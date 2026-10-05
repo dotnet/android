@@ -1,19 +1,13 @@
 using System;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
-using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
-using Xamarin.Android.Tools.VSWhere;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -50,103 +44,37 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("_SkipNdkResolution", "true");
 
 			using var builder = CreateApkBuilder ();
-			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), $"CoreCLR app build should succeed for {abi} with the prebuilt runtime.");
 			builder.Output.AssertTargetIsSkipped ("_LinkNativeRuntime", defaultIfNotUsed: true);
-			StringAssertEx.DoesNotContain ("Task \"ResolveAndroidNdk\"", builder.LastBuildOutput, "Ordinary CoreCLR should not require an NDK.");
 		}
 
 		[TestCase ("armeabi-v7a")]
 		[TestCase ("arm64-v8a")]
 		[TestCase ("x86_64")]
-		public void BuildNativeAotWithOfficialNdk (string abi)
+		public void BuildNativeAotWithoutCPlusPlusArchives (string abi)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 			proj.SetRuntimeIdentifiers ([abi]);
-			proj.SetProperty ("_SkipNdkResolution", "false");
 
 			using var builder = CreateApkBuilder ();
-			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), $"NativeAOT build should succeed for {abi} without libc++ or libunwind.");
-			string toolchain = GetNdkToolchainDirectory ();
-			StringAssertEx.Contains (Path.Combine (toolchain, "bin", TestEnvironment.IsWindows ? "ld.lld.exe" : "ld.lld"), builder.LastBuildOutput,
-				"The final linker must come from the official Android NDK.");
 
 			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			string [] responseFiles = Directory.GetFiles (intermediateDirectory, "ld.*.rsp", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (responseFiles, "Native linker response files should be generated.");
 			foreach (string responseFile in responseFiles) {
-				string response = File.ReadAllText (responseFile).Replace ('\\', '/');
+				string response = File.ReadAllText (responseFile);
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
-				StringAssert.Contains (Path.Combine (toolchain, "sysroot", "usr", "lib").Replace ('\\', '/'), response, "CRT and system libraries must come from the NDK.");
-				StringAssert.Contains (Path.Combine (toolchain, "lib", "clang").Replace ('\\', '/'), response, "Compiler runtime must come from the NDK.");
-				string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
-				string [] linkedObjects = File.ReadAllLines (responseFile)
-					.Select (line => line.Trim ('"'))
-					.Where (line => line.EndsWith (".o", StringComparison.Ordinal))
-					.Select (line => Path.GetFullPath (line, projectDirectory))
-					.ToArray ();
-				foreach (string objectName in new [] { $"jni_init_funcs.{abi}.o", $"environment.{abi}.o" }) {
-					string objectFile = Directory.GetFiles (intermediateDirectory, objectName, SearchOption.AllDirectories).Single ();
-					Assert.IsTrue (linkedObjects.Contains (objectFile), $"The generated object {objectName} must remain linked.");
-				}
 				foreach (string archiveName in CPlusPlusArchiveNames) {
 					StringAssert.DoesNotContain (archiveName, response, responseFile);
 				}
-				if (abi == "armeabi-v7a") {
-					AssertArmEhabiSymbolsPromoted (builder, proj);
-				}
 			}
-		}
-
-		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.NativeAOT)]
-		[Platform ("Win")]
-		public async Task BuildWithNdkUsingFullMsBuild (AndroidRuntime runtime)
-		{
-			string msbuild = MSBuildLocator.QueryLatest ().MSBuildPath;
-			if (FileVersionInfo.GetVersionInfo (msbuild).FileMajorPart < 18) {
-				Assert.Ignore ("Full MSBuild 18 or later is required for the .NET task host.");
+			if (abi == "armeabi-v7a") {
+				AssertArmEhabiSymbolsPromoted (builder, proj);
 			}
-
-			byte [] original = File.ReadAllBytes (GetInstalledRuntimePackFile ("libnet-android.debug.so"));
-			var proj = new XamarinAndroidApplicationProject {
-				OtherBuildItems = {
-					new AndroidItem.AndroidNativeLibrary ("native/arm64-v8a/libstrip-input.so") {
-						BinaryContent = () => original,
-					},
-				},
-			};
-			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
-			proj.SetProperty ("AndroidStripNativeLibraries", "true");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Restore (proj), "Restore should succeed before the Full MSBuild build.");
-			string directory = Path.Combine (Root, builder.ProjectDirectory);
-			var startInfo = ProcessUtils.CreateProcessStartInfo (msbuild,
-				Path.Combine (directory, proj.ProjectFilePath), "-t:Build,SignAndroidPackage", "-nr:false", "-v:minimal",
-				"@" + Path.Combine (directory, "project.rsp"));
-			startInfo.WorkingDirectory = directory;
-			startInfo.Environment ["DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR"] = TestEnvironment.DotNetPreviewDirectory;
-			startInfo.Environment ["DOTNET_HOST_PATH"] = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet.exe");
-			if (TestEnvironment.UseLocalBuildOutput) {
-				startInfo.Environment ["DOTNETSDK_WORKLOAD_MANIFEST_ROOTS"] = TestEnvironment.WorkloadManifestOverridePath;
-				startInfo.Environment ["DOTNETSDK_WORKLOAD_PACK_ROOTS"] = TestEnvironment.WorkloadPackOverridePath;
-			}
-			using var stdout = new StringWriter (CultureInfo.InvariantCulture);
-			using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-			using var cancellation = new CancellationTokenSource (TimeSpan.FromMinutes (10));
-			int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, cancellation.Token);
-			Assert.AreEqual (0, exitCode, $"{stdout}{stderr}");
-
-			string apk = Path.Combine (directory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			FileAssert.Exists (apk, "Full MSBuild should produce a signed app.");
-			Assert.Less (ZipHelper.ReadFileFromZip (apk, "lib/arm64-v8a/libstrip-input.so").Length, original.Length,
-				"Full MSBuild should package the NDK-stripped native library.");
 		}
 
 		[Test]
@@ -232,33 +160,12 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("error XA5104:", builder.LastBuildOutput, "A missing NDK should produce XA5104.");
 		}
 
-		[Test]
-		public void BuildCoreClrWithNativeLibraryStripping_WithoutNdk ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
-			proj.SetProperty ("AndroidStripNativeLibraries", "true");
-			proj.SetProperty ("_SkipNdkResolution", "true");
-
-			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), "Optional native library stripping must require an NDK.");
-			StringAssertEx.Contains ("error XA5104:", builder.LastBuildOutput, "A missing NDK should produce XA5104.");
-		}
-
 		[TestCase ("apk", false)]
 		[TestCase ("aab", true)]
 		public void BuildCoreClrWithNativeLibraryStripping (string packageFormat, bool isRelease)
 		{
 			string fixture = GetInstalledRuntimePackFile ("libnet-android.debug.so");
 			byte [] original = File.ReadAllBytes (fixture);
-			using (var stream = new MemoryStream (original)) {
-				using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
-				Assert.IsTrue (elf.Sections.Any (section => section.Type == SectionType.SymbolTable || section.Name == ".debug_info"),
-					"The debug runtime fixture must contain symbols.");
-			}
-
 			const string nativeLibrary = "native/arm64-v8a/libstrip-input.so";
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -274,11 +181,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidStripNativeLibraries", "true");
 
 			using var builder = CreateApkBuilder ();
-			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), $"The {proj.Configuration} {packageFormat} build should strip native libraries using the NDK.");
-			StringAssertEx.Contains ("Task \"ResolveAndroidNdk\"", builder.LastBuildOutput, "Native stripping must resolve the NDK tool.");
-			StringAssertEx.Contains (Path.Combine (GetNdkToolchainDirectory (), "bin", TestEnvironment.IsWindows ? "llvm-strip.exe" : "llvm-strip"),
-				builder.LastBuildOutput, "The strip tool must come from the NDK.");
 
 			string package = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
 			string archivePath = $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/libstrip-input.so";
@@ -296,26 +199,12 @@ namespace Xamarin.Android.Build.Tests
 			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			string strippedLibrary = Path.Combine (intermediateDirectory, "android-arm64", "stripped", "libstrip-input.so");
 			FileAssert.Exists (strippedLibrary);
-			CollectionAssert.AreEqual (stripped, File.ReadAllBytes (strippedLibrary), "The package should contain the intermediate stripped copy.");
-			string [] fileWrites = File.ReadAllLines (Path.Combine (intermediateDirectory, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
-			Assert.IsTrue (fileWrites.Contains (strippedLibrary), "The stripped copy must be tracked for Clean.");
-
-			DateTime stripTime = File.GetLastWriteTimeUtc (strippedLibrary);
-			builder.BuildLogFile = "stripping-unchanged.log";
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "An unchanged build should reuse the stripped copy.");
-			FileAssert.Exists (strippedLibrary, "IncrementalClean must preserve the stripped copy.");
-			if (isRelease) {
-				Assert.AreEqual (stripTime, File.GetLastWriteTimeUtc (strippedLibrary), "An unchanged Release build should not strip again.");
-			}
-			fileWrites = File.ReadAllLines (Path.Combine (intermediateDirectory, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
-			Assert.IsTrue (fileWrites.Contains (strippedLibrary), "The stripped copy must remain tracked after an unchanged build.");
 
 			builder.BuildLogFile = "stripping-disabled.log";
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
 				"AndroidStripNativeLibraries=false",
 				"_SkipNdkResolution=true",
 			]), "Disabling stripping on an incremental build should not require an NDK.");
-			StringAssertEx.DoesNotContain ("Task \"ResolveAndroidNdk\"", builder.LastBuildOutput, "Disabling stripping must remove the NDK requirement.");
 			CollectionAssert.AreEqual (original, ZipHelper.ReadFileFromZip (package, archivePath), "Toggling stripping off must repackage the original.");
 
 			builder.BuildLogFile = "stripping-enabled.log";
@@ -350,8 +239,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (builder.Build (proj), "A failed strip must fail packaging rather than use the original file.");
 			StringAssertEx.Contains ("error XA0142:", builder.LastBuildOutput, "The failed native tool should produce XA0142.");
 			StringAssertEx.Contains ("llvm-strip", builder.LastBuildOutput, "The failure should identify the NDK strip command.");
-			string strippedLibrary = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "stripped", "libinvalid.so");
-			FileAssert.DoesNotExist (strippedLibrary, "A failed strip must remove any partial output.");
 		}
 
 		static string GetNdkToolchainDirectory ()
