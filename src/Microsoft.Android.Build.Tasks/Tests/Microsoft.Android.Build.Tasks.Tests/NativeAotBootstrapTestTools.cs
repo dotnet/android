@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 using NUnit.Framework;
 
@@ -31,15 +30,7 @@ internal static class NativeAotBootstrapTestTools
 		foreach (string argument in arguments) {
 			startInfo.ArgumentList.Add (argument);
 		}
-		using var process = Process.Start (startInfo)
-			?? throw new InvalidOperationException ($"Unable to start '{executable}'");
-		Task<string> output = process.StandardOutput.ReadToEndAsync ();
-		Task<string> error = process.StandardError.ReadToEndAsync ();
-		if (!process.WaitForExit (120_000)) {
-			process.Kill (entireProcessTree: true);
-			Assert.Fail ($"'{executable}' timed out");
-		}
-		return (process.ExitCode, output.GetAwaiter ().GetResult (), error.GetAwaiter ().GetResult ());
+		return NativeToolTestHelper.Capture (startInfo, TimeSpan.FromMinutes (2));
 	}
 
 	internal static string JavaTool (string name)
