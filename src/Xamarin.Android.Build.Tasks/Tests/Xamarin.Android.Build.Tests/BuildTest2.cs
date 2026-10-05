@@ -24,21 +24,6 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
-		static object [] MarshalMethodsDefaultStatusSource = new object [] {
-			new object[] {
-				/* isRelease */              true,
-				/* marshalMethodsEnabled */  false,
-			},
-			new object[] {
-				/* isRelease */              true,
-				/* marshalMethodsEnabled */  true,
-			},
-			new object[] {
-				/* isRelease */              false,
-				/* marshalMethodsEnabled */  true,
-			},
-		};
-
 		[Test]
 		public void BuildBasicApplication ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
 		{
@@ -313,6 +298,10 @@ namespace Xamarin.Android.Build.Tests
 							bridge.Methods.FirstOrDefault (method => method.Name == methodName),
 							$"Disabled GC bridge logging should trim {methodName} from Mono.Android.dll.");
 					}
+
+					Assert.IsNull (
+						monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.JniRemappingLookup"),
+						"Apps without remapping inputs should trim the managed JNI remapping implementation.");
 				}
 
 				const int ApkSizeThreshold = 5 * 1024;
@@ -1619,12 +1608,14 @@ namespace UnamedProject
 				FileAssert.Exists (dexFile);
 				var classes = new List<string> {
 					"Lmono/android/view/View_OnClickListenerImplementor;",
-					"Landroid/runtime/JavaProxyThrowable;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
+				// NativeAOT uses Java.Interop's exception proxy; CoreCLR uses Android.Runtime's.
 				if (runtime == AndroidRuntime.NativeAOT) {
+					classes.Add ("Lnet/dot/jni/internal/JavaProxyThrowable;");
 					classes.Add ("Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;");
 				} else {
+					classes.Add ("Landroid/runtime/JavaProxyThrowable;");
 					classes.Add ("Lmono/MonoRuntimeProvider;");
 				}
 

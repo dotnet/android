@@ -62,7 +62,7 @@ static partial class JavaInteropRuntime
 			runtime = options.CreateJreVM ();
 
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
-			JNIEnvInit.InitializeNativeAotRuntime (runtime, initArgs);
+			JNIEnvInit.InitializeNativeAotRuntime (runtime);
 
 			SetAppContextBaseDirectory (filesDir);
 

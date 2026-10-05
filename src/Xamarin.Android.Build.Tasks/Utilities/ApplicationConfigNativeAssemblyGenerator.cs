@@ -25,7 +25,7 @@ class ApplicationConfigNativeAssemblyGenerator
 	// src/native/clr/include/xamarin-app.hh.  Data sizes are the sums of sizes of all the non-pointer
 	// members (see LlvmIrTarget.GetAggregateAlignment).  All of the structures contain pointers, and
 	// their non-pointer members don't need alignment higher than NonPointerMemberAlignment
-	const ulong ApplicationConfigDataSize = 51;
+	const ulong ApplicationConfigDataSize = 34;
 	const ulong AssemblyStoreRuntimeDataDataSize = 8;
 	const ulong AssemblyStoreSingleAssemblyRuntimeDataDataSize = 0;
 	const ulong DSOCacheEntryDataSize = 10;
@@ -79,15 +79,10 @@ class ApplicationConfigNativeAssemblyGenerator
 	public string AndroidPackageName { get; set; } = "";
 	public int NumberOfAssembliesInApk { get; set; }
 	public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
-	public int AndroidRuntimeJNIEnvToken { get; set; }
-	public int JNIEnvInitializeToken { get; set; }
-	public int JniRemappingReplacementTypeCount { get; set; }
-	public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 	public PackageNamingPolicy PackageNamingPolicy { get; set; }
 	public List<ITaskItem> NativeLibraries { get; set; } = [];
 	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
 	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
-	public bool MarshalMethodsEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
 	public bool HaveAssemblyStore { get; set; }
 
@@ -139,7 +134,6 @@ class ApplicationConfigNativeAssemblyGenerator
 		InitDSOCache (ret);
 
 		ret.ApplicationConfig = new ApplicationConfig {
-			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)runtimeProperties.Count,
 			package_naming_policy = (uint)PackageNamingPolicy,
@@ -149,10 +143,6 @@ class ApplicationConfigNativeAssemblyGenerator
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
 			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 			number_of_dso_cache_entries = (uint)ret.DsoCache.Count,
-			android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
-			jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
-			jni_remapping_replacement_type_count = (uint)JniRemappingReplacementTypeCount,
-			jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
 			android_package_name = AndroidPackageName,
 			have_assembly_store = HaveAssemblyStore,
 		};
@@ -195,7 +185,6 @@ class ApplicationConfigNativeAssemblyGenerator
 		w.Write ($$"""
 
 			%struct.ApplicationConfig = type {
-				i1, ; bool marshal_methods_enabled
 				i1, ; bool ignore_split_configs
 				i32, ; uint32_t number_of_runtime_properties
 				i32, ; uint32_t package_naming_policy
@@ -205,10 +194,6 @@ class ApplicationConfigNativeAssemblyGenerator
 				i32, ; uint32_t bundled_assembly_name_width
 				i32, ; uint32_t number_of_dso_cache_entries
 				i32, ; uint32_t number_of_shared_libraries
-				i32, ; uint32_t android_runtime_jnienv_class_token
-				i32, ; uint32_t jnienv_initialize_method_token
-				i32, ; uint32_t jni_remapping_replacement_type_count
-				i32, ; uint32_t jni_remapping_replacement_method_index_entry_count
 				ptr, ; char* android_package_name
 				i1 ; bool have_assembly_store
 			}
@@ -264,7 +249,6 @@ class ApplicationConfigNativeAssemblyGenerator
 		ApplicationConfig cfg = data.ApplicationConfig;
 		w.WriteGlobal ("application_config", LlvmIrWriter.GlobalConstant, "%struct.ApplicationConfig", $$"""
 			{
-				i1 {{(cfg.marshal_methods_enabled ? "true" : "false")}}, ; bool marshal_methods_enabled
 				i1 {{(cfg.ignore_split_configs ? "true" : "false")}}, ; bool ignore_split_configs
 				i32 {{cfg.number_of_runtime_properties}}, ; uint32_t number_of_runtime_properties
 				i32 {{cfg.package_naming_policy}}, ; uint32_t package_naming_policy
@@ -274,10 +258,6 @@ class ApplicationConfigNativeAssemblyGenerator
 				i32 {{cfg.bundled_assembly_name_width}}, ; uint32_t bundled_assembly_name_width
 				i32 {{cfg.number_of_dso_cache_entries}}, ; uint32_t number_of_dso_cache_entries
 				i32 {{cfg.number_of_shared_libraries}}, ; uint32_t number_of_shared_libraries
-				i32 u0x{{cfg.android_runtime_jnienv_class_token:x8}}, ; uint32_t android_runtime_jnienv_class_token
-				i32 u0x{{cfg.jnienv_initialize_method_token:x8}}, ; uint32_t jnienv_initialize_method_token
-				i32 u0x{{cfg.jni_remapping_replacement_type_count:x8}}, ; uint32_t jni_remapping_replacement_type_count
-				i32 {{cfg.jni_remapping_replacement_method_index_entry_count}}, ; uint32_t jni_remapping_replacement_method_index_entry_count
 				ptr {{strings.GetPointer (cfg.android_package_name, "ApplicationConfig", "android_package_name")}}, ; char* android_package_name
 				i1 {{(cfg.have_assembly_store ? "true" : "false")}}; bool have_assembly_store
 			}

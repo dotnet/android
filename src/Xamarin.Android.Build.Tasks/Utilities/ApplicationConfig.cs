@@ -25,7 +25,6 @@ namespace Xamarin.Android.Tasks;
 // Names should be the same as in the above struct
 sealed class ApplicationConfig
 {
-	public bool   marshal_methods_enabled;
 	public bool   ignore_split_configs;
 	public uint   number_of_runtime_properties;
 	public uint   package_naming_policy;
@@ -36,10 +35,6 @@ sealed class ApplicationConfig
 	public uint   number_of_dso_cache_entries;
 	public uint   number_of_shared_libraries;
 
-	public uint   android_runtime_jnienv_class_token;
-	public uint   jnienv_initialize_method_token;
-	public uint   jni_remapping_replacement_type_count;
-	public uint   jni_remapping_replacement_method_index_entry_count;
 	public string android_package_name = String.Empty;
 	public bool   have_assembly_store;
 }

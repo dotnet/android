@@ -51,10 +51,6 @@
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' ">
-    <DefineConstants>$(DefineConstants);ENABLE_MARSHAL_METHODS</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
     <!-- Compile-only reference: the real _Microsoft.Android.TypeMaps.dll is generated at app

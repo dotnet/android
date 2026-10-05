@@ -141,7 +141,6 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 //   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
-	bool marshal_methods_enabled;
 	bool ignore_split_configs;
 	uint32_t number_of_runtime_properties;
 	uint32_t package_naming_policy;
@@ -151,10 +150,6 @@ struct ApplicationConfig
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_dso_cache_entries;
 	uint32_t number_of_shared_libraries;
-	uint32_t android_runtime_jnienv_class_token;
-	uint32_t jnienv_initialize_method_token;
-	uint32_t jni_remapping_replacement_type_count;
-	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
 	bool have_assembly_store;
 };
@@ -178,8 +173,7 @@ struct JniRemappingReplacementMethod
 {
 	const char    *target_type;
 	const char    *target_name;
-	// const char    *target_signature;
-	// const int32_t  param_count;
+	const char    *target_signature;
 	const bool     is_static;
 };
 
