@@ -44,7 +44,9 @@ namespace Java.InteropTests {
 		[Test]
 		public void JavaCast_BadInterfaceCast ()
 		{
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var n = new Java.Lang.Integer (42);
+#pragma warning restore CA1422
 			var e = Assert.Catch<Exception>(() => JavaObjectExtensions.JavaCast<Java.Lang.IAppendable> (n));
 			if (e is System.Reflection.TargetInvocationException tie) {
 				// .NET 8 behavior
@@ -109,10 +111,5 @@ namespace Java.InteropTests {
 			: base (handle, transfer)
 		{
 		}
-	}
-}
-
-namespace Net.Dot.Android.Test {
-	partial class IValueProviderInvoker {
 	}
 }
