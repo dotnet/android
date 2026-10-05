@@ -67,8 +67,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		Assert.AreEqual (TypeRules ("test.Live", "test.Outer$Inner", "test.Second"), File.ReadAllText (rules));
-		Assert.AreEqual (MemberRules ("test.Live", "test.Outer$Inner", "test.Second"),
-			File.ReadAllText (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
+		Assert.IsFalse (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
 		StringAssert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
 		File.Delete (second);
@@ -141,11 +140,13 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var root = document.Root ?? throw new InvalidOperationException ();
 		root.Add (new XElement ("Import", new XAttribute ("Project",
 			Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"))));
+		root.Add (new XElement ("Import", new XAttribute ("Project",
+			Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.TypeMap.Proguard.targets"))));
 		root.Add (new XElement ("Target", new XAttribute ("Name", "_ReadGeneratedTrimmableTypeMapAssemblies")));
 		root.Add (new XElement ("Target", new XAttribute ("Name", "Build"),
-			new XAttribute ("DependsOnTargets", "_AddTrimmableTypeMapAssembliesToIlc"),
+			new XAttribute ("DependsOnTargets", "_AndroidConfigureTypeMapProguard;_AddTrimmableTypeMapAssembliesToIlc"),
 			new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/ilc.txt"),
-				new XAttribute ("Lines", "@(IlcArg);Diagnostics=$(IlcGenerateDgmlFile);Parallel=$(_AndroidBuildRuntimeIdentifiersInParallel)"),
+				new XAttribute ("Lines", "@(IlcArg);Diagnostics=$(IlcGenerateDgmlFile);Parallel=$(_AndroidBuildRuntimeIdentifiersInParallel);Scoped=$(_AndroidUseScopedTypeMapMembers)"),
 				new XAttribute ("Overwrite", "true"))));
 		document.Save (project);
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled, "-p:IlcGenerateDgmlFile=" + diagnostics, "-p:Optimize=true");
@@ -154,6 +155,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		StringAssert.DoesNotContain ("--scandgmllog:", output);
 		StringAssert.DoesNotContain ("--dgmllog:", output);
 		CollectionAssert.Contains (lines, "Parallel=");
+		CollectionAssert.Contains (lines, "Scoped=");
 		StringAssert.Contains ("Diagnostics=" + diagnostics, output);
 	}
 
