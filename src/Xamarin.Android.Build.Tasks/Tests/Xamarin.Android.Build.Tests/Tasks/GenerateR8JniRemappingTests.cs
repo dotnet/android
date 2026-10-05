@@ -251,25 +251,94 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsEmpty (Errors, "A phantom class must not cause a conflicting-member XA4325 error.");
 		}
 
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void NativeAotStringHeadersAndOtherEncodingsAreNotClasses (bool elf32, bool headerCase)
+		{
+			string survivingClass = headerCase ? "com/contoso/" + new string ('B', 53) : "\u0141";
+			string objectFile = WriteNativeObject (["", survivingClass, "run.()V", "value", "I"],
+				commandStream: true, elf32: elf32);
+			var root = XDocument.Parse (Run ($"""
+				A -> a.b:
+				{survivingClass.Replace ('/', '.')} -> a.b:
+
+				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual (survivingClass, (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
+			Assert.AreEqual (survivingClass, (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
+			string members = Run ($"""
+				A -> a.b:
+				    void run() -> absentMethod
+				    int value -> absentField
+				{survivingClass.Replace ('/', '.')} -> a.b:
+				    void run() -> retainedMethod
+				    int value -> retainedField
+
+				""", objectFile);
+			StringAssert.Contains ("target-method-name=\"retainedMethod\"", members);
+			StringAssert.Contains ("target-field-name=\"retainedField\"", members);
+		}
+
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void NativeAotRawBytesAreNotClassEvidence (bool utf8, bool elf32)
+		{
+			string objectFile = WriteNativeObject (["", "\u0141"], utf8, elf32: elf32, unrelatedBytes: true);
+			var root = XDocument.Parse (Run ($"""
+				A -> a.b:
+				{'\u0141'} -> a.b:
+				ExecutableOnly -> a.b:
+				DataOnly -> a.b:
+
+				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual ("\u0141", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
+			Assert.AreEqual ("\u0141", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
+		}
+
+		[TestCase (false, true, false)]
+		[TestCase (true, true, false)]
+		[TestCase (false, false, false)]
+		[TestCase (true, false, false)]
+		[TestCase (false, true, true)]
+		[TestCase (true, true, true)]
+		public void NativeAotTypeMapKeysSelectOnlyJavaUniverse (bool elf32, bool javaGroup, bool commandStream)
+		{
+			string objectFile = WriteNativeObject (commandStream ? ["unrelated"] : [],
+				elf32: elf32, typeMap: true, javaGroup: javaGroup, commandStream: commandStream);
+			var root = XDocument.Parse (Run ("test.Live -> a.b:\n", objectFile)).Root
+				?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual (javaGroup ? 1 : 0, root.Elements ("replace-type").Count ());
+			Assert.AreEqual (javaGroup ? 1 : 0, root.Elements ("reverse-type").Count ());
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public void NativeAotRelocationsDoNotCompleteUtf16CodeUnits (bool elf32)
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer"],
 				commandStream: true, elf32: elf32, zeroFillAfterLiteral: false);
-			var root = XDocument.Parse (Run ("com.contoso.Peer -> a.b:\n", objectFile)).Root
-				?? throw new AssertionException ("Generated XML has no root.");
-			Assert.IsEmpty (root.Elements (), "A truncated UTF-16 code unit cannot be completed by an unknown relocation.");
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string outputFile = Path.Combine (TestDirectory, "remap.xml");
+			File.WriteAllText (mappingFile, "com.contoso.Peer -> a.b:\n");
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = engine, MappingFile = mappingFile, OutputFile = outputFile,
+				NativeAot = true, NativeAotObjectFile = objectFile,
+			};
+			Assert.IsFalse (task.Execute ());
+			Assert.AreEqual ("XA4325", Errors.Single ().Code,
+				"A named frozen string truncated by an unknown relocation must fail closed.");
+			FileAssert.DoesNotExist (outputFile);
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (true, true)]
-		public void NativeAotRealDehydrationCommandsAreNotIdentifierBoundaries (bool utf8, bool elf32)
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NativeAotRealDehydrationCommandsAreNotIdentifierBoundaries (bool elf32)
 		{
 			string objectFile = WriteNativeObject (
-				["com/contoso/Peer$Inner", "run.([Lcom/contoso/Argument;)V"], utf8, commandStream: true, elf32: elf32);
+				["com/contoso/Peer$Inner", "run.([Lcom/contoso/Argument;)V"], commandStream: true, elf32: elf32);
 			string xml = Run ("""
 				com.contoso.Peer -> a.b:
 				com.contoso.Peer$Inner -> a.b:
@@ -434,16 +503,28 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		string WriteNativeObject (string [] literals, bool utf8 = false,
-			bool commandStream = false, bool invalidCommand = false, bool elf32 = false, bool zeroFillAfterLiteral = true)
+			bool commandStream = false, bool invalidCommand = false, bool elf32 = false, bool zeroFillAfterLiteral = true,
+			bool unrelatedBytes = false, bool typeMap = false, bool javaGroup = true)
 		{
+			int pointerSize = elf32 ? 4 : 8;
+			var stringOffsets = new List<ulong> ();
+			ulong hydratedSize = 0;
 			byte [] Encode ()
 			{
 				using var data = new MemoryStream ();
+				using var writer = new BinaryWriter (data);
 				foreach (string value in literals) {
 					byte [] bytes = (utf8 ? Encoding.UTF8 : Encoding.Unicode).GetBytes (value);
-					data.Write (bytes, 0, bytes.Length);
-					data.WriteByte (0xFF);
-					data.WriteByte (0xFF);
+					if (!utf8) {
+						stringOffsets.Add ((ulong) data.Position + (ulong) pointerSize);
+						writer.Write (new byte [pointerSize * 2]);
+						writer.Write (value.Length);
+					}
+					writer.Write (bytes);
+					writer.Write ((byte) 0);
+					if (!utf8) {
+						writer.Write ((byte) 0);
+					}
 				}
 				return data.ToArray ();
 			}
@@ -468,10 +549,13 @@ namespace Xamarin.Android.Build.Tests.Tasks
 					}
 				}
 				foreach (string value in literals) {
-					Command (1, 8); // Frozen-object sync block.
+					stringOffsets.Add (hydratedSize + (ulong) pointerSize);
+					Command (1, pointerSize); // Frozen-object sync block.
+					hydratedSize += (ulong) pointerSize;
 					Command (3, 0); // PtrReloc(0).
-					byte [] bytes = (utf8 ? Encoding.UTF8 : Encoding.Unicode).GetBytes (value);
-					int count = bytes.Length - (bytes [bytes.Length - 1] == 0 ? 1 : 0);
+					hydratedSize += (ulong) pointerSize;
+					byte [] bytes = Encoding.Unicode.GetBytes (value);
+					int count = bytes.Length - (bytes.Length > 0 && bytes [bytes.Length - 1] == 0 ? 1 : 0);
 					using var literal = new MemoryStream ();
 					using (var writer = new BinaryWriter (literal, Encoding.UTF8, leaveOpen: true)) {
 						writer.Write (value.Length);
@@ -500,16 +584,20 @@ namespace Xamarin.Android.Build.Tests.Tasks
 							Command (invalidCommand ? 6 : 0, copyLength);
 							commands.Write (contents, position, copyLength);
 							position += copyLength;
+							hydratedSize += (ulong) copyLength;
 						}
 						if (zeros > 0) {
 							Command (1, zeros);
 							position += zeros;
+							hydratedSize += (ulong) zeros;
 						}
 					}
 					if (zeroFillAfterLiteral) {
 						Command (1, 13); // 69 03 follows: ZeroFill(13), PtrReloc(0), not U+0369.
+						hydratedSize += 13;
 					}
 					Command (3, 0);
+					hydratedSize += (ulong) pointerSize;
 				}
 				uint length = (uint) image.Length;
 				commands.Write (0U); // Fixup-table relocation placeholder.
@@ -519,33 +607,91 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			}
 
 			byte [] objectData = commandStream ? EncodeCommands () : Encode ();
+			ulong mapOffset = (ulong) objectData.Length;
+			byte [] map = typeMap ? System.Convert.FromHexString ("000208000f050000000002000208000f0500000012746573742f4c69766500") : [];
+			ulong fixupsOffset = mapOffset + (ulong) map.Length;
+			if (typeMap) {
+				objectData = objectData.Concat (map).Concat (new byte [4]).ToArray ();
+			}
+			if (unrelatedBytes && !utf8) {
+				objectData = objectData.Concat (Encoding.Unicode.GetBytes ("DataOnly\0")).ToArray ();
+			}
+			byte [] codeBytes = unrelatedBytes
+				? Encoding.UTF8.GetBytes ("ExecutableOnly\0").Concat (Encoding.Unicode.GetBytes ("ExecutableOnly\0")).ToArray ()
+				: [0xC0, 0x03, 0x5F, 0xD6];
 			var sections = new [] {
 				(Name: "", Flags: 0UL, Type: 0U, Bytes: new byte [0]),
 				(Name: ".shstrtab", Flags: 0UL, Type: 3U, Bytes: new byte [0]),
-				(Name: "__managedcode", Flags: 6UL, Type: 1U, Bytes: new byte [] { 0xC0, 0x03, 0x5F, 0xD6 }),
-				(Name: ".rodata", Flags: 2UL, Type: 1U, Bytes: objectData),
+				(Name: "__managedcode", Flags: 6UL, Type: 1U, Bytes: codeBytes),
+				(Name: ".rodata", Flags: utf8 && !commandStream ? 0x32UL : 2UL, Type: 1U, Bytes: objectData),
+				(Name: ".bss", Flags: 3UL, Type: 8U, Bytes: new byte [0]),
 			};
-			if (commandStream) {
+			if (!utf8 || commandStream || typeMap) {
 				using var symbolData = new MemoryStream ();
 				using var symbols = new BinaryWriter (symbolData);
+				var names = new StringBuilder ("\0");
+				int symbolIndex = 1;
 				symbols.Write (new byte [elf32 ? 16 : 24]);
-				symbols.Write (1U);
-				if (elf32) {
-					symbols.Write (0U);
-					symbols.Write ((uint) objectData.Length);
+				int Symbol (string name, ulong offset, ulong size, ushort section)
+				{
+					symbols.Write ((uint) names.Length);
+					names.Append (name).Append ('\0');
+					if (elf32) {
+						symbols.Write ((uint) offset);
+						symbols.Write ((uint) size);
+					}
+					symbols.Write ((byte) 0x11); // STB_GLOBAL, STT_OBJECT.
+					symbols.Write ((byte) 0);
+					symbols.Write (section);
+					if (!elf32) {
+						symbols.Write (offset);
+						symbols.Write (size);
+					}
+					return symbolIndex++;
 				}
-				symbols.Write ((byte) 0x11); // STB_GLOBAL, STT_OBJECT.
-				symbols.Write ((byte) 0);
-				symbols.Write ((ushort) 3);
-				if (!elf32) {
-					symbols.Write (0UL);
-					symbols.Write ((ulong) objectData.Length);
+				if (commandStream) {
+					Symbol ("fixture__dehydrated_data", 0, mapOffset, 3);
+					Symbol ("fixture__hydrated", 0, hydratedSize, 4);
+				}
+				for (int i = 0; i < stringOffsets.Count; i++) {
+					Symbol ($"fixture__Str_{i}", stringOffsets [i], 0, commandStream ? (ushort) 4 : (ushort) 3);
+				}
+				int groupSymbol = 0;
+				if (typeMap) {
+					Symbol ("fixture__external_type_map__", mapOffset, (ulong) map.Length, 3);
+					Symbol ("fixture__external_CommonFixupsTable_references", fixupsOffset, 4, 3);
+					groupSymbol = Symbol (javaGroup ? "_ZTV29Mono_Android_Java_Lang_Object" : "_ZTV43Mono_Android_Android_Runtime_JavaDictionary", 0, 0, 0);
 				}
 				sections = sections.Concat (new [] {
 					(Name: ".strtab", Flags: 0UL, Type: 3U,
-						Bytes: Encoding.UTF8.GetBytes ("\0fixture__dehydrated_data\0")),
+						Bytes: Encoding.UTF8.GetBytes (names.ToString ())),
 					(Name: ".symtab", Flags: 0UL, Type: 2U, Bytes: symbolData.ToArray ()),
 				}).ToArray ();
+				if (commandStream || typeMap) {
+					using var relocationData = new MemoryStream ();
+					using var relocation = new BinaryWriter (relocationData);
+					void Relocation (ulong offset, int index)
+					{
+						if (elf32) {
+							relocation.Write ((uint) offset);
+							relocation.Write (((uint) index << 8) | 3U); // R_ARM_REL32.
+						} else {
+							relocation.Write (offset);
+							relocation.Write (((ulong) index << 32) | 261UL); // R_AARCH64_PREL32.
+							relocation.Write (0L);
+						}
+					}
+					if (commandStream) {
+						Relocation (0, 2);
+					}
+					if (typeMap) {
+						Relocation (fixupsOffset, groupSymbol);
+					}
+					sections = sections.Concat (new [] {
+						(Name: elf32 ? ".rel.rodata" : ".rela.rodata", Flags: 0UL,
+							Type: elf32 ? 9U : 4U, Bytes: relocationData.ToArray ()),
+					}).ToArray ();
+				}
 			}
 			sections [1].Bytes = Encoding.UTF8.GetBytes (string.Join ("\0", sections.Select (section => section.Name)) + "\0");
 			var offsets = new long [sections.Length];
@@ -586,11 +732,13 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				Word (sections [i].Flags);
 				Word (0);
 				Word ((ulong) offsets [i]);
-				Word ((ulong) sections [i].Bytes.Length);
-				writer.Write (sections [i].Type == 2 ? 4U : 0U); // Symbol string table.
-				writer.Write (sections [i].Type == 2 ? 1U : 0U); // First non-local symbol.
+				Word (i == 4 ? hydratedSize : (ulong) sections [i].Bytes.Length);
+				bool relocations = sections [i].Type == 4 || sections [i].Type == 9;
+				writer.Write (sections [i].Type == 2 ? 5U : relocations ? 6U : 0U);
+				writer.Write (sections [i].Type == 2 ? 1U : relocations ? 3U : 0U);
 				Word (i == 0 ? 0UL : 1UL);
-				Word (sections [i].Type == 2 ? (elf32 ? 16UL : 24UL) : 0UL);
+				Word (sections [i].Type == 2 ? (elf32 ? 16UL : 24UL) : relocations ? (elf32 ? 8UL : 24UL) :
+					sections [i].Flags == 0x32 ? 1UL : 0UL);
 				nameIndex += Encoding.UTF8.GetByteCount (sections [i].Name) + 1;
 			}
 			image.Position = elf32 ? 32 : 40;

@@ -2,10 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Reflection.Metadata;
 
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Tasks;
 
 using Xamarin.Android.Tasks;
 
@@ -121,8 +121,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					throw new BadImageFormatException ("Invalid TypeMap attribute arguments.");
 				}
 
-				key = NormalizeAliasKey (key);
-				if (!TryGetClassName (key, out string? className)) {
+				key = TypeMapKey.NormalizeAliasKey (key);
+				if (!TypeMapClassName.TryGetClassName (key, out string? className)) {
 					throw new BadImageFormatException ($"Invalid TypeMap class name '{key}'.");
 				}
 				if (className != null) {
@@ -242,79 +242,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			var assembly = reader.GetAssemblyReference ((AssemblyReferenceHandle) type.ResolutionScope);
 			string assemblyName = reader.GetString (assembly.Name);
 			return assemblyName == expectedAssembly || assemblyName == "System.Private.CoreLib";
-		}
-
-		static string NormalizeAliasKey (string key)
-		{
-			int start = key.LastIndexOf ('[');
-			if (start <= 0 || start == key.Length - 2 || key [key.Length - 1] != ']') {
-				return key;
-			}
-			for (int i = start + 1; i < key.Length - 1; i++) {
-				if (key [i] < '0' || key [i] > '9') {
-					return key;
-				}
-			}
-			return key.Substring (0, start);
-		}
-
-		static bool TryGetClassName (string name, out string? className)
-		{
-			className = null;
-			int dimensions = 0;
-			while (dimensions < name.Length && name [dimensions] == '[') {
-				dimensions++;
-			}
-			if (dimensions > 0) {
-				if (dimensions > 255 || dimensions == name.Length) {
-					return false;
-				}
-				if (dimensions == name.Length - 1 && "BCDFIJSZ".IndexOf (name [dimensions]) >= 0) {
-					return true;
-				}
-				if (name [dimensions] != 'L' || name [name.Length - 1] != ';') {
-					return false;
-				}
-				name = name.Substring (dimensions + 1, name.Length - dimensions - 2);
-			}
-			if (!IsClassName (name)) {
-				return false;
-			}
-			className = name;
-			return true;
-		}
-
-		static bool IsClassName (string name)
-		{
-			bool first = true;
-			for (int i = 0; i < name.Length; i++) {
-				if (name [i] == '/') {
-					if (first) {
-						return false;
-					}
-					first = true;
-					continue;
-				}
-
-				var category = CharUnicodeInfo.GetUnicodeCategory (name, i);
-				bool start = category == UnicodeCategory.UppercaseLetter ||
-					category == UnicodeCategory.LowercaseLetter ||
-					category == UnicodeCategory.TitlecaseLetter ||
-					category == UnicodeCategory.ModifierLetter ||
-					category == UnicodeCategory.OtherLetter ||
-					category == UnicodeCategory.LetterNumber ||
-					category == UnicodeCategory.CurrencySymbol ||
-					category == UnicodeCategory.ConnectorPunctuation;
-				if (!start && (first || (category != UnicodeCategory.DecimalDigitNumber &&
-						category != UnicodeCategory.NonSpacingMark && category != UnicodeCategory.SpacingCombiningMark))) {
-					return false;
-				}
-				if (char.IsHighSurrogate (name [i])) {
-					i++;
-				}
-				first = false;
-			}
-			return !first;
 		}
 
 		static void RecordAllMappings (R8Mapping mapping, string ownerJniName)
