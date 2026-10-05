@@ -58,6 +58,15 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
+  <!-- VSTest collector tools run on the host, not in the Android application.
+       Exclude their private managed dependencies and Windows native libraries. -->
+  <Target Name="_AndroidRemoveVSTestCollectorArtifacts"
+      AfterTargets="CopyTraceDataCollectorArtifacts">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(TraceDataCollectorArtifacts)" />
+    </ItemGroup>
+  </Target>
+
   <!-- RuntimeIdentifier is assigned in these inner builds, after the outer assembly has been compiled.
        _CheckForInvalidConfigurationAndPlatform is a private MSBuild target, but there is no public
        validation-only target. Microsoft.Common.targets explicitly directs custom targets that require
