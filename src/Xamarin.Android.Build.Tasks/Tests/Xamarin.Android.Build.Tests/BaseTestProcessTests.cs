@@ -127,6 +127,34 @@ public class BaseTestProcessTests : BaseTest
 	}
 
 	[Test]
+	public void ApkDiffEofTimeoutKeepsRawDiagnosticsAndExitStatus ([Values (0, 7)] int exitCode)
+	{
+		string pidFile = Path.Combine (directory, "child.pid");
+		string expectedOutput = "stdout\r\n\r\n" + new string ('o', 128 * 1024) + "raw-tail";
+		string expectedError = "stderr\r\n\r\n" + new string ('e', 128 * 1024) + "raw-tail";
+		File.Move (Script ($"printf '%s' '{expectedOutput}' &\nprintf '%s' '{expectedError}' >&2 &\nwait\n" +
+			$"sleep 20 &\necho $! > '{pidFile}'\nexit {exitCode}"), Path.Combine (directory, "apkdiff"));
+		string previous = Environment.GetEnvironmentVariable ("PATH");
+		string logPath = Path.Combine (directory, "apkdiff.log");
+		try {
+			Environment.SetEnvironmentVariable ("PATH", directory + Path.PathSeparator + previous);
+			var stopwatch = Stopwatch.StartNew ();
+			var (code, stdout, stderr) = RunApkDiffCommand ("fixture", logPath);
+			Assert.AreEqual (exitCode, code, "The output EOF deadline must not replace the completed process status.");
+			Assert.AreEqual (expectedOutput, stdout);
+			StringAssert.StartsWith (expectedError, stderr);
+			StringAssert.Contains ("redirected output still open after 2 seconds", stderr);
+			StringAssert.DoesNotContain ("apkdiff timed out after", stderr);
+			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (5));
+			string log = File.ReadAllText (logPath);
+			StringAssert.Contains ($"apkdiff exited with code: {exitCode}", log);
+			StringAssert.Contains ("\nstdOut:\n" + stdout + "\nstdErr:\n" + stderr, log);
+		} finally {
+			Environment.SetEnvironmentVariable ("PATH", previous);
+		}
+	}
+
+	[Test]
 	public void ApkDiffTimeoutKeepsRawPartialDiagnosticsAndTerminatesTree ()
 	{
 		string pidFile = Path.Combine (directory, "child.pid");

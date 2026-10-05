@@ -79,6 +79,10 @@ Device: No
 | **trimmable type map (build)** | `--filter "FullyQualifiedName~TrimmableTypeMapBuildTests"` | Trimmable type map build integration |
 | **host process policies** | `--filter "FullyQualifiedName~ProjectToolsProcessTests|FullyQualifiedName~BaseTestProcessTests|Name~BuilderDoesNotWaitForInheritedRedirectedOutput"` | Logging, diagnostics, single JAR invocation, owned timeouts and bounded inherited output |
 
+The Builder/DotNetCLI high-volume logging cases run on all host platforms.
+Only shell-script-dependent cases exclude Windows. APK diff coverage verifies raw
+partial diagnostics and the completed process status when the separate EOF deadline expires.
+
 ### Task-level unit tests
 
 Same assembly as above. These test individual MSBuild tasks in isolation with `MockBuildEngine`.

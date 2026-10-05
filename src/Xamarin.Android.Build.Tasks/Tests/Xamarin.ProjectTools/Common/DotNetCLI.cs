@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -75,6 +76,7 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		/// <param name="args">command arguments</param>
 		/// <returns>Whether or not the command succeeded.</returns>
+		/// <remarks>Termination failures are recorded in the process log and return false.</remarks>
 		protected bool Execute (params string [] args)
 		{
 			return ExecuteAsync (args).GetAwaiter ().GetResult ();
@@ -121,19 +123,27 @@ namespace Xamarin.ProjectTools
 				}
 				if (!process.HasExited) {
 					try {
-						process.Kill (entireProcessTree: true);
-					} catch (InvalidOperationException) when (process.HasExited) {
-						// The process exited before the kill request.
+						try {
+							process.Kill (entireProcessTree: true);
+							procOutput.AppendLine ("Issued kill request for process tree.");
+						} catch (InvalidOperationException) when (process.HasExited) {
+							// The process exited before the kill request.
+						}
+						if (!process.WaitForExit (30000)) {
+							procOutput.AppendLine ($"Process {process.Id} did not exit within 30000ms after kill request.");
+							succeeded = false;
+						}
+					} catch (Exception ex) when (ex is Win32Exception || ex is NotSupportedException || ex is AggregateException) {
+						procOutput.AppendLine ($"Failed to terminate process {process.Id}: {ex.GetType ().Name}: {ex.Message}");
+						succeeded = false;
 					}
-					if (!process.WaitForExit (30000))
-						throw new TimeoutException ($"Process {process.Id} did not exit after termination.");
-					procOutput.AppendLine ("Issued kill request for process tree.");
 				}
 			}
 
-			procOutput.AppendLine ($"Exit Code: {process.ExitCode}");
+			int? exitCode = process.HasExited ? process.ExitCode : null;
+			procOutput.AppendLine (exitCode.HasValue ? $"Exit Code: {exitCode.Value}" : "Exit Code: <not available>");
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
-			return succeeded;
+			return succeeded && exitCode.HasValue;
 		}
 
 		public bool New (string template, string output = null, bool noRestore = false)

@@ -8,7 +8,6 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests;
 
 [TestFixture, NonParallelizable]
-[Platform (Exclude = "Win")]
 public class ProjectToolsProcessTests : BaseTest
 {
 	string directory = "";
@@ -101,6 +100,7 @@ public class ProjectToolsProcessTests : BaseTest
 	}
 
 	[Test]
+	[Platform (Exclude = "Win")]
 	public void SevenZipKeepsArgumentBoundariesAndBothDiagnostics ()
 	{
 		string argumentsFile = Path.Combine (directory, "arguments");
@@ -126,6 +126,7 @@ public class ProjectToolsProcessTests : BaseTest
 
 	[TestCase (0)]
 	[TestCase (7)]
+	[Platform (Exclude = "Win")]
 	public void GradleLogsBothStreamsOnceAndPreservesFailure (int exitCode)
 	{
 		var gradle = new GradleCLI {
@@ -154,6 +155,7 @@ public class ProjectToolsProcessTests : BaseTest
 
 	[TestCase ("javac")]
 	[TestCase ("jar")]
+	[Platform (Exclude = "Win")]
 	public void JarFailureRetainsRawDiagnostics (string tool)
 	{
 		var builder = new JarContentBuilder {
@@ -172,6 +174,7 @@ public class ProjectToolsProcessTests : BaseTest
 	}
 
 	[Test]
+	[Platform (Exclude = "Win")]
 	public void JarRunsOnceAndContainsCompiledClass ()
 	{
 		string jdk = AndroidSdkResolver.GetJavaSdkPath ();
