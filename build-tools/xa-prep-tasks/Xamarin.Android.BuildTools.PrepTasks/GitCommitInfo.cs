@@ -52,7 +52,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			var stdoutLines = new List<string> ();
 			var stderrLines = new List<string> ();
-			if (!RunGit ("log -n 1 --pretty=%D HEAD", stdoutLines, stderrLines)) {
+			if (!RunGit (["log", "-n", "1", "--pretty=%D", "HEAD"], stdoutLines, stderrLines)) {
 				goto outOfHere;
 			}
 
@@ -79,7 +79,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				Log.LogMessage (MessageImportance.Low, "  Detached HEAD, no branch information");
 				// Detached HEAD without branch information
 				if (isSubmodule) {
-					if (!RunGit ($"config -f {gitModules} --get \"submodule.{SubmoduleName}.branch\"", stdoutLines, stderrLines)) {
+					if (!RunGit (["config", "-f", gitModules, "--get", $"submodule.{SubmoduleName}.branch"], stdoutLines, stderrLines)) {
 						goto outOfHere;
 					}
 					branch = stdoutLines [0];
@@ -118,7 +118,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 
 			Log.LogMessage (MessageImportance.Low, $"  Branch: {branch}");
-			if (!RunGit ("log -n 1 --pretty=%h HEAD", stdoutLines, stderrLines)) {
+			if (!RunGit (["log", "-n", "1", "--pretty=%h", "HEAD"], stdoutLines, stderrLines)) {
 				goto outOfHere;
 			}
 			string commit = stdoutLines [0].Trim ();
@@ -126,13 +126,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			string url;
 			if (isSubmodule) {
-				if (!RunGit ($"config -f {gitModules} --get \"submodule.{SubmoduleName}.url\"", stdoutLines, stderrLines)) {
+				if (!RunGit (["config", "-f", gitModules, "--get", $"submodule.{SubmoduleName}.url"], stdoutLines, stderrLines)) {
 					goto outOfHere;
 				}
 				url = stdoutLines [0].Trim ();
 			} else {
 				string remoteName = String.IsNullOrEmpty (GitRemoteName) ? "origin" : GitRemoteName;
-				if (!RunGit ($"config --local --get \"remote.{remoteName}.url\"", stdoutLines, stderrLines)) {
+				if (!RunGit (["config", "--local", "--get", $"remote.{remoteName}.url"], stdoutLines, stderrLines)) {
 					goto outOfHere;
 				}
 
@@ -221,17 +221,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return true;
 		}
 
-		bool RunGit (string arguments, List<string> stdoutLines, List<string> stderrLines)
+		bool RunGit (string [] arguments, List<string> stdoutLines, List<string> stderrLines)
 		{
 			stdoutLines?.Clear ();
 			stderrLines?.Clear ();
 
 			bool canContinue = true;
+			var command = $"{GitPath} {string.Join (" ", arguments)}";
 			int exitCode = RunCommand (GitPath, arguments, stdoutLines, stderrLines);
 
 			if (exitCode != 0) {
 				canContinue = false;
-				Log.LogError ($"'{GitPath} {arguments}' exited with code {exitCode}");
+				Log.LogError ($"'{command}' exited with code {exitCode}");
 			}
 
 			if (stderrLines.Count > 0) {
@@ -243,93 +244,54 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			if (stdoutLines.Count == 0) {
 				canContinue = false;
-				Log.LogError ($"'{GitPath} {arguments}' produced no output");
+				Log.LogError ($"'{command}' produced no output");
 			}
 
 			return canContinue;
 		}
 
-		int RunCommand (string commandPath, string arguments, List<string> stdoutLines, List<string> stderrLines)
+		int RunCommand (string commandPath, string [] arguments, List<string> stdoutLines, List<string> stderrLines)
 		{
 			var si = new ProcessStartInfo (commandPath) {
 				UseShellExecute = false,
 				CreateNoWindow = true,
 				WorkingDirectory = WorkingDirectory,
-				RedirectStandardOutput = stdoutLines != null,
-				RedirectStandardError = stderrLines != null,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
 				StandardOutputEncoding = Encoding.Default,
 				StandardErrorEncoding = Encoding.Default,
-				Arguments = arguments,
 			};
+			foreach (var argument in arguments) {
+				si.ArgumentList.Add (argument);
+			}
 			si.EnvironmentVariables.Add ("LC_LANG", "C");
 
-			ManualResetEvent stdout_completed = null;
-			if (!si.RedirectStandardError)
-				si.StandardErrorEncoding = null;
-			else
-				stdout_completed = new ManualResetEvent (false);
-
-			ManualResetEvent stderr_completed = null;
-			if (!si.RedirectStandardOutput)
-				si.StandardOutputEncoding = null;
-			else
-				stderr_completed = new ManualResetEvent (false);
-
-			var p = new Process {
-				StartInfo = si
-			};
-			p.Start ();
-
-			var outputLock = new Object ();
-
-			if (si.RedirectStandardOutput) {
-				p.OutputDataReceived += (sender, e) => {
-					if (e.Data != null)
-						stdoutLines.Add (e.Data);
-					else
-						stdout_completed.Set ();
-				};
-				p.BeginOutputReadLine ();
-			}
-
-			if (si.RedirectStandardError) {
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null)
-						stderrLines.Add (e.Data);
-					else
-						stderr_completed.Set ();
-				};
-				p.BeginErrorReadLine ();
-			}
-
-			TimeSpan outputTimeout = TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout);
-			int processTimeout = ProcessTimeout < 0 ? -1 : ProcessTimeout * 1000;
-			bool needToWait = true;
-			bool exited = true;
-			if (processTimeout > 0) {
-				exited = p.WaitForExit (processTimeout);
-				if (!exited) {
-					Log.LogWarning ($"  Process '{commandPath} {si.Arguments}' failed to exit within the timeout of {ProcessTimeout}s, killing the process");
-					p.Kill ();
+			using var p = Process.Start (si) ?? throw new InvalidOperationException ($"Could not start '{commandPath}'.");
+			using var readCancellation = new CancellationTokenSource ();
+			var output = p.ReadAllLinesAsync (readCancellation.Token).ToListAsync (readCancellation.Token).AsTask ();
+			try {
+				var status = ProcessTimeout > 0
+					? p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (ProcessTimeout))
+					: p.SafeHandle.WaitForExit ();
+				if (status.Canceled) {
+					Log.LogWarning ($"Process '{commandPath} {string.Join (" ", arguments)}' failed to exit within {ProcessTimeout}s.");
 				}
-
-				// We need to call the parameter-less WaitForExit only if any of the standard output
-				// streams have been redirected (see
-				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-				//
-				if (!si.RedirectStandardOutput && !si.RedirectStandardError)
-					needToWait = false;
+				var lines = output.WaitAsync (TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout)).GetAwaiter ().GetResult ();
+				foreach (var line in lines) {
+					(line.StandardError ? stderrLines : stdoutLines).Add (line.Content);
+				}
+				return status.Canceled ? -1 : status.ExitCode;
+			} catch (TimeoutException ex) {
+				Log.LogWarning (ex.Message);
+				return -1;
+			} finally {
+				readCancellation.Cancel ();
+				try {
+					output.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+				} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
+				}
 			}
-
-			if (needToWait)
-				p.WaitForExit ();
-
-			if (si.RedirectStandardError && stderr_completed != null)
-				stderr_completed.WaitOne (outputTimeout);
-			if (si.RedirectStandardOutput && stdout_completed != null)
-				stdout_completed.WaitOne (outputTimeout);
-
-			return exited ? p.ExitCode : -1;
 		}
 	}
 }

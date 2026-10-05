@@ -63,108 +63,96 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			using (var genApiProcess = new Process ()) {
 
-				if (Environment.Version.Major >= 5) {
-					var apiCompat = new FileInfo (Path.Combine (codeGenPath, "..", "netcoreapp3.1", "Microsoft.DotNet.GenAPI.dll"));
-					genApiProcess.StartInfo.FileName = "dotnet";
-					genApiProcess.StartInfo.Arguments = $"\"{apiCompat}\" ";
-				} else {
-					var apiCompat = new FileInfo (Path.Combine (codeGenPath, "Microsoft.DotNet.GenAPI.exe"));
-					genApiProcess.StartInfo.FileName = apiCompat.FullName;
-				}
+				var apiCompat = new FileInfo (Path.Combine (codeGenPath, "..", "netcoreapp3.1", "Microsoft.DotNet.GenAPI.dll"));
+				genApiProcess.StartInfo.FileName = "dotnet";
+				genApiProcess.StartInfo.ArgumentList.Add (apiCompat.FullName);
+				genApiProcess.StartInfo.ArgumentList.Add (assembly);
 
-				genApiProcess.StartInfo.Arguments += $"\"{assembly}\"";
-
-				logger (TraceLevel.Verbose, $"Executing: `\"{genApiProcess.StartInfo.FileName}\" {genApiProcess.StartInfo.Arguments}`");
-
+				logger (TraceLevel.Verbose, $"Executing: `dotnet \"{apiCompat.FullName}\" \"{assembly}\"`");
 				genApiProcess.StartInfo.UseShellExecute = false;
 				genApiProcess.StartInfo.CreateNoWindow = true;
 				genApiProcess.StartInfo.RedirectStandardOutput = true;
 				genApiProcess.StartInfo.RedirectStandardError = true;
-				genApiProcess.EnableRaisingEvents = true;
+				genApiProcess.StartInfo.InheritedHandles = [];
+				var timeout = TimeSpan.FromMinutes (5);
+				var timer = Stopwatch.StartNew ();
+				genApiProcess.Start ();
+				try {
+					foreach (var line in genApiProcess.ReadAllLines (timeout)) {
+						var content = line.Content.Trim ();
 
-				var line = 0;
-
-				void dataReceived (object sender, DataReceivedEventArgs args)
-				{
-					line++;
-					var content = args.Data?.Trim ();
-
-					if (string.IsNullOrWhiteSpace (content) || content.StartsWith ("//", StringComparison.OrdinalIgnoreCase) || content.StartsWith ("Unable to resolve assembly", StringComparison.OrdinalIgnoreCase)) {
-						return;
-					}
-
-					if (content.StartsWith ("[", StringComparison.OrdinalIgnoreCase)) {
-						if (!string.IsNullOrWhiteSpace (currentObject.Item)) {
-							var newObject = new ObjectDescription ();
-							currentObject.InnerObjects.Add (newObject);
-							objectStack.Push (newObject);
-							currentObject = newObject;
+						if (string.IsNullOrWhiteSpace (content) || content.StartsWith ("//", StringComparison.OrdinalIgnoreCase) || content.StartsWith ("Unable to resolve assembly", StringComparison.OrdinalIgnoreCase)) {
+							continue;
 						}
 
-						currentObject.Attributes.Add (content);
-						return;
-					}
-
-					if (content.StartsWith ("{", StringComparison.OrdinalIgnoreCase)) {
-						currentObject.InternalCounter++;
-						return;
-					}
-
-					if (content.StartsWith ("}", StringComparison.OrdinalIgnoreCase)) {
-						currentObject.InternalCounter--;
-						if (currentObject.InternalCounter < 0) {
-							logger (TraceLevel.Error, $"Internal Error! currentObject.InternalCounter is {currentObject.InternalCounter}; must be >= 0! " +
-								$"currentObject.Item=`{currentObject.Item}`");
-							currentObject.InternalCounter = 0;
-						}
-
-						if (currentObject.InternalCounter == 0) {
-							objectStack.Pop ();
-							if (objectStack.Count > 0) {
-								currentObject = objectStack.Peek ();
+						if (content.StartsWith ("[", StringComparison.OrdinalIgnoreCase)) {
+							if (!string.IsNullOrWhiteSpace (currentObject.Item)) {
+								var newObject = new ObjectDescription ();
+								currentObject.InnerObjects.Add (newObject);
+								objectStack.Push (newObject);
+								currentObject = newObject;
 							}
+
+							currentObject.Attributes.Add (content);
+							continue;
 						}
 
-						return;
-					}
+						if (content.StartsWith ("{", StringComparison.OrdinalIgnoreCase)) {
+							currentObject.InternalCounter++;
+							continue;
+						}
 
-					if (content.StartsWith ("namespace ", StringComparison.Ordinal) || LineBeginsType (content)) {
+						if (content.StartsWith ("}", StringComparison.OrdinalIgnoreCase)) {
+							currentObject.InternalCounter--;
+							if (currentObject.InternalCounter < 0) {
+								logger (TraceLevel.Error, $"Internal Error! currentObject.InternalCounter is {currentObject.InternalCounter}; must be >= 0! " +
+									$"currentObject.Item=`{currentObject.Item}`");
+								currentObject.InternalCounter = 0;
+							}
+
+							if (currentObject.InternalCounter == 0) {
+								objectStack.Pop ();
+								if (objectStack.Count > 0) {
+									currentObject = objectStack.Peek ();
+								}
+							}
+
+							continue;
+						}
+
+						if (content.StartsWith ("namespace ", StringComparison.Ordinal) || LineBeginsType (content)) {
+							if (string.IsNullOrWhiteSpace (currentObject.Item)) {
+								currentObject.Item = content;
+							} else {
+								var newObject = new ObjectDescription () { Item = content };
+								currentObject.InnerObjects.Add (newObject);
+								objectStack.Push (newObject);
+								currentObject = newObject;
+							}
+
+							continue;
+						}
+
 						if (string.IsNullOrWhiteSpace (currentObject.Item)) {
 							currentObject.Item = content;
+							objectStack.Pop ();
+							currentObject = objectStack.Peek ();
 						} else {
 							var newObject = new ObjectDescription () { Item = content };
 							currentObject.InnerObjects.Add (newObject);
-							objectStack.Push (newObject);
-							currentObject = newObject;
 						}
-
-						return;
 					}
-
-
-					if (string.IsNullOrWhiteSpace (currentObject.Item)) {
-						currentObject.Item = content;
-						objectStack.Pop ();
-						currentObject = objectStack.Peek ();
-					} else {
-						var newObject = new ObjectDescription () { Item = content };
-						currentObject.InnerObjects.Add (newObject);
+					var remaining = timeout - timer.Elapsed;
+					var status = genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+					if (status.Canceled) {
+						throw new TimeoutException ($"GenAPI failed to exit within {timeout} for '{assembly}'.");
 					}
+					if (status.ExitCode != 0) {
+						throw new InvalidOperationException ($"GenAPI failed with exit code {status.ExitCode} for '{assembly}'.");
+					}
+				} finally {
+					genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
 				}
-
-
-				genApiProcess.OutputDataReceived += dataReceived;
-				genApiProcess.ErrorDataReceived += dataReceived;
-
-				genApiProcess.Start ();
-				genApiProcess.BeginOutputReadLine ();
-				genApiProcess.BeginErrorReadLine ();
-
-				genApiProcess.WaitForExit ();
-
-				genApiProcess.CancelOutputRead ();
-				genApiProcess.CancelErrorRead ();
-
 			}
 
 			return currentObject;

@@ -127,7 +127,7 @@ jq -r --slurpfile failed /tmp/failed.json --slurpfile tl /tmp/tl.json '
 
 `ResultsByBuild` returns every failed test across runs (only `Failed`/`Aborted` are queryable). Matrix lanes that share one phase (e.g. `MSBuild+Emulator`) aggregate in the breakdown — use the Step 3b timing table to pinpoint the numbered job that died. For per-test error/stack, the ETA query, and the run→job mapping, see [references/azdo-queries.md](references/azdo-queries.md).
 
-**Step 3d — Deep failure analysis (run whenever the build is red).** From the repo root, run the bundled C# file-based app — it turns raw failures into the **per-test cross-config matrix**, **crash detection**, and **branch cross-reference** the report needs (makes its own `az`/`gh` calls, needs `az login` and the .NET SDK, ~15–45 s — scales with the affected test family + retries):
+**Step 3d — Deep failure analysis (run whenever the build is red).** From the repo root, run the bundled C# file-based app — it turns raw failures into the **per-test cross-config matrix**, **crash detection**, and **branch cross-reference** the report needs (makes its own `az`/`gh` calls, needs `az login` and a **.NET 11 SDK**, ~15–45 s — scales with the affected test family + retries):
 
 ```bash
 dotnet run .github/skills/ci-status/scripts/ci_failures.cs -- --build-id $BUILD_ID --pr $PR

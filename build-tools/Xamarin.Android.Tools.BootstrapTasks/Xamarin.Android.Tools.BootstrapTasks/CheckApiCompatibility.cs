@@ -175,17 +175,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			for (int i = 0; i < 3; i++) {
 				using (var genApiProcess = new Process ()) {
 
-					if (Environment.Version.Major >= 5) {
-						var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "..", "netcoreapp3.1", "Microsoft.DotNet.ApiCompat.dll"));
-						genApiProcess.StartInfo.FileName = "dotnet";
-						genApiProcess.StartInfo.Arguments = $"\"{apiCompat}\" ";
-					} else {
-						var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "Microsoft.DotNet.ApiCompat.exe"));
-						genApiProcess.StartInfo.FileName = apiCompat.FullName;
-					}
-
-					genApiProcess.StartInfo.Arguments += $"\"{contractAssembly.FullName}\" -i \"{TargetImplementationPath}\" --allow-default-interface-methods ";
-
+					var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "..", "netcoreapp3.1", "Microsoft.DotNet.ApiCompat.dll"));
+					genApiProcess.StartInfo.FileName = "dotnet";
+					genApiProcess.StartInfo.ArgumentList.Add (apiCompat.FullName);
+					genApiProcess.StartInfo.ArgumentList.Add (contractAssembly.FullName);
+					genApiProcess.StartInfo.ArgumentList.Add ("-i");
+					genApiProcess.StartInfo.ArgumentList.Add (TargetImplementationPath);
+					genApiProcess.StartInfo.ArgumentList.Add ("--allow-default-interface-methods");
 
 					// Verify if there is a file with acceptable issues.
 					var acceptableIssuesFiles = new[]{
@@ -196,51 +192,60 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						.Where (v => v.Exists)
 						.FirstOrDefault ();
 					if (acceptableIssuesFile != null) {
-						genApiProcess.StartInfo.Arguments += $"--baseline \"{acceptableIssuesFile.FullName}\" --validate-baseline ";
+						genApiProcess.StartInfo.ArgumentList.Add ("--baseline");
+						genApiProcess.StartInfo.ArgumentList.Add (acceptableIssuesFile.FullName);
+						genApiProcess.StartInfo.ArgumentList.Add ("--validate-baseline");
 					}
 
 					// Verify if there is an exclusion list
 					var excludeAttributes = new FileInfo (Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt"));
 					if (excludeAttributes.Exists) {
-						genApiProcess.StartInfo.Arguments += $"--exclude-attributes \"{excludeAttributes.FullName}\" ";
+						genApiProcess.StartInfo.ArgumentList.Add ("--exclude-attributes");
+						genApiProcess.StartInfo.ArgumentList.Add (excludeAttributes.FullName);
 					}
 
 					genApiProcess.StartInfo.UseShellExecute = false;
 					genApiProcess.StartInfo.CreateNoWindow = true;
 					genApiProcess.StartInfo.RedirectStandardOutput = true;
 					genApiProcess.StartInfo.RedirectStandardError = true;
-					genApiProcess.EnableRaisingEvents = true;
-
+					genApiProcess.StartInfo.InheritedHandles = [];
 					var lines = new List<string> ();
 					var processHasCrashed = false;
-					void dataReceived (object sender, DataReceivedEventArgs args)
-					{
-						if (!string.IsNullOrWhiteSpace (args.Data)) {
-							lines.Add (args.Data.Trim ());
+					// Get api definition for previous Api
+					compatApiCommand = $"CompatApi command: dotnet {string.Join (" ", genApiProcess.StartInfo.ArgumentList.Select (a => $"\"{a}\""))}";
+					Log.LogMessage (MessageImportance.High, compatApiCommand);
 
-							if (args.Data.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
+					int exitCode;
+					var timeout = TimeSpan.FromMinutes (5);
+					var timer = Stopwatch.StartNew ();
+					genApiProcess.Start ();
+					try {
+						foreach (var line in genApiProcess.ReadAllLines (timeout)) {
+							if (string.IsNullOrWhiteSpace (line.Content)) {
+								continue;
+							}
+							lines.Add (line.Content.Trim ());
+							if (line.Content.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
 								processHasCrashed = true;
 							}
 						}
+						var remaining = timeout - timer.Elapsed;
+						var status = genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+						if (status.Canceled) {
+							throw new TimeoutException ($"ApiCompat failed to exit within {timeout}.");
+						}
+						exitCode = status.ExitCode;
+					} catch (TimeoutException ex) {
+						LogError (ex.Message);
+						return;
+					} finally {
+						genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
 					}
 
-					genApiProcess.OutputDataReceived += dataReceived;
-					genApiProcess.ErrorDataReceived += dataReceived;
-
-					// Get api definition for previous Api
-					compatApiCommand = $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}";
-					Log.LogMessage (MessageImportance.High, compatApiCommand);
-
-					genApiProcess.Start ();
-					genApiProcess.BeginOutputReadLine ();
-					genApiProcess.BeginErrorReadLine ();
-
-					genApiProcess.WaitForExit ();
-
-					genApiProcess.CancelOutputRead ();
-					genApiProcess.CancelErrorRead ();
-
 					if (lines.Count == 0) {
+						if (exitCode != 0) {
+							LogError ($"ApiCompat failed with exit code {exitCode}.");
+						}
 						return;
 					}
 
@@ -256,19 +261,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						}
 					}
 
-					// It is expected to have at least one line of output form ApiCompat, if we don't have it, somethign wrong happened.
-					if (!lines.Any ()) {
-						LogError ($"Unable to run ApiCompat correctly. Argument values may be incorrectly.{Environment.NewLine}{compatApiCommand}");
-						return;
-					}
-
-					if (lines [0].Equals ("Total issues: 0", StringComparison.OrdinalIgnoreCase)) {
+					if (exitCode == 0 && lines [0].Equals ("Total issues: 0", StringComparison.OrdinalIgnoreCase)) {
 						Log.LogMessage (MessageImportance.High, lines [0]);
 						return;
 					}
 
 					LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
-					ReportMissingLines (acceptableIssuesFile.FullName, lines);
+					if (acceptableIssuesFile != null) {
+						ReportMissingLines (acceptableIssuesFile.FullName, lines);
+					}
 
 					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, CreateTaskLogger (this));
 					if (missingItems.Any ()) {
