@@ -307,8 +307,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	);
 	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
-	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
-
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
@@ -448,13 +446,10 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.javaVm                                         = jvm;
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
-	init.version                                        = env->GetVersion ();
 	init.brokenExceptionTransitions                     = 0;
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
-	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
-	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
-	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
+	init.jniRemappingData                               = &jni_remapping_data;
 	init.grefLogPath                                    = Logger::gref_log_path ();
 	init.lrefLogPath                                    = Logger::lref_log_path ();
 	init.referenceLogDirectory                         = Logger::reference_log_directory ();
@@ -466,12 +461,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	init.maxGrefCount                                   = static_cast<int>(AndroidSystem::get_max_gref_count ());
-	init.grefClass                                      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, true);
-	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
-
-	jclass lrefLoaderClass                              = env->GetObjectClass (loader);
-	init.Loader_loadClass                               = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-	env->DeleteLocalRef (lrefLoaderClass);
+	jclass lrefClass                                    = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, false);
+	Class_getName                                       = env->GetMethodID (lrefClass, "getName", "()Ljava/lang/String;");
+	env->DeleteLocalRef (lrefClass);
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);
@@ -496,41 +488,10 @@ void Host::Java_mono_android_Runtime_initInternal (
 	log_debugf (LOG_DEFAULT, "Calling into managed runtime init");
 	initialize (&init);
 
-	// RegisterJniNatives and PropagateUncaughtException are returned from Initialize
-	// to avoid extra create_delegate calls. RegisterJniNatives is null when using the
-	// trimmable typemap path (the method is trimmed; registration is handled in managed code).
-	jnienv_register_jni_natives = init.registerJniNativesFn;
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
 
 	MonodroidState::mark_startup_done ();
-}
-
-void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
-{
-	jsize managedType_len = env->GetStringLength (managedType);
-	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
-	int methods_len = env->GetStringLength (methods);
-	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
-
-	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-	log_debugf (LOG_ASSEMBLY, "Registering type: '%s'", optional_string (mt_ptr));
-	env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-	// TODO: must attach thread to the runtime here
-	if (jnienv_register_jni_natives != nullptr) {
-		jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
-	}
-
-	env->ReleaseStringChars (methods, methods_ptr);
-	env->ReleaseStringChars (managedType, managedType_ptr);
-}
-
-void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
-{
-	// In the trimmable typemap path, registerNatives is handled entirely in managed code
-	// via a dynamically registered JNI native method. This C++ stub exists only as a
-	// fallback for the legacy code path (which doesn't use registerNatives).
 }
 
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint

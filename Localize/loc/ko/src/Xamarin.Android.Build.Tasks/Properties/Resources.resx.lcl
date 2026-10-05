@@ -768,24 +768,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1029" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the 'RunAOTCompilation' MSBuild property instead. CoreCLR and NativeAOT do not use this property.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['AotAssemblies' MSBuild 속성은 더 이상 사용되지 않습니다. 제거하세요. Mono를 사용하는 지원 대상 .NET 10 이하 프로젝트에서는 대신 'RunAOTCompilation' MSBuild 속성을 사용하세요. CoreCLR 및 NativeAOT에서는 이 속성을 사용하지 않습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1030" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['RunAOTCompilation' MSBuild 속성은 트리밍이 활성화된 경우에만 지원됩니다. 텍스트 편집기에서 프로젝트 파일을 편집하여 이 빌드 구성에 대해 'PublishTrimmed'를 'true'로 설정합니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1034" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.]]></Val>
@@ -797,12 +779,12 @@
       </Item>
       <Item ItemId=";XA1035" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.]]></Val>
+          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. CoreCLR and NativeAOT do not use Mono's mkbundle.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['BundleAssemblies' 속성은 더 이상 사용되지 않으며 빌드에 영향을 주지 않습니다. 제거하세요. 지원되는 .NET 10 이하 Mono 프로젝트의 경우 전자의 동작에 대해 'AndroidUseAssemblyStore'와 함께 'AndroidEnableAssemblyCompression'을 사용합니다. .NET 11 CoreCLR은 패키지된 어셈블리 저장소 동작을 제어하며 대체 설정이 필요하지 않습니다.]]></Val>
+            <Val><![CDATA['BundleAssemblies' 속성은 더 이상 사용되지 않으며 빌드에 영향을 주지 않습니다. 제거하세요. CoreCLR과 NativeAOT에서는 Mono의 mkbundle을 사용하지 않습니다.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.]]></Val>
+            <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -891,6 +873,15 @@
           <Prev Cat="Text">
             <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1044_RunAOTCompilationDisabled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The MSBuild property 'RunAOTCompilation' is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to 'false'. Remove the property. Starting with .NET 11, set 'PublishReadyToRun' to 'false' to disable ReadyToRun (R2R) AOT compilation.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[MSBuild 속성 'RunAOTCompilation'은 CoreCLR 런타임과 호환되지 않습니다. 이 속성이 'false'로 설정된 상태에서는 빌드를 계속할 수 없습니다. 속성을 제거합니다. .NET 11부터는 R2R(ReadyToRun) AOT 컴파일을 사용하지 않으려면 'PublishReadyToRun'을 'false'로 설정하세요.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1031,24 +1022,6 @@
           <Val><![CDATA[Assembly {0} does not exist.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[{0} 어셈블리가 없습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3004" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android NDK r10d는 버그가 있으며 호환되지 않는 x86_64 libm.so를 제공합니다. https://code.google.com/p/android/issues/detail?id=161422를 참조하세요.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3005" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[검색된 Android NDK 버전이 대상 LLVM 구성과 호환되지 않습니다. NDK r10d 이상으로 업그레이드하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1523,10 +1496,13 @@
       </Item>
       <Item ItemId=";XA4251" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
+          <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. Please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' 형식은 트리밍 가능한 형식 맵에서 지원되지 않는 [JniAddNativeMethodRegistrationAttribute]5D;을(를) 사용합니다. 이 문제를 해결하려면 트리밍 가능한 형식 맵을 대상으로 하지 마세요. 예를 들어 'llvm-ir' 형식 맵 구현으로 전환하면 됩니다. 또한 팀에서 지원 여부를 검토할 수 있도록 https://github.com/dotnet/android/issues에 이 시나리오를 보고해 주세요.]]></Val>
+            <Val><![CDATA['{0}' 형식은 트리밍 가능한 형식 맵에서 지원되지 않는 [JniAddNativeMethodRegistrationAttribute]5D; 사용합니다. 팀에서 지원 여부를 평가할 수 있도록 https://github.com/dotnet/android/issues에 이 시나리오를 보고하세요.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1664,6 +1640,15 @@
           <Val><![CDATA[Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[어셈블리 '{0}'의 런타임별 구현 '{1}' 및 '{2}'에서 Java 피어 콜백 메타데이터가 다릅니다. AndroidTypeMapImplementation=trimmable인 경우 모든 RuntimeIdentifiers는 동등한 콜백 메타데이터를 제공해야 합니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4267" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'llvm-ir' type map implementation is no longer supported. Remove the AndroidTypeMapImplementation property or set it to 'trimmable'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['llvm-ir' 형식 맵 구현은 더 이상 지원하지 않습니다. AndroidTypeMapImplementation 속성을 제거하거나 'trimmable'로 설정합니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

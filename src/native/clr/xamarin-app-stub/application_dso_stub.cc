@@ -1,40 +1,12 @@
 #include <cstdint>
 #include <stdlib.h>
 
+#include <managed-interface.hh>
 #include <xamarin-app.hh>
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
 // designer on desktop.
 const uint64_t format_tag = FORMAT_TAG;
-
-#if defined (DEBUG)
-static TypeMapEntry java_to_managed[] = {};
-static TypeMapEntry managed_to_java[] = {};
-
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
-const TypeMap type_map = {
-	.entry_count = 0,
-	.java_to_managed = java_to_managed,
-	.managed_to_java = managed_to_java,
-};
-
-const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
-const char type_map_assembly_names[] = {};
-const char type_map_managed_type_names[] = {};
-const char type_map_java_type_names[] = {};
-#else
-const uint32_t managed_to_java_map_module_count = 0;
-const uint32_t java_type_count = 0;
-const char java_type_names[] = {};
-const uint64_t java_type_names_size = 0;
-const char managed_type_names[] = {};
-const char managed_assembly_names[] = {};
-const TypeMapModule managed_to_java_map[] = {};
-const TypeMapModuleEntry modules_map_data[] = {};
-const TypeMapModuleEntry modules_duplicates_data[] = {};
-const TypeMapJava java_to_managed_map[] = {};
-const xamarin::android::hash_t java_to_managed_hashes[] = {};
-#endif
 
 uint32_t compressed_assembly_count = 0;
 CompressedAssemblyDescriptor compressed_assembly_descriptors[] = {};
@@ -47,8 +19,6 @@ uint8_t uncompressed_assemblies_data_buffer[] = {};
 //
 constexpr char android_package_name[] = "com.xamarin.test";
 const ApplicationConfig application_config = {
-	.jni_add_native_method_registration_attribute_present = false,
-	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
 	.number_of_runtime_properties = 3,
 	.package_naming_policy = 0,
@@ -58,11 +28,6 @@ const ApplicationConfig application_config = {
 	.bundled_assembly_name_width = 0,
 	.number_of_dso_cache_entries = 2,
 	.number_of_shared_libraries = 2,
-	.android_runtime_jnienv_class_token = 1,
-	.jnienv_initialize_method_token = 2,
-	.jnienv_registerjninatives_method_token = 3,
-	.jni_remapping_replacement_type_count = 2,
-	.jni_remapping_replacement_method_index_entry_count = 2,
 	.android_package_name = android_package_name,
 	.have_assembly_store = false,
 };
@@ -128,14 +93,6 @@ const uint dso_jni_preloads_idx[1] = {
 
 const char dso_names_data[] = {};
 
-//
-// Support for marshal methods
-//
-void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept
-{
-	// Dummy
-}
-
 static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 	{
 		.name = {
@@ -151,6 +108,7 @@ static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_one",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = false,
 		}
 	},
@@ -171,6 +129,7 @@ static const JniRemappingIndexMethodEntry some_java_type_two_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_two",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = true,
 		}
 	},
@@ -212,6 +171,17 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		},
 		.replacement = "another/replacement/java/type",
 	},
+};
+
+extern "C" const xamarin::android::JniRemappingData jni_remapping_data {
+	.type_replacements = jni_remapping_type_replacements,
+	.reverse_type_replacements = nullptr,
+	.method_replacement_index = jni_remapping_method_replacement_index,
+	.field_replacement_index = nullptr,
+	.type_replacement_count = 2,
+	.reverse_type_replacement_count = 0,
+	.method_replacement_index_count = 2,
+	.field_replacement_index_count = 0,
 };
 
 const char *init_runtime_property_names[] = {

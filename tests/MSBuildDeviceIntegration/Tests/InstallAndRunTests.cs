@@ -883,20 +883,10 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values] bool enableMarshalMethods, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (enableMarshalMethods && runtime == AndroidRuntime.CoreCLR) {
-				// This currently fails with the following exception:
-				//
-				// error XARMM7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
-				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Xamarin.Android.Tasks.MarshalMethodsAssemblyRewriter.Rewrite(Boolean brokenExceptionTransitions) in src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs:line 165
-				//  at Xamarin.Android.Tasks.RewriteMarshalMethods.RewriteMethods(NativeCodeGenState state, Boolean brokenExceptionTransitionsEnabled) in src/Xamarin.Android.Build.Tasks/Tasks/RewriteMarshalMethods.cs:line 160
-				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
@@ -923,7 +913,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				EnableMarshalMethods = enableMarshalMethods,
 			};
 			proj.SetRuntime (runtime);
 			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
