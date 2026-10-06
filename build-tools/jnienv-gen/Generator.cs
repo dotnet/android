@@ -83,7 +83,7 @@ namespace Xamarin.Android.JniEnv
 		{
 			if (useJavaInterop)
 				return;
-			o.WriteLine ("\t[StructLayout (LayoutKind.Sequential)]");
+			o.WriteLine ("\t[ExtendedLayout (ExtendedLayoutKind.CStruct)]");
 			o.WriteLine ("\tpartial struct JniNativeInterfaceStruct {");
 			o.WriteLine ();
 
@@ -681,4 +681,3 @@ namespace Xamarin.Android.JniEnv
 		CanBeNull = 2,
 	}
 }
-
