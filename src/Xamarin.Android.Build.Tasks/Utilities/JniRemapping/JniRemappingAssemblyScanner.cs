@@ -13,6 +13,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 {
 	/// <summary>
 	/// Reads linked managed metadata to identify JNI mappings that still have managed consumers.
+	/// TypeMap attributes retain class identity, not members lacking surviving JNI metadata.
 	/// This scanner never modifies or reconstructs the input assembly.
 	/// </summary>
 	static class JniRemappingAssemblyScanner
@@ -126,7 +127,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					throw new BadImageFormatException ($"Invalid TypeMap class name '{key}'.");
 				}
 				if (className != null) {
-					RecordAllMappings (mapping, className);
+					mapping.TryGetRenamedClass (className, out _);
 				}
 			}
 		}
@@ -242,28 +243,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			var assembly = reader.GetAssemblyReference ((AssemblyReferenceHandle) type.ResolutionScope);
 			string assemblyName = reader.GetString (assembly.Name);
 			return assemblyName == expectedAssembly || assemblyName == "System.Private.CoreLib";
-		}
-
-		static void RecordAllMappings (R8Mapping mapping, string ownerJniName)
-		{
-			mapping.TryGetRenamedClass (ownerJniName, out _);
-			foreach (R8ClassMapping type in mapping.EnumerateClassMappings ()) {
-				if (type.OriginalJniName != ownerJniName) {
-					continue;
-				}
-				foreach (R8FieldMapping field in type.Fields) {
-					mapping.RecordFieldAccess (ownerJniName, field.OriginalName);
-				}
-				foreach (R8MethodMapping method in type.Methods) {
-					mapping.TryGetRenamedMethod (
-						ownerJniName,
-						method.OriginalName,
-						method.JavaParameterTypes,
-						method.JavaReturnType,
-						out _);
-				}
-				return;
-			}
 		}
 
 		static void ScanMethod (MetadataReader reader, R8Mapping mapping, TaskLoggingHelper log,
