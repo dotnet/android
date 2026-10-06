@@ -144,7 +144,15 @@ namespace Java.Interop
 		void IJavaPeerable.Finalized ()
 		{
 			managedPeerState    |= Disposed;
-			Dispose (disposing: false);
+			try {
+				Dispose (disposing: false);
+			} finally {
+				// The value manager has detached bridge contexts and cleared the
+				// reference before this callback. Preserve any reattached reference.
+				if (!PeerReference.IsValid) {
+					Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+				}
+			}
 		}
 
 		void IJavaPeerable.SetJniIdentityHashCode (int value)
