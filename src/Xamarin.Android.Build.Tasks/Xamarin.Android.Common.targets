@@ -1899,6 +1899,7 @@ because xbuild doesn't support framework reference assemblies.
   <CollectCompressedAssemblyInfo
       MSBuildRuntime="NET"
       ResolvedAssemblies="@(_AndroidAssemblyCompressionInputs)"
+      PackagedAssemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
       SupportedAbis="@(_BuildTargetAbis)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"

@@ -59,6 +59,19 @@ public class CompressionMetadataTests : BaseTest
 		AssertCompressedAssembly (collect.AssembliesToCompressOutput [1], 17);
 		CollectionAssert.AreEqual (previousOutput, File.ReadAllBytes (lastOutput));
 		Assert.AreEqual (previousTimestamp, File.GetLastWriteTimeUtc (lastOutput));
+
+		// A composite ReadyToRun image is generated after trimming, not in the input closure.
+		var composite = CreateAssembly ("Sample.r2r.dll", abi);
+		engine = new MockBuildEngine (TestContext.Out);
+		Assert.IsTrue (Register (engine, project, assemblies, [abi], [assemblies [1], assemblies [17], composite]));
+		collect = Collect (engine, project, [assemblies [1], assemblies [17], composite], [abi]);
+		compress.BuildEngine = engine;
+		compress.AssembliesToCompress = collect.AssembliesToCompressOutput;
+		Assert.IsTrue (compress.Execute ());
+		Assert.AreEqual (3, collect.AssembliesToCompressOutput.Length, "The generated composite image must not be silently packaged uncompressed.");
+		AssertCompressedAssembly (collect.AssembliesToCompressOutput [2], 18);
+		CollectionAssert.AreEqual (previousOutput, File.ReadAllBytes (lastOutput));
+		Assert.AreEqual (previousTimestamp, File.GetLastWriteTimeUtc (lastOutput));
 	}
 
 	[Test]
@@ -104,11 +117,12 @@ public class CompressionMetadataTests : BaseTest
 		return item;
 	}
 
-	static bool Register (MockBuildEngine engine, string project, ITaskItem [] assemblies, string [] abis)
+	static bool Register (MockBuildEngine engine, string project, ITaskItem [] assemblies, string [] abis, ITaskItem []? packagedAssemblies = null)
 	{
 		var task = new CollectCompressedAssemblyInfo {
 			BuildEngine = engine,
 			ResolvedAssemblies = assemblies,
+			PackagedAssemblies = packagedAssemblies ?? [],
 			SupportedAbis = abis,
 			ProjectFullPath = project,
 			EnableCompression = true,

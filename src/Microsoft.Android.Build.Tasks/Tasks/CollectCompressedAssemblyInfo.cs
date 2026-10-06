@@ -18,6 +18,8 @@ public class CollectCompressedAssemblyInfo : AndroidTask
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
+	public ITaskItem [] PackagedAssemblies { get; set; } = [];
+
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
@@ -42,6 +44,23 @@ public class CollectCompressedAssemblyInfo : AndroidTask
 			validate: true,
 			shouldSkip: assembly => bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool skip) && skip
 		);
+		var packagedAssemblies = MonoAndroidHelper.GetPerArchAssemblies (
+			PackagedAssemblies,
+			SupportedAbis,
+			validate: true,
+			shouldSkip: assembly => bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool skip) && skip
+		);
+		// Crossgen2 can add a composite image which has no pre-trimming input assembly.
+		// Append these generated identities without changing any pre-trimming indices.
+		foreach (var arch in packagedAssemblies) {
+			if (!perArchAssemblies.TryGetValue (arch.Key, out var assemblies)) {
+				assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+				perArchAssemblies.Add (arch.Key, assemblies);
+			}
+			foreach (var assembly in arch.Value) {
+				assemblies.TryAdd (assembly.Key, assembly.Value);
+			}
+		}
 		var archAssemblies = new Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> ();
 
 		foreach (var kvpPerArch in perArchAssemblies) {
