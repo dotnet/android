@@ -185,9 +185,7 @@ namespace Java.InteropTests
 			var r   = new JniObjectReference ();
 			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.CopyAndDispose));
 
-#if __ANDROID__
 			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
-#endif  // __ANDROID__
 		}
 
 		[Test]
