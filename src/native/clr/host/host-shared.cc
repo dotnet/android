@@ -33,16 +33,12 @@ void HostCommon::init_logging_categories () noexcept
 			log_categories |= LOG_ASSEMBLY;
 		} else if (param == "default") {
 			log_categories |= LOG_DEFAULT;
-		} else if (param == "debugger") {
-			log_categories |= LOG_DEBUGGER;
 		} else if (param == "gc") {
 			log_categories |= LOG_GC;
 		} else if (param == "timing") {
 			log_categories |= LOG_TIMING;
 		} else if (param == "network") {
 			log_categories |= LOG_NET;
-		} else if (param == "netlink") {
-			log_categories |= LOG_NETLINK;
 		}
 
 		if (separator == std::string_view::npos) {
