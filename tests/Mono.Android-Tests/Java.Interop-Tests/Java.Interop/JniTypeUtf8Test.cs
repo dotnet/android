@@ -72,11 +72,7 @@ namespace Java.InteropTests
 		[Test]
 		public void FindClass_Utf8_ThrowsOnNotFound ()
 		{
-#if __ANDROID__
 			Assert.Throws<Java.Lang.ClassNotFoundException> (() => JniEnvironment.Types.FindClass ("does/not/Exist"u8));
-#else   // __ANDROID__
-			Assert.Throws<JavaException> (() => JniEnvironment.Types.FindClass ("does/not/Exist"u8));
-#endif  // __ANDROID__
 		}
 
 		[Test]
@@ -250,11 +246,7 @@ namespace Java.InteropTests
 		public void InvalidSignature_Utf8_ThrowsJniException ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object"u8)) {
-#if __ANDROID__
 				Assert.Throws<Java.Lang.NoSuchMethodError> (() => Object_class.GetInstanceMethod ("bogus"u8, "(Z)V"u8));
-#else   // __ANDROID__
-				Assert.Throws<JavaException> (() => Object_class.GetInstanceMethod ("bogus"u8, "(Z)V"u8));
-#endif  // __ANDROID__
 			}
 		}
 	}

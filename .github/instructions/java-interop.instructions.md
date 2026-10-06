@@ -76,6 +76,11 @@ Java-specific configuration:
 - `$(JAVA_HOME)` for Java tooling.
 - `$(JdkJvmPath)` in `Configuration.Override.props` for JVM library location.
 
+Core JNI tests and Java fixtures live in
+`tests/Mono.Android-Tests/Java.Interop-Tests/` and run on Android with
+`Mono.Android.NET-Tests.csproj`. Tooling tests remain under
+`external/Java.Interop/tests/`; there is no standalone core host-JVM harness.
+
 ## Reference material
 
 - [JNI Specification](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)

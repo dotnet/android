@@ -42,7 +42,8 @@ The following **make**(1) variables may be specified:
 
         make run-tests TESTS=bin/Debug/generator-Tests.dll
 
-    Core JNI interop tests run on Android through
+    Core JNI interop sources and Java fixtures live in
+    `tests/Mono.Android-Tests/Java.Interop-Tests/` and run on Android through
     `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj`
     in the enclosing dotnet/android repository.
 
