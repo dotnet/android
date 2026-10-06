@@ -53,7 +53,6 @@
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RegisterNativesTestType.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\SelfRegistration.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\TestType.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\TransferFailureThrowable.java" />
   </ItemGroup>
 
   <Import Project="Java.Interop-Tests.targets" />

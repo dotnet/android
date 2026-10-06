@@ -55,14 +55,6 @@ namespace Java.Interop {
 
 	public class TestJVM : JniRuntime {
 
-		public static event Action<JniObjectReference>? ReferenceDeleted;
-
-		internal static void OnReferenceDeleted (JniObjectReference reference)
-		{
-			if (reference.IsValid)
-				ReferenceDeleted?.Invoke (reference);
-		}
-
 		NativeLibraryJvmLibraryHandler? LibraryHandler;
 
 #if !__ANDROID__
@@ -328,18 +320,9 @@ namespace Java.Interop {
 
 		public override void DeleteGlobalReference (ref JniObjectReference reference)
 		{
-			var deleted = reference;
 			if (reference.IsValid)
 				Interlocked.Decrement (ref grefCount);
 			base.DeleteGlobalReference (ref reference);
-			TestJVM.OnReferenceDeleted (deleted);
-		}
-
-		public override void DeleteLocalReference (ref JniObjectReference reference, ref int localReferenceCount)
-		{
-			var deleted = reference;
-			base.DeleteLocalReference (ref reference, ref localReferenceCount);
-			TestJVM.OnReferenceDeleted (deleted);
 		}
 
 		public override JniObjectReference CreateWeakGlobalReference (JniObjectReference reference)
