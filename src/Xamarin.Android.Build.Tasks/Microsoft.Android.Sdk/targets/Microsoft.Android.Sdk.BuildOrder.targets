@@ -57,6 +57,7 @@ properties that determine build ordering.
       _PrepareAssemblies;
       _CompileDex;
       $(_AfterCompileDex);
+      _AndroidCollectJniRemappingAssets;
       _AddFilesToFileWrites;
       $(IncrementalCleanDependsOn);
     </IncrementalCleanDependsOn>

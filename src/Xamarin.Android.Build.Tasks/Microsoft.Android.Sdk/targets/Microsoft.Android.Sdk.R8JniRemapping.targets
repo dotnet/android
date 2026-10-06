@@ -118,7 +118,7 @@
   <Target Name="_AndroidGenerateJniRemappingAsset"
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' or '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
       DependsOnTargets="_AndroidGenerateR8JniRemapping;_AndroidGenerateJniRemappingAssetInputs"
-      Inputs="$(_AndroidJniRemappingInputXml);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Inputs="$(_AndroidJniRemappingInputXml);@(_AndroidMSBuildAllProjects);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
       Outputs="$(_AndroidJniRemappingAssetBin)">
     <GenerateJniRemappingAsset
         MSBuildRuntime="NET"

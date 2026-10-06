@@ -33,11 +33,20 @@ public class GenerateJniRemappingAsset : AndroidTask
 			string? directory = Path.GetDirectoryName (OutputFile);
 			if (!directory.IsNullOrEmpty ())
 				Directory.CreateDirectory (directory);
-			File.WriteAllBytes (OutputFile, data);
+			string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+			try {
+				WriteOutputFile (temporaryOutputFile, data);
+				File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+			} finally {
+				File.Delete (temporaryOutputFile);
+			}
 		} catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException || ex is XmlException ||
 				ex is EncoderFallbackException || ex is OverflowException || ex is ArgumentException || ex is NotSupportedException) {
 			Log.LogCodedError ("XA4331", Properties.Resources.XA4331, RemappingXmlFilePath ?? "", OutputFile, ex.Message);
 		}
 		return !Log.HasLoggedErrors;
 	}
+
+	protected virtual void WriteOutputFile (string outputFile, byte [] data)
+		=> File.WriteAllBytes (outputFile, data);
 }

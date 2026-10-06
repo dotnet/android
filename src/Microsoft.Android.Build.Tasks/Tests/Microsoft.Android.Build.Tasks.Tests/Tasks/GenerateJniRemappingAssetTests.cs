@@ -214,4 +214,41 @@ public class GenerateJniRemappingAssetTests : BaseTest
 		Assert.IsTrue (errors.Any (error => error.Code == "XA4331"));
 		FileAssert.DoesNotExist (task.OutputFile);
 	}
+
+	sealed class FailingWriteTask : GenerateJniRemappingAsset
+	{
+		protected override void WriteOutputFile (string outputFile, byte [] data)
+		{
+			File.WriteAllBytes (outputFile, data.AsSpan (0, 8).ToArray ());
+			throw new IOException ("Simulated interrupted write.");
+		}
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	public void FailedWritePreservesOutputAndRetryProducesValidAsset (bool existingOutput)
+	{
+		byte []? original = existingOutput ? Generate (null) : null;
+		var retry = CreateTask ("""<replacements><replace-type from="a/B" to="x/Y" /></replacements>""");
+		var timestamp = File.GetLastWriteTimeUtc (retry.OutputFile);
+		var failing = new FailingWriteTask {
+			BuildEngine = retry.BuildEngine,
+			RemappingXmlFilePath = retry.RemappingXmlFilePath,
+			OutputFile = retry.OutputFile,
+		};
+		Assert.IsFalse (failing.Execute ());
+		Assert.IsTrue (errors.Any (error => error.Code == "XA4331"));
+		Assert.IsEmpty (Directory.GetFiles (directory, "*.tmp"));
+		if (original is not null) {
+			CollectionAssert.AreEqual (original, File.ReadAllBytes (retry.OutputFile));
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (retry.OutputFile));
+		} else {
+			FileAssert.DoesNotExist (retry.OutputFile);
+		}
+		errors.Clear ();
+		Assert.IsTrue (retry.Execute ());
+		var asset = new JniRemappingAsset (File.ReadAllBytes (retry.OutputFile));
+		Assert.AreEqual ("x/Y", asset.ReadString (asset.FindReplacementType ("a/B")
+			?? throw new AssertionException ("Retried asset lost its replacement.")));
+	}
 }

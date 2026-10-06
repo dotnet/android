@@ -195,6 +195,13 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var entry in objects) {
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must not recompile ILC.");
 			}
+			var remappingFiles = Directory.GetFiles (intermediate, "r8-jni-*.xml", SearchOption.AllDirectories)
+				.Concat (Directory.GetFiles (intermediate, "jni-remap.bin", SearchOption.AllDirectories)).ToArray ();
+			Assert.IsNotEmpty (remappingFiles, "The fresh R8 build must produce remapping outputs.");
+			Assert.IsTrue (builder.Clean (proj));
+			foreach (var file in remappingFiles) {
+				FileAssert.DoesNotExist (file, "Clean must remove every runtime's late remapping output.");
+			}
 		}
 	}
 }

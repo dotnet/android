@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 using Android.Runtime;
@@ -16,6 +17,27 @@ namespace Java.InteropTests
 		public void RuntimeFeatureIsEnabledForRemappingInputs ()
 		{
 			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.JniRemapping);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void MalformedAssetIsRejectedEvenWhenLookupsAreDisabled (bool unsupportedVersion)
+		{
+			var bytes = new byte [unsupportedVersion ? 64 : 8];
+			if (unsupportedVersion) {
+				bytes [0] = (byte)'X';
+				bytes [1] = (byte)'A';
+				bytes [2] = (byte)'J';
+				bytes [3] = (byte)'R';
+				bytes [4] = 2;
+			}
+			var handle = GCHandle.Alloc (bytes, GCHandleType.Pinned);
+			try {
+				Assert.Throws<InvalidDataException> (() => Microsoft.Android.Runtime.JniRemappingLookup.Initialize (
+					handle.AddrOfPinnedObject (), (uint)bytes.Length, enableLookups: false));
+			} finally {
+				handle.Free ();
+			}
 		}
 
 		[TestCase ("net/dot/android/remap/AsciiFirst", "net/dot/android/remap/TargetFirst")]

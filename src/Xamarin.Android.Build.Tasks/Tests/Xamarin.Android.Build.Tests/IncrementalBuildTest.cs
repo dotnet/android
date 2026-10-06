@@ -343,6 +343,10 @@ namespace Xamarin.Android.Build.Tests
 					Assert.AreEqual (nativeFile.Value, File.GetLastWriteTimeUtc (nativeFile.Key), $"An XML mapping change must not rebuild native code: {nativeFile.Key}");
 				}
 				AssertJniRemappingAsset (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				proj.OtherBuildItems.Clear ();
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Removing the last mapping must rebuild the asset.");
+				AssertJniRemappingAsset (proj, b, expectedTypeCount: 0, expectedMethodCount: 0);
+				Assert.AreEqual (64, new FileInfo (assetPath).Length, "The replacement must be a valid empty asset.");
 				Assert.IsTrue (b.Clean (proj), "Clean failed");
 				FileAssert.DoesNotExist (assetPath, "Clean must remove generated binary assets.");
 			}

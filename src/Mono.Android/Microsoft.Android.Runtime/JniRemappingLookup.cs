@@ -32,16 +32,19 @@ static class JniRemappingLookup
 	static JniRemappingAsset? managedAsset;
 	static GCHandle pinnedAsset;
 
-	internal static unsafe void Initialize (IntPtr data, uint length)
+	internal static unsafe void Initialize (IntPtr data, uint length, bool enableLookups)
 	{
 		if (data == IntPtr.Zero || length == 0 || length > int.MaxValue)
 			throw new InvalidDataException ("JNI remapping asset data is missing or has an invalid length.");
+
+		var parsed = new JniRemappingAsset (new ReadOnlySpan<byte> ((void*)data, (int)length));
+		if (!enableLookups)
+			return;
 
 		lock (initializationLock) {
 			if (managedAsset is not null)
 				throw new InvalidOperationException ("JNI remapping asset has already been initialized.");
 
-			var parsed = new JniRemappingAsset (new ReadOnlySpan<byte> ((void*)data, (int)length));
 			// Java.Interop can retain these UTF-8 pointers for the entire runtime lifetime.
 			pinnedAsset = parsed.Pin ();
 			Volatile.Write (ref managedAsset, parsed);
