@@ -19,6 +19,13 @@ namespace {
 	auto read_compressed_header (const uint8_t *data, uint32_t size, CompressedAssemblyHeader &header) noexcept -> bool
 	{
 		if (size < sizeof (header)) {
+			uint32_t magic = 0;
+			if (size >= sizeof (magic)) {
+				std::memcpy (&magic, data, sizeof (magic));
+			}
+			if (magic == COMPRESSED_DATA_MAGIC) [[unlikely]] {
+				Helpers::abort_application (LOG_ASSEMBLY, "Incomplete compressed assembly header");
+			}
 			return false;
 		}
 
@@ -323,6 +330,9 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const cha
 
 		// Populate pointers during configuration, before probes can run concurrently.
 		AssemblyStoreSingleAssemblyRuntimeData &runtime = runtime_assemblies[entry.mapping_index];
+		if (runtime.descriptor != nullptr) [[unlikely]] {
+			Helpers::abort_application (LOG_ASSEMBLY, "Duplicate assembly store runtime mapping index");
+		}
 		runtime.image_data = assembly_store.data_start + entry.data_offset;
 		runtime.descriptor = &entry;
 		if (entry.debug_data_offset != 0) {

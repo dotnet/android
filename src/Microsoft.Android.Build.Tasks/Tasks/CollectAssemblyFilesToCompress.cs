@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -83,6 +84,10 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 				}
 
 				var compressed_assembly = AssemblyCompression.GetCompressedAssemblyOutputPath (asm, AssemblyCompressionDirectory);
+				if (File.Exists (compressed_assembly) && !AssemblyCompressor.HasDescriptorIndex (compressed_assembly, descriptor_index)) {
+					Log.LogDebugMessage ($"Discarding '{compressed_assembly}' because its compression descriptor index changed.");
+					File.Delete (compressed_assembly);
+				}
 
 				assemblies_to_compress.Add (CreateAssemblyToCompress (asm.ItemSpec, compressed_assembly, descriptor_index));
 

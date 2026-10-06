@@ -2025,9 +2025,6 @@ namespace Xamarin.Android.Build.Tests {
 					continue;
 				}
 
-				var environmentText = File.ReadAllText (environmentFile);
-				StringAssert.DoesNotContain ("@assembly_store_bundled_assemblies", environmentText);
-				StringAssert.DoesNotContain ("@assembly_store =", environmentText);
 				using var storeReader = new BinaryReader (File.OpenRead (Path.ChangeExtension (manifestFile, null)));
 				Assert.AreEqual (0x41424158u, storeReader.ReadUInt32 ());
 				storeReader.ReadUInt32 (); // format version

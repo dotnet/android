@@ -21,6 +21,8 @@ namespace xamarin::android {
 		// The XABA store is trusted build-generated data; no external payload length is available.
 		// `store_path` is used only in diagnostic messages and may be `nullptr` - every use of it
 		// goes through `optional_string ()`.
+		// Configure before assembly probes run. Sequential reconfiguration retains previously
+		// returned image buffers for the process lifetime required by CoreCLR.
 		static void configure_from_payload (const void *payload_start, const char *store_path) noexcept;
 
 	private:

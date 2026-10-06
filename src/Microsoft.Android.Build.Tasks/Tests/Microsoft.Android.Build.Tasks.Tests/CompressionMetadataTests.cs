@@ -17,23 +17,18 @@ public class CompressionMetadataTests : BaseTest
 {
 	string TestDirectory => Path.Combine (Root, "temp", TestName);
 
-	[TestCase ("armeabi-v7a")]
-	[TestCase ("arm64-v8a")]
-	[TestCase ("x86_64")]
-	public void TrimmingRetainsSparseIndicesAndCompressedFiles (string abi)
+	[Test]
+	public void TrimmingRetainsSparseIndicesAndCompressedFiles ()
 	{
-		var assemblies = new [] {
-			CreateAssembly ("First.dll", abi),
-			CreateAssembly ("Kept.dll", abi),
-			CreateAssembly ("Removed.dll", abi),
-			CreateAssembly ("Last.dll", abi),
-		};
+		const string abi = "arm64-v8a";
+		var assemblies = Enumerable.Range (0, 18)
+			.Select (index => CreateAssembly ($"Assembly{index}.dll", abi))
+			.ToArray ();
 		string project = Path.Combine (TestDirectory, "Sample.csproj");
 
 		var engine = new MockBuildEngine (TestContext.Out);
 		Assert.IsTrue (Register (engine, project, assemblies, [abi]));
-		var collect = Collect (engine, project, [assemblies [1], assemblies [3]], [abi]);
-		CollectionAssert.AreEqual (new [] { "1", "3" }, collect.AssembliesToCompressOutput.Select (item => item.GetMetadata ("DescriptorIndex")));
+		var collect = Collect (engine, project, [assemblies [0], assemblies [17]], [abi]);
 
 		var compress = new CompressAssemblies {
 			BuildEngine = engine,
@@ -41,28 +36,27 @@ public class CompressionMetadataTests : BaseTest
 		};
 		Assert.IsTrue (compress.Execute ());
 		Assert.IsEmpty (compress.FailedToCompressAssembliesOutput);
-		AssertCompressedAssembly (collect.AssembliesToCompressOutput [0], 1);
-		AssertCompressedAssembly (collect.AssembliesToCompressOutput [1], 3);
+		AssertCompressedAssembly (collect.AssembliesToCompressOutput [0], 0);
+		AssertCompressedAssembly (collect.AssembliesToCompressOutput [1], 17);
 
 		string lastOutput = collect.AssembliesToCompressOutput [1].GetMetadata ("DestinationPath");
 		byte [] previousOutput = File.ReadAllBytes (lastOutput);
 		DateTime previousTimestamp = File.GetLastWriteTimeUtc (lastOutput);
 
 		// A later build retains the same pre-trimming list, but a different subset survives.
-		// Last.dll must keep index 3 rather than being renumbered to 1 in the two-entry store.
+		// Assembly17.dll must keep index 17 rather than being renumbered in the two-entry store.
 		engine = new MockBuildEngine (TestContext.Out);
 		Assert.IsTrue (Register (engine, project, assemblies, [abi]));
-		collect = Collect (engine, project, [assemblies [0], assemblies [3]], [abi]);
-		CollectionAssert.AreEqual (new [] { "0", "3" }, collect.AssembliesToCompressOutput.Select (item => item.GetMetadata ("DescriptorIndex")));
+		collect = Collect (engine, project, [assemblies [1], assemblies [17]], [abi]);
 		Assert.AreEqual (lastOutput, collect.AssembliesToCompressOutput [1].GetMetadata ("DestinationPath"));
 
 		compress = new CompressAssemblies {
 			BuildEngine = engine,
-			AssembliesToCompress = [collect.AssembliesToCompressOutput [0]],
+			AssembliesToCompress = collect.AssembliesToCompressOutput,
 		};
 		Assert.IsTrue (compress.Execute ());
-		AssertCompressedAssembly (collect.AssembliesToCompressOutput [0], 0);
-		AssertCompressedAssembly (collect.AssembliesToCompressOutput [1], 3);
+		AssertCompressedAssembly (collect.AssembliesToCompressOutput [0], 1);
+		AssertCompressedAssembly (collect.AssembliesToCompressOutput [1], 17);
 		CollectionAssert.AreEqual (previousOutput, File.ReadAllBytes (lastOutput));
 		Assert.AreEqual (previousTimestamp, File.GetLastWriteTimeUtc (lastOutput));
 	}

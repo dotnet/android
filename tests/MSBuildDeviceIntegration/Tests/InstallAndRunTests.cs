@@ -95,6 +95,93 @@ namespace Xamarin.Android.Build.Tests
 			StartActivityAndAssert (proj);
 		}
 
+		[Test]
+		public void CoreCLRAssemblyStoreConcurrentLoads ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			const string success = "ASSEMBLY_STORE_CONCURRENT_LOADS_COMPLETED=16";
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "storeconcurrent")) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
+
+			foreach (string name in new [] { "AssemblyStoreDeferredOne", "AssemblyStoreDeferredTwo" }) {
+				var library = new XamarinAndroidLibraryProject {
+					IsRelease = true,
+					ProjectName = name,
+				};
+				library.AndroidResources.Clear ();
+				library.SetProperty ("AndroidGenerateResourceDesigner", "false");
+				library.Sources.Add (new BuildItem.Source ("LoadProbe.cs") {
+					TextContent = () => "public class LoadProbe { public static int Value => 17; }",
+				});
+				proj.AddReference (library);
+				proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", name));
+				using var libraryBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, name));
+				Assert.IsTrue (libraryBuilder.Build (library), $"{name} should build.");
+			}
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				var names = new [] { "AssemblyStoreDeferredOne", "AssemblyStoreDeferredTwo" };
+				foreach (string name in names) {
+					foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies ()) {
+						if (assembly.GetName ().Name == name) {
+							throw new System.InvalidOperationException ($"{name} was loaded before the concurrent first-load test.");
+						}
+					}
+				}
+				using var start = new System.Threading.ManualResetEventSlim (false);
+				var threads = new System.Threading.Thread [16];
+				var errors = new System.Exception? [threads.Length];
+				for (int i = 0; i < threads.Length; i++) {
+					int index = i;
+					threads [i] = new System.Threading.Thread (() => {
+						try {
+							start.Wait ();
+							string name = names [index % names.Length];
+							var assembly = System.Reflection.Assembly.Load (name);
+							if (assembly.GetName ().Name != name) {
+								throw new System.InvalidOperationException ($"Loaded the wrong assembly for {name}.");
+							}
+						} catch (System.Exception error) {
+							errors [index] = error;
+						}
+					});
+					threads [i].Start ();
+				}
+				start.Set ();
+				foreach (var thread in threads) {
+					thread.Join ();
+				}
+				foreach (var error in errors) {
+					if (error is not null) {
+						throw new System.AggregateException ("Concurrent assembly loading failed.", error);
+					}
+				}
+				Android.Util.Log.Info ("AssemblyStore", "ASSEMBLY_STORE_CONCURRENT_LOADS_COMPLETED=16");
+				""");
+
+			using var appBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName));
+			Assert.IsTrue (appBuilder.Install (proj), "The assembly-store app should install.");
+			StartActivityAndAssert (proj);
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => line.Contains (success, StringComparison.Ordinal),
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-store-logcat.log"),
+					ActivityStartTimeoutInSeconds),
+				"Concurrent first loads of compressed assemblies should complete.");
+		}
+
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
 		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)

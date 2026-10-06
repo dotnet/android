@@ -4,6 +4,7 @@ using System.Buffers;
 using System.IO;
 using System.IO.Compression;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.Android.Tasks;
@@ -36,6 +37,14 @@ static class AssemblyCompressor
 		}
 
 		return true;
+	}
+
+	public static bool HasDescriptorIndex (string compressedAssembly, uint descriptorIndex)
+	{
+		using var reader = new BinaryReader (File.OpenRead (compressedAssembly));
+		return reader.BaseStream.Length >= 3 * sizeof (uint) &&
+			reader.ReadUInt32 () == CompressedDataMagic &&
+			reader.ReadUInt32 () == descriptorIndex;
 	}
 
 	static CompressionResult Compress (string sourcePath, string outputFilePath, uint descriptorIndex, int compressionLevel)
@@ -78,13 +87,14 @@ static class AssemblyCompressor
 			if (!ZstandardEncoder.TryCompress (sourceBytes.AsSpan (0, bytesRead), destBytes, out int encodedLength, compressionLevel, 0))
 				return CompressionResult.EncodingFailed;
 
-			using (var fs = File.Open (outputFilePath, FileMode.Create, FileAccess.Write, FileShare.Read))
-			using (var bw = new BinaryWriter (fs)) {
+			using (var bw = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
 				bw.Write (CompressedDataMagic);         // magic
 				bw.Write (descriptorIndex);             // index into runtime array of descriptors
 				bw.Write (checked ((uint) fi.Length));  // file size before compression
 				bw.Write (destBytes, 0, encodedLength);
 				bw.Flush ();
+				bw.BaseStream.Position = 0;
+				Files.CopyIfStreamChanged (bw.BaseStream, outputFilePath);
 			}
 		} finally {
 			if (sourceBytes != null)

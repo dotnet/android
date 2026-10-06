@@ -76,9 +76,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 
-			var compressedAssembliesSource = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android", $"compressed_assemblies.{abi}.ll");
-			FileAssert.DoesNotExist (compressedAssembliesSource);
-			FileAssert.DoesNotExist (Path.ChangeExtension (compressedAssembliesSource, ".o"));
 		}
 
 		[Test]

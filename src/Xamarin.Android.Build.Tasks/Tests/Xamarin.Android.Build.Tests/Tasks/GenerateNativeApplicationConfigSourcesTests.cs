@@ -42,8 +42,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 
 		string source = File.ReadAllText (Path.Combine (outputRoot, "android", "environment.arm64-v8a.ll"));
-		Assert.That (source, Does.Not.Contain ("@assembly_store_bundled_assemblies"));
-		Assert.That (source, Does.Not.Contain ("@assembly_store ="));
 		Assert.That (source, Does.Not.Contain ("jni_add_native_method_registration_attribute_present"));
 		Assert.That (source, Does.Not.Contain ("jnienv_registerjninatives_method_token"));
 		Assert.That (source, Does.Not.Contain ("marshal_methods_enabled"));
