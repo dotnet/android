@@ -62,6 +62,7 @@ namespace Xamarin.Android.Net
 	/// if they use a certificate with a fully validated trust chain) unless you store the CA certificates from your Android system in <see cref="TrustedCerts"/> along with
 	/// the self-signed certificate(s).</para>
 	/// </remarks>
+	[Obsolete ("AndroidMessageHandler is obsolete. Use System.Net.Http.SocketsHttpHandler instead.")]
 	public class AndroidMessageHandler : HttpMessageHandler
 	{
 		sealed class RequestRedirectionState
