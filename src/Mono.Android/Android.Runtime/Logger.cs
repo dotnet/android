@@ -16,14 +16,6 @@ namespace Android.Runtime {
 			get {return (Categories & LogCategories.GC) != 0;}
 		}
 
-		internal static bool LogGlobalRef {
-			get {return (Categories & LogCategories.GlobalRef) != 0;}
-		}
-
-		internal static bool LogLocalRef {
-			get {return (Categories & LogCategories.LocalRef) != 0;}
-		}
-
 		internal static bool LogTiming {
 			get {return (Categories & LogCategories.Timing) != 0;}
 		}

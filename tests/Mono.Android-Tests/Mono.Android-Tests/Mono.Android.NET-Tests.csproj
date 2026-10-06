@@ -297,7 +297,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
     <AndroidInstrumentation>xamarin.android.runtimetests.TestInstrumentation</AndroidInstrumentation>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>

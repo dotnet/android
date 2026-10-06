@@ -294,7 +294,7 @@ directory.
 
 ## .NET for Android runtime events
 
-Runtime interop timing events use the `Microsoft.Android.Runtime` provider.
+Runtime interop timing and JNI reference events use the `Microsoft.Android.Runtime` provider.
 Optimized `Release` applications disable EventSource support by default so the
 provider implementation can be trimmed away. Enable EventSource support in the
 application project:
@@ -309,12 +309,15 @@ application project:
 collection with tools such as `dotnet-trace`. It enables the diagnostic
 transport.
 
-The runtime timing instrumentation defines the following events:
+The runtime instrumentation defines the following events:
 
 | Event IDs | Keyword | Area |
 |---|---|---|
 | 7-8 | `0x8` | GC bridge start/stop |
 | 9-10 | `0x4` | Trimmable type-map lookup start/stop |
+| 11-14, 18, 20 | `0x10` | Global and weak-global reference operations and diagnostics |
+| 15-17, 19 | `0x20` | Local reference operations and diagnostics |
+| 21 | `0x40` | Opt-in NativeAOT managed reference stacks |
 
 Collect both areas at informational level:
 
@@ -348,6 +351,91 @@ Stop event has no success or found payload, so the lookup result must be
 determined from the consuming runtime operation. Enablement is checked once
 when cache population begins and latched for exception-safe pairing, so a
 Start is followed by Stop even when the backend lookup throws.
+
+### JNI reference events
+
+Reference events require verbose level (`5`). They are independently selectable
+from timing events and do not require a separate Android reference-logging
+feature switch.
+
+```sh
+# Global and weak-global references only
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x10:5 -o references.nettrace
+# Include local references, which can produce substantially more data
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x30:5 -o references.nettrace
+```
+
+| ID | Event |
+|---|---|
+| 11 | `GlobalReferenceCreated` |
+| 12 | `GlobalReferenceDeleted` |
+| 13 | `WeakGlobalReferenceCreated` |
+| 14 | `WeakGlobalReferenceDeleted` |
+| 15 | `LocalReferenceCreated` |
+| 16 | `LocalReferenceDeleted` |
+| 17 | `LocalReferenceReleased` |
+| 18 | `GlobalReferenceDiagnostic` |
+| 19 | `LocalReferenceDiagnostic` |
+| 20 | `WeakGlobalReferenceCollected` |
+| 21 | `ReferenceStackTrace` |
+
+Global-reference operations carry `sourceHandle`, `handle`, `sourceType`,
+`referenceType`, `globalCount`, `weakCount`, `managedThreadId`, and
+`bridgeOperation`. Handles are unsigned 64-bit values on every ABI. Deletion
+uses `sourceHandle` for the deleted reference and a zero destination `handle`.
+Reference types are `0` (invalid), `1` (local), `2` (global), and `3` (weak-global).
+Bridge operations are `0` (ordinary operation), `1` (bridge initialization),
+`2` (global-to-weak), and `3` (weak-to-global).
+
+Local-reference operations carry `sourceHandle`, `handle`, `localCount`,
+`managedThreadId`, and `bridgeOperation`. `sourceHandle` is zero for a reference
+adopted from JNI and for deletion/release. `LocalReferenceReleased` transfers the
+handle out of managed ownership; it does **not** mean JNI deleted the reference.
+Local counts track the supplied JNI environment's managed reference accounting,
+not the entire process's JNI local-reference table.
+
+Diagnostic events retain Java.Interop's peer creation, disposal, finalization,
+identity, and type messages in a `message` payload. `WeakGlobalReferenceCollected`
+identifies a weak `handle` that could not be promoted after Java GC.
+
+Reference counters and GREF-pressure GC behavior remain active even when
+EventSource support is disabled. Event payloads are built only when their
+keyword and level are enabled. CoreCLR EventPipe supplies call stacks without
+the runtime formatting a `StackTrace` string for each reference.
+
+NativeAOT EventPipe reference traces do not currently contain call stacks.
+To collect managed stacks there, additionally enable keyword `0x40`:
+
+```sh
+# NativeAOT globals/weak-globals with managed stacks
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x50:5 -o references.nettrace
+# NativeAOT globals/weak-globals/locals with managed stacks
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x70:5 -o references.nettrace
+```
+
+`ReferenceStackTrace` carries `referenceEventId`, `handle`, `managedThreadId`,
+and `stackTrace`. It follows the corresponding reference operation on the same
+thread. This opt-in fallback allocates and formats a managed stack string;
+ordinary reference collection does not. The capture helper is omitted, but other
+runtime frames may appear depending on compiler inlining. Keyword `0x40` alone
+does not enable reference operations, and CoreCLR never emits this fallback event. NativeAOT
+applications must also retain standard `StackTraceSupport` (enabled by default)
+to obtain useful stacks.
+
+Keep the `.nettrace` file: Speedscope and the `dotnet-trace` Chromium conversion
+do not retain these event payloads. Inspect the events with
+[PerfView](https://github.com/microsoft/perfview) on Windows or a cross-platform
+analyzer using `Microsoft.Diagnostics.Tracing.TraceEvent`. A repository skill
+for schema-aware interpretation is planned in
+[#13000](https://github.com/dotnet/android/issues/13000); it is not yet available.
+
+Start collection before the relevant references are created, using
+`DiagnosticSuspend=true` for startup investigations. EventPipe buffers can
+overflow under heavy reference traffic; increase `--buffersize` or disable
+local events as necessary. Check the analyzer's event-loss diagnostics;
+missing pre-collection operations and an abrupt crash's final buffered events
+cannot be recovered. Counter values are
+concurrent snapshots, not a guarantee of a complete, globally ordered history.
 
 ## How to get GC memory dumps?
 

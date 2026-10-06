@@ -18,8 +18,8 @@ namespace {
 		Constants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
 		Constants::LOG_CATEGORY_NAME_NONE, // Reserved for the removed debugger logging bit.
 		Constants::LOG_CATEGORY_NAME_MONODROID_GC,
-		Constants::LOG_CATEGORY_NAME_MONODROID_GREF,
-		Constants::LOG_CATEGORY_NAME_MONODROID_LREF,
+		Constants::LOG_CATEGORY_NAME_NONE, // Reserved Java.Interop logging bit.
+		Constants::LOG_CATEGORY_NAME_NONE, // Reserved Java.Interop logging bit.
 		Constants::LOG_CATEGORY_NAME_MONODROID_TIMING,
 		Constants::LOG_CATEGORY_NAME_NONE, // Reserved for the removed bundle logging bit.
 		Constants::LOG_CATEGORY_NAME_MONODROID_NETWORK,
