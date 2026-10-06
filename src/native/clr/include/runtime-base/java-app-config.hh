@@ -33,7 +33,7 @@ namespace xamarin::android {
 		static auto system_properties () noexcept -> std::span<const Entry> { return { system_property_entries, system_property_count }; }
 		static auto libraries () noexcept -> std::span<Library> { return { native_libraries, native_library_count }; }
 		static auto runtime_property_names () noexcept -> const char** { return property_names; }
-		static auto runtime_property_values () noexcept -> char** { return property_values; }
+		static auto runtime_property_values (const char *host_contract, const char *runtime_identifier, const char *base_directory) noexcept -> const char**;
 		static auto runtime_property_count () noexcept -> int { return property_count; }
 		static auto lookup_system_property (const char *name, size_t &value_length) noexcept -> const char*;
 
@@ -51,7 +51,7 @@ namespace xamarin::android {
 		static inline Library *native_libraries = nullptr;
 		static inline size_t native_library_count = 0;
 		static inline const char **property_names = nullptr;
-		static inline char **property_values = nullptr;
+		static inline const char **property_values = nullptr;
 		static inline int property_count = 0;
 	};
 }

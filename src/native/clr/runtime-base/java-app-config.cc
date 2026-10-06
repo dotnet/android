@@ -129,7 +129,7 @@ void JavaAppConfig::initialize (JNIEnv *env) noexcept
 	}
 	property_count = static_cast<int>(count);
 	property_names = allocate_items<const char*> (count, "runtime property names");
-	property_values = allocate_items<char*> (count, "runtime property values");
+	property_values = allocate_items<const char*> (count, "runtime property values");
 	property_names[0] = "HOST_RUNTIME_CONTRACT";
 	property_names[1] = "RUNTIME_IDENTIFIER";
 	property_names[2] = "APP_CONTEXT_BASE_DIRECTORY";
@@ -151,6 +151,14 @@ void JavaAppConfig::initialize (JNIEnv *env) noexcept
 	std::free (layout.data ());
 	env->DeleteLocalRef (config);
 	initialized = true;
+}
+
+auto JavaAppConfig::runtime_property_values (const char *host_contract, const char *runtime_identifier, const char *base_directory) noexcept -> const char**
+{
+	property_values[0] = host_contract;
+	property_values[1] = runtime_identifier;
+	property_values[2] = base_directory;
+	return property_values;
 }
 
 auto JavaAppConfig::lookup_system_property (const char *name, size_t &value_length) noexcept -> const char*

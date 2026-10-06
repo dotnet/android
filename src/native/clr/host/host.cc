@@ -299,23 +299,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// We REALLY shouldn't be doing this
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
-	// These indices are load-bearing: the application build emits the property names in this
-	// exact order (see `JavaAppConfig::initialize`) so that we can fill in
-	// the values here without searching the names array.
-	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
-	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
-	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
-
-	char **property_values = JavaAppConfig::runtime_property_values ();
-	property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
-
-	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
-	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
-	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
-	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
-	property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
-
-	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
+	// `APP_CONTEXT_BASE_DIRECTORY` backs `AppContext.BaseDirectory`. Without it
 	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
 	// string for us since assemblies are read straight out of the APK. Point it at the application's
 	// files directory, the same value MonoVM has always used. `.NET` terminates the base directory
@@ -328,10 +312,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 	std::free (app_context_base_directory);
 	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
 	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
-	property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
-
 	const char **prop_names = JavaAppConfig::runtime_property_names ();
-	const char **prop_values = const_cast<const char**>(property_values);
+	// `hostfxr` normally supplies `RUNTIME_IDENTIFIER`, but we don't use `hostfxr`.
+	// The shared app runtimeconfig knows nothing about the ABI, so the per-ABI host
+	// supplies it here; otherwise `RuntimeInformation.RuntimeIdentifier` is "unknown".
+	const char **prop_values = JavaAppConfig::runtime_property_values (
+		host_contract_ptr_buffer.data (), Constants::runtime_identifier.data (), app_context_base_directory
+	);
 	int prop_count = JavaAppConfig::runtime_property_count ();
 
 	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
