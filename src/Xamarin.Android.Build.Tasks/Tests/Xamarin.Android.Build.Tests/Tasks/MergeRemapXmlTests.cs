@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,26 @@ namespace Xamarin.Android.Build.Tests.Tasks
 	[TestFixture]
 	public class MergeRemapXmlTests : BaseTest
 	{
+		[Test]
+		public void OutputFileWithoutDirectoryIsSupported ()
+		{
+			string output = "merge-remap-" + Guid.NewGuid ().ToString ("N") + ".xml";
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new MergeRemapXml {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				OutputFile = new TaskItem (output),
+			};
+			try {
+				Assert.IsTrue (task.Execute ());
+				var root = XDocument.Load (output).Root ?? throw new AssertionException ("Merged XML has no root.");
+				Assert.AreEqual ("replacements", root.Name.LocalName);
+				Assert.IsEmpty (root.Elements ());
+				Assert.IsEmpty (errors);
+			} finally {
+				File.Delete (output);
+			}
+		}
+
 		[TestCase ("mismatched-root")]
 		[TestCase ("unfinished-child")]
 		[TestCase ("trailing-root")]

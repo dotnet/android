@@ -25,7 +25,10 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile.ItemSpec));
+			string? directory = Path.GetDirectoryName (OutputFile.ItemSpec);
+			if (!directory.IsNullOrEmpty ()) {
+				Directory.CreateDirectory (directory);
+			}
 
 			var settings = new XmlWriterSettings () {
 				Encoding            = new UTF8Encoding (false),
