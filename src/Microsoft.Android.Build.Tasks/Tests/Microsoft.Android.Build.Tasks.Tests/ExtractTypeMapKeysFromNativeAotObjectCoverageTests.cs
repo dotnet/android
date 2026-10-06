@@ -165,6 +165,25 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual (12, task.RelocationEnd - task.RelocationStart);
 	}
 
+	[TestCase ("_ZTV31Mono_Android_0_Java_Lang_Object")]
+	[TestCase ("_ZTV32Mono_Android_10_Java_Lang_Object")]
+	[TestCase ("Compilation_123__ZTV31Mono_Android_0_Java_Lang_Object")]
+	[TestCase ("_ZTV39_Mono_Android_TypeMap_0___TypeMapAnchor")]
+	public void RecognizesDisambiguatedJavaGroups (string groupSymbol)
+	{
+		string path = WriteObject ("colliding-assemblies", NativeAotObjectTestFixture.CreateGroups (
+			["System.Collections.Generic.IDictionary`2[System.Char,System.Int32]", "foreign/LooksLikeJava"],
+			["test/Retained"]));
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path,
+			"_ZTV45Mono_Android_0_Android_Runtime_JavaDictionary", groupSymbol);
+
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/Retained\n", File.ReadAllText (task.OutputFile));
+	}
+
 	[TestCase ("aarch64", "R_AARCH64_PREL32", "SHT_RELA", ".rela.rodata")]
 	[TestCase ("arm", "R_ARM_REL32", "SHT_REL", ".rel.rodata")]
 	[TestCase ("x86_64", "R_X86_64_PC32", "SHT_RELA", ".rela.rodata")]
@@ -219,6 +238,10 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 	[TestCase ("_ZTV29Mono_Android_Java_Lang_ObjectExtra")]
 	[TestCase ("_ZTV30ThirdParty_TypeMap___TypeMapAnchor")]
 	[TestCase ("_ZTV30_Other_TypeMap___TypeMapAnchorExtra")]
+	[TestCase ("_ZTV31Mono_Android_x_Java_Lang_Object")]
+	[TestCase ("_ZTV32Mono_Android_00_Java_Lang_Object")]
+	[TestCase ("_ZTV45Mono_Android_0_Android_Runtime_JavaDictionary")]
+	[TestCase ("_ZTV39_Mono_Android_TypeMap_x___TypeMapAnchor")]
 	public void MissingRecognizedJavaGroupIsNotAnEmptySuccess (string groupSymbol)
 	{
 		string path = WriteObject ("foreign-only", NativeAotObjectTestFixture.CreateBlob ("test/LooksLikeJava"));

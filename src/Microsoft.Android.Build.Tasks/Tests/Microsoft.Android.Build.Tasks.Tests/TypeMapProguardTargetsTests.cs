@@ -106,11 +106,10 @@ public class TypeMapProguardTargetsTests : BaseTest
 		void AssertModernRules ()
 		{
 			Assert.AreEqual (TypeRules ("test.Live"), File.ReadAllText (rules));
-			Assert.AreEqual (MemberRules ("test.Live"),
-				File.ReadAllText (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
+			FileAssert.DoesNotExist (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg"));
 			var writes = File.ReadAllText (Path.Combine (directory, "writes.txt"));
 			StringAssert.Contains ("UseTypeMap=true", writes);
-			StringAssert.Contains ("Members=", writes);
+			StringAssert.DoesNotContain ("Members=", writes);
 		}
 	}
 
@@ -278,13 +277,14 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}
 	}
 
-	[TestCase ("NativeAOT", "true", "r8", "true", "true")]
-	[TestCase ("NativeAOT", "false", "r8", "true", "false")]
-	[TestCase ("NativeAOT", "", "r8", "true", "false")]
-	[TestCase ("NativeAOT", "true", "", "true", "false")]
-	[TestCase ("NativeAOT", "true", "r8", "false", "false")]
-	[TestCase ("CoreCLR", "true", "r8", "true", "false")]
-	public void NdkDependencyRequiresNativeObjectOptIn (string runtime, string enabled, string linkTool, string trimmed, string expected)
+	[TestCase ("NativeAOT", "true", "r8", "true", "", "true")]
+	[TestCase ("NativeAOT", "true", "r8", "true", "custom.cfg", "false")]
+	[TestCase ("NativeAOT", "false", "r8", "true", "", "false")]
+	[TestCase ("NativeAOT", "", "r8", "true", "", "false")]
+	[TestCase ("NativeAOT", "true", "", "true", "", "false")]
+	[TestCase ("NativeAOT", "true", "r8", "false", "", "false")]
+	[TestCase ("CoreCLR", "true", "r8", "true", "", "false")]
+	public void NdkDependencyRequiresNativeObjectOptIn (string runtime, string enabled, string linkTool, string trimmed, string proguardConfigFiles, string expected)
 	{
 		var common = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
 		XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
@@ -300,6 +300,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 				new XElement (ns + "_AndroidUseWorkloadNativeLinker", "true"),
 				new XElement (ns + "PublishAot", "true"),
 				new XElement (ns + "PublishTrimmed", trimmed),
+				new XElement (ns + "ProguardConfigFiles", proguardConfigFiles),
 				new XElement (ns + "AndroidLinkTool", linkTool)),
 			new XElement (ns + "Target", new XAttribute ("Name", "Build"),
 				new XElement (dependencyProperties),
@@ -393,6 +394,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 	[TestCase ("CoreCLR", "trimmable", "true", "r8", "true", true, "")]
 	[TestCase ("CoreCLR", "trimmable", "true", "r8", "true", false, "custom.cfg")]
 	[TestCase ("NativeAOT", "trimmable", "true", "r8", "false", false, "custom.cfg")]
+	[TestCase ("NativeAOT", "trimmable", "true", "r8", "true", false, "custom.cfg")]
 	public void InactivePathsNeedNoTypemapInputsOrModernTasks (
 		string runtime, string representation, string trimmed, string linkTool, string enabled, bool innerBuild, string proguardConfigFiles)
 	{

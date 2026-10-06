@@ -1646,8 +1646,7 @@ namespace UnamedProject
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
 
-				// Regression test: NativeAOT must pass its generated ACW keep rules in
-				// proguard_project_references.cfg to R8. Otherwise R8
+				// Regression test: NativeAOT must pass its generated ACW keep rules to R8. Otherwise R8
 				// tree-shakes the runtime ACW/JCW classes out of classes.dex and the app crashes at
 				// startup inside JavaInteropRuntime.init with a ClassNotFoundException for the
 				// UncaughtExceptionMarshaler Java Callable Wrapper. The JCW class name is CRC-hashed
