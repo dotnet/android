@@ -93,7 +93,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Package manager Java generation |
-| **CoreCLR bootstrap blob** | `--filter "FullyQualifiedName~GenerateJavaApplicationConfigTests\|FullyQualifiedName~CoreClrBootstrapBlobTests"` | UTF-8 blob generation and production JNI reader in a host JVM, plus Debug/Release D8/R8 bulk-array checks. Host cases run on macOS/Linux and require `JAVA_HOME` or `TEST_ANDROID_JDK_PATH`, C++23 `clang++` or `CXX`, Android SDK build-tools, and the built `java_runtime_clr.jar`; they do not start CoreCLR or an Android app. |
+| **CoreCLR bootstrap data** | `--filter "FullyQualifiedName~GenerateJavaApplicationConfigTests"` | Task-level UTF-8 blob/offset generation, ordering, escaping, chunk boundaries, preload policy and incremental source generation. |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
 | **ndk** | `--filter "FullyQualifiedName~NdkUtilTests"` | NDK utility tasks |
 
