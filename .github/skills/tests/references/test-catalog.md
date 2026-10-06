@@ -216,7 +216,7 @@ The object-extraction tests use synthetic metadata, so they need no NDK tools.
 The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
 because the UCO format marker is assembly-wide. The manifest-only Activity
 lives in the library assembly, which is not rooted wholesale by the test app.
-To run on-device tests with the trimmable typemap:
+To run the on-device typemap tests:
 
 ```bash
 ./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj

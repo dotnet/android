@@ -152,6 +152,7 @@
     <Compile Include="Java.Interop\TrimmableTypeMapDirectCallbackTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapExportTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
+    <Compile Include="Java.Interop\TransferredReferenceTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapTestHelpers.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />

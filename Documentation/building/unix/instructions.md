@@ -192,6 +192,66 @@ For example, to exclude tests that use the internet (`InetAccess`) category:
 
 To specify multiple categories, separate each category with a `:` character.
 
+### Isolated JNI reference leak checks
+
+Run `JniReferenceLeak` separately from unrelated tests: reference counts are
+process-wide. `JavaSideActivation` and its retained-GREF positive control in
+`Xamarin.Android.JcwGen-Tests` are explicit tests; the category filter selects
+them without adding them to ordinary full-suite runs.
+
+    $ ./dotnet-local.sh build -t:Install -c Debug \
+        -p:IncludeCategories=JniReferenceLeak -p:RuntimeIdentifier=android-arm64 \
+        -p:AdbTarget="-s emulator-PORT" \
+        tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+    $ (cd tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests && \
+        ../../../dotnet-local.sh test Xamarin.Android.JcwGen-Tests.csproj --device emulator-PORT --no-build -c Debug \
+            -p:IncludeCategories=JniReferenceLeak -p:RuntimeIdentifier=android-arm64 \
+            -p:AdbTarget="-s emulator-PORT" \
+            --report-trx --results-directory ../../../bin/TestDebug/JniReferenceLeakResults)
+
+Replace `emulator-PORT` with a dedicated device's serial. Use the same pattern
+with `Mono.Android.NET-Tests.csproj` from the examples above to run the string
+and UTF-8 `TryFindClass` leak checks and their retained-GREF control. These checks
+remain category-tagged, not explicit; the runtime test instrumentation excludes
+them unless `JniReferenceLeak` is the only included category.
+To run only the deterministic completion-protocol regressions on Android, use
+`IncludeCategories=JniReferenceLeakMeasurement` with `Mono.Android.NET-Tests.csproj`.
+When changing categories on a NativeAOT build, use `-t:Rebuild;Install` to refresh
+the embedded runtime configuration and APK. Verify the reported test count.
+If rebuilding removes a referenced project's NuGet assets, run
+`./dotnet-local.sh clean` first, then
+`./dotnet-local.sh build '-t:Build;Install'` so restore follows cleaning.
+
+On a configured host JVM build, run the matching controls, real leak checks,
+and deterministic completion-protocol regressions with:
+
+    $ ./dotnet-local.sh test external/Java.Interop/bin/TestDebug-net10.0/Java.Interop-Tests.dll \
+        --filter "TestCategory=JniReferenceLeak|FullyQualifiedName~JniReferenceLeakMeasurementTests"
+
+Both baseline and measured samples wait for collection completion, not for the
+count to fall below a desired value. Android uses an unreachable peer cycle as
+a collection witness, a changed bridge-completion generation on CoreCLR/NativeAOT,
+and a stable snapshot with no transient weak globals. Host JVM tests do not
+require an Android bridge generation. Timeout diagnostics include strong/weak
+counts and generation; a timeout must not be mistaken for positive-control leak
+detection. Retaining one global per measured iteration must still fail with
+`Delta=100`.
+
+The witness publishes a finalization flag rather than inspecting a peer weak
+reference: CoreCLR/NativeAOT weak-reference reads can themselves wait for bridge
+completion. Managed GC/finalizer waits run off the timeout thread; JNI peer
+draining remains on the instrumentation thread.
+Successful sampling also requires the collection worker to finish. Timeout
+handling checks for a completed worker fault before reporting the timeout.
+If another collection is needed to finalize the witness, the previous bridge
+must complete first, and the next sample requires a generation newer than
+that new request. An additional unreachable cycle ensures the retry requests
+bridge work even if the original witness finalizes just before its GC.
+A timeout does not cancel an uninterruptible runtime
+GC/finalizer wait; it poisons the
+measurement helper for the rest of that process, preventing further batches or
+GC workers. Restart the test process instead of retrying in the same process.
+
 
 # How do I build `Mono.Android.dll` for a given API Level?
 
