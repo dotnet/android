@@ -147,11 +147,7 @@ namespace Java.Interop
 			try {
 				Dispose (disposing: false);
 			} finally {
-				// The value manager has detached bridge contexts and cleared the
-				// reference before this callback. Preserve any reattached reference.
-				if (!PeerReference.IsValid) {
-					Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
-				}
+				Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
 			}
 		}
 
