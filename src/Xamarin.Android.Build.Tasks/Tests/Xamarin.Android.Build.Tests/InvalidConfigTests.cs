@@ -105,7 +105,21 @@ namespace Xamarin.Android.Build.Tests
 			project.SetProperty ("AndroidLinkTool", "r8");
 			project.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
-			project.SetProperty (property, value);
+			if (property == "_AndroidRuntime") {
+				project.Imports.Add (new Import ("InvalidAndroidRuntime.targets") {
+					TextContent = () => $"""
+						<Project>
+						  <Target Name="_SetInvalidAndroidRuntimeForTest" BeforeTargets="_ValidateAndroidR8ObfuscationMode">
+						    <PropertyGroup>
+						      <_AndroidRuntime>{value}</_AndroidRuntime>
+						    </PropertyGroup>
+						  </Target>
+						</Project>
+						""",
+				});
+			} else {
+				project.SetProperty (property, value);
+			}
 			using var builder = CreateApkBuilder ();
 			builder.Target = "_ValidateAndroidR8ObfuscationMode";
 			builder.ThrowOnBuildFailure = false;

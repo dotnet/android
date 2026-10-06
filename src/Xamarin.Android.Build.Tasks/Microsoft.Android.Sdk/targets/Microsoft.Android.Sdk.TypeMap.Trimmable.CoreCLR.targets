@@ -159,10 +159,12 @@
     </ItemGroup>
   </Target>
 
+  <!-- Generate the R8 rules in the inner RID build before the outer R8 invocation.
+       The outer build reuses the final assemblies only for remapping metadata scans. -->
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
       DependsOnTargets="_AndroidInvalidateProguardConfigurationStamp"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
       Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration).stamp">
     <GenerateProguardConfiguration
@@ -176,7 +178,7 @@
   </Target>
 
   <Target Name="_AndroidPrepareR8JniRemappingAssemblies"
-      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       DependsOnTargets="_PrepareLinkedAssembliesForProguard">
     <ItemGroup>
       <_AndroidR8JniRemappingAssembly Remove="@(_AndroidR8JniRemappingAssembly)" />

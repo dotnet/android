@@ -8,8 +8,9 @@
          hook below replaces that full compile/link/publish step with the appropriate half. -->
     <_ComputeFilesToPublishDependsOn>$([MSBuild]::Unescape($(_ComputeFilesToPublishDependsOn.Replace('NativeCompile;', ''))))</_ComputeFilesToPublishDependsOn>
     <_AndroidRunNativeCompileDependsOn>_ComputeAssembliesToCompileToNative;IlcCompile</_AndroidRunNativeCompileDependsOn>
-    <!-- The second per-RID evaluation reconstructs native linker inputs, not ILC outputs. -->
-    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidNativeAotLinkAfterR8)' == 'true' ">_ComputeAssembliesToCompileToNative;SetupOSSpecificProps</_AndroidRunNativeCompileDependsOn>
+    <!-- The second per-RID evaluation reconstructs every ILC/native linker input without
+         recompiling the managed application object. -->
+    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidNativeAotLinkAfterR8)' == 'true' ">$(IlcCompileDependsOn)</_AndroidRunNativeCompileDependsOn>
   </PropertyGroup>
 
   <Target Name="_AndroidLinkNativeAotForRuntimeIdentifier"
