@@ -45,11 +45,9 @@ namespace Java.InteropTests {
 					peer.SetPeerReference (default);
 
 				Assert.AreEqual (state == ReferenceState.NoBlock, peer.JniObjectReferenceControlBlock == IntPtr.Zero);
-				int globals = JniEnvironment.Runtime.GlobalReferenceCount;
 				JniEnvironment.Runtime.ValueManager.FinalizePeer (peer);
 
-				Assert.AreEqual (globals - (state == ReferenceState.Global ? 1 : 0),
-					JniEnvironment.Runtime.GlobalReferenceCount, "JNI reference release is independent of control-block release.");
+				Assert.IsFalse (peer.PeerReference.IsValid);
 				Assert.AreEqual (1, observation.FinalizedCount);
 				Assert.IsFalse (observation.ReferenceWasValid);
 				Assert.AreNotEqual (IntPtr.Zero, observation.ControlBlockDuringCallback);
@@ -173,9 +171,8 @@ namespace Java.InteropTests {
 			var observation = new FinalizationObservation ();
 			var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.CopyAndDispose, observation);
 			try {
-				int globals = JniEnvironment.Runtime.GlobalReferenceCount;
 				peer.Dispose ();
-				Assert.AreEqual (globals - 1, JniEnvironment.Runtime.GlobalReferenceCount);
+				Assert.IsFalse (peer.PeerReference.IsValid);
 				Assert.IsTrue (observation.ReferenceWasValid, "Dispose(true) must still enter with a valid reference.");
 				Assert.AreEqual (0, observation.FinalizedCount);
 				Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
@@ -183,6 +180,53 @@ namespace Java.InteropTests {
 			} finally {
 				Cleanup (peer);
 				JniObjectReference.Dispose (ref local);
+			}
+		}
+
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		[TestCase (false, true)]
+		[TestCase (true, true)]
+		[Category ("JniReferenceLeak")]
+		public unsafe void ReleasePeer_ReleasesGlobalReference (bool exception, bool finalize)
+		{
+			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
+			var constructor = type.GetConstructor ("()V");
+
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
+
+			// VM-wide counts require the dedicated JniReferenceLeak run, not the
+			// ordinary shared-VM lifetime suite. Warm lazy peer/callback caches after
+			// collection, which can invalidate weakly cached peer wrappers.
+			for (int i = 0; i < 10; i++)
+				ReleasePeer (checkReferenceCount: false);
+			ReleasePeer (checkReferenceCount: true);
+
+			void ReleasePeer (bool checkReferenceCount)
+			{
+				var local = type.NewObject (constructor, null);
+				var observation = new FinalizationObservation ();
+				var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.CopyAndDispose, observation);
+				try {
+					int globals = JniEnvironment.Runtime.GlobalReferenceCount;
+					if (finalize)
+						JniEnvironment.Runtime.ValueManager.FinalizePeer (peer);
+					else
+						peer.Dispose ();
+					if (checkReferenceCount)
+						Assert.AreEqual (globals - 1, JniEnvironment.Runtime.GlobalReferenceCount,
+							"JNI global-reference deletion is independent of native control-block release.");
+					Assert.IsFalse (peer.PeerReference.IsValid);
+					Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+				} finally {
+					Cleanup (peer);
+					JniObjectReference.Dispose (ref local);
+				}
 			}
 		}
 
