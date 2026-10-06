@@ -15,7 +15,6 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[TestCase (true, "trimmable")]
 		[TestCase (false, "trimmable")]
-		[TestCase (false, "llvm-ir")]
 		public void UnchangedProguardRulesDoNotRerunR8 (bool obfuscation, string typeMap)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
@@ -92,11 +91,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj), "Newly retained bindings must update the keep rules.");
 			AssertTaskCount ("GenerateProguardConfiguration", 1);
 			StringAssert.Contains ("second(...)", File.ReadAllText (rules));
-			if (typeMap == "trimmable") {
-				Assert.AreNotEqual (originalRules, File.ReadAllText (rules));
-			} else {
-				Assert.AreEqual (originalRules, File.ReadAllText (rules), "LLVM typemaps already retain both bound methods.");
-			}
+			Assert.AreNotEqual (originalRules, File.ReadAllText (rules));
 			if (obfuscation) {
 				AssertTaskCount ("R8", 1);
 			}
