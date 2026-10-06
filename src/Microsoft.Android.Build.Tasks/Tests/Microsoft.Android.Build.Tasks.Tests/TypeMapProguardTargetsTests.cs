@@ -278,13 +278,13 @@ public class TypeMapProguardTargetsTests : BaseTest
 	}
 
 	[TestCase ("NativeAOT", "true", "r8", "true", "", "true")]
-	[TestCase ("NativeAOT", "true", "r8", "true", "custom.cfg", "false")]
-	[TestCase ("NativeAOT", "false", "r8", "true", "", "false")]
-	[TestCase ("NativeAOT", "", "r8", "true", "", "false")]
-	[TestCase ("NativeAOT", "true", "", "true", "", "false")]
-	[TestCase ("NativeAOT", "true", "r8", "false", "", "false")]
+	[TestCase ("NativeAOT", "true", "r8", "true", "custom.cfg", "true")]
+	[TestCase ("NativeAOT", "false", "r8", "true", "", "true")]
+	[TestCase ("NativeAOT", "", "r8", "true", "", "true")]
+	[TestCase ("NativeAOT", "true", "", "true", "", "true")]
+	[TestCase ("NativeAOT", "true", "r8", "false", "", "true")]
 	[TestCase ("CoreCLR", "true", "r8", "true", "", "false")]
-	public void NdkDependencyRequiresNativeObjectOptIn (string runtime, string enabled, string linkTool, string trimmed, string proguardConfigFiles, string expected)
+	public void NdkDependencyFollowsRuntimeRatherThanTypemapPolicy (string runtime, string enabled, string linkTool, string trimmed, string proguardConfigFiles, string expected)
 	{
 		var common = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
 		XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
@@ -297,7 +297,6 @@ public class TypeMapProguardTargetsTests : BaseTest
 				new XElement (ns + "_AndroidRuntime", runtime),
 				new XElement (ns + "AndroidTypeMapImplementation", "trimmable"),
 				new XElement (ns + "_AndroidEnableTypemapR8Trimming", enabled),
-				new XElement (ns + "_AndroidUseWorkloadNativeLinker", "true"),
 				new XElement (ns + "PublishAot", "true"),
 				new XElement (ns + "PublishTrimmed", trimmed),
 				new XElement (ns + "ProguardConfigFiles", proguardConfigFiles),

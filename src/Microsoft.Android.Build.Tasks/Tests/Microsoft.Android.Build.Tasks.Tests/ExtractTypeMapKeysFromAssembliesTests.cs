@@ -86,6 +86,49 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 		Assert.IsTrue (File.GetLastWriteTimeUtc (task.OutputFile).Year > 2000);
 	}
 
+	[TestCase (false)]
+	[TestCase (true)]
+	public void FailedWriteCannotPublishPartialKeys (bool existingOutput)
+	{
+		var (retry, _) = CreateTask (Emit ("Map", Entry ("test/Live")));
+		var old = DateTime.UtcNow.AddDays (-1);
+		Directory.CreateDirectory (Path.GetDirectoryName (retry.OutputFile) ?? throw new InvalidOperationException ());
+		if (existingOutput) {
+			File.WriteAllText (retry.OutputFile, "previous output");
+			File.SetLastWriteTimeUtc (retry.OutputFile, old);
+			old = File.GetLastWriteTimeUtc (retry.OutputFile);
+		}
+		var engine = new TypeMapTaskBuildEngine ();
+		var failing = new FailingKeysWriter {
+			BuildEngine = engine,
+			LinkedAssemblies = retry.LinkedAssemblies,
+			OutputFile = retry.OutputFile,
+		};
+
+		Assert.IsFalse (failing.Execute ());
+		Assert.AreEqual ("XA4327", engine.Errors.Single ().Code);
+		if (existingOutput) {
+			Assert.AreEqual ("previous output", File.ReadAllText (retry.OutputFile));
+			Assert.AreEqual (old, File.GetLastWriteTimeUtc (retry.OutputFile));
+		} else {
+			FileAssert.DoesNotExist (retry.OutputFile);
+		}
+		Assert.IsEmpty (Directory.GetFiles (Path.GetDirectoryName (retry.OutputFile) ?? throw new InvalidOperationException (), "*.tmp"));
+
+		Assert.IsTrue (retry.Execute ());
+		Assert.AreEqual ("test/Live\n", File.ReadAllText (retry.OutputFile));
+		Assert.Greater (File.GetLastWriteTimeUtc (retry.OutputFile), old);
+	}
+
+	sealed class FailingKeysWriter : ExtractTypeMapKeysFromAssemblies
+	{
+		protected override void WriteOutputFile (string outputFile, IReadOnlyCollection<string> keys)
+		{
+			File.WriteAllText (outputFile, "partial");
+			throw new IOException ("Injected write failure.");
+		}
+	}
+
 	[TestCase ("test/A[123]", "test/A")]
 	[TestCase ("test/A[000]", "test/A")]
 	[TestCase ("test/A[9999999999999999999999999999999]", "test/A")]
@@ -431,6 +474,7 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 	{
 		string linker = typeof (ExtractTypeMapKeysFromAssembliesTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
 			.Single (a => a.Key == "ILLinkPath").Value ?? throw new InvalidOperationException ("Missing ILLinkPath.");
+		FileAssert.Exists (linker, "Serialized ILLinkPath must resolve on the current host.");
 		string runtimeDirectory = Path.GetDirectoryName (typeof (object).Assembly.Location) ?? throw new InvalidOperationException ();
 		var start = new ProcessStartInfo (Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet") {
 			RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,

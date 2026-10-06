@@ -167,7 +167,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 
 	[TestCase ("_ZTV31Mono_Android_0_Java_Lang_Object")]
 	[TestCase ("_ZTV32Mono_Android_10_Java_Lang_Object")]
-	[TestCase ("Compilation_123__ZTV31Mono_Android_0_Java_Lang_Object")]
+	[TestCase ("_ZTV33Mono_Android_0_Java_Lang_Object_1")]
 	[TestCase ("_ZTV39_Mono_Android_TypeMap_0___TypeMapAnchor")]
 	public void RecognizesDisambiguatedJavaGroups (string groupSymbol)
 	{
@@ -213,7 +213,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Symbol (path) ["Name"] = new JsonObject { ["Name"] = "Compilation_123___external_type_map__", ["Value"] = 0 };
 		var (task, engine) = CreateTask (path);
 		task.UseGroupMetadata = true;
-		task.RelocationOutput = AddGroupMetadata (path, "Compilation_123__ZTV29Mono_Android_Java_Lang_Object");
+		task.RelocationOutput = AddGroupMetadata (path, "_ZTV29Mono_Android_Java_Lang_Object");
 
 		Assert.IsTrue (task.Execute ());
 		Assert.IsEmpty (engine.Errors);
