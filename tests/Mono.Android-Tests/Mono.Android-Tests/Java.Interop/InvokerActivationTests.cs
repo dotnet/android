@@ -154,6 +154,7 @@ namespace Java.InteropTests
 		static readonly JniPeerMembers members = new JniPeerMembers ("java/util/Collection", typeof (JavaInteropCollectionInvoker));
 
 		public static int ConstructorInvocations;
+		public static Action<IJavaPeerable> PeerCreated;
 
 		public override JniPeerMembers JniPeerMembers => members;
 
@@ -161,6 +162,7 @@ namespace Java.InteropTests
 			: base (ref reference, options)
 		{
 			ConstructorInvocations++;
+			PeerCreated?.Invoke (this);
 		}
 	}
 
@@ -175,6 +177,7 @@ namespace Java.InteropTests
 		static readonly JniPeerMembers members = new JniPeerMembers ("java/util/List", typeof (InheritedJavaInteropListInvoker));
 
 		public static int ConstructorInvocations;
+		public static Action<IJavaPeerable> PeerCreated;
 
 		public override JniPeerMembers JniPeerMembers => members;
 
@@ -182,6 +185,7 @@ namespace Java.InteropTests
 			: base (ref reference, options)
 		{
 			ConstructorInvocations++;
+			PeerCreated?.Invoke (this);
 		}
 	}
 
