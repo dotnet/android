@@ -6,8 +6,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -28,123 +26,6 @@ namespace Java.Interop {
 		new { Name = "Double",      Type = "Double",    UnsignedType = "",          JniCallType = "Double",     JniType = "D",  GetValue = "doubleValue" },
 	};
 #>
-
-	partial class JniRuntime {
-		static JniTypeSignature __StringTypeSignature;
-		static JniTypeSignature __VoidTypeSignature;
-<#
-	foreach (var type in types) {
-#>
-		static JniTypeSignature __<#= type.Type #>TypeSignature;
-		static JniTypeSignature __<#= type.Type #>NullableTypeSignature;
-<#
-	}
-#>
-
-		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		static JniTypeSignature GetCachedTypeSignature (ref JniTypeSignature field, string signature, int arrayRank = 0, bool keyword = false)
-		{
-			if (!field.IsValid)
-				field = new JniTypeSignature (signature, arrayRank, keyword);
-			return field;
-		}
-
-		static bool GetBuiltInTypeSignature (Type type, ref JniTypeSignature signature)
-		{
-			switch (Type.GetTypeCode (type)) {
-				case TypeCode.String:
-					signature = GetCachedTypeSignature (ref __StringTypeSignature, "java/lang/String");
-					return true;
-<#
-	foreach (var type in types) {
-		if (!string.IsNullOrEmpty (type.UnsignedType)) {
-#>
-				case TypeCode.<#= type.UnsignedType #>:
-<#
-		}
-#>
-				case TypeCode.<#= type.Type #>:
-					signature = GetCachedTypeSignature (ref __<#= type.Type #>TypeSignature, "<#= type.JniType #>", arrayRank: 0, keyword: true);
-					return true;
-<#
-	}
-#>
-				case TypeCode.DateTime:
-				case TypeCode.DBNull:
-				case TypeCode.Decimal:
-				case TypeCode.Empty:
-					return false;
-			}
-
-			if (type == typeof (void)) {
-				signature = GetCachedTypeSignature (ref __VoidTypeSignature, "V", arrayRank: 0, keyword: true);
-				return true;
-			}
-
-			if (!type.IsValueType)
-				return false;
-
-			if (type == typeof (Byte?)) {
-				signature = GetCachedTypeSignature (ref __SByteNullableTypeSignature, "java/lang/Byte");
-				return true;
-			}
-
-<#
-	foreach (var type in types) {
-#>
-			if (type == typeof (<#= type.Type #>?)) {
-				signature = GetCachedTypeSignature (ref __<#= type.Type #>NullableTypeSignature, "java/lang/<#= type.Name #>");
-				return true;
-			}
-<#
-	 }
-#>
-
-			return false;
-		}
-
-		static readonly Lazy<Dictionary<string, Type>> JniBuiltinSimpleReferenceToType = new Lazy<Dictionary<string, Type>> (InitJniBuiltinSimpleReferenceToType);
-
-		static Dictionary<string, Type> InitJniBuiltinSimpleReferenceToType ()
-		{
-				return new Dictionary<string, Type> (StringComparer.Ordinal) {
-					{"java/lang/String", typeof (string)},
-					{"net/dot/jni/internal/JavaProxyObject",    typeof (JavaProxyObject)},
-					{"net/dot/jni/internal/JavaProxyThrowable", typeof (JavaProxyThrowable)},
-					{"V", typeof (void)},
-<#
-	foreach (var type in types) {
-#>
-					{"<#= type.JniType #>", typeof (<#= type.Type #>)},
-					{"java/lang/<#= type.Name #>", typeof (<#= type.Type #>?)},
-<#
-	 }
-#>
-				};
-		}
-
-		partial class ReflectionJniValueManager
-		{
-			static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniBuiltinMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniBuiltinMarshalers);
-
-			static KeyValuePair<Type, JniValueMarshaler>[] InitJniBuiltinMarshalers ()
-			{
-				return new []{
-					new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
-					new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaProxyObject), ProxyValueMarshaler.Instance),
-					new KeyValuePair<Type, JniValueMarshaler>(typeof (Byte?), JniNullableByteValueMarshaler.Instance),
-<#
-	foreach (var type in types) {
-#>
-					new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>),   Jni<#= type.Type #>ValueMarshaler.Instance),
-					new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>?),  JniNullable<#= type.Type #>ValueMarshaler.Instance),
-<#
-	}
-#>
-				};
-			}
-		}
-	}
 <#
 	foreach (var type in types) {
 #>
