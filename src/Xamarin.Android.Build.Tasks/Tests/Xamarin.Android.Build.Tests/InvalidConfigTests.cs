@@ -116,6 +116,31 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void NativeAotPreviewMessage (
+			[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
+			[Values ("", "false", "true")] string enablePreviewFeatures)
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = runtime == AndroidRuntime.NativeAOT,
+			};
+			if (runtime == AndroidRuntime.MonoVM) {
+				project.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
+			}
+			project.SetRuntime (runtime);
+			project.SetProperty ("EnablePreviewFeatures", enablePreviewFeatures);
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckNonIdealAppConfigurations";
+			Assert.IsTrue (builder.Build (project, parameters: ["-warnaserror"]), "Informational messages should not fail the build when warnings are treated as errors.");
+			builder.AssertHasNoWarnings ();
+			var message = "The NativeAOT runtime on Android is a preview feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues";
+			Assert.AreEqual (
+				runtime == AndroidRuntime.NativeAOT && enablePreviewFeatures != "true",
+				StringAssertEx.ContainsText (builder.LastBuildOutput, message),
+				"Only NativeAOT without EnablePreviewFeatures should emit the preview message.");
+		}
+
+		[Test]
 		public void RunAotCompilationFalseAllowedForNativeAot ()
 		{
 			var project = new XamarinAndroidApplicationProject {
