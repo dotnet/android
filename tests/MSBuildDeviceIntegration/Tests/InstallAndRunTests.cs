@@ -11,6 +11,7 @@ using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -140,6 +141,16 @@ namespace Xamarin.Android.Build.Tests
 						}
 					}
 				}
+				[System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage ("Trimming", "IL2026",
+					Justification = "Both deferred fixture assemblies are preserved by TrimmerRootAssembly.")]
+				[System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage ("Trimming", "IL2075",
+					Justification = "TrimmerRootAssembly preserves LoadProbe.Value in both deferred fixture assemblies.")]
+				static int GetProbeValue (System.Reflection.Assembly assembly)
+				{
+					var type = assembly.GetType ("LoadProbe") ?? throw new System.InvalidOperationException ("LoadProbe is missing.");
+					var value = type.GetProperty ("Value") ?? throw new System.InvalidOperationException ("LoadProbe.Value is missing.");
+					return (int)(value.GetValue (null) ?? throw new System.InvalidOperationException ("LoadProbe.Value returned null."));
+				}
 				using var start = new System.Threading.ManualResetEventSlim (false);
 				var threads = new System.Threading.Thread [16];
 				var errors = new System.Exception? [threads.Length];
@@ -152,6 +163,9 @@ namespace Xamarin.Android.Build.Tests
 							var assembly = System.Reflection.Assembly.Load (name);
 							if (assembly.GetName ().Name != name) {
 								throw new System.InvalidOperationException ($"Loaded the wrong assembly for {name}.");
+							}
+							if (GetProbeValue (assembly) != 17) {
+								throw new System.InvalidOperationException ($"Code from {name} returned the wrong value.");
 							}
 						} catch (System.Exception error) {
 							errors [index] = error;
@@ -173,6 +187,28 @@ namespace Xamarin.Android.Build.Tests
 
 			using var appBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName));
 			Assert.IsTrue (appBuilder.Install (proj), "The assembly-store app should install.");
+			string apk = Path.Combine (Root, appBuilder.ProjectDirectory, proj.OutputPath,
+				$"{proj.PackageName}-Signed.apk");
+			var (stores, storeError) = AssemblyStoreExplorer.Open (apk);
+			var store = (stores ?? throw new InvalidOperationException (storeError ?? "Could not read the packaged assembly store.")).Single ();
+			var assemblies = store.Assemblies ?? throw new InvalidOperationException ("The packaged assembly store is empty.");
+			var compressedIndices = new HashSet<uint> ();
+			var compressedNames = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var assembly in assemblies) {
+				if (assembly.Ignore || assembly.DataSize < 3 * sizeof (uint)) {
+					continue;
+				}
+				using var image = store.ReadImageData (assembly) ?? throw new InvalidOperationException ($"Could not read {assembly.Name}.");
+				using var reader = new BinaryReader (image);
+				if (reader.ReadUInt32 () == 0x535A4158u) {
+					Assert.IsTrue (compressedIndices.Add (reader.ReadUInt32 ()), "Packaged compression identities must be unique.");
+					compressedNames.Add (assembly.Name);
+				}
+			}
+			Assert.That (compressedNames, Is.SupersetOf (new [] { "AssemblyStoreDeferredOne.dll", "AssemblyStoreDeferredTwo.dll" }),
+				"Both concurrent first-load fixtures must actually be compressed in the installed package.");
+			Assert.That (compressedIndices.Max () + 1, Is.GreaterThan (store.AssemblyCount),
+				"The installed package must exercise sparse pre-trim compression indices beyond its trimmed entry count.");
 			StartActivityAndAssert (proj);
 			Assert.IsTrue (
 				MonitorAdbLogcat (
