@@ -50,7 +50,40 @@ static class JniReferenceLeakMeasurement
 		}
 
 		internal void MarkTimedOut ()
-			=> timedOut = true;
+		{
+			timedOut = true;
+			ObserveCompletion ();
+		}
+	}
+
+	internal sealed class CollectionRound
+	{
+		bool started;
+
+		internal int? Generation { get; private set; }
+
+		bool BridgeCompleted (int? generation)
+			=> Generation == null || generation != Generation;
+
+		internal bool HasCompletedOutcome (CollectionWorker worker, Func<bool> finalized, Func<int?> generation)
+			=> started && worker.HasCompletedOutcome (finalized) && BridgeCompleted (generation ());
+
+		internal void Poll (CollectionWorker worker, Func<bool> finalized, Func<int?> generation,
+			Action drain, Action collect, Action? prepareRetry = null)
+		{
+			worker.ObserveCompletion ();
+			if (started && (!worker.IsCompleted || finalized () || !BridgeCompleted (generation ())))
+				return;
+
+			drain ();
+			if (started)
+				prepareRetry?.Invoke ();
+			// Finish the previous bridge before issuing another collection, and require
+			// a new completion notification for this request rather than reusing its evidence.
+			Generation = generation ();
+			worker.Start (collect);
+			started = true;
+		}
 	}
 
 	internal readonly record struct Sample (int? Generation, int Global, int Weak)
@@ -96,34 +129,34 @@ static class JniReferenceLeakMeasurement
 		// A cycle makes bridge work necessary even when the measured operation leaves no peers.
 		var witness = CreateCollectionWitness ();
 		Func<bool> finalized = () => witness.IsFinalized;
+		// The original witness can finalize just before a retry starts. Give that
+		// request its own unreachable cycle so it still has bridge work to notify.
+		Action prepareRetry = () => { CreateCollectionWitness (); };
 #else
 		Func<int?> generation = () => null;
 		Func<bool> finalized = () => true;
+		Action prepareRetry = () => {};
 		int? initialGeneration = null;
 #endif
-		bool started = false;
+		var round = new CollectionRound ();
 		return WaitForCollection (initialGeneration,
-			() => started && collector.HasCompletedOutcome (finalized),
+			() => round.HasCompletedOutcome (collector, finalized, generation),
 			() => ReadStableSample (generation,
 				() => JniEnvironment.Runtime.GlobalReferenceCount,
 				() => JniEnvironment.Runtime.WeakGlobalReferenceCount), () => {
-			collector.ObserveCompletion ();
-			if (!started || (collector.IsCompleted && !finalized ())) {
-				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			round.Poll (collector, finalized, generation,
+				() => JniEnvironment.Runtime.ValueManager.CollectPeers (), () => {
 				// GC/finalizer waits can block on the bridge. Keep them off the timeout thread.
-				collector.Start (() => {
-					GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-					GC.WaitForPendingFinalizers ();
-				});
-				started = true;
-			}
+				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
+				GC.WaitForPendingFinalizers ();
+			}, prepareRetry);
 		}, () => {
 			if (!collector.IsCompleted)
 				throw new InvalidOperationException ("Collection must finish before draining peers.");
 			collector.ObserveCompletion ();
 			JniEnvironment.Runtime.ValueManager.CollectPeers ();
 		}, TimeSpan.FromSeconds (10), collector.MarkTimedOut,
-			() => $"CollectionWorker={collector.Status}, WitnessFinalized={finalized ()}");
+			() => $"CollectionWorker={collector.Status}, WitnessFinalized={finalized ()}, LatestCollectionGeneration={round.Generation}");
 	}
 
 	internal static (Sample Sample, bool Stable) ReadStableSample (Func<int?> generation,

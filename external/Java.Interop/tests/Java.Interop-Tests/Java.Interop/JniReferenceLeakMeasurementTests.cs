@@ -132,6 +132,73 @@ public class JniReferenceLeakMeasurementTests
 	}
 
 	[Test]
+	public void RetryRequiresLatestBridgeCompletionEvenIfOriginalWitnessFinalizes ()
+	{
+		var worker = new JniReferenceLeakMeasurement.CollectionWorker ();
+		var round = new JniReferenceLeakMeasurement.CollectionRound ();
+		int generation = 7, requests = 0, retryCycles = 0;
+		bool finalized = false;
+		Action collect = () => Interlocked.Increment (ref requests);
+		Action poll = () => round.Poll (worker, () => finalized, () => generation, () => {}, collect,
+			() => {
+				retryCycles++;
+				finalized = true;
+			});
+
+		poll ();
+		Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
+		poll ();
+		Assert.AreEqual (1, requests, "A pending bridge must finish before another worker starts.");
+		Assert.AreEqual (0, retryCycles);
+		generation = 8;
+		poll ();
+		Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
+		Assert.AreEqual (2, requests);
+		Assert.AreEqual (1, retryCycles, "A retry needs bridge work even if the original witness finalizes just before its GC.");
+
+		int polls = 0;
+		var sample = JniReferenceLeakMeasurement.WaitForCollection (7,
+			() => round.HasCompletedOutcome (worker, () => finalized, () => generation),
+			() => (new JniReferenceLeakMeasurement.Sample (generation, 105, 0), true),
+			() => {
+				poll ();
+				if (++polls == 2)
+					generation = 9;
+			}, () => {}, TimeSpan.FromSeconds (1));
+
+		Assert.AreEqual (2, polls, "The retry worker finished before its bridge callback started.");
+		Assert.AreEqual (9, sample.Generation);
+		Assert.AreEqual (105, sample.Global);
+		Assert.AreEqual (2, requests, "No further worker is needed after the original witness finalizes.");
+	}
+
+	[Test]
+	public void FaultAfterLastPollRemainsOriginalExceptionAndPoisonsWorker ()
+	{
+		var worker = new JniReferenceLeakMeasurement.CollectionWorker ();
+		using var release = new ManualResetEventSlim ();
+		worker.Start (() => {
+			release.Wait ();
+			throw new InvalidOperationException ("Late collection failure.");
+		});
+		try {
+			var error = Assert.Throws<InvalidOperationException> (() => JniReferenceLeakMeasurement.WaitForCollection (
+				7, () => false, () => {
+					// The worker faults after this iteration's completion observation.
+					release.Set ();
+					Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
+					return (new JniReferenceLeakMeasurement.Sample (7, 100, 0), true);
+				}, worker.ObserveCompletion, () => {}, TimeSpan.Zero, worker.MarkTimedOut));
+			Assert.That (error?.Message, Is.EqualTo ("Late collection failure."));
+			var reuse = Assert.Throws<InvalidOperationException> (worker.EnsureAvailable);
+			Assert.That (reuse?.Message, Does.Contain ("previously timed out"));
+		} finally {
+			release.Set ();
+			Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
+		}
+	}
+
+	[Test]
 	public void WorkerExceptionIsNotReportedAsLeakAssertion ()
 	{
 		var worker = new JniReferenceLeakMeasurement.CollectionWorker ();

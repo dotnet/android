@@ -218,6 +218,9 @@ To run only the deterministic completion-protocol regressions on Android, use
 `IncludeCategories=JniReferenceLeakMeasurement` with `Mono.Android.NET-Tests.csproj`.
 When changing categories on a NativeAOT build, use `-t:Rebuild;Install` to refresh
 the embedded runtime configuration and APK. Verify the reported test count.
+If rebuilding removes a referenced project's NuGet assets, run
+`./dotnet-local.sh clean` first, then
+`./dotnet-local.sh build '-t:Build;Install'` so restore follows cleaning.
 
 On a configured host JVM build, run the matching controls, real leak checks,
 and deterministic completion-protocol regressions with:
@@ -238,8 +241,14 @@ The witness publishes a finalization flag rather than inspecting a peer weak
 reference: CoreCLR/NativeAOT weak-reference reads can themselves wait for bridge
 completion. Managed GC/finalizer waits run off the timeout thread; JNI peer
 draining remains on the instrumentation thread.
-Successful sampling also requires the collection worker to finish. A timeout
-does not cancel an uninterruptible runtime GC/finalizer wait; it poisons the
+Successful sampling also requires the collection worker to finish. Timeout
+handling checks for a completed worker fault before reporting the timeout.
+If another collection is needed to finalize the witness, the previous bridge
+must complete first, and the next sample requires a generation newer than
+that new request. An additional unreachable cycle ensures the retry requests
+bridge work even if the original witness finalizes just before its GC.
+A timeout does not cancel an uninterruptible runtime
+GC/finalizer wait; it poisons the
 measurement helper for the rest of that process, preventing further batches or
 GC workers. Restart the test process instead of retrying in the same process.
 
