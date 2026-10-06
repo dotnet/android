@@ -210,7 +210,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.AddReference (lib);
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("AndroidPackageFormat", "apk");
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidUseAssemblyStore", "true");
 			proj.SetProperty ("PublishReadyToRun", "false");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "EventSourceCallPath.Instrumentation.Invoke ();");

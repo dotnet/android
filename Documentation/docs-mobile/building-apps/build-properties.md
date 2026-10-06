@@ -439,9 +439,7 @@ their dependencies.
 Other shared post-trimming steps, including `GC.KeepAlive()` insertion, are
 controlled separately.
 
-The default value is `False` when
-[`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is
-`trimmable`, and `True` otherwise.
+The default value is `False`.
 
 ## AndroidEnableMarshalMethods
 
@@ -1346,13 +1344,10 @@ This property is obsolete and should not be used.
 
 ## AndroidTypeMapImplementation
 
-An enum-style property that selects the type map implementation.
-The only supported value is `trimmable`. Setting this property to `llvm-ir`
-causes error [XA4267](../messages/xa4267.md).
-
-The default value is `trimmable` for all Android projects.
-An explicitly empty command-line value (`-p:AndroidTypeMapImplementation=`) is
-invalid. Omit the property to use the default, or set it to `trimmable`.
+This property is obsolete and no longer affects the build. All Android
+applications use the trimmable type map. Remove this property; existing
+assignments, including `llvm-ir` and an explicitly empty command-line value,
+are ignored.
 
 ## AndroidUseApkSigner
 

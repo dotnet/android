@@ -25,7 +25,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var first = WriteNativeObject ("first", "test/Live", "test/Outer$Inner[0]");
 		var second = WriteNativeObject ("second", "test/Second", "test/Outer$Inner[1]");
 		Write ("acw-map.txt", "App.Live, App;test.Live\nApp.Second, App;test.Second\nApp.Dead, App;test.Dead\n");
-		var project = CreateProject ("NativeAOT", "trimmable",
+		var project = CreateProject ("NativeAOT",
 			NativeObjectItem ("first.so", first),
 			NativeObjectItem ("second.so", second));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
@@ -45,7 +45,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 	{
 		var nativeObject = WriteNativeObject ("app", "test/Live");
 		Write ("acw-map.txt", "App.Live, App;test.Live\n");
-		var project = CreateProject ("NativeAOT", "trimmable",
+		var project = CreateProject ("NativeAOT",
 			NativeObjectItem ("app.so", nativeObject));
 		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
@@ -84,7 +84,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 	public void UnoptimizedNativeAotReadsObjectWithoutGraphs (string runILLink)
 	{
 		var nativeObject = WriteNativeObject ("app", "test/Live");
-		var project = CreateProject ("NativeAOT", "trimmable",
+		var project = CreateProject ("NativeAOT",
 			NativeObjectItem ("app.so", nativeObject));
 		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
@@ -95,7 +95,8 @@ public class TypeMapProguardTargetsTests : BaseTest
 	}
 
 	[Test]
-	public void AssemblyTargetConsumesLinkedMetadataAcrossRidsAndEmptyStubs ()
+	public void AssemblyTargetConsumesLinkedMetadataAcrossRidsAndEmptyStubs (
+		[Values (null, "", "llvm-ir", "trimmable", "unsupported")] string? obsoleteImplementation)
 	{
 		string EmitMap (string name, params string [] keys)
 		{
@@ -113,15 +114,16 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var first = EmitMap ("first", "test/Live", "test/Alias[0]");
 		var second = EmitMap ("second", "test/Second", "test/Alias[1]");
 		var stub = EmitMap ("stub");
-		var project = CreateProject ("CoreCLR", "trimmable",
+		var project = CreateProject ("CoreCLR",
 			$"""<ResolvedFileToPublish Include="arm64/R2R/root.dll" AndroidTypeMapLinkedAssemblies="{SecurityElement.Escape (first + ";" + stub)}" />""",
 			$"""<ResolvedFileToPublish Include="x64/R2R/root.dll" AndroidTypeMapLinkedAssemblies="{SecurityElement.Escape (second)}" />""",
 			"""<ResolvedFileToPublish Include="pretrim/unused.dll" />""");
-		Build (project);
+		string [] arguments = obsoleteImplementation == null ? [] : [$"-p:AndroidTypeMapImplementation={obsoleteImplementation}"];
+		Build (project, arguments);
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		Assert.AreEqual (TypeRules ("test.Alias", "test.Live", "test.Second"), File.ReadAllText (rules));
 		File.Delete (second);
-		StringAssert.Contains ("XA4327", Build (project, expectSuccess: false));
+		StringAssert.Contains ("XA4327", Build (project, false, arguments));
 	}
 
 	[Test]
@@ -141,7 +143,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}
 
 		var map = EmitMap ("test/First");
-		var project = CreateProject ("CoreCLR", "trimmable",
+		var project = CreateProject ("CoreCLR",
 			$"""<ResolvedFileToPublish Include="app.dll" AndroidTypeMapLinkedAssemblies="{SecurityElement.Escape (map)}" />""");
 		Build (project, "-t:_CompileToDalvik");
 		var stamp = Path.Combine (directory, "dalvik.stamp");
@@ -169,7 +171,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		using (var stream = File.Create (map)) {
 			new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0)).Emit (model, stream);
 		}
-		var project = CreateProject ("CoreCLR", "trimmable",
+		var project = CreateProject ("CoreCLR",
 			$"""<ResolvedFileToPublish Include="app.dll" AndroidTypeMapLinkedAssemblies="{SecurityElement.Escape (map)}" />""");
 		var stamp = Path.Combine (directory, "dalvik.stamp");
 		var policy = Path.Combine (directory, "dalvik-policy.txt");
@@ -221,7 +223,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 	[TestCase ("CoreCLR", "true", "false", "")]
 	public void InnerBuildReturnsExactProducerPaths (string runtime, string optimize, string runILLink, string expected)
 	{
-		var project = CreateProject (runtime, "trimmable");
+		var project = CreateProject (runtime);
 		var assemblyResolutionTargets = Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.AssemblyResolution.targets");
 		var metadata = runtime == "NativeAOT" ? "AndroidTypeMapNativeObject" : "AndroidTypeMapLinkedAssemblies";
 		var contents = File.ReadAllText (project)
@@ -275,7 +277,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 	[TestCase ("true")]
 	public void CoreClrWithoutILLinkNeedsNoLinkedInputsOrModernTasks (string enabled)
 	{
-		var project = CreateProject ("CoreCLR", "trimmable",
+		var project = CreateProject ("CoreCLR",
 			"""<ResolvedFileToPublish Include="generated/root.dll" AndroidTypeMapLinkedAssemblies="$(MSBuildProjectDirectory)/obj/linked/missing.dll" />""");
 		Assert.IsFalse (Directory.Exists (Path.Combine (directory, "obj", "linked")));
 		Build (project, "-p:RunILLink=false", $"-p:_AndroidEnableTypemapR8Trimming={enabled}",
@@ -287,20 +289,20 @@ public class TypeMapProguardTargetsTests : BaseTest
 		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 	}
 
-	[TestCase ("MonoVM", "trimmable", "true", "r8", "true", false, "")]
-	[TestCase ("CoreCLR", "trimmable", "false", "r8", "true", false, "")]
-	[TestCase ("CoreCLR", "trimmable", "true", "", "true", false, "")]
-	[TestCase ("CoreCLR", "trimmable", "true", "r8", "false", false, "")]
-	[TestCase ("NativeAOT", "trimmable", "true", "r8", "false", false, "")]
-	[TestCase ("NativeAOT", "trimmable", "true", "r8", "", false, "")]
-	[TestCase ("CoreCLR", "trimmable", "true", "r8", "true", true, "")]
-	[TestCase ("CoreCLR", "trimmable", "true", "r8", "true", false, "custom.cfg")]
-	[TestCase ("NativeAOT", "trimmable", "true", "r8", "false", false, "custom.cfg")]
+	[TestCase ("MonoVM", "true", "r8", "true", false, "")]
+	[TestCase ("CoreCLR", "false", "r8", "true", false, "")]
+	[TestCase ("CoreCLR", "true", "", "true", false, "")]
+	[TestCase ("CoreCLR", "true", "r8", "false", false, "")]
+	[TestCase ("NativeAOT", "true", "r8", "false", false, "")]
+	[TestCase ("NativeAOT", "true", "r8", "", false, "")]
+	[TestCase ("CoreCLR", "true", "r8", "true", true, "")]
+	[TestCase ("CoreCLR", "true", "r8", "true", false, "custom.cfg")]
+	[TestCase ("NativeAOT", "true", "r8", "false", false, "custom.cfg")]
 	public void InactivePathsNeedNoTypemapInputsOrModernTasks (
-		string runtime, string representation, string trimmed, string linkTool, string enabled, bool innerBuild, string proguardConfigFiles)
+		string runtime, string trimmed, string linkTool, string enabled, bool innerBuild, string proguardConfigFiles)
 	{
 		Write ("acw-map.txt", "App.Live, App;test.Live\n");
-		var project = CreateProject (runtime, representation);
+		var project = CreateProject (runtime);
 		Build (project,
 			$"-p:PublishTrimmed={trimmed}",
 			$"-p:AndroidLinkTool={linkTool}",
@@ -322,7 +324,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 	static string MemberRules (params string [] names) =>
 		string.Concat (names.Select (name => $"-keepclassmembers class {name} {{ *; }}\n-keepclassmembers interface {name} {{ *; }}\n"));
 
-	string CreateProject (string runtime, string representation, params string [] sourceItems)
+	string CreateProject (string runtime, params string [] sourceItems)
 	{
 		var targets = Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.TypeMap.Proguard.targets");
 		var path = Path.Combine (directory, "pipeline.proj");
@@ -335,7 +337,6 @@ public class TypeMapProguardTargetsTests : BaseTest
 			    <_MicrosoftAndroidBuildTasksAssembly>{SecurityElement.Escape (typeof (GenerateTypeMapProguardConfiguration).Assembly.Location)}</_MicrosoftAndroidBuildTasksAssembly>
 			    <_XamarinAndroidBuildTasksAssembly>unused-legacy-tasks.dll</_XamarinAndroidBuildTasksAssembly>
 			    <_AndroidRuntime>{SecurityElement.Escape (runtime)}</_AndroidRuntime>
-			    <AndroidTypeMapImplementation>{SecurityElement.Escape (representation)}</AndroidTypeMapImplementation>
 			    <PublishTrimmed>true</PublishTrimmed>
 			    <AndroidLinkTool>r8</AndroidLinkTool>
 			    <Optimize>true</Optimize>

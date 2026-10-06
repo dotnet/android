@@ -173,7 +173,7 @@
   </Target>
 
   <Target Name="_ComputePostTrimTrimmableTypeMapInputs"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       AfterTargets="_ResolveAssemblies">
     <PropertyGroup>
       <!-- Device selection can change RuntimeIdentifier after RuntimeIdentifiers was evaluated. -->
@@ -196,7 +196,7 @@
        a real output but leaves the stamp, invalidate the stamp so the producer restores the complete
        post-trim output set instead of letting _GenerateJavaStubs create an empty acw-map placeholder. -->
   <Target Name="_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
     <ItemGroup>
       <_ExpectedPostTrimJavaFile Remove="@(_ExpectedPostTrimJavaFile)" />
       <_ActualPostTrimJavaFile Remove="@(_ActualPostTrimJavaFile)" />
@@ -225,7 +225,7 @@
   </Target>
 
   <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs;_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
       AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
@@ -284,7 +284,7 @@
        assembly references in it - untouched. Runs before the linked TypeMap DLLs are handed to the
        publish/ReadyToRun pipeline. -->
   <Target Name="_GenerateMissingTrimmableTypeMapStubs"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(RuntimeIdentifier)' != '' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(RuntimeIdentifier)' != '' "
       AfterTargets="ILLink"
       BeforeTargets="_AddTrimmableTypeMapToResolvedFileToPublish;CreateReadyToRunImages">
     <GenerateMissingTypeMapStubs

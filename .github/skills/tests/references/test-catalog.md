@@ -134,7 +134,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
-| **trimmable type map** | Same project, built with `-p:AndroidTypeMapImplementation=trimmable` | Java-driven activation, direct UCO callbacks, exports, manifest-only rooting, and typemap lookups (`TrimmableTypeMapRuntimeCoverageTests`, `TrimmableTypeMapDirectCallbackTests`, `TrimmableTypeMapExportTests`, `TrimmableTypeMapManifestTests`, `ExportTests`, `ConstructorActivationTests`, `JavaConvertTest`) |
+| **trimmable type map** | Same project | Java-driven activation, direct UCO callbacks, exports, manifest-only rooting, and typemap lookups (`TrimmableTypeMapRuntimeCoverageTests`, `TrimmableTypeMapDirectCallbackTests`, `TrimmableTypeMapExportTests`, `TrimmableTypeMapManifestTests`, `ExportTests`, `ConstructorActivationTests`, `JavaConvertTest`) |
 | **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
 | **android app** | Same project — tests in `Android.App/` | `Application`, `Activity` tests |
@@ -163,7 +163,7 @@ Command:
 )
 ```
 
-Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:AndroidTypeMapImplementation=trimmable`).
+Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
 
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash
@@ -216,14 +216,13 @@ The object-extraction tests use synthetic metadata, so they need no NDK tools.
 The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
 because the UCO format marker is assembly-wide. The manifest-only Activity
 lives in the library assembly, which is not rooted wholesale by the test app.
-To run on-device tests with the trimmable typemap, pass the same property to
-both commands:
+To run on-device tests with the trimmable typemap:
 
 ```bash
-./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj -p:AndroidTypeMapImplementation=trimmable
+./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 (
   cd tests/Mono.Android-Tests/Mono.Android-Tests
-  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release -p:AndroidTypeMapImplementation=trimmable --report-trx --results-directory ../../../bin/TestRelease/TestResults
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx --results-directory ../../../bin/TestRelease/TestResults
 )
 ```
 
