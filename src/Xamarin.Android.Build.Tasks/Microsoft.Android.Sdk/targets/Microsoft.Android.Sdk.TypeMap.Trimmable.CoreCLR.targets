@@ -160,7 +160,7 @@
   </Target>
 
   <!-- Generate the R8 rules in the inner RID build before the outer R8 invocation.
-       The outer build reuses the final assemblies only for remapping metadata scans. -->
+       The outer build scans the final assemblies only for remapping metadata. -->
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
       DependsOnTargets="_AndroidInvalidateProguardConfigurationStamp"
