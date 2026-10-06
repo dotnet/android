@@ -284,6 +284,45 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[TestCase (false, true)]
 		[TestCase (true, false)]
 		[TestCase (true, true)]
+		public void NativeAotPrimitiveDescriptorTokensAreNotClasses (bool commandStream, bool elf32)
+		{
+			string objectFile = WriteNativeObject (
+				["com/contoso/Peer", "run.(I)V", "consume.([BZ)J", "field.[I"],
+				commandStream: commandStream, elf32: elf32);
+			var root = XDocument.Parse (Run ("""
+				com.contoso.Peer -> a.b:
+				    void run(int) -> retainedMethod
+				I -> a.b:
+				    void run(int) -> absentMethod
+				V -> a.b:
+				B -> a.b:
+				Z -> a.b:
+				J -> a.b:
+
+				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
+			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
+			Assert.AreEqual ("retainedMethod", (string?) root.Elements ("replace-method").Single ().Attribute ("target-method-name"));
+			Assert.IsEmpty (Errors, "Primitive descriptor tokens must not claim absent classes or introduce member conflicts.");
+		}
+
+		[TestCase ("I", false, false)]
+		[TestCase ("LI;", false, true)]
+		[TestCase ("reference.(ILI;)V", true, false)]
+		[TestCase ("[LI;", true, true)]
+		public void NativeAotSingleLetterClassReferencesAreRetained (string reference, bool commandStream, bool elf32)
+		{
+			string objectFile = WriteNativeObject ([reference], commandStream: commandStream, elf32: elf32);
+			var root = XDocument.Parse (Run ("I -> a.b:\n", objectFile)).Root
+				?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual ("I", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
+			Assert.AreEqual ("I", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
+		}
+
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
 		public void NativeAotRawBytesAreNotClassEvidence (bool utf8, bool elf32)
 		{
 			string objectFile = WriteNativeObject (["", "\u0141"], utf8, elf32: elf32, unrelatedBytes: true);
@@ -312,6 +351,29 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				?? throw new AssertionException ("Generated XML has no root.");
 			Assert.AreEqual (javaGroup ? 1 : 0, root.Elements ("replace-type").Count ());
 			Assert.AreEqual (javaGroup ? 1 : 0, root.Elements ("reverse-type").Count ());
+		}
+
+		[TestCase (false, "Mono_Android_0_Java_Lang_Object", true)]
+		[TestCase (true, "Mono_Android_12_Java_Lang_Object", true)]
+		[TestCase (false, "_Owner_TypeMap_0___TypeMapAnchor", true)]
+		[TestCase (true, "_Owner_TypeMap_12___TypeMapAnchor", true)]
+		[TestCase (false, "Mono_Android_0_Java_Lang_Object_1", true)]
+		[TestCase (true, "_Owner_TypeMap_12___TypeMapAnchor_0", true)]
+		[TestCase (false, "Mono_Android_0_Android_Runtime_JavaDictionary", false)]
+		[TestCase (true, "Mono_Android_x_Java_Lang_Object", false)]
+		[TestCase (false, "_Owner_TypeMap_x___TypeMapAnchor", false)]
+		[TestCase (true, "_Owner_TypeMap_0___TypeMapAnchorExtra", false)]
+		public void NativeAotMangledGroupsRespectJavaUniverse (bool elf32, string typeName, bool javaGroup)
+		{
+			string objectFile = WriteNativeObject ([], elf32: elf32, typeMap: true, groupSymbol: $"_ZTV{typeName.Length}{typeName}");
+			var root = XDocument.Parse (Run ("test.Live -> a.b:\n", objectFile)).Root
+				?? throw new AssertionException ("Generated XML has no root.");
+			if (javaGroup) {
+				Assert.AreEqual ("test/Live", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
+				Assert.AreEqual ("test/Live", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
+			} else {
+				Assert.IsEmpty (root.Elements (), "Disambiguation must not admit CLR or lookalike mapping universes.");
+			}
 		}
 
 		[TestCase (false, false)]
@@ -525,7 +587,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 		string WriteNativeObject (string [] literals, bool utf8 = false,
 			bool commandStream = false, bool invalidCommand = false, bool elf32 = false, bool zeroFillAfterLiteral = true,
-			bool unrelatedBytes = false, bool typeMap = false, bool javaGroup = true, bool methodTableMarker = false, bool hydrationFileBacked = false)
+			bool unrelatedBytes = false, bool typeMap = false, bool javaGroup = true, bool methodTableMarker = false,
+			bool hydrationFileBacked = false, string? groupSymbol = null)
 		{
 			int pointerSize = elf32 ? 4 : 8;
 			var stringOffsets = new List<ulong> ();
@@ -699,11 +762,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 					Symbol ("_ZTV18App_N___Str_Helper", methodTableOffset, 8 + (ulong) pointerSize + 64, 4);
 					Symbol ("fixture__Str_Helper", methodTableOffset, 8 + (ulong) pointerSize + 64, 4);
 				}
-				int groupSymbol = 0;
+				int groupSymbolIndex = 0;
 				if (typeMap) {
 					Symbol ("fixture__external_type_map__", mapOffset, (ulong) map.Length, 3);
 					Symbol ("fixture__external_CommonFixupsTable_references", fixupsOffset, 4, 3);
-					groupSymbol = Symbol (javaGroup ? "_ZTV29Mono_Android_Java_Lang_Object" : "_ZTV43Mono_Android_Android_Runtime_JavaDictionary", 0, 0, 0);
+					groupSymbolIndex = Symbol (groupSymbol ??
+						(javaGroup ? "_ZTV29Mono_Android_Java_Lang_Object" : "_ZTV43Mono_Android_Android_Runtime_JavaDictionary"), 0, 0, 0);
 				}
 				sections = sections.Concat (new [] {
 					(Name: ".strtab", Flags: 0UL, Type: 3U,
@@ -728,7 +792,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 						Relocation (0, 2);
 					}
 					if (typeMap) {
-						Relocation (fixupsOffset, groupSymbol);
+						Relocation (fixupsOffset, groupSymbolIndex);
 					}
 					sections = sections.Concat (new [] {
 						(Name: elf32 ? ".rel.rodata" : ".rela.rodata", Flags: 0UL,

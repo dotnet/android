@@ -655,12 +655,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				if (pattern.Descriptor) {
 					return HasDescriptorPrefix (section, start + (pattern.Utf16 ? 2 : 1), pattern.Utf16);
 				}
-				int after = end + 1;
-				int beforeValue = pattern.Utf16 ? ReadUtf16 (section, start - 2) : ReadByte (section, start - 1);
-				int afterValue = pattern.Utf16 ? ReadUtf16 (section, after) : ReadByte (section, after);
-
-				return !IsClassContinuation (beforeValue, pattern.Utf16) &&
-					!IsClassContinuation (afterValue, pattern.Utf16);
+				// Bare names must occupy the whole literal; tokens within descriptors
+				// (for example I in run.(I)V) are not independent class references.
+				return start == 0 && end + 1 == section.Length;
 			}
 
 			static bool HasDescriptorPrefix (byte [] section, int start, bool utf16)
