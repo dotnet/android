@@ -63,19 +63,21 @@ namespace Xamarin.Installer.Build.Tasks
 					var token = installationContext.CancellationToken;
 					
 					var success = await InstallJavaSDKAsync(installationContext, token);
-					if (!success || token.IsCancellationRequested)
+					token.ThrowIfCancellationRequested ();
+					if (!success)
 					{
 						return;
 					}
 					
 					success = await InstallAndroidSDKAsync(installationContext, token);
-					if (!success || token.IsCancellationRequested)
+					token.ThrowIfCancellationRequested ();
+					if (!success)
 					{
 						return;
 					}
 				}
 			}
-			catch (TaskCanceledException ex)
+			catch (OperationCanceledException ex)
 			{
 				Exception(Resources.Task_Cancelled, ex, TimeoutInMinutes);
 			} catch (Exception ex) {
@@ -253,11 +255,8 @@ namespace Xamarin.Installer.Build.Tasks
 				}
 
 				await Task.WhenAll(downloads.Select(d => DownloadAsync(installationContext.HttpClient, d, cancellationToken)));
-
-				if (!cancellationToken.IsCancellationRequested)
-				{
-					installer.Install(sdkInstance, installationSet);
-				}
+				cancellationToken.ThrowIfCancellationRequested ();
+				installer.Install(sdkInstance, installationSet);
 
 				await AcceptLicensesAsync(installationContext, cancellationToken);
 			}
@@ -331,11 +330,8 @@ namespace Xamarin.Installer.Build.Tasks
 			}
 
 			await DownloadAsync(installationContext.HttpClient, jdkToInstall, cancellationToken);
-
-			if (!cancellationToken.IsCancellationRequested)
-			{
-				javaInstaller.InstallJdk(jdkToInstall);
-			}
+			cancellationToken.ThrowIfCancellationRequested ();
+			javaInstaller.InstallJdk(jdkToInstall);
 
 			return true;
 		}
@@ -349,10 +345,7 @@ namespace Xamarin.Installer.Build.Tasks
 				//Trying to mimic Android SDK's prompt, let's at least log all the licenses
 				foreach (var component in installationSet)
 				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						return;
-					}    
+					cancellationToken.ThrowIfCancellationRequested ();
 
 					LogMessage(component.License.Text);
 				}
@@ -370,6 +363,10 @@ namespace Xamarin.Installer.Build.Tasks
 					await installer.AcceptLicensesAsync(sdkInstance, licenses, cancellationToken, javaSdkPath: installationContext.JavaSdkPath, logPath: logPath, throwsErrorIfValidationFailed: true);
 
 					Debug($"All SDK package licenses have been accepted");
+				}
+				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+				{
+					throw;
 				}
 				catch (Exception e)
 				{
@@ -394,7 +391,7 @@ namespace Xamarin.Installer.Build.Tasks
 						int bytesRead;
 						double bytesWritten = 0;
 						double previousProgress = 0;
-						while ((bytesRead = httpStream.Read (buffer, 0, buffer.Length)) > 0) {
+						while ((bytesRead = await httpStream.ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
 							fileStream.Write (buffer, 0, bytesRead);
 							bytesWritten += bytesRead;
 							// Log download progress roughly every 10%.
