@@ -1084,7 +1084,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 </comment>
   </data>
   <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
-    <value>The MSBuild property 'RunAOTCompilation' is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to 'false'. Remove the property. Starting with .NET 11, set 'PublishReadyToRun' to 'false' to disable ReadyToRun (R2R) AOT compilation.</value>
+    <value>'RunAOTCompilation' MSBuild özelliği CoreCLR çalışma zamanı ile uyumlu değil. Bu özellik 'false' olarak ayarlandığında derleme devam edemez. Özelliği kaldırın. .NET 11'den başlayarak, ReadyToRun (R2R) AOT derlemesini devre dışı bırakmak için 'PublishReadyToRun' öğesini 'false' olarak ayarlayın.</value>
     <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
   </data>
   <data name="XA1045" xml:space="preserve">
@@ -1106,8 +1106,8 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>'AndroidEnableMarshalMethods' ve 'PublishReadyToRun' MSBuild özelliklerinin her ikisi de 'true' (doğru) olarak ayarlanamaz. Bir özelliği 'false' (yanlış) olarak ayarlayın.</value>
-    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
+    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
     <value>'AndroidR8ObfuscationMode' MSBuild özelliğinin '{0}' değeri geçersizdir. Geçerli değerler 'disabled' ve 'private-members'dir.</value>

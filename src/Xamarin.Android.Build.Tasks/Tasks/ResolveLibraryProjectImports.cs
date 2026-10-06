@@ -2,11 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 			assemblyMap.Load (AssemblyIdentityMapFile);
 			try {
 				Extract (jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles, proguardConfigFiles, extractedDirectories);
-			} catch (ZipIOException ex) {
+			} catch (InvalidDataException ex) {
 				Log.LogCodedError ("XA1004", ex.Message);
 				Log.LogDebugMessage (ex.ToString ());
 			}
@@ -267,14 +267,14 @@ namespace Xamarin.Android.Tasks
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
 							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
 								AddJar (jars, importsDir, name, assemblyPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
-								updated |= Files.CopyIfStreamChanged (stream, Path.Combine (importsDir, name));
+								updated |= Files.CopyIfStreamChanged (stream, Files.GetArchiveExtractionPath (importsDir, name));
 							}
 						}
 						// embedded native libraries
 						else if (name == "__AndroidNativeLibraries__.zip") {
 							List<string> files = new List<string> ();
 							using (var stream = pe.GetEmbeddedResourceStream (resource))
-							using (var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream)) {
+							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, nativeimportsDir, modifyCallback: (entryFullName) => {
 										files.Add (Path.GetFullPath (Path.Combine (nativeimportsDir, entryFullName)));
@@ -298,7 +298,7 @@ namespace Xamarin.Android.Tasks
 							// temporarily extracted directory will look like:
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
 							using (var stream = pe.GetEmbeddedResourceStream (resource))
-							using (var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream)) {
+							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
 										var path = entryFullName
@@ -437,7 +437,7 @@ namespace Xamarin.Android.Tasks
 								AddJar (jars, importsDir, entryFullName, aarFullPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 							} else if (entryFullName.StartsWith (".net/env/", StringComparison.OrdinalIgnoreCase) ||
 									entryFullName.StartsWith (".net\\env\\", StringComparison.OrdinalIgnoreCase)) {
-								var fullPath = Path.GetFullPath (Path.Combine (importsDir, entryFullName));
+								var fullPath = Files.GetArchiveExtractionPath (importsDir, entryFullName);
 								resolvedEnvironments.Add (new TaskItem (fullPath, new Dictionary<string, string> {
 									[OriginalFile] = aarFile.ItemSpec,
 									[NuGetPackageId] = nuGetPackageId,
@@ -488,7 +488,7 @@ namespace Xamarin.Android.Tasks
 
 		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string? originalFile = null, string? nuGetPackageId = null, string? nuGetPackageVersion = null)
 		{
-			var fullPath = Path.GetFullPath (Path.Combine (destination, path));
+			var fullPath = Files.GetArchiveExtractionPath (destination, path);
 			AddJar (jars, fullPath, originalFile: originalFile, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 		}
 

@@ -33,6 +33,7 @@ set(XAMARIN_MONODROID_SOURCES
   jni-remapping-data-stub.cc
 
   ../runtime-base/android-system.cc
+  ../runtime-base/app-system-properties.cc
 
   # Sources shared with the CoreCLR host
   ${CLR_SOURCES_PATH}/host/host-shared.cc

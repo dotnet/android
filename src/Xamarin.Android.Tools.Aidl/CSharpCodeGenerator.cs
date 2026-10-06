@@ -257,7 +257,7 @@ namespace Xamarin.Android.Tools.Aidl
 		protected override bool OnTransact (int code, global::Android.OS.Parcel data, global::Android.OS.Parcel reply, int flags)
 		{{
 			switch (code) {{
-			case global::Android.OS.BinderConsts.InterfaceTransaction:
+			case global::Android.OS.IBinder.InterfaceTransaction:
 				reply.WriteString (descriptor);
 				return true;",
 // end of long formatted output...

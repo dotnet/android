@@ -11,19 +11,19 @@
 using namespace xamarin::android;
 
 namespace {
-	// Must match the same ordering as LogCategories
+	// Indexed by ffs(LogCategories); preserve reserved bit positions.
 	constexpr std::array<std::string_view const, 12> log_names = {
 		Constants::LOG_CATEGORY_NAME_NONE,
 		Constants::LOG_CATEGORY_NAME_MONODROID,
 		Constants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
-		Constants::LOG_CATEGORY_NAME_MONODROID_DEBUG,
+		Constants::LOG_CATEGORY_NAME_NONE, // Reserved for the removed debugger logging bit.
 		Constants::LOG_CATEGORY_NAME_MONODROID_GC,
 		Constants::LOG_CATEGORY_NAME_MONODROID_GREF,
 		Constants::LOG_CATEGORY_NAME_MONODROID_LREF,
 		Constants::LOG_CATEGORY_NAME_MONODROID_TIMING,
-		Constants::LOG_CATEGORY_NAME_MONODROID_BUNDLE,
+		Constants::LOG_CATEGORY_NAME_NONE, // Reserved for the removed bundle logging bit.
 		Constants::LOG_CATEGORY_NAME_MONODROID_NETWORK,
-		Constants::LOG_CATEGORY_NAME_MONODROID_NETLINK,
+		Constants::LOG_CATEGORY_NAME_NONE, // Reserved for the removed netlink logging bit.
 		Constants::LOG_CATEGORY_NAME_ERROR,
 	};
 

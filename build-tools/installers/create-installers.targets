@@ -49,9 +49,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-interop.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-source-utils.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)LayoutBinding.cs" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libZipSharp.dll" />
-    <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)%(Identity)\libZipSharp.resources.dll')" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libZipSharp.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.dll" />
@@ -59,14 +56,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Common.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Configuration.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.DependencyResolver.Core.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Frameworks.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.LibraryModel.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Packaging.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.ProjectModel.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Protocol.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
@@ -143,12 +132,6 @@
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />
   </ItemGroup>
   <ItemGroup>
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x86\libZipSharpNative-*.dll" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x86\libZipSharpNative-*.pdb" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x64\libZipSharpNative-*.dll" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x64\libZipSharpNative-*.pdb" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative-*.dll" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative-*.pdb" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)aapt2.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\as.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\ld.exe" />
@@ -182,7 +165,6 @@
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\illinkanalyzer" Permission="755" />
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\mono.config" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\aapt2" />
-    <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libZipSharpNative-*.$(LibExtension)" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libMono.Unix.$(LibExtension)" />
   </ItemGroup>
   <!-- monodroid: in-tree installer/debugging projects under src/Xamarin.Installer.*

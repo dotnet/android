@@ -37,13 +37,13 @@ public class JavaMarshalGCBridgeTests
 		Type handleContext = typeof (HandleContext);
 		Assert.AreEqual (0, Marshal.OffsetOf (handleContext, "identityHashCode").ToInt32 ());
 		Assert.AreEqual (IntPtr.Size, Marshal.OffsetOf (handleContext, "controlBlock").ToInt32 ());
-		Assert.AreEqual (IntPtr.Size * 2, Marshal.SizeOf (handleContext));
+		Assert.AreEqual (IntPtr.Size * 2, Marshal.SizeOf<HandleContext> ());
 
 		Type controlBlock = typeof (HandleContext.JniObjectReferenceControlBlock);
 		Assert.AreEqual (0, Marshal.OffsetOf (controlBlock, "handle").ToInt32 ());
 		Assert.AreEqual (IntPtr.Size, Marshal.OffsetOf (controlBlock, "handle_type").ToInt32 ());
 		Assert.AreEqual (IntPtr.Size + sizeof (int), Marshal.OffsetOf (controlBlock, "refs_added").ToInt32 ());
-		Assert.AreEqual (IntPtr.Size + (2 * sizeof (int)), Marshal.SizeOf (controlBlock));
+		Assert.AreEqual (IntPtr.Size + (2 * sizeof (int)), Marshal.SizeOf<HandleContext.JniObjectReferenceControlBlock> ());
 	}
 
 	[TestCase (0ul, true)]

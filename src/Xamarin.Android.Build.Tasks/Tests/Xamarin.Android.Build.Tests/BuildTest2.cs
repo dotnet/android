@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -744,8 +745,8 @@ namespace Xamarin.Android.Build.Tests
 
 				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-				using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
-				Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+				using var zip = ZipFile.OpenRead (aarPath);
+				Assert.IsFalse (zip.Entries.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
 					$"{aarPath} should not contain a .jar file!");
 			}
 		}
@@ -1738,7 +1739,7 @@ namespace UnamedProject
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					var entries = zip.Select (e => e.FullName).ToList ();
+					var entries = zip.Entries.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
 				}
@@ -1754,7 +1755,7 @@ namespace UnamedProject
 				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes3.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					var entries = zip.Select (e => e.FullName).ToList ();
+					var entries = zip.Entries.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
 				}
@@ -2190,8 +2191,9 @@ namespace App1
 				$"The application DEX files should include `{className}`!");
 		}
 
-		[Test]
-		public void InvalidCustomJniInitFunctionName ()
+		[TestCase ("valid_name", TestName = "NativeAotRejectsValidCustomJniInitFunction")]
+		[TestCase ("evil\ndefine void @injected()", TestName = "NativeAotRejectsInvalidCustomJniInitFunctionName")]
+		public void UnsupportedCustomJniInitFunction (string functionName)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
 				return;
@@ -2202,16 +2204,13 @@ namespace App1
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 
-			// A malicious NuGet package could inject LLVM IR via a function name containing
-			// newlines or non-identifier characters (VULN-341/342).  The build must reject
-			// names that are not valid C identifiers.
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "valid_name"));
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "evil\ndefine void @injected()"));
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", functionName));
 
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Build should have failed due to invalid CustomJniInitFunctions names.");
-				StringAssertEx.ContainsRegex (@"is not a valid C identifier", b.LastBuildOutput, "Expected an error about invalid C identifier");
+				Assert.IsFalse (b.Build (proj), "NativeAOT should reject custom JNI initializers, including valid C identifiers.");
+				StringAssertEx.Contains ("error XA1051", b.LastBuildOutput, "Expected the unsupported custom JNI initializer diagnostic.");
+				b.Output.AssertTargetIsSkipped ("IlcCompile", defaultIfNotUsed: true);
 			}
 		}
 	}

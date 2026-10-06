@@ -46,6 +46,12 @@ namespace System.NetTests
 					AddressesAreEqual (Addresses, other.Addresses);
 			}
 
+			public override int GetHashCode ()
+			{
+				// Address order is ignored, and hardware addresses are ignored on API 33.
+				return HashCode.Combine (Name, IsLoopback, IsUp);
+			}
+
 			string HardwareAddressToString ()
 			{
 				if (HardwareAddress == null || HardwareAddress.Length == 0)
@@ -101,6 +107,32 @@ namespace System.NetTests
 				}
 
 				return true;
+			}
+		}
+
+		[Test, Category ("NetworkInterfaceEquality")]
+		public void InterfaceInfo_EqualValuesHaveEqualHashCodes ()
+		{
+			var first = new InterfaceInfo {
+				Name = "test",
+				IsUp = true,
+				HardwareAddress = [1, 2, 3],
+				Addresses = [IPAddress.Loopback, IPAddress.IPv6Loopback],
+			};
+			var second = new InterfaceInfo {
+				Name = "test",
+				IsUp = true,
+				HardwareAddress = [1, 2, 3],
+				Addresses = [IPAddress.IPv6Loopback, IPAddress.Loopback],
+			};
+
+			Assert.AreEqual (first, second);
+			Assert.AreEqual (first.GetHashCode (), second.GetHashCode ());
+
+			if (Android.OS.Build.VERSION.SdkInt == Android.OS.BuildVersionCodes.Tiramisu) {
+				second.HardwareAddress = null;
+				Assert.AreEqual (first, second);
+				Assert.AreEqual (first.GetHashCode (), second.GetHashCode ());
 			}
 		}
 

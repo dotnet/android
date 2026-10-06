@@ -8,7 +8,7 @@ using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 
@@ -237,13 +237,14 @@ public class JavaSourceTest {
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/_Microsoft.Android.Resource.Designer.dll");
 
 			using var aarStream = new MemoryStream ();
-			var aarEntry = nupkg.ReadEntry (aarPath);
-			aarEntry.Extract (aarStream);
+			var aarEntry = nupkg.GetEntry (aarPath) ?? throw new InvalidOperationException ($"Missing AAR '{aarPath}'.");
+			using (var source = aarEntry.Open ())
+				source.CopyTo (aarStream);
 			aarStream.Seek (0, SeekOrigin.Begin);
 
 			// Look for the Maven dependency, foo.jar, and the compiled AndroidJavaSource output under libs/
-			using var aar = ZipArchive.Open (aarStream);
-			int count = aar.Count (e =>
+			using var aar = new ZipArchive (aarStream, ZipArchiveMode.Read, leaveOpen: true);
+			int count = aar.Entries.Count (e =>
 				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
 				e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
 			Assert.AreEqual (3, count, $"There should be 3 .jar files in the {aarPath} archive, but found {count}.");

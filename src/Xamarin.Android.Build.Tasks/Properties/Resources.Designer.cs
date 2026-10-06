@@ -980,6 +980,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1050", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it..
+        /// </summary>
+        public static string XA1051 {
+            get {
+                return ResourceManager.GetString("XA1051", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..

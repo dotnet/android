@@ -10,7 +10,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -28,12 +27,13 @@
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" GeneratePathProperty="true" />
     <PackageReference Include="Irony" />
-    <PackageReference Include="NuGet.ProjectModel" Version="6.14.3" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="System.Text.Json" Version="8.0.6" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
 
@@ -177,6 +177,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\EnvironmentBuilder.cs" Link="Utilities\EnvironmentBuilder.cs" />
+    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\RuntimeProviderSourceGenerator.cs" Link="Utilities\RuntimeProviderSourceGenerator.cs" />
     <Compile Include="..\..\src-ThirdParty\android-platform-tools-base\PackagingUtils.cs">
       <Link>Utilities\%(Filename)%(Extension)</Link>
     </Compile>

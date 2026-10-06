@@ -19,6 +19,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidComputeResPaths" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2LinkAssetPack" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.FixupAssetPackArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAssetPacks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveUnknownFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateDynamicFeatureManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -140,6 +141,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       PackageName="$(_AndroidPackage).%(_AssetPacks.AssetPack)"
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
+  />
+  <FixupAssetPackArchive
+      MSBuildRuntime="NET"
+      Condition=" Exists('%(_AssetPacks.AssetPackOutput)') "
+      ArchiveFile="%(_AssetPacks.AssetPackOutput)"
   />
   <ItemGroup>
     <AndroidAppBundleModules Include="%(_AssetPacks.AssetPackOutput)" Condition=" '$(AndroidIncludeAssetPacksInPackage)' == 'true' "/>

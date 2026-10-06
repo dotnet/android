@@ -16,7 +16,7 @@ using Xamarin.Installer.AndroidSDK.Manager;
 using Xamarin.Installer.Common;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -413,9 +413,11 @@ namespace Xamarin.Android.Build.Tests
 			static byte [] CreateArchive (params (string path, string contents) [] entries)
 			{
 				using (var stream = new MemoryStream ()) {
-					using (var archive = ZipArchive.Create (stream)) {
-						foreach (var entry in entries)
-							archive.AddEntry (entry.path, entry.contents, Encoding.UTF8);
+					using (var archive = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+						foreach (var entry in entries) {
+							using var writer = new StreamWriter (archive.CreateEntry (entry.path).Open (), new UTF8Encoding (false));
+							writer.Write (entry.contents);
+						}
 					}
 					return stream.ToArray ();
 				}
@@ -426,14 +428,15 @@ namespace Xamarin.Android.Build.Tests
 				(string path, string contents) sdkManager)
 			{
 				using (var stream = new MemoryStream ()) {
-					using (var archive = ZipArchive.Create (stream)) {
-						archive.AddEntry (sourceProperties.path, sourceProperties.contents, Encoding.UTF8);
-						archive.AddEntry (
-							Encoding.UTF8.GetBytes (sdkManager.contents),
-							sdkManager.path,
-							EntryPermissions.OwnerRead | EntryPermissions.OwnerWrite | EntryPermissions.OwnerExecute |
-								EntryPermissions.GroupRead | EntryPermissions.GroupExecute |
-								EntryPermissions.WorldRead | EntryPermissions.WorldExecute);
+					using (var archive = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+						using (var writer = new StreamWriter (archive.CreateEntry (sourceProperties.path).Open (), new UTF8Encoding (false)))
+							writer.Write (sourceProperties.contents);
+						var entry = archive.CreateEntry (sdkManager.path);
+						entry.ExternalAttributes = ((int)(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+							UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+							UnixFileMode.OtherRead | UnixFileMode.OtherExecute) | 0x8000) << 16;
+						using var scriptWriter = new StreamWriter (entry.Open (), new UTF8Encoding (false));
+						scriptWriter.Write (sdkManager.contents);
 					}
 					return stream.ToArray ();
 				}

@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace tmt
 {
@@ -195,15 +194,17 @@ namespace tmt
 			const string xamarinAppEntryTail = "/" + xamarinApp;
 
 			var ret = new List<ITypemap> ();
-			ZipArchive zip = ZipArchive.Open (filePath, FileMode.Open);
-			var managedResolver = new ApkManagedTypeResolver (zip, assemblyEntryPrefix);
-			foreach (ZipEntry entry in zip) {
+			using ZipArchive zip = ZipFile.OpenRead (filePath);
+			var managedResolver = new ApkManagedTypeResolver (filePath, zip, assemblyEntryPrefix);
+			foreach (ZipArchiveEntry entry in zip.Entries) {
 				if (!entry.FullName.EndsWith (xamarinAppEntryTail, StringComparison.Ordinal)) {
 					continue;
 				}
 
 				var stream = new MemoryStream ();
-				entry.Extract (stream);
+				using (Stream entryStream = entry.Open ()) {
+					entryStream.CopyTo (stream);
+				}
 
 				ITypemap? tm = LoadDSO (stream, $"{filePath}!{entry.FullName}", managedResolver);
 				if (tm != null) {
