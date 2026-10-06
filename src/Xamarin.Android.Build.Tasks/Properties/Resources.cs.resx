@@ -168,10 +168,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Nepodporovaná nebo neplatná hodnota $(TargetFrameworkVersion) {0}. Aktualizujte prosím možnosti projektu.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
-  <data name="XA0002" xml:space="preserve">
-    <value>Nepovedlo se najít mono.android.jar.</value>
-    <comment>The following are literal names and should not be translated: mono.android.jar</comment>
-  </data>
   <data name="XA0003" xml:space="preserve">
     <value>Neplatná hodnota android:versionCode {0} v AndroidManifest.xml. Musí být celočíselná.</value>
     <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</comment>
@@ -1113,6 +1109,10 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Vlastnost MSBuildu AndroidR8ObfuscationMode má neplatnou hodnotu '{0}'. Platné hodnoty jsou disabled a private-members.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
+  <data name="XA1051" xml:space="preserve">
+    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Závislosti Java {0} není vyhověno.</value>
