@@ -384,6 +384,53 @@ public class TypeMapProguardTargetsTests : BaseTest
 		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 	}
 
+	[TestCase ("false", "", true)]
+	[TestCase ("false", "true", true)]
+	[TestCase ("false", "false", true)]
+	[TestCase ("true", "", false)]
+	[TestCase ("true", "true", false)]
+	[TestCase ("true", "false", true)]
+	public void CoreClrLegacyProducerRemainsEligibleWithoutILLink (string runILLink, string enabled, bool expected)
+	{
+		var targets = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks",
+			"Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"));
+		var root = targets.Root ?? throw new InvalidOperationException ();
+		XNamespace ns = root.Name.Namespace;
+		var prepare = new XElement (root.Elements (ns + "Target")
+			.Single (target => (string?) target.Attribute ("Name") == "_PrepareLinkedAssembliesForProguard"));
+		var generate = new XElement (root.Elements (ns + "Target")
+			.Single (target => (string?) target.Attribute ("Name") == "_GenerateProguardConfiguration"));
+		// Exercise the shipped target's eligibility and hooks without requiring the legacy task assembly.
+		generate.Element (ns + "GenerateProguardConfiguration")?.ReplaceWith (
+			new XElement (ns + "WriteLinesToFile", new XAttribute ("File", "$(_ProguardProjectConfiguration)"),
+				new XAttribute ("Lines", "@(_LinkedAssemblyForProguard)"), new XAttribute ("Overwrite", "true")));
+		var assembly = Write ("unlinked.dll", "input");
+		var output = Path.Combine (directory, "proguard_project_references.cfg");
+		var project = Path.Combine (directory, "legacy.proj");
+		new XDocument (new XElement (ns + "Project",
+			new XElement (ns + "PropertyGroup",
+				new XElement (ns + "PublishTrimmed", "true"),
+				new XElement (ns + "AndroidLinkTool", "r8"),
+				new XElement (ns + "RunILLink", runILLink),
+				new XElement (ns + "_AndroidEnableTypemapR8Trimming", enabled),
+				new XElement (ns + "_ProguardProjectConfiguration", output),
+				new XElement (ns + "_GenerateProguardAfterTargets", "ComputeFilesToPublish")),
+			new XElement (ns + "ItemGroup", new XElement (ns + "ResolvedFileToPublish", new XAttribute ("Include", assembly))),
+			prepare, generate,
+			new XElement (ns + "Target", new XAttribute ("Name", "ComputeFilesToPublish")),
+			new XElement (ns + "Target", new XAttribute ("Name", "Build"),
+				new XAttribute ("DependsOnTargets", "ComputeFilesToPublish")))).Save (project);
+
+		Build (project);
+		Assert.AreEqual (expected, File.Exists (output));
+		if (expected) {
+			Assert.AreEqual (assembly, File.ReadAllText (output).Trim ());
+			var timestamp = File.GetLastWriteTimeUtc (output);
+			Build (project);
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (output), "Unchanged fallback inputs should skip generation.");
+		}
+	}
+
 	[TestCase ("MonoVM", "trimmable", "true", "r8", "true", false, "")]
 	[TestCase ("CoreCLR", "trimmable", "false", "r8", "true", false, "")]
 	[TestCase ("CoreCLR", "trimmable", "true", "", "true", false, "")]
