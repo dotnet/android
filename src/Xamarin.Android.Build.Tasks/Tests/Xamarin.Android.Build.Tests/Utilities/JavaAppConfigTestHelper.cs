@@ -12,6 +12,7 @@ static class JavaAppConfigTestHelper
 {
 	public static (byte [] Data, int [] Layout, string [] Strings) Read (string source)
 	{
+		source = Regex.Replace (source, @"//[^\r\n]*", "");
 		var chunks = Regex.Matches (source, @"private static byte\[\] nativeConfigChunk\d+ \(\).*?return new byte\[\] \{(?<values>.*?)\};", RegexOptions.Singleline);
 		var inline = Regex.Match (source, @"NativeConfig = new byte\[\] \{(?<values>.*?)\};", RegexOptions.Singleline);
 		var values = inline.Success

@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <source_location>
-#include <string>
 
 #include <runtime-base/java-app-config.hh>
 #include <shared/log_types.hh>
@@ -38,24 +37,22 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad (JavaVM *vm, void*)
 
 extern "C" JNIEXPORT jbyteArray JNICALL Java_net_dot_android_CoreClrBootstrapProbe_snapshot (JNIEnv *env, jclass, jboolean jni_flags)
 {
-	std::string result;
-	const char *next = JavaAppConfig::package_name ();
-	auto append = [&result, &next] (const char *value) {
+	const char *blob = JavaAppConfig::package_name ();
+	const char *next = blob;
+	auto check_pointer = [&next] (const char *value) {
 		if (value != next) {
 			Helpers::abort_application ("All configuration pointers must reference the same owned blob");
 		}
-		size_t length = std::strlen (value) + 1;
-		result.append (value, length);
-		next += length;
+		next += std::strlen (value) + 1;
 	};
-	append (JavaAppConfig::package_name ());
+	check_pointer (JavaAppConfig::package_name ());
 	for (auto const& entry : JavaAppConfig::environment ()) {
-		append (entry.name);
-		append (entry.value);
+		check_pointer (entry.name);
+		check_pointer (entry.value);
 	}
 	for (auto const& entry : JavaAppConfig::system_properties ()) {
-		append (entry.name);
-		append (entry.value);
+		check_pointer (entry.name);
+		check_pointer (entry.value);
 		size_t length = 0;
 		if (JavaAppConfig::lookup_system_property (entry.name, length) != entry.value || length != std::strlen (entry.value)) {
 			Helpers::abort_application ("System property lookup must use the blob");
@@ -69,12 +66,12 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_net_dot_android_CoreClrBootstrapPro
 		}
 	}
 	for (int i = 3; i < JavaAppConfig::runtime_property_count (); i++) {
-		append (JavaAppConfig::runtime_property_names ()[i]);
-		append (JavaAppConfig::runtime_property_values ()[i]);
+		check_pointer (JavaAppConfig::runtime_property_names ()[i]);
+		check_pointer (JavaAppConfig::runtime_property_values ()[i]);
 	}
 	size_t index = 0;
 	for (auto const& library : JavaAppConfig::libraries ()) {
-		append (library.name);
+		check_pointer (library.name);
 		bool expected_jni = jni_flags == JNI_TRUE;
 		bool expected_preload = expected_jni && index == 0;
 		if (library.is_jni_library != expected_jni || library.preload != expected_preload || library.handle != nullptr) {
@@ -82,9 +79,10 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_net_dot_android_CoreClrBootstrapPro
 		}
 		index++;
 	}
-	jbyteArray bytes = env->NewByteArray (static_cast<jsize>(result.size ()));
+	jsize length = static_cast<jsize>(next - blob);
+	jbyteArray bytes = env->NewByteArray (length);
 	if (bytes != nullptr) {
-		env->SetByteArrayRegion (bytes, 0, static_cast<jsize>(result.size ()), reinterpret_cast<const jbyte*>(result.data ()));
+		env->SetByteArrayRegion (bytes, 0, length, reinterpret_cast<const jbyte*>(blob));
 	}
 	return bytes;
 }

@@ -106,6 +106,7 @@ public class GenerateJavaApplicationConfig : AndroidTask
 		IDictionary<string, string> runtimeProperties, List<string> libraries)
 	{
 		using var data = new MemoryStream ();
+		var strings = new Dictionary<int, string> ();
 		// The fixed JNI reader uses these counts followed by offsets into the NUL-terminated UTF-8 blob.
 		var layout = new List<int> { environment.Count, systemProperties.Count, runtimeProperties.Count, libraries.Count };
 		AddString (AndroidPackageName);
@@ -121,7 +122,7 @@ public class GenerateJavaApplicationConfig : AndroidTask
 			source.Append ("\t\t").Append (value.ToString (CultureInfo.InvariantCulture)).AppendLine (",");
 		}
 		source.AppendLine ("\t};");
-		AppendBytes (source, data.ToArray ());
+		AppendBytes (source, data.ToArray (), strings);
 
 		void AddPairs (IDictionary<string, string> pairs)
 		{
@@ -136,19 +137,21 @@ public class GenerateJavaApplicationConfig : AndroidTask
 			if (value.IndexOf ('\0') >= 0) {
 				throw new ArgumentException ("Application bootstrap strings must not contain NUL characters");
 			}
-			layout.Add (checked ((int)data.Position));
+			int offset = checked ((int)data.Position);
+			layout.Add (offset);
+			strings.Add (offset, value);
 			byte [] bytes = Encoding.UTF8.GetBytes (value);
 			data.Write (bytes, 0, bytes.Length);
 			data.WriteByte (0);
 		}
 	}
 
-	static void AppendBytes (StringBuilder source, byte [] data)
+	static void AppendBytes (StringBuilder source, byte [] data, Dictionary<int, string> strings)
 	{
 		const int chunkSize = 4096;
 		if (data.Length <= chunkSize) {
 			source.AppendLine ("\tpublic static final byte[] NativeConfig = new byte[] {");
-			AppendByteValues (source, data, 0, data.Length);
+			AppendByteValues (source, data, strings, 0, data.Length);
 			source.AppendLine ("\t};");
 			return;
 		}
@@ -170,23 +173,37 @@ public class GenerateJavaApplicationConfig : AndroidTask
 			source.Append ("\tprivate static byte[] nativeConfigChunk").Append (chunk.ToString (CultureInfo.InvariantCulture)).AppendLine (" ()");
 			source.AppendLine ("\t{");
 			source.AppendLine ("\t\treturn new byte[] {");
-			AppendByteValues (source, data, offset, Math.Min (offset + chunkSize, data.Length));
+			AppendByteValues (source, data, strings, offset, Math.Min (offset + chunkSize, data.Length));
 			source.AppendLine ("\t\t};");
 			source.AppendLine ("\t}");
 		}
 	}
 
-	static void AppendByteValues (StringBuilder source, byte [] data, int offset, int end)
+	static void AppendByteValues (StringBuilder source, byte [] data, Dictionary<int, string> strings, int offset, int end)
 	{
+		if (offset > 0 && !strings.ContainsKey (offset)) {
+			source.AppendLine ("\t\t\t// Continuation of the preceding UTF-8 string.");
+		}
+		int column = 0;
 		for (int i = offset; i < end; i++) {
-			if ((i - offset) % 16 == 0) {
-				source.Append ("\t\t\t");
-			}
-			source.Append (unchecked ((sbyte)data [i]).ToString (CultureInfo.InvariantCulture)).Append (",");
-			if ((i - offset) % 16 == 15 || i + 1 == end) {
+			if (strings.TryGetValue (i, out string? value)) {
+				if (column > 0) {
+					source.AppendLine ();
+					column = 0;
+				}
+				source.Append ("\t\t\t// ");
+				AppendJavaString (source, value);
 				source.AppendLine ();
+			}
+			if (column == 0) {
+				source.Append ("\t\t\t");
 			} else {
 				source.Append (' ');
+			}
+			source.Append (unchecked ((sbyte)data [i]).ToString (CultureInfo.InvariantCulture)).Append (",");
+			if (++column == 16 || i + 1 == end) {
+				source.AppendLine ();
+				column = 0;
 			}
 		}
 	}

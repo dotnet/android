@@ -131,7 +131,7 @@ public class CoreClrBootstrapBlobTests : BaseTest
 			: "");
 		string runtimeConfig = Path.Combine (directory, "app.runtimeconfig.json");
 		File.WriteAllText (runtimeConfig, populated
-			? """{"runtimeOptions":{"configProperties":{"Z.Switch":"last","A.Switch":"first","HOST_RUNTIME_CONTRACT":"untrusted"}}}"""
+			? """{"runtimeOptions":{"configProperties":{"Z.Switch":"last","A.Switch":"line\n//\"quoted\"\\u000a};","HOST_RUNTIME_CONTRACT":"untrusted"}}}"""
 			: """{"runtimeOptions":{}}""");
 		var task = new GenerateJavaApplicationConfig {
 			BuildEngine = new MockBuildEngine (TestContext.Out),

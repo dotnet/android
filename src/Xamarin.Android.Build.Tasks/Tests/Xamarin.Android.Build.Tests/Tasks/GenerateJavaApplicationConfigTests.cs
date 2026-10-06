@@ -47,6 +47,9 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 		Assert.That (source, Does.Not.Contain ("String[] Environment"));
 		Assert.That (source, Does.Not.Contain ("String[] SystemProperties"));
 		Assert.That (source, Does.Not.Contain ("String[] RuntimeProperties"));
+		Assert.That (source, Does.Contain ("// \"example.test\""));
+		Assert.That (source, Does.Contain ("// \"MY_ENV\""));
+		Assert.That (source, Does.Contain ("// \"value\\\\\\\"quoted\""));
 		Assert.That (source, Does.Contain ("\"libSome.Library.dll.so\","));
 		Assert.That (source, Does.Contain ("NativeLibraryFlags = new byte[] {\n\t\t0,"));
 		Assert.That (source, Does.Not.Contain ("dso_cache"));
@@ -158,6 +161,7 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 		Assert.That (JavaAppConfigTestHelper.Read (source).Strings, Is.EqualTo (new [] { "example.test", "MY_ENV", value }));
 		Assert.That (source, Does.Contain ("nativeConfigChunk4 ()"));
 		Assert.That (source, Does.Contain ("System.arraycopy"));
+		Assert.That (source, Does.Contain ("// Continuation of the preceding UTF-8 string."));
 		Assert.That (source, Does.Not.Contain ("getBytes"));
 		Assert.That (source, Does.Not.Contain ("Base64"));
 	}
@@ -185,6 +189,26 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 		Assert.That (config.Strings, Is.EqualTo (new [] { "example.test", "MY_ENV", value }));
 		Assert.That (source.Contains ("System.arraycopy"), Is.EqualTo (size > 4096));
 		Assert.That (source.Contains ("nativeConfigChunk"), Is.EqualTo (size > 4096));
+	}
+
+	[Test]
+	public void EscapesStringCommentsWithoutChangingBlobBytes ()
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		string runtimeConfig = Path.Combine (directory, "app.runtimeconfig.json");
+		File.WriteAllText (runtimeConfig, """{"runtimeOptions":{"configProperties":{"Example":"line\n//\"quoted\"\\u000a};"}}}""");
+		var task = new GenerateJavaApplicationConfig {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			AndroidPackageName = "example.test",
+			OutputFile = Path.Combine (directory, "AppBootstrapConfig.java"),
+			ProjectRuntimeConfigFilePath = runtimeConfig,
+		};
+
+		Assert.IsTrue (task.Execute ());
+		string source = File.ReadAllText (task.OutputFile);
+		Assert.That (source, Does.Contain ("// \"line\\n//\\\"quoted\\\"\\\\u000a};\""));
+		Assert.That (JavaAppConfigTestHelper.Read (source).Strings, Is.EqualTo (new [] { "example.test", "Example", "line\n//\"quoted\"\\u000a};" }));
 	}
 
 	[Test]

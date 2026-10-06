@@ -133,6 +133,8 @@ from the offsets; it performs no JNI string conversion or per-string copy.
 Literal byte-array initializers become DEX bulk array-data payloads, rather than
 per-byte Java assignments. Blobs larger than 4 KiB use bounded initializer methods and
 one Java chunk-concatenation step to stay below the per-method bytecode limit.
+The generated literals include escaped string comments for inspection; those comments
+do not affect the bytes, DEX payloads, or runtime work.
 Java retains library names as strings for JNI-aware loading.
 Its native library state records the canonical
 packaged name, whether the library has `JNI_OnLoad`, the preload policy, and the loaded handle.
