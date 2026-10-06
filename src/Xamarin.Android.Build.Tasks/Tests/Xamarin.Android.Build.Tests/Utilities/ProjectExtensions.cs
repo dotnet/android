@@ -22,7 +22,6 @@ public static class ProjectExtensions
 			return;
 		}
 		project.SetPublishAot (true);
-		project.SetProperty ("_SkipNdkResolution", "true");
 	}
 
 	static void DoSetRuntime (XamarinProject project, AndroidRuntime runtime)

@@ -16,22 +16,44 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 {
 	const string JavaGroup = "_ZTV29Mono_Android_Java_Lang_Object";
 
-	[TestCase ("_ZTV43Mono_Android_Android_Runtime_JavaDictionary")]
-	[TestCase ("_ZTV29Mono_Android_Java_Lang_ObjectExtra")]
-	[TestCase ("_ZTV30ThirdParty_TypeMap___TypeMapAnchor")]
-	[TestCase ("_ZTV30_Other_TypeMap___TypeMapAnchorExtra")]
-	public void MissingRecognizedJavaGroupIsNotAnEmptySuccess (string groupSymbol)
+	[TestCase ("Mono_Android_Android_Runtime_JavaDictionary")]
+	[TestCase ("Mono_Android_Java_Lang_ObjectExtra")]
+	[TestCase ("ThirdParty_TypeMap___TypeMapAnchor")]
+	[TestCase ("_Other_TypeMap___TypeMapAnchorExtra")]
+	[TestCase ("Mono_Android_0_Android_Runtime_JavaDictionary")]
+	[TestCase ("Mono_Android_x_Java_Lang_Object")]
+	[TestCase ("Mono_Android_01_Java_Lang_Object")]
+	[TestCase ("_Owner_TypeMap_x___TypeMapAnchor")]
+	[TestCase ("_Owner_TypeMap_0___TypeMapAnchorExtra")]
+	public void MissingRecognizedJavaGroupIsNotAnEmptySuccess (string typeName)
 	{
 		var fixture = CreateFixture ();
 		fixture.AssertSuccess ();
 		File.Delete (fixture.OutputFile);
 
 		var (task, errors) = fixture.CreateTask ();
-		task.Relocations = fixture.Relocations.Replace (JavaGroup, groupSymbol, StringComparison.Ordinal);
+		task.Relocations = fixture.Relocations.Replace (JavaGroup, $"_ZTV{typeName.Length}{typeName}", StringComparison.Ordinal);
 
 		Assert.IsFalse (task.Execute ());
 		AssertCodedError (errors, fixture.ObjectFile, "No Java type map group");
 		Assert.IsFalse (File.Exists (fixture.OutputFile), "Non-Java groups must not produce an empty key file.");
+	}
+
+	[TestCase ("Mono_Android_0_Java_Lang_Object")]
+	[TestCase ("Mono_Android_12_Java_Lang_Object")]
+	[TestCase ("_Owner_TypeMap_0___TypeMapAnchor")]
+	[TestCase ("_Owner_TypeMap_12___TypeMapAnchor")]
+	[TestCase ("Mono_Android_0_Java_Lang_Object_1")]
+	[TestCase ("_Owner_TypeMap_12___TypeMapAnchor_0")]
+	public void DisambiguatedJavaGroupRetainsKeys (string typeName)
+	{
+		var fixture = CreateFixture ();
+		var (task, errors) = fixture.CreateTask ();
+		task.Relocations = fixture.Relocations.Replace (JavaGroup, $"_ZTV{typeName.Length}{typeName}", StringComparison.Ordinal);
+
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (errors);
+		Assert.AreEqual ("test/Live\n", File.ReadAllText (fixture.OutputFile));
 	}
 
 	[TestCase ("", TestName = "MalformedToolJsonFailsWithFileContext_Empty")]

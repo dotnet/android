@@ -24,28 +24,9 @@
 
   <ItemGroup>
     <Compile Include="$(JavaInteropTestDirectory)**\*.cs" Exclude="$(JavaInteropTestDirectory)obj\**;$(JavaInteropTestDirectory)bin\**" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JavaVMFixture.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniNativeInterfaceTests.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
-  </ItemGroup>
-
-  <!--
-    [JniAddNativeMethodRegistrationAttribute] is not supported under the trimmable
-    typemap (XA4251). Exclude the upstream Java.Interop fixtures that use it (and
-    their dependents) from the Android test assembly so the assembly can
-    compile through the generator. The matching NUnit test class is excluded by
-    name in tests/Mono.Android-Tests/Mono.Android-Tests/Xamarin.Android.RuntimeTests/NUnitInstrumentation.cs.
-  -->
-  <ItemGroup>
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorBase.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorDerived.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
-  </ItemGroup>
-
-  <!-- ReflectionJniValueManager is unsupported by the trimmable typemap value manager. See dotnet/android#12221. -->
-  <ItemGroup>
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
   </ItemGroup>
 
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override build/clean behavior -->

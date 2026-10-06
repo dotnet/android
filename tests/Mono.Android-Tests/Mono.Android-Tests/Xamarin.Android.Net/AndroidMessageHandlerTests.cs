@@ -13,6 +13,8 @@ using Xamarin.Android.Net;
 
 using NUnit.Framework;
 
+#pragma warning disable CS0618 // These tests intentionally exercise the obsolete AndroidMessageHandler.
+
 namespace Xamarin.Android.NetTests
 {
 	[TestFixture]

@@ -1905,6 +1905,115 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4324", resourceCulture);
             }
         }
+
+        public static string XA4325 {
+            get {
+                return ResourceManager.GetString("XA4325", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_MappingNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingDataFailure {
+            get {
+                return ResourceManager.GetString("XA4325_MappingDataFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyHasNoMetadata {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyHasNoMetadata", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AmbiguousEntry {
+            get {
+                return ResourceManager.GetString("XA4325_AmbiguousEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotModeRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotModeRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectFormat {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectFormat", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotInvalidSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotTruncatedSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotTruncatedSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotMissingSections {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotMissingSections", resourceCulture);
+            }
+
+        }
+
+        public static string XA4325_NativeAotInvalidDehydration {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidDehydration", resourceCulture);
+            }
+        }
+
+        public static string XA4326 {
+            get {
+                return ResourceManager.GetString("XA4326", resourceCulture);
+            }
+        }
+
+        public static string XA4326_ConflictingEntry {
+            get {
+                return ResourceManager.GetString("XA4326_ConflictingEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4326_UnsupportedSignature {
+            get {
+                return ResourceManager.GetString("XA4326_UnsupportedSignature", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Could not extract Java type map keys from &apos;{0}&apos;: {1}.

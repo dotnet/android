@@ -617,5 +617,71 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "value", [], "java.lang.String", out string stringMethod));
 			Assert.AreEqual ("b", stringMethod);
 		}
+
+		[Test]
+		public void EnumeratesFieldTypesAndMembersDeterministically ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Zebra -> a.z:
+				    java.lang.String[] values -> b
+				    void run(int) -> c
+				com.contoso.Apple -> a.a:
+				    int count -> d
+
+				"""));
+
+			var classes = new System.Collections.Generic.List<R8ClassMapping> (mapping.EnumerateClassMappings ());
+
+			Assert.AreEqual (2, classes.Count);
+			Assert.AreEqual ("com/contoso/Apple", classes [0].OriginalJniName);
+			Assert.AreEqual ("int", classes [0].Fields [0].JavaFieldType);
+			Assert.AreEqual ("com/contoso/Zebra", classes [1].OriginalJniName);
+			Assert.AreEqual ("java.lang.String[]", classes [1].Fields [0].JavaFieldType);
+			Assert.AreEqual ("run", classes [1].Methods [0].OriginalName);
+			CollectionAssert.AreEqual (new [] { "int" }, classes [1].Methods [0].JavaParameterTypes);
+		}
+
+		[Test]
+		public void PreservesSameNamedFieldsWithDistinctDescriptors ()
+		{
+			var mapping = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Peer -> a.b:
+				    int value -> a
+				    java.lang.String value -> b
+
+				"""));
+			var classes = new System.Collections.Generic.List<R8ClassMapping> (mapping.EnumerateClassMappings ());
+
+			Assert.AreEqual (2, classes [0].Fields.Count);
+			Assert.AreEqual ("int", classes [0].Fields [0].JavaFieldType);
+			Assert.AreEqual ("a", classes [0].Fields [0].ObfuscatedName);
+			Assert.AreEqual ("java.lang.String", classes [0].Fields [1].JavaFieldType);
+			Assert.AreEqual ("b", classes [0].Fields [1].ObfuscatedName);
+			Assert.IsFalse (mapping.TryGetRenamedField ("com/contoso/Peer", "value", out _),
+				"A name-only lookup must not choose an arbitrary descriptor's target.");
+		}
+
+		[Test]
+		public void FieldCompatibilityAndReachabilityUseDescriptorIdentity ()
+		{
+			var seed = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Peer -> a.b:
+				    int value -> a
+				    java.lang.String value -> b
+
+				"""));
+			var final = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Peer -> a.b:
+				    int value -> c
+
+				"""));
+			string [] required = ["F\tcom/contoso/Peer\tvalue"];
+			CollectionAssert.AreEqual (new [] {
+				"field 'com/contoso/Peer.value': seed name 'a', final name 'c'",
+			}, seed.GetCompatibilityConflicts (final, required));
+			CollectionAssert.AreEqual (new [] {
+				"field 'com/contoso/Peer.value'",
+			}, seed.GetReachabilityConflicts (final, required));
+		}
 	}
 }
