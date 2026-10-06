@@ -4,8 +4,8 @@
   <!--
     This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
     netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
-    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here must run on .NET,
-    with the runtime selected by the task registration or invocation.
+    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here select the .NET
+    runtime through their task registrations or MSBuildRuntime="NET" invocations.
     Keep this assembly small and self-contained: link only the minimal helpers it needs.
   -->
   <PropertyGroup>

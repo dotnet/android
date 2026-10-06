@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -744,8 +745,8 @@ namespace Xamarin.Android.Build.Tests
 
 				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-				using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
-				Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+				using var zip = ZipFile.OpenRead (aarPath);
+				Assert.IsFalse (zip.Entries.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
 					$"{aarPath} should not contain a .jar file!");
 			}
 		}
@@ -1738,7 +1739,7 @@ namespace UnamedProject
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					var entries = zip.Select (e => e.FullName).ToList ();
+					var entries = zip.Entries.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
 				}
@@ -1754,7 +1755,7 @@ namespace UnamedProject
 				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes3.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					var entries = zip.Select (e => e.FullName).ToList ();
+					var entries = zip.Entries.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
 				}

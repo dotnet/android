@@ -516,7 +516,7 @@ namespace Xamarin.Android.Build.Tests
 			if (!File.Exists (apksignerExe)) {
 				// Fall back to META-INF check if apksigner is not available
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apkPath}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apkPath}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 				}
 				return;
 			}

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.ProjectTools
 {
@@ -247,31 +247,29 @@ namespace Xamarin.ProjectTools
 			apk.Dispose ();
 		}
 
-		ZipEntry GetEntry (string file)
+		ZipArchiveEntry GetEntry (string file)
 		{
-			return apk.First (e => e.FullName == file);
+			return apk.GetEntry (file) ?? throw new InvalidOperationException ($"APK does not contain '{file}'.");
 		}
 
 		public bool Exists (string file)
 		{
-			return apk.Any (e => e.FullName == file);
+			return apk.GetEntry (file) != null;
 		}
 
 		public string GetText (string file)
 		{
-			using (var ms = new MemoryStream ()) {
-				GetEntry (file).Extract (ms);
-				ms.Position = 0;
-				using (var sr = new StreamReader (ms))
-					return sr.ReadToEnd ();
-			}
+			using (var stream = GetEntry (file).Open ())
+			using (var reader = new StreamReader (stream))
+				return reader.ReadToEnd ();
 		}
 
 		public byte [] GetRaw (string file)
 		{
 			var e = GetEntry (file);
+			using (var stream = e.Open ())
 			using (var ms = new MemoryStream ()) {
-				e.Extract (ms);
+				stream.CopyTo (ms);
 				return ms.ToArray ();
 			}
 		}

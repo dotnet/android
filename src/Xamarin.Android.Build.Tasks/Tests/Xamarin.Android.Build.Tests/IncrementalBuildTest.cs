@@ -1982,12 +1982,12 @@ namespace Lib2
 			{
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					var entry = zip.ReadEntry ("assets/Foo.txt");
+					var entry = zip.GetEntry ("assets/Foo.txt");
 					Assert.IsNotNull (entry, "Foo.txt should exist in apk!");
-					using (var stream = new MemoryStream ())
+					if (entry == null)
+						return;
+					using (var stream = entry.Open ())
 					using (var reader = new StreamReader (stream)) {
-						entry.Extract (stream);
-						stream.Position = 0;
 						Assert.AreEqual (text, reader.ReadToEnd ());
 					}
 				}
@@ -2017,7 +2017,7 @@ namespace Lib2
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
+					Assert.IsNotNull (zip.GetEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
 				}
 
 				// Touch $(MSBuildProjectFile)
@@ -2027,7 +2027,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
+					Assert.IsNotNull (zip.GetEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
 				}
 			}
 		}

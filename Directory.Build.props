@@ -39,7 +39,6 @@
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>3.3.0</LibZipSharpVersion>
     <MicroBuildCoreVersion>1.0.0</MicroBuildCoreVersion>
     <NuGetApiPackageVersion>6.14.3</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.3.6</LZ4PackageVersion>
