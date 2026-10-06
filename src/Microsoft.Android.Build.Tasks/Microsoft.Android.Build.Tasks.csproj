@@ -57,6 +57,7 @@
     </EmbeddedResource>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\KnownMetadata.cs" Link="Utilities\KnownMetadata.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />

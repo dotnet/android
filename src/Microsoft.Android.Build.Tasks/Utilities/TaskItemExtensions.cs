@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -13,6 +14,12 @@ namespace Microsoft.Android.Tasks;
 /// </summary>
 static class TaskItemExtensions
 {
+	public static bool GetMetadataOrDefault (this ITaskItem item, string name, bool defaultValue)
+	{
+		string value = item.GetMetadata (name);
+		return string.IsNullOrWhiteSpace (value) ? defaultValue : bool.Parse (value);
+	}
+
 	public static bool TryGetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log, out string value)
 	{
 		value = item.GetMetadata (name);

@@ -42,6 +42,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.ResolveAndroidNdk" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
@@ -923,6 +924,10 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
 		<_PropertyCacheItems Include="OS=$(OS)" />
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
+		<_PropertyCacheItems Include="AndroidStripNativeLibraries=$(_AndroidStripNativeLibraries)" />
+		<_PropertyCacheItems Include="_AndroidRuntime=$(_AndroidRuntime)" />
+		<_PropertyCacheItems Include="_AndroidCheckedBuild=$(_AndroidCheckedBuild)" />
+		<_PropertyCacheItems Include="_AndroidNativeAotExtraLinkerArgs=$(_AndroidNativeAotExtraLinkerArgs)" />
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
 		<_PropertyCacheItems Include="_NuGetAssetsFileHash=%(_NuGetAssetsFileHash.FileHash)" />
 		<_PropertyCacheItems Include="AndroidManifestPlaceholders=$(AndroidManifestPlaceholders)" />
@@ -1960,7 +1965,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareBuildApk"
-    DependsOnTargets="$(_PrepareBuildApkDependsOnTargets)">
+    DependsOnTargets="_AndroidResolveNdk;$(_PrepareBuildApkDependsOnTargets)">
   <PropertyGroup>
     <_BuildApkEmbedOutputs Condition=" '$(AndroidPackageFormat)' == 'aab' ">
       $(_AppBundleIntermediate)
@@ -1978,6 +1983,33 @@ because xbuild doesn't support framework reference assemblies.
         Condition=" (('$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '') Or '$(AndroidEnableMultiDex)' == 'True') And Exists('$(_AndroidR8BuildMetadataFile)') "
         Include="com.android.tools/r8.json:$(_AndroidR8BuildMetadataFile)"
     />
+  </ItemGroup>
+</Target>
+
+<Target Name="_AndroidResolveNdk"
+    DependsOnTargets="_ResolveSdks"
+    Condition=" '$(DesignTimeBuild)' != 'true' and ('$(_AndroidRuntime)' == 'NativeAOT' or '$(_AndroidStripNativeLibraries)' == 'true' or '$(_AndroidCheckedBuild)' != '') ">
+  <ResolveAndroidNdk
+      MSBuildRuntime="NET"
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      AndroidRuntime="$(_AndroidRuntime)"
+      StripNativeLibraries="$(_AndroidStripNativeLibraries)"
+      CheckedBuild="$(_AndroidCheckedBuild)">
+    <Output TaskParameter="ToolchainDirectory" PropertyName="_AndroidNdkToolchainDirectory" />
+    <Output TaskParameter="LinkerToolPath" PropertyName="_AndroidNdkLinkerToolPath" />
+    <Output TaskParameter="ObjcopyToolPath" PropertyName="_AndroidNdkObjcopyToolPath" />
+    <Output TaskParameter="StripToolPath" PropertyName="_AndroidNdkStripToolPath" />
+    <Output TaskParameter="ClangRuntimeDirectory" PropertyName="_AndroidNdkClangRuntimeDirectory" />
+  </ResolveAndroidNdk>
+</Target>
+
+<!-- Package runs after the SDK has recorded Build's FileWrites. Keep prior stripped
+     copies registered so IncrementalClean does not delete them on an unchanged build. -->
+<Target Name="_AndroidRegisterStrippedNativeLibraries"
+    BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+    Condition=" '$(DesignTimeBuild)' != 'true' ">
+  <ItemGroup>
+    <FileWrites Include="$(IntermediateOutputPath)android-*\stripped\*.so" />
   </ItemGroup>
 </Target>
 
@@ -2124,6 +2156,7 @@ because xbuild doesn't support framework reference assemblies.
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"
+      StripToolPath="$(_AndroidNdkStripToolPath)"
       BundleNativeLibraries="$(_BundleResultNativeLibraries)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(AndroidNativeLibrary)"
@@ -2139,7 +2172,14 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
+    <Output TaskParameter="StrippedLibraries" ItemName="FileWrites" />
+    <Output TaskParameter="StrippedLibraries" ItemName="_AndroidStrippedNativeLibraries" />
   </CollectNativeFilesForArchive>
+
+  <WriteLinesToFile
+      Condition=" '@(_AndroidStrippedNativeLibraries->Count())' != '0' "
+      File="$(IntermediateOutputPath)$(CleanFile)"
+      Lines="@(_AndroidStrippedNativeLibraries->'%(FullPath)')" />
 
   <!-- Create the actual zip archive -->
   <BuildArchive
@@ -2229,6 +2269,8 @@ because xbuild doesn't support framework reference assemblies.
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
+      StripNativeLibraries="$(_AndroidStripNativeLibraries)"
+      StripToolPath="$(_AndroidNdkStripToolPath)"
       BundleNativeLibraries="$(_BundleNativeLibraries)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(_NativeLibraries)"
@@ -2243,7 +2285,14 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
+    <Output TaskParameter="StrippedLibraries" ItemName="FileWrites" />
+    <Output TaskParameter="StrippedLibraries" ItemName="_AndroidStrippedNativeLibraries" />
   </CollectNativeFilesForArchive>
+
+  <WriteLinesToFile
+      Condition=" '@(_AndroidStrippedNativeLibraries->Count())' != '0' "
+      File="$(IntermediateOutputPath)$(CleanFile)"
+      Lines="@(_AndroidStrippedNativeLibraries->'%(FullPath)')" />
 
   <!-- Create the actual zip archive -->
   <BuildArchive
@@ -2816,7 +2865,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency);@(JavaDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
-    <_NdkRequired Condition="'$(PublishAot)' == 'true' and '$(_AndroidUseWorkloadNativeLinker)' != 'true'">true</_NdkRequired>
+    <_NdkRequired Condition="'$(_AndroidRuntime)' == 'NativeAOT' or '$(_AndroidStripNativeLibraries)' == 'true' or '$(_AndroidCheckedBuild)' != ''">true</_NdkRequired>
     <_NdkRequired Condition="'$(_NdkRequired)' == ''">false</_NdkRequired>
   </PropertyGroup>
   <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>
