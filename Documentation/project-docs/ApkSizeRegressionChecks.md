@@ -73,3 +73,7 @@ result of optimization or reasonable increase after runtime
 update/bump), the reference files need to be updated. The files
 with current sizes are part of tests results archive in the artifacts
 of the CI build.
+
+For a targeted change, refresh the affected entry sizes and `PackageSize`
+from the same Release test result. Keep unrelated entry sizes and the
+configured regression thresholds unchanged.

@@ -51,7 +51,7 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 		Assert.That (source, Does.Contain ("// \"MY_ENV\""));
 		Assert.That (source, Does.Contain ("// \"value\\\\\\\"quoted\""));
 		Assert.That (source, Does.Contain ("\"libSome.Library.dll.so\","));
-		Assert.That (source, Does.Contain ("NativeLibraryFlags = new byte[] {\n\t\t0,"));
+		Assert.That (config.Flags, Is.EqualTo (new byte [] { 0 }));
 		Assert.That (source, Does.Not.Contain ("dso_cache"));
 		Assert.That (source, Does.Contain ("preloadJniLibraries ()"));
 		Assert.That (source, Does.Not.Contain ("readRemappingAsset"));
@@ -245,6 +245,23 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 		};
 		Assert.IsTrue (task.Execute ());
 		// A non-JNI library is never preloaded, even if requested as an always-preload library.
-		Assert.That (File.ReadAllText (task.OutputFile), Does.Contain ("NativeLibraryFlags = new byte[] {\n\t\t0,"));
+		Assert.That (JavaAppConfigTestHelper.Read (File.ReadAllText (task.OutputFile)).Flags, Is.EqualTo (new byte [] { 0 }));
+	}
+
+	[TestCase ("\n")]
+	[TestCase ("\r\n")]
+	public void ReadsNativeLibraryFlagsIndependentOfLineEndings (string lineEnding)
+	{
+		var task = new GenerateJavaApplicationConfig {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			AndroidPackageName = "example.test",
+			OutputFile = Path.Combine (Root, "temp", nameof (ReadsNativeLibraryFlagsIndependentOfLineEndings),
+				lineEnding.Length == 1 ? "LF" : "CRLF", "AppBootstrapConfig.java"),
+			NativeLibraries = [new TaskItem ("libSome.Library.so")],
+		};
+
+		Assert.IsTrue (task.Execute ());
+		string source = File.ReadAllText (task.OutputFile).Replace ("\r\n", "\n").Replace ("\n", lineEnding);
+		Assert.That (JavaAppConfigTestHelper.Read (source).Flags, Is.EqualTo (new byte [] { 0 }));
 	}
 }
