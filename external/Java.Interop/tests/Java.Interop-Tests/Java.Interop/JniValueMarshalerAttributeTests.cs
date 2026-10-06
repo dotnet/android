@@ -15,9 +15,8 @@ namespace Java.InteropTests {
 			Assert.Throws<ArgumentNullException> (() => new JniValueMarshalerAttribute (null));
 			Assert.Throws<ArgumentException> (() => new JniValueMarshalerAttribute (typeof(int)));
 
-			var a   = new JniValueMarshalerAttribute (typeof (DemoValueTypeValueMarshaler));
-			Assert.AreEqual (a.MarshalerType, typeof (DemoValueTypeValueMarshaler));
+			var a   = new JniValueMarshalerAttribute (typeof (JniInt32ValueMarshaler));
+			Assert.AreEqual (a.MarshalerType, typeof (JniInt32ValueMarshaler));
 		}
 	}
 }
-
