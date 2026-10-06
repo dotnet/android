@@ -179,10 +179,11 @@
 
   <Target Name="_AndroidPrepareR8JniRemappingAssemblies"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
-      DependsOnTargets="_PrepareLinkedAssembliesForProguard">
+      DependsOnTargets="_ResolveAssemblies">
     <ItemGroup>
       <_AndroidR8JniRemappingAssembly Remove="@(_AndroidR8JniRemappingAssembly)" />
-      <_AndroidR8JniRemappingAssembly Include="@(_LinkedAssemblyForProguard)" />
+      <!-- Do not schedule the ProGuard producer after R8 while collecting its linked inputs. -->
+      <_AndroidR8JniRemappingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
   </Target>
 

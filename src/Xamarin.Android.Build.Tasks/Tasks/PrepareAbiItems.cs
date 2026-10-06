@@ -13,7 +13,6 @@ namespace Xamarin.Android.Tasks
 	{
 		const string ArmV7a = "armeabi-v7a";
 		const string EnvBase = "environment";
-		const string JniRemappingBase = "jni_remap";
 		const string PinvokePreserveBase = "pinvoke_preserve";
 		const string JniInitFuncsBase = "jni_init_funcs";
 
@@ -45,8 +44,6 @@ namespace Xamarin.Android.Tasks
 
 			if (MonoAndroidHelper.StringEquals ("environment", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = EnvBase;
-			} else if (MonoAndroidHelper.StringEquals ("jniremap", Mode, StringComparison.OrdinalIgnoreCase)) {
-				baseName = JniRemappingBase;
 			} else if (MonoAndroidHelper.StringEquals ("runtime_linking", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = PinvokePreserveBase;
 			} else if (MonoAndroidHelper.StringEquals ("jni_init", Mode, StringComparison.OrdinalIgnoreCase)) {

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 using Android.Runtime;
 using Java.Interop;
@@ -7,6 +8,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
+	[Category ("JniRemapping")]
 	[Category ("NativeAOTIgnore")]
 	public class JniRemappingLookupTests
 	{
@@ -20,9 +22,22 @@ namespace Java.InteropTests
 		[TestCase ("net/dot/android/remap/Middle", "net/dot/android/remap/TargetMiddle")]
 		[TestCase ("net/dot/android/remap/Zebra", "net/dot/android/remap/TargetLast")]
 		[TestCase ("net/dot/android/remap/Źródło", "net/dot/android/remap/UnicodeTarget")]
-		public void ReplacementTypeLookupUsesGeneratedTable (string source, string target)
+		public void ReplacementTypeLookupUsesBinaryAsset (string source, string target)
 		{
 			Assert.AreEqual (target, JniEnvironment.Runtime.TypeManager.GetReplacementType (source));
+		}
+
+		[Test]
+		public void CachedUtf8ReplacementSurvivesGarbageCollection ()
+		{
+			const string source = "net/dot/android/remap/AsciiFirst";
+			var pointer = Microsoft.Android.Runtime.JniRemappingLookup.GetReplacementTypeUtf8 (source);
+			Assert.AreNotEqual (IntPtr.Zero, pointer);
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
+			GC.Collect ();
+			Assert.AreEqual (pointer, Microsoft.Android.Runtime.JniRemappingLookup.GetReplacementTypeUtf8 (source));
+			Assert.AreEqual ("net/dot/android/remap/TargetFirst", Marshal.PtrToStringUTF8 (pointer));
 		}
 
 		[TestCase ("0/net/dot/android/remap/Before")]

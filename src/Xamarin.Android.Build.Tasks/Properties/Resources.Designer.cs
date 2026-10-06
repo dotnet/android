@@ -2046,6 +2046,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Could not generate JNI remapping asset from &apos;{0}&apos; to &apos;{1}&apos;: {2}
+        /// </summary>
+        public static string XA4331 {
+            get {
+                return ResourceManager.GetString("XA4331", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {

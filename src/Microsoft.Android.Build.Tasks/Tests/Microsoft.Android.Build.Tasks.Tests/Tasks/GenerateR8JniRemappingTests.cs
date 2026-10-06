@@ -1,6 +1,5 @@
 #nullable enable
 
-extern alias xamarinbuildtasks;
 
 using System.Collections.Generic;
 using System.IO;
@@ -13,8 +12,8 @@ using Microsoft.Build.Utilities;
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
 
-using GenerateJniRemappingNativeCode = xamarinbuildtasks::Xamarin.Android.Tasks.GenerateJniRemappingNativeCode;
-using MergeRemapXml = xamarinbuildtasks::Xamarin.Android.Tasks.MergeRemapXml;
+using Microsoft.Android.Runtime;
+using MergeRemapXml = Xamarin.Android.Tasks.MergeRemapXml;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
@@ -665,14 +664,25 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", merged);
 			StringAssert.Contains ("replace-field", merged);
 
-			var generate = new GenerateJniRemappingNativeCode {
+			string assetFile = Path.Combine (TestDirectory, "jni-remap.bin");
+			var generate = new GenerateJniRemappingAsset {
 				BuildEngine = engine,
-				RemappingXmlFilePath = new TaskItem (mergedFile),
-				OutputDirectory = TestDirectory,
-				SupportedAbis = ["arm64-v8a"],
+				RemappingXmlFilePath = mergedFile,
+				OutputFile = assetFile,
 			};
-			Assert.IsTrue (generate.Execute (), "GenerateJniRemappingNativeCode should have succeeded.");
+			Assert.IsTrue (generate.Execute (), "GenerateJniRemappingAsset should have succeeded.");
 			Assert.AreEqual (0, Errors.Count, "The generated document must parse with the existing schema.");
+			var asset = new JniRemappingAsset (File.ReadAllBytes (assetFile));
+			Assert.AreEqual ("com/microsoft/intune/Mam", asset.ReadString (
+				asset.FindReplacementType ("com/contoso/Mam") ?? throw new AssertionException ("MAM type remap was lost.")));
+			Assert.AreEqual ("com/contoso/Peer", asset.ReadString (
+				asset.FindReverseType ("a/b") ?? throw new AssertionException ("R8 reverse type remap was lost.")));
+			var method = asset.FindMethod ("a/b", "doWork", "(I)V")
+				?? throw new AssertionException ("R8 method remap was lost.");
+			Assert.AreEqual ("c", asset.ReadString (method.TargetName));
+			var field = asset.FindField ("a/b", "counter", "I")
+				?? throw new AssertionException ("R8 field remap was lost.");
+			Assert.AreEqual ("d", asset.ReadString (field.TargetName));
 		}
 
 		string WriteNativeObject (string [] literals, bool utf8 = false,

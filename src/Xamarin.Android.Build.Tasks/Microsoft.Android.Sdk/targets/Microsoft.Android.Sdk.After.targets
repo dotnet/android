@@ -23,6 +23,7 @@ This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
   <Import Project="Microsoft.Android.Sdk.AndroidLibraries.targets" />
   <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
   <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
+  <Import Project="Microsoft.Android.Sdk.R8JniRemapping.targets" />
 
   <!-- This one must be imported after `Microsoft.Android.Sdk.AssemblyResolution.targets` -->
   <Import Project="Microsoft.Android.Sdk.NativeRuntime.targets" Condition=" '$(AndroidApplication)' == 'true' And '$(_AndroidRuntime)' == 'CoreCLR' " />

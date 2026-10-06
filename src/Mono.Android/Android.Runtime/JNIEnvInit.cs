@@ -27,6 +27,7 @@ namespace Android.Runtime
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
 			public IntPtr          jniRemappingData;
+			public uint            jniRemappingDataLength;
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public int             maxGrefCount;
@@ -121,8 +122,13 @@ namespace Android.Runtime
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
 			InitializeMaxGrefCounts (args);
-			if (RuntimeFeature.JniRemapping) {
-				JniRemappingLookup.Initialize (args.jniRemappingData);
+			try {
+				if (RuntimeFeature.JniRemapping) {
+					JniRemappingLookup.Initialize (args.jniRemappingData, args.jniRemappingDataLength);
+				}
+			} finally {
+				// The native host hands off temporary bytes; cached JNI pointers use our private pinned copy.
+				RuntimeNativeMethods.monodroid_free (args.jniRemappingData);
 			}
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;

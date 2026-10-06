@@ -287,7 +287,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void JniRemappingCountsSurviveIncrementalBuild ()
+		public void JniRemappingAssetSurvivesIncrementalBuild ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			const bool isRelease = true;
@@ -295,12 +295,7 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
-						Encoding = Encoding.UTF8,
-						TextContent = () => """
+			string remappingXml = """
 <replacements>
   <replace-type from="android/app/Activity" to="example/RemapActivity" />
   <replace-method
@@ -310,39 +305,68 @@ namespace Xamarin.Android.Build.Tests
       target-method-name="onMyCreate"
       target-method-instance-to-static="false" />
 </replacements>
-""",
+""";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => remappingXml,
 					},
 				},
 			};
 			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
 			proj.MainActivity = proj.DefaultMainActivity;
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build failed");
-				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
-				var remapSourceTimestamps = GetJniRemappingSourceTimestamps (proj, b);
+				AssertJniRemappingAsset (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				string assetPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "jni-remap", "jni-remap.bin");
+				var assetTimestamp = File.GetLastWriteTimeUtc (assetPath);
 
 				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
-				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
-				AssertJniRemappingSourceTimestamps (remapSourceTimestamps);
+				AssertJniRemappingAsset (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				Assert.AreEqual (assetTimestamp, File.GetLastWriteTimeUtc (assetPath), "An unrelated C# change must not regenerate the binary asset.");
+
+				var nativeTimestamps = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory), "*.o", SearchOption.AllDirectories)
+					.Concat (Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory), "libxamarin-app*.so", SearchOption.AllDirectories))
+					.ToDictionary (path => path, File.GetLastWriteTimeUtc);
+				var originalBytes = File.ReadAllBytes (assetPath);
+				remappingXml = remappingXml.Replace ("onMyCreate", "onChangedCreate");
+				proj.Touch ("Remap.xml");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "changed mapping build failed");
+				Assert.IsFalse (originalBytes.SequenceEqual (File.ReadAllBytes (assetPath)));
+				foreach (var nativeFile in nativeTimestamps) {
+					Assert.AreEqual (nativeFile.Value, File.GetLastWriteTimeUtc (nativeFile.Key), $"An XML mapping change must not rebuild native code: {nativeFile.Key}");
+				}
+				AssertJniRemappingAsset (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				Assert.IsTrue (b.Clean (proj), "Clean failed");
+				FileAssert.DoesNotExist (assetPath, "Clean must remove generated binary assets.");
 			}
 		}
 
-		void AssertJniRemappingCounts (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
+		void AssertJniRemappingAsset (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
-				string remapPath = Path.Combine (objDirPath, "android", $"jni_remap.{abi}.ll");
-				FileAssert.Exists (remapPath);
-				string source = File.ReadAllText (remapPath);
-				var data = Regex.Match (source, @"@jni_remapping_data\s*=\s*[^{]+\{(?<fields>[^}]+)\}");
-				Assert.IsTrue (data.Success, $"jni_remapping_data must be emitted for {abi}.");
-				var counts = Regex.Matches (data.Groups ["fields"].Value, @"\bi32 (?<count>\d+)\b");
-				Assert.AreEqual (4, counts.Count, $"jni_remapping_data must contain four counts for {abi}.");
-				Assert.AreEqual (expectedTypeCount, uint.Parse (counts [0].Groups ["count"].Value, CultureInfo.InvariantCulture), $"type_replacement_count should be preserved for {abi}.");
-				Assert.AreEqual (expectedMethodCount, uint.Parse (counts [2].Groups ["count"].Value, CultureInfo.InvariantCulture), $"method_replacement_index_count should be preserved for {abi}.");
+			string assetPath = Path.Combine (objDirPath, "android", "jni-remap", "jni-remap.bin");
+			FileAssert.Exists (assetPath);
+			using var reader = new BinaryReader (File.OpenRead (assetPath));
+			Assert.AreEqual (0x524a4158u, reader.ReadUInt32 (), "The runtime asset must use the XAJR format.");
+			Assert.AreEqual (1u, reader.ReadUInt32 ());
+			reader.BaseStream.Position = 20;
+			Assert.AreEqual (expectedTypeCount, reader.ReadUInt32 ());
+			reader.BaseStream.Position = 36;
+			Assert.AreEqual (expectedMethodCount, reader.ReadUInt32 ());
+			Assert.IsEmpty (Directory.GetFiles (objDirPath, "jni_remap.*.ll", SearchOption.AllDirectories));
+			Assert.IsEmpty (Directory.GetFiles (objDirPath, "jni_remap.*.o", SearchOption.AllDirectories));
+			string apkPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			foreach (string rid in proj.GetRuntimeIdentifiers ()) {
+				CollectionAssert.AreEqual (File.ReadAllBytes (assetPath),
+					ZipHelper.ReadFileFromZip (apkPath, $"assets/xa-internal/jni-remap.{rid}.bin"),
+					"Every packaged RID must get the same CoreCLR remapping data.");
 			}
 		}
 
@@ -385,29 +409,6 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.DoesNotContain ("jni_add_native_method_registration_attribute_present", source);
 				StringAssert.DoesNotContain ("jnienv_registerjninatives_method_token", source);
 				StringAssert.DoesNotContain ("marshal_methods_enabled", source);
-			}
-		}
-
-		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
-		{
-			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android");
-			var timestamps = new Dictionary<string, DateTime> (StringComparer.Ordinal);
-			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
-				string path = Path.Combine (objDirPath, $"jni_remap.{abi}.ll");
-				FileAssert.Exists (path);
-				timestamps.Add (path, File.GetLastWriteTimeUtc (path));
-			}
-			return timestamps;
-		}
-
-		void AssertJniRemappingSourceTimestamps (Dictionary<string, DateTime> expectedTimestamps)
-		{
-			foreach (var expectedTimestamp in expectedTimestamps) {
-				Assert.AreEqual (
-					expectedTimestamp.Value,
-					File.GetLastWriteTimeUtc (expectedTimestamp.Key),
-					$"{expectedTimestamp.Key} should not be touched when regenerated with unchanged contents."
-				);
 			}
 		}
 

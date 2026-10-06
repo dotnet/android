@@ -161,6 +161,14 @@ namespace Xamarin.Android.Build.Tests
 				var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
+					foreach (string rid in proj.GetRuntimeIdentifiers ()) {
+						var asset = ZipHelper.ReadFileFromZip (zip, $"base/assets/xa-internal/jni-remap.{rid}.bin");
+						Assert.IsNotNull (asset, $"The AAB must contain a remapping asset for {rid}.");
+						using var header = new BinaryReader (new MemoryStream (asset));
+						Assert.AreEqual (0x524a4158u, header.ReadUInt32 ());
+						Assert.AreEqual (1u, header.ReadUInt32 ());
+						Assert.GreaterOrEqual (asset.Length, 64);
+					}
 					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
 					var metadata = zip.Entries.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
 					Assert.IsNotNull (metadata, $"AAB file `{aab}` should contain the R8 build metadata.");

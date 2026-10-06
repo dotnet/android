@@ -210,7 +210,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     (which is imported after the ILC NuGet targets).
   -->
   <Target Name="_AndroidLinkNativeAotSharedLibraryInputs"
-      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidResolveNdk;_AndroidCompileNativeAotR8Remapping">
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidResolveNdk">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
       <_AndroidNativeAotAbi>@(_PrivateBuildTargetAbi)</_AndroidNativeAotAbi>
@@ -234,7 +234,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <!-- Supplied by the SDK-resolved NativeAOT runtime pack, including the BCL native archives. -->
       <_NativeAotLinkLibraries Include="@(NativeLibrary);@(_NdkLibs)" />
-      <_NativeAotAdditionalObjects Include="@(_AndroidNativeAotR8RemappingObject)" />
       <_NativeAotSystemLibraries Include="dl" />
       <_NativeAotSystemLibraries Include="z" />
       <_NativeAotSystemLibraries Include="log" />
@@ -247,7 +246,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <Target Name="_AndroidLinkNativeAotSharedLibrary"
       AfterTargets="LinkNative"
-      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' or '$(_AndroidNativeAotLinkAfterR8)' == 'true' "
       DependsOnTargets="_AndroidLinkNativeAotSharedLibraryInputs"
       Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotAdditionalObjects);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
       Outputs="@(_AndroidNativeAotLinkOutputs)">
@@ -288,12 +286,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     Restore the old scheduling so NativeCompile runs after ComputeResolvedFilesToPublishList
     in the inner per-RID build.
   -->
-  <PropertyGroup>
-    <_AndroidRunNativeCompileDependsOn>NativeCompile</_AndroidRunNativeCompileDependsOn>
-  </PropertyGroup>
   <Target Name="_AndroidRunNativeCompile"
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="$(_AndroidRunNativeCompileDependsOn)" />
+      DependsOnTargets="NativeCompile" />
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <PropertyGroup>
@@ -305,9 +300,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- The linker target is not always scheduled during incremental deployment builds. -->
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
       <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)"
-          Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') or '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
+          Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') ">
         <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <AndroidNativeAotObjectFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(NativeObject)'))</AndroidNativeAotObjectFile>
+        <AndroidNativeAotIntermediateOutputPath>$(NativeIntermediateOutputPath)</AndroidNativeAotIntermediateOutputPath>
+        <AndroidNativeAotRemappingDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(NativeIntermediateOutputPath)', 'jni-remap'))</AndroidNativeAotRemappingDirectory>
+        <AndroidNativeAotSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">$([System.IO.Path]::ChangeExtension('$(_AndroidNativeAotSharedLibrary)', '.dbg.so'))</AndroidNativeAotSymbols>
       </ResolvedFileToPublish>
       <!-- Fix paths to contain lib-prefix -->
       <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).so' " />

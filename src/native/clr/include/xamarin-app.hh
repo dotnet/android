@@ -163,40 +163,6 @@ struct DSOCacheEntry
 	void           *handle;
 };
 
-struct JniRemappingString
-{
-	const uint32_t  length;
-	const char     *str;
-};
-
-struct JniRemappingReplacementMethod
-{
-	const char    *target_type;
-	const char    *target_name;
-	const char    *target_signature;
-	const bool     is_static;
-};
-
-struct JniRemappingIndexMethodEntry
-{
-	const JniRemappingString            name;
-	const JniRemappingString            signature;
-	const JniRemappingReplacementMethod replacement;
-};
-
-struct JniRemappingIndexTypeEntry
-{
-	const JniRemappingString            name;
-	const uint32_t             method_count;
-	const JniRemappingIndexMethodEntry *methods;
-};
-
-struct JniRemappingTypeReplacementEntry
-{
-	const JniRemappingString  name;
-	const char      *replacement;
-};
-
 struct AppEnvironmentVariable
 {
 	const uint32_t name_index;
@@ -204,9 +170,6 @@ struct AppEnvironmentVariable
 };
 
 extern "C" {
-	[[gnu::visibility("default")]] extern const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
-	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
-
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 	[[gnu::visibility("default")]] extern const ApplicationConfig application_config;

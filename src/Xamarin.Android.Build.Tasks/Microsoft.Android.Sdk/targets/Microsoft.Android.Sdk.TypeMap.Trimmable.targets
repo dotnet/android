@@ -589,7 +589,4 @@
     </ItemGroup>
   </Target>
 
-  <!-- Imported last: it overrides $(_PreTrimTypeMapAcwMapOutputFile) and
-       $(_PreTrimTypeMapApplicationRegistrationOutputFile) computed above. -->
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.R8JniRemapping.targets" />
 </Project>

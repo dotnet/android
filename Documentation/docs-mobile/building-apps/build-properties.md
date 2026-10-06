@@ -1159,7 +1159,7 @@ An enum-style property that specifies how `r8` obfuscates Java names when
 |---|---|
 | `private-members` | Preserves Java class and interface names and public or protected member names. Private and package-private members can be obfuscated, and R8 optimization is enabled. |
 | `disabled` | Disables obfuscation, preserves all Java names, and uses the non-optimizing Android R8 defaults. |
-| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using generated native remapping tables. Available for trimmed CoreCLR and NativeAOT applications. |
+| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using binary remapping assets. Available for trimmed CoreCLR and NativeAOT applications. |
 
 This property does not disable R8 code shrinking. It was introduced in a .NET 10
 servicing release and defaults to `disabled` in .NET 10 and to `private-members`
@@ -1183,9 +1183,12 @@ For example:
 
 The runtime-remapping mode leaves managed assemblies unchanged. It runs R8 once,
 after managed trimming or ILC, then uses the resulting R8 mapping to
-generate native runtime remapping tables. CoreCLR selects remaps from linked
+generate versioned, pointer-free binary assets loaded by the managed runtime.
+CoreCLR selects remaps from linked
 assemblies. NativeAOT selects remaps from retained JNI literals in ILC's native
-object and statically links the table afterward.
+object and generates a separate asset for each runtime identifier. Changed
+remapping data does not require recompiling managed code or relinking native
+libraries. MAM and user replacement XML use the same binary transport.
 
 Runtime-generated JNI names may require explicit remapping or keep rules.
 Conservative keep rules still protect native callbacks, bootstrap code, and

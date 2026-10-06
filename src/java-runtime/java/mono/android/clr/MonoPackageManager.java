@@ -66,6 +66,7 @@ public class MonoPackageManager {
 
 				NativeLibraryHelper.loadLibrary ("monodroid", runtimePackage, apks);
 
+				net.dot.android.JniRemappingAsset.initialize (context.getAssets ());
 				Runtime.initInternal (
 					language,
 					apks,

@@ -6,6 +6,7 @@
 #include <runtime-base/app-system-properties.hh>
 #include <shared/log_functions.hh>
 #include <shared/log_types.hh>
+#include <runtime-base/jni-remapping-asset.hh>
 
 using namespace xamarin::android;
 
@@ -76,7 +77,7 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		}
 		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
 	}
-	initArgs->jniRemappingData = &jni_remapping_data;
+	load_jni_remapping_asset (env, *initArgs);
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
 	env->DeleteLocalRef (lrefGCUserPeerable);
