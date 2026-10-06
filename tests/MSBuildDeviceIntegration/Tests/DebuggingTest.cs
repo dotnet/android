@@ -45,8 +45,23 @@ namespace Xamarin.Android.Build.Tests
 			return -1;
 		}
 
-		[Test]
-		public void ApplicationRunsWithoutDebugger ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool extractNativeLibs, [Values] bool useEmbeddedDex)
+		static IEnumerable<TestCaseData> ApplicationRunsWithoutDebuggerCases ()
+		{
+			foreach (var configuration in BaseTest.ValidRuntimeConfigurations) {
+				foreach (var extractNativeLibs in new [] { false, true }) {
+					foreach (var useEmbeddedDex in new [] { false, true }) {
+						// Release normalizes embedded DEX to false; retain the existing NativeAOT skip cases.
+						if (configuration.isRelease && configuration.runtime == AndroidRuntime.CoreCLR && useEmbeddedDex) {
+							continue;
+						}
+						yield return new TestCaseData (configuration, extractNativeLibs, useEmbeddedDex);
+					}
+				}
+			}
+		}
+
+		[TestCaseSource (nameof (ApplicationRunsWithoutDebuggerCases))]
+		public void ApplicationRunsWithoutDebugger ((bool isRelease, AndroidRuntime runtime) configuration, bool extractNativeLibs, bool useEmbeddedDex)
 		{
 			var (isRelease, runtime) = configuration;
 
