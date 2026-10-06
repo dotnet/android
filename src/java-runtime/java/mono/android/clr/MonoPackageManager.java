@@ -39,8 +39,13 @@ public class MonoPackageManager {
 				apks = new String[] { runtimePackage.sourceDir };
 			}
 
-			if (!initialized) {
+			if (context instanceof android.app.Application) {
 				ApplicationRegistration.Context = context;
+			}
+			if (!initialized) {
+				if (ApplicationRegistration.Context == null) {
+					ApplicationRegistration.Context = context;
+				}
 				Locale locale       = Locale.getDefault ();
 				String language     = locale.getLanguage () + "-" + locale.getCountry ();
 				String filesDir     = context.getFilesDir ().getAbsolutePath ();
