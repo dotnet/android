@@ -42,47 +42,17 @@ namespace {
 
 	auto copy_string (JNIEnv *env, jstring value) noexcept -> char*
 	{
-		jsize length = env->GetStringLength (value);
-		const jchar *characters = env->GetStringChars (value, nullptr);
-		if (length < 0 || characters == nullptr || env->ExceptionCheck ()) {
+		const char *characters = env->GetStringUTFChars (value, nullptr);
+		if (characters == nullptr || env->ExceptionCheck ()) {
 			Helpers::abort_application (LOG_DEFAULT, "Unable to read application bootstrap string");
 		}
-		size_t capacity = Helpers::add_with_overflow_check<size_t> (
-			Helpers::multiply_with_overflow_check<size_t> (static_cast<size_t>(length), 3uz), 1uz);
-		char *result = allocate_items<char> (capacity, "application bootstrap string");
-		size_t position = 0;
-		for (jsize i = 0; i < length; i++) {
-			uint32_t codepoint = characters[i];
-			if (codepoint >= 0xd800 && codepoint <= 0xdbff) {
-				if (i + 1 < length && characters[i + 1] >= 0xdc00 && characters[i + 1] <= 0xdfff) {
-					codepoint = 0x10000 + ((codepoint - 0xd800) << 10) + (characters[++i] - 0xdc00);
-				} else {
-					codepoint = 0xfffd;
-				}
-			} else if (codepoint >= 0xdc00 && codepoint <= 0xdfff) {
-				codepoint = 0xfffd;
-			}
-			if (codepoint == 0) {
-				Helpers::abort_application (LOG_DEFAULT, "NUL character in application bootstrap string");
-			}
-			if (codepoint <= 0x7f) {
-				result[position++] = static_cast<char>(codepoint);
-			} else if (codepoint <= 0x7ff) {
-				result[position++] = static_cast<char>(0xc0 | (codepoint >> 6));
-				result[position++] = static_cast<char>(0x80 | (codepoint & 0x3f));
-			} else if (codepoint <= 0xffff) {
-				result[position++] = static_cast<char>(0xe0 | (codepoint >> 12));
-				result[position++] = static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f));
-				result[position++] = static_cast<char>(0x80 | (codepoint & 0x3f));
-			} else {
-				result[position++] = static_cast<char>(0xf0 | (codepoint >> 18));
-				result[position++] = static_cast<char>(0x80 | ((codepoint >> 12) & 0x3f));
-				result[position++] = static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f));
-				result[position++] = static_cast<char>(0x80 | (codepoint & 0x3f));
-			}
+		if (std::strstr (characters, "\xc0\x80") != nullptr) {
+			Helpers::abort_application (LOG_DEFAULT, "NUL character in application bootstrap string");
 		}
-		result[position] = '\0';
-		env->ReleaseStringChars (value, characters);
+		size_t length = std::strlen (characters);
+		char *result = allocate_items<char> (Helpers::add_with_overflow_check<size_t> (length, 1uz), "application bootstrap string");
+		std::memcpy (result, characters, length + 1uz);
+		env->ReleaseStringUTFChars (value, characters);
 		return result;
 	}
 
