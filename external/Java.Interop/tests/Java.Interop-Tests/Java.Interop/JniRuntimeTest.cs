@@ -35,8 +35,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[RequiresDynamicCode ("This test uses ReflectionJniTypeManager, which is reflection-based and not NativeAOT-compatible.")]
-		[RequiresUnreferencedCode ("This test uses ReflectionJniTypeManager, which is reflection-based and not trimming-compatible.")]
 		public void Dispose_ClearsJniEnvironment ()
 		{
 			var c   = JniRuntime.CurrentRuntime;
@@ -66,18 +64,11 @@ namespace Java.InteropTests
 
 	class JniProxyRuntime : JniRuntime
 	{
-		JniRuntime          Proxy;
-
-		[RequiresDynamicCode ("JniProxyRuntime uses ReflectionJniTypeManager, which is reflection-based and not NativeAOT-compatible.")]
-		[RequiresUnreferencedCode ("JniProxyRuntime uses ReflectionJniTypeManager, which is reflection-based and not trimming-compatible.")]
 		public JniProxyRuntime (JniRuntime proxy)
 			: base (CreateOptions (proxy))
 		{
-			Proxy   = proxy;
 		}
 
-		[RequiresDynamicCode ("JniProxyRuntime uses ReflectionJniTypeManager, which is reflection-based and not NativeAOT-compatible.")]
-		[RequiresUnreferencedCode ("JniProxyRuntime uses ReflectionJniTypeManager, which is reflection-based and not trimming-compatible.")]
 		static JniRuntime.CreationOptions CreateOptions (JniRuntime proxy)
 		{
 			return new JniRuntime.CreationOptions {
@@ -85,7 +76,7 @@ namespace Java.InteropTests
 				InvocationPointer           = proxy.InvocationPointer,
 				ObjectReferenceManager      = new ProxyObjectReferenceManager (),
 				ValueManager                = new ProxyValueManager (),
-				TypeManager                 = new ProxyTypeManager (),
+				TypeManager                 = new JniTypeManager (),
 			};
 		}
 
@@ -100,9 +91,9 @@ namespace Java.InteropTests
 			}
 		}
 
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "ProxyValueManager intentionally uses reflection-backed value manager behavior for tests.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "ProxyValueManager intentionally uses reflection-backed value manager behavior for tests.")]
-		class ProxyValueManager : ReflectionJniValueManager {
+		// This runtime only tests environment disposal, not peer creation or marshaling.
+		class ProxyValueManager : JniValueManager {
+			const DynamicallyAccessedMemberTypes PeerConstructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 			public override void AddPeer (IJavaPeerable peer)
 			{
@@ -118,7 +109,7 @@ namespace Java.InteropTests
 
 			public override List<JniSurfacedPeerInfo>   GetSurfacedPeers ()
 			{
-				return null;
+				return [];
 			}
 
 			public override IJavaPeerable PeekPeer (JniObjectReference reference)
@@ -133,14 +124,43 @@ namespace Java.InteropTests
 			public override void WaitForGCBridgeProcessing ()
 			{
 			}
-		}
 
-		[RequiresDynamicCode ("ProxyTypeManager uses ReflectionJniTypeManager, which is reflection-based and not NativeAOT-compatible.")]
-		[RequiresUnreferencedCode ("ProxyTypeManager uses ReflectionJniTypeManager, which is reflection-based and not trimming-compatible.")]
-		class ProxyTypeManager : ReflectionJniTypeManager {
-			public ProxyTypeManager ()
-			{
-			}
+			public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object[] argumentValues)
+				=> throw new NotSupportedException ();
+
+			protected override void ConstructPeerCore (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
+				=> throw new NotSupportedException ();
+
+			public override IJavaPeerable CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions transfer,
+					[DynamicallyAccessedMembers (PeerConstructors)] Type targetType)
+				=> throw new NotSupportedException ();
+
+			protected override object CreateValueCore (ref JniObjectReference reference, JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (PeerConstructors)] Type targetType = null)
+				=> throw new NotSupportedException ();
+
+			protected override T CreateValueCore<[DynamicallyAccessedMembers (PeerConstructors)] T> (
+					ref JniObjectReference reference, JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (PeerConstructors)] Type targetType = null)
+				=> throw new NotSupportedException ();
+
+			protected override object GetValueCore (ref JniObjectReference reference, JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (PeerConstructors)] Type targetType = null)
+				=> throw new NotSupportedException ();
+
+			protected override T GetValueCore<[DynamicallyAccessedMembers (PeerConstructors)] T> (
+					ref JniObjectReference reference, JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (PeerConstructors)] Type targetType = null)
+				=> throw new NotSupportedException ();
+
+			protected override JniValueMarshaler GetValueMarshalerCore (Type type)
+				=> throw new NotSupportedException ();
+
+			protected override JniValueMarshaler<T> GetValueMarshalerCore<T> ()
+				=> throw new NotSupportedException ();
+
+			protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (Type type, object value)
+				=> throw new NotSupportedException ();
 		}
 	}
 }
