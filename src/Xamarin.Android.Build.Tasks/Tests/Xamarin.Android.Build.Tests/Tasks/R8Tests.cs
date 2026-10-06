@@ -79,6 +79,9 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (obfuscationMode == "runtime-remapping",
 					lines.Contains ("-keepclassmembernames interface * { *; }"),
 					"Remapping-specific rules must not change the existing modes.");
+				Assert.AreEqual (obfuscationMode == "runtime-remapping",
+					lines.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }"),
+					"Runtime remapping must preserve Java native callback names and descriptor types.");
 				CollectionAssert.Contains (lines, "-keep class net.dot.android.ApplicationRegistration { *; }");
 				if (nativeAot) {
 					CollectionAssert.Contains (lines, "-keep class mono.android.IGCUserPeer { *; }");

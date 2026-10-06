@@ -280,6 +280,7 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ("-keep class mono.android.Runtime { *; }");
 				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
 				writer.WriteLine ("-keepclassmembernames interface * { *; }");
+				writer.WriteLine ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }");
 				writer.WriteLine ("-keepnames public class *");
 				writer.WriteLine ("-keepnames class **$*");
 				return;
