@@ -39,10 +39,8 @@
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>3.3.0</LibZipSharpVersion>
     <MicroBuildCoreVersion>1.0.0</MicroBuildCoreVersion>
-    <NewtonsoftJsonPackageVersion>13.0.3</NewtonsoftJsonPackageVersion>
-    <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
+    <NuGetApiPackageVersion>6.14.3</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.3.6</LZ4PackageVersion>
     <MicrosoftTestingPlatformVersion>2.2.1</MicrosoftTestingPlatformVersion>
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
@@ -51,7 +49,7 @@
     <ELFSharpVersion>2.17.3</ELFSharpVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.3</MdocPackageVersion>
-    <!-- Used by the installer-side projects under src/Xamarin.Installer.*, src/Mono.AndroidTools, src/Xamarin.AndroidTools -->
+    <!-- Used by the installer-side projects under src/Xamarin.Installer.* -->
     <GitInfoVersion>2.3.0</GitInfoVersion>
     <IniParserNetstandardVersion>2.5.2</IniParserNetstandardVersion>
     <MicrosoftWin32RegistryVersion>5.0.0</MicrosoftWin32RegistryVersion>
@@ -69,7 +67,6 @@
       This can be opted into locally with $(_AndroidTreatWarningsAsErrors) = true.
     -->
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.NET-Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'NativeAOT.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'TestRunner.Core.NET.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>

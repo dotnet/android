@@ -1,19 +1,19 @@
 #ifndef __JAVA_INTEROP_LOGGER_H__
 #define __JAVA_INTEROP_LOGGER_H__
 
-// Keep in sync with java-interop-logger.c's LogCategories enum
+// Keep in sync with src/Mono.Android/Android.Runtime/LogCategories.cs
 typedef enum _LogCategories {
 	LOG_NONE      = 0,
 	LOG_DEFAULT   = 1 << 0,
 	LOG_ASSEMBLY  = 1 << 1,
-	LOG_DEBUGGER  = 1 << 2,
+	// Bit 2 is reserved for the removed debugger logging category.
 	LOG_GC        = 1 << 3,
 	LOG_GREF      = 1 << 4,
 	LOG_LREF      = 1 << 5,
 	LOG_TIMING    = 1 << 6,
-	LOG_BUNDLE    = 1 << 7,
+	// Bit 7 is reserved for the removed bundle logging category.
 	LOG_NET       = 1 << 8,
-	LOG_NETLINK   = 1 << 9,
+	// Bit 9 is reserved for the removed netlink logging category.
 } LogCategories;
 
 extern unsigned int log_categories;

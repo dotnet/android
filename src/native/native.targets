@@ -171,6 +171,7 @@
       <_RuntimeSources Include="clr\runtime-base\logger.cc" />
       <_RuntimeSources Include="nativeaot\include\**\*.hh" />
       <_RuntimeSources Include="nativeaot\host\*.cc" />
+      <_RuntimeSources Include="nativeaot\runtime-base\*.cc" />
     </ItemGroup>
   </Target>
 

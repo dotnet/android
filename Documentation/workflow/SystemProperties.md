@@ -22,11 +22,10 @@ comma-separated list of `NAME[=VALUE]` categories:
 * `all` enables all categories.
 * `assembly` logs assembly lookup and loading.
 * `default` enables general runtime messages.
-* `debugger` logs debugger-related native runtime messages.
 * `gc` logs garbage-collection and JNI reference messages.
 * `gref`, `gref=FILE`, and `gref+` enable global JNI reference logging.
 * `lref`, `lref=FILE`, and `lref+` enable local JNI reference logging.
-* `network` and `netlink` log native network activity.
+* `network` logs native network activity.
 * `timing` enables the `monodroid-timing` category used by the obsolete
   managed `Android.Runtime.TimingLogger` API.
 

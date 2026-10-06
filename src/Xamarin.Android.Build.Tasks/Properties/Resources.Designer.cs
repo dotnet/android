@@ -212,15 +212,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find mono.android.jar.
-        /// </summary>
-        public static string XA0002 {
-            get {
-                return ResourceManager.GetString("XA0002", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value..
         /// </summary>
         public static string XA0003 {
@@ -973,7 +964,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidEnableMarshalMethods&apos; and &apos;PublishReadyToRun&apos; MSBuild properties cannot both be set to &apos;true&apos;. Set one property to &apos;false&apos;..
+        ///   Looks up a localized string similar to The &apos;AndroidEnableMarshalMethods&apos; MSBuild property is no longer supported. Remove it or set it to &apos;false&apos;..
         /// </summary>
         public static string XA1049 {
             get {
@@ -987,6 +978,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1050 {
             get {
                 return ResourceManager.GetString("XA1050", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it..
+        /// </summary>
+        public static string XA1051 {
+            get {
+                return ResourceManager.GetString("XA1051", resourceCulture);
             }
         }
         

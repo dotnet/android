@@ -11,6 +11,7 @@ namespace Xamarin.Android.RuntimeTests
 	[TestFixture]
 	public class TimeZoneTest
 	{
+#pragma warning disable CS0618 // Compare legacy TimeZone and Java Date behavior with TimeZoneInfo.
 		[Test]
 		public void TestDaylightSavingsTime ()
 		{
@@ -88,7 +89,9 @@ namespace Xamarin.Android.RuntimeTests
 		{
 			return new Java.Util.Date (time.Year - 1900, time.Month - 1, time.Day, time.Hour, time.Minute, time.Second);
 		}
+#pragma warning restore CS0618
 
+#pragma warning disable CS0618 // Regression coverage for legacy daylight-saving transition calculations.
 		[Test]
 		public void Transitions ()
 		{
@@ -140,6 +143,7 @@ namespace Xamarin.Android.RuntimeTests
 				}
 			}
 		}
+#pragma warning restore CS0618
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=22955
 		[Test]
@@ -161,7 +165,9 @@ namespace Xamarin.Android.RuntimeTests
 		public void DateTimeConversions_ShouldNotThrow2 (string timeString)
 		{
 			Assert.DoesNotThrow (() => {
+#pragma warning disable CS0618 // Regression coverage for TimeZone.GetUtcOffset on historical dates.
 				var tz = TimeZone.CurrentTimeZone.GetUtcOffset (Convert.ToDateTime (timeString));
+#pragma warning restore CS0618
 				Assert.IsNotNull (tz);
 			}, "Regression test for #22955 c2 failed.");
 		}
@@ -173,7 +179,9 @@ namespace Xamarin.Android.RuntimeTests
 		public void DaylightChangesEndMinusStart_ShouldNotThrow (int year)
 		{
 			Assert.DoesNotThrow (() => {
+#pragma warning disable CS0618 // Regression coverage for TimeZone.GetDaylightChanges across years.
 				var dst = TimeZone.CurrentTimeZone.GetDaylightChanges (year);
+#pragma warning restore CS0618
 				Assert.IsNotNull (dst);
 			}, "Regression test for #22955 c17 failed.");
 		}

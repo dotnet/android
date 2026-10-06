@@ -46,8 +46,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
-    <ProjectReference Include="..\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
+    <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
+      <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
+    </ProjectReference>
     <ProjectReference Include="..\Xamarin.Installer.Common\Xamarin.Installer.Common.csproj" />
   </ItemGroup>
   <ItemGroup>

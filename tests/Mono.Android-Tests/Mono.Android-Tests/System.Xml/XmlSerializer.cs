@@ -1,5 +1,8 @@
+#nullable enable
+
 using System.Xml.Serialization;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 using NUnit.Framework;
 
@@ -13,6 +16,8 @@ namespace System.XmlTests {
     public class XmlSerializerTest {
 
         [Test]
+        [RequiresUnreferencedCode ("Tests XML serialization metadata after trimming.")]
+        [RequiresDynamicCode ("Tests XML serialization that may require runtime code generation.")]
         public void TrimmingDefaultValueAttribute ()
         {
             // Context: https://github.com/dotnet/runtime/issues/109724

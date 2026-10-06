@@ -27,7 +27,9 @@ namespace Android.GraphicsTests
 		[Test, TestCaseSource (nameof (NinePatchDrawables))]
 		public void DrawableFromRes_ShouldBeTypeNinePatchDrawable (int resId, string name)
 		{
+#pragma warning disable CS0618 // Exercise the legacy resource-loading path for nine-patch images.
 			var d = Application.Context.Resources.GetDrawable (resId);
+#pragma warning restore CS0618
 			Assert.IsNotNull (d, $"An image should have been retrieved from resource `{name}`.");
 			Assert.IsNotNull (d as NinePatchDrawable, $"The drawable created from resource `{name}` should be a NinePatchDrawable.");
 		}
@@ -37,7 +39,9 @@ namespace Android.GraphicsTests
 		{
 			var value = new Android.Util.TypedValue ();
 			InputStreamInvoker si = GetResourceStream (resId, value);
+#pragma warning disable CA1422 // Drawable.CreateFromResourceStream overload with BitmapFactory.Options is obsolete since API 28.
 			var d = Drawable.CreateFromResourceStream (Application.Context.Resources, value, si, value.String.ToString (), null);
+#pragma warning restore CA1422
 			Assert.IsNotNull (d, $"An image should have been retrieved from resource `{name}`.");
 			Assert.IsNotNull (d as NinePatchDrawable, $"The drawable created from resource `{name}` should be a NinePatchDrawable.");
 		}

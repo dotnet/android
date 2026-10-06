@@ -36,7 +36,19 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 
+The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
+NativeAOT JNI property reader and loads it into a host JVM. On macOS/Linux, these tests require
+`JAVA_HOME` or `TEST_ANDROID_JDK_PATH` and a C++23 compiler (`clang++`, or `CXX`); they do not
+require an Android device or a locally built Android SDK.
+
 ---
+
+The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
+also require the NDK `llvm-readobj` and adjacent `llvm-objdump` and `clang`
+executables. Pass
+`-p:_NativeAotLlvmReadObjPath=/path/to/ndk/toolchains/llvm/prebuilt/<host>/bin/llvm-readobj`
+(with `.exe` on Windows) to execute them; without it, those cases are reported as
+skipped. Other target regression cases do not require native tools.
 
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 

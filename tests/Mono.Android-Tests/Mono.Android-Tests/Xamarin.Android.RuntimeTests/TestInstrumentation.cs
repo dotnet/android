@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Android.App;
 using Android.OS;
@@ -27,10 +30,8 @@ namespace Xamarin.Android.RuntimeTests
 				categories.Add ("CoreCLRIgnore");
 				categories.Add ("NTLM");
 
-				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-					categories.Add ("NativeTypeMap");
-					categories.Add ("TrimmableTypeMapUnsupported");
-				}
+				categories.Add ("NativeTypeMap");
+				categories.Add ("TrimmableTypeMapUnsupported");
 
 				// Build-time flags flow in via runtimeconfig.json properties
 				// (see <RuntimeHostConfigurationOption> entries in Mono.Android.NET-Tests.csproj).
@@ -39,10 +40,6 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("NativeAOTIgnore");
 					categories.Add ("SSL");
 					categories.Add ("NTLM");
-
-					if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-						categories.Add ("Export");
-					}
 				}
 
 				// Process-wide reference counts are only stable in the dedicated filtered run.
@@ -84,34 +81,14 @@ namespace Xamarin.Android.RuntimeTests
 		static bool HasAppContextSwitch (string key)
 			=> AppContext.TryGetSwitch (key, out var value) && value;
 
-		protected override IEnumerable<string>? ExcludedTestNames {
-			get {
-				if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-					return null;
-
-				// Tests from the external Java.Interop-Tests assembly that fail under the
-				// trimmable typemap. These cannot use [Category] because we don't control
-				// that assembly — they must be excluded by name here.
-				return new [] {
-					// Known limitation: [JniAddNativeMethodRegistrationAttribute] is not
-					// supported by design under the trimmable typemap. This Java.Interop-Tests
-					// fixture uses that attribute to register native callbacks on a hand-written
-					// Java peer (an obsolete code path whose primary consumer, jnimarshalmethod-gen,
-					// was removed in dotnet/java-interop#1405). The trimmable typemap generator
-					// emits XA4251 when it encounters the attribute and instructs users to either
-					// avoid it or switch off the trimmable typemap.
-					// See https://github.com/dotnet/android/issues/11170.
-					"Java.InteropTests.InvokeVirtualFromConstructorTests",
-				};
-			}
-		}
-
 		public override void OnCreate (Bundle? arguments)
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			base.OnCreate (arguments);
 		}
 
+		// Keep the expression fixture rooted for its linker regression test.
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods, typeof (System.LinqTests.LinqExpressionTest))]
 		protected override IEnumerable<Assembly> GetTestAssemblies ()
 		{
 			return [

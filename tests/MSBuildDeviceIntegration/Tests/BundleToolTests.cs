@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -320,10 +320,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, languageSplitContent.Length, "Found language split apk in bundle, but disabled by bundle configuration file!");
 
 			using (var stream = new MemoryStream ())
-			using (var apkSet = ZipArchive.Open (aab, FileMode.Open)) {
+			using (var apkSet = ZipFile.OpenRead (aab)) {
 				// We have a zip inside a zip
-				var baseMaster = apkSet.ReadEntry ("splits/base-master.apk");
-				baseMaster.Extract (stream);
+				var baseMaster = apkSet.GetEntry ("splits/base-master.apk") ?? throw new InvalidOperationException ("Missing base-master.apk.");
+				using (var source = baseMaster.Open ())
+					source.CopyTo (stream);
 
 				stream.Position = 0;
 				var uncompressed = new List<string> {
@@ -337,11 +338,11 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					uncompressed.Add (".dll");
 				}
-				using (var baseApk = ZipArchive.Open (stream)) {
-					foreach (var file in baseApk) {
+				using (var baseApk = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
+					foreach (var file in baseApk.Entries) {
 						foreach (var ext in uncompressed) {
 							if (file.FullName.EndsWith (ext, StringComparison.OrdinalIgnoreCase)) {
-								Assert.AreEqual (CompressionMethod.Store, file.CompressionMethod, $"{file.FullName} should be uncompressed!");
+								Assert.AreEqual (file.Length, file.CompressedLength, $"{file.FullName} should be uncompressed!");
 							}
 						}
 					}

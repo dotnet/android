@@ -8,7 +8,6 @@
   <PropertyGroup>
     <LangVersion>12</LangVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <DefineConstants>$(DefineConstants);MSBUILD</DefineConstants>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -26,16 +25,13 @@
     <Compile Remove="Linker\**" />
     <Compile Remove="Mono.Android\**" />
     <Compile Remove="Resources\**" />
-    <Compile Remove="Xamarin.AndroidTools.Aidl\**" />
     <EmbeddedResource Remove="external\**" />
     <EmbeddedResource Remove="Linker\**" />
     <EmbeddedResource Remove="Mono.Android\**" />
     <EmbeddedResource Remove="Resources\**" />
-    <EmbeddedResource Remove="Xamarin.AndroidTools.Aidl\**" />
     <None Remove="external\**" />
     <None Remove="Linker\**" />
     <None Remove="Mono.Android\**" />
-    <None Remove="Xamarin.AndroidTools.Aidl\**" />
   </ItemGroup>
 
   <ItemGroup>

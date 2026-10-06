@@ -18,6 +18,10 @@
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
+    <!-- Runtime regression tests intentionally exercise trim-unsafe and AOT-unsafe APIs and dependencies.
+         Keep linker and NativeAOT analysis warnings visible while enforcing C# compiler warnings and IL2037. -->
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+    <IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <EventSourceSupport>true</EventSourceSupport>
     <AndroidNdkDirectory></AndroidNdkDirectory>
@@ -82,12 +86,11 @@
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
     <!-- The callback format is assembly-wide; keep UCO fixtures separate from the legacy bindings above. -->
     <ProjectReference Include="..\TrimmableTypeMapCallbacks\TrimmableTypeMapCallbacks.csproj" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
-    <Reference Include="Mono.Android.Export" Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
 
   <ItemGroup>
     <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" />
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
@@ -138,7 +141,6 @@
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
-    <Compile Include="Java.Interop\ActivationConstructorCacheTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
@@ -146,6 +148,7 @@
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
+    <Compile Include="Java.Interop\JniRemappingLookupTests.cs" />
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
     <Compile Include="Java.Interop\JavaMarshalGCBridgeTests.cs" />
     <Compile Include="Java.Interop\PeerIdentityTests.cs" />
@@ -202,8 +205,8 @@
 
   <ItemGroup>
     <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
-    <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
-    <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
+    <AndroidJavaSource Update="java\net\dot\android\test\InterfaceCollectionFixture.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/remap/*.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
   </ItemGroup>

@@ -8,8 +8,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.SetIlcToolchainPath" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" />
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- Default property values for NativeAOT -->
@@ -62,8 +62,54 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       _AndroidComputeIlcCompileInputs;
       $(IlcCompileDependsOn)
     </IlcCompileDependsOn>
-    <_AndroidBeforeIlcCompileDependsOn>_CreatePropertiesCache</_AndroidBeforeIlcCompileDependsOn>
+    <_AndroidBeforeIlcCompileDependsOn>_AndroidValidateNativeAotJniInitFunctions;_CreatePropertiesCache</_AndroidBeforeIlcCompileDependsOn>
   </PropertyGroup>
+
+  <Target Name="_AndroidValidateNativeAotJniInitFunctions"
+      BeforeTargets="_GenerateTrimmableTypeMap;_GenerateJavaStubs">
+    <AndroidError Code="XA1051"
+        ResourceName="XA1051"
+        Condition=" '@(AndroidStaticJniInitFunction->Count())' != '0' " />
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotBootstrapSourcesInputs"
+      DependsOnTargets="_GenerateJavaStubs;_GetGenerateJavaStubsInputs">
+    <PropertyGroup>
+      <_AndroidNativeAotBootstrapDirectory>$(IntermediateOutputPath)android</_AndroidNativeAotBootstrapDirectory>
+      <_AndroidNativeAotBootstrapInputsFile>$(IntermediateOutputPath)nativeaot-bootstrap.inputs</_AndroidNativeAotBootstrapInputsFile>
+    </PropertyGroup>
+    <!-- Command-line library names and environment selection/order can change without newer file inputs. -->
+    <WriteLinesToFile
+        File="$(_AndroidNativeAotBootstrapInputsFile)"
+        Lines="TargetName=$(TargetName);@(_EnvironmentFiles->'EnvironmentFile=%(FullPath)')"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->
+    <GetNativeAotRuntimeProviders ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
+      <Output TaskParameter="AdditionalProviderSources" ItemName="_AndroidNativeAotRuntimeProvider" />
+    </GetNativeAotRuntimeProviders>
+    <ItemGroup>
+      <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/JavaInteropRuntime.java" />
+      <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/NativeAotEnvironmentVars.java" />
+      <_AndroidNativeAotBootstrapSource Include="@(_AndroidNativeAotRuntimeProvider->'$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/%(Identity).java')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotBootstrapSources"
+      BeforeTargets="_FindJavaStubFiles"
+      DependsOnTargets="_AndroidGenerateNativeAotBootstrapSourcesInputs"
+      Inputs="$(_AndroidNativeAotBootstrapInputsFile);@(_EnvironmentFiles);$(IntermediateOutputPath)AndroidManifest.xml;$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Outputs="@(_AndroidNativeAotBootstrapSource)">
+    <GenerateNativeAotBootstrapSources
+        OutputDirectory="$(_AndroidNativeAotBootstrapDirectory)"
+        TargetName="$(TargetName)"
+        Environments="@(_EnvironmentFiles)"
+        AdditionalProviderSources="@(_AndroidNativeAotRuntimeProvider)" />
+    <ItemGroup>
+      <FileWrites Include="@(_AndroidNativeAotBootstrapSource)" />
+      <FileWrites Include="$(_AndroidNativeAotBootstrapInputsFile)" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="_AndroidBeforeIlcCompile"
       DependsOnTargets="$(_AndroidBeforeIlcCompileDependsOn)"
@@ -159,87 +205,19 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
+      <!-- The managed JNI_OnLoad calls this initializer even when the app has no crypto P/Invokes. -->
+      <DirectPInvoke Include="System.Security.Cryptography.Native.Android!AndroidCryptoNative_InitLibraryOnLoad" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_PrepareNativeAotAndroidAppInputs">
+  <Target Name="_PrepareNativeAotAndroidAppInputs"
+      DependsOnTargets="_AndroidValidateNativeAotJniInitFunctions">
     <ItemGroup>
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' " Include="armeabi-v7a" />
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' " Include="arm64-v8a" />
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' " Include="x86_64" />
     </ItemGroup>
 
-    <PrepareAbiItems
-        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
-        NativeSourcesDir="$(_NativeAssemblySourceDir)"
-        Debug="$(AndroidIncludeDebugSymbols)"
-        Mode="jni_init">
-      <Output TaskParameter="AssemblySources" ItemName="_PrivateJniInitFuncsAssemblySource" />
-    </PrepareAbiItems>
-
-    <PrepareAbiItems
-        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
-        NativeSourcesDir="$(_NativeAssemblySourceDir)"
-        Debug="$(AndroidIncludeDebugSymbols)"
-        Mode="environment">
-      <Output TaskParameter="AssemblySources" ItemName="_PrivateEnvironmentAssemblySource" />
-    </PrepareAbiItems>
-
-    <ItemGroup>
-      <_PrivateJniInitFuncsNativeObjectFile Include="@(_PrivateJniInitFuncsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-        <abi>%(_PrivateJniInitFuncsAssemblySource.abi)</abi>
-      </_PrivateJniInitFuncsNativeObjectFile>
-
-      <_PrivateEnvironmentNativeObjectFile Include="@(_PrivateEnvironmentAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-        <abi>%(_PrivateEnvironmentAssemblySource.abi)</abi>
-      </_PrivateEnvironmentNativeObjectFile>
-
-      <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
-      <!-- In .NET 11+, the SDK's ILLink target populates ResolvedFileToPublish with linked assemblies
-           (via _LinkedResolvedFileToPublish) WITHOUT RuntimeIdentifier metadata. _AndroidComputeIlcCompileInputs
-           adds the same items WITH RuntimeIdentifier, but ->Distinct() keeps the first occurrence (without metadata).
-           Stamp RuntimeIdentifier on any items that lack it, since we're in the inner build with a single RID. -->
-      <_PrivateAndroidNaotResolvedAssemblyFiles
-          Update="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
-          Condition=" '%(_PrivateAndroidNaotResolvedAssemblyFiles.RuntimeIdentifier)' == '' "
-          RuntimeIdentifier="$(RuntimeIdentifier)"
-      />
-    </ItemGroup>
-  </Target>
-
-  <Target
-      Name="_GenerateNativeAotAndroidAppAssemblerSources"
-      DependsOnTargets="_GenerateEnvironmentFiles;_PrepareNativeAotAndroidAppInputs"
-      Inputs="@(_PrivateAndroidNaotResolvedAssemblyFiles);@(AndroidEnvironment);@(LibraryEnvironments)"
-      Outputs="@(_PrivateJniInitFuncsAssemblySource);@(_PrivateJniInitFuncsNativeObjectFile);@(_PrivateEnvironmentAssemblySource);@(_PrivateEnvironmentNativeObjectFile)">
-    <GenerateNativeAotLibraryLoadAssemblerSources
-        ResolvedAssemblies="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
-        CustomJniInitFunctions="@(AndroidStaticJniInitFunction)"
-        OutputSources="@(_PrivateJniInitFuncsAssemblySource)" />
-
-    <GenerateNativeAotEnvironmentAssemblerSources
-        Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
-        OutputSources="@(_PrivateEnvironmentAssemblySource)"
-        RID="$(RuntimeIdentifier)" />
-
-    <CompileNativeAssembly
-        Sources="@(_PrivateJniInitFuncsAssemblySource);@(_PrivateEnvironmentAssemblySource)"
-        DebugBuild="$(AndroidIncludeDebugSymbols)"
-        WorkingDirectory="$(_NativeAssemblySourceDir)"
-        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
-
-    <ItemGroup>
-      <LinkerArg Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
-      <LinkerArg Include="@(_PrivateEnvironmentNativeObjectFile)" />
-    </ItemGroup>
-  </Target>
-
-  <!-- Make sure we have a chance to generate our application-specific static library before linking
-       takes place. We must run after `IlcCompile`, which is a dependency of `LinkNative`  -->
-  <Target
-      Name="_GenerateNativeAotAndroidAppLibrary"
-      AfterTargets="IlcCompile"
-      DependsOnTargets="_GenerateNativeAotAndroidAppAssemblerSources">
   </Target>
 
   <!--
@@ -303,8 +281,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <!-- Supplied by the SDK-resolved NativeAOT runtime pack, including the BCL native archives. -->
       <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
-      <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
-      <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
       <_NativeAotSystemLibraries Include="dl" />
       <_NativeAotSystemLibraries Include="z" />
       <_NativeAotSystemLibraries Include="log" />
