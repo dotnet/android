@@ -589,7 +589,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		[Test]
-		public void DescriptorDistinctR8FieldsReachNativeTables ()
+		public void DescriptorDistinctR8FieldsReachBinaryAsset ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
 			string xmlFile = Path.Combine (TestDirectory, "r8.xml");
@@ -608,20 +608,22 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				?? throw new AssertionException ("Generated XML has no root.");
 			CollectionAssert.AreEqual (new [] { ("I", "integerTarget"), ("Ljava/lang/String;", "stringTarget") }, fields);
 
-			var nativeCode = new GenerateJniRemappingNativeCode {
+			string assetFile = Path.Combine (TestDirectory, "jni-remap.bin");
+			var binary = new GenerateJniRemappingAsset {
 				BuildEngine = engine,
-				OutputDirectory = TestDirectory,
-				SupportedAbis = ["arm64-v8a"],
-				RemappingXmlFilePath = new TaskItem (xmlFile),
+				OutputFile = assetFile,
+				RemappingXmlFilePath = xmlFile,
 			};
-			Assert.IsTrue (nativeCode.Execute ());
-			string ll = File.ReadAllText (Path.Combine (TestDirectory, "jni_remap.arm64-v8a.ll"));
-			StringAssert.Contains ("[2 x %struct.JniRemappingIndexFieldEntry]", ll);
-			StringAssert.Contains ("integerTarget", ll);
-			StringAssert.Contains ("stringTarget", ll);
-			StringAssert.Contains ("Ljava/lang/String;", ll);
-			var info = nativeCode.NativeCodeInfo ?? throw new AssertionException ("The task must provide native code information.");
-			Assert.AreEqual (1, info.ReplacementFieldIndexEntryCount);
+			Assert.IsTrue (binary.Execute ());
+			var asset = new JniRemappingAsset (File.ReadAllBytes (assetFile));
+			var integer = asset.FindField ("a/b", "value", "I")
+				?? throw new AssertionException ("The integer field remap was lost.");
+			var text = asset.FindField ("a/b", "value", "Ljava/lang/String;")
+				?? throw new AssertionException ("The string field remap was lost.");
+			Assert.AreEqual ("integerTarget", asset.ReadString (integer.TargetName));
+			Assert.AreEqual ("stringTarget", asset.ReadString (text.TargetName));
+			Assert.AreEqual ("I", asset.ReadString (integer.TargetSignature));
+			Assert.AreEqual ("Ljava/lang/String;", asset.ReadString (text.TargetSignature));
 		}
 
 		[Test]

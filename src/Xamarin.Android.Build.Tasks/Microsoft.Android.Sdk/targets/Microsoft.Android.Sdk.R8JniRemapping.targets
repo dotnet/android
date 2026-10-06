@@ -41,6 +41,19 @@
 
   <!-- The first per-RID publish returns the actual ILC object path. No post-R8 project
        evaluation, native relink, or guessed SDK object filename is needed. -->
+  <Target Name="_AndroidCollectNativeAotJniRemappingFileWrites"
+      AfterTargets="_ResolveAssemblies"
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' ">
+    <ItemGroup>
+      <_AndroidNativeAotJniRemappingFile Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.AndroidNativeAotObjectFile)' != '' " />
+      <FileWrites Include="@(_AndroidNativeAotJniRemappingFile)" />
+      <FileWrites Include="@(_AndroidNativeAotJniRemappingFile->'%(AndroidNativeAotObjectFile)')" />
+      <FileWrites Include="@(_AndroidNativeAotJniRemappingFile->'%(AndroidNativeAotSymbols)')" />
+      <FileWrites Include="@(_AndroidNativeAotJniRemappingFile->'%(AndroidNativeAotIntermediateOutputPath)sections.ld')" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AndroidGenerateNativeAotR8RemappingInputs"
       DependsOnTargets="_AndroidR8JniRemappingInputs;_ConvertAndroidMamMappingFileToXml;_ResolveAssemblies">
     <ItemGroup>
