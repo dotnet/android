@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
@@ -196,6 +197,88 @@ namespace Xamarin.Android.Build.Tests {
 			var task = CreateTask ([], outputDir, javaDir);
 
 			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An invalid incremental cache should regenerate every typemap assembly.");
+		}
+
+		[Test]
+		public void Execute_SwitchToPreGeneratedFrameworkTypeMap_PreservesRoot ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+			var firstTask = CreateTask (assemblies, outputDir, javaDir);
+			firstTask.Debug = true;
+			Assert.IsTrue (firstTask.Execute (), "Initial local typemap generation should succeed.");
+
+			var rootPath = Path.Combine (outputDir, "_Microsoft.Android.TypeMaps.dll");
+			var initialRoot = File.ReadAllBytes (rootPath);
+
+			var secondTask = CreateTask (assemblies, outputDir, javaDir);
+			secondTask.Debug = true;
+			secondTask.PreGeneratedTypeMapAssemblies = assemblies;
+			Assert.IsTrue (secondTask.Execute (), "Switching to the pre-generated framework typemap should succeed.");
+
+			var preGeneratedRoot = File.ReadAllBytes (rootPath);
+			CollectionAssert.AreEqual (
+				initialRoot,
+				preGeneratedRoot,
+				"The root should reference a per-assembly map identically whether that map was generated locally or pre-generated.");
+			CollectionAssert.AreEqual (
+				new [] { rootPath },
+				secondTask.GeneratedAssemblies.Select (item => item.ItemSpec).ToArray (),
+				"Only the existing root should be reported when every scanned assembly uses a pre-generated typemap.");
+		}
+
+		[Test]
+		public void Execute_ReadsPreGeneratedJcwNamesFromStandardZipArchive ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var outputDir = Path.Combine (path, "typemap");
+			var javaDir = Path.Combine (path, "java");
+			var jcwJar = Path.Combine (path, "framework-jcws.jar");
+			Directory.CreateDirectory (path);
+			using (var stream = File.Create (jcwJar))
+			using (var archive = new ZipArchive (stream, ZipArchiveMode.Create)) {
+				archive.CreateEntry ("android/app/Activity.class");
+				archive.CreateEntry ("META-INF/");
+			}
+
+			var task = CreateTask ([], outputDir, javaDir);
+			task.Debug = true;
+			task.PreGeneratedTypeMapAssemblies = [new TaskItem ("Mono.Android.dll")];
+			task.PreGeneratedJcwJar = jcwJar;
+
+			Assert.IsTrue (task.Execute (), "The task should read pre-generated JCW names without external ZIP dependencies.");
+			CollectionAssert.AreEqual (
+				new [] { Path.Combine (outputDir, "_Microsoft.Android.TypeMaps.dll") },
+				task.GeneratedAssemblies.Select (item => item.ItemSpec).ToArray ());
+		}
+
+		[Test]
+		public void Execute_InvalidPreGeneratedFrameworkAcwMap_ReportsFileAndLine ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var acwMap = Path.Combine (Root, path, "framework-acw-map.txt");
+			Directory.CreateDirectory (Path.GetDirectoryName (acwMap));
+			File.WriteAllText (acwMap, $"{Environment.NewLine}invalid");
+
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = CreateTask ([], outputDir, javaDir, errors: errors);
+			task.PreGeneratedFrameworkAcwMap = acwMap;
+
+			Assert.IsFalse (task.Execute (), "A malformed pre-generated framework ACW map should fail the task.");
+			Assert.IsTrue (
+				errors.Any (error => error.Message?.Contains ($"'{acwMap}' at line 2: 'invalid'", StringComparison.Ordinal) == true),
+				"The error should identify the malformed ACW map and line number.");
 		}
 
 		[Test]
