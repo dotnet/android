@@ -139,6 +139,25 @@ namespace Xamarin.Android.Build.Tests
 				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+				var runtimeConfigFiles = Directory.GetFiles (
+					Path.Combine (Root, b.ProjectDirectory, proj.OutputPath),
+					$"{proj.ProjectName}.runtimeconfig.json",
+					SearchOption.AllDirectories);
+				Assert.AreEqual (1, runtimeConfigFiles.Length, "The build should produce one runtimeconfig.json.");
+				using (var runtimeConfig = JsonDocument.Parse (File.ReadAllText (runtimeConfigFiles [0]))) {
+					var configProperties = runtimeConfig.RootElement
+						.GetProperty ("runtimeOptions")
+						.GetProperty ("configProperties");
+					bool expectedJniRemapping = obfuscationMode == "runtime-remapping";
+					Assert.AreEqual (
+						expectedJniRemapping,
+						configProperties.GetProperty ("Java.Interop.RuntimeFeature.JniRemapping").GetBoolean (),
+						"Java.Interop JNI remapping must be retained only for runtime-remapping builds.");
+					Assert.AreEqual (
+						expectedJniRemapping,
+						configProperties.GetProperty ("Microsoft.Android.Runtime.RuntimeFeature.JniRemapping").GetBoolean (),
+						"Microsoft.Android.Runtime JNI remapping must be retained only for runtime-remapping builds.");
+				}
 				var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
