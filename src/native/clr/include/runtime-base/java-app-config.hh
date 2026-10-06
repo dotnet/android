@@ -39,6 +39,7 @@ namespace xamarin::android {
 
 	private:
 		static inline bool initialized = false;
+		static inline char *bootstrap_data = nullptr;
 		static inline char *android_package_name = nullptr;
 		static inline uint32_t naming_policy = 0;
 		static inline bool assembly_store_enabled = false;

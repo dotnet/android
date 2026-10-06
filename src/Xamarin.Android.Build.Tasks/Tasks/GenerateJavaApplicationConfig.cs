@@ -75,7 +75,6 @@ public class GenerateJavaApplicationConfig : AndroidTask
 		}
 
 		var fields = new StringBuilder ();
-		AppendString (fields, "PackageName", AndroidPackageName);
 		fields.Append ("\tpublic static final int PackageNamingPolicy = ").Append (((int)namingPolicy).ToString (CultureInfo.InvariantCulture)).AppendLine (";");
 		fields.Append ("\tpublic static final boolean HaveAssemblyStore = ").Append (UseAssemblyStore ? "true" : "false").AppendLine (";");
 		bool ignoreSplitConfigs = !CustomBundleConfigFile.IsNullOrEmpty () && BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (Log, CustomBundleConfigFile);
@@ -83,9 +82,7 @@ public class GenerateJavaApplicationConfig : AndroidTask
 			return false;
 		}
 		fields.Append ("\tpublic static final boolean IgnoreSplitConfigs = ").Append (ignoreSplitConfigs ? "true" : "false").AppendLine (";");
-		AppendPairs (fields, "Environment", environment.EnvironmentVariables);
-		AppendPairs (fields, "SystemProperties", environment.SystemProperties);
-		AppendPairs (fields, "RuntimeProperties", runtimeProperties);
+		AppendNativeConfig (fields, environment.EnvironmentVariables, environment.SystemProperties, runtimeProperties, libraries);
 		AppendArray (fields, "NativeLibraries", libraries);
 		fields.AppendLine ("\tpublic static final byte[] NativeLibraryFlags = new byte[] {");
 		foreach (byte value in flags) {
@@ -105,14 +102,93 @@ public class GenerateJavaApplicationConfig : AndroidTask
 		return true;
 	}
 
-	static void AppendPairs (StringBuilder source, string name, IEnumerable<KeyValuePair<string, string>> pairs)
+	void AppendNativeConfig (StringBuilder source, IDictionary<string, string> environment, IDictionary<string, string> systemProperties,
+		IDictionary<string, string> runtimeProperties, List<string> libraries)
 	{
-		var values = new List<string> ();
-		foreach (var pair in pairs) {
-			values.Add (pair.Key);
-			values.Add (pair.Value);
+		using var data = new MemoryStream ();
+		// The fixed JNI reader uses these counts followed by offsets into the NUL-terminated UTF-8 blob.
+		var layout = new List<int> { environment.Count, systemProperties.Count, runtimeProperties.Count, libraries.Count };
+		AddString (AndroidPackageName);
+		AddPairs (environment);
+		AddPairs (systemProperties);
+		AddPairs (runtimeProperties);
+		foreach (string library in libraries) {
+			AddString (library);
 		}
-		AppendArray (source, name, values);
+
+		source.AppendLine ("\tpublic static final int[] NativeConfigLayout = new int[] {");
+		foreach (int value in layout) {
+			source.Append ("\t\t").Append (value.ToString (CultureInfo.InvariantCulture)).AppendLine (",");
+		}
+		source.AppendLine ("\t};");
+		AppendBytes (source, data.ToArray ());
+
+		void AddPairs (IDictionary<string, string> pairs)
+		{
+			foreach (var pair in pairs) {
+				AddString (pair.Key);
+				AddString (pair.Value);
+			}
+		}
+
+		void AddString (string value)
+		{
+			if (value.IndexOf ('\0') >= 0) {
+				throw new ArgumentException ("Application bootstrap strings must not contain NUL characters");
+			}
+			layout.Add (checked ((int)data.Position));
+			byte [] bytes = Encoding.UTF8.GetBytes (value);
+			data.Write (bytes, 0, bytes.Length);
+			data.WriteByte (0);
+		}
+	}
+
+	static void AppendBytes (StringBuilder source, byte [] data)
+	{
+		const int chunkSize = 4096;
+		if (data.Length <= chunkSize) {
+			source.AppendLine ("\tpublic static final byte[] NativeConfig = new byte[] {");
+			AppendByteValues (source, data, 0, data.Length);
+			source.AppendLine ("\t};");
+			return;
+		}
+		source.AppendLine ("\tpublic static final byte[] NativeConfig = createNativeConfig ();");
+		source.AppendLine ("\tprivate static byte[] createNativeConfig ()");
+		source.AppendLine ("\t{");
+		source.Append ("\t\tbyte[] data = new byte[").Append (data.Length.ToString (CultureInfo.InvariantCulture)).AppendLine ("];");
+		for (int offset = 0, chunk = 0; offset < data.Length; offset += chunkSize, chunk++) {
+			int length = Math.Min (chunkSize, data.Length - offset);
+			source.Append ("\t\tSystem.arraycopy (nativeConfigChunk").Append (chunk.ToString (CultureInfo.InvariantCulture))
+				.Append (" (), 0, data, ").Append (offset.ToString (CultureInfo.InvariantCulture))
+				.Append (", ").Append (length.ToString (CultureInfo.InvariantCulture)).AppendLine (");");
+		}
+		source.AppendLine ("\t\treturn data;");
+		source.AppendLine ("\t}");
+
+		// Literal arrays become DEX fill-array-data payloads; chunking avoids Java's per-method bytecode limit.
+		for (int offset = 0, chunk = 0; offset < data.Length; offset += chunkSize, chunk++) {
+			source.Append ("\tprivate static byte[] nativeConfigChunk").Append (chunk.ToString (CultureInfo.InvariantCulture)).AppendLine (" ()");
+			source.AppendLine ("\t{");
+			source.AppendLine ("\t\treturn new byte[] {");
+			AppendByteValues (source, data, offset, Math.Min (offset + chunkSize, data.Length));
+			source.AppendLine ("\t\t};");
+			source.AppendLine ("\t}");
+		}
+	}
+
+	static void AppendByteValues (StringBuilder source, byte [] data, int offset, int end)
+	{
+		for (int i = offset; i < end; i++) {
+			if ((i - offset) % 16 == 0) {
+				source.Append ("\t\t\t");
+			}
+			source.Append (unchecked ((sbyte)data [i]).ToString (CultureInfo.InvariantCulture)).Append (",");
+			if ((i - offset) % 16 == 15 || i + 1 == end) {
+				source.AppendLine ();
+			} else {
+				source.Append (' ');
+			}
+		}
 	}
 
 	static void AppendArray (StringBuilder source, string name, IEnumerable<string> values)
@@ -124,13 +200,6 @@ public class GenerateJavaApplicationConfig : AndroidTask
 			source.AppendLine (",");
 		}
 		source.AppendLine ("\t};");
-	}
-
-	static void AppendString (StringBuilder source, string name, string value)
-	{
-		source.Append ("\tpublic static final String ").Append (name).Append (" = ");
-		AppendJavaString (source, value);
-		source.AppendLine (";");
 	}
 
 	static void AppendJavaString (StringBuilder source, string value)

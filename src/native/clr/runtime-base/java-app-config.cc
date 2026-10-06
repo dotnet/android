@@ -3,28 +3,23 @@
 #include <cstdlib>
 #include <cstring>
 #include <source_location>
+#include <type_traits>
 
 #include <runtime-base/java-app-config.hh>
 #include <runtime-base/logger.hh>
-#include <runtime-base/util.hh>
+#include <shared/helpers.hh>
 
 using namespace xamarin::android;
 
 namespace {
-	struct Strings
-	{
-		char **values;
-		size_t count;
-	};
-
 	template<typename T>
-	auto allocate_items (size_t count, const char *description) noexcept -> T*
+	auto allocate_items (size_t count, const char *description, bool zero_initialize = true) noexcept -> T*
 	{
 		if (count == 0) {
 			return nullptr;
 		}
 		size_t size = Helpers::multiply_with_overflow_check<size_t> (count, sizeof (T));
-		auto items = static_cast<T*>(std::calloc (1, size));
+		auto items = static_cast<T*>(zero_initialize ? std::calloc (1, size) : std::malloc (size));
 		if (items == nullptr) {
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (), "Unable to allocate %s", description);
 		}
@@ -40,68 +35,32 @@ namespace {
 		return field;
 	}
 
-	auto copy_string (JNIEnv *env, jstring value) noexcept -> char*
+	template<typename T>
+	auto read_array (JNIEnv *env, jclass config, const char *name) noexcept -> std::span<T>
 	{
-		const char *characters = env->GetStringUTFChars (value, nullptr);
-		if (characters == nullptr || env->ExceptionCheck ()) {
-			Helpers::abort_application (LOG_DEFAULT, "Unable to read application bootstrap string");
-		}
-		if (std::strstr (characters, "\xc0\x80") != nullptr) {
-			Helpers::abort_application (LOG_DEFAULT, "NUL character in application bootstrap string");
-		}
-		size_t length = std::strlen (characters);
-		char *result = allocate_items<char> (Helpers::add_with_overflow_check<size_t> (length, 1uz), "application bootstrap string");
-		std::memcpy (result, characters, length + 1uz);
-		env->ReleaseStringUTFChars (value, characters);
-		return result;
-	}
-
-	auto read_string (JNIEnv *env, jclass config, const char *name) noexcept -> char*
-	{
-		jfieldID field = require_field (env, config, name, "Ljava/lang/String;");
-		auto value = static_cast<jstring>(env->GetStaticObjectField (config, field));
-		if (value == nullptr || env->ExceptionCheck ()) {
-			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (), "Invalid Java application config field '%s'", name);
-		}
-		char *result = copy_string (env, value);
-		env->DeleteLocalRef (value);
-		return result;
-	}
-
-	auto read_strings (JNIEnv *env, jclass config, const char *name, size_t stride) noexcept -> Strings
-	{
-		jfieldID field = require_field (env, config, name, "[Ljava/lang/String;");
-		auto array = static_cast<jobjectArray>(env->GetStaticObjectField (config, field));
+		static_assert (std::is_same_v<T, jbyte> || std::is_same_v<T, jint>);
+		jfieldID field = require_field (env, config, name, std::is_same_v<T, jbyte> ? "[B" : "[I");
+		jobject array = env->GetStaticObjectField (config, field);
 		if (array == nullptr || env->ExceptionCheck ()) {
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (), "Invalid Java application config array '%s'", name);
 		}
-		jsize length = env->GetArrayLength (array);
-		if (length < 0 || static_cast<size_t>(length) % stride != 0) {
+		jsize length = env->GetArrayLength (static_cast<jarray>(array));
+		if (length < 0 || env->ExceptionCheck ()) {
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (), "Invalid length of Java application config array '%s'", name);
 		}
-		char **values = allocate_items<char*> (static_cast<size_t>(length), name);
-		for (jsize i = 0; i < length; i++) {
-			auto element = static_cast<jstring>(env->GetObjectArrayElement (array, i));
-			if (element == nullptr || env->ExceptionCheck ()) {
-				Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (), "Invalid string in Java application config array '%s'", name);
+		T *values = allocate_items<T> (static_cast<size_t>(length), name, false);
+		if (length > 0) {
+			if constexpr (std::is_same_v<T, jbyte>) {
+				env->GetByteArrayRegion (static_cast<jbyteArray>(array), 0, length, values);
+			} else {
+				env->GetIntArrayRegion (static_cast<jintArray>(array), 0, length, values);
 			}
-			values[i] = copy_string (env, element);
-			env->DeleteLocalRef (element);
+			if (env->ExceptionCheck ()) {
+				Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (), "Unable to read Java application config array '%s'", name);
+			}
 		}
 		env->DeleteLocalRef (array);
 		return { values, static_cast<size_t>(length) };
-	}
-
-	auto read_pairs (JNIEnv *env, jclass config, const char *name, size_t &count) noexcept -> JavaAppConfig::Entry*
-	{
-		Strings strings = read_strings (env, config, name, 2);
-		count = strings.count / 2;
-		auto entries = allocate_items<JavaAppConfig::Entry> (count, name);
-		for (size_t i = 0; i < count; i++) {
-			entries[i] = { strings.values[i * 2], strings.values[i * 2 + 1] };
-		}
-		std::free (strings.values);
-		return entries;
 	}
 }
 
@@ -115,15 +74,56 @@ void JavaAppConfig::initialize (JNIEnv *env) noexcept
 		Helpers::abort_application (LOG_DEFAULT, "Unable to load AppBootstrapConfig");
 	}
 
-	android_package_name = read_string (env, config, "PackageName");
+	auto data = read_array<jbyte> (env, config, "NativeConfig");
+	auto layout = read_array<jint> (env, config, "NativeConfigLayout");
+	auto flags = read_array<jbyte> (env, config, "NativeLibraryFlags");
+	if (layout.size () < 5 || data.empty ()) {
+		Helpers::abort_application (LOG_DEFAULT, "Invalid Java application bootstrap layout");
+	}
+	size_t string_count = 1;
+	for (size_t i = 0; i < 4; i++) {
+		if (layout[i] < 0) {
+			Helpers::abort_application (LOG_DEFAULT, "Invalid Java application bootstrap count");
+		}
+		size_t count = Helpers::multiply_with_overflow_check<size_t> (static_cast<size_t>(layout[i]), i == 3 ? 1uz : 2uz);
+		string_count = Helpers::add_with_overflow_check<size_t> (string_count, count);
+	}
+	auto offsets = layout.subspan (4);
+	if (offsets.size () != string_count || offsets[0] != 0 || flags.size () != static_cast<size_t>(layout[3])) {
+		Helpers::abort_application (LOG_DEFAULT, "Invalid Java application bootstrap offsets");
+	}
+	for (size_t i = 0; i < offsets.size (); i++) {
+		size_t end = i + 1 < offsets.size () ? static_cast<size_t>(offsets[i + 1]) : data.size ();
+		if (offsets[i] < 0 || end > data.size () || static_cast<size_t>(offsets[i]) >= end || data[end - 1] != 0) {
+			Helpers::abort_application (LOG_DEFAULT, "Invalid Java application bootstrap string bounds");
+		}
+	}
+	bootstrap_data = reinterpret_cast<char*>(data.data ());
+	auto string_at = [&offsets] (size_t index) noexcept -> char* {
+		return bootstrap_data + offsets[index];
+	};
+	size_t index = 0;
+	android_package_name = string_at (index++);
 	naming_policy = static_cast<uint32_t>(env->GetStaticIntField (config, require_field (env, config, "PackageNamingPolicy", "I")));
 	assembly_store_enabled = env->GetStaticBooleanField (config, require_field (env, config, "HaveAssemblyStore", "Z")) == JNI_TRUE;
 	split_configs_ignored = env->GetStaticBooleanField (config, require_field (env, config, "IgnoreSplitConfigs", "Z")) == JNI_TRUE;
-	environment_entries = read_pairs (env, config, "Environment", environment_count);
-	system_property_entries = read_pairs (env, config, "SystemProperties", system_property_count);
+	if (env->ExceptionCheck ()) {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to read Java application package settings");
+	}
 
-	Strings runtime = read_strings (env, config, "RuntimeProperties", 2);
-	size_t count = Helpers::add_with_overflow_check<size_t> (runtime.count / 2, 3uz);
+	auto read_pairs = [&index, &string_at] (size_t count, const char *name) noexcept -> Entry* {
+		auto entries = allocate_items<Entry> (count, name);
+		for (size_t i = 0; i < count; i++) {
+			entries[i] = { string_at (index++), string_at (index++) };
+		}
+		return entries;
+	};
+	environment_count = static_cast<size_t>(layout[0]);
+	environment_entries = read_pairs (environment_count, "environment variables");
+	system_property_count = static_cast<size_t>(layout[1]);
+	system_property_entries = read_pairs (system_property_count, "system properties");
+
+	size_t count = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(layout[2]), 3uz);
 	if (count > INT_MAX) {
 		Helpers::abort_application (LOG_DEFAULT, "Too many CoreCLR runtime properties");
 	}
@@ -134,36 +134,21 @@ void JavaAppConfig::initialize (JNIEnv *env) noexcept
 	property_names[1] = "RUNTIME_IDENTIFIER";
 	property_names[2] = "APP_CONTEXT_BASE_DIRECTORY";
 	for (size_t i = 3; i < count; i++) {
-		property_names[i] = runtime.values[(i - 3) * 2];
-		property_values[i] = runtime.values[(i - 3) * 2 + 1];
+		property_names[i] = string_at (index++);
+		property_values[i] = string_at (index++);
 	}
-	std::free (runtime.values);
 
-	Strings names = read_strings (env, config, "NativeLibraries", 1);
-	native_library_count = names.count;
+	native_library_count = static_cast<size_t>(layout[3]);
 	native_libraries = allocate_items<Library> (native_library_count, "native libraries");
-	jfieldID flags_field = require_field (env, config, "NativeLibraryFlags", "[B");
-	auto flags_array = static_cast<jbyteArray>(env->GetStaticObjectField (config, flags_field));
-	if (flags_array == nullptr || env->ExceptionCheck () ||
-		static_cast<size_t>(env->GetArrayLength (flags_array)) != native_library_count) {
-		Helpers::abort_application (LOG_DEFAULT, "Invalid Java native library flags");
-	}
-	if (native_library_count > 0) {
-		jbyte *flags = env->GetByteArrayElements (flags_array, nullptr);
-		if (flags == nullptr || env->ExceptionCheck ()) {
-			Helpers::abort_application (LOG_DEFAULT, "Unable to read Java native library flags");
+	for (size_t i = 0; i < native_library_count; i++) {
+		auto value = static_cast<uint8_t>(flags[i]);
+		if ((value & ~0x03u) != 0 || ((value & 2u) != 0 && (value & 1u) == 0)) {
+			Helpers::abort_application (LOG_DEFAULT, "Invalid Java native library preload flags");
 		}
-		for (size_t i = 0; i < native_library_count; i++) {
-			auto value = static_cast<uint8_t>(flags[i]);
-			if ((value & ~0x03u) != 0 || ((value & 2u) != 0 && (value & 1u) == 0)) {
-				Helpers::abort_application (LOG_DEFAULT, "Invalid Java native library preload flags");
-			}
-			native_libraries[i] = { names.values[i], (value & 1u) != 0, (value & 2u) != 0, nullptr };
-		}
-		env->ReleaseByteArrayElements (flags_array, flags, JNI_ABORT);
+		native_libraries[i] = { string_at (index++), (value & 1u) != 0, (value & 2u) != 0, nullptr };
 	}
-	env->DeleteLocalRef (flags_array);
-	std::free (names.values);
+	std::free (flags.data ());
+	std::free (layout.data ());
 	env->DeleteLocalRef (config);
 	initialized = true;
 }

@@ -82,12 +82,12 @@ namespace Xamarin.Android.Build.Tests
 
 			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
 			var txt = File.ReadAllText (configTask.OutputFile);
-			StringAssert.Contains ("YYYY", txt, "Java bootstrap should contain the environment value.");
+			CollectionAssert.Contains (JavaAppConfigTestHelper.Read (txt).Strings, "YYYY", "Java bootstrap should contain the environment value.");
 
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=XXXX");
 			Assert.IsTrue (configTask.Execute (), "GenerateJavaApplicationConfig task should have executed. (run 2)");
 			txt = File.ReadAllText (configTask.OutputFile);
-			StringAssert.Contains ("XXXX", txt, "Java bootstrap should contain the updated environment value.");
+			CollectionAssert.Contains (JavaAppConfigTestHelper.Read (txt).Strings, "XXXX", "Java bootstrap should contain the updated environment value.");
 		}
 
 		[Test]
@@ -125,7 +125,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (storeTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 
 			var txt = File.ReadAllText (configTask.OutputFile);
-			StringAssert.Contains ("ZZZZ", txt, "Java bootstrap should contain the custom environment value.");
+			CollectionAssert.Contains (JavaAppConfigTestHelper.Read (txt).Strings, "ZZZZ", "Java bootstrap should contain the custom environment value.");
 			txt = File.ReadAllText (Path.Combine (storeTask.EnvironmentOutputDirectory, "environment.arm64-v8a.ll"));
 			StringAssert.Contains ("[1 x %struct.AssemblyStoreSingleAssemblyRuntimeData] zeroinitializer", txt, "The excluded assembly must not be counted in the remaining native state.");
 		}

@@ -299,8 +299,9 @@ namespace Xamarin.Android.Build.Tests
 
 				if (runtime == AndroidRuntime.CoreCLR) {
 					string config = File.ReadAllText (Path.Combine (envFilesDir, "android", "src", "net", "dot", "android", "AppBootstrapConfig.java"));
-					StringAssert.Contains ($"\"{env_var}\"", config);
-					StringAssert.Contains ($"\"{env_val}\"", config);
+					var strings = JavaAppConfigTestHelper.Read (config).Strings;
+					CollectionAssert.Contains (strings, env_var);
+					CollectionAssert.Contains (strings, env_val);
 				} else {
 					var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
 					var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);

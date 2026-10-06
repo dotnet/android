@@ -124,7 +124,17 @@ and bundled native tools are unaffected.
 CoreCLR applications generate `net/dot/android/AppBootstrapConfig.java` instead of embedding
 environment variables, bundled system properties, CoreCLR hosting and package settings,
 and the native library cache in `environment.<abi>.ll`. The fixed `libmonodroid.so` host reads the Java
-configuration through JNI when it loads. Its native library state records the canonical
+configuration through JNI when it loads. The build task encodes the strings once as
+NUL-terminated UTF-8 in a Java `byte[]`, with an `int[]` containing the environment,
+system-property, runtime-property and library counts followed by string offsets (package
+name first, then each group in that order). The host makes one bulk copy of those bytes
+into process-lifetime native storage and constructs the pointer tables CoreCLR requires
+from the offsets; it performs no JNI string conversion or per-string copy.
+Literal byte-array initializers become DEX bulk array-data payloads, rather than
+per-byte Java assignments. Blobs larger than 4 KiB use bounded initializer methods and
+one Java chunk-concatenation step to stay below the per-method bytecode limit.
+Java retains library names as strings for JNI-aware loading.
+Its native library state records the canonical
 packaged name, whether the library has `JNI_OnLoad`, the preload policy, and the loaded handle.
 Library aliases (`lib` prefix, `.so` suffix, and `.dll.so` variants) are resolved against
 those records when loading, without a generated hash/index array. Java preloads the
