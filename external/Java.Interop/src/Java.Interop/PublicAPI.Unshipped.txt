@@ -20,6 +20,7 @@ virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeSignaturesCore(System.Type
 abstract Java.Interop.JniRuntime.JniValueManager.CreateLocalObjectReferenceArgumentCore(System.Type! type, object? value) -> Java.Interop.JniObjectReference
 Java.Interop.JniRuntime.JniValueManager.CreateLocalObjectReferenceArgument(System.Type! type, object? value) -> Java.Interop.JniObjectReference
 Java.Interop.JavaException.JavaException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions transfer, Java.Interop.JniObjectReference throwableOverride) -> void
+Java.Interop.JavaException.JavaException(Java.Interop.JniObjectReference throwableOverride, Java.Interop.JniObjectReferenceOptions disposeThrowableOnException) -> void
 Java.Interop.JavaException.SetJavaStackTrace(Java.Interop.JniObjectReference peerReferenceOverride = default(Java.Interop.JniObjectReference)) -> void
 Java.Interop.JniRuntime.JniTypeManager.GetInvokerType(System.Type! type) -> System.Type?
 Java.Interop.JniRuntime.JniValueManager.GetPeer(Java.Interop.JniObjectReference reference, System.Type? targetType = null) -> Java.Interop.IJavaPeerable?

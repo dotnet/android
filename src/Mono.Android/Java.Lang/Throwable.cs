@@ -14,12 +14,22 @@ namespace Java.Lang {
 		protected bool is_generated;
 
 		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None, new JniObjectReference (handle))
+			: base (GetThrowableReference (handle, transfer), JniObjectReferenceOptions.CopyAndDispose)
 		{
 			if (GetType () == typeof (Throwable))
 				is_generated = true;
 
 			SetHandle (handle, transfer);
+		}
+
+		static JniObjectReference GetThrowableReference (IntPtr handle, JniHandleOwnership transfer)
+		{
+			var type = (transfer & (JniHandleOwnership.TransferLocalRef | JniHandleOwnership.TransferGlobalRef)) switch {
+				JniHandleOwnership.TransferLocalRef => JniObjectReferenceType.Local,
+				JniHandleOwnership.TransferGlobalRef => JniObjectReferenceType.Global,
+				_ => JniObjectReferenceType.Invalid,
+			};
+			return new JniObjectReference (handle, type);
 		}
 
 		IntPtr IJavaObjectEx.ToLocalJniHandle ()
@@ -99,15 +109,17 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			var reference = new JniObjectReference (value);
-
-			Construct (
-					ref reference,
-					value == IntPtr.Zero ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy);
-			if (value != IntPtr.Zero) {
-				SetJavaStackTrace (new JniObjectReference (value));
+			try {
+				var reference = new JniObjectReference (value);
+				Construct (
+						ref reference,
+						value == IntPtr.Zero ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy);
+				if (value != IntPtr.Zero) {
+					SetJavaStackTrace (new JniObjectReference (value));
+				}
+			} finally {
+				JNIEnv.DeleteRef (value, transfer);
 			}
-			JNIEnv.DeleteRef (value, transfer);
 		}
 
 		public static Throwable FromException (System.Exception e)
