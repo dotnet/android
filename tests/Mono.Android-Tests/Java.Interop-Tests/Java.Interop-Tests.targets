@@ -30,7 +30,7 @@
   </ItemGroup>
   <Target Name="_CopyTestJarFiles"
       Inputs="%(TestJarEntry.OutputFile)"
-      Outputs="$(OutputPath)$([System.IO.Path]::GetFileName('%(TestJarEntry.OutputFile)'))">
+      Outputs="$(OutputPath)$([System.IO.Path]::GetFileName($([MSBuild]::NormalizePath('%(TestJarEntry.OutputFile)'))))">
     <Copy
         SourceFiles="%(TestJarEntry.OutputFile)"
         DestinationFolder="$(OutputPath)"
