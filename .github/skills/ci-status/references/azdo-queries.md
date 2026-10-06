@@ -9,6 +9,90 @@ RES=499b84ac-1321-427f-aa17-267ca6975798   # Azure DevOps app id, for `az rest -
 
 `build`-area `az devops invoke` works unauthenticated; in the `test` area only `--resource runs` is broken (404 on dnceng-public, so `runs` and `ResultsByBuild` go through `az rest`) — other resources like `--resource results` work fine. `az rest` and artifact/log downloads need `az login`.
 
+## Previous attempts after a targeted retry
+
+Once a stage retry starts, the root timeline shows the new attempt. Preserve the original failure evidence by following each retried stage's `previousAttempts[].timelineId`:
+
+```bash
+az devops invoke --area build --resource timeline --org "$ORG" \
+  --route-parameters project=$PROJECT buildId=$BUILD_ID \
+  --query 'records[?type==`Stage` && attempt>`1`].{name:name,refName:refName,attempt:attempt,previousAttempts:previousAttempts}' -o json
+
+az rest --method get --resource "$RES" \
+  --url "$ORG/$PROJECT/_apis/build/builds/$BUILD_ID/timeline/$PREVIOUS_TIMELINE_ID?api-version=7.1" \
+  --query 'records[?result==`failed` || result==`canceled`].{type:type,name:name,refName:refName,parentId:parentId,result:result,issues:issues[].message}' -o json
+```
+
+Do not report “no failures” merely because the selected stages advanced to attempt 2. Report the original classification plus the current retry state.
+
+## Targeted retry of failed stage jobs
+
+The Azure DevOps [Stages - Update API](https://learn.microsoft.com/rest/api/azure/devops/build/stages/update?view=azure-devops-rest-7.1) accepts `state: retry`. With `forceRetryAllJobs: false`, Azure retries the failed jobs in the selected stage (and jobs transitively dependent on them), rather than rerunning every successful job in that stage.
+
+List the completed failed stages and their stable YAML `refName`:
+
+```bash
+az devops invoke --area build --resource timeline --org "$ORG" \
+  --route-parameters project=$PROJECT buildId=$BUILD_ID \
+  --query 'records[?type==`Stage` && state==`completed` && (result==`failed` || result==`canceled`)].{name:name,refName:refName,result:result,attempt:attempt}' -o json
+```
+
+After the user explicitly confirms the exact stages, retry one stage at a time:
+
+```bash
+az rest --method patch --resource "$RES" \
+  --url "$ORG/$PROJECT/_apis/build/builds/$BUILD_ID/stages/$STAGE_REF?api-version=7.1" \
+  --headers Content-Type=application/json \
+  --body '{"state":"retry","forceRetryAllJobs":false}'
+```
+
+The API returns HTTP 200 with no body on success.
+
+### Authentication and permissions
+
+- Run `az login` using the Microsoft Entra tenant associated with the Azure DevOps organization. If necessary, use `az login --tenant <tenant-id>` and select a subscription from that tenant.
+- Azure CLI requests a token for the Azure DevOps resource `499b84ac-1321-427f-aa17-267ca6975798`.
+- The API operation requires OAuth scope `vso.build_execute`.
+- The signed-in identity must exist in the Azure DevOps organization and have permission to queue/retry the pipeline (normally the pipeline's **Queue builds** permission). A token scope cannot override an Azure DevOps permission denial.
+
+### Safeguards before PATCH
+
+1. Re-fetch the build and verify its `sourceBranch` is `refs/pull/$PR/merge`; verify the build link/id is the one analyzed.
+2. Re-fetch the timeline immediately before retrying.
+3. Retry only stages that are still `completed` with `result` `failed`/`canceled`.
+4. Do not issue another retry if the stage attempt advanced or is pending/in progress.
+5. Select only stages whose failed descendants are all classified `known-flaky-test`, `transient-infrastructure`, or evidenced `timeout-or-crash` with confidence at least `0.60`.
+6. Exclude stages containing a `likely-pr-regression` or `unknown` failure. A mixed stage requires an explicit user selection because the API acts at stage granularity.
+7. Show the stage display names, `refName` values, and exact command before asking for confirmation.
+8. Warn that failed dependent jobs can rerun.
+
+### Verify the retry
+
+Refresh the build and timeline after each PATCH. The selected stage must increment `attempt` or enter `pending`/`inProgress`:
+
+```bash
+az devops invoke --area build --resource timeline --org "$ORG" \
+  --route-parameters project=$PROJECT buildId=$BUILD_ID \
+  --query "records[?type==\`Stage\` && refName==\`$STAGE_REF\`].{name:name,attempt:attempt,state:state,result:result}" -o json
+```
+
+### Safe failures and fallback
+
+| Response | Meaning / action |
+|---|---|
+| `203` or `401` | Missing/wrong Entra login or tenant. Reauthenticate; do not fall back automatically. |
+| `403` | The identity lacks Azure DevOps organization/pipeline permission. Give the command to an authorized maintainer. |
+| `404` | The build/stage ref is stale or incorrect. Refresh the timeline; never guess a refName. |
+| `400` or `409` | The stage is no longer retryable or changed state. Refresh and report the current state. |
+
+Fallback order:
+
+1. Give the targeted REST command to an authorized maintainer.
+2. Recommend Azure DevOps UI **Retry failed jobs** for the named stages.
+3. Offer `/azp run` only with explicit confirmation when targeted retry is unavailable or a genuinely new full run is required.
+
+Never silently turn a failed targeted retry into a full pipeline run.
+
 ## ETA for an in-progress build
 
 Duration is dominated by hosted-agent queue time (same ~38 jobs every run, yet ~50 min to ~3 h+). Pull recent green runs of def `333`, take the **median** duration, `ETA = startTime + median`; present it as a rough window.
