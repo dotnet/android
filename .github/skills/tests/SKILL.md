@@ -91,7 +91,7 @@ Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and
 ### Java.Interop tests
 Tooling tests are standalone (`dotnet test` on `.csproj`). Core JNI interop tests
 run on Android as part of `Mono.Android.NET-Tests.csproj`, using the on-device
-commands above. The standalone host-JVM test harness has been removed.
+commands above.
 
 To build the Java.Interop tooling solution:
 ```bash

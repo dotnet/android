@@ -181,8 +181,7 @@ Core JNI interop tests from `external/Java.Interop/tests/Java.Interop-Tests/`
 are compiled into `tests/Mono.Android-Tests/Java.Interop-Tests/Java.Interop-Tests.NET.csproj`
 and run with the on-device `Mono.Android.NET-Tests.csproj` suite. They require
 the locally built Android SDK and an Android device/emulator; use the on-device
-build/install and test commands above. The standalone host-JVM test project
-and its `TestJVM` harness have been removed.
+build/install and test commands above.
 
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|

@@ -44,8 +44,7 @@ The following **make**(1) variables may be specified:
 
     Core JNI interop tests run on Android through
     `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj`
-    in the enclosing dotnet/android repository. The standalone host-JVM test
-    project and reflection-backed runtime managers have been removed.
+    in the enclosing dotnet/android repository.
 
 * `$(V)`: If set to a non-empty string, adds `/v:diag` to `$(MSBUILD_FLAGS)`
     invocations.
