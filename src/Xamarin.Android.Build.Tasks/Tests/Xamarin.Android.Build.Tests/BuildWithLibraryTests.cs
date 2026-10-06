@@ -297,10 +297,16 @@ namespace Xamarin.Android.Build.Tests
 					envFilesDir = intermediate;
 				}
 
-				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
-				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
-				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
-				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					string config = File.ReadAllText (Path.Combine (envFilesDir, "android", "src", "net", "dot", "android", "AppBootstrapConfig.java"));
+					StringAssert.Contains ($"\"{env_var}\"", config);
+					StringAssert.Contains ($"\"{env_val}\"", config);
+				} else {
+					var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
+					var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
+					Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
+					Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
+				}
 			}
 
 			// Check Resource.designer.cs

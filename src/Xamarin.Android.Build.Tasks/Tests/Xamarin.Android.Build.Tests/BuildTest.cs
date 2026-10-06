@@ -428,19 +428,18 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+				string config = File.ReadAllText (Path.Combine (objPath, "android", "src", "net", "dot", "android", "AppBootstrapConfig.java"));
+				Assert.That (config, Does.Contain ("HaveAssemblyStore = true;"));
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
-				uint numberOfAssembliesInApk = app_config.number_of_assemblies_in_apk;
+				int numberOfAssembliesInApk = helper.GetNumberOfAssemblies (arch: targetArches [0]);
 
 				foreach (AndroidTargetArch arch in targetArches) {
 					Assert.AreEqual (
 						numberOfAssembliesInApk,
 						helper.GetNumberOfAssemblies (arch: arch),
-						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)})"
+						$"Assembly count must agree across ABIs for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)})"
 					);
 				}
 			}

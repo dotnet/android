@@ -128,17 +128,8 @@ namespace Xamarin.Android.Build.Tests
 			if (runtime == AndroidRuntime.NativeAOT) {
 				EnvironmentHelper.ReadNativeAotEnvironmentVariables (objPath);
 			} else {
-				var envFiles = EnvironmentHelper.GatherEnvironmentFiles (
-					objPath,
-					String.Join (";", Abis),
-					true,
-					runtime
-				);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
-
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-
-				Assert.IsTrue (app_config.ignore_split_configs, $"App config should indicate that split configs must be ignored");
+				string config = File.ReadAllText (Path.Combine (objPath, "android", "src", "net", "dot", "android", "AppBootstrapConfig.java"));
+				Assert.That (config, Does.Contain ("IgnoreSplitConfigs = true;"), "App config should indicate that split configs must be ignored");
 			}
 		}
 

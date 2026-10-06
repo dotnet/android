@@ -119,6 +119,23 @@ The existing assembly-store setting selects this task unconditionally for stores
 continue to use `DSOWrapperGenerator` and `llvm-objcopy`. Other application-specific LLVM generation
 and bundled native tools are unaffected.
 
+### CoreCLR application bootstrap and native libraries
+
+CoreCLR applications generate `net/dot/android/AppBootstrapConfig.java` instead of embedding
+environment variables, bundled system properties, CoreCLR hosting and package settings,
+and the native library cache in `environment.<abi>.ll`. The fixed `libmonodroid.so` host reads the Java
+configuration through JNI when it loads. Its native library state records the canonical
+packaged name, whether the library has `JNI_OnLoad`, the preload policy, and the loaded handle.
+Library aliases (`lib` prefix, `.so` suffix, and `.dll.so` variants) are resolved against
+those records when loading, without a generated hash/index array. Java preloads the
+JNI libraries after CoreCLR initialization; non-preloaded JNI libraries are still loaded
+with `JNI_OnLoad` support on demand. The CoreCLR R8 keep rules preserve the Java entry points
+used by JNI.
+
+The per-ABI `environment.<abi>.ll` object is still generated for assembly-store runtime
+state, and the separate compression and JNI-remapping native objects are unchanged. This
+does not remove LLVM/llc, native-stub linkage, or the bundled native toolchain.
+
 The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm`,
 `llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.
 These tests are categorized as `RequiresAndroidNdk` and resolve the NDK on the

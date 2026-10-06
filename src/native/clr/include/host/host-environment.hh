@@ -12,8 +12,6 @@
 #include <runtime-base/logger.hh>
 #include <runtime-base/util.hh>
 
-struct AppEnvironmentVariable;
-
 namespace xamarin::android {
 	class HostEnvironment
 	{
@@ -49,43 +47,6 @@ namespace xamarin::android {
 		{
 			// TODO: should we **actually** try to set the system property here? Would that even work? Needs testing
 			log_debugf (LOG_DEFAULT, " System property %s = '%s'", optional_string (name), optional_string (value));
-		}
-
-		[[gnu::flatten, gnu::always_inline]]
-		static auto lookup_system_property (const char *name, size_t &value_len,
-			uint32_t const count, AppEnvironmentVariable const (&entries)[],
-			const char (&contents)[]) noexcept -> const char*
-		{
-			value_len = 0;
-			if (count == 0) {
-				return nullptr;
-			}
-
-			for (size_t i = 0; i < count; i++) {
-				AppEnvironmentVariable const& sys_prop = entries[i];
-				const char *prop_name = &contents[sys_prop.name_index];
-				if (strcmp (name, prop_name) != 0) {
-					continue;
-				}
-
-				const char *prop_value = &contents[sys_prop.value_index];
-				value_len = strlen (prop_value);
-				return prop_value;
-			}
-
-			return nullptr;
-		}
-
-		template<void (*setter)(const char *name, const char *value) noexcept> [[gnu::flatten, gnu::always_inline]]
-		static void set_values (uint32_t const& count, AppEnvironmentVariable const (&entries)[], const char (&contents)[]) noexcept
-		{
-			for (size_t i = 0; i < count; i++) {
-				AppEnvironmentVariable const& env_var = entries[i];
-				const char *var_name = &contents[env_var.name_index];
-				const char *var_value = &contents[env_var.value_index];
-
-				setter (var_name, var_value);
-			}
 		}
 
 	private:

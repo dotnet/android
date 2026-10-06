@@ -380,7 +380,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
-			EnvironmentHelper.ReadApplicationConfig (envFiles);
+			string config = Path.Combine (objDirPath, "android", "src", "net", "dot", "android", "AppBootstrapConfig.java");
+			FileAssert.Exists (config);
 			foreach (var envFile in envFiles) {
 				var source = File.ReadAllText (envFile.Path);
 				StringAssert.DoesNotContain ("jni_add_native_method_registration_attribute_present", source);

@@ -60,6 +60,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaApplicationConfig" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeRuntimeLinkingSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1592,16 +1593,17 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
     <_GeneratePackageManagerJavaInputs Include="$(_XARemapMembersFilePath)" Condition=" '@(_AndroidRemapMembers->Count())' != '0' " />
-    <!-- `configProperties` from these files are baked into the generated native application config -->
+    <!-- `configProperties` from these files are baked into the generated Java application config -->
     <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
     <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
+    <_GeneratePackageManagerJavaInputs Include="$(AndroidBundleConfigurationFile)" Condition="Exists('$(AndroidBundleConfigurationFile)')" />
   </ItemGroup>
 </Target>
 
 <Target Name="_GeneratePackageManagerJava"
   Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
-  Inputs="@(_GeneratePackageManagerJavaInputs)"
+  Inputs="@(_GeneratePackageManagerJavaInputs);@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
 
   <!-- Create java needed for Mono runtime -->
@@ -1636,24 +1638,27 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidNativeLibraryNoJniPreload Include="@(_AllNativeLibraries)" />
   </ItemGroup>
 
+  <GenerateJavaApplicationConfig
+      OutputFile="$(_AndroidIntermediateJavaSourceDirectory)net\dot\android\AppBootstrapConfig.java"
+      AndroidPackageName="$(_AndroidPackage)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      UseAssemblyStore="$(_AndroidUseAssemblyStore)"
+      Environments="@(_EnvironmentFiles)"
+      NativeLibraries="@(_AllNativeLibraries)"
+      NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"
+      NativeLibrariesAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
+      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      ProjectRuntimeConfigDevFilePath="$(ProjectRuntimeConfigDevFilePath)"
+      CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+  />
+
   <GenerateNativeApplicationConfigSources
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       AdditionalResolvedAssemblies="@(_AdditionalNativeConfigResolvedAssemblies)"
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
-      NativeLibraries="@(_AllNativeLibraries)"
-      NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"
-      NativeLibrariesAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
-      Environments="@(_EnvironmentFiles)"
       EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
       SupportedAbis="@(_BuildTargetAbis)"
-      AndroidPackageName="$(_AndroidPackage)"
-      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      UseAssemblyStore="$(_AndroidUseAssemblyStore)"
-      CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
-      AndroidRuntime="$(_AndroidRuntime)"
-      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
-      ProjectRuntimeConfigDevFilePath="$(ProjectRuntimeConfigDevFilePath)"
       >
   </GenerateNativeApplicationConfigSources>
 
@@ -1666,6 +1671,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
+    <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)net\dot\android\AppBootstrapConfig.java" />
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
     <FileWrites Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' " Include="@(_RuntimeLinkingAssemblySource)" />
   </ItemGroup>

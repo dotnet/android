@@ -36,7 +36,7 @@ namespace xamarin::android {
 			std::string_view const& assembly_name, std::string_view const& type_name,
 			std::string_view const& method_name) noexcept -> void*;
 
-		static void preload_jni_libraries () noexcept;
+		static void preload_jni_libraries (JNIEnv *env) noexcept;
 
 	private:
 		static inline void *clr_host = nullptr;

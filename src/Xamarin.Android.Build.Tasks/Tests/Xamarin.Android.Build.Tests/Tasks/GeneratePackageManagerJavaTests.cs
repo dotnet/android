@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -65,49 +64,36 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.net6.helloandroid' android:versionCode='1' />");
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=YYYY");
 
-			var metadata = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
-				{"Abi", "arm64-v8a"},
-			};
-
-			var resolvedUserAssembliesList = resolvedUserAssemblies.Select (x => new TaskItem (x, metadata));
-			var resolvedAssembliesList = resolvedAssemblies.Select (x => new TaskItem (x, metadata));
-
 			var packageManagerTask = new GeneratePackageManagerJava {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				MainAssembly = "linked/HelloAndroid.dll",
 				OutputDirectory = Path.Combine (path, "src", "mono"),
 			};
 
-			var configTask = new GenerateNativeApplicationConfigSources {
+			var configTask = new GenerateJavaApplicationConfig {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
-				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
-				EnvironmentOutputDirectory = Path.Combine (path, "env"),
-				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
+				OutputFile = Path.Combine (path, "src", "net", "dot", "android", "AppBootstrapConfig.java"),
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
 				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
 			};
 
 			Assert.IsTrue (packageManagerTask.Execute (), "GeneratePackageManagerJava task should have executed.");
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
+			Assert.IsTrue (configTask.Execute (), "GenerateJavaApplicationConfig task should have executed.");
 
 			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
-			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
-			StringAssert.Contains ("YYYY", txt, "environment.arm64-v8a.ll should contain 'YYYY'");
-			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
-			StringAssert.Contains ("YYYY", txt, "environment.x86.ll should contain 'YYYY'");
+			var txt = File.ReadAllText (configTask.OutputFile);
+			StringAssert.Contains ("YYYY", txt, "Java bootstrap should contain the environment value.");
 
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=XXXX");
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed. (run 2)");
-			txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
-			StringAssert.Contains ("XXXX", txt, "environment.arm64-v8a.ll should contain 'XXXX'");
-			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
-			StringAssert.Contains ("XXXX", txt, "environment.x86.ll should contain 'XXXX'");
+			Assert.IsTrue (configTask.Execute (), "GenerateJavaApplicationConfig task should have executed. (run 2)");
+			txt = File.ReadAllText (configTask.OutputFile);
+			StringAssert.Contains ("XXXX", txt, "Java bootstrap should contain the updated environment value.");
 		}
 
 		[Test]
-		public void GenerateNativeApplicationConfigSkipsAssembliesExcludedFromPackage ()
+		public void GenerateAssemblyStoreStateSkipsAssembliesExcludedFromPackage ()
 		{
-			var path = Path.Combine (Root, "temp", nameof (GenerateNativeApplicationConfigSkipsAssembliesExcludedFromPackage));
+			var path = Path.Combine (Root, "temp", nameof (GenerateAssemblyStoreStateSkipsAssembliesExcludedFromPackage));
 			Directory.CreateDirectory (path);
 
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=ZZZZ");
@@ -119,7 +105,13 @@ namespace Xamarin.Android.Build.Tests
 				{ "AndroidSkipAddToPackage", "true" },
 			};
 
-			var configTask = new GenerateNativeApplicationConfigSources {
+			var configTask = new GenerateJavaApplicationConfig {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				OutputFile = Path.Combine (path, "src", "net", "dot", "android", "AppBootstrapConfig.java"),
+				AndroidPackageName = "com.microsoft.net6.helloandroid",
+				Environments = [new TaskItem (Path.Combine (path, "myenv.txt"))],
+			};
+			var storeTask = new GenerateNativeApplicationConfigSources {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				ResolvedAssemblies = [
 					new TaskItem ("linked/HelloAndroid.dll", metadata),
@@ -127,15 +119,15 @@ namespace Xamarin.Android.Build.Tests
 				],
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
 				SupportedAbis = ["arm64-v8a"],
-				AndroidPackageName = "com.microsoft.net6.helloandroid",
-				Environments = [new TaskItem (Path.Combine (path, "myenv.txt"))],
 			};
 
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
+			Assert.IsTrue (configTask.Execute (), "GenerateJavaApplicationConfig task should have executed.");
+			Assert.IsTrue (storeTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 
-			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
-			StringAssert.Contains ("ZZZZ", txt, "environment.arm64-v8a.ll should contain the custom environment value.");
-			StringAssert.DoesNotContain ("Mono.Android.Export.dll", txt, "environment.arm64-v8a.ll should not list assemblies excluded from packaging.");
+			var txt = File.ReadAllText (configTask.OutputFile);
+			StringAssert.Contains ("ZZZZ", txt, "Java bootstrap should contain the custom environment value.");
+			txt = File.ReadAllText (Path.Combine (storeTask.EnvironmentOutputDirectory, "environment.arm64-v8a.ll"));
+			StringAssert.Contains ("[1 x %struct.AssemblyStoreSingleAssemblyRuntimeData] zeroinitializer", txt, "The excluded assembly must not be counted in the remaining native state.");
 		}
 	}
 }

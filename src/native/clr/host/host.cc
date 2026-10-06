@@ -24,6 +24,7 @@
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/dso-loader.hh>
+#include <runtime-base/java-app-config.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
@@ -137,7 +138,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 
 void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
 {
-	if (!application_config.have_assembly_store) {
+	if (!JavaAppConfig::have_assembly_store ()) {
 		log_debugf (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery");
 		return;
 	}
@@ -226,54 +227,29 @@ auto Host::create_delegate (
 }
 
 [[gnu::flatten, gnu::always_inline]]
-void Host::preload_jni_libraries () noexcept
+void Host::preload_jni_libraries (JNIEnv *env) noexcept
 {
-	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
-		return;
+	jclass config = env->FindClass ("net/dot/android/AppBootstrapConfig");
+	if (config == nullptr || env->ExceptionCheck ()) {
+		Helpers::abort_application (LOG_ASSEMBLY, "Unable to load AppBootstrapConfig for JNI preload");
 	}
-
-	log_debugf (LOG_ASSEMBLY, "DSO jni preloads index stride == %u", dso_jni_preloads_idx_stride);
-
-	if ((dso_jni_preloads_idx_count % dso_jni_preloads_idx_stride) != 0) [[unlikely]] {
-		Helpers::abort_applicationf (
-			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"DSO preload index is invalid, size (%u) is not a multiple of %u",
-			dso_jni_preloads_idx_count,
-			dso_jni_preloads_idx_stride
-		);
+	jmethodID preload = env->GetStaticMethodID (config, "preloadJniLibraries", "()V");
+	if (preload == nullptr || env->ExceptionCheck ()) {
+		Helpers::abort_application (LOG_ASSEMBLY, "Unable to find JNI preload method");
 	}
+	env->CallStaticVoidMethod (config, preload);
+	if (env->ExceptionCheck ()) {
+		env->ExceptionDescribe ();
+		Helpers::abort_application (LOG_ASSEMBLY, "Unable to preload JNI libraries");
+	}
+	env->DeleteLocalRef (config);
 
-	for (size_t i = 0; i < dso_jni_preloads_idx_count; i += dso_jni_preloads_idx_stride) {
-		const size_t entry_index = dso_jni_preloads_idx[i];
-		DSOCacheEntry &entry = dso_cache[entry_index];
-		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
-
-		log_debugf (
-			LOG_ASSEMBLY,
-			"Preloading JNI shared library: %.*s (entry's index: %zu; name hash: %x)",
-			static_cast<int>(dso_name.length ()),
-			dso_name.data (),
-			entry_index,
-			entry.hash
-		);
-
-		void *handle = MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
-
-		// Set handle in all the alias entries
-		for (size_t j = 1; j < dso_jni_preloads_idx_stride; j++) {
-			const size_t entry_alias_index = dso_jni_preloads_idx[i + j];
-			DSOCacheEntry &entry_alias = dso_cache[entry_alias_index];
-			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry);
-
-			log_debugf (
-				LOG_ASSEMBLY,
-				"Putting JNI library handle in alias entry at index %zu: %.*s",
-				entry_alias_index,
-				static_cast<int>(entry_alias_name.length ()),
-				entry_alias_name.data ()
-			);
-			entry_alias.handle = handle;
+	for (JavaAppConfig::Library &library : JavaAppConfig::libraries ()) {
+		if (library.preload) {
+			void *handle = ::dlopen (library.name, RTLD_NOW | RTLD_NOLOAD);
+			if (handle != nullptr) {
+				__atomic_store_n (&library.handle, handle, __ATOMIC_RELEASE);
+			}
 		}
 	}
 }
@@ -324,19 +300,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
 	// These indices are load-bearing: the application build emits the property names in this
-	// exact order (see `ApplicationConfigNativeAssemblyGeneratorCLR`) so that we can fill in
+	// exact order (see `JavaAppConfig::initialize`) so that we can fill in
 	// the values here without searching the names array.
 	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
 
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
+	char **property_values = JavaAppConfig::runtime_property_values ();
+	property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
 
 	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
 	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
 	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
 	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
+	property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
 
 	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
 	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
@@ -351,11 +328,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 	std::free (app_context_base_directory);
 	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
 	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
+	property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
 
-	const char **prop_names = init_runtime_property_names;
-	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
-	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+	const char **prop_names = JavaAppConfig::runtime_property_names ();
+	const char **prop_values = const_cast<const char**>(property_values);
+	int prop_count = JavaAppConfig::runtime_property_count ();
 
 	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
 	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
@@ -407,7 +384,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	}
 
 	int hr = coreclr_initialize (
-		application_config.android_package_name,
+		JavaAppConfig::package_name (),
 		"Xamarin.Android",
 		prop_count,
 		prop_names,
@@ -440,14 +417,14 @@ void Host::Java_mono_android_Runtime_initInternal (
 		gettid ()
 	);
 
-	preload_jni_libraries ();
+	preload_jni_libraries (env);
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                                         = jvm;
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
 	init.brokenExceptionTransitions                     = 0;
-	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
+	init.packageNamingPolicy                            = static_cast<int>(JavaAppConfig::package_naming_policy ());
 	init.boundExceptionType                             = 0; // System
 	init.jniRemappingData                               = &jni_remapping_data;
 	init.grefLogPath                                    = Logger::gref_log_path ();
@@ -498,6 +475,11 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) n
 {
 	jvm = vm;
 
+	JNIEnv *env = nullptr;
+	if (vm->GetEnv (reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK || env == nullptr) {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to obtain JNI environment during CoreCLR startup");
+	}
+	JavaAppConfig::initialize (env);
 	OSBridge::initialize_on_onload (vm);
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
