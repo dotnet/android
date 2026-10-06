@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JavaObjectTest : JavaVMFixture
+	public class JavaObjectTest
 	{
 #if !NO_GC_BRIDGE_SUPPORT
 		[Test]

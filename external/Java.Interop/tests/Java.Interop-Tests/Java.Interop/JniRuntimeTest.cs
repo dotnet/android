@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniRuntimeTest : JavaVMFixture
+	public class JniRuntimeTest
 	{
 		[Test]
 		public void CreateJavaVM ()

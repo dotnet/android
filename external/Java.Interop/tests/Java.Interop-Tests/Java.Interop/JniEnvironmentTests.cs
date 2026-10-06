@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniEnvironmentTests : JavaVMFixture
+	public class JniEnvironmentTests
 	{
 		[Test]
 		public unsafe void Types_IsSameObject ()
@@ -25,6 +25,7 @@ namespace Java.InteropTests
 					JniObjectReference.Dispose (ref o);
 				}
 			}
+
 		}
 
 		[Test]
@@ -144,4 +145,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-

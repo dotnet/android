@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniTypeUtf8Test : JavaVMFixture {
+	public class JniTypeUtf8Test {
 
 		const string JniReferenceLeakCategory = "JniReferenceLeak";
 		const int LeakCheckIterations = 100;
