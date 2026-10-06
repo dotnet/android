@@ -115,7 +115,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckR8MetadataFilesExist (
 			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
-			[Values ("disabled", "private-members")] string obfuscationMode)
+			[Values ("disabled", "private-members", "runtime-remapping")] string obfuscationMode)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -128,6 +128,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
+			if (obfuscationMode == "runtime-remapping") {
+				proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			}
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
 			proj.SetProperty ("AndroidPackageFormat", "aab");
@@ -147,7 +150,7 @@ namespace Xamarin.Android.Build.Tests
 					using var stream = metadata.Open ();
 					using var document = JsonDocument.Parse (stream);
 					var options = document.RootElement.GetProperty ("options");
-					Assert.AreEqual (obfuscationMode == "private-members", options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
+					Assert.AreEqual (obfuscationMode != "disabled", options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");

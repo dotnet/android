@@ -211,7 +211,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     (which is imported after the ILC NuGet targets).
   -->
   <Target Name="_AndroidLinkNativeAotSharedLibraryInputs"
-      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidResolveNdk">
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidResolveNdk;_AndroidCompileNativeAotR8Remapping">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
       <_AndroidNativeAotAbi>@(_PrivateBuildTargetAbi)</_AndroidNativeAotAbi>
@@ -235,6 +235,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <!-- Supplied by the SDK-resolved NativeAOT runtime pack, including the BCL native archives. -->
       <_NativeAotLinkLibraries Include="@(NativeLibrary);@(_NdkLibs)" />
+      <_NativeAotAdditionalObjects Include="@(_AndroidNativeAotR8RemappingObject)" />
       <_NativeAotSystemLibraries Include="dl" />
       <_NativeAotSystemLibraries Include="z" />
       <_NativeAotSystemLibraries Include="log" />
@@ -247,8 +248,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <Target Name="_AndroidLinkNativeAotSharedLibrary"
       AfterTargets="LinkNative"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' or '$(_AndroidNativeAotLinkAfterR8)' == 'true' "
       DependsOnTargets="_AndroidLinkNativeAotSharedLibraryInputs"
-      Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
+      Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotAdditionalObjects);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
       Outputs="@(_AndroidNativeAotLinkOutputs)">
     <LinkNativeAotSharedLibrary
         MSBuildRuntime="NET"
@@ -258,6 +260,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         NativeObject="$(NativeObject)"
         OutputSharedLibrary="$(_AndroidNativeAotSharedLibrary)"
         NativeLibraries="@(_NativeAotLinkLibraries)"
+        AdditionalObjectFiles="@(_NativeAotAdditionalObjects)"
         CrtStartFiles="@(_NativeAotCrtStartFiles)"
         CrtEndFiles="@(_NativeAotCrtEndFiles)"
         CompilerRuntimeLibraries="@(_NativeAotCompilerRtLibs)"
@@ -302,7 +305,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <!-- The linker target is not always scheduled during incremental deployment builds. -->
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
-      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)" Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') ">
+      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)"
+          Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') or '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
         <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
