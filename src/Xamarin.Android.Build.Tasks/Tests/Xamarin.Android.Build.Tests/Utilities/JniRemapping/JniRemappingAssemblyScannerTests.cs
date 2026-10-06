@@ -3,8 +3,10 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
 
 using Microsoft.Build.Utilities;
 using Cecil = Mono.Cecil;
@@ -45,10 +47,11 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", false)]
 		[TestCase ("System.Runtime.InteropServices", "System.Private.CoreLib", true)]
 		[TestCase ("System.Private.CoreLib", "System.Runtime", true)]
-		public void TypeMapAttributeRetainsGeneratedMappings (string attributeAssembly, string typeAssembly, bool localAnchor)
+		public void TypeMapAttributeRetainsOnlyClassMapping (string attributeAssembly, string typeAssembly, bool localAnchor)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p,
 				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, localAnchor: localAnchor));
+			byte [] originalBytes = File.ReadAllBytes (path);
 			R8Mapping mapping = Scan (path, """
 				com.contoso.ProxyPeer -> a.b:
 				    void callback() -> c
@@ -58,24 +61,83 @@ namespace Xamarin.Android.Build.Tests
 
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tcom/contoso/ProxyPeer",
-				"M\tcom/contoso/ProxyPeer\tcallback():void",
-				"F\tcom/contoso/ProxyPeer\tvalue",
 			}, mapping.AccessedEntries);
+			CollectionAssert.AreEqual (originalBytes, File.ReadAllBytes (path));
 		}
 
-		[TestCase ("System.Runtime.InteropServices", "System.Runtime", false)]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", false)]
-		[TestCase ("System.Runtime.InteropServices", "System.Private.CoreLib", false)]
-		[TestCase ("System.Private.CoreLib", "System.Runtime", true)]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", true)]
-		public void SurvivingClassOnlyTypeMapProducesBothDirections (string attributeAssembly, string typeAssembly, bool localAnchor)
+		[TestCase ("System.Runtime.InteropServices", "System.Runtime", false, false)]
+		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", false, false)]
+		[TestCase ("System.Runtime.InteropServices", "System.Private.CoreLib", false, false)]
+		[TestCase ("System.Private.CoreLib", "System.Runtime", true, false)]
+		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", true, false)]
+		[TestCase ("System.Runtime.InteropServices", "System.Runtime", false, true)]
+		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", false, true)]
+		[TestCase ("System.Runtime.InteropServices", "System.Private.CoreLib", false, true)]
+		[TestCase ("System.Private.CoreLib", "System.Runtime", true, true)]
+		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", true, true)]
+		public void SurvivingClassOnlyTypeMapProducesBothDirections (string attributeAssembly, string typeAssembly, bool localAnchor, bool includeTargetType)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/Marker",
-				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, localAnchor: localAnchor));
+				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, localAnchor: localAnchor, includeTargetType: includeTargetType));
 			byte [] originalBytes = File.ReadAllBytes (path);
-			string xml = Generate (path, "com.contoso.Marker -> a.b:\n");
-			StringAssert.Contains ("""<replace-type from="com/contoso/Marker" to="a/b" />""", xml);
-			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Marker" />""", xml);
+			string xml = Generate (path, """
+				com.contoso.Marker -> a.b:
+				    void callback() -> c
+				    int value -> d
+				com.contoso.Unused -> a.e:
+				    void unused() -> f
+
+				""");
+			var root = XDocument.Parse (xml).Root ?? throw new AssertionException ("Generated XML has no root.");
+			CollectionAssert.AreEquivalent (new [] { "replace-type", "reverse-type" },
+				root.Elements ().Select (element => element.Name.LocalName));
+			var forward = root.Element ("replace-type") ?? throw new AssertionException ("Missing forward type mapping.");
+			Assert.AreEqual ("com/contoso/Marker", (string?) forward.Attribute ("from"));
+			Assert.AreEqual ("a/b", (string?) forward.Attribute ("to"));
+			var reverse = root.Element ("reverse-type") ?? throw new AssertionException ("Missing reverse type mapping.");
+			Assert.AreEqual ("a/b", (string?) reverse.Attribute ("from"));
+			Assert.AreEqual ("com/contoso/Marker", (string?) reverse.Attribute ("to"));
+			CollectionAssert.AreEqual (originalBytes, File.ReadAllBytes (path));
+		}
+
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void TypeMapWithSurvivingMetadataRetainsOnlyReferencedMembers (bool localAnchor, bool includeTargetType)
+		{
+			string path = CreateAssembly (p => CreateTypeMapFixture (p, localAnchor: localAnchor,
+				includeTargetType: includeTargetType, includeSurvivingMetadata: true));
+			byte [] originalBytes = File.ReadAllBytes (path);
+			string mappingText = """
+				com.contoso.ProxyPeer -> a.b:
+				    void onClick() -> c
+				    void onClick(int) -> e
+				    void unused() -> f
+				    int value -> d
+				    java.lang.String value -> g
+				    int unusedValue -> h
+
+				""";
+			var mapping = Scan (path, mappingText);
+			CollectionAssert.AreEquivalent (new [] {
+				"C\tcom/contoso/ProxyPeer",
+				"M\tcom/contoso/ProxyPeer\tonClick():void",
+				"F\tcom/contoso/ProxyPeer\tvalue",
+			}, mapping.AccessedEntries);
+			var root = XDocument.Parse (Generate (path, mappingText)).Root
+				?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual (1, root.Elements ("replace-type").Count ());
+			Assert.AreEqual (1, root.Elements ("reverse-type").Count ());
+			var method = root.Elements ("replace-method").Single ();
+			Assert.AreEqual ("onClick", (string?) method.Attribute ("source-method-name"));
+			Assert.AreEqual ("()V", (string?) method.Attribute ("source-method-signature"));
+			Assert.AreEqual ("c", (string?) method.Attribute ("target-method-name"));
+			CollectionAssert.AreEquivalent (new [] { ("value", "I", "d"), ("value", "Ljava/lang/String;", "g") },
+				root.Elements ("replace-field").Select (field => (
+					(string?) field.Attribute ("source-field-name"),
+					(string?) field.Attribute ("source-field-signature"),
+					(string?) field.Attribute ("target-field-name"))));
 			CollectionAssert.AreEqual (originalBytes, File.ReadAllBytes (path));
 		}
 
@@ -214,6 +276,12 @@ namespace Xamarin.Android.Build.Tests
 				"Linked",
 				Cecil.ModuleKind.Dll);
 			Cecil.ModuleDefinition module = assembly.MainModule;
+			AddRegisteredPeer (module, "com/contoso/Peer", unrelatedAttributes);
+			assembly.Write (path);
+		}
+
+		static void AddRegisteredPeer (Cecil.ModuleDefinition module, string jniName, bool unrelatedAttributes = false)
+		{
 			Cecil.TypeReference attributeType = module.ImportReference (typeof (System.Attribute));
 
 			Cecil.TypeDefinition registerAttribute = AddAttribute (module, attributeType, "Android.Runtime", "RegisterAttribute", 3);
@@ -221,7 +289,7 @@ namespace Xamarin.Android.Build.Tests
 			Cecil.MethodReference registerCtor3 = registerAttribute.Methods [1];
 
 			var peer = new Cecil.TypeDefinition ("Com.Contoso", "Peer", Cecil.TypeAttributes.Public | Cecil.TypeAttributes.Class, module.TypeSystem.Object);
-			peer.CustomAttributes.Add (Attribute (registerCtor1, "com/contoso/Peer"));
+			peer.CustomAttributes.Add (Attribute (registerCtor1, jniName));
 			module.Types.Add (peer);
 
 			var method = new Cecil.MethodDefinition ("OnClick", Cecil.MethodAttributes.Public, module.TypeSystem.Void);
@@ -247,13 +315,12 @@ namespace Xamarin.Android.Build.Tests
 			var field = new Cecil.FieldDefinition ("Value", Cecil.FieldAttributes.Public, module.TypeSystem.Int32);
 			field.CustomAttributes.Add (Attribute (registerCtor1, "value"));
 			peer.Fields.Add (field);
-
-			assembly.Write (path);
 		}
 
 		static void CreateTypeMapFixture (string path, string key = "com/contoso/ProxyPeer[1]", bool includeTypeArgument = true,
 			string attributeAssembly = "System.Runtime.InteropServices", string typeAssembly = "System.Runtime",
-			bool localAnchor = false, string groupName = "Object", bool userDefinedAttribute = false)
+			bool localAnchor = false, string groupName = "Object", bool userDefinedAttribute = false,
+			bool includeTargetType = false, bool includeSurvivingMetadata = false)
 		{
 			using var assembly = Cecil.AssemblyDefinition.CreateAssembly (
 				new Cecil.AssemblyNameDefinition ("_Fixture.TypeMap", new System.Version (1, 0)),
@@ -266,6 +333,13 @@ namespace Xamarin.Android.Build.Tests
 			module.AssemblyReferences.Add (systemRuntimeInteropServices);
 			var systemObject = new Cecil.TypeReference ("System", "Object", module, systemRuntime);
 			var systemType = new Cecil.TypeReference ("System", "Type", module, systemRuntime);
+			var proxy = new Cecil.TypeDefinition ("Com.Contoso", "ProxyPeer", Cecil.TypeAttributes.Public | Cecil.TypeAttributes.Class, systemObject);
+			module.Types.Add (proxy);
+			var target = new Cecil.TypeDefinition ("Com.Contoso", "ManagedPeer", Cecil.TypeAttributes.Public | Cecil.TypeAttributes.Class, systemObject);
+			module.Types.Add (target);
+			if (includeSurvivingMetadata) {
+				AddRegisteredPeer (module, "com/contoso/ProxyPeer");
+			}
 			Cecil.TypeReference attributeType;
 			if (userDefinedAttribute) {
 				var definition = AddAttribute (module, module.ImportReference (typeof (System.Attribute)),
@@ -296,13 +370,19 @@ namespace Xamarin.Android.Build.Tests
 			constructor.Parameters.Add (new Cecil.ParameterDefinition (module.TypeSystem.String));
 			if (includeTypeArgument) {
 				constructor.Parameters.Add (new Cecil.ParameterDefinition (systemType));
+				if (includeTargetType) {
+					constructor.Parameters.Add (new Cecil.ParameterDefinition (systemType));
+				}
 			}
 			var attribute = new Cecil.CustomAttribute (constructor);
 			attribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (module.TypeSystem.String, key));
 			if (includeTypeArgument) {
 				attribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (
 					systemType,
-					systemObject));
+					proxy));
+				if (includeTargetType) {
+					attribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (systemType, target));
+				}
 			}
 			assembly.CustomAttributes.Add (attribute);
 			assembly.Write (path);
