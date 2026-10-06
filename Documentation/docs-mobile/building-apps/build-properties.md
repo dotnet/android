@@ -2060,6 +2060,19 @@ For more information, see
 
 [maui-runtimes-compilation]: /dotnet/maui/deployment/runtimes-compilation
 
+## UseNativeHttpHandler
+
+A boolean property that selects the default HTTP handler used by
+`System.Net.Http.HttpClientHandler`. Set it to `true` to use
+`Xamarin.Android.Net.AndroidMessageHandler` or `false` to use
+`System.Net.Http.SocketsHttpHandler`.
+
+Starting with .NET 12, the default is `false`. In .NET 11 and earlier,
+the default is `true`. An explicitly configured value takes precedence.
+
+`AndroidMessageHandler` is obsolete starting with .NET 12. Use
+`SocketsHttpHandler` instead.
+
 ## WaitForExit
 
 A boolean property that controls the behavior of `dotnet run` when launching
