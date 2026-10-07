@@ -58,8 +58,27 @@ public class GenerateJniRemappingAssetTests : BaseTest
 		CollectionAssert.AreEqual (bytes, Generate ("<replacements />"));
 	}
 
-	[Test]
-	public void RoundTripPreservesLookupOrderAndOptionalSignatures ()
+	sealed class PinnedPayload : IDisposable
+	{
+		GCHandle handle;
+		readonly int length;
+		public IntPtr Address => handle.AddrOfPinnedObject ();
+
+		public PinnedPayload (byte [] data)
+		{
+			handle = GCHandle.Alloc (data, GCHandleType.Pinned);
+			length = data.Length;
+		}
+
+		public JniRemappingAsset CreateAsset ()
+			=> JniRemappingAsset.FromMappedData (Address, (uint)length);
+
+		public void Dispose () => handle.Free ();
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	public void RoundTripPreservesLookupOrderAndOptionalSignatures (bool mapped)
 	{
 		const string xml = """
 			<replacements>
@@ -89,7 +108,8 @@ public class GenerateJniRemappingAssetTests : BaseTest
 		root.ReplaceNodes (root.Elements ().Reverse ().ToArray ());
 		CollectionAssert.AreEqual (bytes, Generate (reversed.ToString ()), "XML ordering must not affect serialized bytes.");
 
-		var asset = new JniRemappingAsset (bytes);
+		using var payload = mapped ? new PinnedPayload (bytes) : null;
+		var asset = payload is null ? new JniRemappingAsset (bytes) : payload.CreateAsset ();
 		foreach (var (source, target) in new [] { ("aa/First", "x/First"), ("zz/Last", "x/Last"), ("型/名前", "x/Unicode") }) {
 			Assert.AreEqual (target, asset.ReadString (asset.FindReplacementType (source)
 				?? throw new AssertionException ($"Missing replacement for {source}.")));
@@ -170,6 +190,102 @@ public class GenerateJniRemappingAssetTests : BaseTest
 		Reject (data => data [data.Length - 1] = 1);
 		Reject (data => data [(int)JniRemappingAsset.ReadUInt32 (data, 48)] = 0xff);
 		Reject (data => JniRemappingAsset.WriteUInt32 (data, (int)JniRemappingAsset.ReadUInt32 (data, 32) + 48, 2));
+	}
+
+	[Test]
+	public void MappedStartupChecksOnlyHeaderAndDefersEntriesUntilAccess ()
+	{
+		var bytes = Generate ("""
+			<replacements>
+			  <replace-type from="a/B" to="x/Y" />
+			  <replace-type from="z/Z" to="unused/Target" />
+			</replacements>
+			""");
+		int lastTarget = JniRemappingAsset.HeaderSize + JniRemappingAsset.TypeEntrySize + 8;
+		JniRemappingAsset.WriteUInt32 (bytes, lastTarget, uint.MaxValue);
+		Assert.Throws<InvalidDataException> (() => new JniRemappingAsset (bytes),
+			"Build-time full validation must reject even an unused malformed row.");
+		using var payload = new PinnedPayload (bytes);
+		var asset = payload.CreateAsset ();
+		Assert.AreEqual (payload.Address, asset.MappedAddress);
+		var target = asset.FindReplacementType ("a/B") ?? throw new AssertionException ("Valid replacement was lost.");
+		Assert.AreEqual ("x/Y", asset.ReadString (target));
+		Assert.Throws<InvalidDataException> (() => asset.FindReplacementType ("z/Z"),
+			"A malformed target must fail before its pointer or string can escape.");
+	}
+
+	[TestCase (64)]
+	[TestCase (1024 * 1024)]
+	public void MappedStartupDoesNotAllocatePayloadSizedStorage (int size)
+	{
+		byte [] data = new byte [size];
+		Generate (null).CopyTo (data, 0);
+		JniRemappingAsset.WriteUInt32 (data, 12, (uint)size);
+		JniRemappingAsset.WriteUInt32 (data, 52, (uint)(size - JniRemappingAsset.HeaderSize));
+		using var payload = new PinnedPayload (data);
+		payload.CreateAsset ();
+		long before = GC.GetAllocatedBytesForCurrentThread ();
+		var asset = payload.CreateAsset ();
+		long allocated = GC.GetAllocatedBytesForCurrentThread () - before;
+		Assert.Less (allocated, 4096, "Startup allocation must not scale with the mapped payload size.");
+		Assert.AreEqual (payload.Address, asset.MappedAddress);
+		Assert.Throws<InvalidOperationException> (() => asset.Pin ());
+	}
+
+	[TestCase ("offset")]
+	[TestCase ("length")]
+	[TestCase ("nul")]
+	[TestCase ("embedded-nul")]
+	[TestCase ("utf8")]
+	[TestCase ("empty")]
+	public void MappedLookupRejectsMalformedStringBeforeAccess (string corruption)
+	{
+		var bytes = Generate ("""<replacements><replace-type from="a/B" to="x/Y" /></replacements>""");
+		int source = JniRemappingAsset.HeaderSize;
+		int pool = (int)JniRemappingAsset.ReadUInt32 (bytes, source);
+		int length = (int)JniRemappingAsset.ReadUInt32 (bytes, source + 4);
+		switch (corruption) {
+			case "offset": JniRemappingAsset.WriteUInt32 (bytes, source, uint.MaxValue - 1); break;
+			case "length": JniRemappingAsset.WriteUInt32 (bytes, source + 4, uint.MaxValue); break;
+			case "nul": bytes [pool + length] = 1; break;
+			case "embedded-nul": bytes [pool + 1] = 0; break;
+			case "utf8": bytes [pool] = 0xff; break;
+			case "empty":
+				JniRemappingAsset.WriteUInt32 (bytes, source, 0);
+				JniRemappingAsset.WriteUInt32 (bytes, source + 4, 0);
+				break;
+			default: throw new AssertionException ($"Unknown corruption {corruption}.");
+		}
+		using var payload = new PinnedPayload (bytes);
+		var asset = payload.CreateAsset ();
+		Assert.Throws<InvalidDataException> (() => asset.FindReplacementType ("a/B"));
+	}
+
+	[Test]
+	public void MappedLookupRejectsUnsupportedMethodFlags ()
+	{
+		var bytes = Generate ("""
+			<replacements><replace-method source-type="a/B" source-method-name="m"
+			  target-type="x/Y" target-method-name="n" target-method-instance-to-static="false" /></replacements>
+			""");
+		int method = (int)JniRemappingAsset.ReadUInt32 (bytes, 32);
+		JniRemappingAsset.WriteUInt32 (bytes, method + 48, 2);
+		using var payload = new PinnedPayload (bytes);
+		var asset = payload.CreateAsset ();
+		Assert.Throws<InvalidDataException> (() => asset.FindMethod ("a/B", "m", "()V"));
+	}
+
+	[TestCase (4, 2u)]
+	[TestCase (12, uint.MaxValue)]
+	[TestCase (20, uint.MaxValue)]
+	[TestCase (48, uint.MaxValue)]
+	[TestCase (56, 1u)]
+	public void MappedStartupRejectsInvalidHeaderBounds (int word, uint value)
+	{
+		var bytes = Generate ("""<replacements><replace-type from="a/B" to="x/Y" /></replacements>""");
+		JniRemappingAsset.WriteUInt32 (bytes, word, value);
+		using var payload = new PinnedPayload (bytes);
+		Assert.Throws<InvalidDataException> (() => payload.CreateAsset ());
 	}
 
 	[Test]

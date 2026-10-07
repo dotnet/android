@@ -29,18 +29,20 @@ static class JniRemappingLookup
 	static readonly ConcurrentDictionary<string, string> reverseTypes = new (StringComparer.Ordinal);
 	static readonly object initializationLock = new ();
 	static JniRemappingAsset? managedAsset;
-	static GCHandle pinnedAsset;
+	static IntPtr utf8Base;
 
 	internal static void Initialize (JniRemappingAsset asset)
 	{
 		ArgumentNullException.ThrowIfNull (asset);
+		if (asset.MappedAddress == IntPtr.Zero)
+			throw new ArgumentException ("Runtime JNI remapping requires a retained read-only mapping.", nameof (asset));
 
 		lock (initializationLock) {
 			if (managedAsset is not null)
 				throw new InvalidOperationException ("JNI remapping asset has already been initialized.");
 
 			// Java.Interop can retain these UTF-8 pointers for the entire runtime lifetime.
-			pinnedAsset = asset.Pin ();
+			utf8Base = asset.MappedAddress;
 			Volatile.Write (ref managedAsset, asset);
 		}
 	}
@@ -86,11 +88,14 @@ static class JniRemappingLookup
 			return IntPtr.Zero;
 
 		var target = GetAsset ().FindReplacementType (jniSimpleReference);
-		return target is { } value ? GetPinnedUtf8Pointer (value) : IntPtr.Zero;
+		return target is { } value ? GetMappedUtf8Pointer (value) : IntPtr.Zero;
 	}
 
-	static unsafe IntPtr GetPinnedUtf8Pointer (JniRemappingAsset.StringRef value)
-		=> (IntPtr)((byte*)pinnedAsset.AddrOfPinnedObject () + checked ((int)value.Offset));
+	static unsafe IntPtr GetMappedUtf8Pointer (JniRemappingAsset.StringRef value)
+	{
+		GetAsset ().ReadBytes (value);
+		return (IntPtr)((byte*)utf8Base + checked ((int)value.Offset));
+	}
 
 	internal static string? GetReverseType (string? jniSimpleReference)
 	{
@@ -156,10 +161,10 @@ static class JniRemappingLookup
 		if (remapped is not { } entry)
 			return null;
 
-		IntPtr targetType = GetPinnedUtf8Pointer (entry.TargetType);
-		IntPtr targetName = GetPinnedUtf8Pointer (entry.TargetName);
-		IntPtr targetSignatureUtf8 = entry.TargetSignature.IsMissing ? IntPtr.Zero : GetPinnedUtf8Pointer (entry.TargetSignature);
-		IntPtr matchedSignatureUtf8 = entry.MatchedSignature.Length == 0 ? IntPtr.Zero : GetPinnedUtf8Pointer (entry.MatchedSignature);
+		IntPtr targetType = GetMappedUtf8Pointer (entry.TargetType);
+		IntPtr targetName = GetMappedUtf8Pointer (entry.TargetName);
+		IntPtr targetSignatureUtf8 = entry.TargetSignature.IsMissing ? IntPtr.Zero : GetMappedUtf8Pointer (entry.TargetSignature);
+		IntPtr matchedSignatureUtf8 = entry.MatchedSignature.Length == 0 ? IntPtr.Zero : GetMappedUtf8Pointer (entry.MatchedSignature);
 		int? paramCount = null;
 		string? targetSignature = null;
 		if (entry.IsStatic) {

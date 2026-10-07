@@ -11,6 +11,7 @@ using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
+using ELFSharp.ELF;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -162,8 +163,11 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					foreach (string rid in proj.GetRuntimeIdentifiers ()) {
-						var asset = ZipHelper.ReadFileFromZip (zip, $"base/assets/xa-internal/jni-remap.{rid}.bin");
-						Assert.IsNotNull (asset, $"The AAB must contain a remapping asset for {rid}.");
+						var library = ZipHelper.ReadFileFromZip (zip, $"base/lib/{MonoAndroidHelper.RidToAbi (rid)}/libandroid_runtime_blobs.so");
+						Assert.IsNotNull (library, $"The AAB must contain a remapping ELF for {rid}.");
+						using var remappingStream = new MemoryStream (library);
+						using var elf = ELFReader.Load (remappingStream, shouldOwnStream: false);
+						var asset = elf.Sections.Single (section => section.Name == "payload").GetContents ();
 						using var header = new BinaryReader (new MemoryStream (asset));
 						Assert.AreEqual (0x524a4158u, header.ReadUInt32 ());
 						Assert.AreEqual (1u, header.ReadUInt32 ());

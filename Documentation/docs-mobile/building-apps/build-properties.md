@@ -1159,7 +1159,7 @@ An enum-style property that specifies how `r8` obfuscates Java names when
 |---|---|
 | `private-members` | Preserves Java class and interface names and public or protected member names. Private and package-private members can be obfuscated, and R8 optimization is enabled. |
 | `disabled` | Disables obfuscation, preserves all Java names, and uses the non-optimizing Android R8 defaults. |
-| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using binary remapping assets. Available for trimmed CoreCLR and NativeAOT applications. |
+| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using a read-only binary payload in the ABI-specific `libandroid_runtime_blobs.so`. Available for trimmed CoreCLR and NativeAOT applications. |
 
 This property does not disable R8 code shrinking. It was introduced in a .NET 10
 servicing release and defaults to `disabled` in .NET 10 and to `private-members`

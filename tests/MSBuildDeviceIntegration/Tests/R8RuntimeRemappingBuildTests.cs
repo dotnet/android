@@ -196,7 +196,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must not recompile ILC.");
 			}
 			var remappingFiles = Directory.GetFiles (intermediate, "r8-jni-*.xml", SearchOption.AllDirectories)
-				.Concat (Directory.GetFiles (intermediate, "jni-remap.bin", SearchOption.AllDirectories)).ToArray ();
+				.Concat (Directory.GetFiles (intermediate, "jni-remap.bin", SearchOption.AllDirectories))
+				.Concat (Directory.GetFiles (intermediate, "libandroid_runtime_blobs.so", SearchOption.AllDirectories)).ToArray ();
 			Assert.IsNotEmpty (remappingFiles, "The fresh R8 build must produce remapping outputs.");
 			Assert.IsTrue (builder.Clean (proj));
 			foreach (var file in remappingFiles) {

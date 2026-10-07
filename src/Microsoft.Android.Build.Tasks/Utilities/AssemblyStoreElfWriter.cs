@@ -8,7 +8,7 @@ using Xamarin.Android.Tools;
 namespace Microsoft.Android.Tasks;
 
 // A data-only ET_DYN image: loadable file offsets are also virtual addresses, with one
-// read-only PT_LOAD covering the headers, dynamic metadata and assembly store.
+// read-only PT_LOAD covering the headers, dynamic metadata and single payload.
 static class AssemblyStoreElfWriter
 {
 	public const string PayloadSymbol = "_assembly_store";
@@ -32,6 +32,7 @@ static class AssemblyStoreElfWriter
 		public uint PageSize { get; }
 		public byte [] Strings { get; }
 		public ulong PayloadSize { get; }
+		public uint SonameIndex { get; }
 
 		public uint WordSize => Is64Bit ? 8u : 4u;
 		public ushort HeaderSize => (ushort)(Is64Bit ? 64 : 52);
@@ -39,7 +40,6 @@ static class AssemblyStoreElfWriter
 		public ushort SectionHeaderSize => (ushort)(Is64Bit ? 64 : 40);
 		public uint SymbolSize => Is64Bit ? 24u : 16u;
 		public ulong DynamicSize => DynamicEntryCount * WordSize * 2;
-		public uint SonameIndex => (uint)PayloadSymbol.Length + 2;
 		public ulong SymbolsOffset => Align ((ulong)HeaderSize + (ulong)ProgramHeaderCount * ProgramHeaderSize, WordSize);
 		public ulong StringsOffset => SymbolsOffset + SymbolCount * SymbolSize;
 		public ulong HashOffset => Align (StringsOffset + (ulong)Strings.Length, sizeof (uint));
@@ -52,7 +52,7 @@ static class AssemblyStoreElfWriter
 		public ulong SectionHeadersOffset => Align (SectionNamesOffset + (ulong)SectionNames.Length, WordSize);
 		public ulong FileSize => checked (SectionHeadersOffset + (ulong)SectionCount * SectionHeaderSize);
 
-		public Layout (AndroidTargetArch arch, ulong payloadSize, string libraryName)
+		public Layout (AndroidTargetArch arch, ulong payloadSize, string libraryName, string payloadSymbol)
 		{
 			(Is64Bit, Machine, Flags, PageSize) = arch switch {
 				AndroidTargetArch.Arm => (false, (ushort)40, 0x05000200u, 4096u), // armeabi-v7a: EABI5, base (softfp) calling convention
@@ -68,7 +68,9 @@ static class AssemblyStoreElfWriter
 				throw new NotSupportedException ("Assembly-store payloads cannot exceed 4 GiB.");
 			}
 
-			Strings = new UTF8Encoding (false, true).GetBytes ("\0" + PayloadSymbol + "\0" + libraryName + "\0");
+			var encoding = new UTF8Encoding (false, true);
+			SonameIndex = checked ((uint)encoding.GetByteCount (payloadSymbol) + 2);
+			Strings = encoding.GetBytes ("\0" + payloadSymbol + "\0" + libraryName + "\0");
 			PayloadSize = payloadSize;
 			if (!Is64Bit && FileSize > uint.MaxValue) {
 				throw new NotSupportedException ("The assembly store and ELF headers exceed the ELF32 size limit.");
@@ -76,11 +78,16 @@ static class AssemblyStoreElfWriter
 		}
 	}
 
-	public static void Write (Stream payload, Stream output, AndroidTargetArch arch, string libraryName)
+	public static void Write (Stream payload, Stream output, AndroidTargetArch arch, string libraryName,
+		string payloadSymbol = PayloadSymbol)
 	{
 		ArgumentNullException.ThrowIfNull (payload);
 		ArgumentNullException.ThrowIfNull (output);
 		ArgumentNullException.ThrowIfNull (libraryName);
+		ArgumentNullException.ThrowIfNull (payloadSymbol);
+		if (payloadSymbol.Length == 0 || payloadSymbol.IndexOf ('\0') >= 0) {
+			throw new ArgumentException ("The payload symbol must be nonempty and contain no NUL characters.", nameof (payloadSymbol));
+		}
 		if (libraryName.Length == 0 || libraryName.IndexOf ('\0') >= 0) {
 			throw new ArgumentException ("The shared-library name must be nonempty and contain no NUL characters.", nameof (libraryName));
 		}
@@ -91,7 +98,7 @@ static class AssemblyStoreElfWriter
 			throw new ArgumentException ("The output must be a separate writable, seekable stream.", nameof (output));
 		}
 
-		var layout = new Layout (arch, checked ((ulong)(payload.Length - payload.Position)), libraryName);
+		var layout = new Layout (arch, checked ((ulong)(payload.Length - payload.Position)), libraryName, payloadSymbol);
 		output.SetLength (0);
 		output.Position = 0;
 		using var writer = new BinaryWriter (output, Encoding.UTF8, leaveOpen: true);
@@ -109,7 +116,7 @@ static class AssemblyStoreElfWriter
 		writer.Write (layout.Strings);
 
 		output.Position = (long)layout.HashOffset;
-		// SysV hash: one bucket points to the only exported symbol; both chains terminate.
+		// SysV hash: one bucket points to the single exported payload.
 		writer.Write (1u);
 		writer.Write (SymbolCount);
 		writer.Write (1u);

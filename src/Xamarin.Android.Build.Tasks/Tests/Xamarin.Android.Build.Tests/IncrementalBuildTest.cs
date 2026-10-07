@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
+using ELFSharp.ELF;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -368,9 +369,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (Directory.GetFiles (objDirPath, "jni_remap.*.o", SearchOption.AllDirectories));
 			string apkPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 			foreach (string rid in proj.GetRuntimeIdentifiers ()) {
+				using var stream = new MemoryStream (ZipHelper.ReadFileFromZip (apkPath,
+					$"lib/{MonoAndroidHelper.RidToAbi (rid)}/libandroid_runtime_blobs.so"));
+				using var elf = ELFReader.Load (stream, shouldOwnStream: false);
 				CollectionAssert.AreEqual (File.ReadAllBytes (assetPath),
-					ZipHelper.ReadFileFromZip (apkPath, $"assets/xa-internal/jni-remap.{rid}.bin"),
-					"Every packaged RID must get the same CoreCLR remapping data.");
+					elf.Sections.Single (section => section.Name == "payload").GetContents (),
+					"Every packaged ABI must get the same CoreCLR remapping payload.");
 			}
 		}
 

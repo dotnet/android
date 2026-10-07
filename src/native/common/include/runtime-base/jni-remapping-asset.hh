@@ -1,46 +1,75 @@
 #pragma once
 
-#include <cstdlib>
-
-#include <constants.hh>
+#include <cstdint>
+#include <dlfcn.h>
+#include <link.h>
 #include <managed-interface.hh>
 #include <shared/helpers.hh>
 
 namespace xamarin::android {
-	inline void load_jni_remapping_asset (JNIEnv *env, JnienvInitializeArgs &args) noexcept
+	inline void *remapping_module;
+
+	struct RemappingRange {
+		uintptr_t base;
+		uintptr_t start;
+		uintptr_t segment_end;
+		bool valid;
+	};
+
+	inline auto check_remapping_range (dl_phdr_info *info, size_t, void *opaque) noexcept -> int
 	{
-		auto check_exception = [env] {
-			if (env->ExceptionCheck ()) [[unlikely]] {
-				env->ExceptionDescribe ();
-				env->ExceptionClear ();
-				Helpers::abort_application ("Failed to load the JNI remapping asset");
+		auto &range = *static_cast<RemappingRange*> (opaque);
+		if (static_cast<uintptr_t> (info->dlpi_addr) != range.base)
+			return 0;
+		for (size_t i = 0; i < info->dlpi_phnum; ++i) {
+			const auto &segment = info->dlpi_phdr [i];
+			if (segment.p_type != PT_LOAD || (segment.p_flags & PF_R) == 0 || (segment.p_flags & (PF_W | PF_X)) != 0)
+				continue;
+			if (segment.p_vaddr > UINTPTR_MAX - range.base)
+				continue;
+			uintptr_t start = range.base + static_cast<uintptr_t> (segment.p_vaddr);
+			if (segment.p_memsz > UINTPTR_MAX - start)
+				continue;
+			uintptr_t end = start + static_cast<uintptr_t> (segment.p_memsz);
+			if (range.start >= start && range.start < end && end - range.start >= 64) {
+				range.segment_end = end;
+				range.valid = true;
+				break;
 			}
-		};
+		}
+		return 1;
+	}
 
-		jclass reader = env->FindClass ("net/dot/android/JniRemappingAsset");
-		check_exception ();
-		abort_unless (reader != nullptr, "Could not find the JNI remapping asset reader");
-		jmethodID read = env->GetStaticMethodID (reader, "read", "(Ljava/lang/String;)[B");
-		check_exception ();
-		abort_unless (read != nullptr, "Could not find the JNI remapping asset reader method");
-		jstring rid = env->NewStringUTF (Constants::runtime_identifier.data ());
-		check_exception ();
-		abort_unless (rid != nullptr, "Could not allocate the JNI remapping runtime identifier");
-		auto asset = static_cast<jbyteArray> (env->CallStaticObjectMethod (reader, read, rid));
-		check_exception ();
-		abort_unless (asset != nullptr, "The JNI remapping asset reader returned no data");
-		jsize length = env->GetArrayLength (asset);
-		abort_unless (length > 0, "The JNI remapping asset is empty");
-		auto data = static_cast<uint8_t*> (std::malloc (static_cast<size_t> (length)));
-		abort_unless (data != nullptr, "Could not allocate the JNI remapping asset buffer");
-		env->GetByteArrayRegion (asset, 0, length, reinterpret_cast<jbyte*> (data));
-		check_exception ();
-		env->DeleteLocalRef (asset);
-		env->DeleteLocalRef (rid);
-		env->DeleteLocalRef (reader);
+	inline void load_jni_remapping_asset (JnienvInitializeArgs &args) noexcept
+	{
+		abort_unless (remapping_module == nullptr, "The JNI remapping module was already loaded");
+		remapping_module = ::dlopen ("libandroid_runtime_blobs.so", RTLD_NOW | RTLD_LOCAL);
+		if (remapping_module == nullptr) {
+			const char *error = ::dlerror ();
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Failed to dlopen JNI remapping data library: %s", error == nullptr ? "unknown linker error" : error);
+		}
+		::dlerror ();
+		const void *data = ::dlsym (remapping_module, "xajr_payload");
+		const char *data_error = ::dlerror ();
+		abort_unless (data != nullptr && data_error == nullptr, "JNI remapping data symbol is missing");
+		uintptr_t start_address = reinterpret_cast<uintptr_t> (data);
+		Dl_info module_info {};
+		abort_unless (::dladdr (data, &module_info) != 0 && module_info.dli_fbase != nullptr,
+			"JNI remapping symbol has no module mapping");
+		RemappingRange range {reinterpret_cast<uintptr_t> (module_info.dli_fbase), start_address, 0, false};
+		::dl_iterate_phdr (check_remapping_range, &range);
+		abort_unless (range.valid, "JNI remapping header is outside a read-only data load segment");
 
-		// JNIEnvInit copies and validates the bytes, then releases them with monodroid_free.
-		args.jniRemappingData = data;
-		args.jniRemappingDataLength = static_cast<uint32_t> (length);
+		// Read the declared size only after independently bounding the fixed header.
+		const auto *bytes = static_cast<const uint8_t*> (data);
+		uint32_t length = static_cast<uint32_t> (bytes [12]) | (static_cast<uint32_t> (bytes [13]) << 8) |
+			(static_cast<uint32_t> (bytes [14]) << 16) | (static_cast<uint32_t> (bytes [15]) << 24);
+		abort_unless (length >= 64 && length <= INT32_MAX && length <= range.segment_end - start_address,
+			"JNI remapping payload has an invalid size or exceeds its read-only load segment");
+
+		// Java.Interop can retain these pointers for the process lifetime: never dlclose.
+		args.jniRemappingData = static_cast<const uint8_t*> (data);
+		args.jniRemappingDataLength = length;
 	}
 }

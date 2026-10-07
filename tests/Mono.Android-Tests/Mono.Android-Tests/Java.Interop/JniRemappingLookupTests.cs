@@ -33,7 +33,7 @@ namespace Java.InteropTests
 			}
 			var handle = GCHandle.Alloc (bytes, GCHandleType.Pinned);
 			try {
-				Assert.Throws<InvalidDataException> (() => Microsoft.Android.Runtime.JniRemappingAsset.FromNativeData (
+				Assert.Throws<InvalidDataException> (() => Microsoft.Android.Runtime.JniRemappingAsset.FromMappedData (
 					handle.AddrOfPinnedObject (), (uint)bytes.Length));
 			} finally {
 				handle.Free ();

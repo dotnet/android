@@ -77,7 +77,7 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		}
 		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
 	}
-	load_jni_remapping_asset (env, *initArgs);
+	load_jni_remapping_asset (*initArgs);
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
 	env->DeleteLocalRef (lrefGCUserPeerable);

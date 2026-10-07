@@ -49,9 +49,10 @@ The `.R8` files cover the `$(AndroidLinkTool)=r8` configuration.
 NativeAOT enables `r8` by default, so it has no separate `.R8`
 reference.
 
-The CoreCLR references include the valid 64-byte empty JNI remapping asset and
-its Java/native loader and managed validation code. Apps without remapping
-inputs must still trim the managed lookup implementation.
+The CoreCLR references include the valid 64-byte empty JNI remapping payload in
+the data-only `libandroid_runtime_blobs.so`, its native loader and fixed-size
+managed header checks. There is no Java buffer or managed payload copy. Apps
+without remapping inputs must still trim the managed lookup implementation.
 
 The new reference files can be obtained from the test results
 archive - artifact of the given CI build (preferred method).

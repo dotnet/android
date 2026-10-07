@@ -450,7 +450,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.brokenExceptionTransitions                     = 0;
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
-	load_jni_remapping_asset (env, init);
+	load_jni_remapping_asset (init);
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

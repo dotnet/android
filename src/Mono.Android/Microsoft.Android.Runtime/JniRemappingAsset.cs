@@ -25,7 +25,13 @@ internal sealed class JniRemappingAsset
 	const int AsciiComparisonChunkSize = 16;
 	static readonly UTF8Encoding StrictUtf8 = new (false, true);
 
-	readonly byte [] bytes;
+	readonly byte []? ownedBytes;
+	readonly IntPtr mappedAddress;
+	readonly int mappedLength;
+	unsafe ReadOnlySpan<byte> bytes => ownedBytes is not null
+		? ownedBytes
+		: new ReadOnlySpan<byte> ((void*)mappedAddress, mappedLength);
+	internal IntPtr MappedAddress => mappedAddress;
 	readonly int typeOffset;
 	readonly int typeCount;
 	readonly int reverseTypeOffset;
@@ -85,18 +91,27 @@ internal sealed class JniRemappingAsset
 
 	internal bool IsEmpty => typeCount == 0 && reverseTypeCount == 0 && methodCount == 0 && fieldCount == 0;
 
-	internal static unsafe JniRemappingAsset FromNativeData (IntPtr data, uint length)
+	internal JniRemappingAsset (ReadOnlySpan<byte> data)
+		: this (data.ToArray (), IntPtr.Zero, 0)
 	{
-		if (data == IntPtr.Zero || length == 0 || length > int.MaxValue)
-			throw new InvalidDataException ("JNI remapping asset data is missing or has an invalid length.");
-
-		return new JniRemappingAsset (new ReadOnlySpan<byte> ((void*)data, (int)length));
+		ValidateTypes (typeOffset, typeCount);
+		ValidateTypes (reverseTypeOffset, reverseTypeCount);
+		ValidateMembers (methodOffset, methodCount, MethodEntrySize, methods: true);
+		ValidateMembers (fieldOffset, fieldCount, FieldEntrySize, methods: false);
 	}
 
-	internal JniRemappingAsset (ReadOnlySpan<byte> data)
+	internal static JniRemappingAsset FromMappedData (IntPtr data, uint length)
 	{
-		// Validate a private snapshot, never mutable caller-owned bytes.
-		bytes = data.ToArray ();
+		if (data == IntPtr.Zero || length < HeaderSize || length > int.MaxValue)
+			throw new InvalidDataException ("JNI remapping mapped data is missing or has an invalid bounded length.");
+		return new JniRemappingAsset (null, data, (int)length);
+	}
+
+	JniRemappingAsset (byte []? snapshot, IntPtr address, int length)
+	{
+		ownedBytes = snapshot;
+		mappedAddress = address;
+		mappedLength = length;
 		if (bytes.Length < HeaderSize)
 			throw new InvalidDataException ("JNI remapping asset header is truncated.");
 		if (ReadUInt32 (bytes, 0) != Magic)
@@ -119,14 +134,10 @@ internal sealed class JniRemappingAsset
 			throw new InvalidDataException ("JNI remapping asset string pool is out of bounds.");
 		stringsOffset = next;
 		stringsLength = (int)poolLength;
-
-		ValidateTypes (typeOffset, typeCount);
-		ValidateTypes (reverseTypeOffset, reverseTypeCount);
-		ValidateMembers (methodOffset, methodCount, MethodEntrySize, methods: true);
-		ValidateMembers (fieldOffset, fieldCount, FieldEntrySize, methods: false);
 	}
 
-	internal GCHandle Pin () => GCHandle.Alloc (bytes, GCHandleType.Pinned);
+	internal GCHandle Pin ()
+		=> GCHandle.Alloc (ownedBytes ?? throw new InvalidOperationException ("Mapped data must not be GC-pinned."), GCHandleType.Pinned);
 
 	(int Offset, int Count) ReadSection (int headerOffset, int entrySize, ref int next)
 	{
@@ -206,7 +217,7 @@ internal sealed class JniRemappingAsset
 				value.Length >= (uint)(stringsOffset + stringsLength) - value.Offset)
 			throw new InvalidDataException ("JNI remapping asset string is out of bounds.");
 
-		ReadOnlySpan<byte> utf8 = ReadBytes (value);
+		ReadOnlySpan<byte> utf8 = bytes.Slice ((int)value.Offset, (int)value.Length);
 		if (utf8.IndexOf ((byte)0) >= 0 || bytes [(int)(value.Offset + value.Length)] != 0)
 			throw new InvalidDataException ("JNI remapping asset string is not NUL terminated.");
 		if (!Ascii.IsValid (utf8)) {
@@ -231,15 +242,15 @@ internal sealed class JniRemappingAsset
 		int right = count;
 		while (left < right) {
 			int middle = left + (right - left) / 2;
-			StringRef name = ReadStringRef (offset + middle * TypeEntrySize);
+			StringRef name = ReadStringRef (offset + middle * TypeEntrySize, required: true);
 			if (Compare (ReadBytes (name), source, ascii) < 0)
 				left = middle + 1;
 			else
 				right = middle;
 		}
-		if (left >= count || Compare (ReadBytes (ReadStringRef (offset + left * TypeEntrySize)), source, ascii) != 0)
+		if (left >= count || Compare (ReadBytes (ReadStringRef (offset + left * TypeEntrySize, required: true)), source, ascii) != 0)
 			return null;
-		return ReadStringRef (offset + left * TypeEntrySize + 8);
+		return ReadStringRef (offset + left * TypeEntrySize + 8, required: true);
 	}
 
 	internal MethodReplacement? FindMethod (ReadOnlySpan<char> sourceType, ReadOnlySpan<char> name, ReadOnlySpan<char> signature)
@@ -287,8 +298,13 @@ internal sealed class JniRemappingAsset
 	}
 
 	MethodReplacement ReadMethod (int position, StringRef matchedSignature)
-		=> new (ReadStringRef (position + 24), ReadStringRef (position + 32), ReadStringRef (position + 40),
-			matchedSignature, (ReadUInt32 (bytes, position + 48) & 1) != 0);
+	{
+		uint flags = ReadUInt32 (bytes, position + 48);
+		if ((flags & ~1u) != 0)
+			throw new InvalidDataException ("JNI remapping method entry has unsupported flags.");
+		return new (ReadStringRef (position + 24, required: true), ReadStringRef (position + 32, required: true),
+			ReadStringRef (position + 40, required: true, optional: true), matchedSignature, (flags & 1) != 0);
+	}
 
 	internal FieldReplacement? FindField (ReadOnlySpan<char> sourceType, ReadOnlySpan<char> name, ReadOnlySpan<char> signature)
 	{
@@ -312,7 +328,8 @@ internal sealed class JniRemappingAsset
 	}
 
 	FieldReplacement ReadField (int position)
-		=> new (ReadStringRef (position + 24), ReadStringRef (position + 32), ReadStringRef (position + 40));
+		=> new (ReadStringRef (position + 24, required: true), ReadStringRef (position + 32, required: true),
+			ReadStringRef (position + 40, required: true, optional: true));
 
 	int FindFirstMember (int offset, int count, int entrySize, ReadOnlySpan<char> sourceType,
 	                     ReadOnlySpan<byte> sourceTypeUtf8, ReadOnlySpan<char> name)
@@ -338,24 +355,24 @@ internal sealed class JniRemappingAsset
 	int CompareMember (int position, ReadOnlySpan<char> sourceType, ReadOnlySpan<byte> sourceTypeUtf8,
 	                   ReadOnlySpan<char> name, bool typeIsUtf8, bool typeIsAscii, bool nameIsAscii)
 	{
-		ReadOnlySpan<byte> type = ReadBytes (ReadStringRef (position));
+		ReadOnlySpan<byte> type = ReadBytes (ReadStringRef (position, required: true));
 		int comparison = typeIsUtf8
 			? CompareUtf8 (type, sourceTypeUtf8)
 			: Compare (type, sourceType, typeIsAscii);
 		return comparison != 0
 			? comparison
-			: Compare (ReadBytes (ReadStringRef (position + 8)), name, nameIsAscii);
+			: Compare (ReadBytes (ReadStringRef (position + 8, required: true)), name, nameIsAscii);
 	}
 
 	int FindEndOfMember (int offset, int count, int entrySize, int first)
 	{
-		StringRef type = ReadStringRef (offset + first * entrySize);
-		StringRef name = ReadStringRef (offset + first * entrySize + 8);
+		StringRef type = ReadStringRef (offset + first * entrySize, required: true);
+		StringRef name = ReadStringRef (offset + first * entrySize + 8, required: true);
 		int last = first + 1;
 		while (last < count) {
 			int position = offset + last * entrySize;
-			if (CompareUtf8 (ReadBytes (type), ReadBytes (ReadStringRef (position))) != 0 ||
-					CompareUtf8 (ReadBytes (name), ReadBytes (ReadStringRef (position + 8))) != 0)
+			if (CompareUtf8 (ReadBytes (type), ReadBytes (ReadStringRef (position, required: true))) != 0 ||
+					CompareUtf8 (ReadBytes (name), ReadBytes (ReadStringRef (position + 8, required: true))) != 0)
 				break;
 			last++;
 		}
@@ -366,18 +383,25 @@ internal sealed class JniRemappingAsset
 	{
 		if (value.IsMissing)
 			throw new ArgumentException ("The JNI remapping string is absent.", nameof (value));
-		return Encoding.UTF8.GetString (bytes, (int)value.Offset, (int)value.Length);
+		return Encoding.UTF8.GetString (ReadBytes (value));
 	}
 
 	internal ReadOnlySpan<byte> ReadBytes (StringRef value)
 	{
 		if (value.IsMissing)
 			throw new ArgumentException ("The JNI remapping string is absent.", nameof (value));
-		return bytes.AsSpan ((int)value.Offset, (int)value.Length);
+		if (mappedAddress != IntPtr.Zero)
+			ValidateString (value, required: false);
+		return bytes.Slice ((int)value.Offset, (int)value.Length);
 	}
 
-	StringRef ReadStringRef (int position)
-		=> new (ReadUInt32 (bytes, position), ReadUInt32 (bytes, position + 4));
+	StringRef ReadStringRef (int position, bool required = false, bool optional = false)
+	{
+		var value = new StringRef (ReadUInt32 (bytes, position), ReadUInt32 (bytes, position + 4));
+		if (mappedAddress != IntPtr.Zero)
+			ValidateString (value, required, optional);
+		return value;
+	}
 
 	internal static uint ReadUInt32 (ReadOnlySpan<byte> data, int offset)
 		=> BinaryPrimitives.ReadUInt32LittleEndian (data.Slice (offset, sizeof (uint)));

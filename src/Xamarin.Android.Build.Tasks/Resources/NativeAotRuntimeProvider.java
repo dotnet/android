@@ -37,7 +37,6 @@ public class NativeAotRuntimeProvider
 
         // Initialize .NET runtime
         JavaInteropRuntime.loadLibrary(context);
-        net.dot.android.JniRemappingAsset.initialize (context.getAssets ());
         JavaInteropRuntime.init(loader, language, filesDir, cacheDir);
         // NOTE: only required for custom applications
         ApplicationRegistration.registerApplications();

@@ -1,6 +1,7 @@
 <!-- R8 runs once, after managed trimming. Its final mapping is converted to replacement
-     XML, then packaged as binary JNI remapping assets. Managed JNI names stay unchanged. -->
+     XML, then packaged as a mapped data-only JNI remapping library. Managed JNI names stay unchanged. -->
 <Project>
+  <UsingTask TaskName="Microsoft.Android.Tasks.WrapJniRemappingAsSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
@@ -129,17 +130,45 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_AndroidCollectJniRemappingAssets"
+  <Target Name="_AndroidGenerateJniRemappingElfInputs"
       DependsOnTargets="_CompileDex;_AndroidGenerateJniRemappingAsset;_AndroidGenerateNativeAotR8RemappingAsset">
     <ItemGroup>
-      <_AndroidJniRemappingRid Include="@(_RIDs)" />
-      <_AndroidJniRemappingAssetToArchive Include="@(_AndroidJniRemappingRid->'$(_AndroidJniRemappingAssetBin)')"
+      <_AndroidJniRemappingElf Include="@(_RIDs)"
           Condition=" '$(_AndroidRuntime)' != 'NativeAOT' or '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' ">
-        <ArchivePath>assets/xa-internal/jni-remap.%(_AndroidJniRemappingRid.Identity).bin</ArchivePath>
-      </_AndroidJniRemappingAssetToArchive>
-      <_AndroidJniRemappingAssetToArchive Include="@(_AndroidNativeAotR8RemappingInput->'%(BinaryFile)')"
+        <BinaryFile>$(_AndroidJniRemappingAssetBin)</BinaryFile>
+        <ElfFile>$(IntermediateOutputPath)android\jni-remap\%(Identity)\libandroid_runtime_blobs.so</ElfFile>
+        <RuntimeIdentifier>%(Identity)</RuntimeIdentifier>
+      </_AndroidJniRemappingElf>
+      <_AndroidJniRemappingElf Include="@(_AndroidNativeAotR8RemappingInput)"
           Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
-        <ArchivePath>assets/xa-internal/jni-remap.%(_AndroidNativeAotR8RemappingInput.RuntimeIdentifier).bin</ArchivePath>
+        <ElfFile>%(_AndroidNativeAotR8RemappingInput.AndroidNativeAotRemappingDirectory)libandroid_runtime_blobs.so</ElfFile>
+      </_AndroidJniRemappingElf>
+      <_AndroidJniRemappingElf>
+        <Abi Condition=" '%(_AndroidJniRemappingElf.RuntimeIdentifier)' == 'android-arm64' ">arm64-v8a</Abi>
+        <Abi Condition=" '%(_AndroidJniRemappingElf.RuntimeIdentifier)' == 'android-arm' ">armeabi-v7a</Abi>
+        <Abi Condition=" '%(_AndroidJniRemappingElf.RuntimeIdentifier)' == 'android-x64' ">x86_64</Abi>
+        <Abi Condition=" '%(_AndroidJniRemappingElf.RuntimeIdentifier)' == 'android-x86' ">x86</Abi>
+      </_AndroidJniRemappingElf>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateJniRemappingElf"
+      DependsOnTargets="_AndroidGenerateJniRemappingElfInputs"
+      Inputs="%(_AndroidJniRemappingElf.BinaryFile);$(_AndroidR8JniTaskAssembly)"
+      Outputs="%(_AndroidJniRemappingElf.ElfFile)">
+    <WrapJniRemappingAsSharedLibrary MSBuildRuntime="NET"
+        InputFile="%(_AndroidJniRemappingElf.BinaryFile)"
+        OutputFile="%(_AndroidJniRemappingElf.ElfFile)"
+        RuntimeIdentifier="%(_AndroidJniRemappingElf.RuntimeIdentifier)" />
+    <ItemGroup>
+      <FileWrites Include="%(_AndroidJniRemappingElf.ElfFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidCollectJniRemappingAssets" DependsOnTargets="_AndroidGenerateJniRemappingElf">
+    <ItemGroup>
+      <_AndroidJniRemappingAssetToArchive Include="@(_AndroidJniRemappingElf->'%(ElfFile)')">
+        <ArchivePath>lib/%(_AndroidJniRemappingElf.Abi)/libandroid_runtime_blobs.so</ArchivePath>
       </_AndroidJniRemappingAssetToArchive>
     </ItemGroup>
   </Target>

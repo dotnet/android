@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using ELFSharp.ELF;
 using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -137,6 +138,13 @@ namespace Xamarin.Android.Build.Tests
 						echoed.GetType () != typeof (Example.RuntimePeer) ||
 						hidden.GetType () != HiddenPeerBinding.GetBindingType ())
 					throw new InvalidOperationException ("Obfuscated JNI lookup returned an incorrect value or managed type.");
+				for (int i = 0; i < 8; i++) {
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+					using var afterCollection = Example.RuntimePeer.Create ();
+					if (peer.Add (2) != 15 || boundHidden.HiddenAdd () != 31 || afterCollection.Value != 7)
+						throw new InvalidOperationException ("Cached remapping pointers did not survive collection.");
+				}
 				Console.WriteLine ("R8_RUNTIME_REMAP_SUCCESS");
 				""");
 
@@ -183,20 +191,28 @@ namespace Xamarin.Android.Build.Tests
 				var asset = Directory.GetFiles (intermediate, "jni-remap.bin", SearchOption.AllDirectories).Single ();
 				var originalAsset = File.ReadAllBytes (asset);
 				var apkPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var apk = System.IO.Compression.ZipFile.OpenRead (apkPath)) {
-					var entry = apk.GetEntry ($"assets/xa-internal/jni-remap.{proj.GetRuntimeIdentifiers ().Single ()}.bin")
-						?? throw new AssertionException ("The binary asset must be packaged for the running RID.");
+				byte [] ReadPackagedPayload ()
+				{
+					using var apk = System.IO.Compression.ZipFile.OpenRead (apkPath);
+					var entry = apk.GetEntry ($"lib/{proj.GetRuntimeIdentifiersAsAbis ().Single ()}/libandroid_runtime_blobs.so")
+						?? throw new AssertionException ("The data-only ELF must be packaged for the running ABI.");
 					using var data = new MemoryStream ();
 					using var input = entry.Open ();
 					input.CopyTo (data);
-					CollectionAssert.AreEqual (originalAsset, data.ToArray ());
+					data.Position = 0;
+					using var elf = ELFReader.Load (data, shouldOwnStream: false);
+					return elf.Sections.Single (section => section.Name == "payload").GetContents ();
 				}
+				CollectionAssert.AreEqual (originalAsset, ReadPackagedPayload ());
+				var dataElf = Directory.GetFiles (intermediate, "libandroid_runtime_blobs.so", SearchOption.AllDirectories).Single ();
+				var dataTimestamp = File.GetLastWriteTimeUtc (dataElf);
 
 				AssertAppRuns ("r8-runtime-remap.log");
 
 				Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
 				AssertR8Invocations (builder, 0);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"));
+				Assert.AreEqual (dataTimestamp, File.GetLastWriteTimeUtc (dataElf), "A no-op must not regenerate the data ELF.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					var aaptRules = Path.Combine (intermediate, "aapt_rules.txt");
@@ -213,12 +229,14 @@ namespace Xamarin.Android.Build.Tests
 					var ilcObject = Directory.GetFiles (intermediate, $"{proj.ProjectName}.o", SearchOption.AllDirectories).Single ();
 					var ilcTimestamp = File.GetLastWriteTimeUtc (ilcObject);
 					var nativeTimestamps = Directory.GetFiles (Path.Combine (Root, builder.ProjectDirectory), "*.so", SearchOption.AllDirectories)
+						.Where (path => Path.GetFileName (path) != "libandroid_runtime_blobs.so")
 						.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 					File.Delete (asset);
 					Assert.IsTrue (builder.Build (proj), "A missing binary remapping asset should be regenerated.");
 					AssertR8Invocations (builder, 0);
 					FileAssert.Exists (asset);
 					CollectionAssert.AreEqual (originalAsset, File.ReadAllBytes (asset));
+					CollectionAssert.AreEqual (originalAsset, ReadPackagedPayload (), "Recovered bytes must reach the packaged data ELF.");
 					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the asset must not recompile IL.");
 					foreach (var nativeFile in nativeTimestamps) {
 						Assert.AreEqual (nativeFile.Value, File.GetLastWriteTimeUtc (nativeFile.Key), "Recovering the asset must not relink native code.");
@@ -244,12 +262,13 @@ namespace Xamarin.Android.Build.Tests
 				extraRules = "-keepclassmembernames class example.RuntimePeer { public int value; }";
 				var nativeFiles = Directory.GetFiles (intermediate, "*.o", SearchOption.AllDirectories)
 					.Concat (Directory.GetFiles (intermediate, "*.so", SearchOption.AllDirectories)
-						.Where (path => Path.GetFileName (path) != "assembly-store.so"))
+						.Where (path => Path.GetFileName (path) != "assembly-store.so" && Path.GetFileName (path) != "libandroid_runtime_blobs.so"))
 					.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 				proj.Touch ("r8-custom.pro");
 				Assert.IsTrue (builder.Install (proj), "Changed R8 rules must update the binary remapping asset.");
 				AssertR8Invocations (builder, 1);
 				Assert.IsFalse (originalAsset.SequenceEqual (File.ReadAllBytes (asset)), "Changed mappings must change the bytes used at runtime.");
+				CollectionAssert.AreEqual (File.ReadAllBytes (asset), ReadPackagedPayload (), "Changed mappings must reach the packaged data ELF.");
 				foreach (var nativeFile in nativeFiles) {
 					Assert.AreEqual (nativeFile.Value, File.GetLastWriteTimeUtc (nativeFile.Key), "A mapping change must not rebuild native code.");
 				}
@@ -261,6 +280,7 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ("-dontobfuscate", File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
 				var baselineAsset = Path.Combine (intermediate, "android", "jni-remap", "jni-remap.bin");
 				Assert.AreEqual (64, new FileInfo (baselineAsset).Length, "Disabling R8 remapping must replace stale mappings with a valid empty asset.");
+				CollectionAssert.AreEqual (File.ReadAllBytes (baselineAsset), ReadPackagedPayload (), "Disabling remapping must replace stale data in the packaged ELF.");
 				AssertAppRuns ("r8-disabled.log");
 			} finally {
 				Assert.IsTrue (builder.Uninstall (proj), "Obfuscated app should uninstall.");

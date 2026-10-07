@@ -4,23 +4,23 @@
     "AndroidManifest.xml": {
       "Size": 2964
     },
-    "assets/xa-internal/jni-remap.android-arm64.bin": {
-      "Size": 64
-    },
     "classes.dex": {
-      "Size": 20432
+      "Size": 18852
+    },
+    "lib/arm64-v8a/libandroid_runtime_blobs.so": {
+      "Size": 16952
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 2442928
+      "Size": 2435032
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2835664
+      "Size": 2839808
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4740576
+      "Size": 4679152
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 109168
+      "Size": 107472
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72256
@@ -35,7 +35,7 @@
       "Size": 171584
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 9600
+      "Size": 8872
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -62,5 +62,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 6530583
+  "PackageSize": 6489618
 }

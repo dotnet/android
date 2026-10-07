@@ -122,14 +122,9 @@ namespace Android.Runtime
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
 			InitializeMaxGrefCounts (args);
-			try {
-				var asset = JniRemappingAsset.FromNativeData (args.jniRemappingData, args.jniRemappingDataLength);
-				if (RuntimeFeature.JniRemapping) {
-					JniRemappingLookup.Initialize (asset);
-				}
-			} finally {
-				// The native host hands off temporary bytes; cached JNI pointers use our private pinned copy.
-				RuntimeNativeMethods.monodroid_free (args.jniRemappingData);
+			var asset = JniRemappingAsset.FromMappedData (args.jniRemappingData, args.jniRemappingDataLength);
+			if (RuntimeFeature.JniRemapping) {
+				JniRemappingLookup.Initialize (asset);
 			}
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
