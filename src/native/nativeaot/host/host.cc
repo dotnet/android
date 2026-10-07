@@ -1,9 +1,11 @@
+#include <host/host-common.hh>
 #include <host/host-environment-naot.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/app-system-properties.hh>
-#include <runtime-base/logger.hh>
+#include <shared/log_functions.hh>
+#include <shared/log_types.hh>
 
 using namespace xamarin::android;
 
@@ -15,7 +17,7 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void*) noexcept -> jint
 	abort_unless (result == JNI_OK && env != nullptr, "Unable to get JNI environment for NativeAOT startup");
 	AppSystemProperties::initialize (env);
 
-	Logger::init_logging_categories ();
+	HostCommon::init_logging_categories ();
 	HostEnvironment::init ();
 	jvm = vm;
 
@@ -35,7 +37,6 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 
 	AndroidSystem::set_primary_override_dir (files_dir);
 	HostEnvironment::setup_environment (language, files_dir, cache_dir);
-	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.
@@ -76,13 +77,6 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
 	}
 	initArgs->jniRemappingData = &jni_remapping_data;
-	initArgs->grefLogPath = Logger::gref_log_path ();
-	initArgs->lrefLogPath = Logger::lref_log_path ();
-	initArgs->referenceLogDirectory = Logger::reference_log_directory ();
-	initArgs->lightGref = Logger::light_gref_enabled () ? 1 : 0;
-	initArgs->lightLref = Logger::light_lref_enabled () ? 1 : 0;
-	initArgs->grefToLogcat = Logger::gref_to_logcat () ? 1 : 0;
-	initArgs->lrefToLogcat = Logger::lref_to_logcat () ? 1 : 0;
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
 	env->DeleteLocalRef (lrefGCUserPeerable);

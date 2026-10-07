@@ -9,8 +9,8 @@
 #include <string_view>
 
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/logger.hh>
 #include <runtime-base/util.hh>
+#include <shared/log_functions.hh>
 
 namespace xamarin::android {
 	class HostEnvironment

@@ -6,7 +6,7 @@
 #include <type_traits>
 
 #include <runtime-base/java-app-config.hh>
-#include <runtime-base/logger.hh>
+#include <shared/log_types.hh>
 #include <shared/helpers.hh>
 
 using namespace xamarin::android;

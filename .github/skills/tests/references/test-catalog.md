@@ -179,18 +179,14 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 ## Java.Interop Tests — Mixed Tiers
 
 Tooling tests are standalone (listed in the Standalone Tests table above).
-JVM-based tests are full-build (require local SDK + JVM).
-
-Build (full-build only): `./dotnet-local.sh build external/Java.Interop/Java.Interop.slnx -c Debug`
-Device: **No** (runs on host JVM via `TestJVM`)
+Core JNI interop tests from `external/Java.Interop/tests/Java.Interop-Tests/`
+are compiled into `tests/Mono.Android-Tests/Java.Interop-Tests/Java.Interop-Tests.NET.csproj`
+and run with the on-device `Mono.Android.NET-Tests.csproj` suite. They require
+the locally built Android SDK and an Android device/emulator; use the on-device
+build/install and test commands above.
 
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|
-| **java-interop** (core) | `external/Java.Interop/tests/Java.Interop-Tests/` | Core JNI interop tests |
-| **java-interop export** | `external/Java.Interop/tests/Java.Interop.Export-Tests/` | Export/callable wrapper tests |
-| **java-interop dynamic** | `external/Java.Interop/tests/Java.Interop.Dynamic-Tests/` | Dynamic interop |
-| **java-interop performance** | `external/Java.Interop/tests/Java.Interop-PerformanceTests/` | JNI performance benchmarks |
-| **java-base** | `external/Java.Interop/tests/Java.Base-Tests/` | Java.Base runtime tests |
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | Binding generator tests |
 | **java callable wrappers** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | JCW generation |
 | **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |

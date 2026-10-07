@@ -908,15 +908,13 @@ sealed class TypeMapAssemblyEmitter
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
 	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
-	///   var result = new TargetType(ref jniRef, options);
-	///   JNIEnv.DeleteRef(handle, ownership);
-	///   return result;
+	///   try { return new TargetType(ref jniRef, options); }
+	///   finally { JNIEnv.DeleteRef(handle, ownership); }
 	/// </summary>
 	void EmitCreateInstanceViaJavaInteropNewobj (EntityHandle typeRef)
 	{
 		var ctorRef = AddJavaInteropActivationCtorRef (typeRef);
-		EmitCreateInstanceBodyWithLocals (
-			EncodeJniObjectReferenceAndObjectLocals,
+		EmitJavaInteropActivationWithCleanup (
 			encoder => {
 				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
@@ -929,31 +927,23 @@ sealed class TypeMapAssemblyEmitter
 				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
 				encoder.StoreLocal (1); // save result
-
-				// JNIEnv.DeleteRef(handle, ownership);
-				encoder.OpCode (ILOpCode.Ldarg_1); // handle
-				encoder.OpCode (ILOpCode.Ldarg_2); // ownership
-				encoder.Call (_jniEnvDeleteRefRef, parameterCount: 2);
-
-				encoder.LoadLocal (1); // load result
-				encoder.Return (returnsValue: true);
 			});
 	}
 
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
-	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-	///   var jniRef = new JniObjectReference(handle);
-	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
-	///   obj.BaseCtor(ref jniRef, options);
-	///   JNIEnv.DeleteRef(handle, ownership);
-	///   return obj;
+	///   try {
+	///     var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+	///     var jniRef = new JniObjectReference(handle);
+	///     var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///     obj.BaseCtor(ref jniRef, options); return obj;
+	///   }
+	///   finally { JNIEnv.DeleteRef(handle, ownership); }
 	/// </summary>
 	void EmitCreateInstanceInheritedJavaInteropCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
 	{
 		var baseCtorRef = AddJavaInteropActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
-		EmitCreateInstanceBodyWithLocals (
-			EncodeJniObjectReferenceLocal,
+		EmitJavaInteropActivationWithCleanup (
 			encoder => {
 				// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
 				encoder.LoadToken (targetTypeRef);
@@ -961,8 +951,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
 				encoder.CastClass (targetTypeRef);
 
-				// dup obj (one copy for the call, one for the return)
-				encoder.OpCode (ILOpCode.Dup);
+				encoder.StoreLocal (1);
 
 				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
@@ -971,17 +960,38 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
 				// obj.BaseCtor(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
+				encoder.LoadLocal (1);
+				encoder.CastClass (targetTypeRef);
 				encoder.LoadLocalAddress (0);
 				EmitJniObjectReferenceOptions (encoder);
 				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
-
-				// JNIEnv.DeleteRef(handle, ownership);
-				encoder.OpCode (ILOpCode.Ldarg_1); // handle
-				encoder.OpCode (ILOpCode.Ldarg_2); // ownership
-				encoder.Call (_jniEnvDeleteRefRef, parameterCount: 2);
-
-				encoder.Return (returnsValue: true);
 			});
+	}
+
+	void EmitJavaInteropActivationWithCleanup (Action<TrackedInstructionEncoder> activate)
+	{
+		_pe.EmitBody ("CreateInstance",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			GetCreateInstanceSignature (),
+			(encoder, flow) => {
+				var tryStart = encoder.DefineLabel ();
+				var finallyStart = encoder.DefineLabel ();
+				var returnStart = encoder.DefineLabel ();
+
+				encoder.MarkLabel (tryStart);
+				activate (encoder);
+				encoder.Branch (ILOpCode.Leave, returnStart);
+				encoder.MarkLabel (finallyStart);
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				encoder.Call (_jniEnvDeleteRefRef, parameterCount: 2);
+				encoder.OpCode (ILOpCode.Endfinally);
+				encoder.MarkLabel (returnStart);
+				encoder.LoadLocal (1);
+				encoder.Return (returnsValue: true);
+				flow.AddFinallyRegion (tryStart, finallyStart, finallyStart, returnStart);
+			},
+			EncodeJniObjectReferenceAndObjectLocals);
 	}
 
 	/// <summary>

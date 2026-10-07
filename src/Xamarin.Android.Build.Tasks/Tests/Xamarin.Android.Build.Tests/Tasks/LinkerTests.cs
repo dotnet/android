@@ -266,6 +266,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNotNull (trimmableTypeMapType);
 			var createJniProxyCacheEntry = trimmableTypeMapType.Methods.Single (method => method.Name == "CreateJniProxyCacheEntry");
 			var createManagedProxyCacheEntry = trimmableTypeMapType.Methods.Single (method => method.Name == "CreateManagedProxyCacheEntry");
+			var referenceManagerType = assembly.MainModule.GetType ("Android.Runtime.ManagedObjectReferenceManager");
+			Assert.IsNotNull (referenceManagerType);
+			var createGlobalReference = referenceManagerType.Methods.Single (method => method.Name == "CreateGlobalReference");
+			var createLocalReference = referenceManagerType.Methods.Single (method => method.Name == "CreateLocalReference");
 			if (enabled) {
 				Assert.IsNotNull (eventSourceType, "the enabled synthetic call path should retain the runtime EventSource facade");
 				var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
@@ -275,6 +279,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the enabled build should retain the GC bridge Stop call site");
 				Assert.IsTrue (CallsRuntimeEventSource (createJniProxyCacheEntry), "the enabled build should retain the Java-to-managed type-map timing call sites");
 				Assert.IsTrue (CallsRuntimeEventSource (createManagedProxyCacheEntry), "the enabled build should retain the managed-to-Java type-map timing call sites");
+				Assert.IsTrue (CallsRuntimeEventSource (createGlobalReference), "the enabled build should retain global reference instrumentation");
+				Assert.IsTrue (CallsRuntimeEventSource (createLocalReference), "the enabled build should retain local reference instrumentation");
 			} else {
 				Assert.IsNull (eventSourceType, "the disabled synthetic call path and runtime EventSource should be removed from the linked assembly");
 				Assert.IsFalse (CallsRuntimeEventSource (initializeIfNeeded, "Initialize"), "the disabled build should remove runtime EventSource initialization");
@@ -282,6 +288,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the disabled build should remove the GC bridge Stop call site");
 				Assert.IsFalse (CallsRuntimeEventSource (createJniProxyCacheEntry), "the disabled build should remove the Java-to-managed type-map timing call sites");
 				Assert.IsFalse (CallsRuntimeEventSource (createManagedProxyCacheEntry), "the disabled build should remove the managed-to-Java type-map timing call sites");
+				Assert.IsFalse (CallsRuntimeEventSource (createGlobalReference), "the disabled build should remove global reference instrumentation");
+				Assert.IsFalse (CallsRuntimeEventSource (createLocalReference), "the disabled build should remove local reference instrumentation");
 			}
 
 			static bool CallsRuntimeEventSource (MethodDefinition method, string? methodName = null) =>

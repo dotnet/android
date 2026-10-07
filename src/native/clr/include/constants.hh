@@ -48,8 +48,6 @@ namespace xamarin::android {
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "monodroid" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_ASSEMBLY    { "monodroid-assembly" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_GC          { "monodroid-gc" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_GREF        { "monodroid-gref" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_LREF        { "monodroid-lref" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_TIMING      { "monodroid-timing" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETWORK     { "monodroid-network" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_ERROR                 { "*error*" };
