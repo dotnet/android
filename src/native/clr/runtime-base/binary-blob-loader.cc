@@ -25,6 +25,13 @@ namespace {
 		uint16_t flags;
 		uint32_t stored;
 		uint32_t raw;
+
+		[[nodiscard]] auto is_valid (size_t available) const noexcept -> bool
+		{
+			return magic == blob_magic && version == 1 && flags <= 1 && stored != 0 &&
+				raw != 0 && raw <= maximum_raw_size && stored <= available &&
+				(flags != 0 || stored == raw);
+		}
 	};
 	static_assert (sizeof (BlobHeader) == 16);
 	constexpr size_t envelope_size = sizeof (BlobHeader);
@@ -91,9 +98,7 @@ auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
 
 	BlobHeader header;
 	std::memcpy (&header, blob, sizeof (header));
-	if (header.magic != blob_magic || header.version != 1 || header.flags > 1 || header.stored == 0 ||
-	    header.raw == 0 || header.raw > maximum_raw_size || header.stored > extent.length - envelope_size ||
-	    (header.flags == 0 && header.stored != header.raw)) [[unlikely]] {
+	if (!header.is_valid (extent.length - envelope_size)) [[unlikely]] {
 		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
 			"Invalid binary blob envelope or ELF extent for '%s'", symbol);
 	}
