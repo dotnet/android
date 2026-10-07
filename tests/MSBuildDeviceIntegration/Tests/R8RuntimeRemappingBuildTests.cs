@@ -144,6 +144,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true)]
 		[TestCase (AndroidRuntime.NativeAOT, false)]
 		[TestCase (AndroidRuntime.NativeAOT, true)]
 		public void MultiRidUsesOneR8Mapping (AndroidRuntime runtime, bool explicitPrimaryRid)
