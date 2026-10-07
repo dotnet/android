@@ -1,9 +1,11 @@
+#include <host/host-common.hh>
 #include <host/host-environment-naot.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/app-system-properties.hh>
-#include <runtime-base/logger.hh>
+#include <shared/log_functions.hh>
+#include <shared/log_types.hh>
 
 using namespace xamarin::android;
 
@@ -15,7 +17,7 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void*) noexcept -> jint
 	abort_unless (result == JNI_OK && env != nullptr, "Unable to get JNI environment for NativeAOT startup");
 	AppSystemProperties::initialize (env);
 
-	Logger::init_logging_categories ();
+	HostCommon::init_logging_categories ();
 	HostEnvironment::init ();
 	jvm = vm;
 

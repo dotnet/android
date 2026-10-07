@@ -17,6 +17,7 @@
 #include <host/assembly-store.hh>
 #include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
+#include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
 #include <host/host-util.hh>
@@ -25,10 +26,10 @@
 #include <runtime-base/android-system.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
+#include <shared/log_functions.hh>
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
@@ -294,7 +295,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	[[maybe_unused]] jobjectArray assembliesJava,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
-	Logger::init_logging_categories ();
+	HostCommon::init_logging_categories ();
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);

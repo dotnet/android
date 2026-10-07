@@ -2,7 +2,6 @@
 
 #include <host/host-environment-naot.hh>
 #include <runtime-base/app-system-properties.hh>
-#include <runtime-base/logger.hh>
 
 using namespace xamarin::android;
 
