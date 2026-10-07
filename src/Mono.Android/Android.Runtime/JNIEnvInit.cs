@@ -29,6 +29,7 @@ namespace Android.Runtime
 			public IntPtr          jniRemappingData;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public int             maxGrefCount;
+			public uint            jniRemappingDataSize;
 		}
 #pragma warning restore 0649
 
@@ -120,7 +121,7 @@ namespace Android.Runtime
 
 			InitializeMaxGrefCounts (args);
 			if (RuntimeFeature.JniRemapping) {
-				JniRemappingLookup.Initialize ();
+				JniRemappingLookup.Initialize (args.jniRemappingData, args.jniRemappingDataSize);
 			}
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;

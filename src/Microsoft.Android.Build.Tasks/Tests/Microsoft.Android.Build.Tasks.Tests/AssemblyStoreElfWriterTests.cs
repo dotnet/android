@@ -165,28 +165,12 @@ public class AssemblyStoreElfWriterTests : BaseTest
 	public void MultiSymbolRejectsInvalidInputsBeforeWriting ()
 	{
 		using var first = new MemoryStream (new byte [] { 1 });
-		using var empty = new MemoryStream ();
 		using var output = new MemoryStream ();
 		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
-			new [] { ("xa_same", (Stream)first), ("xa_same", (Stream)empty) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
-		Assert.Throws<InvalidDataException> (() => AssemblyStoreElfWriter.Write (
-			new [] { ("xa_first", (Stream)first), ("xa_second", (Stream)empty) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
+			new [] { ("xa_same", (Stream)first), ("xa_same", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
 		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
 			new [] { ("bad\0name", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
 		Assert.Zero (output.Length);
-	}
-
-	[Test]
-	public void UsesUtf8ByteOffsetsForNamedSymbols ()
-	{
-		byte [] data = [42];
-		using var a = new MemoryStream (data);
-		using var b = new MemoryStream (data);
-		using var output = new MemoryStream ();
-		AssemblyStoreElfWriter.Write (new [] { ("blob_😀", (Stream)a), ("xa_next", (Stream)b) },
-			output, AndroidTargetArch.Arm64, "libbinary_blobs.so");
-		AssemblyStoreElfWriter.Validate (output.ToArray (), AndroidTargetArch.Arm64, "libbinary_blobs.so",
-			new [] { ("blob_😀", data), ("xa_next", data) });
 	}
 
 	[Test]

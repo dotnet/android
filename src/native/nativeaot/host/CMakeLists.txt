@@ -41,6 +41,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${CLR_SOURCES_PATH}/host/os-bridge.cc
   ${CLR_SOURCES_PATH}/host/runtime-util.cc
   ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
+  ${CLR_SOURCES_PATH}/runtime-base/binary-blob-loader.cc
   ${CLR_SOURCES_PATH}/runtime-base/cpu-arch-detect.cc
   ${CLR_SOURCES_PATH}/runtime-base/util.cc
   ${CLR_SOURCES_PATH}/shared/helpers.cc
@@ -126,6 +127,16 @@ macro(lib_target_options TARGET_NAME)
 endmacro ()
 
 lib_target_options(${XAMARIN_NAOT_ANDROID_LIB})
+if(ANDROID_ABI MATCHES "^arm64-v8a")
+  set(ZSTD_RUNTIME_DIR "${CORECLR_APP_RUNTIME_DIR_ARM64}")
+elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
+  set(ZSTD_RUNTIME_DIR "${CORECLR_APP_RUNTIME_DIR_ARM}")
+elseif(ANDROID_ABI MATCHES "^x86_64")
+  set(ZSTD_RUNTIME_DIR "${CORECLR_APP_RUNTIME_DIR_X86_64}")
+else()
+  set(ZSTD_RUNTIME_DIR "${CORECLR_APP_RUNTIME_DIR_X86}")
+endif()
+target_link_libraries(${XAMARIN_NAOT_ANDROID_LIB} "${ZSTD_RUNTIME_DIR}/native/libSystem.IO.Compression.Native.a")
 xa_add_compile_definitions(${XAMARIN_NAOT_ANDROID_LIB})
 xa_add_include_directories(${XAMARIN_NAOT_ANDROID_LIB})
 

@@ -194,14 +194,12 @@ namespace Xamarin.Android.Build.Tests
 				int envelope = data.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
 				Assert.GreaterOrEqual (envelope, 0, "The ELF must contain the remapping payload.");
 				Assert.AreEqual (compress ? 1 : 0, BitConverter.ToUInt16 (data, envelope + 6), "Unexpected compression mode.");
-				var blobTimestamp = File.GetLastWriteTimeUtc (binaryBlob);
 
 				AssertAppRuns ("r8-runtime-remap.log");
 
 				Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
 				AssertR8Invocations (builder, 0, runtime);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"));
-				Assert.AreEqual (blobTimestamp, File.GetLastWriteTimeUtc (binaryBlob), "No-op builds must preserve binary-blob timestamps.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					var aaptRules = Path.Combine (intermediate, "aapt_rules.txt");

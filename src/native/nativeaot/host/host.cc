@@ -3,6 +3,7 @@
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/binary-blob-loader.hh>
 #include <runtime-base/app-system-properties.hh>
 #include <shared/log_functions.hh>
 #include <shared/log_types.hh>
@@ -76,7 +77,9 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		}
 		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
 	}
-	initArgs->jniRemappingData = nullptr;
+	BinaryBlobPayload remapping = BinaryBlobLoader::load ("xa_jni_remapping");
+	initArgs->jniRemappingData = remapping.data;
+	initArgs->jniRemappingDataSize = remapping.size;
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
 	env->DeleteLocalRef (lrefGCUserPeerable);

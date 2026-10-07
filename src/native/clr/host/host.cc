@@ -24,6 +24,7 @@
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/binary-blob-loader.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/monodroid-dl.hh>
@@ -449,7 +450,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.brokenExceptionTransitions                     = 0;
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
-	init.jniRemappingData                               = nullptr;
+	BinaryBlobPayload remapping = BinaryBlobLoader::load ("xa_jni_remapping");
+	init.jniRemappingData                               = remapping.data;
+	init.jniRemappingDataSize                           = remapping.size;
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

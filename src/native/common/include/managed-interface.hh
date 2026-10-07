@@ -7,17 +7,6 @@
 namespace xamarin::android {
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
 
-	struct JniRemappingData {
-		const void *type_replacements;
-		const void *reverse_type_replacements;
-		const void *method_replacement_index;
-		const void *field_replacement_index;
-		uint32_t    type_replacement_count;
-		uint32_t    reverse_type_replacement_count;
-		uint32_t    method_replacement_index_count;
-		uint32_t    field_replacement_index_count;
-	};
-
 	extern "C" {
 	}
 
@@ -32,9 +21,11 @@ namespace xamarin::android {
 		uint8_t         brokenExceptionTransitions;
 		int             packageNamingPolicy;
 		uint8_t         boundExceptionType;
-		const JniRemappingData *jniRemappingData;
+		const uint8_t   *jniRemappingData;
+		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 		int              maxGrefCount;
+		uint32_t         jniRemappingDataSize;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs

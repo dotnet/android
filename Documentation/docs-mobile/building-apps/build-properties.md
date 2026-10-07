@@ -1192,7 +1192,9 @@ generate a per-ABI `libbinary_blobs.so` containing bounded, read-only JNI
 remapping data. CoreCLR selects remaps from linked assemblies. NativeAOT
 selects remaps from retained JNI literals in ILC's native object. Neither
 runtime needs to compile the remapping table into application native code.
-The remapping payload is mapped without copying by default.
+The native host validates each payload's read-only ELF extent and passes its
+bounded data to the managed lookup. The uncompressed payload remains mapped
+without copying by default.
 
 Runtime-generated JNI names may require explicit remapping or keep rules.
 Conservative keep rules still protect native callbacks, bootstrap code, and

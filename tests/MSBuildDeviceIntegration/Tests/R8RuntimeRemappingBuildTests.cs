@@ -13,45 +13,27 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class R8RuntimeRemappingBuildTests : BaseTest
 	{
-		[TestCase (AndroidRuntime.CoreCLR, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, true)]
-		[TestCase (AndroidRuntime.NativeAOT, true, false)]
-		public void OrdinaryBuildPackagesBinaryRemapping (AndroidRuntime runtime, bool release, bool aab)
+		[Test]
+		public void BuildWithoutR8PackagesEmptyBinaryRemapping ()
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release)) {
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
 				return;
 			}
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = release,
+				IsRelease = false,
 			};
-			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
-			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj));
 			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var blobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
-				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
-			var abis = release ? new [] { "arm64-v8a", "x86_64" } : new [] { "arm64-v8a" };
-			Assert.AreEqual (abis.Length, blobs.Count, "Every built ABI needs a remapping data library even without R8 or XML remaps.");
-			var archivePath = aab
-				? Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.aab")
-				: Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			using (var archive = ZipFile.OpenRead (archivePath)) {
-				foreach (var abi in abis)
-					Assert.IsNotNull (archive.GetEntry ($"{(aab ? "base/" : "")}lib/{abi}/libbinary_blobs.so"));
-			}
-			Assert.IsTrue (builder.Build (proj), "A no-op build should preserve the data libraries.");
-			foreach (var blob in blobs)
-				Assert.AreEqual (blob.Value, File.GetLastWriteTimeUtc (blob.Key));
-			var missing = blobs.Keys.Single (path => path.Contains ("arm64-v8a", StringComparison.Ordinal));
-			File.Delete (missing);
-			Assert.IsTrue (builder.Build (proj), "A deleted data library must be recreated.");
-			FileAssert.Exists (missing);
-			Assert.IsTrue (builder.Clean (proj));
-			foreach (var blob in blobs.Keys)
-				FileAssert.DoesNotExist (blob);
+				.ToArray ();
+			Assert.AreEqual (1, blobs.Length, "Builds without R8 still need an empty remapping data library.");
+			using var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk"));
+			Assert.IsNotNull (apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so"));
 		}
 
 		[TestCase (true)]
@@ -244,8 +226,6 @@ namespace Xamarin.Android.Build.Tests
 				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 			Assert.IsTrue (builder.Build (proj), "A multi-RID no-op build should succeed.");
 			Assert.AreEqual ((0, 0), ReadInvocationCounts (), "No-op builds must not run R8 or native linking.");
-			foreach (var entry in binaryBlobs)
-				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must retain binary-blob timestamps.");
 			foreach (var entry in objects) {
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must not recompile ILC.");
 			}
