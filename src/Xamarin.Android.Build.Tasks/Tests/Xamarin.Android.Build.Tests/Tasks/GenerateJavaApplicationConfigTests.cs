@@ -141,12 +141,14 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 		Assert.That (config.Strings, Is.EqualTo (new [] { "example.test" }));
 	}
 
-	[Test]
-	public void SplitsLargeBlobIntoBoundedJavaInitializers ()
+	[TestCase (4097)]
+	[TestCase (20000)]
+	[TestCase (65537)]
+	public void SplitsLargeBlobIntoBoundedJavaInitializers (int valueBytes)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (directory);
-		string value = new string ('x', 20000) + "\ud83d\ude80";
+		string value = new string ('x', valueBytes) + "\ud83d\ude80";
 		string environmentFile = Path.Combine (directory, "environment.txt");
 		File.WriteAllText (environmentFile, $"MY_ENV={value}\n");
 		var task = new GenerateJavaApplicationConfig {
@@ -158,8 +160,10 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 
 		Assert.IsTrue (task.Execute ());
 		string source = File.ReadAllText (task.OutputFile);
-		Assert.That (JavaAppConfigTestHelper.Read (source).Strings, Is.EqualTo (new [] { "example.test", "MY_ENV", value }));
-		Assert.That (source, Does.Contain ("nativeConfigChunk4 ()"));
+		var config = JavaAppConfigTestHelper.Read (source);
+		Assert.That (config.Strings, Is.EqualTo (new [] { "example.test", "MY_ENV", value }));
+		Assert.That (config.Data.Length, Is.GreaterThan (valueBytes));
+		Assert.That (source, Does.Contain ($"nativeConfigChunk{(config.Data.Length - 1) / 4096} ()"));
 		Assert.That (source, Does.Contain ("System.arraycopy"));
 		Assert.That (source, Does.Contain ("// Continuation of the preceding UTF-8 string."));
 		Assert.That (source, Does.Not.Contain ("getBytes"));

@@ -109,6 +109,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 |-----------|--------|-------|
 | **device** (all) | (no filter) | All device integration tests |
 | **install and run** | `--filter "FullyQualifiedName~InstallAndRunTests"` | App installation and launch |
+| **CoreCLR bootstrap data** | `--filter "FullyQualifiedName~BootstrapConfigurationTests"` | Builds and runs apps with bundled system-property values above 4 KiB and 64 KiB, verifies full native parsing and hosting-property round trips; Debug/D8 and Release/R8. |
 | **install** | `--filter "FullyQualifiedName~InstallTests"` | Installation-only tests |
 | **debugging** | `--filter "FullyQualifiedName~DebuggingTest"` | Debugger attach and breakpoint tests |
 | **performance** | `--filter "cat=Performance"` | Startup time, build time measurements |
