@@ -44,6 +44,11 @@ static class JniRemappingLookup
 	readonly record struct NativeJniRemappingIndexTypeEntry (NativeJniRemappingString name, uint method_count, uint methods);
 	readonly record struct NativeJniRemappingIndexFieldTypeEntry (NativeJniRemappingString name, uint field_count, uint fields);
 	readonly record struct NativeJniRemappingTypeReplacementEntry (NativeJniRemappingString name, uint replacement);
+	readonly struct NativeBinaryBlobPayload
+	{
+		public readonly IntPtr data;
+		public readonly uint size;
+	}
 
 	static unsafe byte* table;
 	static uint size;
@@ -52,7 +57,7 @@ static class JniRemappingLookup
 	static bool isInUse;
 	static readonly ConcurrentDictionary<string, string> reverseTypes = new (StringComparer.Ordinal);
 
-	internal static unsafe void Initialize (IntPtr data, uint length)
+	internal static unsafe void Initialize (IntPtr data)
 	{
 		reverseTypes.Clear ();
 		if (!RuntimeFeature.JniRemapping) {
@@ -61,11 +66,15 @@ static class JniRemappingLookup
 			return;
 		}
 
-		if (data == IntPtr.Zero || length < HeaderSize || length > 256 * 1024 * 1024)
+		if (data == IntPtr.Zero)
 			throw new InvalidDataException ("Invalid native JNI remapping table.");
 
-		table = (byte*)data;
-		size = length;
+		NativeBinaryBlobPayload payload = *(NativeBinaryBlobPayload*)data;
+		if (payload.data == IntPtr.Zero || payload.size < HeaderSize || payload.size > 256 * 1024 * 1024)
+			throw new InvalidDataException ("Invalid native JNI remapping table.");
+
+		table = (byte*)payload.data;
+		size = payload.size;
 		counts = new uint [6];
 		offsets = new uint [6];
 		for (int i = 0; i < 4; i++) {

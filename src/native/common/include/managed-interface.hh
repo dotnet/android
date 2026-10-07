@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include <jni.h>
+#include <runtime-base/binary-blob-loader.hh>
 
 namespace xamarin::android {
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
@@ -21,11 +22,10 @@ namespace xamarin::android {
 		uint8_t         brokenExceptionTransitions;
 		int             packageNamingPolicy;
 		uint8_t         boundExceptionType;
-		const uint8_t   *jniRemappingData;
+		const BinaryBlobPayload *jniRemappingData;
 		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 		int              maxGrefCount;
-		uint32_t         jniRemappingDataSize;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
