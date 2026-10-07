@@ -72,6 +72,35 @@ public class TypeMapProguardTargetsTests : BaseTest
 	}
 
 	[Test]
+	public void ProguardCleanDirectoryConditionParsesAndRuns ()
+	{
+		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		var cleanTarget = source.Descendants ()
+			.Single (element => element.Name.LocalName == "Target" && (string?) element.Attribute ("Name") == "_CleanMonoAndroidIntermediateDir");
+		var propertyGroup = new XElement (cleanTarget.Elements ().Single (element => element.Name.LocalName == "PropertyGroup"));
+		var removeDirectory = new XElement (cleanTarget.Elements ().Single (element =>
+			element.Name.LocalName == "RemoveDirFixed" &&
+			((string?) element.Attribute ("Directories"))?.Contains ("_AndroidProguardIntermediateDirectory", StringComparison.Ordinal) == true));
+		removeDirectory.Name = "RemoveDir";
+		foreach (var element in propertyGroup.DescendantsAndSelf ().Concat (removeDirectory.DescendantsAndSelf ())) {
+			element.Name = element.Name.LocalName;
+		}
+		var project = Path.Combine (directory, "clean.proj");
+		var intermediate = Path.Combine (directory, "obj") + Path.DirectorySeparatorChar;
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup", new XElement ("IntermediateOutputPath", intermediate)),
+			new XElement ("Target", new XAttribute ("Name", "Build"), propertyGroup, removeDirectory)))
+			.Save (project);
+
+		Build (project);
+		var proguardDirectory = Path.Combine (intermediate, "proguard");
+		Directory.CreateDirectory (proguardDirectory);
+		File.WriteAllText (Path.Combine (proguardDirectory, "rules.cfg"), "rules");
+		Build (project);
+		DirectoryAssert.DoesNotExist (proguardDirectory);
+	}
+
+	[Test]
 	public void NativeObjectTargetUnionsRidsAndHonorsDisabledTrimming ()
 	{
 		var first = WriteNativeObject ("first", "test/Live", "test/Outer$Inner[0]");

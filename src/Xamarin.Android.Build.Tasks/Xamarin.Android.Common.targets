@@ -2720,6 +2720,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
+	<PropertyGroup>
+		<_AndroidProguardIntermediateDirectory>$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))</_AndroidProguardIntermediateDirectory>
+	</PropertyGroup>
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assemblies" Condition="Exists ('$(IntermediateOutputPath)assemblies')" />
@@ -2734,7 +2737,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assets" Condition="Exists ('$(IntermediateOutputPath)assets')" />
  	<RemoveDirFixed Directories="$(IntermediateOutputPath)java" Condition="Exists ('$(IntermediateOutputPath)java')" />
-	<RemoveDirFixed Directories="$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))" Condition="Exists ('$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))')" />
+	<RemoveDirFixed Directories="$(_AndroidProguardIntermediateDirectory)" Condition="Exists ('$(_AndroidProguardIntermediateDirectory)')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatFilesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatFilesDirectory)')" />
