@@ -76,13 +76,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 
-			var compressedAssembliesSource = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android", $"compressed_assemblies.{abi}.ll");
-			FileAssert.Exists (compressedAssembliesSource);
-			var compressedAssembliesSourceText = File.ReadAllText (compressedAssembliesSource);
-			StringAssert.Contains ("@compressed_assembly_count = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@compressed_assembly_descriptors = dso_local local_unnamed_addr global [0 x %struct.CompressedAssemblyDescriptor] zeroinitializer, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@uncompressed_assemblies_data_size = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
 		[Test]
@@ -244,7 +237,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
-			proj.SetProperty ("_AndroidEnableObjectReferenceLogging", "false");
 			if (r8) {
 				proj.SetProperty ("AndroidLinkTool", "r8");
 			}
@@ -265,32 +257,9 @@ namespace Xamarin.Android.Build.Tests
 				if (runtime == AndroidRuntime.CoreCLR) {
 					var monoAndroidPath = GetLinkedPath (b, true, "Mono.Android.dll");
 					using var monoAndroid = AssemblyDefinition.ReadAssembly (monoAndroidPath);
-					var referenceManager = monoAndroid.MainModule.GetType ("Android.Runtime.ManagedObjectReferenceManager");
-					if (referenceManager == null) {
-						Assert.Fail ($"{monoAndroidPath} should contain the managed reference manager.");
-						return;
-					}
-					string [] loggingMethods = [
-						"CreateLogWriter",
-						"TryCreateLogWriter",
-						"LogLocalReference",
-						"LogReference",
-						"FormatReferenceMessage",
-						"FormatHandle",
-						"GetObjectRefType",
-						"GetThreadName",
-						"WriteReference",
-						"LogReferenceFromNative",
-						"LogMessageFromNative",
-					];
-					foreach (string methodName in loggingMethods) {
-						Assert.IsNull (
-							referenceManager.Methods.FirstOrDefault (method => method.Name == methodName),
-							$"Disabled reference logging should trim {methodName} from Mono.Android.dll.");
-					}
 					Assert.IsNull (
-						referenceManager.Fields.FirstOrDefault (field => field.Name == "gcBridgeReferenceStackTrace"),
-						"Disabled reference logging should trim gcBridgeReferenceStackTrace from Mono.Android.dll.");
+						monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource"),
+						"Disabled EventSource support should remove reference events.");
 
 					var bridge = monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalGCBridge");
 					Assert.IsNotNull (bridge, "The managed GC bridge should survive linking.");
@@ -1579,15 +1548,16 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				IEnumerable<string> proguardProjectConfigurations = [Path.Combine (intermediate, "proguard",
-					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg")];
-				if (runtime == AndroidRuntime.NativeAOT && string.IsNullOrEmpty (rid)) {
-					proguardProjectConfigurations = Directory.GetFiles (intermediate, "proguard_project_references.cfg", SearchOption.AllDirectories);
-				}
+				var proguardProjectConfigurations = Directory.GetFiles (
+					Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath),
+					runtime == AndroidRuntime.NativeAOT ? "proguard_project_primary.cfg" : "proguard_project_references.cfg",
+					SearchOption.AllDirectories);
+				Assert.IsNotEmpty (proguardProjectConfigurations);
 				foreach (var proguardProjectConfiguration in proguardProjectConfigurations) {
-					FileAssert.Exists (proguardProjectConfiguration);
-					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectConfiguration), $"-keep class {proj.JavaPackageName}.MainActivity"),
-						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`!");
+					Assert.IsTrue (StringAssertEx.ContainsText (
+						File.ReadAllLines (proguardProjectConfiguration),
+						$"-keep class {proj.JavaPackageName}.MainActivity"),
+						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`.");
 				}
 
 				// The user AndroidJavaSource keep is emitted into proguard_project_primary.cfg on every
@@ -1645,8 +1615,7 @@ namespace UnamedProject
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
 
-				// Regression test: the trimmable NativeAOT path generates its ACW keep rules from the
-				// ILC DGML into proguard_project_references.cfg. If that file is not passed to R8, R8
+				// Regression test: NativeAOT must pass its generated ACW keep rules to R8. Otherwise R8
 				// tree-shakes the runtime ACW/JCW classes out of classes.dex and the app crashes at
 				// startup inside JavaInteropRuntime.init with a ClassNotFoundException for the
 				// UncaughtExceptionMarshaler Java Callable Wrapper. The JCW class name is CRC-hashed

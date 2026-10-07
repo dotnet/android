@@ -12,8 +12,6 @@ namespace Android.Runtime
 		Assembly  = 1 << 1,
 		// Bit 2 is reserved for the removed debugger logging category.
 		GC        = 1 << 3,
-		GlobalRef = 1 << 4,
-		LocalRef  = 1 << 5,
 		Timing    = 1 << 6,
 		// Bit 7 is reserved for the removed bundle logging category.
 		Net       = 1 << 8,

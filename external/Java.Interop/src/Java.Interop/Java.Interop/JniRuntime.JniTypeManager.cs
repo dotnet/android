@@ -500,8 +500,7 @@ namespace Java.Interop {
 			protected virtual ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
 				=> GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName.ToString (), jniFieldSignature.ToString ());
 
-			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
-			// provide reflection-based registration. Override to provide custom registration.
+			// Default implementation is a no-op. Override to provide custom registration.
 			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 			{
 			}

@@ -5,7 +5,6 @@
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/logger.hh>
 #include <shared/helpers.hh>
 
 using namespace xamarin::android;

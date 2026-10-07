@@ -89,8 +89,11 @@ Build and install the APK first, then run `dotnet test` from the test project di
 Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands.
 
 ### Java.Interop tests
-Tooling tests are standalone (`dotnet test` on `.csproj`). JVM tests require the local SDK:
+Tooling tests are standalone (`dotnet test` on `.csproj`). Core JNI interop tests
+run on Android as part of `Mono.Android.NET-Tests.csproj`, using the on-device
+commands above.
+
+To build the Java.Interop tooling solution:
 ```bash
 ./dotnet-local.sh build external/Java.Interop/Java.Interop.slnx -c Debug
-./dotnet-local.sh test external/Java.Interop/tests/Java.Interop-Tests/bin/Debug/${TFM}/Java.Interop-Tests.dll
 ```

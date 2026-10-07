@@ -41,6 +41,7 @@
     <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\NativeAotTypeMapReader.cs" Link="Utilities\JniRemapping\NativeAotTypeMapReader.cs" />
     <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\TypeMapKey.cs" Link="Utilities\JniRemapping\TypeMapKey.cs" />
     <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\TypeMapClassName.cs" Link="Utilities\JniRemapping\TypeMapClassName.cs" />
+    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\MonoAndroidHelper.Assemblies.cs" Link="Utilities\MonoAndroidHelper.Assemblies.cs" />
     <Compile Remove="MSBuild\**" />
     <Compile Remove="Resources\**" />
     <Compile Remove="Tests\**" />

@@ -11,7 +11,6 @@ static class RuntimeFeature
 	const bool StartupNoGCRegionEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault = false;
-	const bool ObjectReferenceLoggingEnabledByDefault = false;
 	const bool GCBridgeLoggingEnabledByDefault = true;
 	const bool JniRemappingEnabledByDefault = true;
 
@@ -43,10 +42,6 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (UseTypeMapAttributesForJavaDictionaryValueTypeLookups)}")]
 	internal static bool UseTypeMapAttributesForJavaDictionaryValueTypeLookups { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (UseTypeMapAttributesForJavaDictionaryValueTypeLookups)}", out bool isEnabled) ? isEnabled : UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault;
-
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
-	internal static bool ObjectReferenceLogging { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}", out bool isEnabled) ? isEnabled : ObjectReferenceLoggingEnabledByDefault;
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (GCBridgeLogging)}")]
 	internal static bool GCBridgeLogging { get; } =

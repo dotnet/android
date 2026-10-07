@@ -155,6 +155,45 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
+  <Target Name="_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier"
+      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;_ReadGeneratedTrimmableTypeMapAssemblies"
+      Returns="@(_AndroidAssemblyCompressionInput)">
+    <ItemGroup>
+      <_AndroidAssemblyCompressionInput
+          Include="@(RuntimePackAsset);@(ReferenceCopyLocalPaths);@(IntermediateAssembly);@(_GeneratedTypeMapAssembliesFromList)"
+          Condition=" '%(Extension)' == '.dll' ">
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </_AndroidAssemblyCompressionInput>
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(_AndroidAssemblyCompressionInput)">
+      <Output TaskParameter="Filtered" ItemName="_AndroidDistinctAssemblyCompressionInput" />
+    </RemoveDuplicates>
+    <ItemGroup>
+      <_AndroidAssemblyCompressionInput Remove="@(_AndroidAssemblyCompressionInput)" />
+      <_AndroidAssemblyCompressionInput Include="@(_AndroidDistinctAssemblyCompressionInput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidResolveAssemblyCompressionInputs"
+      Condition=" '$(DesignTimeBuild)' != 'true' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidEnableAssemblyCompression)' == 'true' ">
+    <!-- Use a separate resolve-only instance: publish replaces copy-local inputs with ILLink outputs. -->
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+        Properties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties);_AndroidResolveCompressionInputsOnly=true;_GenerateResourceDesignerAssemblyOutput=$(_GenerateResourceDesignerAssemblyOutput)"
+        Targets="_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier">
+      <Output TaskParameter="TargetOutputs" ItemName="_AndroidUntrimmedAssemblyCompressionInput" />
+    </MSBuild>
+    <ProcessAssemblies
+        RuntimeIdentifiers="@(_RIDs)"
+        InputAssemblies="@(_AndroidUntrimmedAssemblyCompressionInput)">
+      <Output TaskParameter="OutputAssemblies" ItemName="_AndroidResolvedAssemblyCompressionInput" />
+    </ProcessAssemblies>
+    <AppendCustomMetadataToItemGroup
+        Inputs="@(_AndroidResolvedAssemblyCompressionInput)"
+        MetaDataItems="@(AndroidCustomMetaDataForReferences)">
+      <Output TaskParameter="Output" ItemName="_AndroidAssemblyCompressionInputs" />
+    </AppendCustomMetadataToItemGroup>
+  </Target>
+
   <Target Name="_ResolveAssemblies" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
     <ItemGroup>
       <_RIDs Include="$(RuntimeIdentifier)"  Condition=" '$(RuntimeIdentifiers)' == '' " />
