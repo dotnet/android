@@ -14,7 +14,7 @@ namespace Microsoft.Android.Tasks;
 // not to the compression envelope or the containing ELF.
 static class JniRemappingBinaryBlob
 {
-	public const string Symbol = "xa_jni_remapping";
+	public const string Symbol = "remapping_data";
 	const uint Magic = 0x42424c42;
 	const int HeaderSize = 56;
 	const int EnvelopeSize = 16;

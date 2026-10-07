@@ -104,10 +104,10 @@ public class GenerateJniRemappingBinaryBlobsTests : BaseTest
 		using var uncompressedStream = new MemoryStream (uncompressed);
 		using var elf = new MemoryStream ();
 		AssemblyStoreElfWriter.Write (
-			new [] { ("xa_jni_remapping", (Stream)compressedStream), ("xa_second_blob", (Stream)uncompressedStream) },
+			new [] { ("remapping_data", (Stream)compressedStream), ("xa_second_blob", (Stream)uncompressedStream) },
 			elf, AndroidTargetArch.Arm64, "libbinary_blobs.so");
 		AssemblyStoreElfWriter.Validate (elf.ToArray (), AndroidTargetArch.Arm64, "libbinary_blobs.so",
-			new [] { ("xa_jni_remapping", compressed), ("xa_second_blob", uncompressed) });
+			new [] { ("remapping_data", compressed), ("xa_second_blob", uncompressed) });
 		Assert.AreEqual (1, BitConverter.ToUInt16 (compressed, 6));
 		Assert.AreEqual (0, BitConverter.ToUInt16 (uncompressed, 6));
 		JniRemappingBinaryBlob.Validate (compressed);

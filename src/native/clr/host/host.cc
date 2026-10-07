@@ -451,7 +451,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
 	static BinaryBlobPayload remapping = {};
-	remapping                                           = BinaryBlobLoader::load ("xa_jni_remapping");
+	remapping                                           = BinaryBlobLoader::load ("remapping_data");
 	init.jniRemappingData                               = &remapping;
 
 	// GC threshold is 90% of the max GREF count
