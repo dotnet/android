@@ -197,16 +197,17 @@ namespace Xamarin.Android.Build.Tests
 
 				AssertAppRuns ("r8-runtime-remap.log");
 
+				var aaptRules = Path.Combine (intermediate, "aapt_rules.txt");
+				string? originalAaptRules = null;
+				if (runtime == AndroidRuntime.NativeAOT) {
+					FileAssert.Exists (aaptRules);
+					originalAaptRules = File.ReadAllText (aaptRules);
+				}
 				Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
 				AssertR8Invocations (builder, 0, runtime);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"));
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					var aaptRules = Path.Combine (intermediate, "aapt_rules.txt");
-					FileAssert.Exists (aaptRules);
-					var originalAaptRules = File.ReadAllText (aaptRules);
-					Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
-					AssertR8Invocations (builder, 0, runtime);
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8Remapping"));
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8BinaryBlobs"));
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"));

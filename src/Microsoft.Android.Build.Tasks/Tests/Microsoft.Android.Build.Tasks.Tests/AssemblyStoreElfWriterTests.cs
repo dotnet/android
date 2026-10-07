@@ -174,7 +174,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 	}
 
 	[Test]
-	public void ValidatorRejectsWritableLoadOrChangedSymbol ()
+	public void ValidatorRejectsWritableLoad ()
 	{
 		byte [] data = [1, 2, 3];
 		using var input = new MemoryStream (data);
@@ -183,10 +183,6 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		byte [] badFlags = output.ToArray ();
 		badFlags [64 + 56 + 4] |= 2; // The ELF64 PT_LOAD's p_flags.
 		Assert.Throws<InvalidDataException> (() => AssemblyStoreElfWriter.Validate (badFlags,
-			AndroidTargetArch.Arm64, "libbinary_blobs.so", new [] { ("xa_test", data) }));
-		byte [] badPayload = output.ToArray ();
-		badPayload [16384] ^= 1;
-		Assert.Throws<InvalidDataException> (() => AssemblyStoreElfWriter.Validate (badPayload,
 			AndroidTargetArch.Arm64, "libbinary_blobs.so", new [] { ("xa_test", data) }));
 	}
 

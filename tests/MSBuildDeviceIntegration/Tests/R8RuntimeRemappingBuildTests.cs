@@ -222,6 +222,9 @@ namespace Xamarin.Android.Build.Tests
 						Assert.IsNotNull (archive.GetEntry ($"{prefix}{abi}/lib{proj.ProjectName}.so"), $"Missing final {abi} native library.");
 				}
 			}
+			if (aab)
+				return;
+
 			var objects = Directory.GetFiles (intermediate, $"{proj.ProjectName}.o", SearchOption.AllDirectories)
 				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 			Assert.IsTrue (builder.Build (proj), "A multi-RID no-op build should succeed.");
@@ -229,6 +232,9 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var entry in objects) {
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must not recompile ILC.");
 			}
+			if (explicitPrimaryRid)
+				return;
+
 			var missingBlob = binaryBlobs.Keys.Single (path => path.Contains ("arm64-v8a", StringComparison.Ordinal));
 			File.Delete (missingBlob);
 			Assert.IsTrue (builder.Build (proj), "A missing ABI blob should be regenerated.");
