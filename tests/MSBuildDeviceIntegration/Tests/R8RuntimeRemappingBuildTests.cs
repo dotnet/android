@@ -81,17 +81,22 @@ namespace Xamarin.Android.Build.Tests
 
 			proj.MainActivity = proj.MainActivity.Replace ("peer.First ()", "peer.First () + 1");
 			proj.Touch ("MainActivity.cs");
-			Assert.IsTrue (builder.Build (proj), "A managed-only change should rebuild without running R8.");
+			Assert.IsTrue (builder.Build (proj), "A managed-only change should follow the active ProGuard pipeline's incrementality.");
 			AssertTaskCount ("Csc", 1);
 			AssertTaskCount ("GenerateProguardConfiguration", obfuscation ? 1 : 0);
-			AssertTaskCount ("GenerateTypeMapProguardConfiguration", 0);
-			AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", 0);
-			AssertTaskCount ("R8", 0);
+			AssertTaskCount ("GenerateTypeMapProguardConfiguration", obfuscation ? 0 : 1);
+			AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", obfuscation ? 0 : 1);
+			AssertTaskCount ("R8", obfuscation ? 0 : 1);
 			Assert.AreEqual (originalRules, File.ReadAllText (rules));
-			Assert.AreEqual (originalTime, File.GetLastWriteTimeUtc (rules));
+			if (obfuscation) {
+				Assert.AreEqual (originalTime, File.GetLastWriteTimeUtc (rules));
+			} else {
+				Assert.Greater (File.GetLastWriteTimeUtc (rules), originalTime);
+			}
 			if (memberRules != null) {
 				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
-				Assert.AreEqual (originalMemberTime, File.GetLastWriteTimeUtc (memberRules));
+				Assert.Greater (File.GetLastWriteTimeUtc (memberRules), originalMemberTime);
+				originalMemberTime = File.GetLastWriteTimeUtc (memberRules);
 			}
 
 			Assert.IsTrue (builder.Build (proj));
@@ -118,15 +123,16 @@ namespace Xamarin.Android.Build.Tests
 				AssertTaskCount ("R8", 1);
 			} else {
 				AssertTaskCount ("GenerateProguardConfiguration", 0);
-				AssertTaskCount ("GenerateTypeMapProguardConfiguration", 0);
-				AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", 0);
-				AssertTaskCount ("R8", 0);
+				AssertTaskCount ("GenerateTypeMapProguardConfiguration", 1);
+				AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", 1);
+				AssertTaskCount ("R8", 1);
 				Assert.AreEqual (originalRules, File.ReadAllText (rules));
 				Assert.IsNotNull (memberRules);
 				if (memberRules == null) {
 					throw new AssertionException ("Scoped member rules were not generated.");
 				}
 				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
+				Assert.Greater (File.GetLastWriteTimeUtc (memberRules), originalMemberTime);
 			}
 
 			Assert.IsTrue (builder.Clean (proj));
