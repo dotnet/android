@@ -21,7 +21,7 @@ namespace Java.InteropTests
 
 		[TestCase (false)]
 		[TestCase (true)]
-		public void MalformedAssetIsRejectedEvenWhenLookupsAreDisabled (bool unsupportedVersion)
+		public void MalformedNativeAssetIsRejectedBeforeLookupInitialization (bool unsupportedVersion)
 		{
 			var bytes = new byte [unsupportedVersion ? 64 : 8];
 			if (unsupportedVersion) {
@@ -33,8 +33,8 @@ namespace Java.InteropTests
 			}
 			var handle = GCHandle.Alloc (bytes, GCHandleType.Pinned);
 			try {
-				Assert.Throws<InvalidDataException> (() => Microsoft.Android.Runtime.JniRemappingLookup.Initialize (
-					handle.AddrOfPinnedObject (), (uint)bytes.Length, enableLookups: false));
+				Assert.Throws<InvalidDataException> (() => Microsoft.Android.Runtime.JniRemappingAsset.FromNativeData (
+					handle.AddrOfPinnedObject (), (uint)bytes.Length));
 			} finally {
 				handle.Free ();
 			}

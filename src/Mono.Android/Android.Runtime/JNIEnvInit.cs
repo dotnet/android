@@ -123,7 +123,10 @@ namespace Android.Runtime
 
 			InitializeMaxGrefCounts (args);
 			try {
-				JniRemappingLookup.Initialize (args.jniRemappingData, args.jniRemappingDataLength, RuntimeFeature.JniRemapping);
+				var asset = JniRemappingAsset.FromNativeData (args.jniRemappingData, args.jniRemappingDataLength);
+				if (RuntimeFeature.JniRemapping) {
+					JniRemappingLookup.Initialize (asset);
+				}
 			} finally {
 				// The native host hands off temporary bytes; cached JNI pointers use our private pinned copy.
 				RuntimeNativeMethods.monodroid_free (args.jniRemappingData);

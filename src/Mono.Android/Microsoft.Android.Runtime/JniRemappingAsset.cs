@@ -85,6 +85,14 @@ internal sealed class JniRemappingAsset
 
 	internal bool IsEmpty => typeCount == 0 && reverseTypeCount == 0 && methodCount == 0 && fieldCount == 0;
 
+	internal static unsafe JniRemappingAsset FromNativeData (IntPtr data, uint length)
+	{
+		if (data == IntPtr.Zero || length == 0 || length > int.MaxValue)
+			throw new InvalidDataException ("JNI remapping asset data is missing or has an invalid length.");
+
+		return new JniRemappingAsset (new ReadOnlySpan<byte> ((void*)data, (int)length));
+	}
+
 	internal JniRemappingAsset (ReadOnlySpan<byte> data)
 	{
 		// Validate a private snapshot, never mutable caller-owned bytes.

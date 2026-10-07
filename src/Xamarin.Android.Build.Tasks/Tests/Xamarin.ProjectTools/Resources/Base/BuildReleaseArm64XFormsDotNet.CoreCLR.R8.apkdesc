@@ -4,6 +4,9 @@
     "AndroidManifest.xml": {
       "Size": 6768
     },
+    "assets/xa-internal/jni-remap.android-arm64.bin": {
+      "Size": 64
+    },
     "classes.dex": {
       "Size": 2489764
     },

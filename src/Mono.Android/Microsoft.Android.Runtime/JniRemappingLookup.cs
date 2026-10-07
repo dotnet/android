@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -32,22 +31,17 @@ static class JniRemappingLookup
 	static JniRemappingAsset? managedAsset;
 	static GCHandle pinnedAsset;
 
-	internal static unsafe void Initialize (IntPtr data, uint length, bool enableLookups)
+	internal static void Initialize (JniRemappingAsset asset)
 	{
-		if (data == IntPtr.Zero || length == 0 || length > int.MaxValue)
-			throw new InvalidDataException ("JNI remapping asset data is missing or has an invalid length.");
-
-		var parsed = new JniRemappingAsset (new ReadOnlySpan<byte> ((void*)data, (int)length));
-		if (!enableLookups)
-			return;
+		ArgumentNullException.ThrowIfNull (asset);
 
 		lock (initializationLock) {
 			if (managedAsset is not null)
 				throw new InvalidOperationException ("JNI remapping asset has already been initialized.");
 
 			// Java.Interop can retain these UTF-8 pointers for the entire runtime lifetime.
-			pinnedAsset = parsed.Pin ();
-			Volatile.Write (ref managedAsset, parsed);
+			pinnedAsset = asset.Pin ();
+			Volatile.Write (ref managedAsset, asset);
 		}
 	}
 

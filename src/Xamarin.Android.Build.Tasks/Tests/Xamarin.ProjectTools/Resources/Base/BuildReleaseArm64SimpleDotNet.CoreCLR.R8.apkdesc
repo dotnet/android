@@ -4,11 +4,14 @@
     "AndroidManifest.xml": {
       "Size": 2964
     },
+    "assets/xa-internal/jni-remap.android-arm64.bin": {
+      "Size": 64
+    },
     "classes.dex": {
-      "Size": 19232
+      "Size": 20432
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 2437584
+      "Size": 2442928
     },
     "lib/arm64-v8a/libclrjit.so": {
       "Size": 2835664
@@ -17,7 +20,7 @@
       "Size": 4740576
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 107304
+      "Size": 109168
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72256
@@ -59,5 +62,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 6522299
+  "PackageSize": 6530583
 }

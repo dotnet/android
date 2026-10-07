@@ -4,8 +4,11 @@
     "AndroidManifest.xml": {
       "Size": 6768
     },
+    "assets/xa-internal/jni-remap.android-arm64.bin": {
+      "Size": 64
+    },
     "classes.dex": {
-      "Size": 9090628
+      "Size": 9091640
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
