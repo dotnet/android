@@ -18,7 +18,16 @@ using namespace xamarin::android;
 namespace {
 	constexpr uint32_t blob_magic = 0x42424c42; // BLBB
 	constexpr uint32_t maximum_raw_size = 256 * 1024 * 1024;
-	constexpr size_t envelope_size = 16;
+
+	struct BlobHeader {
+		uint32_t magic;
+		uint16_t version;
+		uint16_t flags;
+		uint32_t stored;
+		uint32_t raw;
+	};
+	static_assert (sizeof (BlobHeader) == 16);
+	constexpr size_t envelope_size = sizeof (BlobHeader);
 
 	struct SymbolExtent {
 		const uint8_t *symbol;
@@ -58,14 +67,6 @@ namespace {
 		}
 		return 0;
 	}
-
-	template<typename T>
-	auto read_unaligned (const uint8_t *data) noexcept -> T
-	{
-		T value;
-		std::memcpy (&value, data, sizeof (value));
-		return value;
-	}
 }
 
 auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
@@ -88,33 +89,30 @@ auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
 			"Binary blob '%s' is not in a file-backed, read-only ELF load segment", symbol);
 	}
 
-	uint32_t magic = read_unaligned<uint32_t> (blob);
-	uint16_t version = read_unaligned<uint16_t> (blob + 4);
-	uint16_t flags = read_unaligned<uint16_t> (blob + 6);
-	uint32_t stored = read_unaligned<uint32_t> (blob + 8);
-	uint32_t raw = read_unaligned<uint32_t> (blob + 12);
-	if (magic != blob_magic || version != 1 || flags > 1 || stored == 0 ||
-	    raw == 0 || raw > maximum_raw_size || stored > extent.length - envelope_size ||
-	    (flags == 0 && stored != raw)) [[unlikely]] {
+	BlobHeader header;
+	std::memcpy (&header, blob, sizeof (header));
+	if (header.magic != blob_magic || header.version != 1 || header.flags > 1 || header.stored == 0 ||
+	    header.raw == 0 || header.raw > maximum_raw_size || header.stored > extent.length - envelope_size ||
+	    (header.flags == 0 && header.stored != header.raw)) [[unlikely]] {
 		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
 			"Invalid binary blob envelope or ELF extent for '%s'", symbol);
 	}
 
-	if (flags == 0) {
-		return { blob + envelope_size, raw };
+	if (header.flags == 0) {
+		return { blob + envelope_size, header.raw };
 	}
 
-	void *decoded = std::malloc (raw);
+	void *decoded = std::malloc (header.raw);
 	if (decoded == nullptr) [[unlikely]] {
 		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Cannot allocate %u bytes for binary blob '%s'", raw, symbol);
+			"Cannot allocate %u bytes for binary blob '%s'", header.raw, symbol);
 	}
-	size_t decompressed = ZSTD_decompress (decoded, raw, blob + envelope_size, stored);
-	if (ZSTD_isError (decompressed) || decompressed != raw) [[unlikely]] {
+	size_t decompressed = ZSTD_decompress (decoded, header.raw, blob + envelope_size, header.stored);
+	if (ZSTD_isError (decompressed) || decompressed != header.raw) [[unlikely]] {
 		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
 			"Cannot decode binary blob '%s': %s (expected %u bytes, got %zu)",
-			symbol, ZSTD_isError (decompressed) ? ZSTD_getErrorName (decompressed) : "wrong uncompressed size", raw, decompressed);
+			symbol, ZSTD_isError (decompressed) ? ZSTD_getErrorName (decompressed) : "wrong uncompressed size", header.raw, decompressed);
 	}
 	// The lookup returns pointers into the body, so neither the DSO nor a decoded buffer is released.
-	return { static_cast<const uint8_t*> (decoded), raw };
+	return { static_cast<const uint8_t*> (decoded), header.raw };
 }
