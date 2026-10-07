@@ -11,17 +11,10 @@ namespace Java.Interop
 		Copy                        = 1 << 0,                   // DoNotTransfer
 		// DisposeSource            = 1 << 1,                   // See JniObjectReference.DisposeSource
 		CopyAndDispose              = (1 << 1) + Copy,          // Transfer
-		// DoNotRegisterTarget      = 1 << 2,                   // See JniRuntime.JniValueManager.DoNotRegisterTarget
 		CopyAndDoNotRegister        = (1 << 2) + Copy,
 	}
 
 	partial struct JniObjectReference {
 		const       JniObjectReferenceOptions   DisposeSource       = (JniObjectReferenceOptions) (1 << 1);
-	}
-
-	partial class JniRuntime {
-		partial class ReflectionJniValueManager {
-			const   JniObjectReferenceOptions   DoNotRegisterTarget = (JniObjectReferenceOptions) (1 << 2);
-		}
 	}
 }

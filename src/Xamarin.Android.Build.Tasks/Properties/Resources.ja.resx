@@ -168,10 +168,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>'{0}' の $(TargetFrameworkVersion) 値がサポートされていないか、無効です。プロジェクトのオプションを更新してください。</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
-  <data name="XA0002" xml:space="preserve">
-    <value>mono.android.jar が見つかりませんでした</value>
-    <comment>The following are literal names and should not be translated: mono.android.jar</comment>
-  </data>
   <data name="XA0003" xml:space="preserve">
     <value>`AndroidManifest.xml` の `android:versionCode` の値 `{0}` が無効です。整数値である必要があります。</value>
     <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</comment>
@@ -1113,6 +1109,10 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>'AndroidR8ObfuscationMode' MSBuild プロパティの値 '{0}' が無効です。有効な値は 'disabled' と 'private-members' です。</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
+  <data name="XA1051" xml:space="preserve">
+    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java 依存関係 '{0}' が満たされていません。</value>

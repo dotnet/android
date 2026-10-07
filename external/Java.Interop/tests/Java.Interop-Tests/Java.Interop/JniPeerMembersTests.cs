@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniPeerMembersTests : JavaVMFixture
+	public class JniPeerMembersTests
 	{
 		[Test]
 		public void Ctor_CanReferenceNonexistentType ()
@@ -173,7 +173,7 @@ namespace Java.InteropTests
 		}
 
 #if !__ANDROID__
-		// These tests use JavaVMFixture's custom JniTypeManager, which Android does not support.
+		// These remapping tests are not supported by the Android type manager.
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]

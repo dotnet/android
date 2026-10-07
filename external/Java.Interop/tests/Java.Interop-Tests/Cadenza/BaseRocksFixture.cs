@@ -36,7 +36,7 @@ using Cadenza;
 
 namespace Cadenza.Tests {
 
-	public abstract class BaseRocksFixture : Java.InteropTests.JavaVMFixture {
+	public abstract class BaseRocksFixture {
 
 		public void AssertAreSame<T> (IEnumerable<T> expected, IEnumerable<T> data)
 		{

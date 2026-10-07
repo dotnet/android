@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniTypeManagerTests : JavaVMFixture
+	public class JniTypeManagerTests
 	{
 		[Test]
 		public void GetTypeSignature_Type ()

@@ -1,6 +1,5 @@
-using System;
 using System.IO;
-using System.Linq;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -51,66 +50,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase ("disabled", true, false)]
-		[TestCase ("private-members", false, false)]
-		[TestCase ("runtime-remapping", false, false)]
-		[TestCase ("disabled", true, true)]
-		[TestCase ("private-members", false, true)]
-		[TestCase ("runtime-remapping", false, true)]
-		public void GenerateCommonXamarinConfiguration_RespectsObfuscationMode (string obfuscationMode, bool expectDontObfuscate, bool nativeAot)
-		{
-			var path = Path.GetTempFileName ();
-			try {
-				var task = new R8 {
-					BuildEngine = new MockBuildEngine (TestContext.Out),
-					ObfuscationMode = obfuscationMode,
-					UseTrimmableNativeAotProguardConfiguration = nativeAot,
-					ProguardCommonXamarinConfiguration = path,
-				};
-				task.GenerateCommonXamarinConfiguration ();
-
-				var lines = File.ReadAllLines (path);
-				Assert.AreEqual (expectDontObfuscate, lines.Any (l => l.Trim () == "-dontobfuscate"),
-					"Only disabled mode should prevent all obfuscation.");
-				Assert.IsTrue (lines.Any (l => l.Contains ("-keep class net.dot.jni.")),
-					"Shared bootstrap rules must survive.");
-				Assert.AreEqual (obfuscationMode == "private-members",
-					lines.Contains ("-keep,allowshrinking,allowoptimization class **"));
-				Assert.AreEqual (obfuscationMode == "runtime-remapping",
-					lines.Contains ("-keepclassmembernames interface * { *; }"),
-					"Remapping-specific rules must not change the existing modes.");
-				Assert.AreEqual (obfuscationMode == "runtime-remapping",
-					lines.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }"),
-					"Runtime remapping must preserve Java native callback names and descriptor types.");
-				CollectionAssert.Contains (lines, "-keep class net.dot.android.ApplicationRegistration { *; }");
-				if (nativeAot) {
-					CollectionAssert.Contains (lines, "-keep class mono.android.IGCUserPeer { *; }");
-					if (obfuscationMode == "runtime-remapping") {
-						CollectionAssert.Contains (lines, "-keep class mono.android.Runtime { *; }");
-						CollectionAssert.Contains (lines, "-keep class mono.android.GCUserPeer { <init>(); }");
-					}
-				}
-			} finally {
-				File.Delete (path);
-			}
-		}
-
-		[Test]
-		public void GenerateCommonXamarinConfiguration_RejectsUnknownObfuscationMode ()
-		{
-			var path = Path.GetTempFileName ();
-			var task = new R8 {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				ObfuscationMode = "unknown",
-				ProguardCommonXamarinConfiguration = path,
-			};
-			try {
-				Assert.Throws<InvalidOperationException> (() => task.GenerateCommonXamarinConfiguration ());
-			} finally {
-				File.Delete (path);
-			}
-		}
-
 		[Test]
 		public void WritePrivateMemberObfuscationRules ()
 		{
@@ -138,6 +77,116 @@ namespace Xamarin.Android.Build.Tests
 			R8.WriteObfuscationRules (writer, "disabled");
 
 			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
+		}
+
+		[Test]
+		public void WriteRuntimeRemappingRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "runtime-remapping");
+
+			var rules = writer.ToString ();
+			StringAssert.DoesNotContain ("-dontobfuscate", rules);
+			StringAssert.Contains ("-keepclassmembernames interface * { *; }", rules);
+			StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", rules);
+			StringAssert.Contains ("-keep class mono.android.Runtime { *; }", rules);
+		}
+
+		[Test]
+		public void RuntimeRemappingKeepsAcwsRenameable ()
+		{
+			var task = new R8 {
+				ObfuscationMode = "runtime-remapping",
+			};
+
+			Assert.AreEqual ("-keep,allowobfuscation", task.KeepOption);
+		}
+
+		[Test]
+		public void RuntimeRemappingDoesNotDisableTypeMapMinification ()
+		{
+			var directory = Path.Combine (Path.GetTempPath (), "R8RuntimeRemapping_" + System.Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (directory);
+			try {
+				var source = Path.Combine (directory, "UserSource.java");
+				File.WriteAllText (source, "package example;\npublic class UserSource {}");
+				var task = new R8ResponseTestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					UseTypeMapProguardConfiguration = true,
+					UseScopedTypeMapMembers = true,
+					EnableShrinking = true,
+					ObfuscationMode = "runtime-remapping",
+					JavaSourceFiles = [new TaskItem (source)],
+					JavaPlatformJarPath = Path.Combine (directory, "android.jar"),
+					ProguardGeneratedApplicationConfiguration = Path.Combine (directory, "primary.cfg"),
+					ProguardCommonXamarinConfiguration = Path.Combine (directory, "common.cfg"),
+					ResponseFile = Path.Combine (directory, "r8.rsp"),
+				};
+
+				var response = task.WriteResponse ();
+				StringAssert.DoesNotContain ("--no-minification", response);
+				StringAssert.Contains ("-keep,allowobfuscation class example.UserSource { *; }", File.ReadAllText (task.ProguardGeneratedApplicationConfiguration));
+				StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", File.ReadAllText (task.ProguardCommonXamarinConfiguration));
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void RetainedTypeMapRulesDoNotRootAllAcwsOrObfuscatePrivateMembers (bool scopedMembers)
+		{
+			var directory = Path.Combine (Path.GetTempPath (), "R8TypeMap_" + System.Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (directory);
+			try {
+				var map = Path.Combine (directory, "acw-map.txt");
+				File.WriteAllText (map, "Unused.Type;unused.Wrapper\n");
+				var source = Path.Combine (directory, "UserSource.java");
+				File.WriteAllText (source, "package example;\npublic class UserSource {}");
+				var task = new R8ResponseTestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					UseTypeMapProguardConfiguration = true,
+					UseScopedTypeMapMembers = scopedMembers,
+					EnableShrinking = true,
+					ObfuscationMode = "private-members",
+					AcwMapFile = map,
+					JavaSourceFiles = [new TaskItem (source)],
+					JavaPlatformJarPath = Path.Combine (directory, "android.jar"),
+					ProguardGeneratedApplicationConfiguration = Path.Combine (directory, "primary.cfg"),
+					ProguardCommonXamarinConfiguration = Path.Combine (directory, "common.cfg"),
+					ResponseFile = Path.Combine (directory, "r8.rsp"),
+				};
+				var response = task.WriteResponse ();
+				StringAssert.Contains ("--no-minification", response);
+				StringAssert.DoesNotContain ("--no-tree-shaking", response);
+				var primary = File.ReadAllText (task.ProguardGeneratedApplicationConfiguration);
+				StringAssert.DoesNotContain ("unused.Wrapper", primary);
+				StringAssert.Contains ("-keep class example.UserSource { *; }", primary);
+				var common = File.ReadAllText (task.ProguardCommonXamarinConfiguration);
+				StringAssert.Contains ("-dontobfuscate", common);
+				StringAssert.DoesNotContain ("-keep,allowshrinking,allowoptimization class **", common);
+				StringAssert.DoesNotContain ("-keep class mono.android.**", common);
+				if (scopedMembers) {
+					StringAssert.DoesNotContain ("-keepclassmembers class * {", common);
+					StringAssert.Contains ("-keep class mono.android.Runtime { *; }", common);
+					StringAssert.Contains ("-keep class net.dot.jni.ManagedPeer { *; }", common);
+					StringAssert.Contains ("-keep interface mono.android.IGCUserPeer { *; }", common);
+					StringAssert.Contains ("-keep,allowshrinking class * implements **", common);
+				} else {
+					StringAssert.Contains ("-keepclassmembers class * {", common);
+				}
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		sealed class R8ResponseTestTask : R8
+		{
+			public string ResponseFile { get; set; } = "";
+
+			protected override string CreateResponseFilePath () => ResponseFile;
+
+			public string WriteResponse () => File.ReadAllText (CreateResponseFile ());
 		}
 	}
 }

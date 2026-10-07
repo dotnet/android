@@ -10,10 +10,9 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
-	public class JniTypeUtf8Test : JavaVMFixture {
+	public class JniTypeUtf8Test {
 
 		const string JniReferenceLeakCategory = "JniReferenceLeak";
-		const int LeakCheckIterations = 100;
 
 		[Test]
 		public unsafe void Sanity_Utf8 ()
@@ -121,9 +120,11 @@ namespace Java.InteropTests
 			var objectClass = JniEnvironment.Types.FindClass ("java/lang/Object");
 			var retainedReferences = new List<JniObjectReference> ();
 			try {
-				Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
+				var error = Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
 					retainedReferences.Add (objectClass.NewGlobalRef ());
 				}));
+				Assert.That (error?.Message, Does.Contain ("Operation should not leak global references"));
+				Assert.That (error?.Message, Does.Contain ("Delta=100"));
 			} finally {
 				foreach (var retainedReference in retainedReferences) {
 					var reference = retainedReference;
@@ -135,37 +136,7 @@ namespace Java.InteropTests
 
 		static void AssertNoSustainedGlobalReferenceGrowth (Action action)
 		{
-			for (int i = 0; i < LeakCheckIterations; i++) {
-				action ();
-			}
-			CollectPeers ();
-
-			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
-			for (int i = 0; i < LeakCheckIterations; i++) {
-				action ();
-			}
-			CollectGarbage ();
-			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
-
-			Assert.LessOrEqual (grefsAfter, grefsBefore,
-				$"Operation should not leak global references after {LeakCheckIterations} iterations. " +
-				$"Before={grefsBefore}, After={grefsAfter}, Delta={grefsAfter - grefsBefore}");
-		}
-
-		static void CollectPeers ()
-		{
-			CollectGarbage ();
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
-			CollectGarbage ();
-		}
-
-		static void CollectGarbage ()
-		{
-			for (int i = 0; i < 3; i++) {
-				GC.Collect ();
-				GC.WaitForPendingFinalizers ();
-			}
+			JniReferenceLeakMeasurement.AssertNoSustainedGlobalReferenceGrowth (action);
 		}
 
 		[Test]

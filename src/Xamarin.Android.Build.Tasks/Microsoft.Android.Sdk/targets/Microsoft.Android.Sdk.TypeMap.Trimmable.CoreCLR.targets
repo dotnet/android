@@ -164,7 +164,7 @@
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
       DependsOnTargets="_AndroidInvalidateProguardConfigurationStamp"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and ('$(AndroidLinkTool)' != 'r8' or '$(_AndroidEnableTypemapR8Trimming)' == 'false' or '$(RunILLink)' == 'false') "
       Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration).stamp">
     <GenerateProguardConfiguration

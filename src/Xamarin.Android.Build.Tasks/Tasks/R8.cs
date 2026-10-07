@@ -36,7 +36,8 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardMappingFileOutput { get; set; }
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
-		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
+		public bool UseTypeMapProguardConfiguration { get; set; }
+		public bool UseScopedTypeMapMembers { get; set; }
 		public string ObfuscationMode { get; set; } = "private-members";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
@@ -161,18 +162,22 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
-					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
+				bool runtimeRemapping = string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase);
+				if (UseTypeMapProguardConfiguration && !runtimeRemapping) {
+					WriteArg (response, "--no-minification");
+				}
+				if (UseTypeMapProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					// Class roots come from retained typemap keys, not the complete ACW map.
+					// User-authored AndroidJavaSource (Bind != true) has no managed peer
 					// and is absent from that map, so keep it here explicitly; otherwise R8 shrinks it away
 					// (e.g. dropping large unreferenced sources so an app that needs multidex no longer does).
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
-						appcfg.WriteLine ("# ACW keep rules are generated from NativeAOT ILC metadata.");
+						appcfg.WriteLine ("# Class keep rules are generated from retained typemap keys.");
 						foreach (var java in GetUserJavaTypes ()) {
 							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
-				} else if (!AcwMapFile.IsNullOrEmpty ()) {
+				} else if (!UseTypeMapProguardConfiguration && !AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {
@@ -190,7 +195,28 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				GenerateCommonXamarinConfiguration ();
+				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
+					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
+						WriteObfuscationRules (xamcfg, UseTypeMapProguardConfiguration && !runtimeRemapping ? "disabled" : ObfuscationMode);
+						xamcfg.WriteLine ();
+						xamcfg.Flush ();
+						if (UseTypeMapProguardConfiguration) {
+							using var stream = GetEmbeddedResourceStream (UseScopedTypeMapMembers ? "proguard_typemap_coreclr.cfg" : "proguard_typemap.cfg");
+							stream.CopyTo (xamcfg.BaseStream);
+						} else {
+							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
+							stream.CopyTo (xamcfg.BaseStream);
+						}
+						if (IgnoreWarnings) {
+							xamcfg.WriteLine ("-ignorewarnings");
+						}
+						if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
+							xamcfg.WriteLine ("-keepattributes SourceFile");
+							xamcfg.WriteLine ("-keepattributes LineNumberTable");
+							xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
+						}
+					}
+				}
 			} else {
 				//NOTE: we may be calling r8 *only* for multi-dex, and all shrinking is disabled
 				WriteArg (response, "--no-tree-shaking");
@@ -235,36 +261,7 @@ namespace Xamarin.Android.Tasks
 			return responseFile;
 		}
 
-		/// <summary>
-		/// The keep option used for the generated Java Callable Wrapper keep rules. When the JNI
-		/// names are remapped at runtime the wrappers must survive shrinking but stay renameable,
-		/// otherwise a plain <c>-keep</c> pins their names and prevents obfuscation.
-		/// </summary>
 		internal string KeepOption => string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase) ? "-keep,allowobfuscation" : "-keep";
-
-		internal void GenerateCommonXamarinConfiguration ()
-		{
-			if (ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
-				return;
-			}
-
-			using var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration);
-			WriteObfuscationRules (xamcfg, ObfuscationMode);
-			xamcfg.WriteLine ();
-			xamcfg.Flush ();
-			string resourceName = UseTrimmableNativeAotProguardConfiguration ? "proguard_trimmable_nativeaot.cfg" : "proguard_xamarin.cfg";
-			using (Stream resource = GetEmbeddedResourceStream (resourceName)) {
-				resource.CopyTo (xamcfg.BaseStream);
-			}
-			if (IgnoreWarnings) {
-				xamcfg.WriteLine ("-ignorewarnings");
-			}
-			if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
-				xamcfg.WriteLine ("-keepattributes SourceFile");
-				xamcfg.WriteLine ("-keepattributes LineNumberTable");
-				xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
-			}
-		}
 
 		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
 		{
@@ -370,7 +367,7 @@ namespace Xamarin.Android.Tasks
 
 		Stream GetEmbeddedResourceStream (string resourceName)
 		{
-			var stream = GetType ().Assembly.GetManifestResourceStream (resourceName);
+			var stream = typeof (R8).Assembly.GetManifestResourceStream (resourceName);
 			if (stream == null) {
 				throw new InvalidOperationException ($"Missing embedded resource '{resourceName}'.");
 			}

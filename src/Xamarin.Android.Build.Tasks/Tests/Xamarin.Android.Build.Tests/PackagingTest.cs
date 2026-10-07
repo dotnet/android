@@ -169,7 +169,9 @@ namespace Xamarin.Android.Build.Tests
 					using var stream = metadata.Open ();
 					using var document = JsonDocument.Parse (stream);
 					var options = document.RootElement.GetProperty ("options");
-					Assert.AreEqual (obfuscationMode != "disabled", options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
+					Assert.AreEqual (
+						runtime == AndroidRuntime.CoreCLR || obfuscationMode != "disabled",
+						options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");

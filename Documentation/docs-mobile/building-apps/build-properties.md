@@ -1196,6 +1196,13 @@ Conservative keep rules still protect native callbacks, bootstrap code, and
 resource-referenced names. No mode falls back to another mode; unrecognized
 values report [XA1050](../messages/xa1050.md) when R8 is enabled.
 
+When managed-trimmed CoreCLR builds use retained typemap rules, all Java
+names are preserved regardless of this setting, but R8 optimization remains
+enabled. This path uses the optimizing Android defaults together with
+`-dontobfuscate` and `--no-minification`; disabling renaming does not disable
+optimization. The `runtime-remapping` mode uses its own renameable retention
+policy instead of this no-minification path.
+
 ## AndroidResgenExtraArgs
 
 Specifies
@@ -2099,6 +2106,19 @@ For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
 
 [maui-runtimes-compilation]: /dotnet/maui/deployment/runtimes-compilation
+
+## UseNativeHttpHandler
+
+A boolean property that selects the default HTTP handler used by
+`System.Net.Http.HttpClientHandler`. Set it to `true` to use
+`Xamarin.Android.Net.AndroidMessageHandler` or `false` to use
+`System.Net.Http.SocketsHttpHandler`.
+
+Starting with .NET 12, the default is `false`. In .NET 11 and earlier,
+the default is `true`. An explicitly configured value takes precedence.
+
+`AndroidMessageHandler` is obsolete starting with .NET 12. Use
+`SocketsHttpHandler` instead.
 
 ## WaitForExit
 

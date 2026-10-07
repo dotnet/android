@@ -36,13 +36,6 @@ namespace xamarin::android {
 		const JniRemappingData *jniRemappingData;
 		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
-		const char      *grefLogPath;
-		const char      *lrefLogPath;
-		const char      *referenceLogDirectory;
-		uint8_t         lightGref;
-		uint8_t         lightLref;
-		uint8_t         grefToLogcat;
-		uint8_t         lrefToLogcat;
 		int              maxGrefCount;
 	};
 

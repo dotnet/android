@@ -64,11 +64,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (null, "private-members", "false")]
-		[TestCase ("private-members", "private-members", "false")]
-		[TestCase ("disabled", "disabled", "false")]
-		[TestCase ("runtime-remapping", "runtime-remapping", "true")]
-		public void R8ObfuscationDefaults (string? mode, string expectedMode, string expectedRemapping)
+		[TestCase (null, "private-members", "false", "")]
+		[TestCase ("private-members", "private-members", "false", "")]
+		[TestCase ("disabled", "disabled", "false", "")]
+		[TestCase ("runtime-remapping", "runtime-remapping", "true", "false")]
+		public void R8ObfuscationDefaults (string? mode, string expectedMode, string expectedRemapping, string expectedTypeMapR8Trimming)
 		{
 			var project = new XamarinAndroidApplicationProject { IsRelease = true };
 			project.SetRuntime (AndroidRuntime.CoreCLR);
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 				TextContent = () => """
 					<Project>
 					  <Target Name="ReportR8Options" DependsOnTargets="_ValidateAndroidR8ObfuscationMode">
-					    <Message Importance="High" Text="R8_OPTIONS=$(AndroidR8ObfuscationMode)|$(_AndroidR8RuntimeRemappingEnabled)" />
+					    <Message Importance="High" Text="R8_OPTIONS=$(AndroidR8ObfuscationMode)|$(_AndroidR8RuntimeRemappingEnabled)|$(_AndroidEnableTypemapR8Trimming)" />
 					  </Target>
 					</Project>
 					""",
@@ -89,7 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			builder.Target = "ReportR8Options";
 			Assert.IsTrue (builder.Build (project));
-			StringAssertEx.Contains ($"R8_OPTIONS={expectedMode}|{expectedRemapping}", builder.LastBuildOutput);
+			StringAssertEx.Contains ($"R8_OPTIONS={expectedMode}|{expectedRemapping}|{expectedTypeMapR8Trimming}", builder.LastBuildOutput);
 		}
 
 		[TestCase ("AndroidLinkTool", "d8", "AndroidLinkTool")]

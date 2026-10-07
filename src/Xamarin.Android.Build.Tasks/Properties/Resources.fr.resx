@@ -168,10 +168,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Valeur '{0}' non prise en charge ou non valide pour $(TargetFrameworkVersion). Mettez à jour les options du projet.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
-  <data name="XA0002" xml:space="preserve">
-    <value>Fichier mono.android.jar introuvable</value>
-    <comment>The following are literal names and should not be translated: mono.android.jar</comment>
-  </data>
   <data name="XA0003" xml:space="preserve">
     <value>Valeur '{0}' de 'android:versionCode' non valide dans 'AndroidManifest.xml'. Il doit s'agir d'une valeur entière.</value>
     <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</comment>
@@ -1113,6 +1109,10 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <value>La propriété MSBuild « AndroidR8ObfuscationMode » a une valeur non valide de '{0}'. Les valeurs valides sont « disabled » et « private-members ».</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
+  <data name="XA1051" xml:space="preserve">
+    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dépendance Java « {0} » n’est pas satisfaite.</value>
