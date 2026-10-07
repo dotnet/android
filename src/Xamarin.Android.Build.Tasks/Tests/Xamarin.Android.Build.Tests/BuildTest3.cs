@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -232,15 +231,8 @@ public partial class BuildTest3 : BaseTest
 		Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 		string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-		List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
-			objDirPath,
-			String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
-			true
-		);
-
-		EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
-		uint numberOfDsoCacheEntries = app_config.number_of_dso_cache_entries;
-
-		return EnvironmentHelper.ReadJniPreloads (envFiles, numberOfDsoCacheEntries);
+		return new List<EnvironmentHelper.JniPreloads> {
+			EnvironmentHelper.ReadCoreClrBootstrap (objDirPath).Preloads,
+		};
 	}
 }

@@ -9,6 +9,7 @@
 #include <xamarin-app.hh>
 #include <host/host-environment-clr.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/coreclr-bootstrap.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/util.hh>
@@ -422,22 +423,20 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 void
 AndroidSystem::setup_environment () noexcept
 {
-	if (application_config.environment_variable_count > 0) {
-		log_debugf (LOG_DEFAULT, "Setting environment variables (%u)", application_config.environment_variable_count);
-		HostEnvironment::set_values<HostEnvironment::set_variable> (
-            application_config.environment_variable_count,
-            app_environment_variables,
-            app_environment_variable_contents
-        );
+	if (CoreClrBootstrap::config.environment_variable_count > 0) {
+		log_debugf (LOG_DEFAULT, "Setting environment variables (%u)", CoreClrBootstrap::config.environment_variable_count);
+		for (uint32_t i = 0; i < CoreClrBootstrap::config.environment_variable_count; i++) {
+			AppEnvironmentVariable entry = CoreClrBootstrap::pair (false, i);
+			HostEnvironment::set_variable (CoreClrBootstrap::string (entry.name_index), CoreClrBootstrap::string (entry.value_index, false));
+		}
 	}
 
-	if (application_config.system_property_count > 0) {
-		log_debugf (LOG_DEFAULT, "Setting system properties (%u)", application_config.system_property_count);
-		HostEnvironment::set_values<HostEnvironment::set_system_property> (
-            application_config.system_property_count,
-            app_system_properties,
-            app_system_property_contents
-        );
+	if (CoreClrBootstrap::config.system_property_count > 0) {
+		log_debugf (LOG_DEFAULT, "Setting system properties (%u)", CoreClrBootstrap::config.system_property_count);
+		for (uint32_t i = 0; i < CoreClrBootstrap::config.system_property_count; i++) {
+			AppEnvironmentVariable entry = CoreClrBootstrap::pair (true, i);
+			HostEnvironment::set_system_property (CoreClrBootstrap::string (entry.name_index), CoreClrBootstrap::string (entry.value_index, false));
+		}
 	}
 
 #if defined(DEBUG)
@@ -490,17 +489,19 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 	}
 #endif // DEBUG
 
-	if (application_config.system_property_count == 0) {
+	if (CoreClrBootstrap::config.system_property_count == 0) {
 		return nullptr;
 	}
 
-	return HostEnvironment::lookup_system_property (
-		name,
-		value_len,
-		application_config.system_property_count,
-		app_system_properties,
-		app_system_property_contents
-	);
+	for (uint32_t i = 0; i < CoreClrBootstrap::config.system_property_count; i++) {
+		AppEnvironmentVariable entry = CoreClrBootstrap::pair (true, i);
+		if (std::strcmp (name, CoreClrBootstrap::string (entry.name_index)) == 0) {
+			const char *value = CoreClrBootstrap::string (entry.value_index, false);
+			value_len = std::strlen (value);
+			return value;
+		}
+	}
+	return nullptr;
 }
 
 auto AndroidSystem::format_full_dso_path (const char *base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t

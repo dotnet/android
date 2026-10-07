@@ -6,6 +6,7 @@ using System.IO;
 
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks.LLVMIR;
@@ -124,6 +125,7 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	SortedDictionary <string, string>? environmentVariables;
 	SortedDictionary <string, string>? systemProperties;
 	SortedDictionary <string, string>? runtimeProperties;
+	DsoCacheState? bootstrapDsoState;
 	StructureInstance? application_config;
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - assigned conditionally by build process
@@ -144,6 +146,7 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
 	public bool HaveAssemblyStore { get; set; }
+	public bool CoreClrBootstrap { get; set; }
 
 	public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties,
 		IDictionary<string, string>? runtimeProperties, TaskLoggingHelper log)
@@ -182,7 +185,7 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 		var envVarsBlob = new LlvmIrStringBlob ();
 		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appEnvVars = LlvmIrHelpers.MakeEnvironmentVariableList (
 			Log,
-			environmentVariables,
+			CoreClrBootstrap ? null : environmentVariables,
 			envVarsBlob,
 			appEnvironmentVariableStructureInfo
 		);
@@ -198,7 +201,7 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 		var sysPropsBlob = new LlvmIrStringBlob ();
 		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appSysProps = LlvmIrHelpers.MakeEnvironmentVariableList (
 			Log,
-			systemProperties,
+			CoreClrBootstrap ? null : systemProperties,
 			sysPropsBlob,
 			appEnvironmentVariableStructureInfo
 		);
@@ -210,19 +213,22 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 		module.Add (sysProps);
 		module.AddGlobalVariable ("app_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
 
-		DsoCacheState dsoState = InitDSOCache ();
+		bootstrapDsoState = InitDSOCache ();
+		DsoCacheState dsoState = CoreClrBootstrap ? new DsoCacheState {
+			NamesBlob = new LlvmIrStringBlob (),
+		} : bootstrapDsoState;
 		var app_cfg = new ApplicationConfig {
-			ignore_split_configs = IgnoreSplitConfigs,
-			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
-			package_naming_policy = (uint)PackageNamingPolicy,
-			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count),
+			ignore_split_configs = !CoreClrBootstrap && IgnoreSplitConfigs,
+			number_of_runtime_properties = CoreClrBootstrap ? 3u : (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
+			package_naming_policy = CoreClrBootstrap ? 0u : (uint)PackageNamingPolicy,
+			environment_variable_count = (uint)(CoreClrBootstrap || environmentVariables == null ? 0 : environmentVariables.Count),
 			system_property_count = (uint)(appSysProps.Count),
-			number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
-			number_of_shared_libraries = (uint)NativeLibraries.Count,
-			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
+			number_of_assemblies_in_apk = CoreClrBootstrap ? 0u : (uint)NumberOfAssembliesInApk,
+			number_of_shared_libraries = CoreClrBootstrap ? 0u : (uint)NativeLibraries.Count,
+			bundled_assembly_name_width = CoreClrBootstrap ? 0u : (uint)BundledAssemblyNameWidth,
 			number_of_dso_cache_entries = (uint)dsoState.DsoCache.Count,
-			android_package_name = AndroidPackageName,
-			have_assembly_store = HaveAssemblyStore,
+			android_package_name = CoreClrBootstrap ? "com.xamarin.test" : AndroidPackageName,
+			have_assembly_store = !CoreClrBootstrap && HaveAssemblyStore,
 		};
 		application_config = new StructureInstance<ApplicationConfig> (applicationConfigStructureInfo, app_cfg);
 		module.AddGlobalVariable ("application_config", application_config);
@@ -272,13 +278,14 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 			null,
 		};
 
-		if (runtimeProperties != null) {
+		if (runtimeProperties != null && !CoreClrBootstrap) {
 			foreach (var kvp in runtimeProperties) {
 				if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT) ||
 						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_IDENTIFIER) ||
 						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY)) {
 					continue;
 				}
+
 				runtime_property_names.Add (kvp.Key);
 				runtime_property_values.Add (kvp.Value);
 			}
@@ -294,6 +301,52 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 		};
 		module.Add (init_runtime_property_values);
 
+	}
+
+	public byte [] CreateCoreClrBootstrap ()
+	{
+		if (!CoreClrBootstrap || bootstrapDsoState == null || environmentVariables == null ||
+			systemProperties == null || runtimeProperties == null) {
+			throw new InvalidOperationException ("CoreCLR bootstrap configuration has not been constructed.");
+		}
+
+		var state = bootstrapDsoState;
+		foreach (var entry in state.DsoCache) {
+			if (entry.Instance == null) {
+				throw new InvalidOperationException ("The CoreCLR DSO cache contains a null entry.");
+			}
+			entry.Instance.hash = TypeMapHelper.HashNameForCLR (entry.Instance.HashedName ?? "");
+		}
+		state.DsoCache.Sort ((a, b) => {
+			var left = a.Instance;
+			var right = b.Instance;
+			if (left == null || right == null) {
+				throw new InvalidOperationException ("The CoreCLR DSO cache contains a null entry.");
+			}
+			return left.hash.CompareTo (right.hash);
+		});
+		var libraries = new List<(uint Hash, bool Ignore, bool IsJniLibrary, string Name)> ();
+		foreach (var entry in state.DsoCache) {
+			var item = entry.Instance;
+			if (item == null || item.RealName == null) {
+				throw new InvalidOperationException ("The CoreCLR DSO cache contains a library without a name.");
+			}
+			libraries.Add ((item.hash, item.ignore, item.is_jni_library, item.RealName));
+		}
+		var preloads = new List<uint> ();
+		foreach (var entry in state.JniPreloadDSOs) {
+			int index = state.DsoCache.FindIndex (item => ReferenceEquals (item.Instance, entry));
+			if (index < 0) {
+				throw new InvalidOperationException ("The CoreCLR JNI preload entry was not found in the DSO cache.");
+			}
+			preloads.Add ((uint)index);
+		}
+		return CoreClrBootstrapBlob.Create (
+			IgnoreSplitConfigs, HaveAssemblyStore, (uint)PackageNamingPolicy,
+			(uint)NumberOfAssembliesInApk, (uint)BundledAssemblyNameWidth, (uint)NativeLibraries.Count,
+			AndroidPackageName, environmentVariables, systemProperties, runtimeProperties,
+			libraries, preloads, state.NameMutationsCount
+		);
 	}
 
 	string? GetPreloadIndicesLibraryName (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)

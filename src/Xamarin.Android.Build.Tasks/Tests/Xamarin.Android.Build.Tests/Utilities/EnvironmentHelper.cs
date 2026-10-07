@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -80,6 +81,62 @@ namespace Xamarin.Android.Build.Tests
 			public uint IndexStride;
 			public List<JniPreloadsEntry> Entries;
 			public string SourceFile;
+		}
+
+		public static (ApplicationConfig Config, JniPreloads Preloads) ReadCoreClrBootstrap (string intermediateDirectory)
+		{
+			string [] files = Directory.GetFiles (intermediateDirectory, "coreclr-bootstrap.bin", SearchOption.AllDirectories);
+			Assert.AreEqual (1, files.Length, "Expected one shared CoreCLR bootstrap intermediate.");
+			string path = files [0];
+			byte [] data = File.ReadAllBytes (path);
+			uint Read (uint offset) => BinaryPrimitives.ReadUInt32LittleEndian (data.AsSpan (checked ((int)offset), 4));
+
+			Assert.GreaterOrEqual (data.Length, 84);
+			Assert.AreEqual (0x47464358u, Read (0));
+			Assert.AreEqual (1, BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (4, 2)));
+			Assert.AreEqual ((uint)data.Length, Read (8));
+			uint dsoCount = Read (24);
+			uint preloadCount = Read (32);
+			uint preloadStride = Read (36);
+			uint dsoOffset = Read (52);
+			uint preloadOffset = Read (56);
+			uint stringsOffset = Read (60);
+			Assert.AreEqual ((ulong)84 + (ulong)(Read (12) + Read (16) + Read (20)) * 8, (ulong)dsoOffset);
+			Assert.AreEqual ((ulong)dsoOffset + (ulong)dsoCount * 12, (ulong)preloadOffset);
+			Assert.AreEqual ((ulong)preloadOffset + (ulong)preloadCount * 4, (ulong)stringsOffset);
+			Assert.Greater (preloadStride, 0);
+			Assert.AreEqual (0u, preloadCount % preloadStride);
+
+			string ReadName (uint offset)
+			{
+				Assert.Greater (offset, stringsOffset);
+				Assert.Less (offset, (uint)data.Length);
+				int end = Array.IndexOf (data, (byte)0, checked ((int)offset));
+				Assert.Greater (end, (int)offset);
+				return Encoding.UTF8.GetString (data, checked ((int)offset), end - checked ((int)offset));
+			}
+
+			var config = new ApplicationConfig {
+				number_of_dso_cache_entries = dsoCount,
+				number_of_assemblies_in_apk = Read (72),
+				number_of_shared_libraries = Read (28),
+				android_package_name = ReadName (Read (80)),
+				have_assembly_store = (data [6] & 2) != 0,
+			};
+			var preloads = new JniPreloads {
+				IndexStride = preloadStride,
+				Entries = new List<JniPreloadsEntry> (),
+				SourceFile = path,
+			};
+			for (uint i = 0; i < preloadCount; i++) {
+				uint index = Read (preloadOffset + i * 4);
+				Assert.Less (index, dsoCount);
+				preloads.Entries.Add (new JniPreloadsEntry {
+					Index = index,
+					LibraryName = ReadName (Read (dsoOffset + index * 12 + 8)),
+				});
+			}
+			return (config, preloads);
 		}
 
 		const string ApplicationConfigSymbolName = "application_config";
