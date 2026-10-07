@@ -13,6 +13,47 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class R8RuntimeRemappingBuildTests : BaseTest
 	{
+		[TestCase (AndroidRuntime.CoreCLR, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, true)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false)]
+		public void OrdinaryBuildPackagesBinaryRemapping (AndroidRuntime runtime, bool release, bool aab)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = release,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
+			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var blobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
+				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
+			var abis = release ? new [] { "arm64-v8a", "x86_64" } : new [] { "arm64-v8a" };
+			Assert.AreEqual (abis.Length, blobs.Count, "Every built ABI needs a remapping data library even without R8 or XML remaps.");
+			var archivePath = aab
+				? Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.aab")
+				: Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			using (var archive = ZipFile.OpenRead (archivePath)) {
+				foreach (var abi in abis)
+					Assert.IsNotNull (archive.GetEntry ($"{(aab ? "base/" : "")}lib/{abi}/libbinary_blobs.so"));
+			}
+			Assert.IsTrue (builder.Build (proj), "A no-op build should preserve the data libraries.");
+			foreach (var blob in blobs)
+				Assert.AreEqual (blob.Value, File.GetLastWriteTimeUtc (blob.Key));
+			var missing = blobs.Keys.Single (path => path.Contains ("arm64-v8a", StringComparison.Ordinal));
+			File.Delete (missing);
+			Assert.IsTrue (builder.Build (proj), "A deleted data library must be recreated.");
+			FileAssert.Exists (missing);
+			Assert.IsTrue (builder.Clean (proj));
+			foreach (var blob in blobs.Keys)
+				FileAssert.DoesNotExist (blob);
+		}
+
 		[TestCase (true)]
 		[TestCase (false)]
 		public void UnchangedProguardRulesDoNotRerunR8 (bool obfuscation)
@@ -142,11 +183,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true)]
-		[TestCase (AndroidRuntime.NativeAOT, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true)]
-		public void MultiRidUsesOneR8Mapping (AndroidRuntime runtime, bool explicitPrimaryRid)
+		[TestCase (AndroidRuntime.CoreCLR, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false)]
+		[TestCase (AndroidRuntime.NativeAOT, false, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false)]
+		[TestCase (AndroidRuntime.CoreCLR, false, true)]
+		[TestCase (AndroidRuntime.NativeAOT, false, true)]
+		public void MultiRidUsesOneR8Mapping (AndroidRuntime runtime, bool explicitPrimaryRid, bool aab)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -162,7 +205,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
-			proj.SetProperty ("AndroidPackageFormats", "apk");
+			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
 
 			using var builder = CreateApkBuilder ();
 			(int R8, int NativeLinks) ReadInvocationCounts ()
@@ -182,19 +225,40 @@ namespace Xamarin.Android.Build.Tests
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.AreEqual (2, first.NativeLinks, "Each RID should link once, after R8.");
 				Assert.AreEqual (2, Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories).Length);
-				using var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk"));
+			}
+			var binaryBlobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
+				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
+			Assert.AreEqual (2, binaryBlobs.Count, "Each ABI needs its own independent binary-blob library.");
+			var archivePath = aab
+				? Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.aab")
+				: Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			using (var archive = ZipFile.OpenRead (archivePath)) {
 				foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
-					Assert.IsNotNull (apk.GetEntry ($"lib/{abi}/lib{proj.ProjectName}.so"), $"Missing final {abi} native library.");
+					string prefix = aab ? "base/lib/" : "lib/";
+					Assert.IsNotNull (archive.GetEntry ($"{prefix}{abi}/libbinary_blobs.so"), $"Missing {abi} remapping data.");
+					if (runtime == AndroidRuntime.NativeAOT)
+						Assert.IsNotNull (archive.GetEntry ($"{prefix}{abi}/lib{proj.ProjectName}.so"), $"Missing final {abi} native library.");
 				}
 			}
 			var objects = Directory.GetFiles (intermediate, $"{proj.ProjectName}.o", SearchOption.AllDirectories)
 				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 			Assert.IsTrue (builder.Build (proj), "A multi-RID no-op build should succeed.");
 			Assert.AreEqual ((0, 0), ReadInvocationCounts (), "No-op builds must not run R8 or native linking.");
+			foreach (var entry in binaryBlobs)
+				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must retain binary-blob timestamps.");
 			foreach (var entry in objects) {
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must not recompile ILC.");
 			}
+			var missingBlob = binaryBlobs.Keys.Single (path => path.Contains ("arm64-v8a", StringComparison.Ordinal));
+			File.Delete (missingBlob);
+			Assert.IsTrue (builder.Build (proj), "A missing ABI blob should be regenerated.");
+			Assert.AreEqual ((0, 0), ReadInvocationCounts (), "Restoring data must not rerun R8 or relink NativeAOT.");
+			FileAssert.Exists (missingBlob);
+			foreach (var entry in objects)
+				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "Restoring data must not recompile ILC.");
+			Assert.IsTrue (builder.Clean (proj));
+			foreach (var blob in binaryBlobs.Keys)
+				FileAssert.DoesNotExist (blob, "Clean must remove generated binary-blob libraries.");
 		}
 	}
 }

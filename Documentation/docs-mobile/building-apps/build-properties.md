@@ -1159,7 +1159,7 @@ An enum-style property that specifies how `r8` obfuscates Java names when
 |---|---|
 | `private-members` | Preserves Java class and interface names and public or protected member names. Private and package-private members can be obfuscated, and R8 optimization is enabled. |
 | `disabled` | Disables obfuscation, preserves all Java names, and uses the non-optimizing Android R8 defaults. |
-| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using generated native remapping tables. Available for trimmed CoreCLR and NativeAOT applications. |
+| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using a separate read-only binary data library. Available for trimmed CoreCLR and NativeAOT applications. |
 
 This property does not disable R8 code shrinking. It was introduced in a .NET 10
 servicing release and defaults to `disabled` in .NET 10 and to `private-members`
@@ -1181,11 +1181,18 @@ For example:
 </PropertyGroup>
 ```
 
+CoreCLR and NativeAOT applications also package a separate per-ABI
+`libbinary_blobs.so` for ordinary JNI remapping in Debug and non-obfuscated
+builds. The remapping data is not compiled into the application's native code
+or shipped as an XML asset.
+
 The runtime-remapping mode leaves managed assemblies unchanged. It runs R8 once,
 after managed trimming or ILC, then uses the resulting R8 mapping to
-generate native runtime remapping tables. CoreCLR selects remaps from linked
-assemblies. NativeAOT selects remaps from retained JNI literals in ILC's native
-object and statically links the table afterward.
+generate a per-ABI `libbinary_blobs.so` containing bounded, read-only JNI
+remapping data. CoreCLR selects remaps from linked assemblies. NativeAOT
+selects remaps from retained JNI literals in ILC's native object. Neither
+runtime needs to compile the remapping table into application native code.
+The remapping payload is mapped without copying by default.
 
 Runtime-generated JNI names may require explicit remapping or keep rules.
 Conservative keep rules still protect native callbacks, bootstrap code, and

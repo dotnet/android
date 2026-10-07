@@ -22,6 +22,9 @@
           Condition=" '%(ResolvedFileToPublish.Identity)' == '$(_AndroidNativeAotSharedLibrary)' ">
         <AndroidNativeAotRemappingDirectory>$(_AndroidNativeAotR8RemappingDirectory)</AndroidNativeAotRemappingDirectory>
       </_AndroidNativeAotLinkedFileToPublish>
+      <_AndroidNativeAotLinkedFileToPublish Include="@(_AndroidNativeAotBinaryBlobLibrary)">
+        <AndroidNativeAotRemappingDirectory>$(_AndroidNativeAotBinaryBlobsDirectory)</AndroidNativeAotRemappingDirectory>
+      </_AndroidNativeAotLinkedFileToPublish>
     </ItemGroup>
   </Target>
 
@@ -40,8 +43,12 @@
       <Output TaskParameter="TargetOutputs" ItemName="_AndroidNativeAotLinkedFileToPublish" />
     </MSBuild>
     <ItemGroup>
-      <ResolvedFileToPublish Remove="@(_AndroidNativeAotLinkedFileToPublish)" />
-      <ResolvedFileToPublish Include="@(_AndroidNativeAotLinkedFileToPublish)" />
+      <ResolvedFileToPublish Remove="@(_AndroidNativeAotLinkedFileToPublish)"
+          Condition=" '%(Filename)%(Extension)' != 'libbinary_blobs.so' " />
+      <ResolvedFileToPublish Include="@(_AndroidNativeAotLinkedFileToPublish)"
+          Condition=" '%(Filename)%(Extension)' != 'libbinary_blobs.so' " />
+      <_AndroidBinaryBlobLibrary Include="@(_AndroidNativeAotLinkedFileToPublish)"
+          Condition=" '%(Filename)%(Extension)' == 'libbinary_blobs.so' " />
       <FileWrites Include="@(_AndroidNativeAotLinkedFileToPublish->'%(AndroidNativeAotRemappingDirectory)**')" />
     </ItemGroup>
   </Target>

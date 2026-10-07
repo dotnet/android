@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -17,12 +18,12 @@ static class AssemblyStoreElfWriter
 	const ushort SectionCount = 7;
 	const ushort PayloadSectionIndex = 5;
 	const ushort SectionNamesIndex = 6;
-	const uint SymbolCount = 2;
 	const uint DynamicEntryCount = 7;
 	const uint ReadOnly = 4; // PF_R
 	const uint Allocated = 2; // SHF_ALLOC
 
 	static readonly byte [] SectionNames = Encoding.ASCII.GetBytes ("\0.dynsym\0.dynstr\0.hash\0.dynamic\0payload\0.shstrtab\0");
+	static readonly UTF8Encoding Utf8 = new (false, true);
 
 	sealed class Layout
 	{
@@ -31,7 +32,9 @@ static class AssemblyStoreElfWriter
 		public uint Flags { get; }
 		public uint PageSize { get; }
 		public byte [] Strings { get; }
+		public IReadOnlyList<(string Name, Stream Data, ulong Size)> Payloads { get; }
 		public ulong PayloadSize { get; }
+		public uint SymbolCount => checked ((uint)Payloads.Count + 1);
 
 		public uint WordSize => Is64Bit ? 8u : 4u;
 		public ushort HeaderSize => (ushort)(Is64Bit ? 64 : 52);
@@ -39,11 +42,12 @@ static class AssemblyStoreElfWriter
 		public ushort SectionHeaderSize => (ushort)(Is64Bit ? 64 : 40);
 		public uint SymbolSize => Is64Bit ? 24u : 16u;
 		public ulong DynamicSize => DynamicEntryCount * WordSize * 2;
-		public uint SonameIndex => (uint)PayloadSymbol.Length + 2;
+		public uint SonameIndex { get; }
 		public ulong SymbolsOffset => Align ((ulong)HeaderSize + (ulong)ProgramHeaderCount * ProgramHeaderSize, WordSize);
 		public ulong StringsOffset => SymbolsOffset + SymbolCount * SymbolSize;
 		public ulong HashOffset => Align (StringsOffset + (ulong)Strings.Length, sizeof (uint));
-		public ulong DynamicOffset => Align (HashOffset + 5 * sizeof (uint), WordSize);
+		public ulong HashSize => checked ((ulong)(3 + SymbolCount) * sizeof (uint));
+		public ulong DynamicOffset => Align (HashOffset + HashSize, WordSize);
 		public ulong PayloadOffset => Align (DynamicOffset + DynamicSize, PageSize);
 		public ulong LoadSize => checked (PayloadOffset + PayloadSize);
 
@@ -52,7 +56,7 @@ static class AssemblyStoreElfWriter
 		public ulong SectionHeadersOffset => Align (SectionNamesOffset + (ulong)SectionNames.Length, WordSize);
 		public ulong FileSize => checked (SectionHeadersOffset + (ulong)SectionCount * SectionHeaderSize);
 
-		public Layout (AndroidTargetArch arch, ulong payloadSize, string libraryName)
+		public Layout (AndroidTargetArch arch, IReadOnlyList<(string Name, Stream Data, ulong Size)> payloads, string libraryName)
 		{
 			(Is64Bit, Machine, Flags, PageSize) = arch switch {
 				AndroidTargetArch.Arm => (false, (ushort)40, 0x05000200u, 4096u), // armeabi-v7a: EABI5, base (softfp) calling convention
@@ -61,15 +65,23 @@ static class AssemblyStoreElfWriter
 				AndroidTargetArch.X86_64 => (true, (ushort)62, 0u, 16384u),
 				_ => throw new NotSupportedException ($"Unsupported assembly-store architecture: {arch}"),
 			};
-			if (payloadSize == 0) {
-				throw new InvalidDataException ("The assembly-store payload must not be empty.");
+			Payloads = payloads;
+			using var strings = new MemoryStream ();
+			strings.WriteByte (0);
+			foreach (var payload in payloads) {
+				var name = Utf8.GetBytes (payload.Name);
+				strings.Write (name);
+				strings.WriteByte (0);
+				PayloadSize = checked (PayloadSize + payload.Size);
 			}
-			if (payloadSize > uint.MaxValue) {
-				throw new NotSupportedException ("Assembly-store payloads cannot exceed 4 GiB.");
+			SonameIndex = checked ((uint)strings.Position);
+			var soname = Utf8.GetBytes (libraryName);
+			strings.Write (soname);
+			strings.WriteByte (0);
+			Strings = strings.ToArray ();
+			if (PayloadSize > uint.MaxValue) {
+				throw new NotSupportedException ("ELF payloads cannot exceed 4 GiB.");
 			}
-
-			Strings = new UTF8Encoding (false, true).GetBytes ("\0" + PayloadSymbol + "\0" + libraryName + "\0");
-			PayloadSize = payloadSize;
 			if (!Is64Bit && FileSize > uint.MaxValue) {
 				throw new NotSupportedException ("The assembly store and ELF headers exceed the ELF32 size limit.");
 			}
@@ -79,19 +91,43 @@ static class AssemblyStoreElfWriter
 	public static void Write (Stream payload, Stream output, AndroidTargetArch arch, string libraryName)
 	{
 		ArgumentNullException.ThrowIfNull (payload);
+		Write (new [] { (Name: PayloadSymbol, Data: payload) }, output, arch, libraryName);
+	}
+
+	// Each stream is already encoded independently; the ELF layer never changes a symbol's payload.
+	public static void Write (IReadOnlyList<(string Name, Stream Data)> payloads, Stream output, AndroidTargetArch arch, string libraryName)
+	{
+		ArgumentNullException.ThrowIfNull (payloads);
 		ArgumentNullException.ThrowIfNull (output);
 		ArgumentNullException.ThrowIfNull (libraryName);
 		if (libraryName.Length == 0 || libraryName.IndexOf ('\0') >= 0) {
 			throw new ArgumentException ("The shared-library name must be nonempty and contain no NUL characters.", nameof (libraryName));
 		}
-		if (!payload.CanRead || !payload.CanSeek) {
-			throw new ArgumentException ("The payload stream must be readable and seekable.", nameof (payload));
-		}
-		if (ReferenceEquals (payload, output) || !output.CanWrite || !output.CanSeek) {
+		if (!output.CanWrite || !output.CanSeek) {
 			throw new ArgumentException ("The output must be a separate writable, seekable stream.", nameof (output));
 		}
 
-		var layout = new Layout (arch, checked ((ulong)(payload.Length - payload.Position)), libraryName);
+		if (payloads.Count == 0) {
+			throw new InvalidDataException ("At least one payload symbol is required.");
+		}
+		var names = new HashSet<string> (StringComparer.Ordinal);
+		var streams = new HashSet<Stream> (ReferenceEqualityComparer.Instance);
+		var entries = new List<(string Name, Stream Data, ulong Size)> (payloads.Count);
+		foreach (var (name, data) in payloads) {
+			if (string.IsNullOrEmpty (name) || name.IndexOf ('\0') >= 0 || !names.Add (name)) {
+				throw new ArgumentException ("Payload symbols must be distinct, nonempty and contain no NUL.", nameof (payloads));
+			}
+			Utf8.GetByteCount (name);
+			if (data == null || !data.CanRead || !data.CanSeek || ReferenceEquals (data, output) || !streams.Add (data)) {
+				throw new ArgumentException ("Each payload must have a separate readable, seekable stream.", nameof (payloads));
+			}
+			long size = checked (data.Length - data.Position);
+			if (size <= 0) {
+				throw new InvalidDataException ("Payload symbols must not be empty.");
+			}
+			entries.Add ((name, data, checked ((ulong)size)));
+		}
+		var layout = new Layout (arch, entries, libraryName);
 		output.SetLength (0);
 		output.Position = 0;
 		using var writer = new BinaryWriter (output, Encoding.UTF8, leaveOpen: true);
@@ -104,17 +140,25 @@ static class AssemblyStoreElfWriter
 
 		output.Position = (long)layout.SymbolsOffset;
 		WriteSymbol (writer, layout, 0, 0, 0, 0, 0);
-		WriteSymbol (writer, layout, 1, 0x11, PayloadSectionIndex, layout.PayloadOffset, layout.PayloadSize); // STB_GLOBAL | STT_OBJECT
+		uint nameOffset = 1;
+		ulong payloadOffset = layout.PayloadOffset;
+		foreach (var (name, _, size) in entries) {
+			WriteSymbol (writer, layout, nameOffset, 0x11, PayloadSectionIndex, payloadOffset, size); // STB_GLOBAL | STT_OBJECT
+			nameOffset = checked (nameOffset + (uint)Utf8.GetByteCount (name) + 1);
+			payloadOffset = checked (payloadOffset + size);
+		}
 		output.Position = (long)layout.StringsOffset;
 		writer.Write (layout.Strings);
 
 		output.Position = (long)layout.HashOffset;
-		// SysV hash: one bucket points to the only exported symbol; both chains terminate.
+		// One bucket links every exported symbol, regardless of its name's hash.
 		writer.Write (1u);
-		writer.Write (SymbolCount);
+		writer.Write (layout.SymbolCount);
 		writer.Write (1u);
 		writer.Write (0u);
-		writer.Write (0u);
+		for (uint i = 1; i < layout.SymbolCount; i++) {
+			writer.Write (i + 1 < layout.SymbolCount ? i + 1 : 0u);
+		}
 
 		output.Position = (long)layout.DynamicOffset;
 		WriteDynamicEntry (writer, layout, 14, layout.SonameIndex); // DT_SONAME
@@ -129,18 +173,110 @@ static class AssemblyStoreElfWriter
 		writer.Write (SectionNames);
 		output.Position = (long)layout.SectionHeadersOffset;
 		WriteSectionHeader (writer, layout, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		WriteSectionHeader (writer, layout, 1, 11, Allocated, layout.SymbolsOffset, SymbolCount * layout.SymbolSize, 2, 1, layout.WordSize, layout.SymbolSize);
+		WriteSectionHeader (writer, layout, 1, 11, Allocated, layout.SymbolsOffset, layout.SymbolCount * layout.SymbolSize, 2, 1, layout.WordSize, layout.SymbolSize);
 		WriteSectionHeader (writer, layout, 9, 3, Allocated, layout.StringsOffset, (ulong)layout.Strings.Length, 0, 0, 1, 0);
-		WriteSectionHeader (writer, layout, 17, 5, Allocated, layout.HashOffset, 5 * sizeof (uint), 1, 0, sizeof (uint), sizeof (uint));
+		WriteSectionHeader (writer, layout, 17, 5, Allocated, layout.HashOffset, layout.HashSize, 1, 0, sizeof (uint), sizeof (uint));
 		WriteSectionHeader (writer, layout, 23, 6, Allocated, layout.DynamicOffset, layout.DynamicSize, 2, 0, layout.WordSize, layout.WordSize * 2);
 		WriteSectionHeader (writer, layout, 32, 1, Allocated, layout.PayloadOffset, layout.PayloadSize, 0, 0, layout.PageSize, 0);
 		WriteSectionHeader (writer, layout, 40, 3, 0, layout.SectionNamesOffset, (ulong)SectionNames.Length, 0, 0, 1, 0);
 
 		writer.Flush ();
 		output.Position = (long)layout.PayloadOffset;
-		payload.CopyTo (output);
-		if ((ulong)output.Position != layout.LoadSize) {
-			throw new IOException ("The assembly-store payload length changed while writing its ELF wrapper.");
+		foreach (var (_, data, size) in entries) {
+			ulong end = checked ((ulong)output.Position + size);
+			byte [] buffer = new byte [81920];
+			ulong remaining = size;
+			while (remaining > 0) {
+				int read = data.Read (buffer, 0, (int)Math.Min ((ulong)buffer.Length, remaining));
+				if (read == 0) {
+					throw new IOException ("An ELF payload ended before its declared length.");
+				}
+				output.Write (buffer, 0, read);
+				remaining -= (uint)read;
+			}
+			if ((ulong)output.Position != end || data.Position != data.Length) {
+				throw new IOException ("An ELF payload length changed while writing its wrapper.");
+			}
+		}
+	}
+
+	public static void Validate (byte [] elf, AndroidTargetArch arch, string libraryName, IReadOnlyList<(string Name, byte [] Data)> expected)
+	{
+		ArgumentNullException.ThrowIfNull (elf);
+		ArgumentNullException.ThrowIfNull (expected);
+		var streams = new List<MemoryStream> ();
+		try {
+			var payloads = new List<(string Name, Stream Data)> ();
+			foreach (var (name, data) in expected) {
+				var stream = new MemoryStream (data, writable: false);
+				streams.Add (stream);
+				payloads.Add ((name, stream));
+			}
+			var layout = new Layout (arch, payloads.ConvertAll (entry => (entry.Name, entry.Data, (ulong)entry.Data.Length)), libraryName);
+			if ((ulong)elf.Length != layout.FileSize || elf [0] != 0x7f || elf [1] != 'E' || elf [2] != 'L' || elf [3] != 'F' ||
+				elf [4] != (layout.Is64Bit ? 2 : 1) || elf [5] != 1) {
+				throw new InvalidDataException ("Invalid ELF header or size.");
+			}
+			using var reader = new BinaryReader (new MemoryStream (elf));
+			reader.BaseStream.Position = 16;
+			if (reader.ReadUInt16 () != 3 || reader.ReadUInt16 () != layout.Machine || reader.ReadUInt32 () != 1) {
+				throw new InvalidDataException ("Invalid ELF machine or type.");
+			}
+			reader.BaseStream.Position = layout.HeaderSize;
+			for (int i = 0; i < ProgramHeaderCount; i++) {
+				uint type = reader.ReadUInt32 ();
+				uint flags = layout.Is64Bit ? reader.ReadUInt32 () : 0;
+				ulong offset = layout.Is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+				reader.BaseStream.Position += layout.Is64Bit ? 16 : 8;
+				ulong size = layout.Is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+				ulong memSize = layout.Is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+				if (!layout.Is64Bit) flags = reader.ReadUInt32 ();
+				reader.BaseStream.Position += layout.WordSize;
+				if (type == 1 && (flags != ReadOnly || offset != 0 || size != layout.LoadSize || memSize != size) ||
+					type == 2 && (flags != ReadOnly || offset != layout.DynamicOffset || size != layout.DynamicSize) ||
+					type == 0x6474e551 && flags != 6) {
+					throw new InvalidDataException ("ELF load or dynamic segment is not read-only and bounded.");
+				}
+			}
+			reader.BaseStream.Position = (long)layout.SectionHeadersOffset + PayloadSectionIndex * layout.SectionHeaderSize;
+			reader.BaseStream.Position += 8;
+			ulong sectionFlags = layout.Is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+			if (sectionFlags != Allocated) throw new InvalidDataException ("ELF payload section is not read-only.");
+			reader.BaseStream.Position = (long)layout.SymbolsOffset + layout.SymbolSize;
+			ulong position = layout.PayloadOffset;
+			uint nameOffset = 1;
+			foreach (var (name, data) in expected) {
+				uint symbolName = reader.ReadUInt32 ();
+				ulong value = layout.Is64Bit ? 0 : reader.ReadUInt32 ();
+				ulong length = layout.Is64Bit ? 0 : reader.ReadUInt32 ();
+				byte info = reader.ReadByte ();
+				byte visibility = reader.ReadByte ();
+				ushort section = reader.ReadUInt16 ();
+				if (layout.Is64Bit) {
+					value = reader.ReadUInt64 ();
+					length = reader.ReadUInt64 ();
+				}
+				if (symbolName != nameOffset || info != 0x11 || visibility != 0 || section != PayloadSectionIndex ||
+					value != position || length != (ulong)data.Length ||
+					!elf.AsSpan ((int)position, data.Length).SequenceEqual (data)) {
+					throw new InvalidDataException ("Invalid ELF payload symbol or contents.");
+				}
+				nameOffset = checked (nameOffset + (uint)Utf8.GetByteCount (name) + 1);
+				position += (ulong)data.Length;
+			}
+			reader.BaseStream.Position = (long)layout.HashOffset;
+			if (reader.ReadUInt32 () != 1 || reader.ReadUInt32 () != layout.SymbolCount || reader.ReadUInt32 () != 1 ||
+				reader.ReadUInt32 () != 0) throw new InvalidDataException ("Invalid ELF symbol hash table.");
+			for (uint i = 1; i < layout.SymbolCount; i++) {
+				if (reader.ReadUInt32 () != (i + 1 < layout.SymbolCount ? i + 1 : 0)) throw new InvalidDataException ("Broken ELF symbol hash chain.");
+			}
+			using var canonical = new MemoryStream ();
+			Write (payloads, canonical, arch, libraryName);
+			if (!canonical.ToArray ().AsSpan ().SequenceEqual (elf)) {
+				throw new InvalidDataException ("ELF metadata does not match the payload layout.");
+			}
+		} finally {
+			foreach (var stream in streams) stream.Dispose ();
 		}
 	}
 

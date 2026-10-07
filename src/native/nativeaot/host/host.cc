@@ -50,6 +50,13 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		abort_unless (false, "Failed to load mono/android/IGCUserPeer class");
 	}
 
+	jclass lrefGCUserPeerable = env->FindClass ("net/dot/jni/GCUserPeerable");
+	if (lrefGCUserPeerable == nullptr) [[unlikely]] {
+		env->ExceptionDescribe ();
+		env->ExceptionClear ();
+		abort_unless (false, "Failed to load net/dot/jni/GCUserPeerable class");
+	}
+
 	initArgs->logCategories = log_categories;
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
@@ -61,7 +68,16 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		}
 		abort_unless (false, "Failed to create a global reference for mono/android/IGCUserPeer");
 	}
-	initArgs->jniRemappingData = &jni_remapping_data;
+	initArgs->grefGCUserPeerable = env->NewGlobalRef (lrefGCUserPeerable);
+	if (initArgs->grefGCUserPeerable == nullptr) [[unlikely]] {
+		if (env->ExceptionCheck ()) {
+			env->ExceptionDescribe ();
+			env->ExceptionClear ();
+		}
+		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
+	}
+	initArgs->jniRemappingData = nullptr;
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
+	env->DeleteLocalRef (lrefGCUserPeerable);
 }

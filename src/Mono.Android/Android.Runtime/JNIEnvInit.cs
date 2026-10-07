@@ -120,7 +120,7 @@ namespace Android.Runtime
 
 			InitializeMaxGrefCounts (args);
 			if (RuntimeFeature.JniRemapping) {
-				JniRemappingLookup.Initialize (args.jniRemappingData);
+				JniRemappingLookup.Initialize ();
 			}
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;

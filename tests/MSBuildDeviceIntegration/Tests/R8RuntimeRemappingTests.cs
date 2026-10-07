@@ -40,9 +40,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.NativeAOT)]
-		public void ObfuscatedMembersRun (AndroidRuntime runtime)
+		[TestCase (AndroidRuntime.CoreCLR, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true)]
+		[TestCase (AndroidRuntime.NativeAOT, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true)]
+		public void ObfuscatedMembersRun (AndroidRuntime runtime, bool compress)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -88,6 +90,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AllowUnsafeBlocks", "true");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
+			if (compress)
+				proj.SetProperty ("_AndroidR8CompressBinaryBlobs", "true");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
 			proj.SetProperty ("ProguardConfigFiles", "r8-custom.pro");
 			string extraRules = "";
@@ -185,12 +189,19 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("target-method-name") != "hiddenAdd"), "Method lookups must use the renamed owner.");
 				Assert.IsFalse (elements.Any (e => (string) e.Attribute ("source-method-name") == "unusedMethod"),
 					"An unused method on a retained type must not occupy the runtime table.");
+				var binaryBlob = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ();
+				byte [] data = File.ReadAllBytes (binaryBlob);
+				int envelope = data.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
+				Assert.GreaterOrEqual (envelope, 0, "The ELF must contain the remapping payload.");
+				Assert.AreEqual (compress ? 1 : 0, BitConverter.ToUInt16 (data, envelope + 6), "Unexpected compression mode.");
+				var blobTimestamp = File.GetLastWriteTimeUtc (binaryBlob);
 
 				AssertAppRuns ("r8-runtime-remap.log");
 
 				Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
 				AssertR8Invocations (builder, 0, runtime);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"));
+				Assert.AreEqual (blobTimestamp, File.GetLastWriteTimeUtc (binaryBlob), "No-op builds must preserve binary-blob timestamps.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					var aaptRules = Path.Combine (intermediate, "aapt_rules.txt");
@@ -199,21 +210,21 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
 					AssertR8Invocations (builder, 0, runtime);
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8Remapping"));
-					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidCompileNativeAotR8Remapping"));
+					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8BinaryBlobs"));
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"));
 					FileAssert.Exists (aaptRules, "IncrementalClean must retain AAPT keep rules.");
 					Assert.AreEqual (originalAaptRules, File.ReadAllText (aaptRules));
 
 					var ilcObject = Directory.GetFiles (intermediate, $"{proj.ProjectName}.o", SearchOption.AllDirectories).Single ();
 					var ilcTimestamp = File.GetLastWriteTimeUtc (ilcObject);
-					var remapObject = Directory.GetFiles (intermediate, $"jni_remap.{DeviceAbi}.o", SearchOption.AllDirectories).Single ();
-					File.Delete (remapObject);
-					Assert.IsTrue (builder.Build (proj), "A missing remapping object should be regenerated.");
+					File.Delete (binaryBlob);
+					Assert.IsTrue (builder.Build (proj), "A missing binary-blob library should be regenerated.");
 					AssertR8Invocations (builder, 0, runtime);
-					FileAssert.Exists (remapObject);
-					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the late-linked table must not recompile IL.");
-					Assert.IsFalse (builder.Output.IsTargetSkipped ("_AndroidCompileNativeAotR8Remapping"));
-					Assert.IsFalse (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"));
+					FileAssert.Exists (binaryBlob);
+					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the data library must not recompile IL.");
+					Assert.IsFalse (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8BinaryBlobs"));
+					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"),
+						"Remapping-data changes must not relink the application.");
 
 					File.Delete (aaptRules);
 					Assert.IsTrue (builder.Build (proj), "Missing resource keep rules should be regenerated.");

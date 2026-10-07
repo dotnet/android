@@ -19,7 +19,6 @@ namespace xamarin::android {
 	};
 
 	extern "C" {
-		[[gnu::visibility("default")]] extern const JniRemappingData jni_remapping_data;
 	}
 
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
