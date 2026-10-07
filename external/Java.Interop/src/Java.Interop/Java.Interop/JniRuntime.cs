@@ -81,8 +81,6 @@ namespace Java.Interop
 			public  JniObjectReferenceManager?  ObjectReferenceManager      {get; set;}
 			public  JniTypeManager?             TypeManager                 {get; set;}
 			public  string?                     JvmLibraryPath              {get; set;}
-			[Obsolete ("JniAddNativeMethodRegistrationAttribute is no longer supported. This property has no effect.")]
-			public  bool                        JniAddNativeMethodRegistrationAttributePresent { get; set; } = true;
 
 			public CreationOptions ()
 			{

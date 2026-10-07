@@ -30,11 +30,12 @@ Overridable MSBuild properties include:
 
 ## Native registration
 
-`JniAddNativeMethodRegistrationAttribute` and
-`JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent` are
-obsolete and have no effect. They remain available for compatibility, and using
-them produces a compiler warning rather than an error. Android native
-registration uses the generated trimmable typemap instead.
+`JniAddNativeMethodRegistrationAttribute` is obsolete and has no effect. It
+remains available for compatibility, and using it produces a compiler warning
+rather than an error. The unused
+`JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent`
+property has been removed. Android native registration uses the generated
+trimmable typemap instead.
 
 ## Runtime exception support
 
