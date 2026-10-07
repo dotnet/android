@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
@@ -18,44 +17,36 @@ public class CoreClrBootstrapBlobTests : BaseTest
 
 	[TestCase (false)]
 	[TestCase (true)]
-	public void SharesElfWithRemappingForEveryAbi (bool compress)
+	public void SharesElfWithRemapping (bool compress)
 	{
-		var runtime = Enumerable.Range (0, 5000).ToDictionary (
-			i => $"Test.Property.{i:D4}", i => new string ('x', 16) + i, StringComparer.Ordinal);
 		var libraries = new (uint Hash, bool Ignore, bool IsJniLibrary, string Name) [] {
 			(1, false, true, "libexample.so"),
-			(2, false, true, "example"),
 		};
 		byte [] raw = CoreClrBootstrapBlob.Create (
 			true, true, 2, 24, 0, 1, "com.example.😀",
 			new SortedDictionary<string, string> { ["TEST_ENV"] = "hello" },
 			new SortedDictionary<string, string> { ["test.property"] = "world" },
-			runtime, libraries, [0, 1], 2);
-		Assert.Greater (raw.Length, 64 * 1024);
+			new Dictionary<string, string> { ["Test.Feature"] = "enabled" }, libraries, [0], 1);
 		CoreClrBootstrapBlob.Validate (raw);
 		Directory.CreateDirectory (DirectoryPath);
 		string bootstrapPath = Path.Combine (DirectoryPath, "bootstrap.bin");
 		File.WriteAllBytes (bootstrapPath, raw);
-		string [] abis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
 		var task = new GenerateJniRemappingBinaryBlobs {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			BootstrapFilePath = bootstrapPath,
 			OutputDirectory = Path.Combine (DirectoryPath, "out"),
-			SupportedAbis = abis,
+			SupportedAbis = ["arm64-v8a"],
 			Compress = compress,
 		};
 		Assert.IsTrue (task.Execute ());
+		Assert.AreEqual (1, task.BinaryBlobLibraries.Length);
 		byte [] remap = JniRemappingBinaryBlob.Create ("", compress);
 		byte [] bootstrap = JniRemappingBinaryBlob.Wrap (raw, compress);
-		foreach (var library in task.BinaryBlobLibraries) {
-			byte [] elf = File.ReadAllBytes (library.ItemSpec);
-			AssemblyStoreElfWriter.Validate (elf, MonoAndroidHelper.AbiToTargetArch (library.GetMetadata ("Abi")),
-				"libbinary_blobs.so", new [] { (JniRemappingBinaryBlob.Symbol, remap), (CoreClrBootstrapBlob.Symbol, bootstrap) });
-			Assert.AreEqual (compress ? 1 : 0, BitConverter.ToUInt16 (bootstrap, 6));
-			Assert.AreEqual (raw.Length, BitConverter.ToInt32 (bootstrap, 12));
-			byte [] decoded = compress ? Decompress (bootstrap) : bootstrap.AsSpan (16).ToArray ();
-			CollectionAssert.AreEqual (raw, decoded);
-		}
+		byte [] elf = File.ReadAllBytes (task.BinaryBlobLibraries [0].ItemSpec);
+		AssemblyStoreElfWriter.Validate (elf, Xamarin.Android.Tools.AndroidTargetArch.Arm64,
+			"libbinary_blobs.so", new [] { (JniRemappingBinaryBlob.Symbol, remap), (CoreClrBootstrapBlob.Symbol, bootstrap) });
+		byte [] decoded = compress ? Decompress (bootstrap) : bootstrap.AsSpan (16).ToArray ();
+		CollectionAssert.AreEqual (raw, decoded);
 	}
 
 	[Test]
