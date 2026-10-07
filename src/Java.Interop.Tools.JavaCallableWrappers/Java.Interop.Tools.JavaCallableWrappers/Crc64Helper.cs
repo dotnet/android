@@ -42,6 +42,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 	///    * XOR length in HashFinal()
 	///    * Using spliced table for faster processing
 	/// </summary>
+	/// <remarks>
+	/// System.IO.Hashing.Crc64 uses CRC-64/ECMA-182 and produces different hashes.
+	/// Retain this legacy variant for hash and generated Java package-name compatibility.
+	/// </remarks>
 	internal static partial class Crc64Helper
 	{
 
