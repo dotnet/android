@@ -1,5 +1,7 @@
 #nullable enable
+using System;
 using System.IO;
+using System.Text;
 
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -11,6 +13,41 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 [TestFixture]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
+	[Test]
+	public void CoreClrConfigurationUsesBinaryBootstrapInsteadOfApplicationGlobals ()
+	{
+		string outputRoot = Path.Combine (Root, "temp", TestName);
+		string rawPath = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin");
+		string configPath = Path.Combine (outputRoot, "app.runtimeconfig.json");
+		Directory.CreateDirectory (outputRoot);
+		File.WriteAllText (configPath, """{"runtimeOptions":{"configProperties":{"Test.Feature":"enabled"}}}""");
+		var task = new GenerateNativeApplicationConfigSources {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ResolvedAssemblies = [new TaskItem (Path.Combine (outputRoot, "Example.dll"))],
+			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
+			CoreClrBootstrapOutputFile = rawPath,
+			SupportedAbis = ["arm64-v8a", "x86"],
+			AndroidPackageName = "com.example.bootstrap",
+			AndroidRuntime = "CoreCLR",
+			UseAssemblyStore = true,
+			ProjectRuntimeConfigFilePath = configPath,
+		};
+		Assert.IsTrue (task.Execute ());
+		byte [] raw = File.ReadAllBytes (rawPath);
+		Assert.AreEqual (0x47464358u, BitConverter.ToUInt32 (raw, 0));
+		Assert.AreEqual (raw.Length, BitConverter.ToInt32 (raw, 8));
+		Assert.AreEqual (2, BitConverter.ToUInt16 (raw, 6) & 2);
+		Assert.AreEqual (4u, BitConverter.ToUInt32 (raw, 20)); // Three host slots and Test.Feature.
+		Assert.AreEqual (1u, BitConverter.ToUInt32 (raw, 72)); // One packaged assembly.
+		StringAssert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
+		StringAssert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));
+		string arm64 = File.ReadAllText (Path.Combine (task.EnvironmentOutputDirectory, "environment.arm64-v8a.ll"));
+		string x86 = File.ReadAllText (Path.Combine (task.EnvironmentOutputDirectory, "environment.x86.ll"));
+		Assert.That (arm64, Does.Not.Contain ("com.example.bootstrap"));
+		Assert.That (arm64, Does.Not.Contain ("Test.Feature"));
+		Assert.That (x86, Does.Not.Contain ("com.example.bootstrap"));
+	}
+
 	[TestCase (false)]
 	[TestCase (true)]
 	public void HaveAssemblyStoreIsEmittedForCoreCLR (bool haveAssemblyStore)

@@ -174,6 +174,14 @@ static class JniRemappingBinaryBlob
 		}
 		EnsureRawBodySize (raw.Length);
 		byte [] body = raw.ToArray ();
+		byte [] result = Wrap (body, compress);
+		Validate (result);
+		return result;
+	}
+
+	internal static byte [] Wrap (byte [] body, bool compress)
+	{
+		EnsureRawBodySize (body.Length);
 		byte [] stored = body;
 		if (compress) {
 			long max = ZstandardEncoder.GetMaxCompressedLength (body.Length);
@@ -195,9 +203,7 @@ static class JniRemappingBinaryBlob
 			writer.Write (checked ((uint)body.Length));
 			writer.Write (stored);
 		}
-		byte [] result = envelope.ToArray ();
-		Validate (result);
-		return result;
+		return envelope.ToArray ();
 	}
 
 	internal static void EnsureRawBodySize (long length)

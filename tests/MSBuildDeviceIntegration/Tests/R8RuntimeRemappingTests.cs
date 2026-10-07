@@ -15,6 +15,51 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class R8RuntimeRemappingTests : DeviceTest
 	{
+		[Test]
+		public void CoreClrLargeBootstrapStartsInDebug ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "bootstrap-env.txt") {
+				TextContent = () => "CORECLR_BOOTSTRAP_ENV=from-binary-blob",
+			});
+			for (int i = 0; i < 5000; i++) {
+				proj.OtherBuildItems.Add (new BuildItem ("RuntimeHostConfigurationOption", $"Test.Bootstrap.{i:D4}") {
+					Metadata = { { "Value", new string ('v', 16) + i } },
+				});
+			}
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				if (System.AppContext.GetData ("Test.Bootstrap.0000") is not string first ||
+						first != "vvvvvvvvvvvvvvvv0" ||
+						System.AppContext.GetData ("Test.Bootstrap.4999") is not string last ||
+						last != "vvvvvvvvvvvvvvvv4999" ||
+						System.Environment.GetEnvironmentVariable ("CORECLR_BOOTSTRAP_ENV") != "from-binary-blob" ||
+						System.String.IsNullOrEmpty (System.AppContext.BaseDirectory))
+					throw new System.InvalidOperationException ("CoreCLR bootstrap properties were not applied.");
+				System.Console.WriteLine ("CORECLR_LARGE_BOOTSTRAP_SUCCESS");
+				""");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "The application with 5000 bootstrap properties should install.");
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			byte [] bootstrap = File.ReadAllBytes (Directory.GetFiles (intermediate, "coreclr-bootstrap.bin",
+				SearchOption.AllDirectories).Single ());
+			Assert.Greater (bootstrap.Length, 64 * 1024);
+			Assert.GreaterOrEqual (BitConverter.ToUInt32 (bootstrap, 20), 5003u,
+				"The application should retain all 5000 custom properties and three runtime-owned properties.");
+			ClearAdbLogcat ();
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.IsTrue (MonitorAdbLogcat (
+				line => line.Contains ("CORECLR_LARGE_BOOTSTRAP_SUCCESS", StringComparison.Ordinal),
+				Path.Combine (Root, builder.ProjectDirectory, "coreclr-large-bootstrap.log"), timeout: 30));
+		}
+
 		void AssertR8Invocations (ProjectBuilder builder, int expected, AndroidRuntime runtime, bool obfuscationEnabled = true)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");

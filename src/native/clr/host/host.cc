@@ -25,6 +25,7 @@
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/binary-blob-loader.hh>
+#include <runtime-base/coreclr-bootstrap.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/monodroid-dl.hh>
@@ -139,7 +140,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 
 void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
 {
-	if (!application_config.have_assembly_store) {
+	if (!CoreClrBootstrap::config.have_assembly_store) {
 		log_debugf (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery");
 		return;
 	}
@@ -230,25 +231,25 @@ auto Host::create_delegate (
 [[gnu::flatten, gnu::always_inline]]
 void Host::preload_jni_libraries () noexcept
 {
-	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
+	if (CoreClrBootstrap::config.number_of_shared_libraries == 0) [[unlikely]] {
 		return;
 	}
 
-	log_debugf (LOG_ASSEMBLY, "DSO jni preloads index stride == %u", dso_jni_preloads_idx_stride);
+	log_debugf (LOG_ASSEMBLY, "DSO jni preloads index stride == %u", CoreClrBootstrap::preload_stride);
 
-	if ((dso_jni_preloads_idx_count % dso_jni_preloads_idx_stride) != 0) [[unlikely]] {
+	if ((CoreClrBootstrap::preload_count % CoreClrBootstrap::preload_stride) != 0) [[unlikely]] {
 		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
 			std::source_location::current (),
 			"DSO preload index is invalid, size (%u) is not a multiple of %u",
-			dso_jni_preloads_idx_count,
-			dso_jni_preloads_idx_stride
+			CoreClrBootstrap::preload_count,
+			CoreClrBootstrap::preload_stride
 		);
 	}
 
-	for (size_t i = 0; i < dso_jni_preloads_idx_count; i += dso_jni_preloads_idx_stride) {
-		const size_t entry_index = dso_jni_preloads_idx[i];
-		DSOCacheEntry &entry = dso_cache[entry_index];
+	for (size_t i = 0; i < CoreClrBootstrap::preload_count; i += CoreClrBootstrap::preload_stride) {
+		const size_t entry_index = CoreClrBootstrap::preload_index (i);
+		DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[entry_index];
 		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
 
 		log_debugf (
@@ -263,10 +264,10 @@ void Host::preload_jni_libraries () noexcept
 		void *handle = MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
 
 		// Set handle in all the alias entries
-		for (size_t j = 1; j < dso_jni_preloads_idx_stride; j++) {
-			const size_t entry_alias_index = dso_jni_preloads_idx[i + j];
-			DSOCacheEntry &entry_alias = dso_cache[entry_alias_index];
-			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry);
+		for (size_t j = 1; j < CoreClrBootstrap::preload_stride; j++) {
+			const size_t entry_alias_index = CoreClrBootstrap::preload_index (i + j);
+			DSOCacheEntry &entry_alias = CoreClrBootstrap::dso_cache[entry_alias_index];
+			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry_alias);
 
 			log_debugf (
 				LOG_ASSEMBLY,
@@ -331,13 +332,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
 
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
 
 	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
 	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
-	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
-	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
+	// come from here: the shared `*.runtimeconfig.json` does not know the ABI of the
+	// running process.
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
 
 	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
 	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
@@ -352,11 +353,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 	std::free (app_context_base_directory);
 	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
 	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
 
-	const char **prop_names = init_runtime_property_names;
-	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
-	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+	const char **prop_names = CoreClrBootstrap::property_names;
+	const char **prop_values = const_cast<const char**>(CoreClrBootstrap::property_values);
+	int prop_count = static_cast<int>(CoreClrBootstrap::config.number_of_runtime_properties);
 
 	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
 	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
@@ -408,7 +409,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	}
 
 	int hr = coreclr_initialize (
-		application_config.android_package_name,
+		CoreClrBootstrap::config.android_package_name,
 		"Xamarin.Android",
 		prop_count,
 		prop_names,
@@ -448,7 +449,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
 	init.brokenExceptionTransitions                     = 0;
-	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
+	init.packageNamingPolicy                            = static_cast<int>(CoreClrBootstrap::config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
 	static BinaryBlobPayload remapping = {};
 	remapping                                           = BinaryBlobLoader::load_optional ("remapping_data");
@@ -491,6 +492,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
+	CoreClrBootstrap::initialize ();
 	jvm = vm;
 
 	OSBridge::initialize_on_onload (vm);

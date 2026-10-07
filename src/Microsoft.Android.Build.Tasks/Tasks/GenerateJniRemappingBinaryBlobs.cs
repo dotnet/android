@@ -21,6 +21,8 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 
 	public string RemappingXmlFilePath { get; set; } = "";
 
+	public string BootstrapFilePath { get; set; } = "";
+
 	[Required]
 	public string OutputDirectory { get; set; } = "";
 
@@ -42,6 +44,12 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				throw new InvalidDataException ("An output directory and at least one ABI are required.");
 			}
 			byte [] blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, Compress);
+			byte []? bootstrap = null;
+			if (!string.IsNullOrWhiteSpace (BootstrapFilePath)) {
+				byte [] raw = File.ReadAllBytes (BootstrapFilePath);
+				CoreClrBootstrapBlob.Validate (raw);
+				bootstrap = JniRemappingBinaryBlob.Wrap (raw, Compress);
+			}
 			var libraries = new List<(string Abi, string Path, AndroidTargetArch Arch)> (SupportedAbis.Length);
 			var seen = new HashSet<string> (StringComparer.Ordinal);
 			foreach (string abi in SupportedAbis) {
@@ -57,15 +65,25 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 			if (File.Exists (stamp))
 				File.Delete (stamp);
 			foreach (var (abi, path, arch) in libraries) {
-				if (blob.Length == 0) {
+				if (blob.Length == 0 && bootstrap == null) {
 					if (File.Exists (path))
 						File.Delete (path);
 					continue;
 				}
 				using var source = new MemoryStream (blob, writable: false);
+				using var bootstrapSource = bootstrap == null ? null : new MemoryStream (bootstrap, writable: false);
 				using var output = new MemoryStream ();
-				AssemblyStoreElfWriter.Write (new [] { (JniRemappingBinaryBlob.Symbol, (Stream)source) },
-					output, arch, "libbinary_blobs.so");
+				var payloads = new List<(string Name, Stream Data)> ();
+				var expected = new List<(string Name, byte [] Data)> ();
+				if (blob.Length != 0) {
+					payloads.Add ((JniRemappingBinaryBlob.Symbol, source));
+					expected.Add ((JniRemappingBinaryBlob.Symbol, blob));
+				}
+				if (bootstrap != null && bootstrapSource != null) {
+					payloads.Add ((CoreClrBootstrapBlob.Symbol, bootstrapSource));
+					expected.Add ((CoreClrBootstrapBlob.Symbol, bootstrap));
+				}
+				AssemblyStoreElfWriter.Write (payloads, output, arch, "libbinary_blobs.so");
 				byte [] elf = output.ToArray ();
 				Directory.CreateDirectory (Path.GetDirectoryName (path) ?? throw new InvalidDataException ("No output directory."));
 				File.WriteAllBytes (path, elf);

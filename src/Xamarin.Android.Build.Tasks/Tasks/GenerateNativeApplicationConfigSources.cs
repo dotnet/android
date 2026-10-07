@@ -46,6 +46,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
+		public string? CoreClrBootstrapOutputFile { get; set; }
+
 		/// <summary>
 		/// When <c>true</c>, descriptive comments are written into the generated LLVM IR.  They make
 		/// the <c>.ll</c> far easier to read, but have no effect on the object code produced from it.
@@ -193,9 +195,20 @@ namespace Xamarin.Android.Tasks
 				NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				HaveAssemblyStore = UseAssemblyStore,
+				CoreClrBootstrap = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR && !CoreClrBootstrapOutputFile.IsNullOrEmpty (),
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 			appConfigAsmGen.EmitComments = EmitLlvmIrComments;
+
+			if (appConfigAsmGen is ApplicationConfigNativeAssemblyGenerator config && config.CoreClrBootstrap) {
+				string? bootstrapPath = CoreClrBootstrapOutputFile;
+				if (bootstrapPath == null || bootstrapPath.Trim ().Length == 0) {
+					throw new InvalidOperationException ("CoreCLR bootstrap output path is required.");
+				}
+				byte [] raw = config.CreateCoreClrBootstrap ();
+				using var stream = new MemoryStream (raw, writable: false);
+				Files.CopyIfStreamChanged (stream, bootstrapPath);
+			}
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();
