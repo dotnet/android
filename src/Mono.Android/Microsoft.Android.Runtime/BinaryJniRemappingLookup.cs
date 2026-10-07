@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Android.Runtime;
 using Java.Interop;
+using static Microsoft.Android.Runtime.JniRemappingLookup;
 
 namespace Microsoft.Android.Runtime;
 
@@ -153,6 +154,26 @@ static unsafe class BinaryJniRemappingLookup
 		return BinaryPrimitives.ReadUInt32LittleEndian (new ReadOnlySpan<byte> (table + offset, 4));
 	}
 
+	static NativeJniRemappingString ReadString (uint offset)
+		=> new (Read (offset), Read (offset + 4));
+
+	static NativeJniRemappingTypeReplacementEntry ReadTypeReplacement (uint offset)
+		=> new (ReadString (offset), Read (offset + 8));
+
+	static NativeJniRemappingIndexTypeEntry ReadMethodType (uint offset)
+		=> new (ReadString (offset), Read (offset + 12), Read (offset + 8));
+
+	static NativeJniRemappingIndexFieldTypeEntry ReadFieldType (uint offset)
+		=> new (ReadString (offset), Read (offset + 12), Read (offset + 8));
+
+	static NativeJniRemappingIndexMethodEntry ReadMethod (uint offset)
+		=> new (ReadString (offset), ReadString (offset + 8),
+			new (Read (offset + 16), Read (offset + 20), Read (offset + 24), Read (offset + 28)));
+
+	static NativeJniRemappingIndexFieldEntry ReadField (uint offset)
+		=> new (ReadString (offset), ReadString (offset + 8),
+			new (Read (offset + 16), Read (offset + 20), Read (offset + 24)));
+
 	static uint Entry (int index, uint position, uint stride)
 	{
 		uint offset = checked (offsets [index] + position * stride);
@@ -185,14 +206,14 @@ static unsafe class BinaryJniRemappingLookup
 		return value;
 	}
 
-	static int Compare (uint offset, uint length, ReadOnlySpan<char> key)
+	static int Compare (NativeJniRemappingString value, ReadOnlySpan<char> key)
 	{
-		ReadOnlySpan<byte> value = String (offset, length);
-		return JniRemappingLookup.CompareUtf8ToUtf16 (value, key);
+		ReadOnlySpan<byte> utf8 = String (value.Offset, value.Length);
+		return JniRemappingLookup.CompareUtf8ToUtf16 (utf8, key);
 	}
 
-	static int Compare (uint offset, uint length, ReadOnlySpan<byte> key)
-		=> String (offset, length).SequenceCompareTo (key);
+	static int Compare (NativeJniRemappingString value, ReadOnlySpan<byte> key)
+		=> String (value.Offset, value.Length).SequenceCompareTo (key);
 
 	static uint Find (int index, uint stride, ReadOnlySpan<char> key)
 	{
@@ -200,7 +221,7 @@ static unsafe class BinaryJniRemappingLookup
 		while (left < right) {
 			uint middle = left + (right - left) / 2;
 			uint entry = Entry (index, middle, stride);
-			if (Compare (Read (entry), Read (entry + 4), key) < 0)
+			if (Compare (ReadString (entry), key) < 0)
 				left = middle + 1;
 			else
 				right = middle;
@@ -214,7 +235,7 @@ static unsafe class BinaryJniRemappingLookup
 		while (left < right) {
 			uint middle = left + (right - left) / 2;
 			uint entry = Entry (index, middle, stride);
-			if (Compare (Read (entry), Read (entry + 4), key) < 0)
+			if (Compare (ReadString (entry), key) < 0)
 				left = middle + 1;
 			else
 				right = middle;
@@ -229,7 +250,8 @@ static unsafe class BinaryJniRemappingLookup
 		if (position == counts [index])
 			return null;
 		uint entry = Entry (index, position, TypeStride);
-		return Compare (Read (entry), Read (entry + 4), key) == 0 ? CString (Read (entry + 8)) : null;
+		var replacement = ReadTypeReplacement (entry);
+		return Compare (replacement.Name, key) == 0 ? CString (replacement.Replacement) : null;
 	}
 
 	static uint FindType (int index, ReadOnlySpan<char> key)
@@ -237,7 +259,7 @@ static unsafe class BinaryJniRemappingLookup
 		uint position = Find (index, IndexStride, key);
 		if (position < counts [index]) {
 			uint entry = Entry (index, position, IndexStride);
-			if (Compare (Read (entry), Read (entry + 4), key) == 0)
+			if (Compare (ReadString (entry), key) == 0)
 				return entry;
 		}
 		return 0;
@@ -248,15 +270,14 @@ static unsafe class BinaryJniRemappingLookup
 		uint position = Find (index, IndexStride, key);
 		if (position < counts [index]) {
 			uint entry = Entry (index, position, IndexStride);
-			if (Compare (Read (entry), Read (entry + 4), key) == 0)
+			if (Compare (ReadString (entry), key) == 0)
 				return entry;
 		}
 		return 0;
 	}
 
-	static uint FindMember (uint type, int index, uint stride, ReadOnlySpan<char> name, ReadOnlySpan<char> signature, bool method)
+	static uint FindMember (uint first, uint count, int index, uint stride, ReadOnlySpan<char> name, ReadOnlySpan<char> signature, bool method)
 	{
-		uint first = Read (type + 8), count = Read (type + 12);
 		if (first > counts [index] || count > counts [index] - first)
 			throw new InvalidDataException ("JNI remapping member range exceeds the table.");
 		uint left = first, right = first + count;
@@ -264,19 +285,19 @@ static unsafe class BinaryJniRemappingLookup
 		while (left < right) {
 			uint middle = left + (right - left) / 2;
 			uint entry = Entry (index, middle, stride);
-			if (Compare (Read (entry), Read (entry + 4), name) < 0)
+			if (Compare (ReadString (entry), name) < 0)
 				left = middle + 1;
 			else
 				right = middle;
 		}
 		uint last = left;
-		while (last < end && Compare (Read (Entry (index, last, stride)), Read (Entry (index, last, stride) + 4), name) == 0)
+		while (last < end && Compare (ReadString (Entry (index, last, stride)), name) == 0)
 			last++;
 		if (signature.Length > 0 || !method) {
 			for (uint i = left; i < last; i++) {
 				uint entry = Entry (index, i, stride);
-				uint sigLength = Read (entry + 12);
-				if (sigLength > 0 && Compare (Read (entry + 8), sigLength, signature) == 0)
+				var memberSignature = ReadString (entry + 8);
+				if (memberSignature.Length > 0 && Compare (memberSignature, signature) == 0)
 					return entry;
 			}
 			if (method) {
@@ -285,8 +306,8 @@ static unsafe class BinaryJniRemappingLookup
 					ReadOnlySpan<char> prefix = signature [..(close + 1)];
 					for (uint i = left; i < last; i++) {
 						uint entry = Entry (index, i, stride);
-						uint sigLength = Read (entry + 12);
-						if (sigLength > 0 && Compare (Read (entry + 8), sigLength, prefix) == 0)
+						var memberSignature = ReadString (entry + 8);
+						if (memberSignature.Length > 0 && Compare (memberSignature, prefix) == 0)
 							return entry;
 					}
 				}
@@ -294,7 +315,7 @@ static unsafe class BinaryJniRemappingLookup
 		}
 		for (uint i = left; i < last; i++) {
 			uint entry = Entry (index, i, stride);
-			if (Read (entry + 12) == 0)
+			if (ReadString (entry + 8).Length == 0)
 				return entry;
 		}
 		return 0;
@@ -306,13 +327,15 @@ static unsafe class BinaryJniRemappingLookup
 		uint type = sourceUtf8.IsEmpty ? FindType (2, source) : FindType (2, sourceUtf8);
 		if (type == 0)
 			return null;
-		uint entry = FindMember (type, 4, MethodStride, name, signature, method: true);
-		if (entry == 0)
+		var typeEntry = ReadMethodType (type);
+		uint offset = FindMember (typeEntry.MethodStart, typeEntry.MethodCount, 4, MethodStride, name, signature, method: true);
+		if (offset == 0)
 			return null;
-		byte* targetType = CString (Read (entry + 16));
-		byte* targetName = CString (Read (entry + 20));
-		byte* targetSignature = CString (Read (entry + 24));
-		uint flags = Read (entry + 28);
+		var entry = ReadMethod (offset);
+		byte* targetType = CString (entry.Replacement.TargetType);
+		byte* targetName = CString (entry.Replacement.TargetName);
+		byte* targetSignature = CString (entry.Replacement.TargetSignature);
+		uint flags = entry.Replacement.IsStatic;
 		if (targetType == null || targetName == null || flags > 1)
 			throw new InvalidDataException ("Invalid JNI remapping method target or flag.");
 		bool isStatic = flags == 1;
@@ -326,10 +349,9 @@ static unsafe class BinaryJniRemappingLookup
 				? $"(L{sourceText};" + original.Substring (1)
 				: Marshal.PtrToStringUTF8 ((IntPtr)targetSignature);
 		}
-		uint signatureLength = Read (entry + 12);
-		byte* matchedSignature = signatureLength > 0 &&
-				Compare (Read (entry + 8), signatureLength, signature) == 0
-			? table + Read (entry + 8) : null;
+		byte* matchedSignature = entry.Signature.Length > 0 &&
+				Compare (entry.Signature, signature) == 0
+			? table + entry.Signature.Offset : null;
 		var result = new JniRuntime.ReplacementMethodInfo {
 			TargetJniTypeUtf8 = (IntPtr)targetType,
 			TargetJniMethodNameUtf8 = (IntPtr)targetName,
@@ -355,12 +377,14 @@ static unsafe class BinaryJniRemappingLookup
 		uint type = FindType (3, source);
 		if (type == 0)
 			return null;
-		uint entry = FindMember (type, 5, FieldStride, name, signature, method: false);
-		if (entry == 0)
+		var typeEntry = ReadFieldType (type);
+		uint offset = FindMember (typeEntry.FieldStart, typeEntry.FieldCount, 5, FieldStride, name, signature, method: false);
+		if (offset == 0)
 			return null;
-		byte* targetType = CString (Read (entry + 16));
-		byte* targetName = CString (Read (entry + 20));
-		byte* targetSignature = CString (Read (entry + 24));
+		var entry = ReadField (offset);
+		byte* targetType = CString (entry.Replacement.TargetType);
+		byte* targetName = CString (entry.Replacement.TargetName);
+		byte* targetSignature = CString (entry.Replacement.TargetSignature);
 		if (targetType == null || targetName == null)
 			throw new InvalidDataException ("Invalid JNI remapping field target.");
 		var result = new JniRuntime.ReplacementFieldInfo {

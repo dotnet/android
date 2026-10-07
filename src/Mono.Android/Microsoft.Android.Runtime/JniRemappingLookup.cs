@@ -26,6 +26,18 @@ static class JniStaticMethodFallback
 
 static class JniRemappingLookup
 {
+	// These retain the native lookup's shape: strings use raw-table offsets and member groups use indexes, not ELF pointers.
+	internal readonly record struct NativeJniRemappingString (uint Offset, uint Length);
+	internal readonly record struct NativeJniRemappingTypeReplacementEntry (NativeJniRemappingString Name, uint Replacement);
+	internal readonly record struct NativeJniRemappingIndexTypeEntry (NativeJniRemappingString Name, uint MethodCount, uint MethodStart);
+	internal readonly record struct NativeJniRemappingIndexFieldTypeEntry (NativeJniRemappingString Name, uint FieldCount, uint FieldStart);
+	internal readonly record struct NativeJniRemappingReplacementMethod (uint TargetType, uint TargetName, uint TargetSignature, uint IsStatic);
+	internal readonly record struct NativeJniRemappingReplacementField (uint TargetType, uint TargetName, uint TargetSignature);
+	internal readonly record struct NativeJniRemappingIndexMethodEntry (
+		NativeJniRemappingString Name, NativeJniRemappingString Signature, NativeJniRemappingReplacementMethod Replacement);
+	internal readonly record struct NativeJniRemappingIndexFieldEntry (
+		NativeJniRemappingString Name, NativeJniRemappingString Signature, NativeJniRemappingReplacementField Replacement);
+
 	static bool isInUse;
 	static readonly ConcurrentDictionary<string, string> reverseTypes = new (StringComparer.Ordinal);
 
