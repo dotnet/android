@@ -101,24 +101,32 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public unsafe void FinalizePeer_RetainsReferenceReattachedByCallback (bool exception)
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		[TestCase (false, true)]
+		[TestCase (true, true)]
+		public unsafe void FinalizePeer_RetainsReferenceReattachedByCallback (bool exception, bool throwingCallback)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
 			var local = type.NewObject (type.GetConstructor ("()V"), null);
-			var observation = new FinalizationObservation { Reattach = local };
+			var observation = new FinalizationObservation { Reattach = local, ThrowOnFinalize = throwingCallback };
 			var reference = default (JniObjectReference);
 			var peer = CreatePeer (exception, ref reference, JniObjectReferenceOptions.None, observation);
 			try {
-				JniEnvironment.Runtime.ValueManager.FinalizePeer (peer);
+				if (throwingCallback)
+					Assert.Throws<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
+				else
+					JniEnvironment.Runtime.ValueManager.FinalizePeer (peer);
+				Assert.AreEqual (1, observation.FinalizedCount);
 				Assert.IsFalse (observation.ReferenceWasValid, "Dispose(false) must still enter with an invalid reference.");
 				Assert.IsTrue (peer.PeerReference.IsValid);
 				Assert.AreNotEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (local, peer.PeerReference));
 				Assert.AreSame (peer, JniEnvironment.Runtime.ValueManager.PeekPeer (local));
 				peer.Dispose ();
+				Assert.IsFalse (peer.PeerReference.IsValid);
 				Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+				Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (local));
 			} finally {
 				Cleanup (peer);
 				JniObjectReference.Dispose (ref local);
