@@ -40,6 +40,61 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				Directory.Delete (dir, recursive: true);
 		}
 
+		[TestCase (0, "0000000000000000")]
+		[TestCase (1, "5477EEB6E6BB820B")]
+		[TestCase (7, "30C51612A73C05BC")]
+		[TestCase (8, "B7C7B6C63848DD1C")]
+		[TestCase (9, "E319893727285DAC")]
+		[TestCase (15, "C53E7647D5A8A17E")]
+		[TestCase (16, "739B83CF9C1A90B2")]
+		[TestCase (17, "B2A28A16B737E58F")]
+		[TestCase (255, "80448A320F0F3E67")]
+		[TestCase (256, "04DA82515782790F")]
+		[TestCase (257, "C6C7D9A46A8061D4")]
+		[TestCase (65535, "9E4163DD827887F5")]
+		[TestCase (65536, "C6BB7D3BF1C936A7")]
+		public void HashOutputs (int length, string littleEndianExpected)
+		{
+			var bytes = new byte [length];
+			for (int i = 0; i < bytes.Length; i++)
+				bytes [i] = (byte) (i * 37 + 11);
+			var expected = Convert.FromHexString (littleEndianExpected);
+			if (!BitConverter.IsLittleEndian) {
+				for (int i = 0; i < expected.Length; i++)
+					expected [i] ^= (byte) ((ulong) length >> (i * 8) ^ (ulong) length >> ((7 - i) * 8));
+			}
+			AssertHashOutputs (bytes, Convert.ToHexString (expected));
+		}
+
+		[TestCase (0)]
+		[TestCase (1)]
+		[TestCase (7)]
+		[TestCase (8)]
+		[TestCase (9)]
+		[TestCase (255)]
+		[TestCase (256)]
+		[TestCase (257)]
+		[TestCase (65535)]
+		[TestCase (65536)]
+		public void ZeroFilledHashIncludesNativeEndianLength (int length)
+		{
+			AssertHashOutputs (new byte [length], Convert.ToHexString (BitConverter.GetBytes ((ulong) length)));
+		}
+
+		void AssertHashOutputs (byte [] bytes, string expected)
+		{
+			Assert.AreEqual (expected, Files.HashBytes (bytes), "HashBytes");
+			using (var input = new MemoryStream (bytes)) {
+				input.Position = input.Length;
+				Assert.AreEqual (expected, Files.HashStream (input), "HashStream must rewind the input");
+				Assert.AreEqual (input.Length, input.Position);
+			}
+			Directory.CreateDirectory (tempDir);
+			var path = Path.Combine (tempDir, "hash.bin");
+			File.WriteAllBytes (path, bytes);
+			Assert.AreEqual (expected, Files.HashFile (path), "HashFile");
+		}
+
 		[Test]
 		public void ToLongPathIsIdempotent ()
 		{
