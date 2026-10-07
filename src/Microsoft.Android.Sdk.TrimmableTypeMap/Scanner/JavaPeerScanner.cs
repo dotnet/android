@@ -385,13 +385,6 @@ public sealed class JavaPeerScanner : IDisposable
 
 			var fullName = index.GetTypeFullName (typeHandle);
 
-			// Temporarily allow [JniAddNativeMethodRegistrationAttribute] while we investigate
-			// which scenarios fail later in the trimmable typemap pipeline.
-			// if (index.MayUseJniAddNativeMethodRegistrationAttribute &&
-			//     HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
-			// 	logger?.LogJniAddNativeMethodRegistrationAttributeError (fullName);
-			// }
-
 			// Determine the JNI name and whether this is a known Java peer.
 			// Priority:
 			//   1. [Register] attribute → use JNI name from attribute
@@ -995,23 +988,6 @@ public sealed class JavaPeerScanner : IDisposable
 	internal bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
 	{
 		return TryManagedTypeToJniDescriptor (managedType, exportKind, out _);
-	}
-
-	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
-	{
-		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
-		const string JavaInteropNamespace = "Java.Interop";
-
-		foreach (var methodHandle in typeDef.GetMethods ()) {
-			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
-			foreach (var attrHandle in methodDef.GetCustomAttributes ()) {
-				var attr = index.Reader.GetCustomAttribute (attrHandle);
-				if (AssemblyIndex.IsCustomAttributeMatch (attr, index.Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	/// <summary>

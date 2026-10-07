@@ -78,16 +78,6 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public Dictionary<string, string> ForwardedTypeAssemblies { get; } = new (StringComparer.Ordinal);
 
-	/// <summary>
-	/// True iff the assembly's metadata mentions
-	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
-	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
-	/// attribute (XA4251); this flag lets the scanner short-circuit the
-	/// per-method attribute walk for the overwhelmingly common case of
-	/// assemblies that don't use it.
-	/// </summary>
-	public bool MayUseJniAddNativeMethodRegistrationAttribute { get; private set; }
-
 	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string assemblyPath)
 	{
 		this.peReader = peReader;
@@ -117,20 +107,6 @@ sealed class AssemblyIndex : IDisposable
 
 	void Build ()
 	{
-		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
-		const string JavaInteropNamespace = "Java.Interop";
-
-		// Cheap first pass over TypeReferences / TypeDefinitions to decide whether
-		// the assembly is even capable of carrying [JniAddNativeMethodRegistration].
-		// The per-method attribute walk in the scanner can then skip entirely for
-		// the common case where the attribute is neither imported nor declared here.
-		foreach (var trHandle in Reader.TypeReferences) {
-			var typeReference = Reader.GetTypeReference (trHandle);
-			if (IsTypeReferenceMatch (typeReference, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
-				MayUseJniAddNativeMethodRegistrationAttribute = true;
-			}
-		}
-
 		foreach (var exportedTypeHandle in Reader.ExportedTypes) {
 			var exportedType = Reader.GetExportedType (exportedTypeHandle);
 			var fullName = GetExportedTypeFullName (exportedType);
@@ -145,11 +121,6 @@ sealed class AssemblyIndex : IDisposable
 
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
-
-			if (!MayUseJniAddNativeMethodRegistrationAttribute &&
-			    IsTypeDefinitionMatch (typeDef, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
-				MayUseJniAddNativeMethodRegistrationAttribute = true;
-			}
 
 			var fullName = GetTypeFullName (typeHandle);
 			if (fullName.Length == 0) {

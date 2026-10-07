@@ -1535,15 +1535,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the &apos;llvm-ir&apos; type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
-        /// </summary>
-        public static string XA4251 {
-            get {
-                return ResourceManager.GetString("XA4251", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Trimmable type map Java source input directory &apos;{0}&apos; and output directory &apos;{1}&apos; must be different..
         /// </summary>
         public static string XA4254 {

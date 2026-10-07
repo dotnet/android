@@ -1256,11 +1256,6 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
-  <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. Please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
-    <comment>The following is a literal name and should not be translated: JniAddNativeMethodRegistrationAttribute.
-{0} - Fully-qualified managed type name</comment>
-  </data>
   <data name="XA4252" xml:space="preserve">
     <value>Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp

@@ -113,10 +113,13 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ("-dontobfuscate", common);
 				StringAssert.DoesNotContain ("-keep,allowshrinking,allowoptimization class **", common);
 				StringAssert.DoesNotContain ("-keep class mono.android.**", common);
+				StringAssert.DoesNotContain ("net.dot.jni.ManagedPeer", common);
+				StringAssert.DoesNotContain ("net.dot.jni.GCUserPeerable", common);
+				StringAssert.DoesNotContain ("net.dot.jni.internal.JavaProxyObject", common);
+				StringAssert.DoesNotContain ("net.dot.jni.internal.JavaProxyThrowable", common);
 				if (scopedMembers) {
 					StringAssert.DoesNotContain ("-keepclassmembers class * {", common);
 					StringAssert.Contains ("-keep class mono.android.Runtime { *; }", common);
-					StringAssert.Contains ("-keep class net.dot.jni.ManagedPeer { *; }", common);
 					StringAssert.Contains ("-keep interface mono.android.IGCUserPeer { *; }", common);
 					StringAssert.Contains ("-keep,allowshrinking class * implements **", common);
 				} else {
