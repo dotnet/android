@@ -67,6 +67,7 @@ auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
 			"Invalid binary blob envelope for '%s'", symbol);
 	}
 
+	// BLBB v1 flags: 0 = uncompressed mapped body, 1 = Zstd-compressed body.
 	if (header.flags == 0) {
 		return { blob + envelope_size, header.raw };
 	}
