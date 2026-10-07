@@ -56,7 +56,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Directory.CreateDirectory (Path.GetDirectoryName (generatedReferenceConfiguration) ?? throw new InvalidOperationException ());
 		File.WriteAllText (generatedReferenceConfiguration, "rules");
 		Build (project, "-p:ProguardConfigFiles=custom.cfg");
-		CollectionAssert.AreEqual (new [] {
+		AssertPathsAreEqual (new [] {
 			"custom.cfg",
 			Path.Combine ("obj", "proguard", "proguard_xamarin.cfg"),
 			Path.Combine ("obj", "proguard", "proguard_project_references.cfg"),
@@ -64,11 +64,18 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
 		File.Delete (generatedReferenceConfiguration);
 		Build (project, "-p:ProguardConfigFiles=custom.cfg");
-		CollectionAssert.AreEqual (new [] {
+		AssertPathsAreEqual (new [] {
 			"custom.cfg",
 			Path.Combine ("obj", "proguard", "proguard_xamarin.cfg"),
 			Path.Combine ("obj", "proguard", "proguard_project_primary.cfg"),
 		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
+	}
+
+	void AssertPathsAreEqual (string [] expected, string [] actual)
+	{
+		CollectionAssert.AreEqual (
+			expected.Select (path => Path.GetFullPath (path, directory)),
+			actual.Select (path => Path.GetFullPath (path, directory)));
 	}
 
 	[Test]
