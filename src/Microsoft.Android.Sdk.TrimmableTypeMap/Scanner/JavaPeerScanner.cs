@@ -373,10 +373,6 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	// ManagedPeer depends on reflection-based registration; the trimmable path uses IAndroidCallableWrapper.
-	static bool IsUnsupportedByTrimmableTypeMap (string managedFullName, string assemblyName) =>
-		managedFullName == "Java.Interop.ManagedPeer" && assemblyName == "Java.Interop";
-
 	void ScanAssembly (AssemblyIndex index, Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results)
 	{
 		foreach (var typeHandle in index.Reader.TypeDefinitions) {
@@ -389,14 +385,9 @@ public sealed class JavaPeerScanner : IDisposable
 
 			var fullName = index.GetTypeFullName (typeHandle);
 
-			if (IsUnsupportedByTrimmableTypeMap (fullName, index.AssemblyName)) {
-				continue;
-			}
-
 			// Temporarily allow [JniAddNativeMethodRegistrationAttribute] while we investigate
 			// which scenarios fail later in the trimmable typemap pipeline.
 			// if (index.MayUseJniAddNativeMethodRegistrationAttribute &&
-			//     !IsBuiltInJniAddNativeMethodRegistrationType (fullName, index) &&
 			//     HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
 			// 	logger?.LogJniAddNativeMethodRegistrationAttributeError (fullName);
 			// }
@@ -1021,12 +1012,6 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 		}
 		return false;
-	}
-
-	static bool IsBuiltInJniAddNativeMethodRegistrationType (string fullName, AssemblyIndex index)
-	{
-		return string.Equals (index.AssemblyName, "Java.Interop", StringComparison.Ordinal) &&
-			string.Equals (fullName, "Java.Interop.JavaProxyObject", StringComparison.Ordinal);
 	}
 
 	/// <summary>

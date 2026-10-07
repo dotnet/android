@@ -2,11 +2,11 @@ package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import net.dot.jni.GCUserPeerable;
+import mono.android.IGCUserPeer;
 
-// Android constructs the managed peer through its runtime. GCUserPeerable
+// Android constructs the managed peer through its runtime. IGCUserPeer
 // keeps managed references alive for JavaObjectTest.DisposeAccessesThis.
-public class GetThis implements GCUserPeerable {
+public class GetThis implements IGCUserPeer {
 
 	ArrayList<Object> managedReferences = new ArrayList<Object>();
 
@@ -17,12 +17,12 @@ public class GetThis implements GCUserPeerable {
 		return this;
 	}
 
-	public void jiAddManagedReference (java.lang.Object obj)
+	public void monodroidAddReference (java.lang.Object obj)
 	{
 		managedReferences.add (obj);
 	}
 
-	public void jiClearManagedReferences ()
+	public void monodroidClearReferences ()
 	{
 		managedReferences.clear ();
 	}

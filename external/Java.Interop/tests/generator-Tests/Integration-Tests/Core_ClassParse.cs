@@ -11,11 +11,11 @@ namespace generatortests
 		{
 			AllowWarnings = true;
 
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath: "Core_ClassParse",
-					apiDescriptionFile: "expected.ji/Core_ClassParse/api.xml",
+					apiDescriptionFile: "TestInputs/Core_ClassParse/api.xml",
 					expectedRelativePath: "Core_ClassParse",
-					metadataFile: FullPath ("expected.ji/Core_ClassParse/metadata.xml"));
+					metadataFile: FullPath ("TestInputs/Core_ClassParse/metadata.xml"));
 		}
 	}
 }

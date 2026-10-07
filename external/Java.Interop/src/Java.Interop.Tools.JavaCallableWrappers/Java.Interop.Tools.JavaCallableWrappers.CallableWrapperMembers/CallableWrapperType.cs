@@ -107,14 +107,7 @@ public class CallableWrapperType
 		sw.WriteLine ("\timplements");
 		sw.Write ("\t\t");
 
-		switch (options.CodeGenerationTarget) {
-			case JavaPeerStyle.JavaInterop1:
-				sw.Write ("net.dot.jni.GCUserPeerable");
-				break;
-			default:
-				sw.Write ("mono.android.IGCUserPeer");
-				break;
-		}
+		sw.Write ("mono.android.IGCUserPeer");
 
 		foreach (var iface in ImplementedInterfaces) {
 			sw.WriteLine (",");
@@ -178,13 +171,10 @@ public class CallableWrapperType
 		if (GenerateOnCreateOverrides && IsInstrumentation && !Methods.Any (m => m.Name == "onCreate"))
 			WriteInstrumentationOnCreate (sw, options);
 
-		var addRef = options.CodeGenerationTarget == JavaPeerStyle.JavaInterop1 ? "jiAddManagedReference" : "monodroidAddReference";
-		var clearRefs = options.CodeGenerationTarget == JavaPeerStyle.JavaInterop1 ? "jiClearManagedReferences" : "monodroidClearReferences";
-
 		sw.WriteLine ();
 		sw.WriteLine ("\tprivate java.util.ArrayList refList;");
 
-		sw.WriteLine ($"\tpublic void {addRef} (java.lang.Object obj)");
+		sw.WriteLine ("\tpublic void monodroidAddReference (java.lang.Object obj)");
 		sw.WriteLine ("\t{");
 		sw.WriteLine ("\t\tif (refList == null)");
 		sw.WriteLine ("\t\t\trefList = new java.util.ArrayList ();");
@@ -192,7 +182,7 @@ public class CallableWrapperType
 		sw.WriteLine ("\t}");
 		sw.WriteLine ();
 
-		sw.WriteLine ($"\tpublic void {clearRefs} ()");
+		sw.WriteLine ("\tpublic void monodroidClearReferences ()");
 		sw.WriteLine ("\t{");
 		sw.WriteLine ("\t\tif (refList != null)");
 		sw.WriteLine ("\t\t\trefList.clear ();");
@@ -274,24 +264,13 @@ public class CallableWrapperType
 
 		sw.Write ("\t\t");
 
-		switch (options.CodeGenerationTarget) {
-			case JavaPeerStyle.JavaInterop1:
-				sw.Write ("net.dot.jni.ManagedPeer.registerNativeMembers (");
-				sw.Write (self.Name);
-				sw.Write (".class, ");
-				sw.Write (field);
-				sw.WriteLine (");");
-				break;
-			default:
-				sw.Write ("mono.android.Runtime.register (\"");
-				sw.Write (self.PartialAssemblyQualifiedName);
-				sw.Write ("\", ");
-				sw.Write (self.Name);
-				sw.Write (".class, ");
-				sw.Write (field);
-				sw.WriteLine (");");
-				break;
-		}
+		sw.Write ("mono.android.Runtime.register (\"");
+		sw.Write (self.PartialAssemblyQualifiedName);
+		sw.Write ("\", ");
+		sw.Write (self.Name);
+		sw.Write (".class, ");
+		sw.Write (field);
+		sw.WriteLine (");");
 	}
 
 	// If there are no methods, we need to generate "empty" registration because of backward compatibility

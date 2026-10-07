@@ -30,9 +30,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, constructor, opt);
 
-			Attributes.Add (new RegisterAttr (".ctor", constructor.JniSignature, string.Empty, additionalProperties: constructor.AdditionalAttributeString ()) {
-				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Constructor,
-			});
+			Attributes.Add (new RegisterAttr (".ctor", constructor.JniSignature, string.Empty, additionalProperties: constructor.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddObsolete (Attributes, constructor.Deprecated, opt, deprecatedSince: constructor.DeprecatedSince);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, constructor.AnnotatedVisibility, false, opt);
@@ -46,9 +44,7 @@ namespace generator.SourceWriters
 			SetVisibility (constructor.Visibility);
 			IsUnsafe = true;
 
-			BaseCall = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1
-				? $"{(useBase ? "base" : "this")} (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)"
-				: $"{(useBase ? "base" : "this")} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
+			BaseCall = $"{(useBase ? "base" : "this")} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
 			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
 
 			this.AddMethodParameters (constructor.Parameters, opt);
@@ -62,13 +58,8 @@ namespace generator.SourceWriters
 						? "(" + constructor.Parameters.GetJniNestedDerivedSignature (opt) + ")V"
 						: constructor.JniSignature);
 			writer.WriteLine ();
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				writer.WriteLine ($"if (PeerReference.IsValid)");
-				writer.WriteLine ("\treturn;");
-			} else {
-				writer.WriteLine ($"if ({context_this} != IntPtr.Zero)");
-				writer.WriteLine ("\treturn;");
-			}
+			writer.WriteLine ($"if ({context_this} != IntPtr.Zero)");
+			writer.WriteLine ("\treturn;");
 			writer.WriteLine ();
 
 			foreach (var prep in constructor.Parameters.GetCallPrep (opt))
@@ -83,11 +74,7 @@ namespace generator.SourceWriters
 
 			WriteParamterListCallArgs (writer, constructor.Parameters, false, opt);
 			writer.WriteLine ("var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (){0});", constructor.Parameters.GetCallArgs (opt, invoker: false));
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				writer.WriteLine ("Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);");
-			} else {
-				writer.WriteLine ("SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);");
-			}
+			writer.WriteLine ("SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);");
 			writer.WriteLine ("_members.InstanceMethods.FinishCreateInstance (__id, this{0});", constructor.Parameters.GetCallArgs (opt, invoker: false));
 
 			if (needsFinally) {
@@ -111,14 +98,7 @@ namespace generator.SourceWriters
 			if (parameters.Count == 0)
 				return;
 
-			string JValue = "JValue";
-
-			switch (opt.CodeGenerationTarget) {
-				case CodeGenerationTarget.XAJavaInterop1:
-				case CodeGenerationTarget.JavaInterop1:
-					JValue = invoker ? JValue : "JniArgumentValue";
-					break;
-			}
+			string JValue = invoker ? "JValue" : "JniArgumentValue";
 
 			writer.WriteLine ("{0}* __args = stackalloc {0} [{1}];", JValue, parameters.Count);
 

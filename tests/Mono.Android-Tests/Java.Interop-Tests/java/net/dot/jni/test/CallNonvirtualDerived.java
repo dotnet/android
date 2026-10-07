@@ -2,24 +2,15 @@ package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import net.dot.jni.GCUserPeerable;
+import mono.android.IGCUserPeer;
 
 public class CallNonvirtualDerived
 		extends CallNonvirtualBase
-		implements GCUserPeerable
+		implements IGCUserPeer
 {
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CallNonvirtualDerived, Java.Interop-Tests";
-
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CallNonvirtualDerived () {
-		if (CallNonvirtualDerived.class == getClass ()) {
-			net.dot.jni.ManagedPeer.construct (
-					this,
-					assemblyQualifiedName,
-					""
-			);
-		}
 	}
 
 	boolean methodInvoked;
@@ -28,12 +19,12 @@ public class CallNonvirtualDerived
 		methodInvoked = true;
 	}
 
-	public void jiAddManagedReference (java.lang.Object obj)
+	public void monodroidAddReference (java.lang.Object obj)
 	{
 		managedReferences.add (obj);
 	}
 
-	public void jiClearManagedReferences ()
+	public void monodroidClearReferences ()
 	{
 		managedReferences.clear ();
 	}

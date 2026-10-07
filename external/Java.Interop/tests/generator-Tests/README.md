@@ -7,17 +7,14 @@ It does not work together with class-parse, so you cannot pass any jars
 nor java sources, which is a pain point (but those who created these tests
 didn't care).
 
-There are two "expected" set of files. One is "expected" and the other is
-"expected.ji". They are different per Java.Interop output methods.
-
-The differences between "expected" and "expected.ji" are almost only
-annoying, but this test blindly compares those differences. So if you are
-going to add tests you will have to duplicate your work twice...
+Integration tests generate `XAJavaInterop1` bindings and compare them with
+the baselines in `expected.xaji`. API descriptions, metadata, and additional
+compilation support sources live in `TestInputs`.
 
 Tests that use `BaseGeneratorTest` are organized as:
 
 ./BaseGeneratorTest.cs - sets up generation and compilation options.
-./Compiler.cs - implements C# compilation with `CodeDomProvider`.
+./Compiler.cs - implements C# compilation with Roslyn.
 ./(others).cs - the actual `TestFixture`s.
 
 What those tests do are:
@@ -29,15 +26,12 @@ What those tests do are:
 `BaseGeneratorTest` takes the arguments below,
 
 - outputRelativePath - path to generator output subdir
-- apiDescriptionFile - path to the input API XML output. Sadly existing tests
-  are organized horribly and they reside in the "expected" directory.
+- apiDescriptionFile - path to the input API XML under `TestInputs`.
 - expectedRelativePath - path to the "expected" file generation.
 - additionalSupportPaths - path to additional compilation items.
 
-The test outputs are generated to `out` and `out.ji` directories, per
-the generator's output method.
+The test outputs are generated to `out.xaji`.
 
-When you are creating a new test, it is easier to once generate results in
-those `out` and `out.ji` directories, and copy them as "expected" and
-"expected.ji" with required changes (so that they become really expected
-contents).
+When creating a new test, add its inputs to `TestInputs`, generate the
+results in `out.xaji`, and review them before copying the expected sources
+to `expected.xaji`.

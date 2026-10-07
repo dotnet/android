@@ -19,6 +19,20 @@ namespace Java.InteropTests
 	{
 		static IntPtr noPinActionPointer;
 
+		[Test]
+		public void ManagedValueProxyUsesAndroidGCReferenceContract ()
+		{
+			var value = new ManagedValue (42);
+			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
+			try {
+				Assert.IsTrue (Java.Interop.Runtime.IsGCUserPeer (reference.Handle));
+				using var interfaceType = new JniType ("mono/android/IGCUserPeer");
+				Assert.IsTrue (JniEnvironment.Types.IsInstanceOf (reference, interfaceType.PeerReference));
+			} finally {
+				JniObjectReference.Dispose (ref reference);
+			}
+		}
+
 		// Managed reference identity is the common round-trip contract. Java-visible equality,
 		// hashing, and string conversion are asserted separately because they vary by typemap.
 		[Test]

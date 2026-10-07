@@ -215,7 +215,7 @@ namespace Xamarin.Android.Binder
 			case "xajavainterop1":
 				return CodeGenerationTarget.XAJavaInterop1;
 			case "javainterop1":
-				return CodeGenerationTarget.JavaInterop1;
+				throw new NotSupportedException ("The JavaInterop1 code generation target is no longer supported. Use XAJavaInterop1 instead.");
 			}
 			throw new NotSupportedException ($"Don't know how to convert '{value}' to a CodeGenerationTarget value!");
 		}

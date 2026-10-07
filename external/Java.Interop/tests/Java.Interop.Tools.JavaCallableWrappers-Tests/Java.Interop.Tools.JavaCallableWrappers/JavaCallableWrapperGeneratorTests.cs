@@ -680,14 +680,14 @@ public class ExampleInstrumentation
 		[Test]
 		public void GenerateJavaInteropExample ()
 		{
-			var actual = Generate (typeof (JavaInteropExample), style: JavaPeerStyle.JavaInterop1);
+			var actual = Generate (typeof (JavaInteropExample));
 			var expected = @"package register;
 
 
 public class JavaInteropExample
 	extends java.lang.Object
 	implements
-		net.dot.jni.GCUserPeerable
+		mono.android.IGCUserPeer
 {
 /** @hide */
 	public static final String __md_methods;
@@ -695,14 +695,14 @@ public class JavaInteropExample
 		__md_methods = 
 			""n_Example:()V:__export__\n"" +
 			"""";
-		net.dot.jni.ManagedPeer.registerNativeMembers (JavaInteropExample.class, __md_methods);
+		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", JavaInteropExample.class, __md_methods);
 	}
 
 	public JavaInteropExample (int p0, int p1)
 	{
 		super ();
 		if (getClass () == JavaInteropExample.class) {
-			net.dot.jni.ManagedPeer.construct (this, ""(II)V"", new java.lang.Object[] { p0, p1 });
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib:System.Int32, System.Private.CoreLib"", this, new java.lang.Object[] { p0, p1 });
 		}
 	}
 
@@ -714,14 +714,14 @@ public class JavaInteropExample
 	private native void n_Example ();
 
 	private java.util.ArrayList refList;
-	public void jiAddManagedReference (java.lang.Object obj)
+	public void monodroidAddReference (java.lang.Object obj)
 	{
 		if (refList == null)
 			refList = new java.util.ArrayList ();
 		refList.add (obj);
 	}
 
-	public void jiClearManagedReferences ()
+	public void monodroidClearReferences ()
 	{
 		if (refList != null)
 			refList.clear ();
@@ -730,6 +730,13 @@ public class JavaInteropExample
 ";
 			Assert.AreEqual (expected, actual);
 		}
+
+		[TestCase (-1)]
+		[TestCase (1)]
+		public void UndefinedCodeGenerationTargetIsRejected (int target)
+		{
+			Assert.Throws<NotSupportedException> (() =>
+				new CallableWrapperWriterOptions { CodeGenerationTarget = (JavaPeerStyle) target });
+		}
 	}
 }
-

@@ -20,7 +20,6 @@ namespace MonoDroid.Generation
 			set {
 				switch (value) {
 				case CodeGenerationTarget.XAJavaInterop1:
-				case CodeGenerationTarget.JavaInterop1:
 					codeGenerationTarget    = value;
 					break;
 				default:
@@ -31,13 +30,7 @@ namespace MonoDroid.Generation
 
 		internal JavaInteropCodeGenerator CreateCodeGenerator (TextWriter writer)
 		{
-			switch (codeGenerationTarget) {
-				case CodeGenerationTarget.XAJavaInterop1:
-					return new XAJavaInteropCodeGenerator (writer, this);
-				case CodeGenerationTarget.JavaInterop1:
-				default:
-					return new JavaInteropCodeGenerator (writer, this);
-			}
+			return new JavaInteropCodeGenerator (writer, this);
 		}
 
 		SymbolTable symbolTable;
@@ -319,9 +312,7 @@ namespace MonoDroid.Generation
 
 		public string GetStringArrayToCharSequenceArrayMethodName ()
 		{
-			return CodeGenerationTarget == CodeGenerationTarget.JavaInterop1
-				? "ICharSequenceExtensions.ToCharSequenceArray"
-				: "CharSequence.ArrayFromStringArray";
+			return "CharSequence.ArrayFromStringArray";
 		}
 	}
 }

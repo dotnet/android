@@ -176,16 +176,6 @@ namespace Java.Interop
 			protected virtual bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
 			{
 				result  = null;
-				var p   = value as JavaProxyObject;
-				if (p != null) {
-					result  = p.Value;
-					return true;
-				}
-				var x   = value as JavaProxyThrowable;
-				if (x != null) {
-					result  = x.Exception;
-					return true;
-				}
 				return false;
 			}
 

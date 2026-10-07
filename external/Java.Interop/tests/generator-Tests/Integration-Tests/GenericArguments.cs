@@ -6,14 +6,13 @@ namespace generatortests
 	[TestFixture]
 	public class GenericArguments : BaseGeneratorTest
 	{
-		protected override bool TryJavaInterop1 => false;
 
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath: "GenericArguments",
-					apiDescriptionFile: "expected.ji/GenericArguments/GenericArguments.xml",
+					apiDescriptionFile: "TestInputs/GenericArguments/GenericArguments.xml",
 					expectedRelativePath: "GenericArguments",
 					additionalSupportPaths: null);
 		}

@@ -9,11 +9,11 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "Streams",
-					apiDescriptionFile:     "expected.ji/Streams/Streams.xml",
+					apiDescriptionFile:     "TestInputs/Streams/Streams.xml",
 					expectedRelativePath:   "Streams",
-					additionalSupportPaths: new[]{ "expected.ji/Streams/SupportFiles" });
+					additionalSupportPaths: new[]{ "TestInputs/Streams/SupportFiles" });
 		}
 	}
 }

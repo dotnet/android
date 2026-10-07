@@ -1,4 +1,3 @@
-#if !JAVA_INTEROP1
 
 #pragma warning disable
 using System;
@@ -112,5 +111,3 @@ namespace Java.Interop {
 	}
 }
 #pragma warning restore
-
-#endif  // !JAVA_INTEROP1

@@ -46,6 +46,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void UnsupportedCodegenTargetIsRejected (
+			[Values ("XamarinAndroid", "JavaInterop1", "javainterop1")] string codegenTarget,
+			[Values (true, false)] bool isApplication)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject ()
+				: new XamarinAndroidLibraryProject ();
+			project.SetProperty ("AndroidCodegenTarget", codegenTarget);
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = "_CheckForInvalidConfigurationAndPlatform";
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "Build should have failed.");
+			StringAssertEx.Contains ("error XA4232:", builder.LastBuildOutput, "Build should fail with XA4232.");
+			StringAssertEx.Contains (codegenTarget, builder.LastBuildOutput, "Error should identify the unsupported code generation target.");
+		}
+
+		[Test]
 		public void UnsupportedJcwCodegenTargetIsRejected (
 			[Values ("XamarinAndroid", "JavaInterop1")] string codegenTarget,
 			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)

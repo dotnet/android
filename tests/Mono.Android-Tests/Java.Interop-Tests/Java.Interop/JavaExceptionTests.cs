@@ -82,28 +82,5 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref l);
 		}
 
-		[Test]
-		public void InnerExceptionIsNotAProxy ()
-		{
-			using (var t = new JniType ("java/lang/Throwable")) {
-				var outer = CreateThrowable (t, "Outer Exception");
-				var ex    = new InvalidOperationException ("Managed Exception!");
-				var exp   = CreateJavaProxyThrowable (ex);
-				SetThrowableCause (t, outer, exp.PeerReference);
-				using (var e = new JavaException (ref outer, JniObjectReferenceOptions.CopyAndDispose)) {
-					Assert.IsNotNull (e.InnerException);
-					Assert.AreSame (ex, e.InnerException);
-				}
-				exp.Dispose ();
-			}
-		}
-
-		static JavaException CreateJavaProxyThrowable (Exception value)
-		{
-			var JavaProxyThrowable_type = Type.GetType ("Java.Interop.JavaProxyThrowable, Java.Interop", throwOnError :true);
-			var proxy   = (JavaException) Activator.CreateInstance (JavaProxyThrowable_type, value);
-			return proxy;
-		}
 	}
 }
-

@@ -34,7 +34,6 @@ namespace xamarin::android {
 		int             packageNamingPolicy;
 		uint8_t         boundExceptionType;
 		const JniRemappingData *jniRemappingData;
-		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 		int              maxGrefCount;
 	};

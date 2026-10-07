@@ -100,11 +100,6 @@ namespace MonoDroid.Generation {
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned, bool isMarshal = false)
 		{
 			if (!string.IsNullOrEmpty (managed_type) && (sym is ClassGen || sym is InterfaceGen)) {
-				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.JavaInterop1) {
-					return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
-						opt.GetOutputName (managed_type) +
-						$"> (ref __rm, JniObjectReferenceOptions.Copy)";
-				}
 				return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", 
 				                      opt.GetOutputName (managed_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
  			}
@@ -113,12 +108,6 @@ namespace MonoDroid.Generation {
 
 		public string ToNative (CodeGenerationOptions opt, string var_name)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				if ((sym is GenericTypeParameter) || (sym is GenericSymbol)) {
-					return $"({var_name}?.PeerReference ?? default)";
-				}
-				return sym.ToNative (opt, var_name);
-			}
 			return ((sym is GenericTypeParameter) || (sym is GenericSymbol)) ? String.Format ("JNIEnv.ToLocalJniHandle ({0})", var_name) : sym.ToNative (opt, var_name);
 		}
 
@@ -130,11 +119,6 @@ namespace MonoDroid.Generation {
 			if (targetType == "string")
 				return string.Format ("{0}?.ToString ()", name);
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
-					(rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? sym.FullName) : sym.FullName) +
-					$">(({opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name)}?.PeerReference ?? default).Handle)";
-			}
 			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 			                      rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? sym.FullName) : sym.FullName,
 			                      opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name),

@@ -254,9 +254,6 @@ namespace MonoDroid.Generation
 			attributes.FirstOrDefault (a => {
 				var attrType    = a.AttributeType.FullNameCorrected ();
 
-				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.JavaInterop1) {
-					return attrType == "Java.Interop.JniTypeSignatureAttribute";
-				}
 
 				if (attrType == "Android.Runtime.RegisterAttribute")
 					return true;

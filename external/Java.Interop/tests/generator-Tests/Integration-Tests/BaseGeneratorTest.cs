@@ -32,8 +32,6 @@ namespace generatortests
 		List<string> AdditionalSourceDirectories;
 		protected bool AllowWarnings;
 
-		protected virtual bool TryJavaInterop1 => true;
-
 		public void Execute ()
 		{
 			CodeGenerator.Run (Options);
@@ -121,12 +119,9 @@ namespace generatortests
 			}
 		}
 
-		protected void RunAllTargets (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null, string metadataFile = null)
+		protected void RunTarget (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null, string metadataFile = null)
 		{
 			Run (CodeGenerationTarget.XAJavaInterop1,   Path.Combine ("out.xaji", outputRelativePath),  apiDescriptionFile,     Path.Combine ("expected.xaji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
-			if (TryJavaInterop1) {
-				Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
-			}
 		}
 
 		protected string FullPath (string path)

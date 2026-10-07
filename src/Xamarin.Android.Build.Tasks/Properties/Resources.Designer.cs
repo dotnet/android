@@ -1342,7 +1342,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is no longer supported. The &apos;AndroidCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;..
         /// </summary>
         public static string XA4232 {
             get {

@@ -87,28 +87,7 @@ namespace Java.Interop
 			if (declaringType == DeclaringType)
 				return this;
 
-			// Initialize before publication in case construction recursively accesses this cache:
-			// System.ArgumentException: An item with the same key has already been added. Key: Java.Interop.JavaProxyThrowable
-			//    at System.Collections.Generic.Dictionary`2.TryInsert(TKey key, TValue value, InsertionBehavior behavior)
-			//    at System.Collections.Generic.Dictionary`2.Add(TKey key, TValue value)
-			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 80
-			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 80
-			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			//    at Java.Interop.JavaException..ctor(String message) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JavaException.cs:line 52
-			//    at Java.Interop.JavaProxyThrowable..ctor(Exception exception) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JavaProxyThrowable.cs:line 15
-			//    at Java.Interop.JniEnvironment.Exceptions.Throw(Exception e) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniEnvironment.Errors.cs:line 39
-			//    at Java.Interop.JniRuntime.RaisePendingException(Exception pendingException) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniRuntime.cs:line 444
-			//    at Java.Interop.JniTransition.Dispose() in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniTransition.cs:line 39
-			//    at Java.Interop.ManagedPeer.RegisterNativeMembers(IntPtr jnienv, IntPtr klass, IntPtr n_nativeClass, IntPtr n_methods) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/ManagedPeer.cs:line 195
-			//    at Java.Interop.NativeMethods.java_interop_jnienv_find_class(IntPtr jnienv, IntPtr& thrown, String classname)
-			//    at Java.Interop.NativeMethods.java_interop_jnienv_find_class(IntPtr jnienv, IntPtr& thrown, String classname)
-			//    at Java.Interop.JniEnvironment.Types.TryRawFindClass(IntPtr env, String classname, IntPtr& klass, IntPtr& thrown) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs:line 135
-			//    at Java.Interop.JniEnvironment.Types.TryFindClass(String classname, Boolean throwOnError) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs:line 49
-			//    at Java.Interop.JniEnvironment.Types.FindClass(String classname) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs:line 37
-			//    at Java.Interop.JniType..ctor(String classname) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniType.cs:line 51
-			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
-			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
-			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
+			// Initialize before publication in case construction recursively accesses this cache.
 			return GetOrAdd (
 				SubclassConstructors,
 				declaringType,

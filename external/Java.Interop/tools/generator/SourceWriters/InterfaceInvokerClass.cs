@@ -8,8 +8,6 @@ using System.Xml.Schema;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class InterfaceInvokerClass : ClassWriter
@@ -25,11 +23,8 @@ namespace generator.SourceWriters
 			Inherits = "global::Java.Lang.Object";
 			Implements.Add (iface.Name);
 
-			bool ji = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1;
-
 			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) {
 				UseGlobal       = true,
-				MemberType	    = (!ji) ? null : (MemberTypes?) MemberTypes.TypeInfo,
 			});
 
 			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
@@ -116,16 +111,9 @@ namespace generator.SourceWriters
 
 			IsPublic = true;
 
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				Parameters.Add (new MethodParameterWriter ("reference", new TypeReferenceWriter ("ref JniObjectReference")));
-				Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("JniObjectReferenceOptions")));
-				BaseCall = "base (ref reference, options)";
-
-			} else {
-				Parameters.Add (new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr));
-				Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
-				BaseCall = "base (handle, transfer)";
-			}
+			Parameters.Add (new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr));
+			Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
+			BaseCall = "base (handle, transfer)";
 		}
 	}
 }

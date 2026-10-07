@@ -497,10 +497,7 @@ namespace generatortests
 				throw new Java.Lang.AbstractMethodError (__id);
 			} finally {
 			""".NormalizeLineEndings ()), generated);
-			var expectedStringCleanup = Target == CodeGenerationTarget.JavaInterop1
-				? "global::Java.Interop.JniObjectReference.Dispose (ref native_value);"
-				: "JNIEnv.DeleteLocalRef (native_value);";
-			Assert.That (generated, Does.Contain (expectedStringCleanup));
+			Assert.That (generated, Does.Contain ("JNIEnv.DeleteLocalRef (native_value);"));
 			Assert.AreEqual (generated.Count (c => c == '{'), generated.Count (c => c == '}'), generated);
 		}
 
@@ -1328,78 +1325,6 @@ namespace generatortests
 	}
 
 	[TestFixture]
-	class JavaInteropCodeGeneratorTests : AnyJavaInteropCodeGeneratorTests
-	{
-		protected override CodeGenerationTarget Target => CodeGenerationTarget.JavaInterop1;
-		protected override string  CommonDirectoryOverride => "JavaInterop1";
-
-		protected override CodeGenerationOptions CreateOptions ()
-		{
-			var options = new CodeGenerationOptions {
-				CodeGenerationTarget            = Target,
-				SupportDefaultInterfaceMethods	= true,
-				SupportInterfaceConstants       = true,
-				SupportNestedInterfaceTypes     = true,
-				SupportNullableReferenceTypes   = true,
-			};
-			return options;
-		}
-
-		[Test]
-		public void StringPropertyOverride ([Values("true", "false")] string final)
-		{
-			var xml = @$"<api>
-			  <package name='java.lang' jni-name='java/lang'>
-			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
-			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object'
-			      final='true' name='String' static='false' visibility='public'>
-			    </class>
-			  </package>
-			  <package name='android.widget' jni-name='android/widget'>
-			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='TextView' static='false' visibility='public'>
-			       <method abstract='false' deprecated='not deprecated' final='{final}' name='getText' bridge='false' native='false' return='java.lang.CharSequence' static='false' synchronized='false' synthetic='false' visibility='public'>
-			       </method>
-			       <method abstract='false' deprecated='not deprecated' final='{final}' name='setText' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public'>
-			         <parameter name='text' type='java.lang.CharSequence'>
-			         </parameter>
-			       </method>
-			     </class>
-			  </package>
-			</api>";
-
-			var gens = ParseApiDefinition (xml);
-			var klass = gens.Single (g => g.Name == "TextView");
-
-			generator.Context.ContextTypes.Push (klass);
-			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
-			generator.Context.ContextTypes.Pop ();
-
-			if (final == "true") {
-				Assert.True (writer.ToString ().Contains (
-		@"set {
-			const string __id = ""setText.(Ljava/lang/CharSequence;)V"";
-			global::Java.Interop.JniObjectReference text = global::Java.Interop.JniEnvironment.Strings.NewString (value);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (text);
-				_members.InstanceMethods.InvokeNonvirtualVoidMethod (__id, this, __args);
-			} finally {
-				global::Java.Interop.JniObjectReference.Dispose (ref text);
-			}
-		}
-	}"), $"was: `{writer}`");
-			} else {
-				Assert.True (writer.ToString ().Contains (
-		@"set {
-			var jls = value == null ? null : new global::Java.Lang.String (value);
-			TextFormatted = jls;
-			if (jls != null) jls.Dispose ();
-		}"), $"was: `{writer}`");
-			}
-		}
-	}
-
-	[TestFixture]
 	class XAJavaInteropCodeGeneratorTests : AnyJavaInteropCodeGeneratorTests
 	{
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
@@ -1442,7 +1367,6 @@ namespace generatortests
 		[Test]
 		public void SupportedOSPlatform ()
 		{
-			// We do not write [SupportedOSPlatform] for JavaInterop, only XAJavaInterop
 			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 			klass.ApiAvailableSince = new AndroidSdkVersion (30);
 

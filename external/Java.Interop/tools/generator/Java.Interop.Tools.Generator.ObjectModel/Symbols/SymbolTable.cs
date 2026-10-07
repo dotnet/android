@@ -71,9 +71,6 @@ namespace MonoDroid.Generation {
 			AddType (new SimpleSymbol ("0", "ubyte", "byte", "B", returnCast: "(byte)"));
 			char_seq = new CharSequenceSymbol ();
 			string_sym = new StringSymbol ();
-			if (target == CodeGenerationTarget.JavaInterop1) {
-				return;
-			}
 			AddType ("Android.Graphics.Color", new ColorSymbol ());
 			instream_sym = new StreamSymbol ("InputStream");
 			outstream_sym = new StreamSymbol ("OutputStream");
@@ -197,16 +194,7 @@ namespace MonoDroid.Generation {
 			}
 			key = TypeNameUtilities.FilterPrimitiveFullName (key) ?? key;
 
-			if (target == CodeGenerationTarget.JavaInterop1) {
-				if (key == "java.lang.CharSequence") {
-					return CreateArray (char_seq, arrayRank, has_ellipsis);
-				}
-				if (key == "java.lang.String") {
-					return CreateArray (string_sym, arrayRank, has_ellipsis);
-				}
-			}
-
-			switch (this.target != CodeGenerationTarget.JavaInterop1 ? key : null) {
+			switch (key) {
 			case "android.content.res.XmlResourceParser":
 				return CreateArray (xmlresourceparser_sym, arrayRank, has_ellipsis);
 			case "org.xmlpull.v1.XmlPullParser":

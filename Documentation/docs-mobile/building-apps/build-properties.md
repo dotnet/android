@@ -307,10 +307,10 @@ Possible values include:
   Xamarin.Android 6.1 or later. Xamarin.Android 6.1 and later bind
   `Mono.Android.dll` with this value.
 
-- **JavaInterop1**: experimental value, currently the default for the
-  NativeAOT runtime.
+- **JavaInterop1**: this value is obsolete and is no longer supported.
 
-The default value is `XAJavaInterop1`.
+The default and only supported value is `XAJavaInterop1`, including for
+the NativeAOT runtime.
 
 ## AndroidCreatePackagePerAbi
 

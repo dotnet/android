@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace MonoDroid.Generation {
 
 	public class GenericTypeParameter : ISymbol {
@@ -73,11 +71,6 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				var transfer = "JniObjectReferenceOptions." + (owned ? "CopyAndDispose" : "Copy");
-				return $"global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<{opt.GetOutputName (FullName)}>" +
-					$"(ref {varname}, {transfer})";
-			}
 			return String.Format ("({0}{4}) global::Java.Lang.Object.GetObject<{3}> ({1}, {2})", opt.GetOutputName (type), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer", opt.GetOutputName (FullName), opt.NullableOperator);
 		}
 
@@ -122,11 +115,6 @@ namespace MonoDroid.Generation {
 		{
 			var native_name = opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name));
 			var name = opt.GetSafeIdentifier (var_name);
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return new[]{
-					$"var {native_name} = ({name}?.PeerReference ?? default);",
-				};
-			}
 			return new string[] {
 				string.Format ("IntPtr {0} = JNIEnv.ToLocalJniHandle ({1});",
 						native_name, name),
@@ -140,10 +128,6 @@ namespace MonoDroid.Generation {
 
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return new string[]{
-				};
-			}
 			return new string[]{
 				string.Format ("JNIEnv.DeleteLocalRef ({0});",
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))),

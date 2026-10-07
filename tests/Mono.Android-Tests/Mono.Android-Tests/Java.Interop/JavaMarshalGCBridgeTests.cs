@@ -28,6 +28,55 @@ public class JavaMarshalGCBridgeTests
 		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target,
 		MarkCrossReferencesArgs* args);
 
+	[UnsafeAccessor (UnsafeAccessorKind.StaticMethod, Name = "get_BridgeJni")]
+	static extern JavaMarshalGCBridgeJni GetBridgeJni (
+		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target);
+
+	[TestCase ("net/dot/jni/test/GetThis")]
+	[TestCase ("net/dot/jni/test/CallNonvirtualBase")]
+	[TestCase ("net/dot/jni/test/CallNonvirtualDerived")]
+	public unsafe void HandwrittenPeersUseAndroidGCReferenceContract (string jniTypeName)
+	{
+		using var peerType = new JniType (jniTypeName);
+		using var listType = new JniType ("java/util/ArrayList");
+		using var destination = new Java.Interop.JavaObject ();
+		var peer = peerType.NewObject (peerType.GetConstructor ("()V"), null);
+		JniObjectReference references = default;
+		JniObjectReference retained = default;
+		try {
+			Assert.IsTrue (Java.Interop.Runtime.IsGCUserPeer (peer.Handle),
+				$"{jniTypeName} should be recognized as an Android GC peer.");
+			var field = peerType.GetInstanceField ("managedReferences", "Ljava/util/ArrayList;");
+			references = JniEnvironment.InstanceFields.GetObjectField (peer, field);
+			var size = listType.GetInstanceMethod ("size", "()I");
+			Assert.AreEqual (0, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+
+			var bridge = GetBridgeJni (null);
+			Assert.IsTrue (bridge.AddReference (peer, destination.PeerReference, knownGCUserPeer: false));
+			Assert.AreEqual (1, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+			JniArgumentValue* arguments = stackalloc JniArgumentValue [1];
+			arguments [0] = new JniArgumentValue (0);
+			retained = JniEnvironment.InstanceMethods.CallObjectMethod (
+				references, listType.GetInstanceMethod ("get", "(I)Ljava/lang/Object;"), arguments);
+			Assert.IsTrue (JniEnvironment.Types.IsSameObject (destination.PeerReference, retained));
+
+			bridge.ClearReferences (peer);
+			Assert.AreEqual (0, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+		} finally {
+			JniObjectReference.Dispose (ref retained);
+			JniObjectReference.Dispose (ref references);
+			JniObjectReference.Dispose (ref peer);
+		}
+	}
+
+	[Test]
+	public void OrdinaryJavaObjectsAreNotGCUserPeers ()
+	{
+		using var value = new Java.Interop.JavaObject ();
+		Assert.IsFalse (Java.Interop.Runtime.IsGCUserPeer (value.PeerReference.Handle));
+		Assert.IsFalse (Java.Interop.Runtime.IsGCUserPeer (IntPtr.Zero));
+	}
+
 	[Test]
 	public void NativeAndManagedBridgeLayoutsMatch ()
 	{

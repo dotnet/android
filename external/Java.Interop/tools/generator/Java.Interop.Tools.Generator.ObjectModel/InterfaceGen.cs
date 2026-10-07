@@ -43,11 +43,6 @@ namespace MonoDroid.Generation
 
 		public override string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
-					opt.GetOutputName (FullName) +
-					$"> (ref {varname}, JniObjectReferenceOptions.{(owned ? "CopyAndDispose" : "Copy")})";
-			}
 			return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", opt.GetOutputName (FullName), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
 			/*
 			if (String.IsNullOrEmpty (Marshaler))
@@ -87,9 +82,7 @@ namespace MonoDroid.Generation
 			using (var sw = gen_info.OpenStream (opt.GetFileName (FullName))) {
 				sw.WriteLine ("using System;");
 				sw.WriteLine ("using System.Collections.Generic;");
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					sw.WriteLine ("using Android.Runtime;");
-				}
+				sw.WriteLine ("using Android.Runtime;");
 				sw.WriteLine ("using Java.Interop;");
 				sw.WriteLine ();
 				var hasNamespace = !string.IsNullOrWhiteSpace (Namespace);
@@ -242,9 +235,6 @@ namespace MonoDroid.Generation
 
 		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return $"({varname}?.PeerReference ?? default)";
-			}
 			return string.Format ("JNIEnv.ToLocalJniHandle ({0})", varname);
 			/*
 			if (String.IsNullOrEmpty (Marshaler))

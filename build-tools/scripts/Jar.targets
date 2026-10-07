@@ -7,21 +7,21 @@
       <JavaCPath Condition=" '$(JavaCPath)' == '' ">$(JavaSdkDirectory)\bin\javac</JavaCPath>
     </PropertyGroup>
   </Target>
-  <Target Name="_GetJavaInteropJarPath">
+  <Target Name="_GetJavaRuntimeJarPath">
     <PropertyGroup>
-      <_JIJar_InTree>$([System.IO.Path]::GetFullPath ('$(XAInstallPrefix)'))\xbuild\Xamarin\Android\java-interop.jar</_JIJar_InTree>
-      <_JIJar_System Condition=" '$(_XamarinAndroidMSBuildDirectory)' != '' ">$(_XamarinAndroidMSBuildDirectory)\java-interop.jar</_JIJar_System>
-      <_JavaInteropJarPath Condition=" Exists($(_JIJar_InTree)) ">$(_JIJar_InTree)</_JavaInteropJarPath>
-      <_JavaInteropJarPath Condition=" '$(_JavaInteropJarPath)' == '' ">$(_JIJar_System)</_JavaInteropJarPath>
+      <_RuntimeJar_InTree>$([System.IO.Path]::GetFullPath ('$(XAInstallPrefix)'))\xbuild\Xamarin\Android\java_runtime.jar</_RuntimeJar_InTree>
+      <_RuntimeJar_System Condition=" '$(_XamarinAndroidMSBuildDirectory)' != '' ">$(_XamarinAndroidMSBuildDirectory)\java_runtime.jar</_RuntimeJar_System>
+      <_JavaRuntimeJarPath Condition=" Exists($(_RuntimeJar_InTree)) ">$(_RuntimeJar_InTree)</_JavaRuntimeJarPath>
+      <_JavaRuntimeJarPath Condition=" '$(_JavaRuntimeJarPath)' == '' ">$(_RuntimeJar_System)</_JavaRuntimeJarPath>
     </PropertyGroup>
     <Error
-        Condition=" '$(_JavaInteropJarPath)' == '' "
-        Text="Could not determine path to `java-interop.jar`."
+        Condition=" '$(_JavaRuntimeJarPath)' == '' "
+        Text="Could not determine path to `java_runtime.jar`."
     />
   </Target>
   <Target Name="BuildTestJarFile"
-      DependsOnTargets="_GetJavacVersions;_GetJavaInteropJarPath"
-      Inputs="$(MSBuildAllProjects);@(TestJarEntry)"
+      DependsOnTargets="_GetJavacVersions;_GetJavaRuntimeJarPath"
+      Inputs="$(MSBuildAllProjects);@(TestJarEntry);$(_JavaRuntimeJarPath)"
       Outputs="%(TestJarEntry.OutputFile)">
     <ItemGroup>
       <_JavacSource
@@ -34,8 +34,7 @@
       <_Targets>--release $(JavacTargetVersion)</_Targets>
       <_Targets Condition=" '$(JavacTargetVersion)' == '1.8' ">--release 8</_Targets>
       <_DestDir>$(IntermediateOutputPath)__CreateTestJarFile-bin</_DestDir>
-      <_AndroidJar>-classpath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
-      <_CP>-cp "$(_JavaInteropJarPath)"</_CP>
+      <_CP>-classpath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar$(PathSeparator)$(_JavaRuntimeJarPath)"</_CP>
       <_JavacFilesResponse>$(IntermediateOutputPath)__javac_response.txt</_JavacFilesResponse>
     </PropertyGroup>
     <WriteLinesToFile
@@ -44,7 +43,7 @@
         Overwrite="True"
     />
     <MakeDir Directories="$(_DestDir)" />
-    <Exec Command="$(_Javac) $(_Targets) -d &quot;$(_DestDir)&quot; $(_AndroidJar) $(_CP) &quot;@$(_JavacFilesResponse)&quot;" />
+    <Exec Command="$(_Javac) $(_Targets) -d &quot;$(_DestDir)&quot; $(_CP) &quot;@$(_JavacFilesResponse)&quot;" />
     <Delete Files="$(_JavacFilesResponse)" />
     <Exec
         Command="$(_Jar) cf &quot;classes.jar&quot; ."

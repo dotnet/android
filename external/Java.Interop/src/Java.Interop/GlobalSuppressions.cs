@@ -14,7 +14,6 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage ("Design", "CA1024:Use properties where appropriate", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.GetRegisteredRuntimes()")]
 
-[assembly: SuppressMessage ("Design", "CA1032:Implement standard exception constructors", Justification = "System.Runtime.Serialization.SerializationInfo doesn't exist in our targeted PCL profile, so we can't provide the (SerializationInfo, StreamingContext) constructor.", Scope = "type", Target = "~T:Java.Interop.JavaProxyThrowable")]
 [assembly: SuppressMessage ("Design", "CA1032:Implement standard exception constructors", Justification = "System.Runtime.Serialization.SerializationInfo doesn't exist in our targeted PCL profile, so we can't provide the (SerializationInfo, StreamingContext) constructor.", Scope = "type", Target = "~T:Java.Interop.JniLocationException")]
 
 // See: 045b8af7, 6a42bb89, f60906cf, e10f7cb0, etc.
@@ -88,7 +87,6 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.Throw(System.Exception)")]
 [assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniRuntime.UnTrack(System.IntPtr)")]
 [assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.ProxyValueMarshaler.CreateGenericObjectReferenceArgumentState(System.Object,System.Reflection.ParameterAttributes)~Java.Interop.JniValueMarshalerState")]
-[assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.ManagedPeer.RegisterNativeMembers(System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr)")]
 [assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniRuntime.#ctor(Java.Interop.JniRuntime.CreationOptions)")]
 
 [assembly: SuppressMessage ("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.Throw(Java.Interop.JniObjectReference)")]

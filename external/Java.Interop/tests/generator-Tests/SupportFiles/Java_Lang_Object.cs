@@ -5,28 +5,14 @@ using System.Text;
 
 using Java.Interop;
 
-#if !JAVA_INTEROP1
 using Android.Runtime;
-#endif  // !JAVA_INTEROP1
 
 namespace Java.Lang
 {
 	public partial class Object : 
-#if JAVA_INTEROP1
-		global::Java.Interop.JavaObject,
-#else
 		IJavaObject,
-#endif  // JAVA_INTEROP1
 		IDisposable, IJavaPeerable
 	{
-#if JAVA_INTEROP1
-
-		public Object (ref JniObjectReference reference, JniObjectReferenceOptions options)
-			: base (ref reference, options)
-		{
-		}
-
-#else   // !JAVA_INTEROP1
 
 		public virtual JniPeerMembers JniPeerMembers {
 			get { return null; }
@@ -296,7 +282,5 @@ namespace Java.Lang
 		{
 			throw new NotImplementedException ();
 		}
-#endif  // !JAVA_INTEROP1
 	}
 }
-

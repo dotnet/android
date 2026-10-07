@@ -80,6 +80,16 @@ namespace Java.Interop {
 			return new TrimmableTypeMapValueManager ();
 		}
 
+		public override Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
+		{
+			return Android.Runtime.AndroidExceptionManager.GetExceptionForThrowable (ref reference, options);
+		}
+
+		public override void RaisePendingException (Exception pendingException)
+		{
+			Android.Runtime.AndroidExceptionManager.RaisePendingException (pendingException);
+		}
+
 		public override string? GetCurrentManagedThreadName ()
 		{
 			return Thread.CurrentThread.Name;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.SourceWriter;
@@ -19,8 +18,6 @@ namespace generator.SourceWriters
 		public bool UseShortForm { get; set; }  // TODO: Temporary for matching existing unit tests
 		public bool AcwLast { get; set; }       // TODO: Temporary for matching existing unit tests
 
-		public MemberTypes? MemberType { get; set; }
-
 		public RegisterAttr (string name, string signature = null, string connector = null, bool noAcw = false, string additionalProperties = null)
 		{
 			Name = name;
@@ -32,10 +29,6 @@ namespace generator.SourceWriters
 
 		public override void WriteAttribute (CodeWriter writer)
 		{
-			if (MemberType.HasValue) {
-				WriteJavaInterop1Attribute (writer);
-				return;
-			}
 			var sb = new StringBuilder ();
 
 			if (UseGlobal)
@@ -60,24 +53,5 @@ namespace generator.SourceWriters
 			writer.WriteLine (sb.ToString ());
 		}
 
-		private void WriteJavaInterop1Attribute (CodeWriter writer)
-		{
-			switch (MemberType) {
-				case MemberTypes.TypeInfo:
-					var invokerType = string.IsNullOrEmpty (Connector)
-						? ""
-						: $", InvokerType=typeof ({Connector.Replace ('/', '.')})";
-					writer.WriteLine ($"[global::Java.Interop.JniTypeSignature (\"{Name}\", GenerateJavaPeer={(DoNotGenerateAcw ? "false" : "true")}{invokerType})]");
-					break;
-				case MemberTypes.Constructor:
-					writer.WriteLine ($"[global::Java.Interop.JniConstructorSignature (\"{Signature}\")]");
-					break;
-				case MemberTypes.Method:
-					writer.WriteLine ($"[global::Java.Interop.JniMethodSignature (\"{Name}\", \"{Signature}\")]");
-					break;
-				default:
-					throw new NotImplementedException ($"Don't know how to write attribute for `{MemberType}`");
-			}
-		}
 	}
 }

@@ -9,9 +9,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "CSharpKeywords",
-					apiDescriptionFile:     "expected.ji/CSharpKeywords/CSharpKeywords.xml",
+					apiDescriptionFile:     "TestInputs/CSharpKeywords/CSharpKeywords.xml",
 					expectedRelativePath:   "CSharpKeywords");
 		}
 	}
