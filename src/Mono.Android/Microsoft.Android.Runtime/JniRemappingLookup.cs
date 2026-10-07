@@ -34,16 +34,61 @@ static class JniRemappingLookup
 	const uint MethodStride = 32;
 	const uint FieldStride = 28;
 
-	readonly record struct NativeJniRemappingString (uint offset, uint length);
-	readonly record struct NativeJniRemappingReplacementMethod (uint target_type, uint target_name, uint target_signature, uint is_static);
-	readonly record struct NativeJniRemappingReplacementField (uint target_type, uint target_name, uint target_signature);
-	readonly record struct NativeJniRemappingIndexMethodEntry (
-		NativeJniRemappingString name, NativeJniRemappingString signature, NativeJniRemappingReplacementMethod replacement);
-	readonly record struct NativeJniRemappingIndexFieldEntry (
-		NativeJniRemappingString name, NativeJniRemappingString signature, NativeJniRemappingReplacementField replacement);
-	readonly record struct NativeJniRemappingIndexTypeEntry (NativeJniRemappingString name, uint method_count, uint methods);
-	readonly record struct NativeJniRemappingIndexFieldTypeEntry (NativeJniRemappingString name, uint field_count, uint fields);
-	readonly record struct NativeJniRemappingTypeReplacementEntry (NativeJniRemappingString name, uint replacement);
+	unsafe struct NativeJniRemappingString
+	{
+		public uint  length;
+		public byte* str;
+	}
+
+	unsafe struct NativeJniRemappingReplacementMethod
+	{
+		public byte* target_type;
+		public byte* target_name;
+		public byte* target_signature;
+		public byte  is_static;
+	}
+
+	unsafe struct NativeJniRemappingReplacementField
+	{
+		public byte* target_type;
+		public byte* target_name;
+		public byte* target_signature;
+	}
+
+	unsafe struct NativeJniRemappingIndexMethodEntry
+	{
+		public NativeJniRemappingString            name;
+		public NativeJniRemappingString            signature;
+		public uint                               replacement;
+	}
+
+	unsafe struct NativeJniRemappingIndexTypeEntry
+	{
+		public NativeJniRemappingString            name;
+		public uint                                method_count;
+		public uint                                methods;
+	}
+
+	unsafe struct NativeJniRemappingTypeReplacementEntry
+	{
+		public NativeJniRemappingString name;
+		public byte*                    replacement;
+	}
+
+	unsafe struct NativeJniRemappingIndexFieldEntry
+	{
+		public NativeJniRemappingString           name;
+		public NativeJniRemappingString           signature;
+		public uint                              replacement;
+	}
+
+	unsafe struct NativeJniRemappingIndexFieldTypeEntry
+	{
+		public NativeJniRemappingString          name;
+		public uint                              field_count;
+		public uint                              fields;
+	}
+
 	readonly struct NativeBinaryBlobPayload
 	{
 		public readonly IntPtr data;
@@ -108,23 +153,46 @@ static class JniRemappingLookup
 		return System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian (new ReadOnlySpan<byte> (table + offset, 4));
 	}
 
-	static NativeJniRemappingString ReadString (uint offset) => new (Read (offset), Read (offset + 4));
+	static unsafe NativeJniRemappingString ReadString (uint offset) => new () {
+		str = table + Read (offset),
+		length = Read (offset + 4),
+	};
 
-	static NativeJniRemappingTypeReplacementEntry ReadType (uint offset) => new (ReadString (offset), Read (offset + 8));
+	static unsafe NativeJniRemappingTypeReplacementEntry ReadType (uint offset) => new () {
+		name = ReadString (offset),
+		replacement = CString (Read (offset + 8)),
+	};
 
 	static NativeJniRemappingIndexTypeEntry ReadMethodType (uint offset)
-		=> new (ReadString (offset), Read (offset + 12), Read (offset + 8));
+		=> new () { name = ReadString (offset), method_count = Read (offset + 12), methods = Read (offset + 8) };
 
 	static NativeJniRemappingIndexFieldTypeEntry ReadFieldType (uint offset)
-		=> new (ReadString (offset), Read (offset + 12), Read (offset + 8));
+		=> new () { name = ReadString (offset), field_count = Read (offset + 12), fields = Read (offset + 8) };
 
 	static NativeJniRemappingIndexMethodEntry ReadMethod (uint offset)
-		=> new (ReadString (offset), ReadString (offset + 8),
-			new (Read (offset + 16), Read (offset + 20), Read (offset + 24), Read (offset + 28)));
+		=> new () { name = ReadString (offset), signature = ReadString (offset + 8), replacement = offset + 16 };
 
 	static NativeJniRemappingIndexFieldEntry ReadField (uint offset)
-		=> new (ReadString (offset), ReadString (offset + 8),
-			new (Read (offset + 16), Read (offset + 20), Read (offset + 24)));
+		=> new () { name = ReadString (offset), signature = ReadString (offset + 8), replacement = offset + 16 };
+
+	static unsafe NativeJniRemappingReplacementMethod ReadReplacementMethod (uint offset)
+	{
+		uint isStatic = Read (offset + 12);
+		if (isStatic > 1)
+			throw new InvalidDataException ("JNI remapping method has an invalid instance-to-static flag.");
+		return new () {
+			target_type = CString (Read (offset)),
+			target_name = CString (Read (offset + 4)),
+			target_signature = CString (Read (offset + 8)),
+			is_static = (byte)isStatic,
+		};
+	}
+
+	static unsafe NativeJniRemappingReplacementField ReadReplacementField (uint offset) => new () {
+		target_type = CString (Read (offset)),
+		target_name = CString (Read (offset + 4)),
+		target_signature = CString (Read (offset + 8)),
+	};
 
 	static uint Entry (int section, uint position, uint stride)
 	{
@@ -136,14 +204,14 @@ static class JniRemappingLookup
 		return offset;
 	}
 
-	static unsafe ReadOnlySpan<byte> String (NativeJniRemappingString value)
+	static unsafe void ValidateString (NativeJniRemappingString value)
 	{
+		uint offset = checked ((uint)(value.str - table));
 		uint start = Read (40);
 		uint end = checked (start + Read (44));
-		if (value.offset < start || value.length > int.MaxValue || value.offset >= end ||
-				value.length >= end - value.offset || table [value.offset + value.length] != 0)
+		if (offset < start || value.length > int.MaxValue || offset >= end ||
+				value.length >= end - offset || value.str [value.length] != 0)
 			throw new InvalidDataException ("JNI remapping string exceeds its bounds or is not NUL terminated.");
-		return new ReadOnlySpan<byte> (table + value.offset, (int)value.length);
 	}
 
 	static unsafe byte* CString (uint offset)
@@ -253,52 +321,50 @@ static class JniRemappingLookup
 			return null;
 
 		byte* matchedSignature;
-		NativeJniRemappingReplacementMethod? method = jniSourceTypeUtf8 == IntPtr.Zero
+		NativeJniRemappingReplacementMethod? result = jniSourceTypeUtf8 == IntPtr.Zero
 			? LookupMethod (jniSourceType, jniMethodName, jniMethodSignature, out matchedSignature)
 			: LookupMethod (GetNullTerminatedUtf8Span (jniSourceTypeUtf8), jniMethodName, jniMethodSignature, out matchedSignature);
 
-		if (method is not { } replacement)
+		if (result is not { } replacement)
 			return null;
-		byte* targetType = CString (replacement.target_type);
-		byte* targetName = CString (replacement.target_name);
-		byte* targetSignatureBytes = CString (replacement.target_signature);
-		if (targetType == null || targetName == null || replacement.is_static > 1) {
+		NativeJniRemappingReplacementMethod* method = &replacement;
+		if (method->target_type == null || method->target_name == null) {
 			string sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
 			throw new InvalidDataException (
 				$"JNI remapping entry for `{sourceType}.{jniMethodName}{jniMethodSignature}` has invalid target information.");
 		}
 
 		int? paramCount = null;
-		bool isStatic = replacement.is_static != 0;
+		bool isStatic = method->is_static != 0;
 		string? targetSignature = null;
 		if (isStatic) {
 			string sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
 			string sourceSignature = jniMethodSignature.ToString ();
 			paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (sourceSignature) + 1;
-			targetSignature = targetSignatureBytes == null
+			targetSignature = method->target_signature == null
 				? $"(L{sourceType};" + sourceSignature.Substring ("(".Length)
-				: Marshal.PtrToStringUTF8 ((IntPtr)targetSignatureBytes);
+				: Marshal.PtrToStringUTF8 ((IntPtr)method->target_signature);
 		}
 
 		var ret = new JniRuntime.ReplacementMethodInfo {
-			TargetJniTypeUtf8               = (IntPtr)targetType,
-			TargetJniMethodNameUtf8         = (IntPtr)targetName,
+			TargetJniTypeUtf8               = (IntPtr)method->target_type,
+			TargetJniMethodNameUtf8         = (IntPtr)method->target_name,
 			TargetJniMethodSignature        = targetSignature,
 			TargetJniMethodSignatureUtf8    = isStatic
 				? IntPtr.Zero
-				: (IntPtr)(targetSignatureBytes == null ? matchedSignature : targetSignatureBytes),
+				: (IntPtr)(method->target_signature == null ? matchedSignature : method->target_signature),
 			TargetJniMethodParameterCount   = paramCount,
 			TargetJniMethodInstanceToStatic = isStatic,
 		};
 
 		if (Logger.LogAssembly) {
 			string sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
-			string targetTypeText = Marshal.PtrToStringUTF8 ((IntPtr)targetType) ?? "";
-			string targetNameText = Marshal.PtrToStringUTF8 ((IntPtr)targetName) ?? "";
+			string targetType = Marshal.PtrToStringUTF8 ((IntPtr)method->target_type) ?? "";
+			string targetName = Marshal.PtrToStringUTF8 ((IntPtr)method->target_name) ?? "";
 			string effectiveTargetSignature = targetSignature ??
 				(matchedSignature == null ? jniMethodSignature.ToString () : Marshal.PtrToStringUTF8 ((IntPtr)matchedSignature) ?? "");
 			var message = $"Remapping method `{sourceType}.{jniMethodName}{jniMethodSignature}` to " +
-				$"`{targetTypeText}.{targetNameText}{effectiveTargetSignature}`; " +
+				$"`{targetType}.{targetName}{effectiveTargetSignature}`; " +
 				$"param-count: {paramCount}; instance-to-static? {isStatic}";
 			Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
 		}
@@ -317,25 +383,23 @@ static class JniRemappingLookup
 		if (!RuntimeFeature.JniRemapping || !isInUse)
 			return null;
 
-		NativeJniRemappingReplacementField? field = LookupField (
+		NativeJniRemappingReplacementField? result = LookupField (
 			jniSourceType,
 			jniFieldName,
 			jniFieldSignature);
-		if (field is not { } replacement)
+		if (result is not { } replacement)
 			return null;
-		byte* targetTypeBytes = CString (replacement.target_type);
-		byte* targetNameBytes = CString (replacement.target_name);
-		byte* targetSignatureBytes = CString (replacement.target_signature);
-		if (targetTypeBytes == null || targetNameBytes == null) {
+		NativeJniRemappingReplacementField* field = &replacement;
+		if (field->target_type == null || field->target_name == null) {
 			throw new InvalidDataException (
 				$"JNI remapping entry for `{jniSourceType}.{jniFieldName}:{jniFieldSignature}` has invalid target information.");
 		}
 
-		string targetType = Marshal.PtrToStringUTF8 ((IntPtr)targetTypeBytes) ?? "";
-		string targetName = Marshal.PtrToStringUTF8 ((IntPtr)targetNameBytes) ?? "";
-		string targetSignature = targetSignatureBytes == null
+		string targetType = Marshal.PtrToStringUTF8 ((IntPtr)field->target_type) ?? "";
+		string targetName = Marshal.PtrToStringUTF8 ((IntPtr)field->target_name) ?? "";
+		string targetSignature = field->target_signature == null
 			? jniFieldSignature.ToString ()
-			: Marshal.PtrToStringUTF8 ((IntPtr)targetSignatureBytes) ?? "";
+			: Marshal.PtrToStringUTF8 ((IntPtr)field->target_signature) ?? "";
 
 		if (Logger.LogAssembly) {
 			var message = $"Remapping field `{jniSourceType}.{jniFieldName}:{jniFieldSignature}` to " +
@@ -360,27 +424,33 @@ static class JniRemappingLookup
 		return Marshal.PtrToStringUTF8 (jniSourceTypeUtf8) ?? "";
 	}
 
-	static bool Equal (NativeJniRemappingString value, ReadOnlySpan<byte> key)
+	static unsafe bool Equal (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
-		return value.length == (uint)key.Length && String (value).SequenceEqual (key);
+		if (value.length == (uint)key.Length)
+			ValidateString (value);
+		return value.length == (uint)key.Length &&
+			new ReadOnlySpan<byte> (value.str, key.Length).SequenceEqual (key);
 	}
 
-	static bool Equal (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
+	static unsafe bool Equal (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
 	{
-		ReadOnlySpan<byte> utf8 = String (value);
+		ValidateString (value);
+		ReadOnlySpan<byte> utf8 = new ReadOnlySpan<byte> (value.str, checked ((int)value.length));
 		return keyIsAscii
 			? Ascii.Equals (utf8, key)
 			: CompareUtf8ToUtf16 (utf8, key) == 0;
 	}
 
-	static int Compare (NativeJniRemappingString value, ReadOnlySpan<byte> key)
+	static unsafe int Compare (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
-		return String (value).SequenceCompareTo (key);
+		ValidateString (value);
+		return new ReadOnlySpan<byte> (value.str, checked ((int)value.length)).SequenceCompareTo (key);
 	}
 
-	static int Compare (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
+	static unsafe int Compare (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
 	{
-		ReadOnlySpan<byte> utf8 = String (value);
+		ValidateString (value);
+		ReadOnlySpan<byte> utf8 = new ReadOnlySpan<byte> (value.str, checked ((int)value.length));
 		return keyIsAscii ? CompareUtf8ToAscii (utf8, key) : CompareUtf8ToUtf16 (utf8, key);
 	}
 
@@ -491,8 +561,10 @@ static class JniRemappingLookup
 		uint index = LowerBoundByName (section, 0, counts [section], TypeStride, key, keyIsAscii);
 		if (index >= counts [section])
 			return null;
-		var entry = ReadType (Entry (section, index, TypeStride));
-		return Equal (entry.name, key, keyIsAscii) ? CString (entry.replacement) : null;
+		uint offset = Entry (section, index, TypeStride);
+		if (!Equal (ReadString (offset), key, keyIsAscii))
+			return null;
+		return ReadType (offset).replacement;
 	}
 
 	static unsafe NativeJniRemappingReplacementMethod? LookupMethod (
@@ -540,8 +612,8 @@ static class JniRemappingLookup
 			for (uint i = first; i < last; i++) {
 				var entry = ReadMethod (Entry (4, i, MethodStride));
 				if (entry.signature.length != 0 && Equal (entry.signature, signature, signatureIsAscii)) {
-					matchedSignature = table + entry.signature.offset;
-					return entry.replacement;
+					matchedSignature = entry.signature.str;
+					return ReadReplacementMethod (entry.replacement);
 				}
 			}
 
@@ -555,7 +627,7 @@ static class JniRemappingLookup
 				for (uint i = first; i < last; i++) {
 					var entry = ReadMethod (Entry (4, i, MethodStride));
 					if (entry.signature.length != 0 && Equal (entry.signature, signaturePrefix, signaturePrefixIsAscii))
-						return entry.replacement;
+						return ReadReplacementMethod (entry.replacement);
 				}
 			}
 		}
@@ -563,7 +635,7 @@ static class JniRemappingLookup
 		for (uint i = first; i < last; i++) {
 			var entry = ReadMethod (Entry (4, i, MethodStride));
 			if (entry.signature.length == 0)
-				return entry.replacement;
+				return ReadReplacementMethod (entry.replacement);
 		}
 		return null;
 	}
@@ -595,12 +667,12 @@ static class JniRemappingLookup
 		for (uint i = first; i < last; i++) {
 			var entry = ReadField (Entry (5, i, FieldStride));
 			if (entry.signature.length != 0 && Equal (entry.signature, signature, signatureIsAscii))
-				return entry.replacement;
+				return ReadReplacementField (entry.replacement);
 		}
 		for (uint i = first; i < last; i++) {
 			var entry = ReadField (Entry (5, i, FieldStride));
 			if (entry.signature.length == 0)
-				return entry.replacement;
+				return ReadReplacementField (entry.replacement);
 		}
 		return null;
 	}
