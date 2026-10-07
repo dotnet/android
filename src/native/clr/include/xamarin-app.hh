@@ -176,12 +176,4 @@ extern "C" {
 
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
-	[[gnu::visibility("default")]] extern uint32_t compressed_assembly_count;
-	[[gnu::visibility("default")]] extern CompressedAssemblyDescriptor compressed_assembly_descriptors[];
-	[[gnu::visibility("default")]] extern uint32_t uncompressed_assemblies_data_size;
-	[[gnu::visibility("default")]] extern uint8_t uncompressed_assemblies_data_buffer[];
-
-	[[gnu::visibility("default")]] extern AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
-	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
-
 }

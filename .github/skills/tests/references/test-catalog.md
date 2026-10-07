@@ -94,6 +94,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Package manager Java generation |
 | **CoreCLR bootstrap data** | `--filter "FullyQualifiedName~GenerateJavaApplicationConfigTests"` | Task-level UTF-8 blob/offset generation, ordering, escaping, chunk boundaries, preload policy and incremental source generation. |
+| **CoreCLR native format marker** | `--filter "FullyQualifiedName~GenerateNativeApplicationConfigSourcesTests"` | Per-ABI native output retains only `format_tag`; configuration, DSO cache, assembly-store and compression state are not generated. |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
 | **ndk** | `--filter "FullyQualifiedName~NdkUtilTests"` | NDK utility tasks |
 

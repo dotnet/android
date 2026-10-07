@@ -144,9 +144,10 @@ JNI libraries after CoreCLR initialization; non-preloaded JNI libraries are stil
 with `JNI_OnLoad` support on demand. The CoreCLR R8 keep rules preserve the Java entry points
 used by JNI.
 
-The per-ABI `environment.<abi>.ll` object is still generated for assembly-store runtime
-state, and the separate compression and JNI-remapping native objects are unchanged. This
-does not remove LLVM/llc, native-stub linkage, or the bundled native toolchain.
+Assembly-store mapping and decompression state are runtime-owned. The per-ABI
+`environment.<abi>.ll` object retains only the application format marker, while
+JNI-remapping native data and `libxamarin-app.so` linkage remain. This does not
+remove LLVM/llc, native-stub linkage, or the bundled native toolchain.
 
 The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm`,
 `llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.

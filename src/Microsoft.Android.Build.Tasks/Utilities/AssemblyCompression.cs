@@ -6,15 +6,14 @@ using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
-	/// Reader-side helpers for Zstandard-compressed AssemblyStore assemblies. The actual
-	/// compression is performed by the <c>CompressAssemblies</c> task in
-	/// Microsoft.Android.Build.Tasks.dll (net11.0), which uses
-	/// <c>System.IO.Compression.ZstandardEncoder</c>.
+	/// Helpers shared by the compression metadata producer and consumer in
+	/// Microsoft.Android.Build.Tasks.dll.
 	/// </summary>
 	class AssemblyCompression
 	{
@@ -26,11 +25,11 @@ namespace Xamarin.Android.Tasks
 			var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
 			var arch = MonoAndroidHelper.GetTargetArch (assembly);
 
-			if (!compressedAssembliesInfo.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assembliesInfo)) {
+			if (!compressedAssembliesInfo.TryGetValue (arch, out var assembliesInfo)) {
 				throw new InvalidOperationException ($"Internal error: compression assembly info for architecture {arch} not available");
 			}
 
-			if (!assembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) || info == null) {
+			if (!assembliesInfo.TryGetValue (key, out var info)) {
 				log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
 				return false;
 			}

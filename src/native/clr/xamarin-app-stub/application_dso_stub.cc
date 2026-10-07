@@ -8,34 +8,6 @@
 // designer on desktop.
 const uint64_t format_tag = FORMAT_TAG;
 
-uint32_t compressed_assembly_count = 0;
-CompressedAssemblyDescriptor compressed_assembly_descriptors[] = {};
-uint32_t uncompressed_assemblies_data_size = 0;
-uint8_t uncompressed_assemblies_data_buffer[] = {};
-
-AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-};
-
-AssemblyStoreRuntimeData assembly_store = {
-	.data_start = nullptr,
-	.assembly_count = 0,
-	.index_entry_count = 0,
-	.assemblies = nullptr,
-};
-
 static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 	{
 		.name = {
