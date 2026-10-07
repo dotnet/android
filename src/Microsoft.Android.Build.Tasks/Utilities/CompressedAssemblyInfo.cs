@@ -3,29 +3,24 @@ using System;
 using System.IO;
 using Microsoft.Build.Framework;
 
-using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	class CompressedAssemblyInfo
 	{
 		const string CompressedAssembliesInfoKey = "__CompressedAssembliesInfo";
 
-		public uint FileSize                { get; }
-		public uint DescriptorIndex         { get; }
-		public AndroidTargetArch TargetArch { get; }
-		public string AssemblyName          { get; }
+		public uint DescriptorIndex { get; }
 
-		public CompressedAssemblyInfo (uint fileSize, uint descriptorIndex, AndroidTargetArch targetArch, string assemblyName)
+		public CompressedAssemblyInfo (uint descriptorIndex)
 		{
-			FileSize = fileSize;
 			DescriptorIndex = descriptorIndex;
-			TargetArch = targetArch;
-			AssemblyName = assemblyName;
 		}
 
 		public static string GetKey (string projectFullPath)
 		{
+			ArgumentNullException.ThrowIfNull (projectFullPath);
 			if (projectFullPath.IsNullOrEmpty ())
 				throw new ArgumentException ("must be a non-empty string", nameof (projectFullPath));
 
@@ -34,6 +29,7 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetDictionaryKey (ITaskItem assembly)
 		{
+			ArgumentNullException.ThrowIfNull (assembly);
 			// Prefer %(DestinationSubPath) if set
 			var path = assembly.GetMetadata ("DestinationSubPath");
 			if (!path.IsNullOrEmpty ()) {

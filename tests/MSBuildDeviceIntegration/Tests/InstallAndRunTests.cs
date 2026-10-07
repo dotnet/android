@@ -11,6 +11,7 @@ using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -93,6 +94,128 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
 			StartActivityAndAssert (proj);
+		}
+
+		[Test]
+		public void CoreCLRAssemblyStoreConcurrentLoads ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			const string success = "ASSEMBLY_STORE_CONCURRENT_LOADS_COMPLETED=16";
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "storeconcurrent")) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
+
+			foreach (string name in new [] { "AssemblyStoreDeferredOne", "AssemblyStoreDeferredTwo" }) {
+				var library = new XamarinAndroidLibraryProject {
+					IsRelease = true,
+					ProjectName = name,
+				};
+				library.AndroidResources.Clear ();
+				library.SetProperty ("AndroidGenerateResourceDesigner", "false");
+				library.Sources.Add (new BuildItem.Source ("LoadProbe.cs") {
+					TextContent = () => "public class LoadProbe { public static int Value => 17; }",
+				});
+				proj.AddReference (library);
+				proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", name));
+				using var libraryBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, name));
+				Assert.IsTrue (libraryBuilder.Build (library), $"{name} should build.");
+			}
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				var names = new [] { "AssemblyStoreDeferredOne", "AssemblyStoreDeferredTwo" };
+				foreach (string name in names) {
+					foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies ()) {
+						if (assembly.GetName ().Name == name) {
+							throw new System.InvalidOperationException ($"{name} was loaded before the concurrent first-load test.");
+						}
+					}
+				}
+				[System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage ("Trimming", "IL2026",
+					Justification = "Both deferred fixture assemblies are preserved by TrimmerRootAssembly.")]
+				[System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage ("Trimming", "IL2075",
+					Justification = "TrimmerRootAssembly preserves LoadProbe.Value in both deferred fixture assemblies.")]
+				static int GetProbeValue (System.Reflection.Assembly assembly)
+				{
+					var type = assembly.GetType ("LoadProbe") ?? throw new System.InvalidOperationException ("LoadProbe is missing.");
+					var value = type.GetProperty ("Value") ?? throw new System.InvalidOperationException ("LoadProbe.Value is missing.");
+					return (int)(value.GetValue (null) ?? throw new System.InvalidOperationException ("LoadProbe.Value returned null."));
+				}
+				using var start = new System.Threading.ManualResetEventSlim (false);
+				var threads = new System.Threading.Thread [16];
+				var errors = new System.Exception? [threads.Length];
+				for (int i = 0; i < threads.Length; i++) {
+					int index = i;
+					threads [i] = new System.Threading.Thread (() => {
+						try {
+							start.Wait ();
+							string name = names [index % names.Length];
+							var assembly = System.Reflection.Assembly.Load (name);
+							if (assembly.GetName ().Name != name) {
+								throw new System.InvalidOperationException ($"Loaded the wrong assembly for {name}.");
+							}
+							if (GetProbeValue (assembly) != 17) {
+								throw new System.InvalidOperationException ($"Code from {name} returned the wrong value.");
+							}
+						} catch (System.Exception error) {
+							errors [index] = error;
+						}
+					});
+					threads [i].Start ();
+				}
+				start.Set ();
+				foreach (var thread in threads) {
+					thread.Join ();
+				}
+				foreach (var error in errors) {
+					if (error is not null) {
+						throw new System.AggregateException ("Concurrent assembly loading failed.", error);
+					}
+				}
+				Android.Util.Log.Info ("AssemblyStore", "ASSEMBLY_STORE_CONCURRENT_LOADS_COMPLETED=16");
+				""");
+
+			using var appBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName));
+			Assert.IsTrue (appBuilder.Install (proj), "The assembly-store app should install.");
+			string apk = Path.Combine (Root, appBuilder.ProjectDirectory, proj.OutputPath,
+				$"{proj.PackageName}-Signed.apk");
+			var (stores, storeError) = AssemblyStoreExplorer.Open (apk);
+			var store = (stores ?? throw new InvalidOperationException (storeError ?? "Could not read the packaged assembly store.")).Single ();
+			var assemblies = store.Assemblies ?? throw new InvalidOperationException ("The packaged assembly store is empty.");
+			var compressedIndices = new HashSet<uint> ();
+			var compressedNames = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var assembly in assemblies) {
+				if (assembly.Ignore || assembly.DataSize < 3 * sizeof (uint)) {
+					continue;
+				}
+				using var image = store.ReadImageData (assembly) ?? throw new InvalidOperationException ($"Could not read {assembly.Name}.");
+				using var reader = new BinaryReader (image);
+				if (reader.ReadUInt32 () == 0x535A4158u) {
+					Assert.IsTrue (compressedIndices.Add (reader.ReadUInt32 ()), "Packaged compression identities must be unique.");
+					compressedNames.Add (assembly.Name);
+				}
+			}
+			Assert.That (compressedNames, Is.SupersetOf (new [] { "AssemblyStoreDeferredOne.dll", "AssemblyStoreDeferredTwo.dll" }),
+				"Both concurrent first-load fixtures must actually be compressed in the installed package.");
+			Assert.That (compressedIndices.Max () + 1, Is.GreaterThan (store.AssemblyCount),
+				"The installed package must exercise sparse pre-trim compression indices beyond its trimmed entry count.");
+			StartActivityAndAssert (proj);
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => line.Contains (success, StringComparison.Ordinal),
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-store-logcat.log"),
+					ActivityStartTimeoutInSeconds),
+				"Concurrent first loads of compressed assemblies should complete.");
 		}
 
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
