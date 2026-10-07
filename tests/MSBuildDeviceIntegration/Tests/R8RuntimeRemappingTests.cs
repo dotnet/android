@@ -76,7 +76,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetProperty ("AllowUnsafeBlocks", "true");
 			proj.SetProperty ("TrimMode", "full");

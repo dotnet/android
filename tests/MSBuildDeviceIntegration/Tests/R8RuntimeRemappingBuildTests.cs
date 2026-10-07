@@ -13,9 +13,9 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class R8RuntimeRemappingBuildTests : BaseTest
 	{
-		[TestCase (true, "trimmable")]
-		[TestCase (false, "trimmable")]
-		public void UnchangedProguardRulesDoNotRerunR8 (bool obfuscation, string typeMap)
+		[TestCase (true)]
+		[TestCase (false)]
+		public void UnchangedProguardRulesDoNotRerunR8 (bool obfuscation)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
@@ -39,7 +39,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
-			proj.SetProperty ("AndroidTypeMapImplementation", typeMap);
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetProperty ("AndroidR8ObfuscationMode", obfuscation ? "runtime-remapping" : "disabled");
 			proj.SetProperty ("AndroidPackageFormats", "apk");
@@ -160,7 +159,6 @@ namespace Xamarin.Android.Build.Tests
 			if (explicitPrimaryRid) {
 				proj.SetProperty ("RuntimeIdentifier", "android-arm64");
 			}
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");

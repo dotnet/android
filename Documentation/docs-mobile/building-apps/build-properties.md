@@ -439,9 +439,7 @@ their dependencies.
 Other shared post-trimming steps, including `GC.KeepAlive()` insertion, are
 controlled separately.
 
-The default value is `False` when
-[`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is
-`trimmable`, and `True` otherwise.
+The default value is `False`.
 
 ## AndroidEnableMarshalMethods
 
@@ -1169,8 +1167,7 @@ in .NET 11 and later. The experimental `runtime-remapping` value was added in
 .NET 11 and must be selected explicitly.
 
 The `runtime-remapping` value requires `AndroidLinkTool=r8`,
-`AndroidTypeMapImplementation=trimmable`, `PublishTrimmed=true`, and either the
-CoreCLR or NativeAOT runtime. Explicit incompatible settings produce
+`PublishTrimmed=true`, and either the CoreCLR or NativeAOT runtime. Explicit incompatible settings produce
 [XA4329](../messages/xa4329.md) rather than being silently changed. This
 runtime-remapping mode has no effect on library projects.
 
@@ -1179,7 +1176,6 @@ For example:
 ```xml
 <PropertyGroup Condition="'$(Configuration)' == 'Release'">
   <AndroidLinkTool>r8</AndroidLinkTool>
-  <AndroidTypeMapImplementation>trimmable</AndroidTypeMapImplementation>
   <PublishTrimmed>true</PublishTrimmed>
   <AndroidR8ObfuscationMode>runtime-remapping</AndroidR8ObfuscationMode>
 </PropertyGroup>
@@ -1381,13 +1377,10 @@ This property is obsolete and should not be used.
 
 ## AndroidTypeMapImplementation
 
-An enum-style property that selects the type map implementation.
-The only supported value is `trimmable`. Setting this property to `llvm-ir`
-causes error [XA4267](../messages/xa4267.md).
-
-The default value is `trimmable` for all Android projects.
-An explicitly empty command-line value (`-p:AndroidTypeMapImplementation=`) is
-invalid. Omit the property to use the default, or set it to `trimmable`.
+This property is obsolete and no longer affects the build. All Android
+applications use the trimmable type map. Remove this property; existing
+assignments, including `llvm-ir` and an explicitly empty command-line value,
+are ignored.
 
 ## AndroidUseApkSigner
 

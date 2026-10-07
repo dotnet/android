@@ -2,7 +2,7 @@
 
 This is an internal guide to the interop path used by **CoreCLR and NativeAOT Android applications**. The Java VM (ART) and the managed runtime are separate environments in one process. JNI is the boundary in both directions: bound C# types call Java methods through Java.Interop, and Java calls managed methods through generated Java callable wrappers (JCWs) with registered JNI entrypoints.
 
-`AndroidTypeMapImplementation=trimmable` is the only supported application TypeMap implementation. Earlier versions of this guide described a choice between reflection/delegate-based "dynamic" registration and native LLVM-generated marshal methods. Neither describes this path. Here, the build generates **managed** TypeMap assemblies (including proxy and marshal code) and Java sources; the managed runtime registers their native callbacks with ART. There is no application-level native TypeMap lookup table, generated `Java_...` symbol for each callback, or marshal-method callback rewriting.
+All applications use the trimmable TypeMap implementation. Earlier versions of this guide described a choice between reflection/delegate-based "dynamic" registration and native LLVM-generated marshal methods. Neither describes this path. Here, the build generates **managed** TypeMap assemblies (including proxy and marshal code) and Java sources; the managed runtime registers their native callbacks with ART. There is no application-level native TypeMap lookup table, generated `Java_...` symbol for each callback, or marshal-method callback rewriting.
 
 | Earlier guide | Trimmable TypeMap path |
 | --- | --- |

@@ -1644,7 +1644,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable..
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; uses an unsupported Java peer callback format..
         /// </summary>
         public static string XA4265 {
             get {
@@ -1653,7 +1653,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable..
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata..
         /// </summary>
         public static string XA4266 {
             get {

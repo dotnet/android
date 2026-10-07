@@ -78,7 +78,6 @@ namespace Xamarin.Android.Build.Tests
 			});
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			// Exercise the general selective-obfuscation policy, not the retained-typemap path
 			// which intentionally disables all minification.

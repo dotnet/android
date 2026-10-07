@@ -118,7 +118,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty (proj.ReleaseProperties, "TrimMode", "full");
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>",
 				"""<activity android:name="example.KeptActivity" android:exported="false" /></application>""");
 			// Include only the JAR so generated keeps for managed peers or app-authored Java cannot root these types.

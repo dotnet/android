@@ -651,7 +651,6 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;
