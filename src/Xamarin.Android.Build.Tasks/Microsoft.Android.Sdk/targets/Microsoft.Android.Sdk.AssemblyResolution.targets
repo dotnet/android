@@ -87,12 +87,12 @@ _ResolveAssemblies MSBuild target.
         <!-- Return the exact per-RID producer paths to the outer typemap/R8 build. The
              ILC object and linked metadata must not be replaced by pre-trim or R2R inputs. -->
         <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
-            Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' "
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
             AndroidTypeMapNativeObject="$(NativeObject)"
             AndroidTypeMapLlvmReadObjPath="$(_AndroidTypeMapLlvmReadObjPath)"
             AndroidTypeMapLlvmObjDumpPath="$(_AndroidTypeMapLlvmObjDumpPath)" />
         <_AndroidLinkedTypeMapKeySource Include="@(_GeneratedTypeMapAssembliesFromList->'$(IntermediateOutputPath)linked\%(Filename)%(Extension)')"
-            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' " />
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' " />
         <!-- The root carries the complete generator-known inventory, including trimmed maps
              replaced by empty stubs. Do not discover maps from publish globs or drop missing files. -->
         <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"

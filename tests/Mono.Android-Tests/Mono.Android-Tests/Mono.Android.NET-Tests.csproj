@@ -49,10 +49,6 @@
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
   </ItemGroup>
 
-  <PropertyGroup>
-    <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
   </ItemGroup>
@@ -84,7 +80,7 @@
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
     <!-- The callback format is assembly-wide; keep UCO fixtures separate from the legacy bindings above. -->
-    <ProjectReference Include="..\TrimmableTypeMapCallbacks\TrimmableTypeMapCallbacks.csproj" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <ProjectReference Include="..\TrimmableTypeMapCallbacks\TrimmableTypeMapCallbacks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -120,7 +116,7 @@
 
   <ItemGroup>
     <Compile Include="Android.App\ApplicationTest.cs" />
-    <Compile Include="Android.App\TrimmableTypeMapManifestTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <Compile Include="Android.App\TrimmableTypeMapManifestTests.cs" />
     <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
     <Compile Include="Android.Content\CursorLoaderTest.cs" />
     <Compile Include="Android.Content\IntentTest.cs" />
@@ -153,11 +149,11 @@
     <Compile Include="Java.Interop\PeerIdentityTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
     <Compile Include="Java.Interop\RawInterfaceCollectionHolder.cs" />
-    <Compile Include="Java.Interop\TrimmableTypeMapDirectCallbackTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <Compile Include="Java.Interop\TrimmableTypeMapExportTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <Compile Include="Java.Interop\TrimmableTypeMapDirectCallbackTests.cs" />
+    <Compile Include="Java.Interop\TrimmableTypeMapExportTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
-    <Compile Include="Java.Interop\TransferredReferenceTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <Compile Include="Java.Interop\TrimmableTypeMapTestHelpers.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <Compile Include="Java.Interop\TransferredReferenceTests.cs" />
+    <Compile Include="Java.Interop\TrimmableTypeMapTestHelpers.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />

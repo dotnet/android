@@ -37,17 +37,16 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
-			AddTestData (false, "trimmable", AndroidRuntime.CoreCLR);
-			AddTestData (true, "trimmable", AndroidRuntime.NativeAOT);
+			AddTestData (true, AndroidRuntime.CoreCLR);
+			AddTestData (false, AndroidRuntime.CoreCLR);
+			AddTestData (true, AndroidRuntime.NativeAOT);
 
 			return ret;
 
-			void AddTestData (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
+			void AddTestData (bool isRelease, AndroidRuntime runtime)
 			{
 				ret.Add (new object[] {
 					isRelease,
-					typemapImplementation,
 					runtime,
 				});
 			}
@@ -55,13 +54,12 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (Get_DotNetRun_Data))]
-		public void DotNetRun (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
+		public void DotNetRun (bool isRelease, AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 
@@ -218,9 +216,9 @@ namespace Xamarin.Android.Build.Tests
 				"Concurrent first loads of compressed assemblies should complete.");
 		}
 
-		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
-		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
-		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void UnicodeJavaIdentifierActivityActivates (AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -241,7 +239,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace (
 					"[Android.Runtime.Register (\"${JAVA_PACKAGENAME}.MainActivity\"),",
@@ -317,7 +314,7 @@ namespace Xamarin.Android.Build.Tests
 			});
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
+			Assert.IsTrue (builder.Install (proj), $"{runtime} should install.");
 			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 			Assert.IsTrue (
 				DexUtils.ContainsClass ("Lcom/example/\U00010428Peer\U00010400;", dexFile, AndroidSdkPath),
@@ -334,7 +331,7 @@ namespace Xamarin.Android.Build.Tests
 					Path.Combine (Root, builder.ProjectDirectory, "unicode-identifier-logcat.log"),
 					ActivityStartTimeoutInSeconds
 				),
-				$"{runtime}/{typeMapImplementation} should activate every supported Unicode peer. " +
+				$"{runtime} should activate every supported Unicode peer. " +
 					$"Missing: {string.Join (", ", expectedLogcatOutput)}"
 			);
 		}
@@ -420,7 +417,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("UcoOverrideTypes.cs") {
 				TextContent = () => @"using System;
@@ -1869,10 +1865,9 @@ namespace Styleable.Library {
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
-		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
-		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
 		public void AppCompatJavaAliasCastsAndInflation (
-			string typemapImplementation,
 			AndroidRuntime runtime)
 		{
 			const string expectedLogcatOutput = "APPCOMPAT_ALIAS_CASTS_PASS";
@@ -1881,7 +1876,7 @@ namespace Styleable.Library {
 				return;
 			}
 
-			var packageSuffix = $"appcompataliascasts{typemapImplementation.Replace ("-", "")}";
+			const string packageSuffix = "appcompataliascasts";
 			var packageName = PackageUtils.MakePackageName (runtime, packageSuffix);
 			var proj = new XamarinAndroidApplicationProject (
 				packageName: packageName) {
@@ -1889,7 +1884,6 @@ namespace Styleable.Library {
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			proj.SetDefaultTargetDevice ();
 			proj.PackageReferences.Add (new Package {
 				Id = "Xamarin.AndroidX.AppCompat",
@@ -2618,7 +2612,6 @@ namespace UnnamedProject
 			foreach (var useR8 in new [] { false, true }) {
 				foreach (var apiNative in new [] { true, false }) {
 					yield return CreateTestCase (
-						"trimmable",
 						AndroidRuntime.CoreCLR,
 						apiNative,
 						useR8);
@@ -2627,30 +2620,26 @@ namespace UnnamedProject
 
 			foreach (var apiNative in new [] { true, false }) {
 				yield return CreateTestCase (
-					"trimmable",
 					AndroidRuntime.NativeAOT,
 					apiNative,
 					true);
 			}
 
 			static TestCaseData CreateTestCase (
-				string typemapImplementation,
 				AndroidRuntime runtime,
 				bool apiNative,
 				bool useR8)
 			{
-				var typemapName = typemapImplementation.Replace ("-", "_");
 				var apiName = apiNative ? "Native" : "Desugared";
 				var dexToolName = useR8 ? "R8" : "D8";
-				return new TestCaseData (typemapImplementation, runtime, apiNative, useR8)
-					.SetName ($"InterfaceMethods_{typemapName}_{runtime}_{apiName}_{dexToolName}");
+				return new TestCaseData (runtime, apiNative, useR8)
+					.SetName ($"InterfaceMethods_{runtime}_{apiName}_{dexToolName}");
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (GetInterfaceMethodDesugaringData))]
 		public void InterfaceMethodsMatchDesugaring (
-			string typemapImplementation,
 			AndroidRuntime runtime,
 			bool apiNative,
 			bool useR8)
@@ -2660,7 +2649,7 @@ namespace UnnamedProject
 				return;
 			}
 
-			var packageSuffix = $"interfacemethods_{typemapImplementation.Replace ("-", "")}_{apiNative}_{useR8}";
+			var packageSuffix = $"interfacemethods_{apiNative}_{useR8}";
 			var packageName = PackageUtils.MakePackageName (runtime, packageSuffix).ToLowerInvariant ();
 			var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
 				IsRelease = true,
@@ -2705,7 +2694,6 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			proj.SetProperty ("AndroidLinkTool", useR8 ? "r8" : "");
 			if (useR8) {
 				// Keep the companion methods and names stable for the DEX and JNI assertions.

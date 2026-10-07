@@ -20,7 +20,6 @@ public class ScopedTypeMapR8Tests : DeviceTest
 		};
 		proj.SetRuntime (AndroidRuntime.CoreCLR);
 		proj.SetRuntimeIdentifiers ([DeviceAbi]);
-		proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 		proj.SetProperty ("AndroidLinkTool", "r8");
 		proj.SetProperty ("AndroidR8ObfuscationMode", "disabled");
 		proj.SetProperty ("_AndroidEnableTypemapR8Trimming", "true");

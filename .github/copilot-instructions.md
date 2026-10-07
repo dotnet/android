@@ -232,13 +232,11 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
   ```bash
   make prepare && make all CONFIGURATION=Release
   ./dotnet-local.sh build -t:Install -c Release \
-      tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
-      -p:AndroidTypeMapImplementation=<llvm-ir|trimmable>
+      tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
   (
       cd tests/Mono.Android-Tests/Mono.Android-Tests
       ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
-          --report-trx --results-directory ../../../bin/TestRelease/TestResults \
-          -p:AndroidTypeMapImplementation=<llvm-ir|trimmable>
+          --report-trx --results-directory ../../../bin/TestRelease/TestResults
   )
   ```
   On Windows, use `build.cmd` and `dotnet-local.cmd` instead of `make`/`dotnet-local.sh`.
