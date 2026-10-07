@@ -52,11 +52,21 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var configurations = File.ReadAllLines (Path.Combine (directory, "configurations.txt"));
 		Assert.AreEqual (1, configurations.Count (path => Path.GetFileName (path).StartsWith ("proguard-android", StringComparison.Ordinal)));
 		Assert.IsTrue (configurations.Any (path => Path.GetFileName (path) == expected));
+		var generatedReferenceConfiguration = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
+		Directory.CreateDirectory (Path.GetDirectoryName (generatedReferenceConfiguration) ?? throw new InvalidOperationException ());
+		File.WriteAllText (generatedReferenceConfiguration, "rules");
 		Build (project, "-p:ProguardConfigFiles=custom.cfg");
 		CollectionAssert.AreEqual (new [] {
 			"custom.cfg",
 			"obj/proguard/proguard_xamarin.cfg",
 			"obj/proguard/proguard_project_references.cfg",
+			"obj/proguard/proguard_project_primary.cfg",
+		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
+		File.Delete (generatedReferenceConfiguration);
+		Build (project, "-p:ProguardConfigFiles=custom.cfg");
+		CollectionAssert.AreEqual (new [] {
+			"custom.cfg",
+			"obj/proguard/proguard_xamarin.cfg",
 			"obj/proguard/proguard_project_primary.cfg",
 		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
 	}
@@ -372,39 +382,6 @@ public class TypeMapProguardTargetsTests : BaseTest
 			Assert.AreEqual (Path.Combine (directory, "custom-ndk-bin", executable).Replace ('\\', '/'),
 				File.ReadAllText (Path.Combine (directory, "readobj.txt")).Trim ().Replace ('\\', '/'));
 		}
-	}
-
-	[Test]
-	public void MissingInnerProguardConfigurationIsNotSelected ()
-	{
-		var targets = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks",
-			"Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.AssemblyResolution.targets"));
-		var root = targets.Root ?? throw new InvalidOperationException ();
-		XNamespace ns = root.Name.Namespace;
-		var resolve = root.Elements (ns + "Target")
-			.Single (target => (string?) target.Attribute ("Name") == "_ResolveAssemblies");
-		var properties = new XElement (resolve.Elements (ns + "PropertyGroup")
-			.Single (group => group.Elements (ns + "_ProguardProjectConfiguration").Any ()));
-		var project = Path.Combine (directory, "inner-proguard.proj");
-		var expected = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		new XDocument (new XElement (ns + "Project",
-			new XElement (ns + "PropertyGroup",
-				new XElement (ns + "RuntimeIdentifier", "android-arm64"),
-				new XElement (ns + "IntermediateOutputPath", Path.Combine (directory, "obj") + Path.DirectorySeparatorChar),
-				new XElement (ns + "AndroidLinkTool", "r8")),
-			new XElement (ns + "Target", new XAttribute ("Name", "Build"),
-				properties,
-				new XElement (ns + "WriteLinesToFile", new XAttribute ("File", Path.Combine (directory, "selected.txt")),
-					new XAttribute ("Lines", "$(_ProguardProjectConfiguration)"), new XAttribute ("Overwrite", "true")))))
-			.Save (project);
-
-		Build (project);
-		Assert.AreEqual ("", File.ReadAllText (Path.Combine (directory, "selected.txt")).Trim ());
-
-		Directory.CreateDirectory (Path.GetDirectoryName (expected) ?? throw new InvalidOperationException ());
-		File.WriteAllText (expected, "rules");
-		Build (project);
-		Assert.AreEqual (expected, File.ReadAllText (Path.Combine (directory, "selected.txt")).Trim ());
 	}
 
 	[TestCase ("")]

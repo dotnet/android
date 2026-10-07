@@ -1858,7 +1858,6 @@ because xbuild doesn't support framework reference assemblies.
 	<PropertyGroup>
 		<_CompileToDalvikInputs>
 			$(_CompileToDalvikInputs)
-			;$(_ProguardProjectConfiguration)
 			;@(_ProguardConfiguration)
 			;$(AndroidR8JarPath)
 		</_CompileToDalvikInputs>
@@ -1887,7 +1886,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
   <ItemGroup>
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
-    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' and ('$(ProguardConfigFiles)' == '' or Exists('$(_ProguardProjectConfiguration)')) " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
     <!-- @(ProguardConfiguration) should be listed last -->
     <_ProguardConfiguration Include="@(ProguardConfiguration)" />
