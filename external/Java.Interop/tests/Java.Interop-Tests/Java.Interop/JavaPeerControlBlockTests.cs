@@ -13,7 +13,7 @@ namespace Java.InteropTests {
 
 	[TestFixture]
 	[Category ("PeerControlBlock")]
-	public class JavaPeerControlBlockTests : JavaVMFixture {
+	public class JavaPeerControlBlockTests {
 
 		public enum ReferenceState {
 			Global,
@@ -243,12 +243,6 @@ namespace Java.InteropTests {
 				} catch (InvalidOperationException) when (throwingConstructor) {
 				}
 				Assert.IsNotNull (observation.WeakPeer, "Construction must reach the derived constructor.");
-#if NO_GC_BRIDGE_SUPPORT
-				// The host test manager strongly roots registered peers; Android must
-				// instead exercise collection through its reference-tracking bridge.
-				if (observation.WeakPeer != null && observation.WeakPeer.TryGetTarget (out var peer))
-					JniEnvironment.Runtime.ValueManager.RemovePeer (peer);
-#endif
 			} finally {
 				JniObjectReference.Dispose (ref local);
 			}
