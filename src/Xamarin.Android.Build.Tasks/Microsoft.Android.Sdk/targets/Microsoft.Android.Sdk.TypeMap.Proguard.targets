@@ -19,7 +19,7 @@
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
       <!-- ProguardConfigFiles is the existing complete configuration override. -->
       <_AndroidUseTypeMapProguardConfiguration Condition=" '$(ProguardConfigFiles)' == '' ">true</_AndroidUseTypeMapProguardConfiguration>
-      <_AndroidUseScopedTypeMapMembers Condition=" '$(_AndroidUseTypeMapProguardConfiguration)' == 'true' ">true</_AndroidUseScopedTypeMapMembers>
+      <_AndroidUseScopedTypeMapMembers Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUseTypeMapProguardConfiguration)' == 'true' ">true</_AndroidUseScopedTypeMapMembers>
     </PropertyGroup>
   </Target>
 

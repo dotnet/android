@@ -53,9 +53,16 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 			if (directory != null && directory.Length > 0) {
 				Directory.CreateDirectory (directory);
 			}
-			using var writer = new StreamWriter (OutputFile, append: false, new UTF8Encoding (false)) { NewLine = "\n" };
-			foreach (var name in classes) {
-				WriteClassRule (writer, name);
+			string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+			try {
+				using (var writer = new StreamWriter (temporaryOutputFile, append: false, new UTF8Encoding (false)) { NewLine = "\n" }) {
+					foreach (var name in classes) {
+						WriteClassRule (writer, name);
+					}
+				}
+				File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+			} finally {
+				File.Delete (temporaryOutputFile);
 			}
 		} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is DecoderFallbackException ||
 				ex is ArgumentException || ex is NotSupportedException) {
