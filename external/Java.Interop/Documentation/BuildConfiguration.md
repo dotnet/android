@@ -28,6 +28,14 @@ Overridable MSBuild properties include:
     This value should be a full path.
     By default this is `$(MSBuildThisFileDirectory)bin/$(Configuration)`.
 
+## Native registration
+
+`JniAddNativeMethodRegistrationAttribute` and
+`JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent` are
+obsolete and have no effect. They remain available for compatibility, and using
+them produces a compiler warning rather than an error. Android native
+registration uses the generated trimmable typemap instead.
+
 ## Runtime exception support
 
 `JniEnvironment.Exceptions.Throw(Exception)` delegates to the active

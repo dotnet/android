@@ -81,6 +81,7 @@ namespace Java.Interop
 			public  JniObjectReferenceManager?  ObjectReferenceManager      {get; set;}
 			public  JniTypeManager?             TypeManager                 {get; set;}
 			public  string?                     JvmLibraryPath              {get; set;}
+			[Obsolete ("JniAddNativeMethodRegistrationAttribute is no longer supported. This property has no effect.")]
 			public  bool                        JniAddNativeMethodRegistrationAttributePresent { get; set; } = true;
 
 			public CreationOptions ()
@@ -174,7 +175,6 @@ namespace Java.Interop
 		public      JniVersion                          JniVersion          {get; private set;}
 
 		internal    bool                                TrackIDs            {get; private set;}
-		internal    bool                                JniAddNativeMethodRegistrationAttributePresent { get; }
 
 		protected JniRuntime (CreationOptions options)
 		{
@@ -185,7 +185,6 @@ namespace Java.Interop
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
-			JniAddNativeMethodRegistrationAttributePresent = options.JniAddNativeMethodRegistrationAttributePresent;
 
 			JniVersion          = options.JniVersion;
 

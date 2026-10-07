@@ -80,7 +80,6 @@ namespace Android.Runtime {
 			ObjectReferenceManager  = new ManagedObjectReferenceManager ();
 			TypeManager             = typeManager;
 			ValueManager            = valueManager;
-			JniAddNativeMethodRegistrationAttributePresent = false;
 		}
 	}
 }
