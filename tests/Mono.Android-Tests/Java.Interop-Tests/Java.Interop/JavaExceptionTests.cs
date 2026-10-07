@@ -28,12 +28,10 @@ namespace Java.InteropTests
 			try {
 				new JniType ("this/type/had/better/not/exist");
 			}
-#if __ANDROID__
 			catch (Java.Lang.Throwable e) {
 				AssertMembers (e.Message, "Throwable.StackTrace", e.StackTrace);
 				e.Dispose ();
 			}
-#endif  // __ANDROID__
 			catch (JavaException e) {
 				AssertMembers (e.Message, "JavaException.JavaStackTrace", e.JavaStackTrace);
 				e.Dispose ();
