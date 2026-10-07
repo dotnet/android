@@ -4,26 +4,16 @@ import java.util.ArrayList;
 
 import net.dot.jni.GCUserPeerable;
 
+// Android constructs the managed peer through its runtime. GCUserPeerable
+// keeps managed references alive for JavaObjectTest.DisposeAccessesThis.
 public class GetThis implements GCUserPeerable {
 
-	static {
-		net.dot.jni.ManagedPeer.registerNativeMembers (
-				GetThis.class,
-				"");
-	}
-
-	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
+	ArrayList<Object> managedReferences = new ArrayList<Object>();
 
 	public GetThis () {
-		if (GetThis.class == getClass ()) {
-			net.dot.jni.ManagedPeer.construct (
-					this,
-					"()V"
-			);
-		}
 	}
-    
-	public final GetThis getThis() {
+
+	public final GetThis getThis () {
 		return this;
 	}
 

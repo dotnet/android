@@ -14,7 +14,6 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT</DefineConstants>
-    <JavaInteropTestDirectory>$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\</JavaInteropTestDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,10 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(JavaInteropTestDirectory)**\*.cs" Exclude="$(JavaInteropTestDirectory)obj\**;$(JavaInteropTestDirectory)bin\**" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniNativeInterfaceTests.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
+    <!-- JNIEnv is internal to Java.Interop and is not exposed to this Android test assembly. -->
+    <Compile Remove="Java.Interop\JniNativeInterfaceTests.cs" />
   </ItemGroup>
 
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override build/clean behavior -->

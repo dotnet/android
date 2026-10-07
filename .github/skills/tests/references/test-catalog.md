@@ -177,8 +177,8 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 ## Java.Interop Tests — Mixed Tiers
 
 Tooling tests are standalone (listed in the Standalone Tests table above).
-Core JNI interop tests from `external/Java.Interop/tests/Java.Interop-Tests/`
-are compiled into `tests/Mono.Android-Tests/Java.Interop-Tests/Java.Interop-Tests.NET.csproj`
+Core JNI interop tests live in `tests/Mono.Android-Tests/Java.Interop-Tests/`
+and are compiled by its `Java.Interop-Tests.NET.csproj` default source glob
 and run with the on-device `Mono.Android.NET-Tests.csproj` suite. They require
 the locally built Android SDK and an Android device/emulator; use the on-device
 build/install and test commands above.

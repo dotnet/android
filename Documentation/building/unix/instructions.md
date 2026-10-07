@@ -222,19 +222,12 @@ If rebuilding removes a referenced project's NuGet assets, run
 `./dotnet-local.sh clean` first, then
 `./dotnet-local.sh build '-t:Build;Install'` so restore follows cleaning.
 
-On a configured host JVM build, run the matching controls, real leak checks,
-and deterministic completion-protocol regressions with:
-
-    $ ./dotnet-local.sh test external/Java.Interop/bin/TestDebug-net10.0/Java.Interop-Tests.dll \
-        --filter "TestCategory=JniReferenceLeak|FullyQualifiedName~JniReferenceLeakMeasurementTests"
-
 Both baseline and measured samples wait for collection completion, not for the
 count to fall below a desired value. Android uses an unreachable peer cycle as
 a collection witness, a changed bridge-completion generation on CoreCLR/NativeAOT,
-and a stable snapshot with no transient weak globals. Host JVM tests do not
-require an Android bridge generation. Timeout diagnostics include strong/weak
-counts and generation; a timeout must not be mistaken for positive-control leak
-detection. Retaining one global per measured iteration must still fail with
+and a stable snapshot with no transient weak globals. Timeout diagnostics
+include strong/weak counts and generation; a timeout must not be mistaken for
+positive-control leak detection. Retaining one global per measured iteration must still fail with
 `Delta=100`.
 
 The witness publishes a finalization flag rather than inspecting a peer weak
