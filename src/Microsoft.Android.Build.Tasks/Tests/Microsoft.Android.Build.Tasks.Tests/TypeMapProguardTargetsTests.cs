@@ -58,16 +58,16 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Build (project, "-p:ProguardConfigFiles=custom.cfg");
 		CollectionAssert.AreEqual (new [] {
 			"custom.cfg",
-			"obj/proguard/proguard_xamarin.cfg",
-			"obj/proguard/proguard_project_references.cfg",
-			"obj/proguard/proguard_project_primary.cfg",
+			Path.Combine ("obj", "proguard", "proguard_xamarin.cfg"),
+			Path.Combine ("obj", "proguard", "proguard_project_references.cfg"),
+			Path.Combine ("obj", "proguard", "proguard_project_primary.cfg"),
 		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
 		File.Delete (generatedReferenceConfiguration);
 		Build (project, "-p:ProguardConfigFiles=custom.cfg");
 		CollectionAssert.AreEqual (new [] {
 			"custom.cfg",
-			"obj/proguard/proguard_xamarin.cfg",
-			"obj/proguard/proguard_project_primary.cfg",
+			Path.Combine ("obj", "proguard", "proguard_xamarin.cfg"),
+			Path.Combine ("obj", "proguard", "proguard_project_primary.cfg"),
 		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
 	}
 

@@ -1877,9 +1877,9 @@ because xbuild doesn't support framework reference assemblies.
     <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android-optimize.txt" Condition=" ('$(AndroidR8ObfuscationMode)' != 'disabled' and '$(_AndroidUseTypeMapProguardConfiguration)' != 'true') or ('$(_AndroidUseTypeMapProguardConfiguration)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR') " />
   </ItemGroup>
   <ItemGroup>
-    <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_xamarin.cfg'))"         Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' and ('$(ProguardConfigFiles)' == '' or Exists('$(_ProguardProjectConfiguration)')) " />
-    <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_project_primary.cfg'))" Condition=" '$(AndroidLinkTool)' != '' " />
     <!-- @(ProguardConfiguration) should be listed last -->
     <_ProguardConfiguration Include="@(ProguardConfiguration)" />
   </ItemGroup>
@@ -2737,7 +2737,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assets" Condition="Exists ('$(IntermediateOutputPath)assets')" />
  	<RemoveDirFixed Directories="$(IntermediateOutputPath)java" Condition="Exists ('$(IntermediateOutputPath)java')" />
-	<RemoveDirFixed Directories="$(IntermediateOutputPath)proguard" Condition="Exists ('$(IntermediateOutputPath)proguard')" />
+	<RemoveDirFixed Directories="$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))" Condition="Exists ('$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatFilesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatFilesDirectory)')" />

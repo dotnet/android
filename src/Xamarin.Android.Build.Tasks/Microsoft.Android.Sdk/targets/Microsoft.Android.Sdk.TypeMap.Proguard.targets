@@ -15,7 +15,7 @@
       BeforeTargets="_CalculateProguardConfigurationFiles"
       Condition=" '$(ProguardConfigFiles)' == '' and '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' and (('$(_AndroidRuntime)' == 'CoreCLR' and '$(RunILLink)' != 'false') or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) ">
     <PropertyGroup>
-      <_ProguardProjectConfiguration>$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_ProguardProjectConfiguration>$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_project_references.cfg'))</_ProguardProjectConfiguration>
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
       <!-- ProguardConfigFiles is the existing complete configuration override. -->
       <_AndroidUseTypeMapProguardConfiguration Condition=" '$(ProguardConfigFiles)' == '' ">true</_AndroidUseTypeMapProguardConfiguration>
@@ -46,7 +46,7 @@
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="_GenerateJavaStubs">
     <PropertyGroup>
-      <_ProguardProjectConfiguration>$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_ProguardProjectConfiguration>$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_project_references.cfg'))</_ProguardProjectConfiguration>
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
       <_AndroidTypeMapProguardModeFile>$(IntermediateOutputPath)typemap.proguard-mode.inputs</_AndroidTypeMapProguardModeFile>
       <_CompileToDalvikInputs>$(_CompileToDalvikInputs);$(_AndroidTypeMapProguardModeFile);$(_AndroidTypeMapProguardConfiguration)</_CompileToDalvikInputs>
@@ -68,7 +68,7 @@
       DependsOnTargets="_AndroidGenerateNativeAotProguardConfigurationInputs"
       Inputs="$(_AcwMapFile);$(_AndroidBuildPropertiesCache);$(_AndroidTypeMapProguardModeFile)"
       Outputs="$(_ProguardProjectConfiguration)">
-    <MakeDir Directories="$(IntermediateOutputPath)proguard" />
+    <MakeDir Directories="$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))" />
     <WriteLinesToFile File="$(_ProguardProjectConfiguration)"
         Lines="# Class roots are supplied by the legacy ACW configuration."
         Overwrite="true" />
@@ -157,7 +157,7 @@
   <Target Name="_AndroidGenerateTypeMapMemberProguardConfigurationInputs"
       DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs">
     <PropertyGroup>
-      <_AndroidTypeMapMemberProguardConfiguration>$(IntermediateOutputPath)proguard\proguard_typemap_members.cfg</_AndroidTypeMapMemberProguardConfiguration>
+      <_AndroidTypeMapMemberProguardConfiguration>$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_typemap_members.cfg'))</_AndroidTypeMapMemberProguardConfiguration>
       <_CompileToDalvikInputs>$(_CompileToDalvikInputs);$(_AndroidTypeMapMemberProguardConfiguration)</_CompileToDalvikInputs>
     </PropertyGroup>
   </Target>

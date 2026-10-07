@@ -90,7 +90,7 @@
       BeforeTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' != '' ">
     <PropertyGroup>
-      <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_project_references.cfg'))</_ProguardProjectConfiguration>
     </PropertyGroup>
   </Target>
 
