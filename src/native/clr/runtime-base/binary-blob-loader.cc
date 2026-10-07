@@ -24,10 +24,16 @@ namespace {
 		uint32_t stored;
 		uint32_t raw;
 
+		// BLBB v1 flags: 0 = uncompressed mapped body, 1 = Zstd-compressed body.
+		[[nodiscard]] auto is_compressed () const noexcept -> bool
+		{
+			return flags == 1;
+		}
+
 		[[nodiscard]] auto is_valid () const noexcept -> bool
 		{
 			return magic == blob_magic && version == 1 && flags <= 1 && stored != 0 &&
-				raw != 0 && raw <= maximum_raw_size && (flags != 0 || stored == raw);
+				raw != 0 && raw <= maximum_raw_size && (is_compressed () || stored == raw);
 		}
 	};
 	static_assert (sizeof (BlobHeader) == 16);
@@ -67,8 +73,7 @@ auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
 			"Invalid binary blob envelope for '%s'", symbol);
 	}
 
-	// BLBB v1 flags: 0 = uncompressed mapped body, 1 = Zstd-compressed body.
-	if (header.flags == 0) {
+	if (!header.is_compressed ()) {
 		return { blob + envelope_size, header.raw };
 	}
 
