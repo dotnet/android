@@ -374,6 +374,39 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}
 	}
 
+	[Test]
+	public void MissingInnerProguardConfigurationIsNotSelected ()
+	{
+		var targets = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks",
+			"Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.AssemblyResolution.targets"));
+		var root = targets.Root ?? throw new InvalidOperationException ();
+		XNamespace ns = root.Name.Namespace;
+		var resolve = root.Elements (ns + "Target")
+			.Single (target => (string?) target.Attribute ("Name") == "_ResolveAssemblies");
+		var properties = new XElement (resolve.Elements (ns + "PropertyGroup")
+			.Single (group => group.Elements (ns + "_ProguardProjectConfiguration").Any ()));
+		var project = Path.Combine (directory, "inner-proguard.proj");
+		var expected = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
+		new XDocument (new XElement (ns + "Project",
+			new XElement (ns + "PropertyGroup",
+				new XElement (ns + "RuntimeIdentifier", "android-arm64"),
+				new XElement (ns + "IntermediateOutputPath", Path.Combine (directory, "obj") + Path.DirectorySeparatorChar),
+				new XElement (ns + "AndroidLinkTool", "r8")),
+			new XElement (ns + "Target", new XAttribute ("Name", "Build"),
+				properties,
+				new XElement (ns + "WriteLinesToFile", new XAttribute ("File", Path.Combine (directory, "selected.txt")),
+					new XAttribute ("Lines", "$(_ProguardProjectConfiguration)"), new XAttribute ("Overwrite", "true")))))
+			.Save (project);
+
+		Build (project);
+		Assert.AreEqual ("", File.ReadAllText (Path.Combine (directory, "selected.txt")).Trim ());
+
+		Directory.CreateDirectory (Path.GetDirectoryName (expected) ?? throw new InvalidOperationException ());
+		File.WriteAllText (expected, "rules");
+		Build (project);
+		Assert.AreEqual (expected, File.ReadAllText (Path.Combine (directory, "selected.txt")).Trim ());
+	}
+
 	[TestCase ("")]
 	[TestCase ("true")]
 	public void CoreClrWithoutILLinkNeedsNoLinkedInputsOrModernTasks (string enabled)

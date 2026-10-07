@@ -64,41 +64,77 @@ namespace Xamarin.Android.Build.Tests
 			var rules = Directory.GetFiles (intermediate, "proguard_project_references.cfg", SearchOption.AllDirectories).Single ();
 			var originalRules = File.ReadAllText (rules);
 			var originalTime = File.GetLastWriteTimeUtc (rules);
-			StringAssert.Contains ("first(...)", originalRules);
-			FileAssert.Exists (rules + ".stamp");
+			string? memberRules = null;
+			string? originalMemberRules = null;
+			DateTime originalMemberTime = default;
+			if (obfuscation) {
+				StringAssert.Contains ("first(...)", originalRules);
+				FileAssert.Exists (rules + ".stamp");
+			} else {
+				StringAssert.Contains ("-keep class example.Peer", originalRules);
+				StringAssert.DoesNotContain ("first(...)", originalRules);
+				memberRules = Directory.GetFiles (intermediate, "proguard_typemap_members.cfg", SearchOption.AllDirectories).Single ();
+				originalMemberRules = File.ReadAllText (memberRules);
+				originalMemberTime = File.GetLastWriteTimeUtc (memberRules);
+				StringAssert.Contains ("-keepclassmembers class example.Peer { *; }", originalMemberRules);
+			}
 
 			proj.MainActivity = proj.MainActivity.Replace ("peer.First ()", "peer.First () + 1");
 			proj.Touch ("MainActivity.cs");
 			Assert.IsTrue (builder.Build (proj), "A managed-only change should rebuild without running R8.");
 			AssertTaskCount ("Csc", 1);
-			AssertTaskCount ("GenerateProguardConfiguration", 1);
+			AssertTaskCount ("GenerateProguardConfiguration", obfuscation ? 1 : 0);
+			AssertTaskCount ("GenerateTypeMapProguardConfiguration", 0);
+			AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", 0);
 			AssertTaskCount ("R8", 0);
 			Assert.AreEqual (originalRules, File.ReadAllText (rules));
 			Assert.AreEqual (originalTime, File.GetLastWriteTimeUtc (rules));
+			if (memberRules != null) {
+				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
+				Assert.AreEqual (originalMemberTime, File.GetLastWriteTimeUtc (memberRules));
+			}
 
 			Assert.IsTrue (builder.Build (proj));
 			AssertTaskCount ("GenerateProguardConfiguration", 0);
+			AssertTaskCount ("GenerateTypeMapProguardConfiguration", 0);
+			AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", 0);
 			AssertTaskCount ("R8", 0);
 
 			File.Delete (rules);
 			Assert.IsTrue (builder.Build (proj), "A missing rule file must be restored even when the stamp exists.");
-			AssertTaskCount ("GenerateProguardConfiguration", 1);
-			AssertTaskCount ("R8", obfuscation ? 1 : 0);
+			AssertTaskCount ("GenerateProguardConfiguration", obfuscation ? 1 : 0);
+			AssertTaskCount ("GenerateTypeMapProguardConfiguration", obfuscation ? 0 : 1);
+			AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", 0);
+			AssertTaskCount ("R8", 1);
 			Assert.AreEqual (originalRules, File.ReadAllText (rules));
 
 			proj.MainActivity = proj.MainActivity.Replace ("peer.First () + 1", "peer.Second ()");
 			proj.Touch ("MainActivity.cs");
 			Assert.IsTrue (builder.Build (proj), "Newly retained bindings must update the keep rules.");
-			AssertTaskCount ("GenerateProguardConfiguration", 1);
-			StringAssert.Contains ("second(...)", File.ReadAllText (rules));
-			Assert.AreNotEqual (originalRules, File.ReadAllText (rules));
 			if (obfuscation) {
+				AssertTaskCount ("GenerateProguardConfiguration", 1);
+				StringAssert.Contains ("second(...)", File.ReadAllText (rules));
+				Assert.AreNotEqual (originalRules, File.ReadAllText (rules));
 				AssertTaskCount ("R8", 1);
+			} else {
+				AssertTaskCount ("GenerateProguardConfiguration", 0);
+				AssertTaskCount ("GenerateTypeMapProguardConfiguration", 0);
+				AssertTaskCount ("GenerateTypeMapMemberProguardConfiguration", 0);
+				AssertTaskCount ("R8", 0);
+				Assert.AreEqual (originalRules, File.ReadAllText (rules));
+				Assert.IsNotNull (memberRules);
+				if (memberRules == null) {
+					throw new AssertionException ("Scoped member rules were not generated.");
+				}
+				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
 			}
 
 			Assert.IsTrue (builder.Clean (proj));
 			Assert.IsFalse (File.Exists (rules), "Clean should remove the rules.");
-			Assert.IsFalse (File.Exists (rules + ".stamp"), "Clean should remove the generation stamp.");
+			Assert.IsFalse (File.Exists (rules + ".stamp"), "Clean should remove the legacy generation stamp.");
+			if (memberRules != null) {
+				Assert.IsFalse (File.Exists (memberRules), "Clean should remove the scoped member rules.");
+			}
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false)]
