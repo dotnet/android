@@ -9,8 +9,7 @@ namespace Java.InteropTests
 {
 #if !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 	[TestFixture]
-	[Category ("TrimmableTypeMapUnsupported")]
-	public class TestTypeTests : JavaVMFixture
+	public class TestTypeTests
 	{
 		int lrefStartCount;
 

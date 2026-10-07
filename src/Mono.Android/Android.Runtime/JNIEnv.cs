@@ -349,7 +349,7 @@ namespace Android.Runtime {
 		/// <remarks>
 		/// Only <see cref="JniHandleOwnership.DoNotRegister"/> survives the conversion. The
 		/// handle-transfer bits intentionally do not: the caller keeps the incoming handle and
-		/// releases it with <see cref="DeleteRef"/> once construction finishes, so the peer must
+		/// releases it with <see cref="DeleteRef"/> in a finally, even if construction throws, so the peer must
 		/// always take a reference of its own — which is why
 		/// <see cref="JniObjectReferenceOptions.Copy"/> is always set.
 		/// </remarks>

@@ -8,6 +8,7 @@ namespace xamarin::android {
 	{
 	public:
 		static auto Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint;
+		static void init_logging_categories () noexcept;
 		static auto get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*;
 
 	protected:

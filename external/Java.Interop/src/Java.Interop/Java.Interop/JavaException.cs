@@ -71,6 +71,41 @@ namespace Java.Interop
 			SetJavaStackTrace (throwableOverride);
 		}
 
+		/// <summary>
+		/// Reads message, cause and stack trace from a borrowed throwable without constructing a peer.
+		/// <paramref name="disposeThrowableOnException"/> applies only if initialization throws;
+		/// on success the caller still owns the throwable and must construct its peer.
+		/// </summary>
+		protected JavaException (JniObjectReference throwableOverride, JniObjectReferenceOptions disposeThrowableOnException)
+			: this (throwableOverride, disposeThrowableOnException,
+					GetThrowableDetails (throwableOverride, disposeThrowableOnException))
+		{
+		}
+
+		JavaException (JniObjectReference throwableOverride, JniObjectReferenceOptions disposeThrowableOnException,
+				(string? Message, Exception? Cause) details)
+			: base (details.Message, details.Cause)
+		{
+			try {
+				Construct (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None);
+				SetJavaStackTrace (throwableOverride);
+			} catch {
+				JniObjectReference.Dispose (ref throwableOverride, disposeThrowableOnException);
+				throw;
+			}
+		}
+
+		static (string? Message, Exception? Cause) GetThrowableDetails (
+				JniObjectReference throwable, JniObjectReferenceOptions disposeThrowableOnException)
+		{
+			try {
+				return (GetMessage (throwable), GetCause (throwable));
+			} catch {
+				JniObjectReference.Dispose (ref throwable, disposeThrowableOnException);
+				throw;
+			}
+		}
+
 		public JavaException (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (GetMessage (ref reference, transfer), GetCause (ref reference, transfer))
 		{

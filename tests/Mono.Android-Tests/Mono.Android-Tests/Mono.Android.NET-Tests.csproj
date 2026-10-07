@@ -9,7 +9,6 @@
     <OutputType>Exe</OutputType>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(XamarinAndroidSourcePath)product.snk</AssemblyOriginatorKeyFile>
-    <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -157,6 +156,7 @@
     <Compile Include="Java.Interop\TrimmableTypeMapDirectCallbackTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapExportTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
+    <Compile Include="Java.Interop\TransferredReferenceTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapTestHelpers.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
@@ -297,7 +297,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
     <AndroidInstrumentation>xamarin.android.runtimetests.TestInstrumentation</AndroidInstrumentation>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>

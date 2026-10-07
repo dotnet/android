@@ -1033,6 +1033,11 @@ dotnet build -p:AndroidNdkDirectory=/path/to/android-ndk
 If this property is not set, .NET for Android locates the NDK from the
 configured Android development environment.
 
+In .NET 11 and later, NativeAOT builds require an installed Android NDK.
+The final native link uses the NDK's `ld.lld`, `llvm-objcopy`, CRT objects,
+sysroot libraries, and compiler runtime. CoreCLR builds do not require an NDK
+unless native library stripping or a checked build is enabled.
+
 ## AndroidPackageFormat
 
 An enum-style property with valid
@@ -1159,6 +1164,12 @@ An enum-style property that specifies how `r8` obfuscates Java names when
   non-optimizing Android R8 defaults.
 
 This property does not disable R8 code shrinking.
+
+When managed-trimmed CoreCLR builds use retained typemap rules, all Java
+names are preserved regardless of this setting, but R8 optimization remains
+enabled. This path uses the optimizing Android defaults together with
+`-dontobfuscate` and `--no-minification`; disabling renaming does not disable
+optimization.
 
 This property was introduced in a .NET 10 servicing release. It defaults to
 `disabled` in .NET 10 and to `private-members` in .NET 11 and later.
@@ -1312,6 +1323,13 @@ Experimental support for this property was added in .NET 8, removed in .NET 10.
 A bool property which tells the packaging process to strip debug symbols from the native shared libraries (`.so` files).
 
 The default value is `false` and the debug symbols, if any, will be preserved when packaging.
+
+In .NET 11 and later, setting this property to `true` requires an installed
+Android NDK and uses its `llvm-strip` tool for APK and AAB packaging, including
+Debug and Fast Deployment builds. Libraries are stripped into intermediate
+copies; the original project files and installed runtime packs are not modified.
+Missing NDK tools or a failed strip operation fail the build instead of
+packaging an unstripped fallback.
 
 ## AndroidSupportedAbis
 
@@ -2059,6 +2077,19 @@ For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
 
 [maui-runtimes-compilation]: /dotnet/maui/deployment/runtimes-compilation
+
+## UseNativeHttpHandler
+
+A boolean property that selects the default HTTP handler used by
+`System.Net.Http.HttpClientHandler`. Set it to `true` to use
+`Xamarin.Android.Net.AndroidMessageHandler` or `false` to use
+`System.Net.Http.SocketsHttpHandler`.
+
+Starting with .NET 12, the default is `false`. In .NET 11 and earlier,
+the default is `true`. An explicitly configured value takes precedence.
+
+`AndroidMessageHandler` is obsolete starting with .NET 12. Use
+`SocketsHttpHandler` instead.
 
 ## WaitForExit
 

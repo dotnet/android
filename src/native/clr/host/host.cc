@@ -17,6 +17,7 @@
 #include <host/assembly-store.hh>
 #include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
+#include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
 #include <host/host-util.hh>
@@ -25,10 +26,10 @@
 #include <runtime-base/android-system.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
+#include <shared/log_functions.hh>
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
@@ -294,7 +295,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	[[maybe_unused]] jobjectArray assembliesJava,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
-	Logger::init_logging_categories ();
+	HostCommon::init_logging_categories ();
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
@@ -312,7 +313,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::set_primary_override_dir (files_dir);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
-	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
@@ -450,13 +450,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
 	init.jniRemappingData                               = &jni_remapping_data;
-	init.grefLogPath                                    = Logger::gref_log_path ();
-	init.lrefLogPath                                    = Logger::lref_log_path ();
-	init.referenceLogDirectory                         = Logger::reference_log_directory ();
-	init.lightGref                                      = Logger::light_gref_enabled () ? 1 : 0;
-	init.lightLref                                      = Logger::light_lref_enabled () ? 1 : 0;
-	init.grefToLogcat                                   = Logger::gref_to_logcat () ? 1 : 0;
-	init.lrefToLogcat                                   = Logger::lref_to_logcat () ? 1 : 0;
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

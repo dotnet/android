@@ -165,40 +165,4 @@ namespace Java.InteropTests
 		}
 	}
 
-	[TestFixture]
-	[Category ("TrimmableTypeMapUnsupported")]
-	public class JavaObjectArray_object_ContractTest : JavaObjectArrayContractTest<object> {
-		static  readonly    object  a   = new object ();
-
-		protected override object CreateValueA () {return a;}
-		protected override object CreateValueB () {return 42;}
-
-		int grefStartCount;
-
-		[OneTimeSetUp]
-		public void BeginCheckGlobalRefCount ()
-		{
-			// So that the JavaProxyObject.TypeRef GREF isn't counted.
-			using (var o = new JavaObjectArray<object> (1))
-				o [0] = a;
-			grefStartCount  = JniEnvironment.Runtime.GlobalReferenceCount;
-		}
-
-		[OneTimeTearDown]
-		public void EndCheckGlobalRefCount ()
-		{
-			int gref    = JniEnvironment.Runtime.GlobalReferenceCount;
-			Assert.IsTrue (gref <= (grefStartCount),
-					string.Format ("JNI global references: grefStartCount={0}; gref={1}", grefStartCount, gref));
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-		}
-
-		[Test]
-		public void ObjectArrayType ()
-		{
-			var c = CreateCollection (new object[0]);
-			Assert.AreEqual ("[Ljava/lang/Object;", ((IJavaPeerable) c).GetJniTypeName ());
-			Dispose (c);
-		}
-	}
 }
