@@ -2,12 +2,12 @@
 // https://github.com/dotnet/android/blob/34acbbae6795854cc4e9f8eb7167ab011e0266b4/src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidHelper.cs#L409
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Build.Utilities;
@@ -694,8 +694,13 @@ namespace Microsoft.Android.Build.Tasks
 		/// XOR the data length into the hash to avoid collisions on zero-filled inputs.
 		static void XorLength (Span<byte> hash, ulong length)
 		{
-			ref var crc = ref Unsafe.As<byte, ulong> (ref hash [0]);
-			crc ^= length;
+			if (BitConverter.IsLittleEndian) {
+				ulong crc = BinaryPrimitives.ReadUInt64LittleEndian (hash);
+				BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
+			} else {
+				ulong crc = BinaryPrimitives.ReadUInt64BigEndian (hash);
+				BinaryPrimitives.WriteUInt64BigEndian (hash, crc ^ length);
+			}
 		}
 
 		public static string ToHexString (byte[] hash)

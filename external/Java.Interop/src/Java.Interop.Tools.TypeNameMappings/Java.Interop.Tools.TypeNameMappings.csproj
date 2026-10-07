@@ -2,7 +2,6 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
   </PropertyGroup>
 

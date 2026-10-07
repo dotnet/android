@@ -9,6 +9,7 @@
     <OutputPath>$(TestOutputDirectory)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RollForward>Major</RollForward>
+    <DefineConstants>$(DefineConstants);MICROSOFT_ANDROID_BUILD_BASETASKS_TESTS</DefineConstants>
   </PropertyGroup>
 
   <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
@@ -21,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <Compile Include="..\..\external\Java.Interop\tests\Java.Interop.Tools.JavaCallableWrappers-Tests\Java.Interop.Tools.JavaCallableWrappers\Crc64Tests.cs" Link="Crc64Tests.cs" />
   </ItemGroup>
 
 </Project>

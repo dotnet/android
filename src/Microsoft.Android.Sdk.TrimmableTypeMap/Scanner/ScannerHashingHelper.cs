@@ -43,23 +43,16 @@ internal static class ScannerHashingHelper
 
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)
 	{
-		return System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName);
+		return checked (System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName));
 	}
 
-	static unsafe int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
+	static int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
 	{
-		int bytesWritten = 0;
-		fixed (char* nsPtr = ns)
-		fixed (byte* destinationPtr = destination) {
-			bytesWritten += System.Text.Encoding.UTF8.GetBytes (nsPtr, ns.Length, destinationPtr, destination.Length);
-		}
+		int bytesWritten = System.Text.Encoding.UTF8.GetBytes (ns.AsSpan (), destination);
 
 		destination [bytesWritten++] = (byte) ':';
 
-		fixed (char* assemblyNamePtr = assemblyName)
-		fixed (byte* destinationPtr = destination) {
-			bytesWritten += System.Text.Encoding.UTF8.GetBytes (assemblyNamePtr, assemblyName.Length, destinationPtr + bytesWritten, destination.Length - bytesWritten);
-		}
+		bytesWritten += System.Text.Encoding.UTF8.GetBytes (assemblyName.AsSpan (), destination.Slice (bytesWritten));
 
 		return bytesWritten;
 	}
