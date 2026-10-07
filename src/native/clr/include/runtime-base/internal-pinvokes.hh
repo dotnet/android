@@ -6,7 +6,7 @@
 
 #include <host/gc-bridge.hh>
 #include <xamarin-app.hh>
-#include "logger.hh"
+#include <shared/log_types.hh>
 
 extern "C" {
 	BridgeProcessingFtn clr_initialize_gc_bridge (BridgeProcessingFtn bridge_processing_callback) noexcept;

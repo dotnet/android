@@ -53,7 +53,6 @@ set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
   android-system-shared.cc
   cpu-arch-detect.cc
-  logger.cc
   util.cc
 )
 add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")
