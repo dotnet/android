@@ -93,7 +93,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Package manager Java generation |
-| **CoreCLR bootstrap data** | `--filter "FullyQualifiedName~GenerateJavaApplicationConfigTests"` | Task-level UTF-8 blob/offset generation, ordering, escaping, chunk boundaries, preload policy and incremental source generation. |
+| **CoreCLR bootstrap data** | `--filter "FullyQualifiedName~GenerateJavaApplicationConfigTests"` | Task-level UTF-8 blob/offset generation, ordering, escaping, byte/layout chunk boundaries, 5,000-property layouts, preload policy and incremental source generation. |
 | **CoreCLR native format marker** | `--filter "FullyQualifiedName~GenerateNativeApplicationConfigSourcesTests"` | Per-ABI native output retains only `format_tag`; configuration, DSO cache, assembly-store and compression state are not generated. |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
 | **ndk** | `--filter "FullyQualifiedName~NdkUtilTests"` | NDK utility tasks |
@@ -110,7 +110,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 |-----------|--------|-------|
 | **device** (all) | (no filter) | All device integration tests |
 | **install and run** | `--filter "FullyQualifiedName~InstallAndRunTests"` | App installation and launch |
-| **CoreCLR bootstrap data** | `--filter "FullyQualifiedName~BootstrapConfigurationTests"` | Builds and runs apps with bundled system-property values above 4 KiB and 64 KiB, verifies full native parsing and hosting-property round trips; Debug/D8 and Release/R8. |
+| **CoreCLR bootstrap data** | `--filter "FullyQualifiedName~BootstrapConfigurationTests"` | Builds and runs apps with bundled system-property values above 4 KiB and 64 KiB and 5,000 runtime properties; verifies native parsing and hosting-property round trips in Debug/D8 and Release/R8. |
 | **install** | `--filter "FullyQualifiedName~InstallTests"` | Installation-only tests |
 | **debugging** | `--filter "FullyQualifiedName~DebuggingTest"` | Debugger attach and breakpoint tests |
 | **performance** | `--filter "cat=Performance"` | Startup time, build time measurements |

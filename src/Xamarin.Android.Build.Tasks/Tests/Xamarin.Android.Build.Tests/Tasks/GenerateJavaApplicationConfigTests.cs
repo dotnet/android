@@ -1,8 +1,11 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -193,6 +196,51 @@ public class GenerateJavaApplicationConfigTests : BaseTest
 		Assert.That (config.Strings, Is.EqualTo (new [] { "example.test", "MY_ENV", value }));
 		Assert.That (source.Contains ("System.arraycopy"), Is.EqualTo (size > 4096));
 		Assert.That (source.Contains ("nativeConfigChunk"), Is.EqualTo (size > 4096));
+	}
+
+	[TestCase (2045, false)]
+	[TestCase (2046, true)]
+	[TestCase (5000, true)]
+	public void BoundsManyPropertyLayoutInitializers (int propertyCount, bool chunkedLayout)
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		var properties = new SortedDictionary<string, string> (StringComparer.Ordinal);
+		var expectedStrings = new List<string> { "example.test" };
+		for (int i = 0; i < propertyCount; i++) {
+			string name = "Example.P" + i.ToString ("D5", CultureInfo.InvariantCulture);
+			properties.Add (name, "x");
+			expectedStrings.Add (name);
+			expectedStrings.Add ("x");
+		}
+		string runtimeConfig = Path.Combine (directory, "app.runtimeconfig.json");
+		File.WriteAllText (runtimeConfig, JsonSerializer.Serialize (new {
+			runtimeOptions = new { configProperties = properties },
+		}));
+		var task = new GenerateJavaApplicationConfig {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			AndroidPackageName = "example.test",
+			OutputFile = Path.Combine (directory, "AppBootstrapConfig.java"),
+			ProjectRuntimeConfigFilePath = runtimeConfig,
+		};
+
+		Assert.IsTrue (task.Execute ());
+		string source = File.ReadAllText (task.OutputFile);
+		var config = JavaAppConfigTestHelper.Read (source);
+		Assert.That (config.Layout.Take (4), Is.EqualTo (new [] { 0, 0, propertyCount, 0 }));
+		Assert.That (config.Layout.Length, Is.EqualTo (5 + 2 * propertyCount));
+		Assert.That (config.Data.Length, Is.EqualTo (13 + 17 * propertyCount));
+		Assert.That (config.Strings, Is.EqualTo (expectedStrings));
+		Assert.That (source.Contains ("NativeConfigLayout = createNativeConfigLayout ();"), Is.EqualTo (chunkedLayout));
+		Assert.That (source.Contains ("nativeConfigLayoutChunk"), Is.EqualTo (chunkedLayout));
+		if (chunkedLayout) {
+			int lastChunk = (config.Layout.Length - 1) / 4096;
+			Assert.That (source, Does.Contain ($"nativeConfigLayoutChunk{lastChunk} ()"));
+		}
+
+		DateTime before = File.GetLastWriteTimeUtc (task.OutputFile);
+		Assert.IsTrue (task.Execute ());
+		Assert.That (File.GetLastWriteTimeUtc (task.OutputFile), Is.EqualTo (before));
 	}
 
 	[Test]

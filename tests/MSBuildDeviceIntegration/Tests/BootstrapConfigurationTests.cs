@@ -13,6 +13,66 @@ namespace Xamarin.Android.Build.Tests;
 [Category ("UsesDevice")]
 public class BootstrapConfigurationTests : DeviceTest
 {
+	[TestCase (false)]
+	[TestCase (true)]
+	public void ManyRuntimeProperties (bool isRelease)
+	{
+		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: isRelease)) {
+			return;
+		}
+
+		const int propertyCount = 5000;
+		const string successMarker = "MANY_BOOTSTRAP_PROPERTIES_OK:5000";
+		string packageName = PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, $"manybootstrap{isRelease}");
+		var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
+			IsRelease = isRelease,
+			EmbedAssembliesIntoApk = true,
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetRuntimeIdentifiers ([DeviceAbi]);
+		proj.SetDefaultTargetDevice ();
+		proj.SetProperty ("PublishReadyToRun", "false");
+		if (isRelease) {
+			proj.SetProperty ("AndroidLinkTool", "r8");
+		}
+		for (int i = 0; i < propertyCount; i++) {
+			proj.OtherBuildItems.Add (new BuildItem (
+				"RuntimeHostConfigurationOption", "Example.P" + i.ToString ("D5", CultureInfo.InvariantCulture)) {
+				Metadata = {
+					{ "Value", "x" },
+				},
+			});
+		}
+		proj.MainActivity = proj.DefaultMainActivity
+			.Replace ("//${USINGS}", "using System.Globalization;")
+			.Replace ("//${AFTER_ONCREATE}", $$"""
+				for (int i = 0; i < {{propertyCount}}; i++) {
+					string name = "Example.P" + i.ToString ("D5", CultureInfo.InvariantCulture);
+					if (!string.Equals (AppContext.GetData (name) as string, "x", StringComparison.Ordinal)) {
+						throw new InvalidOperationException ($"Runtime property {name} did not round-trip.");
+					}
+				}
+				Console.WriteLine ("{{successMarker}}");
+				""");
+
+		using var builder = CreateApkBuilder (packageName: packageName);
+		Assert.IsTrue (builder.Install (proj), "The many-property application should compile, build and install.");
+		string source = File.ReadAllText (builder.Output.GetIntermediaryPath (
+			Path.Combine ("android", "src", "net", "dot", "android", "AppBootstrapConfig.java")));
+		var config = JavaAppConfigTestHelper.Read (source);
+		Assert.That (config.Layout [2], Is.GreaterThanOrEqualTo (propertyCount));
+		Assert.That (config.Layout.Length, Is.GreaterThan (10000));
+		Assert.That (source, Does.Contain ("nativeConfigLayoutChunk"));
+
+		ClearAdbLogcat ();
+		Assert.IsTrue (MonitorAdbLogcat (
+			line => line.Contains (successMarker, StringComparison.Ordinal),
+			Path.Combine (Root, builder.ProjectDirectory, "many-bootstrap-logcat.log"),
+			ActivityStartTimeoutInSeconds,
+			onMonitoringStarted: () => StartActivityAndAssert (proj)),
+			"All 5000 properties must survive Java initialization, JNI transfer and CoreCLR hosting.");
+	}
+
 	[TestCase (false, 4097)]
 	[TestCase (false, 65537)]
 	[TestCase (true, 4097)]

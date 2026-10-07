@@ -131,8 +131,9 @@ name first, then each group in that order). The host makes one bulk copy of thos
 into process-lifetime native storage and constructs the pointer tables CoreCLR requires
 from the offsets; it performs no JNI string conversion or per-string copy.
 Literal byte-array initializers become DEX bulk array-data payloads, rather than
-per-byte Java assignments. Blobs larger than 4 KiB use bounded initializer methods and
-one Java chunk-concatenation step to stay below the per-method bytecode limit.
+per-byte Java assignments. Blobs larger than 4 KiB and layouts larger than 4,096 integers
+use bounded initializer methods and Java array concatenation to stay below the
+per-method bytecode limit, including configurations with thousands of properties.
 The generated literals include escaped string comments for inspection; those comments
 do not affect the bytes, DEX payloads, or runtime work.
 Java retains library names as strings for JNI-aware loading.

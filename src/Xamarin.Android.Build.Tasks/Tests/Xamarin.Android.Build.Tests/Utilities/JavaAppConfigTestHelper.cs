@@ -13,15 +13,9 @@ static class JavaAppConfigTestHelper
 	public static (byte [] Data, int [] Layout, string [] Strings, byte [] Flags) Read (string source)
 	{
 		source = Regex.Replace (source, @"//[^\r\n]*", "");
-		var chunks = Regex.Matches (source, @"private static byte\[\] nativeConfigChunk\d+ \(\).*?return new byte\[\] \{(?<values>.*?)\};", RegexOptions.Singleline);
-		var inline = Regex.Match (source, @"NativeConfig = new byte\[\] \{(?<values>.*?)\};", RegexOptions.Singleline);
-		var values = inline.Success
-			? ReadIntegers (inline.Groups ["values"].Value)
-			: chunks.Cast<Match> ().SelectMany (chunk => ReadIntegers (chunk.Groups ["values"].Value));
-		byte [] data = values
+		byte [] data = ReadPrimitiveArray (source, "byte", "NativeConfig", "nativeConfig")
 			.Select (value => unchecked ((byte)value)).ToArray ();
-		var layoutMatch = Regex.Match (source, @"NativeConfigLayout = new int\[\] \{(?<values>.*?)\};", RegexOptions.Singleline);
-		int [] layout = ReadIntegers (layoutMatch.Groups ["values"].Value);
+		int [] layout = ReadPrimitiveArray (source, "int", "NativeConfigLayout", "nativeConfigLayout");
 		if (data.Length == 0 || layout.Length < 5 || layout [4] != 0) {
 			throw new InvalidDataException ("Invalid Java bootstrap data");
 		}
@@ -44,6 +38,21 @@ static class JavaAppConfigTestHelper
 			strings [i] = utf8.GetString (data, start, end - start - 1);
 		}
 		return (data, layout, strings, flags);
+	}
+
+	static int [] ReadPrimitiveArray (string source, string javaType, string name, string methodPrefix)
+	{
+		var inline = Regex.Match (source, $@"{name} = new {javaType}\[\] \{{(?<values>.*?)\}};", RegexOptions.Singleline);
+		if (inline.Success) {
+			return ReadIntegers (inline.Groups ["values"].Value);
+		}
+		var chunks = Regex.Matches (source,
+			$@"private static {javaType}\[\] {methodPrefix}Chunk\d+ \(\).*?return new {javaType}\[\] \{{(?<values>.*?)\}};",
+			RegexOptions.Singleline);
+		if (chunks.Count == 0) {
+			throw new InvalidDataException ($"Missing Java bootstrap array {name}");
+		}
+		return chunks.Cast<Match> ().SelectMany (chunk => ReadIntegers (chunk.Groups ["values"].Value)).ToArray ();
 	}
 
 	static int [] ReadIntegers (string source) => source.Split ([','], StringSplitOptions.RemoveEmptyEntries)
