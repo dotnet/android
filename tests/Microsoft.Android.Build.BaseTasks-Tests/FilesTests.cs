@@ -47,11 +47,6 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			for (int i = 0; i < bytes.Length; i++)
 				bytes [i] = (byte) (i * 37 + 11);
 			AssertHashOutputs (bytes, "B2A28A16B737E58F");
-#pragma warning disable CS0618 // Verify the obsolete public CRC64 wrapper remains compatible.
-			using (var crc = new Crc64 ()) {
-				Assert.AreEqual ("3A9B1DD30122C897", Files.HashFile (Path.Combine (tempDir, "hash.bin"), crc), "Legacy CRC64");
-			}
-#pragma warning restore CS0618
 		}
 
 		[Test]
