@@ -34,6 +34,7 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 
 	public override bool RunTask ()
 	{
+		BinaryBlobLibraries = [];
 		try {
 			if (string.IsNullOrWhiteSpace (OutputDirectory) || SupportedAbis.Length == 0 ||
 				SupportedAbis.Any (string.IsNullOrWhiteSpace)) {
@@ -49,6 +50,10 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 					Xamarin.Android.Tools.AndroidTargetArch.X86 or Xamarin.Android.Tools.AndroidTargetArch.X86_64)) {
 					throw new InvalidDataException ($"Unsupported ABI: {abi}.");
 				}
+				if (blob.Length == 0) {
+					libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), []));
+					continue;
+				}
 				using var source = new MemoryStream (blob, writable: false);
 				using var output = new MemoryStream ();
 				AssemblyStoreElfWriter.Write (new [] { (JniRemappingBinaryBlob.Symbol, (Stream)source) },
@@ -56,10 +61,14 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				byte [] elf = output.ToArray ();
 				AssemblyStoreElfWriter.Validate (elf, arch, "libbinary_blobs.so",
 					new [] { (JniRemappingBinaryBlob.Symbol, blob) });
-				JniRemappingBinaryBlob.Validate (blob);
 				libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), elf));
 			}
 			foreach (var (abi, path, data) in libraries) {
+				if (data.Length == 0) {
+					if (File.Exists (path))
+						File.Delete (path);
+					continue;
+				}
 				Directory.CreateDirectory (Path.GetDirectoryName (path) ?? throw new InvalidDataException ("No output directory."));
 				File.WriteAllBytes (path, data);
 				var item = new TaskItem (path);
@@ -67,6 +76,8 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				item.SetMetadata ("ArchivePath", $"lib/{abi}/libbinary_blobs.so");
 				BinaryBlobLibraries = [.. BinaryBlobLibraries, item];
 			}
+			Directory.CreateDirectory (OutputDirectory);
+			File.WriteAllText (Path.Combine (OutputDirectory, "binary-blobs.stamp"), BinaryBlobLibraries.Length == 0 ? "false" : "true");
 		} catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException or UnauthorizedAccessException or
 			NotSupportedException or OverflowException or XmlException) {
 			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);

@@ -83,6 +83,10 @@ static class JniRemappingBinaryBlob
 			}
 		}
 
+		if (types.Count == 0 && reverse.Count == 0 && methods.Count == 0 && fields.Count == 0) {
+			return [];
+		}
+
 		types.Sort ((a, b) => Compare (a.Name, b.Name));
 		reverse.Sort ((a, b) => Compare (a.Name, b.Name));
 		// OrderBy preserves input order for equal keys; exact descriptors still precede

@@ -9,6 +9,7 @@
 #include <runtime-base/binary-blob-loader.hh>
 #include <runtime-base/zstd.hh>
 #include <shared/helpers.hh>
+#include <shared/log_functions.hh>
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
@@ -45,9 +46,15 @@ namespace {
 	void open_library () noexcept
 	{
 		library = ::dlopen ("libbinary_blobs.so", RTLD_NOW | RTLD_LOCAL);
-		if (library == nullptr) [[unlikely]] {
+		if (library == nullptr) {
+			const char *error = ::dlerror ();
+			// Android's loader exposes missing-file status through dlerror, not errno.
+			if (error != nullptr && std::strstr (error, "library \"libbinary_blobs.so\" not found") != nullptr) {
+				log_debugf (LOG_ASSEMBLY, "Optional binary blob library is absent: %s", error);
+				return;
+			}
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-				"Cannot load binary blobs: %s", ::dlerror ());
+				"Cannot load binary blobs: %s", optional_string (error));
 		}
 	}
 
@@ -68,32 +75,51 @@ namespace {
 		// The lookup returns pointers into the decoded body, so it is retained for the process lifetime.
 		return { static_cast<const uint8_t*> (decoded), header.raw };
 	}
+	auto load_payload (const char *symbol, bool optional) noexcept -> BinaryBlobPayload
+	{
+		int result = ::pthread_once (&library_once, open_library);
+		if (result != 0) [[unlikely]] {
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Cannot initialize binary blob loader: %d", result);
+		}
+		if (library == nullptr) {
+			if (optional) {
+				return {};
+			}
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Cannot load required binary blob '%s': libbinary_blobs.so was not found", symbol);
+		}
+
+		const uint8_t *blob = static_cast<const uint8_t*> (::dlsym (library, symbol));
+		if (blob == nullptr) {
+			if (optional) {
+				log_debugf (LOG_ASSEMBLY, "Optional binary blob symbol '%s' is absent", symbol);
+				return {};
+			}
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Missing binary blob symbol '%s'", symbol);
+		}
+
+		BlobHeader header;
+		std::memcpy (&header, blob, sizeof (header));
+		if (!header.is_valid ()) [[unlikely]] {
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Invalid binary blob envelope for '%s'", symbol);
+		}
+
+		if (!header.is_compressed ()) {
+			return { blob + envelope_size, header.raw };
+		}
+		return decode_compressed_payload (blob, header, symbol);
+	}
 }
 
 auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
 {
-	int result = ::pthread_once (&library_once, open_library);
-	if (result != 0) [[unlikely]] {
-		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Cannot initialize binary blob loader: %d", result);
-	}
+	return load_payload (symbol, false);
+}
 
-	const uint8_t *blob = static_cast<const uint8_t*> (::dlsym (library, symbol));
-	if (blob == nullptr) [[unlikely]] {
-		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Missing binary blob symbol '%s'", symbol);
-	}
-
-	BlobHeader header;
-	std::memcpy (&header, blob, sizeof (header));
-	if (!header.is_valid ()) [[unlikely]] {
-		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Invalid binary blob envelope for '%s'", symbol);
-	}
-
-	if (!header.is_compressed ()) {
-		return { blob + envelope_size, header.raw };
-	}
-
-	return decode_compressed_payload (blob, header, symbol);
+auto BinaryBlobLoader::load_optional (const char *symbol) noexcept -> BinaryBlobPayload
+{
+	return load_payload (symbol, true);
 }

@@ -162,20 +162,17 @@ static class JniRemappingLookup
 	}
 
 	/// <safety>
-	/// data must address a live native BinaryBlobPayload descriptor whose body remains readable
-	/// for its declared size throughout the process lifetime.
+	/// When nonzero, data must address a live native BinaryBlobPayload descriptor whose body
+	/// remains readable for its declared size throughout the process lifetime.
 	/// </safety>
 	internal static unsafe void Initialize (IntPtr data)
 	{
 		reverseTypes.Clear ();
-		if (!RuntimeFeature.JniRemapping) {
+		if (!RuntimeFeature.JniRemapping || data == IntPtr.Zero) {
 			table = null;
 			isInUse = false;
 			return;
 		}
-
-		if (data == IntPtr.Zero)
-			throw new InvalidDataException ("Invalid native JNI remapping table.");
 
 		NativeBinaryBlobPayload payload;
 		unsafe {
@@ -201,8 +198,7 @@ static class JniRemappingLookup
 					(ulong)offset + (ulong)count * stride > strings)
 				throw new InvalidDataException ("JNI remapping table index is outside the declared data.");
 		}
-		isInUse = header.type_replacement_count != 0 || header.reverse_type_replacement_count != 0 ||
-			header.method_replacement_index_count != 0 || header.field_replacement_index_count != 0;
+		isInUse = true;
 	}
 
 	static bool Contains (uint offset, ulong length) => offset <= size && length <= size - offset;

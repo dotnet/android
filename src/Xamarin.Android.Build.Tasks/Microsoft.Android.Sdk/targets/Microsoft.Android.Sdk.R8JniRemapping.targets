@@ -12,6 +12,10 @@
       DependsOnTargets="_AndroidR8JniRemappingInputs;_ConvertAndroidMamMappingFileToXml;_CollectAndroidRemapMembers">
     <PropertyGroup>
       <_AndroidBinaryBlobsDirectory>$(IntermediateOutputPath)binary-blobs/</_AndroidBinaryBlobsDirectory>
+      <_AndroidBinaryBlobsStamp>$(_AndroidBinaryBlobsDirectory)binary-blobs.stamp</_AndroidBinaryBlobsStamp>
+      <_AndroidRegularBinaryBlobsPresent></_AndroidRegularBinaryBlobsPresent>
+      <_AndroidRegularBinaryBlobsPresent Condition=" Exists('$(_AndroidBinaryBlobsStamp)') ">$([System.IO.File]::ReadAllText('$(_AndroidBinaryBlobsStamp)'))</_AndroidRegularBinaryBlobsPresent>
+      <_AndroidBinaryBlobXml></_AndroidBinaryBlobXml>
       <_AndroidBinaryBlobXml Condition=" '@(_AndroidRemapMembers->Count())' != '0' ">$(_XARemapMembersFilePath)</_AndroidBinaryBlobXml>
     </PropertyGroup>
     <ItemGroup>
@@ -19,8 +23,11 @@
         <Abi>%(_BuildTargetAbis.Identity)</Abi>
         <ArchivePath>lib/%(_BuildTargetAbis.Identity)/libbinary_blobs.so</ArchivePath>
       </_AndroidRegularBinaryBlobLibrary>
-      <_AndroidBinaryBlobLibrary Include="@(_AndroidRegularBinaryBlobLibrary)" />
-      <FileWrites Include="@(_AndroidRegularBinaryBlobLibrary)" />
+      <_AndroidRegularBinaryBlobOutput Include="$(_AndroidBinaryBlobsStamp)" />
+      <_AndroidBinaryBlobGenerationStamp Include="$(_AndroidBinaryBlobsStamp)" />
+      <_AndroidRegularBinaryBlobOutput Include="@(_AndroidRegularBinaryBlobLibrary)"
+          Condition=" '$(_AndroidRegularBinaryBlobsPresent)' != 'false' " />
+      <FileWrites Include="$(_AndroidBinaryBlobsStamp)" />
     </ItemGroup>
   </Target>
 
@@ -28,13 +35,19 @@
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') "
       DependsOnTargets="_AndroidGenerateBinaryBlobsInputs"
       Inputs="@(_AndroidRemapMembers);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
-      Outputs="@(_AndroidRegularBinaryBlobLibrary)">
+      Outputs="@(_AndroidRegularBinaryBlobOutput)">
     <GenerateJniRemappingBinaryBlobs
         MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidBinaryBlobXml)"
         OutputDirectory="$(_AndroidBinaryBlobsDirectory)"
         SupportedAbis="@(_BuildTargetAbis)"
         Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
+    <ItemGroup>
+      <_AndroidBinaryBlobLibrary Include="@(_AndroidRegularBinaryBlobLibrary)"
+          Condition=" Exists('%(_AndroidRegularBinaryBlobLibrary.Identity)') " />
+      <FileWrites Include="@(_AndroidRegularBinaryBlobLibrary)"
+          Condition=" Exists('%(_AndroidRegularBinaryBlobLibrary.Identity)') " />
+    </ItemGroup>
   </Target>
 
   <Target Name="_AndroidR8JniRemappingInputs">
@@ -75,14 +88,20 @@
       DependsOnTargets="_AndroidGenerateR8JniRemapping">
     <PropertyGroup>
       <_AndroidR8BinaryBlobsDirectory>$(IntermediateOutputPath)binary-blobs/</_AndroidR8BinaryBlobsDirectory>
+      <_AndroidR8BinaryBlobsStamp>$(_AndroidR8BinaryBlobsDirectory)binary-blobs.stamp</_AndroidR8BinaryBlobsStamp>
+      <_AndroidCoreClrBinaryBlobsPresent></_AndroidCoreClrBinaryBlobsPresent>
+      <_AndroidCoreClrBinaryBlobsPresent Condition=" Exists('$(_AndroidR8BinaryBlobsStamp)') ">$([System.IO.File]::ReadAllText('$(_AndroidR8BinaryBlobsStamp)'))</_AndroidCoreClrBinaryBlobsPresent>
     </PropertyGroup>
     <ItemGroup>
       <_AndroidCoreClrBinaryBlobLibrary Include="@(_BuildTargetAbis->'$(_AndroidR8BinaryBlobsDirectory)%(Identity)/libbinary_blobs.so')">
         <Abi>%(_BuildTargetAbis.Identity)</Abi>
         <ArchivePath>lib/%(_BuildTargetAbis.Identity)/libbinary_blobs.so</ArchivePath>
       </_AndroidCoreClrBinaryBlobLibrary>
-      <_AndroidBinaryBlobLibrary Include="@(_AndroidCoreClrBinaryBlobLibrary)" />
-      <FileWrites Include="@(_AndroidCoreClrBinaryBlobLibrary)" />
+      <_AndroidCoreClrBinaryBlobOutput Include="$(_AndroidR8BinaryBlobsStamp)" />
+      <_AndroidBinaryBlobGenerationStamp Include="$(_AndroidR8BinaryBlobsStamp)" />
+      <_AndroidCoreClrBinaryBlobOutput Include="@(_AndroidCoreClrBinaryBlobLibrary)"
+          Condition=" '$(_AndroidCoreClrBinaryBlobsPresent)' != 'false' " />
+      <FileWrites Include="$(_AndroidR8BinaryBlobsStamp)" />
     </ItemGroup>
   </Target>
 
@@ -90,13 +109,19 @@
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
       DependsOnTargets="_AndroidGenerateR8BinaryBlobsInputs"
       Inputs="$(_AndroidR8JniRemappingXml);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
-      Outputs="@(_AndroidCoreClrBinaryBlobLibrary)">
+      Outputs="@(_AndroidCoreClrBinaryBlobOutput)">
     <GenerateJniRemappingBinaryBlobs
         MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidR8JniRemappingXml)"
         OutputDirectory="$(_AndroidR8BinaryBlobsDirectory)"
         SupportedAbis="@(_BuildTargetAbis)"
         Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
+    <ItemGroup>
+      <_AndroidBinaryBlobLibrary Include="@(_AndroidCoreClrBinaryBlobLibrary)"
+          Condition=" Exists('%(_AndroidCoreClrBinaryBlobLibrary.Identity)') " />
+      <FileWrites Include="@(_AndroidCoreClrBinaryBlobLibrary)"
+          Condition=" Exists('%(_AndroidCoreClrBinaryBlobLibrary.Identity)') " />
+    </ItemGroup>
   </Target>
 
   <!-- ILC has already emitted external lookup calls. Only its surviving JNI literals select
@@ -134,13 +159,19 @@
       DependsOnTargets="_AndroidGenerateNativeAotR8Remapping">
     <PropertyGroup>
       <_AndroidNativeAotBinaryBlobsDirectory>$(NativeIntermediateOutputPath)binary-blobs/</_AndroidNativeAotBinaryBlobsDirectory>
+      <_AndroidNativeAotBinaryBlobsStamp>$(_AndroidNativeAotBinaryBlobsDirectory)binary-blobs.stamp</_AndroidNativeAotBinaryBlobsStamp>
+      <_AndroidNativeAotBinaryBlobsPresent></_AndroidNativeAotBinaryBlobsPresent>
+      <_AndroidNativeAotBinaryBlobsPresent Condition=" Exists('$(_AndroidNativeAotBinaryBlobsStamp)') ">$([System.IO.File]::ReadAllText('$(_AndroidNativeAotBinaryBlobsStamp)'))</_AndroidNativeAotBinaryBlobsPresent>
     </PropertyGroup>
     <ItemGroup>
-      <_AndroidNativeAotBinaryBlobLibrary Include="@(_PrivateBuildTargetAbi->'$(_AndroidNativeAotBinaryBlobsDirectory)%(Identity)/libbinary_blobs.so')">
+      <_AndroidNativeAotExpectedBinaryBlobLibrary Include="@(_PrivateBuildTargetAbi->'$(_AndroidNativeAotBinaryBlobsDirectory)%(Identity)/libbinary_blobs.so')">
         <Abi>%(_PrivateBuildTargetAbi.Identity)</Abi>
         <ArchivePath>lib/%(_PrivateBuildTargetAbi.Identity)/libbinary_blobs.so</ArchivePath>
-      </_AndroidNativeAotBinaryBlobLibrary>
-      <FileWrites Include="@(_AndroidNativeAotBinaryBlobLibrary)" />
+      </_AndroidNativeAotExpectedBinaryBlobLibrary>
+      <_AndroidNativeAotBinaryBlobOutput Include="$(_AndroidNativeAotBinaryBlobsStamp)" />
+      <_AndroidNativeAotBinaryBlobOutput Include="@(_AndroidNativeAotExpectedBinaryBlobLibrary)"
+          Condition=" '$(_AndroidNativeAotBinaryBlobsPresent)' != 'false' " />
+      <FileWrites Include="$(_AndroidNativeAotBinaryBlobsStamp)" />
     </ItemGroup>
   </Target>
 
@@ -148,13 +179,19 @@
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="_AndroidGenerateNativeAotR8BinaryBlobsInputs"
       Inputs="$(_AndroidNativeAotR8RemappingXml);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
-      Outputs="@(_AndroidNativeAotBinaryBlobLibrary)">
+      Outputs="@(_AndroidNativeAotBinaryBlobOutput)">
     <GenerateJniRemappingBinaryBlobs
         MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidNativeAotR8RemappingXml)"
         OutputDirectory="$(_AndroidNativeAotBinaryBlobsDirectory)"
         SupportedAbis="@(_PrivateBuildTargetAbi)"
         Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
+    <ItemGroup>
+      <_AndroidNativeAotBinaryBlobLibrary Include="@(_AndroidNativeAotExpectedBinaryBlobLibrary)"
+          Condition=" Exists('%(_AndroidNativeAotExpectedBinaryBlobLibrary.Identity)') " />
+      <FileWrites Include="@(_AndroidNativeAotExpectedBinaryBlobLibrary)"
+          Condition=" Exists('%(_AndroidNativeAotExpectedBinaryBlobLibrary.Identity)') " />
+    </ItemGroup>
   </Target>
 
 </Project>

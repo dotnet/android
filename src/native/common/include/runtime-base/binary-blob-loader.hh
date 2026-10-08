@@ -12,5 +12,7 @@ namespace xamarin::android {
 	public:
 		// The returned bytes and the containing DSO remain valid for the process lifetime.
 		static auto load (const char *symbol) noexcept -> BinaryBlobPayload;
+		// Missing optional libraries or symbols return an empty payload.
+		static auto load_optional (const char *symbol) noexcept -> BinaryBlobPayload;
 	};
 }

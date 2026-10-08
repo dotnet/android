@@ -13,16 +13,18 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class R8RuntimeRemappingBuildTests : BaseTest
 	{
-		[Test]
-		public void BuildWithoutR8PackagesEmptyBinaryRemapping ()
+		[TestCase (AndroidRuntime.CoreCLR, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true)]
+		[TestCase (AndroidRuntime.NativeAOT, true)]
+		public void BuildWithoutRemappingOmitsBinaryBlobs (AndroidRuntime runtime, bool release)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release)) {
 				return;
 			}
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = false,
+				IsRelease = release,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
 
 			using var builder = CreateApkBuilder ();
@@ -30,10 +32,78 @@ namespace Xamarin.Android.Build.Tests
 			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var blobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
 				.ToArray ();
-			Assert.AreEqual (1, blobs.Length, "Builds without R8 still need an empty remapping data library.");
-			using var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
-				proj.OutputPath, $"{proj.PackageName}-Signed.apk"));
-			Assert.IsNotNull (apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so"));
+			Assert.IsEmpty (blobs, "Empty remapping must not produce a data library.");
+			using (var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
+				Assert.IsNull (apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so"));
+			}
+			Assert.IsTrue (builder.Build (proj), "The absent-payload no-op build should succeed.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"),
+				"Absence must be cached, not regenerated on every build.");
+			var stamp = Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ();
+			Assert.AreEqual ("false", File.ReadAllText (stamp));
+			File.Delete (stamp);
+			Assert.IsTrue (builder.Build (proj), "A deleted absence stamp must be recreated.");
+			Assert.AreEqual ("false", File.ReadAllText (stamp));
+			Assert.IsTrue (builder.Clean (proj));
+			FileAssert.DoesNotExist (stamp);
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true)]
+		public void MamRemappingTransitionsUpdatePackages (AndroidRuntime runtime, bool aab)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true))
+				return;
+			string mapping = """{"ClassRewrites":[]}""";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("_AndroidMamMappingFile", "mam.json") { TextContent = () => mapping },
+					new AndroidItem.AndroidAsset ("Assets/ordinary.txt") { TextContent = () => "ordinary asset" },
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
+			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			using var builder = CreateApkBuilder ();
+			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			void AssertPackage (bool hasRemapping)
+			{
+				string archivePath = aab
+					? Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.aab")
+					: Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				using var archive = ZipFile.OpenRead (archivePath);
+				string prefix = aab ? "base/" : "";
+				Assert.AreEqual (hasRemapping, archive.GetEntry ($"{prefix}lib/arm64-v8a/libbinary_blobs.so") != null);
+				Assert.IsNotNull (archive.GetEntry ($"{prefix}assets/ordinary.txt"));
+				Assert.IsNull (archive.GetEntry ($"{prefix}assets/xa-internal/xa-mam-mapping.xml"));
+				Assert.IsNull (archive.GetEntry ($"{prefix}assets/xa-internal/xa-remap-members.xml"));
+				Assert.AreEqual (hasRemapping ? "true" : "false",
+					File.ReadAllText (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ()));
+			}
+			Assert.IsTrue (builder.Build (proj));
+			AssertPackage (false);
+			mapping = """{"ClassRewrites":[{"Class":{"From":"android.app.Activity","To":"com.microsoft.intune.mam.client.app.MAMActivity"}}]}""";
+			proj.Touch ("mam.json");
+			Assert.IsTrue (builder.Build (proj));
+			AssertPackage (true);
+			Assert.IsTrue (builder.Build (proj), "MAM input must survive ordinary asset staging and support a no-op.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"));
+			AssertPackage (true);
+			foreach (var blob in Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories))
+				File.Delete (blob);
+			Assert.IsTrue (builder.Build (proj), "A deleted data library must be regenerated.");
+			AssertPackage (true);
+			mapping = """{"ClassRewrites":[]}""";
+			proj.Touch ("mam.json");
+			Assert.IsTrue (builder.Build (proj));
+			Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
+			AssertPackage (false);
+			Assert.IsTrue (builder.Build (proj));
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"));
+			Assert.IsTrue (builder.Clean (proj));
+			Assert.IsEmpty (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories));
 		}
 
 		[TestCase (true)]
@@ -176,8 +246,12 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
+			string remapping = """<replacements><replace-type from="example/Original" to="example/Replacement" /></replacements>""";
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("_AndroidRemapMembers", "explicit-remap.xml") { TextContent = () => remapping },
+				},
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
@@ -242,6 +316,16 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (missingBlob);
 			foreach (var entry in objects)
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "Restoring data must not recompile ILC.");
+			remapping = "<replacements />";
+			proj.Touch ("explicit-remap.xml");
+			Assert.IsTrue (builder.Build (proj), "Empty R8 remapping must remove both ABI libraries.");
+			Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
+			using (var archive = ZipFile.OpenRead (archivePath)) {
+				foreach (var abi in new [] { "arm64-v8a", "x86_64" })
+					Assert.IsNull (archive.GetEntry ($"lib/{abi}/libbinary_blobs.so"));
+			}
+			Assert.IsTrue (builder.Build (proj), "Empty per-RID remapping must be a no-op.");
+			Assert.AreEqual ((0, 0), ReadInvocationCounts ());
 			Assert.IsTrue (builder.Clean (proj));
 			foreach (var blob in binaryBlobs.Keys)
 				FileAssert.DoesNotExist (blob, "Clean must remove generated binary-blob libraries.");

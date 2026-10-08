@@ -97,7 +97,7 @@ public class GenerateJniRemappingBinaryBlobsTests : BaseTest
 	[Test]
 	public void MultipleSymbolsKeepIndependentCompressionEnvelopes ()
 	{
-		string xml = WriteXml ("<replacements />");
+		string xml = WriteXml (Xml);
 		byte [] compressed = JniRemappingBinaryBlob.Create (xml, compress: true);
 		byte [] uncompressed = JniRemappingBinaryBlob.Create (xml, compress: false);
 		using var compressedStream = new MemoryStream (compressed);
@@ -112,6 +112,44 @@ public class GenerateJniRemappingBinaryBlobsTests : BaseTest
 		Assert.AreEqual (0, BitConverter.ToUInt16 (uncompressed, 6));
 		JniRemappingBinaryBlob.Validate (compressed);
 		JniRemappingBinaryBlob.Validate (uncompressed);
+	}
+
+	[Test]
+	public void EmptyMappingOmitsLibrariesAndRemovesStaleOutputs ()
+	{
+		var task = new GenerateJniRemappingBinaryBlobs {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			RemappingXmlFilePath = WriteXml (Xml),
+			OutputDirectory = Path.Combine (DirectoryPath, "out"),
+			SupportedAbis = ["arm64-v8a", "x86_64"],
+		};
+		Assert.IsTrue (task.Execute ());
+		string [] libraries = task.BinaryBlobLibraries.Select (item => item.ItemSpec).ToArray ();
+		Assert.AreEqual (2, libraries.Length);
+		task.RemappingXmlFilePath = WriteXml ("<replacements />");
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (task.BinaryBlobLibraries);
+		foreach (string library in libraries)
+			FileAssert.DoesNotExist (library);
+		Assert.AreEqual ("false", File.ReadAllText (Path.Combine (task.OutputDirectory, "binary-blobs.stamp")));
+		Assert.IsEmpty (JniRemappingBinaryBlob.Create (null, compress: true));
+	}
+
+	[TestCase (null)]
+	[TestCase ("<replacements />")]
+	public void FreshEmptyMappingWritesOnlyAbsenceStamp (string? xml)
+	{
+		var task = new GenerateJniRemappingBinaryBlobs {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			RemappingXmlFilePath = xml == null ? "" : WriteXml (xml),
+			OutputDirectory = Path.Combine (DirectoryPath, "out"),
+			SupportedAbis = ["arm64-v8a"],
+		};
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (task.BinaryBlobLibraries);
+		CollectionAssert.AreEqual (new [] { Path.Combine (task.OutputDirectory, "binary-blobs.stamp") },
+			Directory.GetFiles (task.OutputDirectory, "*", SearchOption.AllDirectories));
+		Assert.AreEqual ("false", File.ReadAllText (Path.Combine (task.OutputDirectory, "binary-blobs.stamp")));
 	}
 
 	[TestCase ("""<replacements><replace-type from="a" /></replacements>""")]

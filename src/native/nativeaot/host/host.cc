@@ -78,8 +78,8 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
 	}
 	static BinaryBlobPayload remapping = {};
-	remapping = BinaryBlobLoader::load ("remapping_data");
-	initArgs->jniRemappingData = &remapping;
+	remapping = BinaryBlobLoader::load_optional ("remapping_data");
+	initArgs->jniRemappingData = remapping.data == nullptr ? nullptr : &remapping;
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
 	env->DeleteLocalRef (lrefGCUserPeerable);
