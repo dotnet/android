@@ -1338,20 +1338,16 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>El ensamblado '{0}' usa un formato de devolución de llamada del mismo nivel de Java que requiere AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>El ensamblado '{0}' tiene metadatos de devolución de llamada del mismo nivel de Java diferentes en implementaciones específicas del runtime '{1}' y '{2}'. Todos los RuntimeIdentifiers deben proporcionar metadatos de devolución de llamada equivalentes cuando AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>Ya no se admite la implementación del mapa de tipo "llvm-ir". Quite la propiedad AndroidTypeMapImplementation o establézcala en "trimmable".</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Error del comando '{0}'.\n{1}</value>

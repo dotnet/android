@@ -1338,20 +1338,16 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>程序集 '{0}' 使用需要 AndroidTypeMapImplementation=trimmable 的 Java 对等回调格式。</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>程序集“{0}”在特定于运行时的实现“{1}”和“{2}”中具有不同的 Java 对等回调元数据。当 AndroidTypeMapImplementation=trimmable 时，所有 RuntimeIdentifier 都必须提供等效的回调元数据。</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>不再支持 “llvm-ir” 类型映射实现。删除 AndroidTypeMapImplementation 属性或将其设置为 “trimmable”。</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>命令 '{0}' 失败。\n{1}</value>

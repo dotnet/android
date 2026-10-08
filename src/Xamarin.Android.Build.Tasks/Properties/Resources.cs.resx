@@ -1338,20 +1338,16 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Sestavení {0} používá formát zpětných volání protějšků v jazyce Java, který vyžaduje AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Sestavení {0} má v implementacích {1} a {2} pro jednotlivé moduly runtime odlišná metadata zpětných volání protějšků v jazyce Java. Všechny identifikátory RuntimeIdentifiers musí při AndroidTypeMapImplementation=trimmable poskytovat ekvivalentní metadata zpětných volání.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>Implementace mapy typu llvm-ir už není podporovaná. Odeberte vlastnost AndroidTypeMapImplementation nebo ji nastavte na trimmable.</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>
