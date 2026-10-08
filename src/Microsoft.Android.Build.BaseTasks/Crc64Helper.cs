@@ -77,20 +77,20 @@ namespace Microsoft.Android.Build.Tasks
 				// Preserve the original native-endian word loads.
 				crc ^= BitConverter.ToUInt64 (array, idx);
 				crc =
-					table [7, crc & 0xff] ^
-					table [6, (crc >> 8) & 0xff] ^
-					table [5, (crc >> 16) & 0xff] ^
-					table [4, (crc >> 24) & 0xff] ^
-					table [3, (crc >> 32) & 0xff] ^
-					table [2, (crc >> 40) & 0xff] ^
-					table [1, (crc >> 48) & 0xff] ^
-					table [0, crc >> 56];
+					table [7 * 256 + (crc & 0xff)] ^
+					table [6 * 256 + ((crc >> 8) & 0xff)] ^
+					table [5 * 256 + ((crc >> 16) & 0xff)] ^
+					table [4 * 256 + ((crc >> 24) & 0xff)] ^
+					table [3 * 256 + ((crc >> 32) & 0xff)] ^
+					table [2 * 256 + ((crc >> 40) & 0xff)] ^
+					table [1 * 256 + ((crc >> 48) & 0xff)] ^
+					table [0 * 256 + (crc >> 56)];
 				idx += 8;
 				len -= 8;
 			}
 
 			while (len > 0) {
-				crc = table [0, (crc ^ array [idx]) & 0xff] ^ (crc >> 8);
+				crc = table [0 * 256 + ((crc ^ array [idx]) & 0xff)] ^ (crc >> 8);
 				idx++;
 				len--;
 			}
