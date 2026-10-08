@@ -76,11 +76,13 @@ namespace Xamarin.Android.Tasks
 				XmlResolver = null,
 			};
 
-			using (var reader = XmlReader.Create (File.OpenRead (remappingXmlFilePath), readerSettings)) {
-				if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
-					Log.LogCodedError ("XA1045", Properties.Resources.XA1045, remappingXmlFilePath);
-				} else {
-					ReadXml (reader, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements, remappingXmlFilePath);
+			using (var input = File.OpenRead (remappingXmlFilePath)) {
+				using (var reader = XmlReader.Create (input, readerSettings)) {
+					if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
+						Log.LogCodedError ("XA1045", Properties.Resources.XA1045, remappingXmlFilePath);
+					} else {
+						ReadXml (reader, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements, remappingXmlFilePath);
+					}
 				}
 			}
 
