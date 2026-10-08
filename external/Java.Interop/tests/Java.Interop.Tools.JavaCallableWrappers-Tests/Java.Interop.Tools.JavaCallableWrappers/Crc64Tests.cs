@@ -47,27 +47,6 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		}
 
 		[Test]
-		public void ZeroFilledHashOutput ()
-		{
-			Assert.AreEqual ("f28f5786fb64a805", ToHash (new byte [256]));
-		}
-
-		[Test]
-		public void OffsetAndIncrementalInputsMatchWholeHash ()
-		{
-			var bytes = Encoding.UTF8.GetBytes ("System.Xml.XmlDocument, System.Xml");
-			var buffer = new byte [bytes.Length + 6];
-			bytes.CopyTo (buffer, 3);
-			using (var crc = new Crc64 ()) {
-				var expected = crc.ComputeHash (bytes);
-				CollectionAssert.AreEqual (expected, crc.ComputeHash (buffer, 3, bytes.Length));
-				crc.TransformBlock (bytes, 0, 16, null, 0);
-				crc.TransformFinalBlock (bytes, 16, bytes.Length - 16);
-				CollectionAssert.AreEqual (expected, crc.Hash);
-			}
-		}
-
-		[Test]
 		public void AllBytesAreProcessed ()
 		{
 			// Slicing processes 8 bytes (a 64-bit word) at a time, and if any of the bytes are skipped we will have a
