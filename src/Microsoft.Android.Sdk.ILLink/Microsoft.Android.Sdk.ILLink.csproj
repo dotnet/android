@@ -6,7 +6,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <Nullable>annotations</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!--
       We share $(OutputPath) with Xamarin.Android.Build.Tasks.csproj.  Letting NuGet
       copy this project's transitive runtime assets there (e.g. the Mono.Cecil.dll
