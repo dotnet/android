@@ -141,6 +141,8 @@ static class JniRemappingLookup
 	{
 		public readonly IntPtr data;
 		public readonly uint size;
+
+		public bool IsValid () => data != IntPtr.Zero && size >= HeaderSize && size <= 256 * 1024 * 1024;
 	}
 
 	static unsafe byte* table;
@@ -180,7 +182,7 @@ static class JniRemappingLookup
 			// SAFETY: both native hosts pass a process-lifetime descriptor, not a body or temporary stack address.
 			payload = *(NativeBinaryBlobPayload*)data;
 		}
-		if (payload.data == IntPtr.Zero || payload.size < HeaderSize || payload.size > 256 * 1024 * 1024)
+		if (!payload.IsValid ())
 			throw new InvalidDataException ("Invalid native JNI remapping table.");
 
 		table = (byte*)payload.data;
