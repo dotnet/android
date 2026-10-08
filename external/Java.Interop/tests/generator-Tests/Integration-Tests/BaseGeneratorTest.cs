@@ -95,13 +95,9 @@ namespace generatortests
 				byte[] f1 = ReadAllBytesIgnoringLineEndings (file1);
 				byte[] f2 = ReadAllBytesIgnoringLineEndings (file2);
 
-#pragma warning disable CS0618 // Retain the existing file-comparison hash semantics.
-				using (var hash = new Crc64 ()) {
-					var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
-					var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
-					result = string.Equals (f1hash, f2hash, StringComparison.Ordinal);
-				}
-#pragma warning restore CS0618
+				var f1hash = Convert.ToBase64String (Crc64JonesCompat.Compute (f1));
+				var f2hash = Convert.ToBase64String (Crc64JonesCompat.Compute (f2));
+				result = string.Equals (f1hash, f2hash, StringComparison.Ordinal);
 			}
 
 			return result;
