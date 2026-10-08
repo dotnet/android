@@ -83,6 +83,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         UseTypeMapProguardConfiguration="$(_AndroidUseTypeMapProguardConfiguration)"
         UseScopedTypeMapMembers="$(_AndroidUseScopedTypeMapMembers)"
         ObfuscationMode="$(AndroidR8ObfuscationMode)"
+        CodeGenerationTarget="$(AndroidCodegenTarget)"
         EnableShrinking="$(_R8EnableShrinking)"
         EnableMultiDex="$(AndroidEnableMultiDex)"
         MultiDexMainDexListFile="$(_AndroidMainDexListFile)"

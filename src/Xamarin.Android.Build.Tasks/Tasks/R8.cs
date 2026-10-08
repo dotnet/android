@@ -39,6 +39,7 @@ namespace Xamarin.Android.Tasks
 		public bool UseTypeMapProguardConfiguration { get; set; }
 		public bool UseScopedTypeMapMembers { get; set; }
 		public string ObfuscationMode { get; set; } = "private-members";
+		public string CodeGenerationTarget { get; set; } = "";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -163,6 +164,8 @@ namespace Xamarin.Android.Tasks
 
 			if (EnableShrinking) {
 				bool runtimeRemapping = string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase);
+				bool preserveJavaInterop1FieldNames = runtimeRemapping &&
+					string.Equals (CodeGenerationTarget, "JavaInterop1", StringComparison.OrdinalIgnoreCase);
 				if (UseTypeMapProguardConfiguration && !runtimeRemapping) {
 					WriteArg (response, "--no-minification");
 				}
@@ -197,7 +200,10 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						WriteObfuscationRules (xamcfg, UseTypeMapProguardConfiguration && !runtimeRemapping ? "disabled" : ObfuscationMode);
+						WriteObfuscationRules (
+							xamcfg,
+							UseTypeMapProguardConfiguration && !runtimeRemapping ? "disabled" : ObfuscationMode,
+							preserveJavaInterop1FieldNames);
 						xamcfg.WriteLine ();
 						xamcfg.Flush ();
 						if (UseTypeMapProguardConfiguration) {
@@ -263,7 +269,7 @@ namespace Xamarin.Android.Tasks
 
 		internal string KeepOption => string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase) ? "-keep,allowobfuscation" : "-keep";
 
-		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
+		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode, bool preserveJavaInterop1FieldNames = false)
 		{
 			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
 				writer.WriteLine ("-dontobfuscate");
@@ -278,6 +284,9 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
 				writer.WriteLine ("-keepclassmembernames interface * { *; }");
 				writer.WriteLine ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }");
+				if (preserveJavaInterop1FieldNames) {
+					writer.WriteLine ("-keepclassmembernames class * { <fields>; }");
+				}
 				writer.WriteLine ("-keepnames public class *");
 				writer.WriteLine ("-keepnames class **$*");
 				return;
