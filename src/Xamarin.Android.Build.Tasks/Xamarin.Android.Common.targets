@@ -1617,6 +1617,8 @@ because xbuild doesn't support framework reference assemblies.
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
 
+  <Delete Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
+
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
