@@ -11,7 +11,6 @@ namespace xamarin::android
 		static inline const uint8_t *body = nullptr;
 		static inline uint32_t body_size = 0;
 		static inline uint32_t strings_start = 0;
-		static inline uint32_t strings_end = 0;
 		static inline uint32_t env_offset = 0;
 		static inline uint32_t sys_offset = 0;
 		static inline uint32_t preload_offset = 0;
@@ -30,6 +29,6 @@ namespace xamarin::android
 		static auto preload_index (uint32_t index) noexcept -> uint32_t;
 
 	private:
-		static auto read (uint32_t offset) noexcept -> uint32_t;
+		static auto read (uint64_t offset) noexcept -> uint32_t;
 	};
 }
