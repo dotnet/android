@@ -1,5 +1,6 @@
 #include <runtime-base/coreclr-bootstrap.hh>
 
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -14,7 +15,33 @@ using namespace xamarin::android;
 
 namespace
 {
-	constexpr uint32_t HeaderSize = 84;
+	struct BootstrapHeader {
+		uint32_t magic;
+		uint16_t version;
+		uint16_t flags;
+		uint32_t size;
+		uint32_t env_count;
+		uint32_t sys_count;
+		uint32_t prop_count;
+		uint32_t dso_count;
+		uint32_t shared_count;
+		uint32_t preload_count;
+		uint32_t preload_stride;
+		uint32_t env_offset;
+		uint32_t sys_offset;
+		uint32_t prop_offset;
+		uint32_t dso_offset;
+		uint32_t preload_offset;
+		uint32_t strings_offset;
+		uint32_t strings_length;
+		uint32_t package_naming_policy;
+		uint32_t assembly_count;
+		uint32_t bundled_name_width;
+		uint32_t package_offset;
+	};
+	static_assert (sizeof (BootstrapHeader) == 84);
+	static_assert (offsetof (BootstrapHeader, flags) == 6);
+	static_assert (offsetof (BootstrapHeader, package_offset) == 80);
 
 	[[noreturn]] void invalid (const char *reason) noexcept
 	{
@@ -74,59 +101,52 @@ void CoreClrBootstrap::initialize () noexcept
 	BinaryBlobPayload bootstrap = BinaryBlobLoader::load ("coreclr_bootstrap");
 	body = bootstrap.data;
 	body_size = bootstrap.size;
-	if (body_size < HeaderSize) {
+	if (body_size < sizeof (BootstrapHeader)) {
 		invalid ("body is shorter than the header");
 	}
-	uint16_t body_flags;
-	std::memcpy (&body_flags, body + 6, sizeof (body_flags));
-	uint32_t env_count = read (12);
-	uint32_t sys_count = read (16);
-	uint32_t prop_count = read (20);
-	uint32_t dso_count = read (24);
-	uint32_t shared_count = read (28);
-	preload_count = read (32);
-	preload_stride = read (36);
-	env_offset = read (40);
-	sys_offset = read (44);
-	uint32_t prop_offset = read (48);
-	uint32_t dso_offset = read (52);
-	preload_offset = read (56);
-	strings_start = read (60);
-	if (prop_count < 3 || prop_count > std::numeric_limits<int>::max ()) {
+	BootstrapHeader header;
+	std::memcpy (&header, body, sizeof (header));
+	preload_count = header.preload_count;
+	preload_stride = header.preload_stride;
+	env_offset = header.env_offset;
+	sys_offset = header.sys_offset;
+	preload_offset = header.preload_offset;
+	strings_start = header.strings_offset;
+	if (header.prop_count < 3 || header.prop_count > std::numeric_limits<int>::max ()) {
 		invalid ("runtime property count out of range");
 	}
 	config = {
-		.ignore_split_configs = (body_flags & 1) != 0,
-		.number_of_runtime_properties = prop_count,
-		.package_naming_policy = read (68),
-		.environment_variable_count = env_count,
-		.system_property_count = sys_count,
-		.number_of_assemblies_in_apk = read (72),
-		.bundled_assembly_name_width = read (76),
-		.number_of_dso_cache_entries = dso_count,
-		.number_of_shared_libraries = shared_count,
-		.android_package_name = string (read (80)),
-		.have_assembly_store = (body_flags & 2) != 0,
+		.ignore_split_configs = (header.flags & 1) != 0,
+		.number_of_runtime_properties = header.prop_count,
+		.package_naming_policy = header.package_naming_policy,
+		.environment_variable_count = header.env_count,
+		.system_property_count = header.sys_count,
+		.number_of_assemblies_in_apk = header.assembly_count,
+		.bundled_assembly_name_width = header.bundled_name_width,
+		.number_of_dso_cache_entries = header.dso_count,
+		.number_of_shared_libraries = header.shared_count,
+		.android_package_name = string (header.package_offset),
+		.have_assembly_store = (header.flags & 2) != 0,
 	};
 
-	dso_cache = static_cast<DSOCacheEntry*> (std::malloc (static_cast<size_t> (dso_count) * sizeof (DSOCacheEntry)));
-	if (dso_count != 0 && dso_cache == nullptr) {
+	dso_cache = static_cast<DSOCacheEntry*> (std::malloc (static_cast<size_t> (header.dso_count) * sizeof (DSOCacheEntry)));
+	if (header.dso_count != 0 && dso_cache == nullptr) {
 		invalid ("out of memory allocating DSO cache");
 	}
-	for (uint32_t i = 0; i < dso_count; i++) {
-		uint64_t offset = static_cast<uint64_t> (dso_offset) + static_cast<uint64_t> (i) * 12;
+	for (uint32_t i = 0; i < header.dso_count; i++) {
+		uint64_t offset = static_cast<uint64_t> (header.dso_offset) + static_cast<uint64_t> (i) * 12;
 		uint32_t hash = read (offset);
 		uint32_t flags = read (offset + 4);
 		uint32_t name = read (offset + 8);
 		new (&dso_cache [i]) DSOCacheEntry { hash, (flags & 0xff) != 0, (flags & 0xff00) != 0, name, nullptr };
 	}
-	property_names = static_cast<const char**> (std::calloc (prop_count, sizeof (const char*)));
-	property_values = static_cast<char**> (std::calloc (prop_count, sizeof (char*)));
+	property_names = static_cast<const char**> (std::calloc (header.prop_count, sizeof (const char*)));
+	property_values = static_cast<char**> (std::calloc (header.prop_count, sizeof (char*)));
 	if (property_names == nullptr || property_values == nullptr) {
 		invalid ("out of memory allocating runtime properties");
 	}
-	for (uint32_t i = 0; i < prop_count; i++) {
-		uint64_t offset = static_cast<uint64_t> (prop_offset) + static_cast<uint64_t> (i) * 8;
+	for (uint32_t i = 0; i < header.prop_count; i++) {
+		uint64_t offset = static_cast<uint64_t> (header.prop_offset) + static_cast<uint64_t> (i) * 8;
 		property_names [i] = string (read (offset));
 		uint32_t value = read (offset + 4);
 		if (i >= 3) {
