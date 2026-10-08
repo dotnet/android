@@ -26,14 +26,14 @@ static class JniRemappingBinaryBlob
 
 	public static byte [] Create (string? xmlPath, bool compress)
 	{
+		if (string.IsNullOrWhiteSpace (xmlPath))
+			return [];
+
 		var types = new List<TypeEntry> ();
 		var reverse = new List<TypeEntry> ();
 		var methods = new List<Member> ();
 		var fields = new List<Member> ();
-		// A blank path means that no remapping inputs exist in this build.
-		using (Stream input = string.IsNullOrWhiteSpace (xmlPath)
-			? new MemoryStream (Utf8.GetBytes ("<replacements />"))
-			: File.OpenRead (xmlPath))
+		using (Stream input = File.OpenRead (xmlPath))
 		using (var reader = XmlReader.Create (input, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null })) {
 			var root = XDocument.Load (reader).Root;
 			if (root?.Name != "replacements") {
@@ -216,7 +216,22 @@ static class JniRemappingBinaryBlob
 		return string.IsNullOrEmpty (value) ? null : value;
 	}
 
-	static int Compare (string a, string b) => Utf8.GetBytes (a).AsSpan ().SequenceCompareTo (Utf8.GetBytes (b));
+	static int Compare (string a, string b)
+	{
+		// XML and strict UTF-8 decoding provide well-formed strings. UTF-8 byte order
+		// matches scalar value order, unlike UTF-16 ordinal order for supplementary characters.
+		var left = a.EnumerateRunes ();
+		var right = b.EnumerateRunes ();
+		while (true) {
+			bool hasLeft = left.MoveNext ();
+			bool hasRight = right.MoveNext ();
+			if (!hasLeft || !hasRight)
+				return hasLeft.CompareTo (hasRight);
+			int result = left.Current.Value.CompareTo (right.Current.Value);
+			if (result != 0)
+				return result;
+		}
+	}
 	static int Specificity (string? signature) => signature == null ? 2 : signature.EndsWith (')') ? 1 : 0;
 	static int CompareMethods (Member a, Member b)
 	{

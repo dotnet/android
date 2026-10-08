@@ -147,7 +147,6 @@ static class JniRemappingLookup
 
 	static unsafe byte* table;
 	static uint size;
-	static bool isInUse;
 	static readonly ConcurrentDictionary<string, string> reverseTypes = new (StringComparer.Ordinal);
 
 	static NativeJniRemappingHeader Header => new (Data);
@@ -170,7 +169,6 @@ static class JniRemappingLookup
 		reverseTypes.Clear ();
 		if (!RuntimeFeature.JniRemapping || data == IntPtr.Zero) {
 			table = null;
-			isInUse = false;
 			return;
 		}
 
@@ -198,7 +196,6 @@ static class JniRemappingLookup
 					(ulong)offset + (ulong)count * stride > strings)
 				throw new InvalidDataException ("JNI remapping table index is outside the declared data.");
 		}
-		isInUse = true;
 	}
 
 	static bool Contains (uint offset, ulong length) => offset <= size && length <= size - offset;
@@ -294,7 +291,7 @@ static class JniRemappingLookup
 
 	internal static unsafe IntPtr GetReplacementTypeUtf8 (string? jniSimpleReference)
 	{
-		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
+		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || table == null || jniSimpleReference.Length == 0)
 			return IntPtr.Zero;
 
 		return (IntPtr)LookupType (0, jniSimpleReference);
@@ -302,7 +299,7 @@ static class JniRemappingLookup
 
 	internal static unsafe string? GetReverseType (string? jniSimpleReference)
 	{
-		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
+		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || table == null || jniSimpleReference.Length == 0)
 			return null;
 
 		string replacement = reverseTypes.GetOrAdd (jniSimpleReference, static source => LookupReverseType (source));
@@ -353,7 +350,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> jniMethodName,
 		ReadOnlySpan<char> jniMethodSignature)
 	{
-		if (!RuntimeFeature.JniRemapping || !isInUse)
+		if (!RuntimeFeature.JniRemapping || table == null)
 			return null;
 
 		byte* matchedSignature;
@@ -417,7 +414,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> jniFieldName,
 		ReadOnlySpan<char> jniFieldSignature)
 	{
-		if (!RuntimeFeature.JniRemapping || !isInUse)
+		if (!RuntimeFeature.JniRemapping || table == null)
 			return null;
 
 		NativeJniRemappingReplacementField? result = LookupField (

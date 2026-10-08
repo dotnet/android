@@ -9,6 +9,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
@@ -41,17 +42,20 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				throw new InvalidDataException ("An output directory and at least one ABI are required.");
 			}
 			byte [] blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, Compress);
-			var libraries = new List<(string Abi, string Path, byte [] Data)> ();
+			var libraries = new List<(string Abi, string Path, AndroidTargetArch Arch)> (SupportedAbis.Length);
 			var seen = new HashSet<string> (StringComparer.Ordinal);
 			foreach (string abi in SupportedAbis) {
 				if (!seen.Add (abi)) throw new InvalidDataException ($"Duplicate ABI: {abi}.");
 				var arch = MonoAndroidHelper.AbiToTargetArch (abi);
-				if (arch is not (Xamarin.Android.Tools.AndroidTargetArch.Arm or Xamarin.Android.Tools.AndroidTargetArch.Arm64 or
-					Xamarin.Android.Tools.AndroidTargetArch.X86 or Xamarin.Android.Tools.AndroidTargetArch.X86_64)) {
+				if (arch is not (AndroidTargetArch.Arm or AndroidTargetArch.Arm64 or AndroidTargetArch.X86 or AndroidTargetArch.X86_64)) {
 					throw new InvalidDataException ($"Unsupported ABI: {abi}.");
 				}
+				libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), arch));
+			}
+			foreach (var (abi, path, arch) in libraries) {
 				if (blob.Length == 0) {
-					libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), []));
+					if (File.Exists (path))
+						File.Delete (path);
 					continue;
 				}
 				using var source = new MemoryStream (blob, writable: false);
@@ -61,16 +65,8 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				byte [] elf = output.ToArray ();
 				AssemblyStoreElfWriter.Validate (elf, arch, "libbinary_blobs.so",
 					new [] { (JniRemappingBinaryBlob.Symbol, blob) });
-				libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), elf));
-			}
-			foreach (var (abi, path, data) in libraries) {
-				if (data.Length == 0) {
-					if (File.Exists (path))
-						File.Delete (path);
-					continue;
-				}
 				Directory.CreateDirectory (Path.GetDirectoryName (path) ?? throw new InvalidDataException ("No output directory."));
-				File.WriteAllBytes (path, data);
+				File.WriteAllBytes (path, elf);
 				var item = new TaskItem (path);
 				item.SetMetadata ("Abi", abi);
 				item.SetMetadata ("ArchivePath", $"lib/{abi}/libbinary_blobs.so");
