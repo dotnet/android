@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <TargetFramework Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">net11.0</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
