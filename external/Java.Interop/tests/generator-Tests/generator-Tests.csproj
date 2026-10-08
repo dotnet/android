@@ -49,7 +49,7 @@
     <Compile Remove="Tests-Core\**\*" />
     <Compile Remove="SupportFiles\**\*" />
     <Compile Include="SupportFiles\RegisterAttribute.cs" />
-    <Compile Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64JonesCompat.cs" Link="Crc64JonesCompat.cs" />
+    <Compile Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" Link="Crc64Helper.cs" />
     <None Include="expected\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

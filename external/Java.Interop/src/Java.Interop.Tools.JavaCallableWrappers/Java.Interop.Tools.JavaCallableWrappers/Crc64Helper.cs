@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE. */
 
 using System;
-using System.Security.Cryptography;
+using System.IO.Hashing;
 
 namespace Java.Interop.Tools.JavaCallableWrappers
 {
@@ -42,15 +42,46 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 	///    * XOR length in HashFinal()
 	///    * System.IO.Hashing implementation with custom Jones parameters
 	/// </summary>
-	[Obsolete ("Use System.IO.Hashing.Crc64 with explicit CRC-64-Jones parameters instead.")]
-	public partial class Crc64 : HashAlgorithm
+	internal sealed class Crc64Helper
 	{
-		readonly Crc64Helper crc = new Crc64Helper ();
+		static readonly Crc64ParameterSet parameters = Crc64ParameterSet.Create (
+			polynomial: 0xad93d23594c935a9UL,
+			initialValue: ulong.MaxValue,
+			finalXorValue: 0,
+			reflectValues: true);
 
-		public override void Initialize () => crc.Initialize ();
+		readonly System.IO.Hashing.Crc64 crc = new System.IO.Hashing.Crc64 (parameters);
+		ulong length;
 
-		protected override void HashCore (byte [] array, int ibStart, int cbSize) => crc.HashCoreJones (array, ibStart, cbSize);
+		internal void Initialize ()
+		{
+			crc.Reset ();
+			length = 0;
+		}
 
-		protected override byte [] HashFinal () => crc.GetCurrentHash ();
+		internal void HashCoreJones (byte [] array, int ibStart, int cbSize)
+		{
+			if (array == null)
+				throw new ArgumentNullException (nameof (array));
+			if (ibStart < 0 || ibStart > array.Length)
+				throw new ArgumentOutOfRangeException (nameof (ibStart));
+			if (cbSize < 0 || cbSize > array.Length - ibStart)
+				throw new ArgumentOutOfRangeException (nameof (cbSize));
+
+			crc.Append (array.AsSpan (ibStart, cbSize));
+			length += (ulong) cbSize;
+		}
+
+		internal byte [] GetCurrentHash () => BitConverter.GetBytes (crc.GetCurrentHashAsUInt64 () ^ length);
+
+		internal static byte [] ComputeJones (byte [] array)
+		{
+			if (array == null)
+				throw new ArgumentNullException (nameof (array));
+			return BitConverter.GetBytes (HashToUInt64Jones (array));
+		}
+
+		internal static ulong HashToUInt64Jones (ReadOnlySpan<byte> input) =>
+			System.IO.Hashing.Crc64.HashToUInt64 (parameters, input) ^ (ulong) input.Length;
 	}
 }

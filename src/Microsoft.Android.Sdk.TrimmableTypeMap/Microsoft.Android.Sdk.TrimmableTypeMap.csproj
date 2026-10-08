@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.Android.Build.BaseTasks\HexUtilities.cs" Link="HexUtilities.cs" />
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64JonesCompat.cs" Link="Crc64JonesCompat.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" Link="Crc64Helper.cs" />
   </ItemGroup>
 
 </Project>
