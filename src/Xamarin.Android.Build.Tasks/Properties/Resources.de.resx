@@ -805,20 +805,6 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
 {1} - The exception message.
 </comment>
   </data>
-  <data name="XA4319" xml:space="preserve">
-    <value>Es wurden keine NativeAOT-DGML-Dateien bereitgestellt.</value>
-    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
-  </data>
-  <data name="XA4320" xml:space="preserve">
-    <value>Die ACW-Zuordnungsdatei „{0}“ wurde nicht gefunden.</value>
-    <comment>The following are literal names and should not be translated: ACW
-{0} - The path to the ACW map file.</comment>
-  </data>
-  <data name="XA4321" xml:space="preserve">
-    <value>Die NativeAOT-DGML-Datei „{0}“ wurde nicht gefunden.</value>
-    <comment>The following are literal names and should not be translated: NativeAOT, DGML
-{0} - The path to the NativeAOT DGML file.</comment>
-  </data>
   <data name="XA4322" xml:space="preserve">
     <value>Das Konfigurationsfile für ProGuard der Bibliothek „{1}“ (aus {2}) wird übersprungen, weil es die nicht unterstützte globale Option „{0}“ enthält. Globale ProGuard-Optionen sind nur in Anwendungsprojekten zulässig.</value>
     <comment>The following are literal names and should not be translated: ProGuard
@@ -834,6 +820,97 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
     <value>[{0}] Die Quelldatei „{1}“ konnte nicht gelöscht werden.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
+  </data>
+  <data name="XA4325" xml:space="preserve">
+    <value>Failed to generate the R8 JNI remapping data. {0}</value>
+    <comment>The following are literal names and should not be translated: R8, JNI.
+{0} - A sentence describing the specific failure.</comment>
+  </data>
+  <data name="XA4325_MappingNotFound" xml:space="preserve">
+    <value>The R8 mapping file '{0}' was not found.</value>
+    <comment>The following is a literal name and should not be translated: R8.
+{0} - The path of the missing mapping file.</comment>
+  </data>
+  <data name="XA4325_MappingDataFailure" xml:space="preserve">
+    <value>The R8 mapping file '{0}' could not be read: {1}</value>
+    <comment>The following is a literal name and should not be translated: R8.
+{0} - The path of the mapping file.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA4325_AssemblyReadFailure" xml:space="preserve">
+    <value>The linked managed assembly '{0}' could not be read: {1}</value>
+    <comment>{0} - The path of the managed assembly.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA4325_AssemblyNotFound" xml:space="preserve">
+    <value>The linked managed assembly '{0}' was not found.</value>
+    <comment>{0} - The path of the missing managed assembly.</comment>
+  </data>
+  <data name="XA4325_AssemblyHasNoMetadata" xml:space="preserve">
+    <value>The linked managed assembly '{0}' does not contain managed metadata.</value>
+    <comment>{0} - The path of the input file.</comment>
+  </data>
+  <data name="XA4325_AmbiguousEntry" xml:space="preserve">
+    <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The XML element name.
+{1} - The runtime lookup key.
+{2} - The first target.
+{3} - The conflicting target.</comment>
+  </data>
+  <data name="XA4325_NativeAotObjectRequired" xml:space="preserve">
+    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
+{0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
+  </data>
+  <data name="XA4325_NativeAotObjectReadFailure" xml:space="preserve">
+    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <comment>The following is a literal name and should not be translated: NativeAOT.
+{0} - The path of the ILC native object.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA4325_NativeAotModeRequired" xml:space="preserve">
+    <value>NativeAotObjectFile requires NativeAot=true.</value>
+    <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
+  </data>
+  <data name="XA4325_NativeAotObjectFormat" xml:space="preserve">
+    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4325_NativeAotInvalidSection" xml:space="preserve">
+    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4325_NativeAotTruncatedSection" xml:space="preserve">
+    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4325_NativeAotMissingSections" xml:space="preserve">
+    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
+  </data>
+  <data name="XA4325_NativeAotInvalidDehydration" xml:space="preserve">
+    <value>The NativeAOT object contains an invalid data dehydration stream.</value>
+    <comment>The following is a literal name and should not be translated: NativeAOT.</comment>
+  </data>
+  <data name="XA4326" xml:space="preserve">
+    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <comment>The following are literal names and should not be translated: R8, JNI.
+{0} - A sentence describing the specific omission.</comment>
+  </data>
+  <data name="XA4326_ConflictingEntry" xml:space="preserve">
+    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The XML element name.
+{1} - The source lookup key.
+{2} - The existing target.
+{3} - The generated target.</comment>
+  </data>
+  <data name="XA4326_UnsupportedSignature" xml:space="preserve">
+    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The member the entry describes.
+{1} - The Java signature which could not be converted.</comment>
   </data>
   <data name="XA4327" xml:space="preserve">
     <value>Die Schlüssel der Java-Typzuordnung konnten aus „{0}“ nicht extrahiert werden: {1}</value>
@@ -1102,7 +1179,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <value>Die MSBuild-Eigenschaft „AndroidEnableMarshalMethods“ wird nicht mehr unterstützt. Entfernen Sie sie oder legen Sie den Wert „false“ fest.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
@@ -1261,20 +1338,16 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Die Assembly „{0}“ verwendet ein Java-Peer-Callback-Format, für das AndroidTypeMapImplementation=trimmable erforderlich ist.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Die Assembly „{0}“ enthält in den laufzeitspezifischen Implementierungen „{1}“ und „{2}“ unterschiedliche Java-Peer-Callback-Metadaten. Wenn AndroidTypeMapImplementation=trimmable verwendet wird, müssen alle RuntimeIdentifiers gleichwertige Callback-Metadaten bereitstellen.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>Die Implementierung der Typzuordnung „llvm-ir“ wird nicht mehr unterstützt. Entfernen Sie die AndroidTypeMapImplementation-Eigenschaft, oder legen Sie sie auf „trimmable“ fest.</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Befehl „{0}“ fehlgeschlagen.\n{1}</value>

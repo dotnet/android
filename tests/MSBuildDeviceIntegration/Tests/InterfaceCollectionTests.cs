@@ -24,7 +24,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 			proj.SetRuntimeIdentifiers ([DeviceAbi]);
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidSdkDirectory", AndroidSdkResolver.GetAndroidSdkPath ());
 			var javaSdkDirectory = AndroidSdkResolver.GetJavaSdkPath ();
 			proj.SetProperty ("JavaSdkDirectory", javaSdkDirectory);

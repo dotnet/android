@@ -63,6 +63,8 @@ namespace Xamarin.Android.Build.Tests
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
 					$"AndroidManifestType={manifestType}",
+					// This integration test downloads the SDK, JDK and (for NativeAOT) NDK from scratch.
+					"AndroidDependencyInstallationTimeout=30",
 				};
 				var manifestPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Installer.AndroidSDK", "Feeds", "AndroidManifestFeed_d18.0.xml");
 				Assert.IsTrue (File.Exists (manifestPath), $"Xamarin manifest does not exist at '{manifestPath}'.");
@@ -75,6 +77,18 @@ namespace Xamarin.Android.Build.Tests
 					string defaultTarget = b.Target;
 					b.Target = "InstallAndroidDependencies";
 					b.BuildLogFile = "install-deps.log";
+
+					if (runtime == AndroidRuntime.NativeAOT) {
+						Directory.CreateDirectory (sdkPath);
+						Directory.CreateDirectory (jdkPath);
+						var timeoutArgs = buildArgs
+							.Where (arg => !arg.StartsWith ("AndroidDependencyInstallationTimeout=", StringComparison.Ordinal))
+							.Concat (["AndroidDependencyInstallationTimeout=0"])
+							.ToArray ();
+						Assert.IsFalse (b.Build (proj, parameters: timeoutArgs), "A timed-out dependency installation must not report success.");
+						Assert.IsTrue (b.LastBuildOutput.ContainsText ("timed out or was cancelled"),
+							"Timeout must be diagnosed before callers try to use missing installed files.");
+					}
 
 					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a

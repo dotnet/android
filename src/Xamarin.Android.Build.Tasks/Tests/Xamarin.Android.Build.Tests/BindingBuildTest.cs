@@ -96,7 +96,6 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (proj, parameters: ["_AndroidEnableUnmanagedCallersOnlyCallbacks=false"]),

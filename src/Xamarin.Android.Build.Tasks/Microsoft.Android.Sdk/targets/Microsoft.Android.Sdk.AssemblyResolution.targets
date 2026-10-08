@@ -58,6 +58,15 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
+  <!-- VSTest collector tools run on the host, not in the Android application.
+       Exclude their private managed dependencies and Windows native libraries. -->
+  <Target Name="_AndroidRemoveVSTestCollectorArtifacts"
+      AfterTargets="CopyTraceDataCollectorArtifacts">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(TraceDataCollectorArtifacts)" />
+    </ItemGroup>
+  </Target>
+
   <!-- RuntimeIdentifier is assigned in these inner builds, after the outer assembly has been compiled.
        _CheckForInvalidConfigurationAndPlatform is a private MSBuild target, but there is no public
        validation-only target. Microsoft.Common.targets explicitly directs custom targets that require
@@ -78,12 +87,12 @@ _ResolveAssemblies MSBuild target.
         <!-- Return the exact per-RID producer paths to the outer typemap/R8 build. The
              ILC object and linked metadata must not be replaced by pre-trim or R2R inputs. -->
         <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
-            Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' "
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
             AndroidTypeMapNativeObject="$(NativeObject)"
             AndroidTypeMapLlvmReadObjPath="$(_AndroidTypeMapLlvmReadObjPath)"
             AndroidTypeMapLlvmObjDumpPath="$(_AndroidTypeMapLlvmObjDumpPath)" />
         <_AndroidLinkedTypeMapKeySource Include="@(_GeneratedTypeMapAssembliesFromList->'$(IntermediateOutputPath)linked\%(Filename)%(Extension)')"
-            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' " />
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' " />
         <!-- The root carries the complete generator-known inventory, including trimmed maps
              replaced by empty stubs. Do not discover maps from publish globs or drop missing files. -->
         <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
@@ -153,6 +162,45 @@ _ResolveAssemblies MSBuild target.
       <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
       <_DebugSymbolsIntermediatePath Include="$([System.IO.Path]::ChangeExtension ($(_OuterIntermediateAssembly), '.pdb'))" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier"
+      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;_ReadGeneratedTrimmableTypeMapAssemblies"
+      Returns="@(_AndroidAssemblyCompressionInput)">
+    <ItemGroup>
+      <_AndroidAssemblyCompressionInput
+          Include="@(RuntimePackAsset);@(ReferenceCopyLocalPaths);@(IntermediateAssembly);@(_GeneratedTypeMapAssembliesFromList)"
+          Condition=" '%(Extension)' == '.dll' ">
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </_AndroidAssemblyCompressionInput>
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(_AndroidAssemblyCompressionInput)">
+      <Output TaskParameter="Filtered" ItemName="_AndroidDistinctAssemblyCompressionInput" />
+    </RemoveDuplicates>
+    <ItemGroup>
+      <_AndroidAssemblyCompressionInput Remove="@(_AndroidAssemblyCompressionInput)" />
+      <_AndroidAssemblyCompressionInput Include="@(_AndroidDistinctAssemblyCompressionInput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidResolveAssemblyCompressionInputs"
+      Condition=" '$(DesignTimeBuild)' != 'true' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidEnableAssemblyCompression)' == 'true' ">
+    <!-- Use a separate resolve-only instance: publish replaces copy-local inputs with ILLink outputs. -->
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+        Properties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties);_AndroidResolveCompressionInputsOnly=true;_GenerateResourceDesignerAssemblyOutput=$(_GenerateResourceDesignerAssemblyOutput)"
+        Targets="_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier">
+      <Output TaskParameter="TargetOutputs" ItemName="_AndroidUntrimmedAssemblyCompressionInput" />
+    </MSBuild>
+    <ProcessAssemblies
+        RuntimeIdentifiers="@(_RIDs)"
+        InputAssemblies="@(_AndroidUntrimmedAssemblyCompressionInput)">
+      <Output TaskParameter="OutputAssemblies" ItemName="_AndroidResolvedAssemblyCompressionInput" />
+    </ProcessAssemblies>
+    <AppendCustomMetadataToItemGroup
+        Inputs="@(_AndroidResolvedAssemblyCompressionInput)"
+        MetaDataItems="@(AndroidCustomMetaDataForReferences)">
+      <Output TaskParameter="Output" ItemName="_AndroidAssemblyCompressionInputs" />
+    </AppendCustomMetadataToItemGroup>
   </Target>
 
   <Target Name="_ResolveAssemblies" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">

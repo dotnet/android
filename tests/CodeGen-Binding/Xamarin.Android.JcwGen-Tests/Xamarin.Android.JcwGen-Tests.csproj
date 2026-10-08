@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="../../../external/Java.Interop/tests/Java.Interop-Tests/Java.Interop/JniReferenceLeakMeasurement.cs" Link="JniReferenceLeakMeasurement.cs" />
+    <Compile Include="../../Mono.Android-Tests/Java.Interop-Tests/Java.Interop/JniReferenceLeakMeasurement.cs" Link="JniReferenceLeakMeasurement.cs" />
     <AndroidJavaSource Include="../Xamarin.Android.McwGen-Tests/java/**/*.java" />
     <Compile Remove="TimingTests.cs" />
     <AndroidLibrary Include="../Xamarin.Android.McwGen-Tests/Jars/KotlinUnsignedTypes.jar" />

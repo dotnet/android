@@ -35,11 +35,7 @@ namespace Java.InteropTests
 		[Test]
 		public void Ctor_ThrowsIfTypeNotFound ()
 		{
-#if __ANDROID__
 			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
-#else   // __ANDROID__
-			Assert.Throws<JavaException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
-#endif  // __ANDROID__
 		}
 
 		[Test]
@@ -117,11 +113,7 @@ namespace Java.InteropTests
 		public void InvalidSignatureThrowsJniException ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
-#if __ANDROID__
 				Assert.Throws<Java.Lang.NoSuchMethodError> (() => Integer_class.GetConstructor ("(C)V")).Dispose ();
-#else   // __ANDROID__
-				Assert.Throws<JavaException> (() => Integer_class.GetConstructor ("(C)V")).Dispose ();
-#endif  // __ANDROID__
 			}
 		}
 
