@@ -69,6 +69,13 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
+			string? bootstrapPath = null;
+			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
+				bootstrapPath = CoreClrBootstrapOutputFile;
+				if (string.IsNullOrWhiteSpace (bootstrapPath)) {
+					throw new InvalidOperationException ("CoreCLR bootstrap output path is required.");
+				}
+			}
 
 			if (!Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicy pnp)) {
 				pnp = PackageNamingPolicyEnum.LowercaseCrc64;
@@ -185,7 +192,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
-			LLVMIR.LlvmIrComposer appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
+			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
 				AndroidPackageName = AndroidPackageName,
 				PackageNamingPolicy = pnp,
 				NumberOfAssembliesInApk = assemblyCount,
@@ -195,17 +202,13 @@ namespace Xamarin.Android.Tasks
 				NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				HaveAssemblyStore = UseAssemblyStore,
-				CoreClrBootstrap = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR && !CoreClrBootstrapOutputFile.IsNullOrEmpty (),
+				CoreClrBootstrap = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR,
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 			appConfigAsmGen.EmitComments = EmitLlvmIrComments;
 
-			if (appConfigAsmGen is ApplicationConfigNativeAssemblyGenerator config && config.CoreClrBootstrap) {
-				string? bootstrapPath = CoreClrBootstrapOutputFile;
-				if (bootstrapPath == null || bootstrapPath.Trim ().Length == 0) {
-					throw new InvalidOperationException ("CoreCLR bootstrap output path is required.");
-				}
-				byte [] raw = config.CreateCoreClrBootstrap ();
+			if (bootstrapPath != null) {
+				byte [] raw = appConfigAsmGen.CreateCoreClrBootstrap ();
 				using var stream = new MemoryStream (raw, writable: false);
 				Files.CopyIfStreamChanged (stream, bootstrapPath);
 			}

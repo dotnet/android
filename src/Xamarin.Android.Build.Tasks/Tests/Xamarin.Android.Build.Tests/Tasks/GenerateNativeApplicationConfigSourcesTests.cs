@@ -1,7 +1,9 @@
 #nullable enable
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -12,6 +14,28 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 [TestFixture]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
+	[TestCase (null)]
+	[TestCase (" ")]
+	public void CoreClrRequiresBootstrapOutputFile (string? bootstrapPath)
+	{
+		string outputRoot = Path.Combine (Root, "temp", TestName);
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new GenerateNativeApplicationConfigSources {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			ResolvedAssemblies = [],
+			EnvironmentOutputDirectory = outputRoot,
+			CoreClrBootstrapOutputFile = bootstrapPath,
+			SupportedAbis = ["arm64-v8a"],
+			AndroidPackageName = "com.example.bootstrap",
+			AndroidRuntime = "CoreCLR",
+		};
+
+		Assert.IsFalse (task.Execute ());
+		Assert.That (errors, Has.Count.EqualTo (1));
+		StringAssert.Contains ("CoreCLR bootstrap output path is required.", errors [0].Message);
+		FileAssert.DoesNotExist (Path.Combine (outputRoot, "environment.arm64-v8a.ll"));
+	}
+
 	[TestCase (false)]
 	[TestCase (true)]
 	public void CoreClrConfigurationUsesBinaryBootstrapInsteadOfApplicationGlobals (bool haveAssemblyStore)
