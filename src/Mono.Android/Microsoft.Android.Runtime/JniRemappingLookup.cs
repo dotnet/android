@@ -2,7 +2,6 @@
 
 using System;
 using System.Buffers;
-using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -59,7 +58,8 @@ static class JniRemappingLookup
 		public uint method_count => Read (48);
 		public uint field_count => Read (52);
 
-		uint Read (int offset) => BinaryPrimitives.ReadUInt32LittleEndian (data.Slice (offset, sizeof (uint)));
+		// Android's supported ABIs are little-endian.
+		uint Read (int offset) => BitConverter.ToUInt32 (data.Slice (offset, sizeof (uint)));
 
 		public uint GetCount (int section) => section switch {
 			0 => type_replacement_count,
@@ -209,7 +209,7 @@ static class JniRemappingLookup
 	{
 		if (!Contains (offset, 4))
 			throw new InvalidDataException ("JNI remapping table access exceeds its bounds.");
-		return BinaryPrimitives.ReadUInt32LittleEndian (Data.Slice ((int)offset, sizeof (uint)));
+		return BitConverter.ToUInt32 (Data.Slice ((int)offset, sizeof (uint)));
 	}
 
 	static unsafe NativeJniRemappingString ReadString (uint offset) => new () {
