@@ -740,11 +740,7 @@ static class JniRemappingLookup
 	{
 		unsafe {
 			// SAFETY: the JNI type-name caller supplies a live NUL-terminated native string.
-			byte* start = (byte*)value;
-			int length = 0;
-			while (start [length] != 0)
-				length++;
-			return new ReadOnlySpan<byte> (start, length);
+			return MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value);
 		}
 	}
 }
