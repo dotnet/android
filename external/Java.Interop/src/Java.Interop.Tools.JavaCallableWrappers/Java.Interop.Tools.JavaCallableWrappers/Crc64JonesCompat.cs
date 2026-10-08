@@ -1,11 +1,7 @@
 using System;
 using System.IO.Hashing;
 
-#if MICROSOFT_ANDROID_BUILD_BASETASKS
-namespace Microsoft.Android.Build.Tasks;
-#else // !MICROSOFT_ANDROID_BUILD_BASETASKS
 namespace Java.Interop.Tools.JavaCallableWrappers;
-#endif // !MICROSOFT_ANDROID_BUILD_BASETASKS
 
 // Legacy Android naming uses Jones parameters, little-endian output, and an extra length XOR.
 internal sealed class Crc64JonesCompat

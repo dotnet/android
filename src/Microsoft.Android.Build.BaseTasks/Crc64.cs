@@ -32,6 +32,7 @@
 
 using System;
 using System.Security.Cryptography;
+using Java.Interop.Tools.JavaCallableWrappers;
 
 namespace Microsoft.Android.Build.Tasks
 {
