@@ -489,19 +489,7 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 	}
 #endif // DEBUG
 
-	if (CoreClrBootstrap::config.system_property_count == 0) {
-		return nullptr;
-	}
-
-	for (uint32_t i = 0; i < CoreClrBootstrap::config.system_property_count; i++) {
-		AppEnvironmentVariable entry = CoreClrBootstrap::pair (true, i);
-		if (std::strcmp (name, CoreClrBootstrap::string (entry.name_index)) == 0) {
-			const char *value = CoreClrBootstrap::string (entry.value_index, false);
-			value_len = std::strlen (value);
-			return value;
-		}
-	}
-	return nullptr;
+	return CoreClrBootstrap::lookup_system_property (name, value_len);
 }
 
 auto AndroidSystem::format_full_dso_path (const char *base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t

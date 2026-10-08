@@ -93,6 +93,20 @@ auto CoreClrBootstrap::preload_index (uint32_t index) noexcept -> uint32_t
 	return entry;
 }
 
+auto CoreClrBootstrap::lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*
+{
+	value_len = 0;
+	for (uint32_t i = 0; i < config.system_property_count; i++) {
+		AppEnvironmentVariable entry = pair (true, i);
+		if (std::strcmp (name, string (entry.name_index)) == 0) {
+			const char *value = string (entry.value_index, false);
+			value_len = std::strlen (value);
+			return value;
+		}
+	}
+	return nullptr;
+}
+
 void CoreClrBootstrap::initialize () noexcept
 {
 	if (body != nullptr) {
