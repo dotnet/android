@@ -70,7 +70,7 @@ public static class JsonExtensions
                 return element.GetString ();
 
             case JsonValueKind.Number:
-                return element.TryGetInt32 (out int intValue) ? intValue : element.GetDouble ();
+                return JsonNode.Parse (element.GetRawText ());
 
             case JsonValueKind.True:
                 return true;
