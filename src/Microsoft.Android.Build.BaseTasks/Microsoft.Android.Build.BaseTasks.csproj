@@ -8,7 +8,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Microsoft.Android.Build.Tasks</RootNamespace>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AssemblyName>$(VendorPrefix)Microsoft.Android.Build.BaseTasks$(VendorSuffix)</AssemblyName>

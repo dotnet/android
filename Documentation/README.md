@@ -25,6 +25,7 @@
   * [D8 and R8 Integration](guides/D8andR8.md)
   * [Java and managed interoperability](guides/internals/JavaJNI_Interop.md)
   * [Profiling Startup](guides/profiling.md)
+  * [CRC64 API changes and migration](release-notes/13036.md)
 
 
 # Building from Source

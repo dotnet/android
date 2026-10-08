@@ -40,24 +40,17 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 	///  Changes beyond initial implementation:
 	///    * Starting Value: ulong.MaxValue
 	///    * XOR length in HashFinal()
-	///    * Using spliced table for faster processing
+	///    * System.IO.Hashing implementation with custom Jones parameters
 	/// </summary>
+	[Obsolete ("Use System.IO.Hashing.Crc64. Preserving legacy hashes requires CRC-64-Jones parameters and XORing the total input length into the result.")]
 	public partial class Crc64 : HashAlgorithm
 	{
-		ulong crc = ulong.MaxValue;
-		ulong length = 0;
+		readonly Crc64Helper crc = new Crc64Helper ();
 
-		public override void Initialize ()
-		{
-			crc = ulong.MaxValue;
-			length = 0;
-		}
+		public override void Initialize () => crc.Initialize ();
 
-		protected override unsafe void HashCore (byte [] array, int ibStart, int cbSize)
-		{
-			Crc64Helper.HashCore (array, ibStart, cbSize, ref crc, ref length);
-		}
+		protected override void HashCore (byte [] array, int ibStart, int cbSize) => crc.HashCoreJones (array, ibStart, cbSize);
 
-		protected override byte [] HashFinal () => BitConverter.GetBytes (crc ^ length);
+		protected override byte [] HashFinal () => crc.GetCurrentHash ();
 	}
 }

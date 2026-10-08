@@ -14,11 +14,9 @@ internal static class ScannerHashingHelper
 		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
 		try {
 			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
-			ulong crc = ulong.MaxValue;
-			ulong length = 0;
-			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
+			ulong crc = Crc64Helper.HashToUInt64Jones (rented.AsSpan (0, bytesWritten));
 			Span<byte> hash = stackalloc byte [8];
-			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
+			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc);
 			return HexUtilities.ToHexString (hash, upperCase: false);
 		} finally {
 			ArrayPool<byte>.Shared.Return (rented);
@@ -43,23 +41,16 @@ internal static class ScannerHashingHelper
 
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)
 	{
-		return System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName);
+		return checked (System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName));
 	}
 
-	static unsafe int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
+	static int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
 	{
-		int bytesWritten = 0;
-		fixed (char* nsPtr = ns)
-		fixed (byte* destinationPtr = destination) {
-			bytesWritten += System.Text.Encoding.UTF8.GetBytes (nsPtr, ns.Length, destinationPtr, destination.Length);
-		}
+		int bytesWritten = System.Text.Encoding.UTF8.GetBytes (ns.AsSpan (), destination);
 
 		destination [bytesWritten++] = (byte) ':';
 
-		fixed (char* assemblyNamePtr = assemblyName)
-		fixed (byte* destinationPtr = destination) {
-			bytesWritten += System.Text.Encoding.UTF8.GetBytes (assemblyNamePtr, assemblyName.Length, destinationPtr + bytesWritten, destination.Length - bytesWritten);
-		}
+		bytesWritten += System.Text.Encoding.UTF8.GetBytes (assemblyName.AsSpan (), destination.Slice (bytesWritten));
 
 		return bytesWritten;
 	}

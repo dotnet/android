@@ -95,11 +95,9 @@ namespace generatortests
 				byte[] f1 = ReadAllBytesIgnoringLineEndings (file1);
 				byte[] f2 = ReadAllBytesIgnoringLineEndings (file2);
 
-				using (var hash = new Crc64 ()) {
-					var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
-					var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
-					result = string.Equals (f1hash, f2hash, StringComparison.Ordinal);
-				}
+				var f1hash = Convert.ToBase64String (Crc64Helper.ComputeJones (f1));
+				var f2hash = Convert.ToBase64String (Crc64Helper.ComputeJones (f2));
+				result = string.Equals (f1hash, f2hash, StringComparison.Ordinal);
 			}
 
 			return result;
