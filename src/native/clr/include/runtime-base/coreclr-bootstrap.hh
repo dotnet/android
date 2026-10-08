@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include <xamarin-app.hh>
@@ -27,6 +28,7 @@ namespace xamarin::android
 		static auto string (uint32_t offset, bool required = true) noexcept -> const char*;
 		static auto pair (bool system, uint32_t index) noexcept -> AppEnvironmentVariable;
 		static auto preload_index (uint32_t index) noexcept -> uint32_t;
+		static auto lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*;
 
 	private:
 		static auto read (uint64_t offset) noexcept -> uint32_t;
