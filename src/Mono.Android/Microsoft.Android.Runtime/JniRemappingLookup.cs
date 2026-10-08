@@ -357,9 +357,11 @@ static class JniRemappingLookup
 			return null;
 
 		byte* matchedSignature;
+		// SAFETY: the native JNI type-name caller supplies a live NUL-terminated UTF-8 string.
 		NativeJniRemappingReplacementMethod? result = jniSourceTypeUtf8 == IntPtr.Zero
 			? LookupMethod (jniSourceType, jniMethodName, jniMethodSignature, out matchedSignature)
-			: LookupMethod (GetNullTerminatedUtf8Span (jniSourceTypeUtf8), jniMethodName, jniMethodSignature, out matchedSignature);
+			: LookupMethod (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)jniSourceTypeUtf8),
+				jniMethodName, jniMethodSignature, out matchedSignature);
 
 		if (result is not { } method)
 			return null;
@@ -704,16 +706,5 @@ static class JniRemappingLookup
 				return ReadReplacementField (entry.replacement);
 		}
 		return null;
-	}
-
-	/// <safety>
-	/// value must address a live NUL-terminated UTF-8 string for the duration of the lookup.
-	/// </safety>
-	static unsafe ReadOnlySpan<byte> GetNullTerminatedUtf8Span (IntPtr value)
-	{
-		unsafe {
-			// SAFETY: the JNI type-name caller supplies a live NUL-terminated native string.
-			return MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value);
-		}
 	}
 }
