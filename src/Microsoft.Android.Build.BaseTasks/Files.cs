@@ -694,13 +694,8 @@ namespace Microsoft.Android.Build.Tasks
 		/// XOR the data length into the hash to avoid collisions on zero-filled inputs.
 		static void XorLength (Span<byte> hash, ulong length)
 		{
-			if (BitConverter.IsLittleEndian) {
-				ulong crc = BinaryPrimitives.ReadUInt64LittleEndian (hash);
-				BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
-			} else {
-				ulong crc = BinaryPrimitives.ReadUInt64BigEndian (hash);
-				BinaryPrimitives.WriteUInt64BigEndian (hash, crc ^ length);
-			}
+			ulong crc = BinaryPrimitives.ReadUInt64LittleEndian (hash);
+			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
 		}
 
 		public static string ToHexString (byte[] hash)

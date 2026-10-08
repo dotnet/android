@@ -14,11 +14,9 @@ internal static class ScannerHashingHelper
 		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
 		try {
 			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
-			ulong crc = ulong.MaxValue;
-			ulong length = 0;
-			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
+			ulong crc = Crc64JonesCompat.HashToUInt64 (rented.AsSpan (0, bytesWritten));
 			Span<byte> hash = stackalloc byte [8];
-			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
+			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc);
 			return HexUtilities.ToHexString (hash, upperCase: false);
 		} finally {
 			ArrayPool<byte>.Shared.Return (rented);
