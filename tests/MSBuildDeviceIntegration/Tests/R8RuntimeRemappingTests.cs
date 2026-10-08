@@ -158,14 +158,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-method" &&
 					(string) e.Attribute ("source-method-name") == "add" &&
 					(string) e.Attribute ("target-method-name") != "add"), "The exercised methods must really be obfuscated.");
-				Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
-					(string) e.Attribute ("source-field-name") == "value" &&
-					(string) e.Attribute ("target-field-name") == "value"),
-					"Generated field lookups must follow a renamed owner while field names remain stable.");
-				Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
-					(string) e.Attribute ("source-field-name") == "staticValue" &&
-					(string) e.Attribute ("target-field-name") == "staticValue"),
-					"Generated static field lookups must follow a renamed owner while field names remain stable.");
+				Assert.IsFalse (elements.Any (e => e.Name == "replace-field" &&
+					((string) e.Attribute ("source-field-name") == "value" ||
+						(string) e.Attribute ("source-field-name") == "staticValue")),
+					"Generated fields with stable names and signatures do not need member remapping entries.");
 				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }",
 					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
