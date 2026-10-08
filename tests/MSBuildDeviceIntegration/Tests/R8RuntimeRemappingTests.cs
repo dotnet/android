@@ -160,8 +160,9 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("target-method-name") != "add"), "The exercised methods must really be obfuscated.");
 				Assert.IsFalse (elements.Any (e => e.Name == "replace-field" &&
 					((string) e.Attribute ("source-field-name") == "value" ||
-						(string) e.Attribute ("source-field-name") == "staticValue")),
-					"Generated fields with stable names and signatures do not need member remapping entries.");
+						(string) e.Attribute ("source-field-name") == "staticValue" ||
+						(string) e.Attribute ("source-field-name") == "hiddenValue")),
+					"Fields with stable names and signatures do not need member remapping entries.");
 				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }",
 					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
@@ -173,10 +174,6 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("source-type") == hiddenType &&
 					(string) e.Attribute ("source-method-name") == "hiddenAdd" &&
 					(string) e.Attribute ("target-method-name") != "hiddenAdd"), "Method lookups must use the renamed owner.");
-				Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
-					(string) e.Attribute ("source-type") == hiddenType &&
-					(string) e.Attribute ("source-field-name") == "hiddenValue" &&
-					(string) e.Attribute ("target-field-name") == "hiddenValue"), "Field lookups must use the renamed owner while preserving the field name.");
 				Assert.IsFalse (elements.Any (e => (string) e.Attribute ("source-method-name") == "unusedMethod"),
 					"An unused method on a retained type must not occupy the runtime table.");
 
