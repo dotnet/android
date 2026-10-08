@@ -223,9 +223,14 @@ internal static class CoreClrBootstrapBlob
 				}
 			}
 		}
+		uint previousHash = 0;
 		for (uint j = 0; j < counts [3]; j++) {
 			reader.BaseStream.Position = offsets [3] + j * entrySizes [3];
-			reader.ReadUInt32 ();
+			uint hash = reader.ReadUInt32 ();
+			if (j != 0 && hash < previousHash) {
+				throw new InvalidDataException ("CoreCLR DSO cache entries are not sorted.");
+			}
+			previousHash = hash;
 			if (reader.ReadByte () > 1 || reader.ReadByte () > 1 || reader.ReadUInt16 () != 0) {
 				throw new InvalidDataException ("Invalid CoreCLR DSO cache flags.");
 			}

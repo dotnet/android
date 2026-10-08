@@ -14,7 +14,6 @@ using namespace xamarin::android;
 
 namespace
 {
-	constexpr uint32_t ConfigMagic = 0x47464358; // XCFG
 	constexpr uint32_t HeaderSize = 84;
 
 	[[noreturn]] void invalid (const char *reason) noexcept
@@ -23,7 +22,7 @@ namespace
 	}
 }
 
-auto CoreClrBootstrap::read (uint32_t offset) noexcept -> uint32_t
+auto CoreClrBootstrap::read (uint64_t offset) noexcept -> uint32_t
 {
 	if (offset > body_size || body_size - offset < sizeof (uint32_t)) {
 		invalid ("read exceeds the body");
@@ -37,16 +36,12 @@ auto CoreClrBootstrap::string (uint32_t offset, bool required) noexcept -> const
 {
 	if (offset == 0 && !required) {
 		// The producer reserves the first byte of the string pool for empty values.
-		return reinterpret_cast<const char*> (body + strings_start);
+		offset = strings_start;
 	}
-	if (offset < strings_start || offset >= strings_end) {
+	if (offset < strings_start || offset >= body_size) {
 		invalid ("string offset outside the string section");
 	}
-	const char *value = reinterpret_cast<const char*> (body + offset);
-	if (std::memchr (value, 0, strings_end - offset) == nullptr || (required && *value == 0)) {
-		invalid ("missing or unterminated string");
-	}
-	return value;
+	return reinterpret_cast<const char*> (body + offset);
 }
 
 auto CoreClrBootstrap::pair (bool system, uint32_t index) noexcept -> AppEnvironmentVariable
@@ -55,7 +50,7 @@ auto CoreClrBootstrap::pair (bool system, uint32_t index) noexcept -> AppEnviron
 	if (index >= count) {
 		invalid ("property index out of range");
 	}
-	uint32_t offset = (system ? sys_offset : env_offset) + index * 8;
+	uint64_t offset = static_cast<uint64_t> (system ? sys_offset : env_offset) + static_cast<uint64_t> (index) * 8;
 	return { read (offset), read (offset + 4) };
 }
 
@@ -64,7 +59,7 @@ auto CoreClrBootstrap::preload_index (uint32_t index) noexcept -> uint32_t
 	if (index >= preload_count) {
 		invalid ("preload index out of range");
 	}
-	uint32_t entry = read (preload_offset + index * 4);
+	uint32_t entry = read (static_cast<uint64_t> (preload_offset) + static_cast<uint64_t> (index) * 4);
 	if (entry >= config.number_of_dso_cache_entries) {
 		invalid ("preload refers to a missing DSO");
 	}
@@ -82,15 +77,8 @@ void CoreClrBootstrap::initialize () noexcept
 	if (body_size < HeaderSize) {
 		invalid ("body is shorter than the header");
 	}
-	if (read (0) != ConfigMagic) {
-		invalid ("invalid body magic");
-	}
-	uint16_t version, body_flags;
-	std::memcpy (&version, body + 4, sizeof (version));
+	uint16_t body_flags;
 	std::memcpy (&body_flags, body + 6, sizeof (body_flags));
-	if (version != 1 || (body_flags & ~uint16_t { 3 }) != 0 || read (8) != body_size) {
-		invalid ("invalid body header");
-	}
 	uint32_t env_count = read (12);
 	uint32_t sys_count = read (16);
 	uint32_t prop_count = read (20);
@@ -104,30 +92,9 @@ void CoreClrBootstrap::initialize () noexcept
 	uint32_t dso_offset = read (52);
 	preload_offset = read (56);
 	strings_start = read (60);
-	uint32_t strings_length = read (64);
-
-	uint64_t next = HeaderSize;
-	auto check_section = [&next] (uint32_t offset, uint32_t count, uint32_t stride) {
-		if (offset != next) {
-			invalid ("noncontiguous table offset");
-		}
-		next += static_cast<uint64_t> (count) * stride;
-		if (next > body_size) {
-			invalid ("table extends beyond the body");
-		}
-	};
-	check_section (env_offset, env_count, 8);
-	check_section (sys_offset, sys_count, 8);
-	check_section (prop_offset, prop_count, 8);
-	check_section (dso_offset, dso_count, 12);
-	check_section (preload_offset, preload_count, 4);
-	if (strings_start != next || strings_length == 0 || strings_length > body_size - strings_start ||
-		strings_length != body_size - strings_start || body [strings_start] != 0 ||
-		prop_count < 3 || prop_count > std::numeric_limits<int>::max () ||
-		preload_stride == 0 || preload_count % preload_stride != 0) {
-		invalid ("invalid string section, runtime properties, or preload layout");
+	if (prop_count < 3 || prop_count > std::numeric_limits<int>::max ()) {
+		invalid ("runtime property count out of range");
 	}
-	strings_end = strings_start + strings_length;
 	config = {
 		.ignore_split_configs = (body_flags & 1) != 0,
 		.number_of_runtime_properties = prop_count,
@@ -146,39 +113,23 @@ void CoreClrBootstrap::initialize () noexcept
 	if (dso_count != 0 && dso_cache == nullptr) {
 		invalid ("out of memory allocating DSO cache");
 	}
-	uint32_t previous_hash = 0;
 	for (uint32_t i = 0; i < dso_count; i++) {
-		uint32_t offset = dso_offset + i * 12;
+		uint64_t offset = static_cast<uint64_t> (dso_offset) + static_cast<uint64_t> (i) * 12;
 		uint32_t hash = read (offset);
-		if ((i != 0 && hash < previous_hash) || body [offset + 4] > 1 || body [offset + 5] > 1 ||
-			body [offset + 6] != 0 || body [offset + 7] != 0) {
-			invalid ("invalid or unsorted DSO cache entry");
-		}
+		uint32_t flags = read (offset + 4);
 		uint32_t name = read (offset + 8);
-		if (name <= strings_start || name >= strings_end) {
-			invalid ("DSO name offset outside the string section");
-		}
-		new (&dso_cache [i]) DSOCacheEntry { hash, body [offset + 4] != 0, body [offset + 5] != 0, name, nullptr };
-		previous_hash = hash;
-	}
-	for (uint32_t i = 0; i < preload_count; i++) {
-		preload_index (i);
+		new (&dso_cache [i]) DSOCacheEntry { hash, (flags & 0xff) != 0, (flags & 0xff00) != 0, name, nullptr };
 	}
 	property_names = static_cast<const char**> (std::calloc (prop_count, sizeof (const char*)));
 	property_values = static_cast<char**> (std::calloc (prop_count, sizeof (char*)));
 	if (property_names == nullptr || property_values == nullptr) {
 		invalid ("out of memory allocating runtime properties");
 	}
-	constexpr const char *required_names[] = { "HOST_RUNTIME_CONTRACT", "RUNTIME_IDENTIFIER", "APP_CONTEXT_BASE_DIRECTORY" };
 	for (uint32_t i = 0; i < prop_count; i++) {
-		uint32_t offset = prop_offset + i * 8;
+		uint64_t offset = static_cast<uint64_t> (prop_offset) + static_cast<uint64_t> (i) * 8;
 		property_names [i] = string (read (offset));
 		uint32_t value = read (offset + 4);
-		if (i < 3) {
-			if (std::strcmp (property_names [i], required_names [i]) != 0 || value != 0) {
-				invalid ("invalid runtime property sentinel");
-			}
-		} else {
+		if (i >= 3) {
 			property_values [i] = const_cast<char*> (string (value, false));
 		}
 	}

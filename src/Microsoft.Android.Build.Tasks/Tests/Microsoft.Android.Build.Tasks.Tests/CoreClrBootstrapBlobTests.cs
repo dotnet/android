@@ -35,4 +35,13 @@ public class CoreClrBootstrapBlobTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		FileAssert.DoesNotExist (Path.Combine (task.OutputDirectory, "arm64-v8a", "libbinary_blobs.so"));
 	}
+
+	[Test]
+	public void RejectsUnsortedDsoCache ()
+	{
+		Assert.Throws<InvalidDataException> (() => CoreClrBootstrapBlob.Create (
+			false, false, 0, 0, 0, 0, "com.example.test",
+			new Dictionary<string, string> (), new Dictionary<string, string> (), new Dictionary<string, string> (),
+			[(2u, false, false, "libsecond.so"), (1u, false, false, "libfirst.so")], [], 1));
+	}
 }

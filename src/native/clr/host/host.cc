@@ -237,16 +237,6 @@ void Host::preload_jni_libraries () noexcept
 
 	log_debugf (LOG_ASSEMBLY, "DSO jni preloads index stride == %u", CoreClrBootstrap::preload_stride);
 
-	if ((CoreClrBootstrap::preload_count % CoreClrBootstrap::preload_stride) != 0) [[unlikely]] {
-		Helpers::abort_applicationf (
-			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"DSO preload index is invalid, size (%u) is not a multiple of %u",
-			CoreClrBootstrap::preload_count,
-			CoreClrBootstrap::preload_stride
-		);
-	}
-
 	for (size_t i = 0; i < CoreClrBootstrap::preload_count; i += CoreClrBootstrap::preload_stride) {
 		const size_t entry_index = CoreClrBootstrap::preload_index (i);
 		DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[entry_index];
