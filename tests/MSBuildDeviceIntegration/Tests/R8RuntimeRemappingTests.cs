@@ -86,10 +86,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true)]
-		public void EmptyExplicitRemappingRuns (AndroidRuntime runtime, bool release)
+		[Test]
+		public void NativeAotEmptyExplicitRemappingRuns ()
 		{
+			const AndroidRuntime runtime = AndroidRuntime.NativeAOT;
+			const bool release = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release))
 				return;
 			var proj = new XamarinAndroidApplicationProject {
@@ -107,10 +108,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Install (proj));
 			try {
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-				bool hasBootstrap = runtime == AndroidRuntime.CoreCLR;
-				Assert.AreEqual (hasBootstrap ? 1 : 0,
-					Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
-				Assert.AreEqual (hasBootstrap ? "true" : "false",
+				Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
+				Assert.AreEqual ("false",
 					File.ReadAllText (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ()));
 				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);

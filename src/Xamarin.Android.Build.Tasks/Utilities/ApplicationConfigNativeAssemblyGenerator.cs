@@ -315,16 +315,8 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 			if (entry.Instance == null) {
 				throw new InvalidOperationException ("The CoreCLR DSO cache contains a null entry.");
 			}
-			entry.Instance.hash = TypeMapHelper.HashNameForCLR (entry.Instance.HashedName ?? "");
 		}
-		state.DsoCache.Sort ((a, b) => {
-			var left = a.Instance;
-			var right = b.Instance;
-			if (left == null || right == null) {
-				throw new InvalidOperationException ("The CoreCLR DSO cache contains a null entry.");
-			}
-			return left.hash.CompareTo (right.hash);
-		});
+		HashAndSortDsoEntries (state.DsoCache);
 		var libraries = new List<(uint Hash, bool Ignore, bool IsJniLibrary, string Name)> ();
 		foreach (var entry in state.DsoCache) {
 			var item = entry.Instance;
@@ -405,7 +397,18 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 			if (entry == null) {
 				throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 			}
+		}
 
+		HashAndSortDsoEntries (cache);
+	}
+
+	static void HashAndSortDsoEntries (List<StructureInstance<DSOCacheEntry>> cache)
+	{
+		foreach (var item in cache) {
+			var entry = item.Instance;
+			if (entry == null) {
+				throw new InvalidOperationException ("The DSO cache contains a null entry.");
+			}
 			entry.hash = TypeMapHelper.HashNameForCLR (entry.HashedName ?? "");
 		}
 
