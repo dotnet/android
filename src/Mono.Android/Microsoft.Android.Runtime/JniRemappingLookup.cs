@@ -265,28 +265,8 @@ static class JniRemappingLookup
 		return offset;
 	}
 
-	static unsafe void ValidateString (NativeJniRemappingString value)
-	{
-		uint offset = checked ((uint)(value.str - table));
-		uint start = Header.strings;
-		uint end = checked (start + Header.strings_length);
-		if (offset < start || value.length > int.MaxValue || offset >= end ||
-				value.length >= end - offset || Data [checked ((int)(offset + value.length))] != 0)
-			throw new InvalidDataException ("JNI remapping string exceeds its bounds or is not NUL terminated.");
-	}
-
-	static unsafe byte* CString (uint offset)
-	{
-		if (offset == 0)
-			return null;
-		uint start = Header.strings;
-		uint end = checked (start + Header.strings_length);
-		if (offset < start || offset >= end)
-			throw new InvalidDataException ("JNI remapping string offset exceeds its bounds.");
-		if (Data.Slice ((int)offset, checked ((int)(end - offset))).IndexOf ((byte)0) < 0)
-			throw new InvalidDataException ("JNI remapping string is not NUL terminated.");
-		return table + offset;
-	}
+	// The build-time writer validates string offsets, byte lengths, UTF-8 and NUL terminators.
+	static unsafe byte* CString (uint offset) => offset == 0 ? null : table + offset;
 
 	internal static IReadOnlyList<string> GetStaticMethodFallbackTypes (string jniSimpleReference, bool useReplacementTypes)
 	{
@@ -484,15 +464,12 @@ static class JniRemappingLookup
 
 	static unsafe bool Equal (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
-		if (value.length == (uint)key.Length)
-			ValidateString (value);
 		return value.length == (uint)key.Length &&
 			new ReadOnlySpan<byte> (value.str, key.Length).SequenceEqual (key);
 	}
 
 	static unsafe bool Equal (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
 	{
-		ValidateString (value);
 		ReadOnlySpan<byte> utf8 = new ReadOnlySpan<byte> (value.str, checked ((int)value.length));
 		return keyIsAscii
 			? Ascii.Equals (utf8, key)
@@ -501,13 +478,11 @@ static class JniRemappingLookup
 
 	static unsafe int Compare (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
-		ValidateString (value);
 		return new ReadOnlySpan<byte> (value.str, checked ((int)value.length)).SequenceCompareTo (key);
 	}
 
 	static unsafe int Compare (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
 	{
-		ValidateString (value);
 		ReadOnlySpan<byte> utf8 = new ReadOnlySpan<byte> (value.str, checked ((int)value.length));
 		return keyIsAscii ? CompareUtf8ToAscii (utf8, key) : CompareUtf8ToUtf16 (utf8, key);
 	}
