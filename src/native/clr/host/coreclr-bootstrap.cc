@@ -76,7 +76,7 @@ void CoreClrBootstrap::initialize () noexcept
 	if (body != nullptr) {
 		return;
 	}
-	BinaryBlobPayload bootstrap = BinaryBlobLoader::load ("xa_coreclr_bootstrap");
+	BinaryBlobPayload bootstrap = BinaryBlobLoader::load ("coreclr_bootstrap");
 	body = bootstrap.data;
 	body_size = bootstrap.size;
 	if (body_size < HeaderSize) {

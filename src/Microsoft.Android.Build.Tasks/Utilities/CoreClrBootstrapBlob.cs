@@ -10,7 +10,7 @@ namespace Microsoft.Android.Tasks;
 // relative to this raw body, so the same data is shared by every target ABI.
 internal static class CoreClrBootstrapBlob
 {
-	public const string Symbol = "xa_coreclr_bootstrap";
+	public const string Symbol = "coreclr_bootstrap";
 	const uint Magic = 0x47464358; // XCFG
 	const ushort Version = 1;
 	const int HeaderSize = 84;

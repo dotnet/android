@@ -525,7 +525,7 @@ namespace Xamarin.Android.Build.Tests
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.IsEmpty (Directory.GetFiles (intermediate, "coreclr-bootstrap.bin", SearchOption.AllDirectories));
 				foreach (var blob in binaryBlobs.Keys)
-					Assert.Less (File.ReadAllBytes (blob).AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("xa_coreclr_bootstrap")), 0);
+					Assert.Less (File.ReadAllBytes (blob).AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("coreclr_bootstrap")), 0);
 			}
 			var archivePath = aab
 				? Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.aab")
