@@ -248,7 +248,6 @@ var delegateTypes = new [] {
 #>
 using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace Android.Runtime
 {
@@ -282,12 +281,12 @@ foreach (var info in delegateTypes) {
 #>
 		private static Delegate CreateBuiltInDelegate (Delegate dlg, Type delegateType)
 		{
-			switch (delegateType.Name) {
+			switch (dlg) {
 <#
 foreach (var info in delegateTypes) {
 #>
-				case nameof (<#= info.Type #>):
-					return new <#= info.Type #> (Unsafe.As<<#= info.Type #>> (dlg).Wrap<#= info.Type #>);
+				case <#= info.Type #> callback:
+					return new <#= info.Type #> (callback.Wrap<#= info.Type #>);
 <#
 }
 #>
