@@ -50,6 +50,24 @@ namespace {
 				"Cannot load binary blobs: %s", ::dlerror ());
 		}
 	}
+
+	// Used only for payloads whose producer opted into Zstd compression.
+	auto decode_compressed_payload (const uint8_t *blob, const BlobHeader &header, const char *symbol) noexcept -> BinaryBlobPayload
+	{
+		void *decoded = std::malloc (header.raw);
+		if (decoded == nullptr) [[unlikely]] {
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Cannot allocate %u bytes for binary blob '%s'", header.raw, symbol);
+		}
+		size_t decompressed = ZSTD_decompress (decoded, header.raw, blob + envelope_size, header.stored);
+		if (ZSTD_isError (decompressed) || decompressed != header.raw) [[unlikely]] {
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Cannot decode binary blob '%s': %s (expected %u bytes, got %zu)",
+				symbol, ZSTD_isError (decompressed) ? ZSTD_getErrorName (decompressed) : "wrong uncompressed size", header.raw, decompressed);
+		}
+		// The lookup returns pointers into the decoded body, so it is retained for the process lifetime.
+		return { static_cast<const uint8_t*> (decoded), header.raw };
+	}
 }
 
 auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
@@ -77,17 +95,5 @@ auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
 		return { blob + envelope_size, header.raw };
 	}
 
-	void *decoded = std::malloc (header.raw);
-	if (decoded == nullptr) [[unlikely]] {
-		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Cannot allocate %u bytes for binary blob '%s'", header.raw, symbol);
-	}
-	size_t decompressed = ZSTD_decompress (decoded, header.raw, blob + envelope_size, header.stored);
-	if (ZSTD_isError (decompressed) || decompressed != header.raw) [[unlikely]] {
-		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Cannot decode binary blob '%s': %s (expected %u bytes, got %zu)",
-			symbol, ZSTD_isError (decompressed) ? ZSTD_getErrorName (decompressed) : "wrong uncompressed size", header.raw, decompressed);
-	}
-	// The lookup returns pointers into the body, so neither the DSO nor a decoded buffer is released.
-	return { static_cast<const uint8_t*> (decoded), header.raw };
+	return decode_compressed_payload (blob, header, symbol);
 }
