@@ -58,4 +58,15 @@
     <ProjectReference Include="..\..\src\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
   </ItemGroup>
 
+  <!--
+    In the .NET for Android build these tools share the SDK pack tools directory with the
+    netstandard2.0 task assemblies, which deposit the netstandard2.0 System.IO.Hashing there.
+    Do not overwrite it with this project's .NET flavor; the tool resolves it from that directory.
+  -->
+  <Target Name="_SkipSharedToolsHashingCopy" BeforeTargets="_CopyFilesMarkedCopyLocal" Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+    </ItemGroup>
+  </Target>
+
 </Project>
