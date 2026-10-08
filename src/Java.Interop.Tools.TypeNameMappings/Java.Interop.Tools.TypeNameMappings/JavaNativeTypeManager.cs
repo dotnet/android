@@ -768,7 +768,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		static string ToCrc64 (string value)
 		{
 			var data = Encoding.UTF8.GetBytes (value);
-			var hash = Crc64JonesCompat.Compute (data);
+			var hash = Crc64Helper.ComputeJones (data);
 			var buf  = new StringBuilder (hash.Length * 2);
 			foreach (var b in hash)
 				buf.AppendFormat ("{0:x2}", b);

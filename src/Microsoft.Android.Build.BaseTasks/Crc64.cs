@@ -48,11 +48,11 @@ namespace Microsoft.Android.Build.Tasks
 	[Obsolete ("Use System.IO.Hashing.Crc64 with explicit CRC-64-Jones parameters instead.")]
 	public partial class Crc64 : HashAlgorithm
 	{
-		readonly Crc64JonesCompat crc = new Crc64JonesCompat ();
+		readonly Crc64Helper crc = new Crc64Helper ();
 
 		public override void Initialize () => crc.Initialize ();
 
-		protected override void HashCore (byte [] array, int ibStart, int cbSize) => crc.Append (array, ibStart, cbSize);
+		protected override void HashCore (byte [] array, int ibStart, int cbSize) => crc.HashCoreJones (array, ibStart, cbSize);
 
 		protected override byte [] HashFinal () => crc.GetCurrentHash ();
 	}
