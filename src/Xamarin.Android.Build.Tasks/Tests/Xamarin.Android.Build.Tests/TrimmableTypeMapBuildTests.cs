@@ -2190,7 +2190,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotEmpty (rspFiles, $"{ridIntermediateDir} should contain an ILC response file.");
 
 			var rspText = File.ReadAllText (rspFiles [0]);
-			StringAssert.Contains ("_Java.Interop.TypeMap.dll", rspText);
+			// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
+			StringAssert.DoesNotContain ("_Java.Interop.TypeMap.dll", rspText);
 			StringAssert.Contains ("_Mono.Android.TypeMap.dll", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Java.Interop.TypeMap", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Mono.Android.TypeMap", rspText);
