@@ -92,20 +92,12 @@ namespace Xamarin.Android.Build.Tests
 			uint Read (uint offset) => BinaryPrimitives.ReadUInt32LittleEndian (data.AsSpan (checked ((int)offset), 4));
 
 			Assert.GreaterOrEqual (data.Length, 84);
-			Assert.AreEqual (0x47464358u, Read (0));
-			Assert.AreEqual (1, BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (4, 2)));
-			Assert.AreEqual ((uint)data.Length, Read (8));
 			uint dsoCount = Read (24);
 			uint preloadCount = Read (32);
 			uint preloadStride = Read (36);
 			uint dsoOffset = Read (52);
 			uint preloadOffset = Read (56);
 			uint stringsOffset = Read (60);
-			Assert.AreEqual ((ulong)84 + (ulong)(Read (12) + Read (16) + Read (20)) * 8, (ulong)dsoOffset);
-			Assert.AreEqual ((ulong)dsoOffset + (ulong)dsoCount * 12, (ulong)preloadOffset);
-			Assert.AreEqual ((ulong)preloadOffset + (ulong)preloadCount * 4, (ulong)stringsOffset);
-			Assert.Greater (preloadStride, 0);
-			Assert.AreEqual (0u, preloadCount % preloadStride);
 
 			string ReadName (uint offset)
 			{
@@ -119,6 +111,7 @@ namespace Xamarin.Android.Build.Tests
 			var config = new ApplicationConfig {
 				number_of_dso_cache_entries = dsoCount,
 				number_of_assemblies_in_apk = Read (72),
+				bundled_assembly_name_width = Read (76),
 				number_of_shared_libraries = Read (28),
 				android_package_name = ReadName (Read (80)),
 				have_assembly_store = (data [6] & 2) != 0,

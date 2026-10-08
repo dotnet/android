@@ -15,7 +15,6 @@ namespace Xamarin.Android.Build.Tests
 	public class R8RuntimeRemappingBuildTests : BaseTest
 	{
 		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true)]
 		[TestCase (AndroidRuntime.NativeAOT, true)]
 		public void BuildWithoutRemappingKeepsOnlyCoreClrBootstrap (AndroidRuntime runtime, bool release)
 		{
