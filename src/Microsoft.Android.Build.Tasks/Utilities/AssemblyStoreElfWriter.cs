@@ -272,7 +272,7 @@ static class AssemblyStoreElfWriter
 			}
 			using var canonical = new MemoryStream ();
 			Write (payloads, canonical, arch, libraryName);
-			if (!canonical.ToArray ().AsSpan ().SequenceEqual (elf)) {
+			if (!canonical.GetBuffer ().AsSpan (0, checked ((int)canonical.Length)).SequenceEqual (elf)) {
 				throw new InvalidDataException ("ELF metadata does not match the payload layout.");
 			}
 		} finally {
