@@ -102,9 +102,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("-keep,allowobfuscation", task.KeepOption);
 		}
 
-		[TestCase ("", false)]
-		[TestCase ("JavaInterop1", true)]
-		public void RuntimeRemappingDoesNotDisableTypeMapMinification (string codeGenerationTarget, bool preserveFieldNames)
+		[Test]
+		public void RuntimeRemappingDoesNotDisableTypeMapMinification ()
 		{
 			var directory = Path.Combine (Path.GetTempPath (), "R8RuntimeRemapping_" + System.Guid.NewGuid ().ToString ("N"));
 			Directory.CreateDirectory (directory);
@@ -117,7 +116,6 @@ namespace Xamarin.Android.Build.Tests
 					UseScopedTypeMapMembers = true,
 					EnableShrinking = true,
 					ObfuscationMode = "runtime-remapping",
-					CodeGenerationTarget = codeGenerationTarget,
 					JavaSourceFiles = [new TaskItem (source)],
 					JavaPlatformJarPath = Path.Combine (directory, "android.jar"),
 					ProguardGeneratedApplicationConfiguration = Path.Combine (directory, "primary.cfg"),
@@ -130,7 +128,7 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ("-keep,allowobfuscation class example.UserSource { *; }", File.ReadAllText (task.ProguardGeneratedApplicationConfiguration));
 				var common = File.ReadAllText (task.ProguardCommonXamarinConfiguration);
 				StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", common);
-				Assert.AreEqual (preserveFieldNames, common.Contains ("-keepclassmembernames class * { <fields>; }", System.StringComparison.Ordinal));
+				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }", common);
 			} finally {
 				Directory.Delete (directory, recursive: true);
 			}

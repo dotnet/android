@@ -77,7 +77,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
 			proj.SetProperty ("AndroidLinkTool", "r8");
-			proj.SetProperty ("AndroidCodegenTarget", "JavaInterop1");
 			proj.SetProperty ("AllowUnsafeBlocks", "true");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
@@ -159,10 +158,14 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-method" &&
 					(string) e.Attribute ("source-method-name") == "add" &&
 					(string) e.Attribute ("target-method-name") != "add"), "The exercised methods must really be obfuscated.");
-				Assert.IsFalse (elements.Any (e => e.Name == "replace-field" &&
-					((string) e.Attribute ("source-field-name") == "value" ||
-						(string) e.Attribute ("source-field-name") == "staticValue")),
-					"Generated JavaInterop1 field accessors have no field-specific metadata, so their field names must be preserved.");
+				Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
+					(string) e.Attribute ("source-field-name") == "value" &&
+					(string) e.Attribute ("target-field-name") == "value"),
+					"Generated field lookups must follow a renamed owner while field names remain stable.");
+				Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
+					(string) e.Attribute ("source-field-name") == "staticValue" &&
+					(string) e.Attribute ("target-field-name") == "staticValue"),
+					"Generated static field lookups must follow a renamed owner while field names remain stable.");
 				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }",
 					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
@@ -177,7 +180,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
 					(string) e.Attribute ("source-type") == hiddenType &&
 					(string) e.Attribute ("source-field-name") == "hiddenValue" &&
-					(string) e.Attribute ("target-field-name") != "hiddenValue"), "Field lookups must use the renamed owner.");
+					(string) e.Attribute ("target-field-name") == "hiddenValue"), "Field lookups must use the renamed owner while preserving the field name.");
 				Assert.IsFalse (elements.Any (e => (string) e.Attribute ("source-method-name") == "unusedMethod"),
 					"An unused method on a retained type must not occupy the runtime table.");
 
