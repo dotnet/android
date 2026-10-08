@@ -26,9 +26,9 @@
       <Uri>https://github.com/dotnet/android</Uri>
       <Sha>db080b91dbe7947a69005a203ea98d9bb207ad04</Sha>
     </Dependency>
-    <Dependency Name="System.IO.Hashing" Version="12.0.0-alpha.1.26480.102">
+    <Dependency Name="System.IO.Hashing" Version="11.0.0-rc.1.26425.128">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a2f466a2ccc2851d3c665f764a36b0cb59dd18b8</Sha>
+      <Sha>3551975be08744f0418857c5bed8ab1545c5dd47</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
