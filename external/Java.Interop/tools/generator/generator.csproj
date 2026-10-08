@@ -32,8 +32,6 @@
 
   <ItemGroup>
     <PackageReference Include="Irony" />
-    <!-- Compile-only: the netstandard2.0 System.IO.Hashing in the shared SDK tools directory is used at run time. -->
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Mono.Options" GeneratePathProperty="true" />
     <!-- Since we are sharing an OutputDirectory, and HtmlAgilityPack is also referenced by a different netstandard2.0 libary,
           we can explicitly reference the netstandard2.0 version here. This will also ensure symbol files are copied to the output directory. -->
@@ -59,5 +57,16 @@
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
   </ItemGroup>
+
+  <!--
+    In the .NET for Android build these tools share the SDK pack tools directory with the
+    netstandard2.0 task assemblies, which deposit the netstandard2.0 System.IO.Hashing there.
+    Do not overwrite it with this project's .NET flavor; the tool resolves it from that directory.
+  -->
+  <Target Name="_SkipSharedToolsHashingCopy" BeforeTargets="_CopyFilesMarkedCopyLocal">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+    </ItemGroup>
+  </Target>
 
 </Project>

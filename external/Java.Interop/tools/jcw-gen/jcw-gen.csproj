@@ -17,8 +17,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Options" />
-    <!-- Compile-only: the netstandard2.0 System.IO.Hashing in the shared SDK tools directory is used at run time. -->
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
@@ -29,5 +27,16 @@
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
   </ItemGroup>
+
+  <!--
+    In the .NET for Android build these tools share the SDK pack tools directory with the
+    netstandard2.0 task assemblies, which deposit the netstandard2.0 System.IO.Hashing there.
+    Do not overwrite it with this project's .NET flavor; the tool resolves it from that directory.
+  -->
+  <Target Name="_SkipSharedToolsHashingCopy" BeforeTargets="_CopyFilesMarkedCopyLocal">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+    </ItemGroup>
+  </Target>
 
 </Project>
