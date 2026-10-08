@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs" />
     <Compile Include="..\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" />
   </ItemGroup>
 
