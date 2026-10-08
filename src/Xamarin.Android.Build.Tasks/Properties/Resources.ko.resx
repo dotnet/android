@@ -1338,20 +1338,16 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>어셈블리 '{0}'는 AndroidTypeMapImplementation=trimmable을 요구하는 Java 피어 콜백 형식을 사용합니다.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>어셈블리 '{0}'의 런타임별 구현 '{1}' 및 '{2}'에서 Java 피어 콜백 메타데이터가 다릅니다. AndroidTypeMapImplementation=trimmable인 경우 모든 RuntimeIdentifiers는 동등한 콜백 메타데이터를 제공해야 합니다.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>'llvm-ir' 형식 맵 구현은 더 이상 지원하지 않습니다. AndroidTypeMapImplementation 속성을 제거하거나 'trimmable'로 설정합니다.</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' 명령이 실패했습니다.\n{1}</value>

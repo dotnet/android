@@ -1338,20 +1338,16 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>L’assembly '{0}' utilise un format de rappel d’homologue Java qui nécessite AndroidTypeMapImplementation=trimmmable.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>L’assembly « {0} » contient des métadonnées de rappel Java différentes dans les implémentations spécifiques au runtime « {1} » et « {2} ». Tous les RuntimeIdentifiers doivent fournir des métadonnées de rappel équivalentes lorsque AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>L’implémentation du mappage de type « llvm-ir » n’est plus prise en charge. Supprimez la propriété AndroidTypeMapImplementation ou définissez-la sur la valeur « trimmable ».</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>La commande « {0} » a échoué.\n{1}</value>

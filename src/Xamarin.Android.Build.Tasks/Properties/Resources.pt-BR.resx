@@ -1338,20 +1338,16 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>O assembly '{0}' usa um formato de retorno de chamada de par Java que requer AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>O assembly '{0}' tem metadados de retorno de chamada de pares Java diferentes em implementações específicas do tempo de execução '{1}' e '{2}'. Todos os RuntimeIdentifiers devem fornecer metadados de retorno de chamada equivalentes quando AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>Não há mais suporte para a implementação do mapa de tipo 'llvm-ir'. Remova a propriedade AndroidTypeMapImplementation ou defina-a como 'trimmable'.</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>O comando '{0}' falhou.\n{1}</value>

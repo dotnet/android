@@ -1338,20 +1338,16 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>L'assembly '{0}' usa un formato di callback peer Java che richiede AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>L'assembly '{0}' ha metadati di callback del peer Java diversi nelle implementazioni specifiche del runtime '{1}' e '{2}'. Tutti i RuntimeIdentifier devono fornire metadati di callback equivalenti quando AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>L'implementazione della mappa di tipo 'llvm-ir' non è più supportata. Rimuovere la proprietà AndroidTypeMapImplementation o impostarla su 'trimmable'.</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Comando '{0}' non riuscito.\n{1}</value>

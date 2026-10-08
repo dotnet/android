@@ -1338,20 +1338,16 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Die Assembly „{0}“ verwendet ein Java-Peer-Callback-Format, für das AndroidTypeMapImplementation=trimmable erforderlich ist.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Die Assembly „{0}“ enthält in den laufzeitspezifischen Implementierungen „{1}“ und „{2}“ unterschiedliche Java-Peer-Callback-Metadaten. Wenn AndroidTypeMapImplementation=trimmable verwendet wird, müssen alle RuntimeIdentifiers gleichwertige Callback-Metadaten bereitstellen.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>Die Implementierung der Typzuordnung „llvm-ir“ wird nicht mehr unterstützt. Entfernen Sie die AndroidTypeMapImplementation-Eigenschaft, oder legen Sie sie auf „trimmable“ fest.</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Befehl „{0}“ fehlgeschlagen.\n{1}</value>
