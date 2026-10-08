@@ -42,7 +42,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 	///    * XOR length in HashFinal()
 	///    * System.IO.Hashing implementation with custom Jones parameters
 	/// </summary>
-	[Obsolete ("Use System.IO.Hashing.Crc64 with explicit CRC-64-Jones parameters instead.")]
+	[Obsolete ("Use System.IO.Hashing.Crc64. Preserving legacy hashes requires CRC-64-Jones parameters and XORing the total input length into the result.")]
 	public partial class Crc64 : HashAlgorithm
 	{
 		readonly Crc64Helper crc = new Crc64Helper ();
