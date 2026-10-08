@@ -271,6 +271,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4327](xa4327.md): Could not extract Java type map keys from '{0}': {1}
 + [XA4328](xa4328.md): Could not generate typemap ProGuard configuration from '{0}': {1}
 + [XA4329](xa4329.md): Invalid or unsupported R8 obfuscation configuration.
++ [XA4330](xa4330.md): A native library uses the reserved libbinary_blobs.so archive name.
 
 ## XA5xxx: GCC and toolchain
 

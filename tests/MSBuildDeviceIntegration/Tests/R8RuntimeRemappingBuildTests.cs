@@ -95,6 +95,21 @@ namespace Xamarin.Android.Build.Tests
 				File.Delete (blob);
 			Assert.IsTrue (builder.Build (proj), "A deleted data library must be regenerated.");
 			AssertPackage (true);
+			var binaryBlob = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ();
+			var stamp = Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ();
+			File.Delete (binaryBlob);
+			Directory.CreateDirectory (binaryBlob);
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "An unwritable library output must fail generation.");
+			StringAssertEx.Contains ("error XA4325", builder.LastBuildOutput);
+			FileAssert.DoesNotExist (stamp, "Failure must invalidate the previous completion stamp.");
+			Directory.Delete (binaryBlob);
+			File.WriteAllBytes (binaryBlob, [0, 1, 2]);
+			builder.ThrowOnBuildFailure = true;
+			Assert.IsTrue (builder.Build (proj), "A failed write must not make a partial library up to date.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"));
+			Assert.Greater (new FileInfo (binaryBlob).Length, 3);
+			AssertPackage (true);
 			mapping = """{"ClassRewrites":[]}""";
 			proj.Touch ("mam.json");
 			Assert.IsTrue (builder.Build (proj));
@@ -104,6 +119,45 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"));
 			Assert.IsTrue (builder.Clean (proj));
 			Assert.IsEmpty (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories));
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, true)]
+		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release))
+				return;
+			var remapping = new BuildItem ("_AndroidRemapMembers", "explicit-remap.xml") {
+				TextContent = () => """<replacements><replace-type from="example/Original" to="example/Replacement" /></replacements>""",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = release,
+				OtherBuildItems = {
+					remapping,
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
+			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ());
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("Libraries/arm64-v8a/libcustom.so") {
+				BinaryContent = () => library,
+				Metadata = {
+					{ "Abi", "arm64-v8a" },
+					{ "ArchiveFileName", "libbinary_blobs.so" },
+				},
+			});
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "A native input must not overwrite or be hidden by the generated data library.");
+			StringAssertEx.Contains ("error XA4330", builder.LastBuildOutput);
+			proj.OtherBuildItems.Remove (remapping);
+			Assert.IsFalse (builder.Build (proj), "The library name remains reserved when no remapping data is generated.");
+			StringAssertEx.Contains ("error XA4330", builder.LastBuildOutput);
 		}
 
 		[TestCase (true)]

@@ -942,6 +942,12 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
 {0} - The runtime name.</comment>
   </data>
+  <data name="XA4330" xml:space="preserve">
+    <value>The native library '{0}' cannot be packaged as '{1}' because 'libbinary_blobs.so' is reserved for .NET for Android binary data.</value>
+    <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
+{0} - The source native library path.
+{1} - The conflicting archive path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

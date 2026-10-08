@@ -52,6 +52,10 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				}
 				libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), arch));
 			}
+			string stamp = Path.Combine (OutputDirectory, "binary-blobs.stamp");
+			// Failed output writes must force generation on the next build.
+			if (File.Exists (stamp))
+				File.Delete (stamp);
 			foreach (var (abi, path, arch) in libraries) {
 				if (blob.Length == 0) {
 					if (File.Exists (path))
@@ -73,7 +77,7 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				BinaryBlobLibraries = [.. BinaryBlobLibraries, item];
 			}
 			Directory.CreateDirectory (OutputDirectory);
-			File.WriteAllText (Path.Combine (OutputDirectory, "binary-blobs.stamp"), BinaryBlobLibraries.Length == 0 ? "false" : "true");
+			File.WriteAllText (stamp, BinaryBlobLibraries.Length == 0 ? "false" : "true");
 		} catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException or UnauthorizedAccessException or
 			NotSupportedException or OverflowException or XmlException) {
 			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);
