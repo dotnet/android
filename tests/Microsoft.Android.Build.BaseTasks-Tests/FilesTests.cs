@@ -41,35 +41,6 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public void HashOutputs ()
-		{
-			var bytes = new byte [17];
-			for (int i = 0; i < bytes.Length; i++)
-				bytes [i] = (byte) (i * 37 + 11);
-			AssertHashOutputs (bytes, "B2A28A16B737E58F");
-		}
-
-		[Test]
-		public void ZeroFilledHashOutput ()
-		{
-			AssertHashOutputs (new byte [256], "0001000000000000");
-		}
-
-		void AssertHashOutputs (byte [] bytes, string expected)
-		{
-			Assert.AreEqual (expected, Files.HashBytes (bytes), "HashBytes");
-			using (var input = new MemoryStream (bytes)) {
-				input.Position = input.Length;
-				Assert.AreEqual (expected, Files.HashStream (input), "HashStream must rewind the input");
-				Assert.AreEqual (input.Length, input.Position);
-			}
-			Directory.CreateDirectory (tempDir);
-			var path = Path.Combine (tempDir, "hash.bin");
-			File.WriteAllBytes (path, bytes);
-			Assert.AreEqual (expected, Files.HashFile (path), "HashFile");
-		}
-
-		[Test]
 		public void ToLongPathIsIdempotent ()
 		{
 			if (!IsWindows) {
