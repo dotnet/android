@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase (AndroidRuntime.CoreCLR, false)]
 		[TestCase (AndroidRuntime.CoreCLR, true)]
 		[TestCase (AndroidRuntime.NativeAOT, true)]
-		public void BuildWithoutRemappingOmitsBinaryBlobs (AndroidRuntime runtime, bool release)
+		public void BuildWithoutRemappingKeepsOnlyCoreClrBootstrap (AndroidRuntime runtime, bool release)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release)) {
 				return;

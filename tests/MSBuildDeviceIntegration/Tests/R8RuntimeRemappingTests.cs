@@ -107,7 +107,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Install (proj));
 			try {
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-				Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
+				bool hasBootstrap = runtime == AndroidRuntime.CoreCLR;
+				Assert.AreEqual (hasBootstrap ? 1 : 0,
+					Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
+				Assert.AreEqual (hasBootstrap ? "true" : "false",
+					File.ReadAllText (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ()));
 				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (MonitorAdbLogcat (line => line.Contains ("EMPTY_REMAP_SUCCESS", StringComparison.Ordinal),

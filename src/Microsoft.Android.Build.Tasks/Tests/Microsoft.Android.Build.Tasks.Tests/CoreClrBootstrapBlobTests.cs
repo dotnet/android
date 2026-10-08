@@ -6,6 +6,7 @@ using System.IO;
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
@@ -13,6 +14,30 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 public class CoreClrBootstrapBlobTests : BaseTest
 {
 	string DirectoryPath => Path.Combine (Root, "temp", TestName);
+
+	[Test]
+	public void EmptyRemappingPublishesBootstrapOnly ()
+	{
+		byte [] raw = CoreClrBootstrapBlob.Create (
+			false, false, 0, 0, 0, 0, "com.example.test",
+			new Dictionary<string, string> (), new Dictionary<string, string> (), new Dictionary<string, string> (),
+			[], [], 1);
+		Directory.CreateDirectory (DirectoryPath);
+		string bootstrapPath = Path.Combine (DirectoryPath, "bootstrap.bin");
+		File.WriteAllBytes (bootstrapPath, raw);
+		var task = new GenerateJniRemappingBinaryBlobs {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BootstrapFilePath = bootstrapPath,
+			OutputDirectory = Path.Combine (DirectoryPath, "out"),
+			SupportedAbis = ["arm64-v8a"],
+		};
+		Assert.IsTrue (task.Execute ());
+		Assert.AreEqual (1, task.BinaryBlobLibraries.Length);
+		AssemblyStoreElfWriter.Validate (File.ReadAllBytes (task.BinaryBlobLibraries [0].ItemSpec),
+			AndroidTargetArch.Arm64, "libbinary_blobs.so",
+			[(CoreClrBootstrapBlob.Symbol, JniRemappingBinaryBlob.Wrap (raw, compress: false))]);
+		Assert.AreEqual ("true", File.ReadAllText (Path.Combine (task.OutputDirectory, "binary-blobs.stamp")));
+	}
 
 	[Test]
 	public void RejectsCorruptBootstrapWithoutPublishing ()
