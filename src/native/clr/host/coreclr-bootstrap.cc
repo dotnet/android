@@ -7,6 +7,7 @@
 #include <new>
 #include <source_location>
 
+#include <host/host-environment-clr.hh>
 #include <runtime-base/binary-blob-loader.hh>
 #include <shared/helpers.hh>
 #include <shared/log_functions.hh>
@@ -105,6 +106,25 @@ auto CoreClrBootstrap::lookup_system_property (const char *name, size_t &value_l
 		}
 	}
 	return nullptr;
+}
+
+void CoreClrBootstrap::setup_environment () noexcept
+{
+	if (config.environment_variable_count > 0) {
+		log_debugf (LOG_DEFAULT, "Setting environment variables (%u)", config.environment_variable_count);
+		for (uint32_t i = 0; i < config.environment_variable_count; i++) {
+			AppEnvironmentVariable entry = pair (false, i);
+			HostEnvironment::set_variable (string (entry.name_index), string (entry.value_index, false));
+		}
+	}
+
+	if (config.system_property_count > 0) {
+		log_debugf (LOG_DEFAULT, "Setting system properties (%u)", config.system_property_count);
+		for (uint32_t i = 0; i < config.system_property_count; i++) {
+			AppEnvironmentVariable entry = pair (true, i);
+			HostEnvironment::set_system_property (string (entry.name_index), string (entry.value_index, false));
+		}
+	}
 }
 
 void CoreClrBootstrap::initialize () noexcept

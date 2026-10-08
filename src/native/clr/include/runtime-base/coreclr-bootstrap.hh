@@ -25,6 +25,7 @@ namespace xamarin::android
 		static inline uint32_t preload_stride = 0;
 
 		static void initialize () noexcept;
+		static void setup_environment () noexcept;
 		static auto string (uint32_t offset, bool required = true) noexcept -> const char*;
 		static auto pair (bool system, uint32_t index) noexcept -> AppEnvironmentVariable;
 		static auto preload_index (uint32_t index) noexcept -> uint32_t;

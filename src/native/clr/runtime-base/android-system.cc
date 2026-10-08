@@ -423,21 +423,7 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 void
 AndroidSystem::setup_environment () noexcept
 {
-	if (CoreClrBootstrap::config.environment_variable_count > 0) {
-		log_debugf (LOG_DEFAULT, "Setting environment variables (%u)", CoreClrBootstrap::config.environment_variable_count);
-		for (uint32_t i = 0; i < CoreClrBootstrap::config.environment_variable_count; i++) {
-			AppEnvironmentVariable entry = CoreClrBootstrap::pair (false, i);
-			HostEnvironment::set_variable (CoreClrBootstrap::string (entry.name_index), CoreClrBootstrap::string (entry.value_index, false));
-		}
-	}
-
-	if (CoreClrBootstrap::config.system_property_count > 0) {
-		log_debugf (LOG_DEFAULT, "Setting system properties (%u)", CoreClrBootstrap::config.system_property_count);
-		for (uint32_t i = 0; i < CoreClrBootstrap::config.system_property_count; i++) {
-			AppEnvironmentVariable entry = CoreClrBootstrap::pair (true, i);
-			HostEnvironment::set_system_property (CoreClrBootstrap::string (entry.name_index), CoreClrBootstrap::string (entry.value_index, false));
-		}
-	}
+	CoreClrBootstrap::setup_environment ();
 
 #if defined(DEBUG)
 	log_debugf (LOG_DEFAULT, "Loading environment from the override directory.");
