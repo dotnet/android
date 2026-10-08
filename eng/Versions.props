@@ -12,7 +12,7 @@
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>12.0.100-alpha.1.26523.103</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26523.103</MicrosoftDotNetCecilPackageVersion>
     <MSTestPackageVersion>4.6.0-preview.26524.1</MSTestPackageVersion>
-    <SystemIOHashingPackageVersion>$(MicrosoftNETCoreAppRefPackageVersion)</SystemIOHashingPackageVersion>
+    <SystemIOHashingPackageVersion>12.0.0-alpha.1.26480.102</SystemIOHashingPackageVersion>
     <SystemReflectionMetadataPackageVersion>11.0.0-preview.1.26104.118</SystemReflectionMetadataPackageVersion>
     <!-- Previous .NET Android version -->
     <MicrosoftNETSdkAndroidManifest110100rc2PackageVersion>37.2.0-rc.2.84</MicrosoftNETSdkAndroidManifest110100rc2PackageVersion>
