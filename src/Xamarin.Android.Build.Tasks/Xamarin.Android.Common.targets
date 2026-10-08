@@ -1598,6 +1598,9 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_AndroidCoreClrBootstrapFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">$(IntermediateOutputPath)android/coreclr-bootstrap.bin</_AndroidCoreClrBootstrapFile>
   </PropertyGroup>
+  <!-- Bootstrap content is copied only when changed, so its timestamp can predate the stamp. -->
+  <Delete Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp"
+          Condition=" '$(_AndroidCoreClrBootstrapFile)' != '' and !Exists ('$(_AndroidCoreClrBootstrapFile)') " />
   <ItemGroup>
     <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
@@ -1612,7 +1615,7 @@ because xbuild doesn't support framework reference assemblies.
   Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
-  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp;$(_AndroidCoreClrBootstrapFile)">
+  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
 
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
