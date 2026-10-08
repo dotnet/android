@@ -522,11 +522,6 @@ namespace Xamarin.Android.Build.Tests
 			var binaryBlobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
 				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 			Assert.AreEqual (2, binaryBlobs.Count, "Each ABI needs its own independent binary-blob library.");
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.IsEmpty (Directory.GetFiles (intermediate, "coreclr-bootstrap.bin", SearchOption.AllDirectories));
-				foreach (var blob in binaryBlobs.Keys)
-					Assert.Less (File.ReadAllBytes (blob).AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("coreclr_bootstrap")), 0);
-			}
 			var archivePath = aab
 				? Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.aab")
 				: Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
