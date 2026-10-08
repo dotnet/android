@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
-    <TargetFramework Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">net11.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
@@ -34,7 +33,7 @@
     netstandard2.0 task assemblies, which deposit the netstandard2.0 System.IO.Hashing there.
     Do not overwrite it with this project's .NET flavor; the tool resolves it from that directory.
   -->
-  <Target Name="_SkipSharedToolsHashingCopy" BeforeTargets="_CopyFilesMarkedCopyLocal" Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">
+  <Target Name="_SkipSharedToolsHashingCopy" BeforeTargets="_CopyFilesMarkedCopyLocal">
     <ItemGroup>
       <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
     </ItemGroup>
