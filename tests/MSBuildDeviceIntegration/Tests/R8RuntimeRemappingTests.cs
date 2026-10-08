@@ -344,8 +344,9 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ("-dontobfuscate", File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
 				using (var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
-					Assert.IsNull (apk.GetEntry ($"lib/{DeviceAbi}/libbinary_blobs.so"),
-						"Disabling obfuscation without explicit remapping must remove the stale packaged library.");
+					Assert.AreEqual (runtime == AndroidRuntime.CoreCLR,
+						apk.GetEntry ($"lib/{DeviceAbi}/libbinary_blobs.so") != null,
+						"Disabling obfuscation must leave CoreCLR's bootstrap library, but remove NativeAOT's remapping-only library.");
 				}
 				AssertAppRuns ("r8-disabled.log");
 			} finally {
