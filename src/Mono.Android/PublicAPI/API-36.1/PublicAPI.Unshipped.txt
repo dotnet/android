@@ -6090,3 +6090,12 @@ static Java.Interop.JniMarshalTyped.Invoke_SSSX<TPeer, T0, T1, T2>(nint jnienv, 
 static Java.Interop.JniMarshalTyped.Invoke_SSX<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, void> body) -> void
 static Java.Interop.JniMarshalTyped.Invoke_SX<TPeer, T0>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, void> body) -> void
 static Java.Interop.JniMarshalTyped.Invoke_X<TPeer>(nint jnienv, nint self, delegate*<TPeer!, void> body) -> void
+*REMOVED*Android.Graphics.ColorValueMarshaler
+*REMOVED*Android.Graphics.ColorValueMarshaler.ColorValueMarshaler() -> void
+*REMOVED*override Android.Graphics.ColorValueMarshaler.CreateGenericObjectReferenceArgumentState(Android.Graphics.Color value, System.Reflection.ParameterAttributes synchronize) -> Java.Interop.JniValueMarshalerState
+*REMOVED*override Android.Graphics.ColorValueMarshaler.CreateGenericValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type! targetType) -> Android.Graphics.Color
+*REMOVED*override Android.Graphics.ColorValueMarshaler.CreateParameterFromManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue, System.Reflection.ParameterAttributes synchronize) -> System.Linq.Expressions.Expression!
+*REMOVED*override Android.Graphics.ColorValueMarshaler.CreateParameterToManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue, System.Reflection.ParameterAttributes synchronize, System.Type! targetType) -> System.Linq.Expressions.Expression!
+*REMOVED*override Android.Graphics.ColorValueMarshaler.CreateReturnValueFromManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue) -> System.Linq.Expressions.Expression!
+*REMOVED*override Android.Graphics.ColorValueMarshaler.DestroyGenericArgumentState(Android.Graphics.Color value, ref Java.Interop.JniValueMarshalerState state, System.Reflection.ParameterAttributes synchronize) -> void
+*REMOVED*override Android.Graphics.ColorValueMarshaler.MarshalType.get -> System.Type!
