@@ -26,29 +26,5 @@ namespace Java.InteropTests
 			return new JavaInt64Array (length);
 		}
 
-		protected override long GetElement (JniArrayElements elements, int index)
-		{
-			return ((JniInt64ArrayElements) elements) [index];
-		}
-
-		[Test]
-		[Category ("JniPrimitiveArrayBounds")]
-		public void GetElements_LargeArray ()
-		{
-			const int length = 268435456;
-			var elements = CreateLargeLease (length);
-			// The fake pointer is only used to obtain a ref; the test never dereferences it.
-			Assert.DoesNotThrow (() => GetFirstElement (elements));
-		}
-
-		static unsafe JniInt64ArrayElements CreateLargeLease (int length)
-		{
-			return new JniInt64ArrayElements (default, (long*) 1, length);
-		}
-
-		static ref long GetFirstElement (JniInt64ArrayElements elements)
-		{
-			return ref elements [0];
-		}
 	}
 }

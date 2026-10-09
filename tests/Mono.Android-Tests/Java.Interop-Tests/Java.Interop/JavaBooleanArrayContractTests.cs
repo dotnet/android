@@ -26,11 +26,6 @@ namespace Java.InteropTests
 			return new JavaBooleanArray (length);
 		}
 
-		protected override bool GetElement (JniArrayElements elements, int index)
-		{
-			return ((JniBooleanArrayElements) elements) [index];
-		}
-
 		protected override bool CreateValueA ()
 		{
 			return true;

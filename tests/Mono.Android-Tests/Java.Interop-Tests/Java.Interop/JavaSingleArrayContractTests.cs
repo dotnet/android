@@ -26,9 +26,5 @@ namespace Java.InteropTests
 			return new JavaSingleArray (length);
 		}
 
-		protected override float GetElement (JniArrayElements elements, int index)
-		{
-			return ((JniSingleArrayElements) elements) [index];
-		}
 	}
 }
