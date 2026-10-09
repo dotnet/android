@@ -77,7 +77,7 @@ static class BundleConfigSplitConfigsChecker
 		try {
 			return DoShouldIgnoreSplitConfigs (log, configFilePath);
 		} catch (Exception ex) {
-			log.LogWarning ($"Failed to process bundle config file '{configFilePath}', split config files will be ignored at run time.");
+			log.LogCodedWarning ("XA4329", Properties.Resources.XA4329, configFilePath);
 			log.LogWarningFromException (ex);
 			return true;
 		}
