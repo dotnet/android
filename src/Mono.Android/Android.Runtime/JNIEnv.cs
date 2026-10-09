@@ -484,13 +484,20 @@ namespace Android.Runtime {
 			return JniEnvironment.Strings.NewString (text).Handle;
 		}
 
-		public static unsafe IntPtr NewString (char[]? text, int length)
+		public static IntPtr NewString (char[]? text, int length)
 		{
 			if (text == null)
 				return IntPtr.Zero;
 
-			fixed (char *s = text)
-				return JniEnvironment.Strings.NewString (s, length).Handle;
+			if (length < 0 || length > text.Length)
+				throw new ArgumentOutOfRangeException (nameof (length));
+			if (length == 0)
+				return JniEnvironment.Strings.NewString ("").Handle;
+
+			unsafe {
+				fixed (char *s = text)
+					return JniEnvironment.Strings.NewString (s, length).Handle;
+			}
 		}
 
 		static void AssertCompatibleArrayTypes (Type srcElementType, IntPtr destArray)
