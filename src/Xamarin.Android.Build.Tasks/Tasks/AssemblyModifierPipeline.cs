@@ -25,10 +25,6 @@ public class AssemblyModifierPipeline : AndroidTask
 {
 	public override string TaskPrefix => "AMP";
 
-	/// <summary>
-	/// Deprecated no-op retained for compatibility with existing MSBuild task invocations.
-	/// Assembly rewriting no longer depends on the code generation target.
-	/// </summary>
 	public string CodeGenerationTarget { get; set; } = "";
 
 	public bool Debug { get; set; }
