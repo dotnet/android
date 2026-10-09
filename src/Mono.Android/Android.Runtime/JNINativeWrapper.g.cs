@@ -454,7 +454,7 @@ namespace Android.Runtime
 			}
 		}
 
-		private static Delegate CreateBuiltInDelegate (Delegate dlg, Type delegateType)
+		private static Delegate CreateBuiltInDelegate (Delegate dlg)
 		{
 			switch (dlg) {
 				case _JniMarshal_PP_V callback:

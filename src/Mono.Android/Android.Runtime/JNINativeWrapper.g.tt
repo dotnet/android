@@ -279,7 +279,7 @@ foreach (var info in delegateTypes) {
 <#
 }
 #>
-		private static Delegate CreateBuiltInDelegate (Delegate dlg, Type delegateType)
+		private static Delegate CreateBuiltInDelegate (Delegate dlg)
 		{
 			switch (dlg) {
 <#
