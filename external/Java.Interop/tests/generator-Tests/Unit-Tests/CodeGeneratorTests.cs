@@ -9,12 +9,12 @@ using generator.SourceWriters;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using NUnit.Framework;
-using Xamarin.Android.Binder;
 using Xamarin.SourceWriter;
 
 namespace generatortests
 {
-	abstract class AnyJavaInteropCodeGeneratorTests : CodeGeneratorTests
+	[TestFixture]
+	class XAJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
 		[Test]
 		public void WriteMethodJniSignatureOverrides ()
@@ -1322,12 +1322,6 @@ namespace generatortests
 
 			return str;
 		}
-	}
-
-	[TestFixture]
-	class XAJavaInteropCodeGeneratorTests : AnyJavaInteropCodeGeneratorTests
-	{
-		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
 
 		[Test]
 		public void WriteClassPeerMembers ()

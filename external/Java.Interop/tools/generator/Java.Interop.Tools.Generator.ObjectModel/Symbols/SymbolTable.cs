@@ -25,8 +25,6 @@ namespace MonoDroid.Generation {
 		ISymbol xmlresourceparser_sym;
 		ISymbol string_sym;
 
-		CodeGenerationTarget    target;
-
 		static readonly string[] InvariantSymbols = new string[]{
 			"Android.Graphics.Color",
 			"boolean",
@@ -52,10 +50,14 @@ namespace MonoDroid.Generation {
 			return symbols.Values.SelectMany (v => v);
 		}
 
+		[Obsolete ("The code generation target is no longer used. Use SymbolTable () instead.")]
 		public SymbolTable (CodeGenerationTarget target)
+			: this ()
 		{
-			this.target = target;
+		}
 
+		public SymbolTable ()
+		{
 			AddType (new SimpleSymbol ("IntPtr.Zero", "void", "void", "V"));
 			AddType (new SimpleSymbol ("false", "boolean", "bool", "Z", "sbyte", from_fmt: "{0} != 0", to_fmt: "{0} ? (sbyte)1 : (sbyte)0") { OnlyFormatOnMarshal = true });
 			AddType (new SimpleSymbol ("0", "byte", "sbyte", "B"));
@@ -247,7 +249,7 @@ namespace MonoDroid.Generation {
 
 			ArraySymbol r = null;
 			while (rank-- > 0)
-				symbol = r = new ArraySymbol (symbol, target);
+				symbol = r = new ArraySymbol (symbol);
 			if (r != null)
 				r.IsParams = has_ellipsis;
 			return symbol;

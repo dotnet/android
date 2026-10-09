@@ -24,7 +24,7 @@ namespace generatortests
 			writer = new StringWriter (builder);
 			options = CreateOptions ();
 
-			generator = options.CreateCodeGenerator (writer);
+			generator = new JavaInteropCodeGenerator (writer, options);
 		}
 
 		[TearDown]
@@ -35,25 +35,21 @@ namespace generatortests
 
 		protected virtual CodeGenerationOptions CreateOptions ()
 		{
-			return new CodeGenerationOptions {
-				CodeGenerationTarget = Target,
-			};
+			return new CodeGenerationOptions ();
 		}
-
-		protected abstract Xamarin.Android.Binder.CodeGenerationTarget Target { get; }
 
 		// Optionally override the directory where the expected test results are located.
 		// For example, we duplicate the "XAJavaInterop1" tests with NRT as "XAJavaInterop1-NRT".
 		protected virtual string TargetedDirectoryOverride => null;
 		protected virtual string CommonDirectoryOverride => null;
 
-		// Get the test results from "Common" for tests with the same results regardless of Target
+		// Get the test results from "Common" for tests with the same results regardless of NRT.
 		protected string GetExpected (string testName) => GetOriginalExpected (testName).NormalizeLineEndings ();
 		string GetOriginalExpected (string testName) => GetExpectedResults (testName, CommonDirectoryOverride ?? "Common");
 
 		// Get the target-specific results, including nullable-reference-type variants.
 		protected string GetTargetedExpected (string testName) => GetOriginalTargetExpected (testName).NormalizeLineEndings ();
-		string GetOriginalTargetExpected (string testName) => GetExpectedResults (testName, TargetedDirectoryOverride ?? Target.ToString ());
+		string GetOriginalTargetExpected (string testName) => GetExpectedResults (testName, TargetedDirectoryOverride ?? "XAJavaInterop1");
 
 		string GetExpectedResults (string testName, string target)
 		{

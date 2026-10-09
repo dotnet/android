@@ -15,7 +15,13 @@ namespace MonoDroid.Generation {
 		ISymbol sym;
 		bool is_params;
 
+		[Obsolete ("The code generation target is no longer used. Use ArraySymbol (ISymbol) instead.")]
 		public ArraySymbol (ISymbol sym, CodeGenerationTarget target)
+			: this (sym)
+		{
+		}
+
+		public ArraySymbol (ISymbol sym)
 		{
 			if (sym.FullName == "sbyte")
 				this.sym = byte_sym;
