@@ -22,15 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="$(MicrosoftNETILLinkPackageVersion)" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
-    <ProjectReference Include="..\..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
-      <Aliases>xamarinbuildtasks</Aliases>
-    </ProjectReference>
   </ItemGroup>
 
 </Project>

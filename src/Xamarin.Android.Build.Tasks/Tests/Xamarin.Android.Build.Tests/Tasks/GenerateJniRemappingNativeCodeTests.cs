@@ -200,6 +200,26 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		}
 
 		[Test]
+		public void DescriptorDistinctFieldsRemainSeparate ()
+		{
+			string ll = RunTask (
+				"""
+				<replacements>
+				  <replace-field source-type="a/B" source-field-name="value" source-field-signature="I"
+				      target-type="x/Y" target-field-name="integerTarget" target-field-signature="I" />
+				  <replace-field source-type="a/B" source-field-name="value" source-field-signature="Ljava/lang/String;"
+				      target-type="x/Y" target-field-name="stringTarget" target-field-signature="Ljava/lang/String;" />
+				</replacements>
+				""");
+
+			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+			StringAssert.Contains ("[2 x %struct.JniRemappingIndexFieldEntry]", ll);
+			StringAssert.Contains ("integerTarget", ll);
+			StringAssert.Contains ("stringTarget", ll);
+			StringAssert.Contains ("Ljava/lang/String;", ll);
+		}
+
+		[Test]
 		public void MissingFieldSignaturesAreBackwardCompatible ()
 		{
 			string ll = RunTask (
