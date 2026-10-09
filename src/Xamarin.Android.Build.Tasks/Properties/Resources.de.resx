@@ -1188,7 +1188,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
-    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <value>Das MSBuild-Element AndroidStaticJniInitFunction wird mit NativeAOT nicht unterstützt. Entfernen Sie es aus dem Projekt, oder verwenden Sie eine NativeAOT-kompatible Version der Bibliothek, die es hinzufügt.</value>
     <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">

@@ -1179,7 +1179,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <value>La proprietà MSBuild 'AndroidEnableMarshalMethods' non è più supportata. Rimuoverlo o impostarlo su 'false'.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
@@ -1188,7 +1188,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
-    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <value>L'elemento AndroidStaticJniInitFunction MSBuild non è supportato con NativeAOT. Rimuoverlo dal progetto o usare una versione compatibile con NativeAOT della libreria che lo aggiunge.</value>
     <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
