@@ -25,6 +25,8 @@ namespace Java.InteropTests
 
 		protected abstract ICollection<TElement> CreateCollection (int length);
 
+		protected abstract TElement GetElement (JniArrayElements elements, int index);
+
 		protected TElement FromInt32 (int value)
 		{
 			return (TElement) Convert.ChangeType (value, typeof(TElement));
@@ -39,6 +41,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("JniPrimitiveArrayBounds")]
 		public void GetElements ()
 		{
 			var a = (TArray) CreateCollection (new[]{FromInt32 ('A')});
@@ -47,6 +50,16 @@ namespace Java.InteropTests
 				if (e == null) // OOM?
 					return;
 				Assert.IsTrue (e.Elements != IntPtr.Zero);
+				Assert.AreEqual (CreateValueA (), GetElement (e, 0));
+				Assert.Throws<ArgumentOutOfRangeException> (() => {
+					GetElement (e, -1);
+				});
+				Assert.Throws<ArgumentOutOfRangeException> (() => {
+					GetElement (e, 1);
+				});
+				Assert.Throws<ArgumentOutOfRangeException> (() => {
+					GetElement (e, 2);
+				});
 				// Multi-dispose is supported.
 				e.Dispose ();
 			}
@@ -55,6 +68,9 @@ namespace Java.InteropTests
 					#pragma warning disable 0219
 					var _ = e.Elements;
 					#pragma warning restore 0219
+			});
+			Assert.Throws<ObjectDisposedException> (() => {
+				GetElement (e, 0);
 			});
 			a.Dispose ();
 		}
@@ -68,6 +84,7 @@ namespace Java.InteropTests
 		//  (Alas, on OpenJDK JNIEnv::Get<Type>ArrayElements() returns a non-NULL pointer
 		//   when the array is empty, so we'll need to run this on Android.)
 		[Test]
+		[Category ("JniPrimitiveArrayBounds")]
 		public void GetElements_EmptyArray ()
 		{
 			var a = (TArray) CreateCollection (new TElement[0]);
@@ -76,6 +93,15 @@ namespace Java.InteropTests
 				if (e == null)
 					return;
 				Assert.IsTrue (e.Elements != IntPtr.Zero);
+				Assert.Throws<ArgumentOutOfRangeException> (() => {
+					GetElement (e, -1);
+				});
+				Assert.Throws<ArgumentOutOfRangeException> (() => {
+					GetElement (e, 0);
+				});
+				Assert.Throws<ArgumentOutOfRangeException> (() => {
+					GetElement (e, 1);
+				});
 				// Multi-dispose is supported.
 				e.Dispose ();
 			}
@@ -85,8 +111,10 @@ namespace Java.InteropTests
 				var _ = e.Elements;
 				#pragma warning restore 0219
 			});
+			Assert.Throws<ObjectDisposedException> (() => {
+				GetElement (e, 0);
+			});
 			a.Dispose ();
 		}
 	}
 }
-

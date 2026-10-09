@@ -25,6 +25,10 @@ namespace Java.InteropTests
 		{
 			return new JavaInt32Array (length);
 		}
+
+		protected override int GetElement (JniArrayElements elements, int index)
+		{
+			return ((JniInt32ArrayElements) elements) [index];
+		}
 	}
 }
-

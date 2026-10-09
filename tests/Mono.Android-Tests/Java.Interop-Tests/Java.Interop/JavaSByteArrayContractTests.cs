@@ -25,6 +25,10 @@ namespace Java.InteropTests
 		{
 			return new JavaSByteArray (length);
 		}
+
+		protected override sbyte GetElement (JniArrayElements elements, int index)
+		{
+			return ((JniSByteArrayElements) elements) [index];
+		}
 	}
 }
-

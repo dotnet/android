@@ -25,6 +25,10 @@ namespace Java.InteropTests
 		{
 			return new JavaDoubleArray (length);
 		}
+
+		protected override double GetElement (JniArrayElements elements, int index)
+		{
+			return ((JniDoubleArrayElements) elements) [index];
+		}
 	}
 }
-

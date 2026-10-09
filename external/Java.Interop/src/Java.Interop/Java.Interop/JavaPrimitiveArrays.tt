@@ -68,6 +68,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (<#= info.ManagedType #>))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}

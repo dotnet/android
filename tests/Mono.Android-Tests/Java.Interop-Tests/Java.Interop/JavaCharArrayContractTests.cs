@@ -25,6 +25,10 @@ namespace Java.InteropTests
 		{
 			return new JavaCharArray (length);
 		}
+
+		protected override char GetElement (JniArrayElements elements, int index)
+		{
+			return ((JniCharArrayElements) elements) [index];
+		}
 	}
 }
-

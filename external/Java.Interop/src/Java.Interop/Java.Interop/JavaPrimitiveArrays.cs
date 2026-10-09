@@ -48,6 +48,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (Boolean))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -250,6 +252,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (SByte))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -452,6 +456,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (Char))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -654,6 +660,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (Int16))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -857,6 +865,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (Int32))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -1059,6 +1069,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (Int64))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -1261,6 +1273,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (Single))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -1463,6 +1477,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= Size / sizeof (Double))
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
