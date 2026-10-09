@@ -491,6 +491,8 @@ namespace Android.Runtime {
 
 			if (length < 0 || length > text.Length)
 				throw new ArgumentOutOfRangeException (nameof (length));
+			if (length == 0)
+				return JniEnvironment.Strings.NewString ("").Handle;
 
 			unsafe {
 				fixed (char *s = text)
