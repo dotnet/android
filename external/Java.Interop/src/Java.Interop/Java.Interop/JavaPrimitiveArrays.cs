@@ -33,11 +33,13 @@ namespace Java.Interop {
 	public sealed class JniBooleanArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Boolean)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe Boolean* Elements {
@@ -48,7 +50,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (Boolean))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -102,7 +104,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
-			return new JniBooleanArrayElements (PeerReference, elements, Length*sizeof (Boolean));
+			return new JniBooleanArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (Boolean item)
@@ -237,11 +239,13 @@ namespace Java.Interop {
 	public sealed class JniSByteArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (SByte)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe SByte* Elements {
@@ -252,7 +256,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (SByte))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -306,7 +310,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
-			return new JniSByteArrayElements (PeerReference, elements, Length*sizeof (SByte));
+			return new JniSByteArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (SByte item)
@@ -441,11 +445,13 @@ namespace Java.Interop {
 	public sealed class JniCharArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Char)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe Char* Elements {
@@ -456,7 +462,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (Char))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -510,7 +516,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
-			return new JniCharArrayElements (PeerReference, elements, Length*sizeof (Char));
+			return new JniCharArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (Char item)
@@ -645,11 +651,13 @@ namespace Java.Interop {
 	public sealed class JniInt16ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Int16)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe Int16* Elements {
@@ -660,7 +668,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (Int16))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -714,7 +722,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
-			return new JniInt16ArrayElements (PeerReference, elements, Length*sizeof (Int16));
+			return new JniInt16ArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (Int16 item)
@@ -850,11 +858,13 @@ namespace Java.Interop {
 	public sealed class JniInt32ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Int32)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe Int32* Elements {
@@ -865,7 +875,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (Int32))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -919,7 +929,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
-			return new JniInt32ArrayElements (PeerReference, elements, Length*sizeof (Int32));
+			return new JniInt32ArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (Int32 item)
@@ -1054,11 +1064,13 @@ namespace Java.Interop {
 	public sealed class JniInt64ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Int64)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe Int64* Elements {
@@ -1069,7 +1081,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (Int64))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -1123,7 +1135,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
-			return new JniInt64ArrayElements (PeerReference, elements, Length*sizeof (Int64));
+			return new JniInt64ArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (Int64 item)
@@ -1258,11 +1270,13 @@ namespace Java.Interop {
 	public sealed class JniSingleArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Single)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe Single* Elements {
@@ -1273,7 +1287,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (Single))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -1327,7 +1341,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
-			return new JniSingleArrayElements (PeerReference, elements, Length*sizeof (Single));
+			return new JniSingleArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (Single item)
@@ -1462,11 +1476,13 @@ namespace Java.Interop {
 	public sealed class JniDoubleArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		int                     elementCount;
 
-		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount)
+			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Double)))
 		{
 			this.arrayHandle = arrayHandle;
+			this.elementCount = elementCount;
 		}
 
 		public new unsafe Double* Elements {
@@ -1477,7 +1493,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= Size / sizeof (Double))
+				if (index < 0 || index >= elementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -1531,7 +1547,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");
-			return new JniDoubleArrayElements (PeerReference, elements, Length*sizeof (Double));
+			return new JniDoubleArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (Double item)
