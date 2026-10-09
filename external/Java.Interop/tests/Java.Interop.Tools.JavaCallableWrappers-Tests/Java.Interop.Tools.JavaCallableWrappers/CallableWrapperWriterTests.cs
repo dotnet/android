@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 using Java.Interop.Tools.JavaCallableWrappers;
@@ -52,6 +53,56 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			Assert.AreEqual (1, constructor.GenerateCount);
 		}
 
+		[Test]
+		public void LegacyGenerationPreservesCallerOptionsForNestedOverrides ()
+		{
+			var directory = Path.Combine (TestContext.CurrentContext.WorkDirectory, Guid.NewGuid ().ToString ("N"));
+			try {
+				foreach (var options in new CallableWrapperWriterOptions [] { new CustomOptions { State = new object () }, null }) {
+					var type = CreateType ("Outer");
+					var nested = CreateType ("Nested");
+					type.NestedTypes.Add (nested);
+					var method = new CustomMethod (type);
+					var constructor = new CustomConstructor (type);
+					var nestedMethod = new CustomMethod (nested);
+					var nestedConstructor = new CustomConstructor (nested);
+					type.Methods.Add (method);
+					type.Constructors.Add (constructor);
+					nested.Methods.Add (nestedMethod);
+					nested.Constructors.Add (nestedConstructor);
+
+					if (options == null)
+						type.Generate (new StringWriter (), default);
+					else
+						type.Generate (new StringWriter (), options);
+					AssertCallerOptions (1);
+
+					if (options == null)
+						type.Generate (directory, default);
+					else
+						type.Generate (directory, options);
+					AssertCallerOptions (2);
+
+					void AssertCallerOptions (int count)
+					{
+						Assert.AreEqual (count, method.GenerateCount);
+						Assert.AreEqual (count, constructor.GenerateCount);
+						Assert.AreEqual (count, nestedMethod.GenerateCount);
+						Assert.AreEqual (count, nestedConstructor.GenerateCount);
+						Assert.AreSame (options, method.Options);
+						Assert.AreSame (options, constructor.Options);
+						Assert.AreSame (options, nestedMethod.Options);
+						Assert.AreSame (options, nestedConstructor.Options);
+						if (options is CustomOptions custom)
+							Assert.AreSame (custom.State, ((CustomOptions) nestedMethod.Options).State);
+					}
+				}
+			} finally {
+				if (Directory.Exists (directory))
+					Directory.Delete (directory, true);
+			}
+		}
+
 		static CallableWrapperType CreateType (string name)
 		{
 			return new CallableWrapperType (name, "example", $"Example.{name}, Example") {
@@ -72,6 +123,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		class CustomMethod : CallableWrapperMethod
 		{
 			public int GenerateCount { get; private set; }
+			public CallableWrapperWriterOptions Options { get; private set; }
 
 			public CustomMethod (CallableWrapperType type) : base (type, "custom", "", "()V")
 			{
@@ -79,7 +131,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			public override void Generate (TextWriter writer, CallableWrapperWriterOptions options)
 			{
-				Assert.AreEqual (JavaPeerStyle.XAJavaInterop1, options.CodeGenerationTarget);
+				Options = options;
 				GenerateCount++;
 			}
 		}
@@ -87,6 +139,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		class CustomConstructor : CallableWrapperConstructor
 		{
 			public int GenerateCount { get; private set; }
+			public CallableWrapperWriterOptions Options { get; private set; }
 
 			public CustomConstructor (CallableWrapperType type) : base (type, type.Name, "", "()V")
 			{
@@ -94,9 +147,14 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			public override void Generate (TextWriter writer, CallableWrapperWriterOptions options)
 			{
-				Assert.AreEqual (JavaPeerStyle.XAJavaInterop1, options.CodeGenerationTarget);
+				Options = options;
 				GenerateCount++;
 			}
+		}
+
+		class CustomOptions : CallableWrapperWriterOptions
+		{
+			public object State { get; set; }
 		}
 	}
 }

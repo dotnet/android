@@ -68,10 +68,32 @@ public class CallableWrapperType
 	// }
 	public void Generate (TextWriter writer, CallableWrapperWriterOptions options, bool isNested = false)
 	{
-		Generate (writer, isNested);
+		GenerateStart (writer, isNested);
+		GenerateBody (writer, options);
+
+		foreach (var nested in NestedTypes)
+			nested.Generate (writer, options, true);
+
+		GenerateFooter (writer);
 	}
 
-	public void Generate (TextWriter writer, bool isNested = false)
+	public void Generate (TextWriter writer)
+	{
+		GenerateSingleStyle (writer, false);
+	}
+
+	void GenerateSingleStyle (TextWriter writer, bool isNested)
+	{
+		GenerateStart (writer, isNested);
+		GenerateBody (writer);
+
+		foreach (var nested in NestedTypes)
+			nested.GenerateSingleStyle (writer, true);
+
+		GenerateFooter (writer);
+	}
+
+	void GenerateStart (TextWriter writer, bool isNested)
 	{
 		if (!isNested && !string.IsNullOrEmpty (Package)) {
 			writer.WriteLine ("package " + Package + ";");
@@ -82,14 +104,7 @@ public class CallableWrapperType
 
 		if (!isNested)
 			GenerateInfrastructure (writer);
-
-		GenerateBody (writer);
-
-		foreach (var nested in NestedTypes)
-			nested.Generate (writer, true);
-
-		GenerateFooter (writer);
-	}	
+	}
 
 	void GenerateHeader (TextWriter sw)
 	{
@@ -162,14 +177,38 @@ public class CallableWrapperType
 		foreach (var ctor in Constructors)
 			ctor.Generate (sw);
 
-		ApplicationConstructor?.Generate (sw);
-
-		foreach (var field in Fields)
-			field.Generate (sw);
+		GenerateApplicationConstructorAndFields (sw);
 
 		foreach (var method in Methods)
 			method.Generate (sw);
 
+		GenerateBodyInfrastructure (sw);
+	}
+
+	void GenerateBody (TextWriter sw, CallableWrapperWriterOptions options)
+	{
+		// Legacy options belong only at the virtual extension boundary, including null and custom state.
+		foreach (var ctor in Constructors)
+			ctor.Generate (sw, options);
+
+		GenerateApplicationConstructorAndFields (sw);
+
+		foreach (var method in Methods)
+			method.Generate (sw, options);
+
+		GenerateBodyInfrastructure (sw);
+	}
+
+	void GenerateApplicationConstructorAndFields (TextWriter sw)
+	{
+		ApplicationConstructor?.Generate (sw);
+
+		foreach (var field in Fields)
+			field.Generate (sw);
+	}
+
+	void GenerateBodyInfrastructure (TextWriter sw)
+	{
 		if (GenerateOnCreateOverrides && IsApplication && !Methods.Any (m => m.Name == "onCreate"))
 			WriteApplicationOnCreate (sw);
 
@@ -292,7 +331,8 @@ public class CallableWrapperType
 
 	public void Generate (string outputPath, CallableWrapperWriterOptions options)
 	{
-		Generate (outputPath);
+		using (StreamWriter sw = OpenStream (outputPath))
+			Generate (sw, options);
 	}
 
 	public void Generate (string outputPath)
