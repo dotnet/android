@@ -111,10 +111,11 @@ namespace Java.Lang {
 		{
 			try {
 				var reference = new JniObjectReference (value);
-				var options = JNIEnv.ToJniObjectReferenceOptions (transfer);
 				Construct (
 						ref reference,
-						value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
+						value == IntPtr.Zero
+							? JniObjectReferenceOptions.None
+							: JNIEnv.ToJniObjectReferenceOptions (transfer));
 				if (value != IntPtr.Zero) {
 					SetJavaStackTrace (new JniObjectReference (value));
 				}
