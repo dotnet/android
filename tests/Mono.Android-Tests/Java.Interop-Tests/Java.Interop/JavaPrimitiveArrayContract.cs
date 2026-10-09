@@ -57,6 +57,7 @@ namespace Java.InteropTests
 			using (e = a.GetElements ()) {
 				if (e == null) // OOM?
 					return;
+				Assert.Greater (e.Size, 0);
 				Assert.IsTrue (e.Elements != IntPtr.Zero);
 				// Multi-dispose is supported.
 				e.Dispose ();
@@ -96,6 +97,7 @@ namespace Java.InteropTests
 			using (e = a.GetElements ()) {
 				if (e == null)
 					return;
+				Assert.AreEqual (0, e.Size);
 				Assert.IsTrue (e.Elements != IntPtr.Zero);
 				// Multi-dispose is supported.
 				e.Dispose ();

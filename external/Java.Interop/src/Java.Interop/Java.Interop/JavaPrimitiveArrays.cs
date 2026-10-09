@@ -33,13 +33,11 @@ namespace Java.Interop {
 	public sealed class JniBooleanArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Boolean)))
+			: base ((IntPtr) elements, elementCount, sizeof (Boolean))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe Boolean* Elements {
@@ -50,7 +48,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -239,13 +237,11 @@ namespace Java.Interop {
 	public sealed class JniSByteArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (SByte)))
+			: base ((IntPtr) elements, elementCount, sizeof (SByte))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe SByte* Elements {
@@ -256,7 +252,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -445,13 +441,11 @@ namespace Java.Interop {
 	public sealed class JniCharArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Char)))
+			: base ((IntPtr) elements, elementCount, sizeof (Char))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe Char* Elements {
@@ -462,7 +456,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -651,13 +645,11 @@ namespace Java.Interop {
 	public sealed class JniInt16ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Int16)))
+			: base ((IntPtr) elements, elementCount, sizeof (Int16))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe Int16* Elements {
@@ -668,7 +660,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -858,13 +850,11 @@ namespace Java.Interop {
 	public sealed class JniInt32ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Int32)))
+			: base ((IntPtr) elements, elementCount, sizeof (Int32))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe Int32* Elements {
@@ -875,7 +865,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -1064,13 +1054,11 @@ namespace Java.Interop {
 	public sealed class JniInt64ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Int64)))
+			: base ((IntPtr) elements, elementCount, sizeof (Int64))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe Int64* Elements {
@@ -1081,7 +1069,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -1270,13 +1258,11 @@ namespace Java.Interop {
 	public sealed class JniSingleArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Single)))
+			: base ((IntPtr) elements, elementCount, sizeof (Single))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe Single* Elements {
@@ -1287,7 +1273,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
@@ -1476,13 +1462,11 @@ namespace Java.Interop {
 	public sealed class JniDoubleArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (Double)))
+			: base ((IntPtr) elements, elementCount, sizeof (Double))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe Double* Elements {
@@ -1493,7 +1477,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];

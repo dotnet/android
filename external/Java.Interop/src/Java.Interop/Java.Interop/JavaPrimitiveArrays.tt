@@ -53,13 +53,11 @@ namespace Java.Interop {
 	public sealed class Jni<#= info.TypeModifier #>ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		int                     elementCount;
 
 		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount)
-			: base ((IntPtr) elements, unchecked (elementCount * sizeof (<#= info.ManagedType #>)))
+			: base ((IntPtr) elements, elementCount, sizeof (<#= info.ManagedType #>))
 		{
 			this.arrayHandle = arrayHandle;
-			this.elementCount = elementCount;
 		}
 
 		public new unsafe <#= info.ManagedType #>* Elements {
@@ -70,7 +68,7 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				if (index < 0 || index >= elementCount)
+				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
