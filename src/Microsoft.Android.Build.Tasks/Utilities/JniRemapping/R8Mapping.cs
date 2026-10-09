@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Xamarin.Android.Tasks.JniRemapping
+namespace Microsoft.Android.Tasks.JniRemapping
 {
 	interface IJniNameMapping
 	{
@@ -291,8 +291,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			originalMethodName = "";
 			return originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
-					classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out var methodName) &&
-					methodName.Length != 0;
+					classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out originalMethodName) &&
+					originalMethodName.Length != 0;
 		}
 
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)

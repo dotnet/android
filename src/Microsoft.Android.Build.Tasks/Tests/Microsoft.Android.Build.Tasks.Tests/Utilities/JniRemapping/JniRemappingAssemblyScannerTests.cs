@@ -15,7 +15,7 @@ using Cecil = Mono.Cecil;
 using Mono.Cecil.Cil;
 using NUnit.Framework;
 
-using Xamarin.Android.Tasks.JniRemapping;
+using Microsoft.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Build.Tests
 {
