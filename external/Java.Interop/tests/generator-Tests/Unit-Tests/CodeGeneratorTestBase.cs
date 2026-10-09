@@ -51,7 +51,7 @@ namespace generatortests
 		protected string GetExpected (string testName) => GetOriginalExpected (testName).NormalizeLineEndings ();
 		string GetOriginalExpected (string testName) => GetExpectedResults (testName, CommonDirectoryOverride ?? "Common");
 
-		// Get the test results from "JavaInterop1" or "XamarinAndroid" for tests with different results per Target
+		// Get the target-specific results, including nullable-reference-type variants.
 		protected string GetTargetedExpected (string testName) => GetOriginalTargetExpected (testName).NormalizeLineEndings ();
 		string GetOriginalTargetExpected (string testName) => GetExpectedResults (testName, TargetedDirectoryOverride ?? Target.ToString ());
 

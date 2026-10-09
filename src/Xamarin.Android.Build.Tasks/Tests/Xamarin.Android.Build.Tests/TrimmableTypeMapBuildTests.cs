@@ -2190,7 +2190,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotEmpty (rspFiles, $"{ridIntermediateDir} should contain an ILC response file.");
 
 			var rspText = File.ReadAllText (rspFiles [0]);
-			StringAssert.Contains ("_Java.Interop.TypeMap.dll", rspText);
+			// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
+			StringAssert.DoesNotContain ("_Java.Interop.TypeMap.dll", rspText);
 			StringAssert.Contains ("_Mono.Android.TypeMap.dll", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Java.Interop.TypeMap", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Mono.Android.TypeMap", rspText);
@@ -2198,16 +2199,17 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable ()
+		public void TrimmableTypeMap_PackagesAndroidJavaProxyThrowable (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -2217,6 +2219,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				DexUtils.ContainsClassWithMethod ("Landroid/runtime/JavaProxyThrowable;", "<init>", "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should include `android.runtime.JavaProxyThrowable`.");
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/internal/JavaProxyThrowable;", dexFile, AndroidSdkPath));
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/internal/JavaProxyObject;", dexFile, AndroidSdkPath));
 		}
 
 		[Test]

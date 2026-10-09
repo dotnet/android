@@ -7,9 +7,6 @@ namespace Java.Lang {
 	public sealed partial class String : global::Java.Lang.Object, Java.Lang.ICharSequence, IEnumerable
 	{
 		public unsafe String (string value)
-#if JAVA_INTEROP1
-			: base (ref *InvalidJniObjectReference, Java.Interop.JniObjectReferenceOptions.None)
-#endif  // JAVA_INTEROP1
 		{
 		}
 

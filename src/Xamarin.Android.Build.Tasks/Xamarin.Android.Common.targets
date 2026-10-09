@@ -1337,8 +1337,7 @@ because xbuild doesn't support framework reference assemblies.
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
 
-<!-- Runtime jar selection.
-     Trimmable jars replace JavaProxyObject/JavaProxyThrowable with non-native implementations. -->
+<!-- Runtime jar selection. -->
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup>
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable.jar</_RuntimeJar>
@@ -2939,6 +2938,14 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
         Condition=" '$(DesignTimeBuild)' != 'true' "/>
+  <Target Name="_AndroidValidateCodegenTarget"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+    <AndroidError Code="XA4232"
+        ResourceName="XA4232"
+        FormatArguments="$(AndroidCodegenTarget)"
+        Condition=" '$(AndroidCodegenTarget)' == 'XamarinAndroid' or '$(AndroidCodegenTarget)' == 'JavaInterop1' " />
+  </Target>
+
   <Target Name="_ValidateAndroidJcwCodegenTarget"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <AndroidError Code="XA4240"

@@ -10,19 +10,9 @@ using Android.Runtime;
 namespace Java.Lang
 {
 	public partial class Throwable : 
-#if JAVA_INTEROP1
-		JavaException,
-#else   // !JAVA_INTEROP1
 		System.Exception,
-#endif  // !JAVA_INTEROP1
 		IJavaPeerable
 	{
-#if JAVA_INTEROP1
-		public Throwable (ref JniObjectReference reference, JniObjectReferenceOptions options)
-			: base (ref reference, options)
-		{
-		}
-#else   // !JAVA_INTEROP1
 
 		public virtual JniPeerMembers JniPeerMembers {
 			get { return null; }
@@ -67,6 +57,5 @@ namespace Java.Lang
 		public void SetPeerReference (JniObjectReference value)
 		{
 		}
-#endif  // !JAVA_INTEROP1
 	}
 }

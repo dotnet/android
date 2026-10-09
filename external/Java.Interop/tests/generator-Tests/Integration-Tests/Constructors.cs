@@ -9,9 +9,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "Constructors",
-					apiDescriptionFile:     "expected.ji/Constructors/Constructors.xml",
+					apiDescriptionFile:     "TestInputs/Constructors/Constructors.xml",
 					expectedRelativePath:   "Constructors");
 		}
 	}

@@ -6,16 +6,15 @@ namespace generatortests
 	[TestFixture]
 	public class Adapters : BaseGeneratorTest
 	{
-		protected override bool TryJavaInterop1 => true;
 
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "Adapters",
-					apiDescriptionFile:     "expected.ji/Adapters/Adapters.xml",
+					apiDescriptionFile:     "TestInputs/Adapters/Adapters.xml",
 					expectedRelativePath:   "Adapters",
-					additionalSupportPaths: new[]{ "expected.ji/Adapters/SupportFiles" });
+					additionalSupportPaths: new[]{ "TestInputs/Adapters/SupportFiles" });
 		}
 	}
 }

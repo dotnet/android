@@ -45,24 +45,13 @@ public class CallableWrapperConstructor : CallableWrapperMethod
 
 			sw.Write ("\t\t\t");
 
-			switch (options.CodeGenerationTarget) {
-				case JavaPeerStyle.JavaInterop1:
-					sw.Write ("net.dot.jni.ManagedPeer.construct (this, \"");
-					sw.Write (JniSignature);
-					sw.Write ("\", new java.lang.Object[] { ");
-					sw.Write (ActivateCall);
-					sw.WriteLine (" });");
-					break;
-				default:
-					sw.Write ("mono.android.TypeManager.Activate (\"");
-					sw.Write (DeclaringType.PartialAssemblyQualifiedName);
-					sw.Write ("\", \"");
-					sw.Write (ManagedParameters);
-					sw.Write ("\", this, new java.lang.Object[] { ");
-					sw.Write (ActivateCall);
-					sw.WriteLine (" });");
-					break;
-			}
+			sw.Write ("mono.android.TypeManager.Activate (\"");
+			sw.Write (DeclaringType.PartialAssemblyQualifiedName);
+			sw.Write ("\", \"");
+			sw.Write (ManagedParameters);
+			sw.Write ("\", this, new java.lang.Object[] { ");
+			sw.Write (ActivateCall);
+			sw.WriteLine (" });");
 
 			sw.WriteLine ("\t\t}");
 		}

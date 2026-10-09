@@ -2,7 +2,7 @@
 
   <Target Name="BuildNativeAOTFromJNIJar"
       AfterTargets="Build"
-      Inputs="@(HelloNativeAOTFromJNIJar);$(OutputPath)java-interop.jar"
+      Inputs="@(HelloNativeAOTFromJNIJar)"
       Outputs="$(OutputPath)hello-from-java.jar">
     <MakeDir Directories="$(IntermediateOutputPath)h-classes" />
     <ItemGroup>
@@ -16,7 +16,6 @@
     <ItemGroup>
       <_JavacOpt Include="$(_JavacSourceOptions)" />
       <_JavacOpt Include="-d &quot;$(IntermediateOutputPath)h-classes&quot; " />
-      <_JavacOpt Include="-classpath &quot;$(OutputPath)java-interop.jar&quot; " />
       <_JavacOpt Include="&quot;@$(IntermediateOutputPath)_java_sources.txt&quot;" />
       <_JavacOpt Include="-h &quot;$(IntermediateOutputPath)h-classes&quot; " />
     </ItemGroup>
@@ -33,13 +32,11 @@
         DestinationFiles="$(PublishDir)lib$(AssemblyName).dylib"
     />
     <Copy SourceFiles="$(OutputPath)hello-from-java.jar" DestinationFolder="$(PublishDir)" />
-    <Copy SourceFiles="$(OutputPath)java-interop.jar" DestinationFolder="$(PublishDir)" />
   </Target>
 
   <Target Name="RunJavaSample">
     <ItemGroup>
       <_Classpath Include="hello-from-java.jar" />
-      <_Classpath Include="java-interop.jar" />
     </ItemGroup>
     <PropertyGroup>
       <_CPSep Condition=" '$(OS)' == 'Windows_NT' ">;</_CPSep>

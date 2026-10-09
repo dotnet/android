@@ -8,8 +8,6 @@ using System.Xml.Schema;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class ClassInvokerClass : ClassWriter
@@ -29,31 +27,19 @@ namespace generator.SourceWriters
 
 			Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) {
 				UseGlobal       = true,
-				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.TypeInfo,
 			});
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 
-			ConstructorWriter ctor = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1
-				? new ConstructorWriter {
-					Name        = Name,
-					IsPublic    = true,
-					BaseCall    = "base (ref reference, options)",
-					Parameters  = {
-						new MethodParameterWriter ("reference", new TypeReferenceWriter ("ref JniObjectReference")),
-						new MethodParameterWriter ("options", new TypeReferenceWriter ("JniObjectReferenceOptions")),
-					},
-				}
-				: new ConstructorWriter {
-					Name        = Name,
-					IsPublic    = true,
-					BaseCall    = "base (handle, transfer)",
-					Parameters  = {
-						new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr),
-						new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
-					},
-				}
-			;
+			ConstructorWriter ctor = new ConstructorWriter {
+				Name        = Name,
+				IsPublic    = true,
+				BaseCall    = "base (handle, transfer)",
+				Parameters  = {
+					new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr),
+					new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
+				},
+			};
 
 			Constructors.Add (ctor);
 

@@ -9,9 +9,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath: "AccessModifiers",
-					apiDescriptionFile: "expected.ji/AccessModifiers/AccessModifiers.xml",
+					apiDescriptionFile: "TestInputs/AccessModifiers/AccessModifiers.xml",
 					expectedRelativePath: "AccessModifiers",
 					additionalSupportPaths: null);
 		}

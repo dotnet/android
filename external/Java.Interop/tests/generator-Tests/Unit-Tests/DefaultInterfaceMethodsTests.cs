@@ -6,14 +6,6 @@ using Xamarin.Android.Binder;
 
 namespace generatortests
 {
-#if TODO_JAVA_INTEROP1
-	[TestFixture]
-	class JavaInteropDefaultInterfaceMethodsTests : DefaultInterfaceMethodsTests
-	{
-		protected override CodeGenerationTarget Target => CodeGenerationTarget.JavaInterop1;
-	}
-#endif  // TODO_JAVA_INTEROP1
-
 	[TestFixture]
 	class XAJavaInteropDefaultInterfaceMethodsTests : DefaultInterfaceMethodsTests
 	{

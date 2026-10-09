@@ -501,9 +501,6 @@ namespace MonoDroid.Generation
 
 		protected void GenerateAnnotationAttribute (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return;
-			}
 			if (ShouldGenerateAnnotationAttribute) {
 				var baseName = Namespace.Length > 0 ? FullName.Substring (Namespace.Length + 1) : FullName;
 				var attrClassNameBase = baseName.Substring (TypeNamePrefix.Length) + "Attribute";
@@ -640,9 +637,6 @@ namespace MonoDroid.Generation
 
 		public string GetObjectHandleProperty (CodeGenerationOptions opt, string variable)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return $"{variable}.PeerReference";
-			}
 			var handleType = IsThrowable () ? "Java.Lang.Throwable" : "Java.Lang.Object";
 
 			return $"((global::{handleType}) {variable}).Handle";
@@ -868,20 +862,9 @@ namespace MonoDroid.Generation
 		{
 			var rgm = this as IRequireGenericMarshal;
 
-			string format = opt.CodeGenerationTarget switch {
-				CodeGenerationTarget.JavaInterop1 =>
-					"{0} {1} = {5}global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<{4}> (ref {2}, {3});",
-				_ =>
-					"{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});",
-			};
-			string transfer = opt.CodeGenerationTarget switch {
-				CodeGenerationTarget.JavaInterop1 =>    "JniObjectReferenceOptions.CopyAndDispose",
-				_ =>                                    "JniHandleOwnership.TransferLocalRef",
-			};
-			string doNotTransfer = opt.CodeGenerationTarget switch {
-				CodeGenerationTarget.JavaInterop1       => "JniObjectReferenceOptions.Copy",
-				_                                       => "JniHandleOwnership.DoNotTransfer",
-			};
+			string format = "{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});";
+			string transfer = "JniHandleOwnership.TransferLocalRef";
+			string doNotTransfer = "JniHandleOwnership.DoNotTransfer";
 
 			return new string []{
 				string.Format (format,

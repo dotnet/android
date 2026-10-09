@@ -128,7 +128,7 @@ namespace generatortests
 		static string GenerateCSharp (string apiXml, out List<GenBase> gens)
 		{
 			var options = new CodeGenerationOptions {
-				CodeGenerationTarget = CodeGenerationTarget.JavaInterop1,
+				CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1,
 			};
 			var sb = new System.Text.StringBuilder ();
 			var writer = new StringWriter (sb);

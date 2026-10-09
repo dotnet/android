@@ -19,7 +19,6 @@ public interface ITrimmableTypeMapLogger
 		string unresolvedTypeName,
 		string unresolvedAssemblyName,
 		string unresolvedAssemblyPath);
-	void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName);
 	void LogInvalidJavaNameError (string javaName, string invalidIdentifier);
 	void LogDuplicateJavaTypeError (string javaName);
 	void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName);

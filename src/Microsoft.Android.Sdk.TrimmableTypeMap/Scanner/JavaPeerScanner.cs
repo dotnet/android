@@ -373,10 +373,6 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	// ManagedPeer depends on reflection-based registration; the trimmable path uses IAndroidCallableWrapper.
-	static bool IsUnsupportedByTrimmableTypeMap (string managedFullName, string assemblyName) =>
-		managedFullName == "Java.Interop.ManagedPeer" && assemblyName == "Java.Interop";
-
 	void ScanAssembly (AssemblyIndex index, Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results)
 	{
 		foreach (var typeHandle in index.Reader.TypeDefinitions) {
@@ -388,18 +384,6 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var fullName = index.GetTypeFullName (typeHandle);
-
-			if (IsUnsupportedByTrimmableTypeMap (fullName, index.AssemblyName)) {
-				continue;
-			}
-
-			// Temporarily allow [JniAddNativeMethodRegistrationAttribute] while we investigate
-			// which scenarios fail later in the trimmable typemap pipeline.
-			// if (index.MayUseJniAddNativeMethodRegistrationAttribute &&
-			//     !IsBuiltInJniAddNativeMethodRegistrationType (fullName, index) &&
-			//     HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
-			// 	logger?.LogJniAddNativeMethodRegistrationAttributeError (fullName);
-			// }
 
 			// Determine the JNI name and whether this is a known Java peer.
 			// Priority:
@@ -1004,29 +988,6 @@ public sealed class JavaPeerScanner : IDisposable
 	internal bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
 	{
 		return TryManagedTypeToJniDescriptor (managedType, exportKind, out _);
-	}
-
-	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
-	{
-		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
-		const string JavaInteropNamespace = "Java.Interop";
-
-		foreach (var methodHandle in typeDef.GetMethods ()) {
-			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
-			foreach (var attrHandle in methodDef.GetCustomAttributes ()) {
-				var attr = index.Reader.GetCustomAttribute (attrHandle);
-				if (AssemblyIndex.IsCustomAttributeMatch (attr, index.Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	static bool IsBuiltInJniAddNativeMethodRegistrationType (string fullName, AssemblyIndex index)
-	{
-		return string.Equals (index.AssemblyName, "Java.Interop", StringComparison.Ordinal) &&
-			string.Equals (fullName, "Java.Interop.JavaProxyObject", StringComparison.Ordinal);
 	}
 
 	/// <summary>

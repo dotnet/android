@@ -7,8 +7,6 @@ using System.Xml.Linq;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class BoundProperty : PropertyWriter
@@ -33,10 +31,9 @@ namespace generator.SourceWriters
 				IsVirtual = true;
 				IsShadow = gen.RequiresNew (property);
 
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
-					getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
+				getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
 
-				if (property.Setter != null && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+				if (property.Setter != null)
 					setter_callback = new MethodCallback (gen, property.Setter, opt, property.AdjustedName, false);
 			}
 
@@ -96,9 +93,7 @@ namespace generator.SourceWriters
 			if (gen.IsGeneratable)
 				GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.IsVirtual ? UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Getter, opt) : string.Empty, additionalProperties: property.Getter.AdditionalAttributeString ()));
-			}
+			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.IsVirtual ? UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Getter, opt) : string.Empty, additionalProperties: property.Getter.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddMethodBody (GetBody, property.Getter, opt);
 
@@ -111,9 +106,7 @@ namespace generator.SourceWriters
 				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
 				SourceWriterExtensions.AddMethodCustomAttributes (SetterAttributes, property.Setter);
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.IsVirtual ? UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Setter, opt) : string.Empty, additionalProperties: property.Setter.AdditionalAttributeString ()));
-				}
+				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.IsVirtual ? UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Setter, opt) : string.Empty, additionalProperties: property.Setter.AdditionalAttributeString ()));
 
 				var pname = property.Setter.Parameters [0].Name;
 				property.Setter.Parameters [0].Name = "value";

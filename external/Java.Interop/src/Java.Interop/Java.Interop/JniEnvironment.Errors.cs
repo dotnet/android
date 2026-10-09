@@ -34,14 +34,8 @@ namespace Java.Interop {
 			{
 				if (e == null)
 					throw new ArgumentNullException (nameof (e));
-				var je = e as JavaException;
-				if (je == null) {
-					je  = new JavaProxyThrowable (e);
-				}
-				Throw (je.PeerReference);
-				GC.KeepAlive (je);
+				Runtime.RaisePendingException (e);
 			}
 		}
 	}
 }
-

@@ -182,6 +182,19 @@ namespace Java.InteropTests
 		[TestCase (4, JniHandleOwnership.DoNotTransfer)]
 		public void ThrowableExtractionFailureReleasesInput (int stage, JniHandleOwnership ownership)
 		{
+			AssertThrowableExtractionFailureReleasesInput (stage, ownership, throughRuntime: false);
+		}
+
+		[Test]
+		public void RuntimeExceptionLookupFailureReleasesInput (
+			[Values (1, 2, 3, 4)] int stage,
+			[Values (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef, JniHandleOwnership.TransferGlobalRef)] JniHandleOwnership ownership)
+		{
+			AssertThrowableExtractionFailureReleasesInput (stage, ownership, throughRuntime: true);
+		}
+
+		static void AssertThrowableExtractionFailureReleasesInput (int stage, JniHandleOwnership ownership, bool throughRuntime)
+		{
 			var source = JNIEnv.CreateInstance ("net/dot/android/test/TransferFailureThrowable", "(I)V", new JValue (stage));
 			try {
 				WithInput (source, ownership, (handle, transfer) => {
@@ -194,7 +207,18 @@ namespace Java.InteropTests
 					}
 					Java.Lang.IllegalStateException failure = null;
 					try {
-						failure = Assert.Throws<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
+						if (throughRuntime) {
+							var reference = new JniObjectReference (handle, transfer == JniHandleOwnership.TransferGlobalRef
+								? JniObjectReferenceType.Global : JniObjectReferenceType.Local);
+							var options = transfer == JniHandleOwnership.DoNotTransfer
+								? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.CopyAndDispose;
+							failure = Assert.Throws<Java.Lang.IllegalStateException> (() =>
+								JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, options));
+							Assert.AreEqual (transfer == JniHandleOwnership.DoNotTransfer, reference.IsValid,
+								"Only the borrowed throwable reference should remain valid after extraction fails.");
+						} else {
+							failure = Assert.Throws<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
+						}
 						StringAssert.Contains ("transfer-extraction-" + stage, failure.Message);
 					} finally {
 						failure?.Dispose ();

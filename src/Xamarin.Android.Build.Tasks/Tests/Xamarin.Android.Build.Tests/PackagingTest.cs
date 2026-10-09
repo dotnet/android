@@ -324,7 +324,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"_Microsoft.Android.TypeMaps.dll",
 				"_UnnamedProject.TypeMap.dll",
 				"_Mono.Android.TypeMap.dll",
-				"_Java.Interop.TypeMap.dll",
 				"Humanizer.dll",
 				"es/Humanizer.resources.dll",
 				"System.Collections.dll",
@@ -342,6 +341,8 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles, supportedArches);
 
+				// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
+				CollectionAssert.DoesNotContain (existingFiles, "_Java.Interop.TypeMap.dll");
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));

@@ -46,7 +46,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Irony.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-interop.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-source-utils.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)LayoutBinding.cs" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.dll" />

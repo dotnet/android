@@ -9,9 +9,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "NonStaticFields",
-					apiDescriptionFile:     "expected.ji/NonStaticFields/NonStaticField.xml",
+					apiDescriptionFile:     "TestInputs/NonStaticFields/NonStaticField.xml",
 					expectedRelativePath:   "NonStaticFields");
 		}
 	}

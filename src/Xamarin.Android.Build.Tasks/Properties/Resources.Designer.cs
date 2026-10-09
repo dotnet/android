@@ -1342,7 +1342,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is no longer supported. The &apos;AndroidCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;..
         /// </summary>
         public static string XA4232 {
             get {
@@ -1531,15 +1531,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4253 {
             get {
                 return ResourceManager.GetString("XA4253", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the &apos;llvm-ir&apos; type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
-        /// </summary>
-        public static string XA4251 {
-            get {
-                return ResourceManager.GetString("XA4251", resourceCulture);
             }
         }
 

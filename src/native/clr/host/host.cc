@@ -460,7 +460,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);
-	init.grefGCUserPeerable                             = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable"sv, true);
 
 	log_infof (LOG_GC, "GREF GC Threshold: %d", init.grefGcThreshold);
 
