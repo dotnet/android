@@ -162,7 +162,7 @@ public class Name_ActivityLifecycleCallbacks
 			Assert.That (actual, Does.Not.Contain ("\t\tcom.xamarin.android.BaseOnTabSelectedListener"));
 		}
 
-		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null, JavaPeerStyle style = JavaPeerStyle.XAJavaInterop1)
+		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null)
 		{
 			var reader_options = new CallableWrapperReaderOptions {
 				DefaultApplicationJavaClass = applicationJavaClass,
@@ -175,13 +175,11 @@ public class Name_ActivityLifecycleCallbacks
 
 			var o   = new StringWriter ();
 			var dir = Path.GetDirectoryName (typeof (JavaCallableWrapperGeneratorTests).Assembly.Location);
-			var options = new CallableWrapperWriterOptions {
-				CodeGenerationTarget        = style,
-			};
+			var outputPath = Path.Combine (dir, "__o");
+			g.Generate (outputPath);
+			g.Generate (o);
 
-			g.Generate (Path.Combine (dir, "__o"), options);
-			g.Generate (o, options);
-
+			Assert.AreEqual (o.ToString (), File.ReadAllText (g.GetDestinationPath (outputPath)));
 			return o.ToString ();
 		}
 

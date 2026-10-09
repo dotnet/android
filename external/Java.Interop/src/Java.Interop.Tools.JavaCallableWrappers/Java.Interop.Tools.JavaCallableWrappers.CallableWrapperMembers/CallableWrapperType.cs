@@ -68,31 +68,36 @@ public class CallableWrapperType
 	// }
 	public void Generate (TextWriter writer, CallableWrapperWriterOptions options, bool isNested = false)
 	{
+		Generate (writer, isNested);
+	}
+
+	public void Generate (TextWriter writer, bool isNested = false)
+	{
 		if (!isNested && !string.IsNullOrEmpty (Package)) {
 			writer.WriteLine ("package " + Package + ";");
 			writer.WriteLine ();
 		}
 
-		GenerateHeader (writer, options);
+		GenerateHeader (writer);
 
 		if (!isNested)
-			GenerateInfrastructure (writer, options);
+			GenerateInfrastructure (writer);
 
-		GenerateBody (writer, options);
+		GenerateBody (writer);
 
 		foreach (var nested in NestedTypes)
-			nested.Generate (writer, options, true);
+			nested.Generate (writer, true);
 
-		GenerateFooter (writer, options);
+		GenerateFooter (writer);
 	}	
 
-	void GenerateHeader (TextWriter sw, CallableWrapperWriterOptions options)
+	void GenerateHeader (TextWriter sw)
 	{
 		sw.WriteLine ();
 
 		// Type annotations
 		foreach (var annotation in Annotations)
-			annotation.Generate (sw, "", options);
+			annotation.Generate (sw, "");
 
 		sw.WriteLine ("public " + (IsAbstract ? "abstract " : "") + "class " + Name);
 
@@ -119,7 +124,7 @@ public class CallableWrapperType
 		sw.WriteLine ("{");
 	}
 
-	void GenerateInfrastructure (TextWriter writer, CallableWrapperWriterOptions options)
+	void GenerateInfrastructure (TextWriter writer)
 	{
 		var needCtor = false;
 
@@ -143,33 +148,33 @@ public class CallableWrapperType
 			writer.WriteLine ("\tstatic {");
 
 			if (HasDynamicallyRegisteredMethods)
-				GenerateRegisterType (writer, this, "__md_methods", options);
+				GenerateRegisterType (writer, this, "__md_methods");
 
 			for (var i = 0; i < NestedTypes.Count; ++i)
-				GenerateRegisterType (writer, NestedTypes [i], $"__md_{i + 1}_methods", options);
+				GenerateRegisterType (writer, NestedTypes [i], $"__md_{i + 1}_methods");
 
 			writer.WriteLine ("\t}");
 		}
 	}
 
-	void GenerateBody (TextWriter sw, CallableWrapperWriterOptions options)
+	void GenerateBody (TextWriter sw)
 	{
 		foreach (var ctor in Constructors)
-			ctor.Generate (sw, options);
+			ctor.Generate (sw);
 
-		ApplicationConstructor?.Generate (sw, options);
+		ApplicationConstructor?.Generate (sw);
 
 		foreach (var field in Fields)
-			field.Generate (sw, options);
+			field.Generate (sw);
 
 		foreach (var method in Methods)
-			method.Generate (sw, options);
+			method.Generate (sw);
 
 		if (GenerateOnCreateOverrides && IsApplication && !Methods.Any (m => m.Name == "onCreate"))
-			WriteApplicationOnCreate (sw, options);
+			WriteApplicationOnCreate (sw);
 
 		if (GenerateOnCreateOverrides && IsInstrumentation && !Methods.Any (m => m.Name == "onCreate"))
-			WriteInstrumentationOnCreate (sw, options);
+			WriteInstrumentationOnCreate (sw);
 
 		sw.WriteLine ();
 		sw.WriteLine ("\tprivate java.util.ArrayList refList;");
@@ -189,12 +194,12 @@ public class CallableWrapperType
 		sw.WriteLine ("\t}");
 	}
 
-	void GenerateFooter (TextWriter sw, CallableWrapperWriterOptions options)
+	void GenerateFooter (TextWriter sw)
 	{
 		sw.WriteLine ("}");
 	}
 
-	void WriteApplicationOnCreate (TextWriter sw, CallableWrapperWriterOptions options)
+	void WriteApplicationOnCreate (TextWriter sw)
 	{
 		sw.WriteLine ();
 
@@ -211,7 +216,7 @@ public class CallableWrapperType
 		sw.WriteLine ("\t}");
 	}
 
-	void WriteInstrumentationOnCreate (TextWriter sw, CallableWrapperWriterOptions options)
+	void WriteInstrumentationOnCreate (TextWriter sw)
 	{
 		sw.WriteLine ();
 		sw.WriteLine ("\tpublic void onCreate (android.os.Bundle arguments)");
@@ -240,7 +245,7 @@ public class CallableWrapperType
 		sw.WriteLine ("\t}");
 	}
 
-	void GenerateRegisterType (TextWriter sw, CallableWrapperType self, string field, CallableWrapperWriterOptions options)
+	void GenerateRegisterType (TextWriter sw, CallableWrapperType self, string field)
 	{
 		if (!self.HasDynamicallyRegisteredMethods)
 			return;
@@ -287,8 +292,13 @@ public class CallableWrapperType
 
 	public void Generate (string outputPath, CallableWrapperWriterOptions options)
 	{
+		Generate (outputPath);
+	}
+
+	public void Generate (string outputPath)
+	{
 		using (StreamWriter sw = OpenStream (outputPath))
-			Generate (sw, options, false);
+			Generate (sw);
 	}
 
 	StreamWriter OpenStream (string outputPath)

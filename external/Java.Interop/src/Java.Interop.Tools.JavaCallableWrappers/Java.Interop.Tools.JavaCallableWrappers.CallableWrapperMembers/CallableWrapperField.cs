@@ -22,10 +22,15 @@ public class CallableWrapperField
 
 	public void Generate (TextWriter sw, CallableWrapperWriterOptions options)
 	{
+		Generate (sw);
+	}
+
+	public void Generate (TextWriter sw)
+	{
 		sw.WriteLine ();
 
 		foreach (var annotation in Annotations)
-			annotation.Generate (sw, "", options);
+			annotation.Generate (sw, "");
 
 		sw.Write ("\t");
 		sw.Write (Visibility);
