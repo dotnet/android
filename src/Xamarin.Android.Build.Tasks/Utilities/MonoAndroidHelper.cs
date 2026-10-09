@@ -11,7 +11,6 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
 using Xamarin.Android.Tools;
-using Java.Interop.Tools.JavaCallableWrappers;
 using Mono.Cecil;
 
 
@@ -730,15 +729,6 @@ namespace Xamarin.Android.Tasks
 				return AndroidRuntime.NativeAOT;
 
 			return AndroidRuntime.CoreCLR;
-		}
-
-		public static JavaPeerStyle ParseCodeGenerationTarget (string codeGenerationTarget)
-		{
-			if (Enum.TryParse (codeGenerationTarget, ignoreCase: true, out JavaPeerStyle style))
-				return style;
-
-			// Default is XAJavaInterop1
-			return JavaPeerStyle.XAJavaInterop1;
 		}
 
 		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
