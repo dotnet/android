@@ -162,7 +162,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (UseTypeMapProguardConfiguration) {
+				bool runtimeRemapping = string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase);
+				if (UseTypeMapProguardConfiguration && !runtimeRemapping) {
 					WriteArg (response, "--no-minification");
 				}
 				if (UseTypeMapProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
@@ -173,7 +174,7 @@ namespace Xamarin.Android.Tasks
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						appcfg.WriteLine ("# Class keep rules are generated from retained typemap keys.");
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
 				} else if (!UseTypeMapProguardConfiguration && !AcwMapFile.IsNullOrEmpty ()) {
@@ -185,18 +186,20 @@ namespace Xamarin.Android.Tasks
 					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 						// User-authored AndroidJavaSource (Bind != true) has no managed peer and is absent
 						// from the acw-map, so keep it explicitly; otherwise shrinking removes it.
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						WriteObfuscationRules (xamcfg, UseTypeMapProguardConfiguration ? "disabled" : ObfuscationMode);
+						WriteObfuscationRules (
+							xamcfg,
+							UseTypeMapProguardConfiguration && !runtimeRemapping ? "disabled" : ObfuscationMode);
 						xamcfg.WriteLine ();
 						xamcfg.Flush ();
 						if (UseTypeMapProguardConfiguration) {
@@ -260,11 +263,32 @@ namespace Xamarin.Android.Tasks
 			return responseFile;
 		}
 
+		internal string KeepOption => string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase) ? "-keep,allowobfuscation" : "-keep";
+
 		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
 		{
 			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
 				writer.WriteLine ("-dontobfuscate");
 				return;
+			}
+
+			if (string.Equals (obfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase)) {
+				// Keep names used by bootstrap JNI and resource/interface lookups that do not
+				// pass through the generated member-remapping tables.
+				writer.WriteLine ("-keep class mono.NativeLibraryHelper { *; <init>(...); }");
+				writer.WriteLine ("-keep class mono.android.Runtime { *; }");
+				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
+				writer.WriteLine ("-keepclassmembernames interface * { *; }");
+				writer.WriteLine ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }");
+				// JavaInterop1 binding field accessors use constant JNI identifiers without
+				// field-specific metadata, including when consumed by an XA-generated app.
+				writer.WriteLine ("-keepclassmembernames class * { <fields>; }");
+				writer.WriteLine ("-keepnames public class *");
+				writer.WriteLine ("-keepnames class **$*");
+				return;
+			}
+			if (!string.Equals (obfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {
+				throw new InvalidOperationException ($"Unsupported R8 obfuscation mode '{obfuscationMode}'.");
 			}
 
 			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");

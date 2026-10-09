@@ -1,0 +1,119 @@
+<!--
+  R8 runs once, after managed trimming. Its final mapping is converted to native JNI lookup
+  tables before native linking. Managed assemblies retain their original JNI names.
+-->
+<Project>
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <Target Name="_AndroidR8JniRemappingInputs">
+    <PropertyGroup>
+      <_AndroidR8JniTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_XamarinAndroidBuildTasksAssembly)'))</_AndroidR8JniTaskAssembly>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniRemappingInputs"
+      DependsOnTargets="_AndroidR8JniRemappingInputs;_ConvertAndroidMamMappingFileToXml;_AndroidPrepareR8JniRemappingAssemblies">
+    <PropertyGroup>
+      <_AndroidR8JniGeneratedRemappingXml>$(IntermediateOutputPath)r8-jni-generated-remap.xml</_AndroidR8JniGeneratedRemappingXml>
+      <_AndroidR8JniRemappingXml>$(IntermediateOutputPath)r8-jni-remap.xml</_AndroidR8JniRemappingXml>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniRemapping"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
+      DependsOnTargets="_AndroidGenerateR8JniRemappingInputs"
+      Inputs="$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);@(_AndroidR8JniRemappingAssembly);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Outputs="$(_AndroidR8JniGeneratedRemappingXml);$(_AndroidR8JniRemappingXml)">
+    <GenerateR8JniRemapping
+        MappingFile="$(_AndroidR8JniMappingFile)"
+        ExistingRemapXmlFiles="@(_AndroidRemapMembers)"
+        LinkedAssemblies="@(_AndroidR8JniRemappingAssembly)"
+        OutputFile="$(_AndroidR8JniGeneratedRemappingXml)" />
+    <MergeRemapXml
+        InputRemapXmlFiles="@(_AndroidRemapMembers);$(_AndroidR8JniGeneratedRemappingXml)"
+        OutputFile="$(_AndroidR8JniRemappingXml)" />
+    <Touch Files="$(_AndroidR8JniGeneratedRemappingXml);$(_AndroidR8JniRemappingXml)" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidR8JniGeneratedRemappingXml);$(_AndroidR8JniRemappingXml)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniRemappingNativeCode"
+      DependsOnTargets="_AndroidGenerateR8JniRemapping;_PrepareAndroidRemapNativeAssemblySources"
+      Inputs="$(_AndroidR8JniRemappingXml);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Outputs="@(_AndroidRemapAssemblySource)">
+    <GenerateJniRemappingNativeCode
+        OutputDirectory="$(_NativeAssemblySourceDir)"
+        RemappingXmlFilePath="$(_AndroidR8JniRemappingXml)"
+        SupportedAbis="@(_BuildTargetAbis)" />
+    <Touch Files="@(_AndroidRemapAssemblySource)" />
+    <ItemGroup>
+      <FileWrites Include="@(_AndroidRemapAssemblySource)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- ILC has already emitted external lookup calls. Only its surviving JNI literals select
+       the per-RID table; generating or relinking this table never recompiles managed code. -->
+  <Target Name="_AndroidGenerateNativeAotR8RemappingInputs"
+      DependsOnTargets="_AndroidR8JniRemappingInputs;_ConvertAndroidMamMappingFileToXml;_PrepareNativeAotAndroidAppInputs">
+    <PropertyGroup>
+      <_AndroidNativeAotR8RemappingDirectory>$(NativeIntermediateOutputPath)jni-remap/</_AndroidNativeAotR8RemappingDirectory>
+      <_AndroidNativeAotR8GeneratedRemappingXml>$(_AndroidNativeAotR8RemappingDirectory)r8-jni-generated-remap.xml</_AndroidNativeAotR8GeneratedRemappingXml>
+      <_AndroidNativeAotR8RemappingXml>$(_AndroidNativeAotR8RemappingDirectory)r8-jni-remap.xml</_AndroidNativeAotR8RemappingXml>
+    </PropertyGroup>
+    <PrepareAbiItems
+        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
+        NativeSourcesDir="$(_AndroidNativeAotR8RemappingDirectory)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="jniremap">
+      <Output TaskParameter="AssemblySources" ItemName="_AndroidNativeAotR8RemappingSource" />
+    </PrepareAbiItems>
+    <ItemGroup>
+      <_AndroidNativeAotR8RemappingObject Include="@(_AndroidNativeAotR8RemappingSource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_AndroidNativeAotR8RemappingSource.abi)</abi>
+      </_AndroidNativeAotR8RemappingObject>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotR8Remapping"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
+      DependsOnTargets="_AndroidGenerateNativeAotR8RemappingInputs"
+      Inputs="$(NativeObject);$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Outputs="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)">
+    <GenerateR8JniRemapping
+        MappingFile="$(_AndroidR8JniMappingFile)"
+        ExistingRemapXmlFiles="@(_AndroidRemapMembers)"
+        NativeAot="true"
+        NativeAotObjectFile="$(NativeObject)"
+        OutputFile="$(_AndroidNativeAotR8GeneratedRemappingXml)" />
+    <MergeRemapXml
+        InputRemapXmlFiles="@(_AndroidRemapMembers);$(_AndroidNativeAotR8GeneratedRemappingXml)"
+        OutputFile="$(_AndroidNativeAotR8RemappingXml)" />
+    <Touch Files="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidCompileNativeAotR8Remapping"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
+      DependsOnTargets="_AndroidGenerateNativeAotR8Remapping"
+      Inputs="$(_AndroidNativeAotR8RemappingXml);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache)"
+      Outputs="@(_AndroidNativeAotR8RemappingSource);@(_AndroidNativeAotR8RemappingObject)">
+    <GenerateJniRemappingNativeCode
+        RemappingXmlFilePath="$(_AndroidNativeAotR8RemappingXml)"
+        OutputDirectory="$(_AndroidNativeAotR8RemappingDirectory)"
+        SupportedAbis="@(_PrivateBuildTargetAbi)" />
+    <CompileNativeAssembly
+        Sources="@(_AndroidNativeAotR8RemappingSource)"
+        DebugBuild="$(AndroidIncludeDebugSymbols)"
+        WorkingDirectory="$(_AndroidNativeAotR8RemappingDirectory)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
+    <Touch Files="@(_AndroidNativeAotR8RemappingSource)" />
+    <ItemGroup>
+      <FileWrites Include="@(_AndroidNativeAotR8RemappingSource);@(_AndroidNativeAotR8RemappingObject)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

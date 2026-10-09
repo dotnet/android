@@ -41,7 +41,8 @@ public class TypeMapProguardTargetsTests : BaseTest
 				new XElement ("_AndroidUseTypeMapProguardConfiguration", typemap),
 				new XElement ("AndroidR8ObfuscationMode", obfuscation),
 				new XElement ("AndroidLinkTool", "r8"),
-				new XElement ("IntermediateOutputPath", "obj/")),
+				new XElement ("IntermediateOutputPath", "obj/"),
+				new XElement ("_ProguardProjectConfiguration", "obj/proguard/proguard_project_references.cfg")),
 			target,
 			new XElement ("Target", new XAttribute ("Name", "Build"), new XAttribute ("DependsOnTargets", "_CalculateProguardConfigurationFiles"),
 				new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/configurations.txt"),
@@ -51,8 +52,59 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var configurations = File.ReadAllLines (Path.Combine (directory, "configurations.txt"));
 		Assert.AreEqual (1, configurations.Count (path => Path.GetFileName (path).StartsWith ("proguard-android", StringComparison.Ordinal)));
 		Assert.IsTrue (configurations.Any (path => Path.GetFileName (path) == expected));
+		var generatedReferenceConfiguration = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
+		Directory.CreateDirectory (Path.GetDirectoryName (generatedReferenceConfiguration) ?? throw new InvalidOperationException ());
+		File.WriteAllText (generatedReferenceConfiguration, "rules");
 		Build (project, "-p:ProguardConfigFiles=custom.cfg");
-		CollectionAssert.AreEqual (new [] { "custom.cfg" }, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
+		AssertPathsAreEqual (new [] {
+			"custom.cfg",
+			Path.Combine ("obj", "proguard", "proguard_xamarin.cfg"),
+			Path.Combine ("obj", "proguard", "proguard_project_references.cfg"),
+			Path.Combine ("obj", "proguard", "proguard_project_primary.cfg"),
+		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
+		File.Delete (generatedReferenceConfiguration);
+		Build (project, "-p:ProguardConfigFiles=custom.cfg");
+		AssertPathsAreEqual (new [] {
+			"custom.cfg",
+			Path.Combine ("obj", "proguard", "proguard_xamarin.cfg"),
+			Path.Combine ("obj", "proguard", "proguard_project_primary.cfg"),
+		}, File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
+	}
+
+	void AssertPathsAreEqual (string [] expected, string [] actual)
+	{
+		CollectionAssert.AreEqual (
+			expected.Select (path => Path.GetFullPath (path, directory)),
+			actual.Select (path => Path.GetFullPath (path, directory)));
+	}
+
+	[Test]
+	public void ProguardCleanDirectoryConditionParsesAndRuns ()
+	{
+		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		var cleanTarget = source.Descendants ()
+			.Single (element => element.Name.LocalName == "Target" && (string?) element.Attribute ("Name") == "_CleanMonoAndroidIntermediateDir");
+		var propertyGroup = new XElement (cleanTarget.Elements ().Single (element => element.Name.LocalName == "PropertyGroup"));
+		var removeDirectory = new XElement (cleanTarget.Elements ().Single (element =>
+			element.Name.LocalName == "RemoveDirFixed" &&
+			((string?) element.Attribute ("Directories"))?.Contains ("_AndroidProguardIntermediateDirectory", StringComparison.Ordinal) == true));
+		removeDirectory.Name = "RemoveDir";
+		foreach (var element in propertyGroup.DescendantsAndSelf ().Concat (removeDirectory.DescendantsAndSelf ())) {
+			element.Name = element.Name.LocalName;
+		}
+		var project = Path.Combine (directory, "clean.proj");
+		var intermediate = Path.Combine (directory, "obj") + Path.DirectorySeparatorChar;
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup", new XElement ("IntermediateOutputPath", intermediate)),
+			new XElement ("Target", new XAttribute ("Name", "Build"), propertyGroup, removeDirectory)))
+			.Save (project);
+
+		Build (project);
+		var proguardDirectory = Path.Combine (intermediate, "proguard");
+		Directory.CreateDirectory (proguardDirectory);
+		File.WriteAllText (Path.Combine (proguardDirectory, "rules.cfg"), "rules");
+		Build (project);
+		DirectoryAssert.DoesNotExist (proguardDirectory);
 	}
 
 	[Test]
@@ -483,9 +535,11 @@ public class TypeMapProguardTargetsTests : BaseTest
 				new XElement (ns + "AndroidLinkTool", "r8"),
 				new XElement (ns + "RunILLink", runILLink),
 				new XElement (ns + "_AndroidEnableTypemapR8Trimming", enabled),
+				new XElement (ns + "_ComputeFilesToPublishForRuntimeIdentifiers", "true"),
 				new XElement (ns + "_ProguardProjectConfiguration", output),
 				new XElement (ns + "_GenerateProguardAfterTargets", "ComputeFilesToPublish")),
 			new XElement (ns + "ItemGroup", new XElement (ns + "ResolvedFileToPublish", new XAttribute ("Include", assembly))),
+			new XElement (ns + "Target", new XAttribute ("Name", "_AndroidInvalidateProguardConfigurationStamp")),
 			prepare, generate,
 			new XElement (ns + "Target", new XAttribute ("Name", "ComputeFilesToPublish")),
 			new XElement (ns + "Target", new XAttribute ("Name", "Build"),

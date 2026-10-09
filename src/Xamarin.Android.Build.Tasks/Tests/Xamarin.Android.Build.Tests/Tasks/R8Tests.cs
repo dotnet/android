@@ -79,6 +79,61 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
 		}
 
+		[Test]
+		public void WriteRuntimeRemappingRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "runtime-remapping");
+
+			var rules = writer.ToString ();
+			StringAssert.DoesNotContain ("-dontobfuscate", rules);
+			StringAssert.Contains ("-keepclassmembernames interface * { *; }", rules);
+			StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", rules);
+			StringAssert.Contains ("-keep class mono.android.Runtime { *; }", rules);
+		}
+
+		[Test]
+		public void RuntimeRemappingKeepsAcwsRenameable ()
+		{
+			var task = new R8 {
+				ObfuscationMode = "runtime-remapping",
+			};
+
+			Assert.AreEqual ("-keep,allowobfuscation", task.KeepOption);
+		}
+
+		[Test]
+		public void RuntimeRemappingDoesNotDisableTypeMapMinification ()
+		{
+			var directory = Path.Combine (Path.GetTempPath (), "R8RuntimeRemapping_" + System.Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (directory);
+			try {
+				var source = Path.Combine (directory, "UserSource.java");
+				File.WriteAllText (source, "package example;\npublic class UserSource {}");
+				var task = new R8ResponseTestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					UseTypeMapProguardConfiguration = true,
+					UseScopedTypeMapMembers = true,
+					EnableShrinking = true,
+					ObfuscationMode = "runtime-remapping",
+					JavaSourceFiles = [new TaskItem (source)],
+					JavaPlatformJarPath = Path.Combine (directory, "android.jar"),
+					ProguardGeneratedApplicationConfiguration = Path.Combine (directory, "primary.cfg"),
+					ProguardCommonXamarinConfiguration = Path.Combine (directory, "common.cfg"),
+					ResponseFile = Path.Combine (directory, "r8.rsp"),
+				};
+
+				var response = task.WriteResponse ();
+				StringAssert.DoesNotContain ("--no-minification", response);
+				StringAssert.Contains ("-keep,allowobfuscation class example.UserSource { *; }", File.ReadAllText (task.ProguardGeneratedApplicationConfiguration));
+				var common = File.ReadAllText (task.ProguardCommonXamarinConfiguration);
+				StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", common);
+				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }", common);
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public void RetainedTypeMapRulesDoNotRootAllAcwsOrObfuscatePrivateMembers (bool scopedMembers)
