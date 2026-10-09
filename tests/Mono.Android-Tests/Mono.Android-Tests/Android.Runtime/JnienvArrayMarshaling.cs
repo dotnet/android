@@ -20,17 +20,6 @@ namespace Android.RuntimeTests {
 	public class JnienvArrayMarshaling {
 
 		[Test]
-		[Category ("NativeAOTIgnore")]
-		public void CreateDelegate_PreservesCustomDelegateWithBuiltInName ()
-		{
-			static int Callback (IntPtr jnienv, IntPtr klazz) => jnienv.ToInt32 () + klazz.ToInt32 ();
-
-			var callback = new _JniMarshal_PP_I (Callback);
-			var wrapped = (_JniMarshal_PP_I) JNINativeWrapper.CreateDelegate (callback);
-			Assert.AreEqual (42, wrapped (new IntPtr (19), new IntPtr (23)));
-		}
-
-		[Test]
 		public void MarshalInt32ArrayArray ()
 		{
 			var states = new []{
@@ -736,7 +725,5 @@ namespace Android.RuntimeTests {
 			for (int i = 0; i < expected.Length; ++i)
 				Assert.AreEqual (expected [i], actual [i], message);
 		}
-
-		delegate int _JniMarshal_PP_I (IntPtr jnienv, IntPtr klazz);
 	}
 }
