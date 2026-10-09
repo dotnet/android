@@ -289,10 +289,13 @@ namespace Microsoft.Android.Tasks.JniRemapping
 
 		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, string originalJavaReturnType, out string originalMethodName)
 		{
-			originalMethodName = "";
-			return originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
-					classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out originalMethodName) &&
-					originalMethodName.Length != 0;
+			string? methodName = null;
+			bool result = originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
+					classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out methodName) &&
+					methodName?.Length != 0;
+
+			originalMethodName = result && methodName is not null ? methodName : "";
+			return result;
 		}
 
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
