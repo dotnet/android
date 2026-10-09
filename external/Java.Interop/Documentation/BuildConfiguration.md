@@ -28,22 +28,6 @@ Overridable MSBuild properties include:
     This value should be a full path.
     By default this is `$(MSBuildThisFileDirectory)bin/$(Configuration)`.
 
-## Native source validation
-
-`src/java-interop/java-interop.csproj` builds the `java-interop-validation`
-static library with CMake to validate the shared dynamic-loading, utility, and
-core native sources on supported Windows, macOS, and Linux hosts. It requires
-a host C/C++ toolchain and CMake, but no Mono runtime pack or Mono headers.
-From the enclosing dotnet/android repository, run:
-
-```sh
-dotnet build external/Java.Interop/src/java-interop/java-interop.csproj
-```
-
-The archive is written to the project's configuration/framework-specific
-intermediate directory (`obj/Debug/net10.0` by default). An unchanged build skips
-native compilation; `dotnet clean` removes the validation archive.
-
 ## Native registration
 
 `JniAddNativeMethodRegistrationAttribute` is obsolete and has no effect. It
