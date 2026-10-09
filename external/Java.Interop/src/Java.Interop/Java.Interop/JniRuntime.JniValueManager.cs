@@ -298,16 +298,6 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null);
 
-			internal Type? GetRuntimeType (JniObjectReference reference)
-			{
-				if (!reference.IsValid)
-					return null;
-				JniTypeSignature signature;
-				if (!JniTypeSignature.TryParse (JniEnvironment.Types.GetJniTypeNameFromInstance (reference)!, out signature))
-					return null;
-				return Runtime.TypeManager.GetType (signature);
-			}
-
 			public JniValueMarshaler GetValueMarshaler (Type type) => GetValueMarshalerCore (type);
 			protected abstract JniValueMarshaler GetValueMarshalerCore (Type type);
 
