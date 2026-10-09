@@ -25,6 +25,6 @@ namespace Java.InteropTests
 		{
 			return new JavaInt16Array (length);
 		}
-
 	}
 }
+
