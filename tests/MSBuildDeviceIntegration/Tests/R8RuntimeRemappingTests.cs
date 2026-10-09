@@ -14,7 +14,7 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class R8RuntimeRemappingTests : DeviceTest
 	{
-		void AssertR8Invocations (ProjectBuilder builder, int expected, bool obfuscationEnabled = true)
+		void AssertR8Invocations (ProjectBuilder builder, int expected, AndroidRuntime runtime, bool obfuscationEnabled = true)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 			var build = BinaryLog.ReadBuild (binlog);
@@ -24,10 +24,18 @@ namespace Xamarin.Android.Build.Tests
 			if (expected != 1 || !obfuscationEnabled) {
 				return;
 			}
-			foreach (var trimming in build.FindChildrenRecursive<Target> (t => t.Name == "_RunILLink" || t.Name == "IlcCompile")) {
+			string trimTargetName = runtime == AndroidRuntime.NativeAOT ? "IlcCompile" : "_RunILLink";
+			var trimmingTargets = build.FindChildrenRecursive<Target> (t => t.Name == trimTargetName).ToList ();
+			Assert.IsNotEmpty (trimmingTargets, $"Expected the {trimTargetName} target before R8.");
+			foreach (var trimming in trimmingTargets) {
 				Assert.LessOrEqual (trimming.EndTime, r8 [0].StartTime, "R8 must run after managed trimming/ILC.");
 			}
-			foreach (var link in tasks.Where (t => t.Name == "LinkNativeRuntime" || t.Name == "LinkApplicationSharedLibraries" || t.Name == "LinkNativeAotSharedLibrary")) {
+			var nativeLinkTasks = tasks.Where (t =>
+				runtime == AndroidRuntime.NativeAOT
+					? t.Name == "LinkNativeAotSharedLibrary"
+					: t.Name == "LinkNativeRuntime" || t.Name == "LinkApplicationSharedLibraries").ToList ();
+			Assert.IsNotEmpty (nativeLinkTasks, "Expected the final native link after R8.");
+			foreach (var link in nativeLinkTasks) {
 				Assert.GreaterOrEqual (link.StartTime, r8 [0].EndTime, "Native linking must consume the final R8 mapping.");
 			}
 		}
@@ -149,7 +157,7 @@ namespace Xamarin.Android.Build.Tests
 					timeout: 30), "Constructors, overloads, fields, and peer return values should work.");
 			}
 			Assert.IsTrue (builder.Install (proj), "Obfuscated app should build and install.");
-			AssertR8Invocations (builder, 1);
+			AssertR8Invocations (builder, 1, runtime);
 			try {
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 				var remapFiles = Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories);
@@ -157,6 +165,7 @@ namespace Xamarin.Android.Build.Tests
 				var elements = remapFiles.SelectMany (file => XDocument.Load (file).Root.Elements ()).ToList ();
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-method" &&
 					(string) e.Attribute ("source-method-name") == "add" &&
+					(string) e.Attribute ("source-method-signature") == "(I)I" &&
 					(string) e.Attribute ("target-method-name") != "add"), "The exercised methods must really be obfuscated.");
 				Assert.IsFalse (elements.Any (e => e.Name == "replace-field" &&
 					((string) e.Attribute ("source-field-name") == "value" ||
@@ -180,7 +189,7 @@ namespace Xamarin.Android.Build.Tests
 				AssertAppRuns ("r8-runtime-remap.log");
 
 				Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
-				AssertR8Invocations (builder, 0);
+				AssertR8Invocations (builder, 0, runtime);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"));
 
 				if (runtime == AndroidRuntime.NativeAOT) {
@@ -188,7 +197,7 @@ namespace Xamarin.Android.Build.Tests
 					FileAssert.Exists (aaptRules);
 					var originalAaptRules = File.ReadAllText (aaptRules);
 					Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
-					AssertR8Invocations (builder, 0);
+					AssertR8Invocations (builder, 0, runtime);
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8Remapping"));
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidCompileNativeAotR8Remapping"));
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"));
@@ -200,7 +209,7 @@ namespace Xamarin.Android.Build.Tests
 					var remapObject = Directory.GetFiles (intermediate, $"jni_remap.{DeviceAbi}.o", SearchOption.AllDirectories).Single ();
 					File.Delete (remapObject);
 					Assert.IsTrue (builder.Build (proj), "A missing remapping object should be regenerated.");
-					AssertR8Invocations (builder, 0);
+					AssertR8Invocations (builder, 0, runtime);
 					FileAssert.Exists (remapObject);
 					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the late-linked table must not recompile IL.");
 					Assert.IsFalse (builder.Output.IsTargetSkipped ("_AndroidCompileNativeAotR8Remapping"));
@@ -208,7 +217,7 @@ namespace Xamarin.Android.Build.Tests
 
 					File.Delete (aaptRules);
 					Assert.IsTrue (builder.Build (proj), "Missing resource keep rules should be regenerated.");
-					AssertR8Invocations (builder, 1);
+					AssertR8Invocations (builder, 1, runtime);
 					FileAssert.Exists (aaptRules);
 					Assert.AreEqual (originalAaptRules, File.ReadAllText (aaptRules));
 					Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreateBaseApk"));
@@ -218,18 +227,29 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (finalMapping);
 				File.Delete (finalMapping);
 				Assert.IsTrue (builder.Build (proj), "A missing final mapping must rerun R8, not reuse stale tables.");
-				AssertR8Invocations (builder, 1);
+				AssertR8Invocations (builder, 1, runtime);
 				FileAssert.Exists (finalMapping);
 
-				extraRules = "-keepclassmembernames class example.RuntimePeer { public int value; }";
+				extraRules = "-keepclassmembernames class example.RuntimePeer { public int add(int); }";
 				proj.Touch ("r8-custom.pro");
 				Assert.IsTrue (builder.Install (proj), "Changed R8 rules must update the late-linked tables.");
-				AssertR8Invocations (builder, 1);
+				AssertR8Invocations (builder, 1, runtime);
+				var changedElements = Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories)
+					.SelectMany (file => XDocument.Load (file).Root.Elements ()).ToList ();
+				Assert.IsFalse (changedElements.Any (e => e.Name == "replace-method" &&
+					(string) e.Attribute ("source-method-name") == "add" &&
+					(string) e.Attribute ("source-method-signature") == "(I)I"),
+					"The changed rule should remove the int overload's remapping entry.");
+				Assert.IsTrue (changedElements.Any (e => e.Name == "replace-method" &&
+					(string) e.Attribute ("source-method-name") == "add" &&
+					(string) e.Attribute ("source-method-signature") == "(Ljava/lang/String;)I" &&
+					(string) e.Attribute ("target-method-name") != "add"),
+					"The other exercised overload should remain remapped.");
 				AssertAppRuns ("r8-changed-rules.log");
 
 				proj.SetProperty ("AndroidR8ObfuscationMode", "disabled");
 				Assert.IsTrue (builder.Install (proj), "Disabling obfuscation should rebuild and install the baseline.");
-				AssertR8Invocations (builder, 1, obfuscationEnabled: false);
+				AssertR8Invocations (builder, 1, runtime, obfuscationEnabled: false);
 				StringAssert.Contains ("-dontobfuscate", File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
 				AssertAppRuns ("r8-disabled.log");
 			} finally {
