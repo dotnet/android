@@ -1179,7 +1179,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <value>Свойство MSBuild "AndroidEnableMarshalMethods" больше не поддерживается. Удалите его или присвойте ему значение false.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
@@ -1188,7 +1188,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
-    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <value>Элемент MSBuild AndroidStaticJniInitFunction не поддерживается в NativeAOT. Удалите его из проекта или используйте совместимую с NativeAOT версию библиотеки, которая его добавляет.</value>
     <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">

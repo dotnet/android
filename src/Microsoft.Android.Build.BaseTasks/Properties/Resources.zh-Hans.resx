@@ -102,7 +102,7 @@
     <comment>{0} - The exception message of the associated exception</comment>
   </data>
   <data name="UnsafeArchiveEntry" xml:space="preserve">
-    <value>Archive entry '{0}' cannot be extracted safely beneath destination directory '{1}'.</value>
+    <value>无法将存档条目“{0}”安全地提取到目标目录“{1}”下。</value>
     <comment>{0} - The archive entry or relative output path; {1} - The destination directory.</comment>
   </data>
 </root>

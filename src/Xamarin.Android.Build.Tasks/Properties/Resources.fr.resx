@@ -1179,7 +1179,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <value>La propriété MSBuild « AndroidEnableMarshalMethods » n’est plus prise en charge. Supprimez-la ou définissez-la sur « false ».</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
@@ -1188,7 +1188,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
-    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <value>L’élément MSBuild AndroidStaticJniInitFunction n’est pas pris en charge avec NativeAOT. Supprimez-le du projet ou utilisez une version compatible avec NativeAOT de la bibliothèque qui l’ajoute.</value>
     <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
