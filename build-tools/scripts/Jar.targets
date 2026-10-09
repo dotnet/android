@@ -12,7 +12,7 @@
       <_RuntimeJar_InTree>$([System.IO.Path]::GetFullPath ('$(XAInstallPrefix)'))\xbuild\Xamarin\Android\java_runtime.jar</_RuntimeJar_InTree>
       <_RuntimeJar_System Condition=" '$(_XamarinAndroidMSBuildDirectory)' != '' ">$(_XamarinAndroidMSBuildDirectory)\java_runtime.jar</_RuntimeJar_System>
       <_JavaRuntimeJarPath Condition=" Exists($(_RuntimeJar_InTree)) ">$(_RuntimeJar_InTree)</_JavaRuntimeJarPath>
-      <_JavaRuntimeJarPath Condition=" '$(_JavaRuntimeJarPath)' == '' ">$(_RuntimeJar_System)</_JavaRuntimeJarPath>
+      <_JavaRuntimeJarPath Condition=" '$(_JavaRuntimeJarPath)' == '' and Exists($(_RuntimeJar_System)) ">$(_RuntimeJar_System)</_JavaRuntimeJarPath>
     </PropertyGroup>
     <Error
         Condition=" '$(_JavaRuntimeJarPath)' == '' "
