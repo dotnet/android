@@ -39,9 +39,20 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("JniPrimitiveArrayBounds")]
 		public void GetElements ()
 		{
 			var a = (TArray) CreateCollection (new[]{FromInt32 ('A')});
+			Assert.AreEqual (CreateValueA (), a [0]);
+			Assert.Catch<ArgumentException> (() => {
+				var _ = a [-1];
+			});
+			Assert.Catch<ArgumentException> (() => {
+				var _ = a [1];
+			});
+			Assert.Catch<ArgumentException> (() => {
+				var _ = a [2];
+			});
 			JniArrayElements e;
 			using (e = a.GetElements ()) {
 				if (e == null) // OOM?
@@ -68,9 +79,19 @@ namespace Java.InteropTests
 		//  (Alas, on OpenJDK JNIEnv::Get<Type>ArrayElements() returns a non-NULL pointer
 		//   when the array is empty, so we'll need to run this on Android.)
 		[Test]
+		[Category ("JniPrimitiveArrayBounds")]
 		public void GetElements_EmptyArray ()
 		{
 			var a = (TArray) CreateCollection (new TElement[0]);
+			Assert.Catch<ArgumentException> (() => {
+				var _ = a [-1];
+			});
+			Assert.Catch<ArgumentException> (() => {
+				var _ = a [0];
+			});
+			Assert.Catch<ArgumentException> (() => {
+				var _ = a [1];
+			});
 			JniArrayElements e;
 			using (e = a.GetElements ()) {
 				if (e == null)
