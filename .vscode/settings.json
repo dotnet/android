@@ -4,4 +4,5 @@
     ],
     "cmake.configureOnOpen": false,
     "dotnetCoreExplorer.searchpatterns": "bin/Test{Debug}/**/net?.0/{Xamarin.Android.Build.Tests,MSBuildDeviceIntegration,Microsoft.Android.Sdk.Analysis.Tests}.dll",
+    "dotnet.defaultSolution": "Microsoft.Android.slnx",
 }
