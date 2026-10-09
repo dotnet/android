@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tasks.JniRemapping;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -14,6 +15,32 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class R8RuntimeRemappingTests : DeviceTest
 	{
+		static bool ContainsField (string [] dexDump, string owner, string name, string signature)
+		{
+			bool inClass = false;
+			bool hasName = false;
+			foreach (var line in dexDump) {
+				var separator = line.IndexOf (':');
+				if (separator < 0) {
+					continue;
+				}
+				var key = line.Substring (0, separator).Trim ();
+				var value = line.Substring (separator + 1).Trim ();
+				if (key == "Class descriptor") {
+					inClass = value == $"'L{owner};'";
+					hasName = false;
+				} else if (inClass && key == "name") {
+					hasName = value == $"'{name}'";
+				} else if (hasName && key == "type") {
+					if (value == $"'{signature}'") {
+						return true;
+					}
+					hasName = false;
+				}
+			}
+			return false;
+		}
+
 		void AssertR8Invocations (ProjectBuilder builder, int expected, AndroidRuntime runtime, bool obfuscationEnabled = true)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
@@ -63,6 +90,9 @@ namespace Xamarin.Android.Build.Tests
 							public class RuntimePeer {
 								public int value = 7;
 								public static int staticValue = 11;
+								public int inheritedValue = 19;
+								public static int inheritedStaticValue = 23;
+								public int rawValue = 53;
 								public RuntimePeer () {}
 								public RuntimePeer echo (RuntimePeer other) { return other; }
 								public static RuntimePeer create () { return new RuntimePeer (); }
@@ -90,7 +120,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
 			proj.SetProperty ("ProguardConfigFiles", "r8-custom.pro");
-			string extraRules = "";
+			const string rawFieldRules = "-keepclassmembers class example.RuntimePeer { public int rawValue; }";
+			string extraRules = rawFieldRules;
 			proj.OtherBuildItems.Add (new BuildItem ("None", "r8-custom.pro") {
 				TextContent = () => extraRules,
 			});
@@ -118,6 +149,18 @@ namespace Xamarin.Android.Build.Tests
 							set => _members.InstanceFields.SetValue ("hiddenValue.I", this, value);
 						}
 
+						[Register ("inheritedValue")]
+						public int InheritedValue {
+							get => _members.InstanceFields.GetInt32Value ("inheritedValue.I", this);
+							set => _members.InstanceFields.SetValue ("inheritedValue.I", this, value);
+						}
+
+						[Register ("inheritedStaticValue")]
+						public static int InheritedStaticValue {
+							get => _members.StaticFields.GetInt32Value ("inheritedStaticValue.I");
+							set => _members.StaticFields.SetValue ("inheritedStaticValue.I", value);
+						}
+
 						[Register ("hiddenAdd", "()I", "")]
 						public unsafe int HiddenAdd () => _members.InstanceMethods.InvokeVirtualInt32Method ("hiddenAdd.()I", this, null);
 
@@ -137,12 +180,30 @@ namespace Xamarin.Android.Build.Tests
 				var boundHidden = (HiddenPeerBinding) hidden;
 				boundHidden.HiddenValue = 29;
 				if (peer.Add (2) != 15 || peer.Add ("abc") != 16 ||
-						Example.RuntimePeer.StaticValue != 17 || echoed.Value != 7 ||
+						peer.Value != 13 || Example.RuntimePeer.StaticValue != 17 || echoed.Value != 7 ||
 						boundHidden.HiddenAdd () != 31 || constructedHidden.HiddenValue != 23 ||
 						boundHidden.Add (1) != 8 ||
 						echoed.GetType () != typeof (Example.RuntimePeer) ||
 						hidden.GetType () != HiddenPeerBinding.GetBindingType ())
 					throw new InvalidOperationException ("Obfuscated JNI lookup returned an incorrect value or managed type.");
+				boundHidden.InheritedValue = 37;
+				HiddenPeerBinding.InheritedStaticValue = 41;
+				if (boundHidden.InheritedValue != 37 || HiddenPeerBinding.InheritedStaticValue != 41)
+					throw new InvalidOperationException ("Inherited field reads or writes failed.");
+				var klass = Android.Runtime.JNIEnv.GetObjectClass (peer.Handle);
+				try {
+					var instanceField = Android.Runtime.JNIEnv.GetFieldID (klass, "rawValue", "I");
+					Android.Runtime.JNIEnv.SetField (peer.Handle, instanceField, 71);
+					if (Android.Runtime.JNIEnv.GetIntField (peer.Handle, instanceField) != 71)
+						throw new InvalidOperationException ("Raw JNI field reads or writes failed.");
+				} finally {
+					Android.Runtime.JNIEnv.DeleteLocalRef (klass);
+				}
+				using var peerClass = peer.Class;
+				using var reflectedField = peerClass.GetDeclaredField ("rawValue");
+				reflectedField.SetInt (peer, 79);
+				if (reflectedField.GetInt (peer) != 79)
+					throw new InvalidOperationException ("Reflection field reads or writes failed.");
 				Console.WriteLine ("R8_RUNTIME_REMAP_SUCCESS");
 				""");
 
@@ -167,13 +228,50 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("source-method-name") == "add" &&
 					(string) e.Attribute ("source-method-signature") == "(I)I" &&
 					(string) e.Attribute ("target-method-name") != "add"), "The exercised methods must really be obfuscated.");
-				Assert.IsFalse (elements.Any (e => e.Name == "replace-field" &&
-					((string) e.Attribute ("source-field-name") == "value" ||
-						(string) e.Attribute ("source-field-name") == "staticValue" ||
-						(string) e.Attribute ("source-field-name") == "hiddenValue")),
-					"Fields with stable names and signatures do not need member remapping entries.");
-				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }",
-					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
+				var finalMapping = Path.Combine (intermediate, "r8-jni-final-mapping.txt");
+				FileAssert.Exists (finalMapping);
+				var mapping = R8Mapping.Load (finalMapping);
+				var dexDumps = Directory.GetFiles (intermediate, "classes*.dex", SearchOption.AllDirectories)
+					.Select (file => DexUtils.GetDexDump (file, AndroidSdkPath).ToArray ()).ToArray ();
+				Assert.IsNotEmpty (dexDumps, "Field assertions must inspect actual DEX output.");
+				foreach (var (owner, name) in new [] {
+					("example/RuntimePeer", "value"),
+					("example/RuntimePeer", "staticValue"),
+					("example/RuntimePeer", "inheritedValue"),
+					("example/RuntimePeer", "inheritedStaticValue"),
+					("example/HiddenPeer", "hiddenValue"),
+				}) {
+					Assert.IsTrue (mapping.TryGetRenamedClass (owner, out var renamedOwner));
+					var renamedField = name;
+					if (runtime == AndroidRuntime.NativeAOT) {
+						Assert.IsTrue (mapping.TryGetRenamedField (owner, name, out renamedField));
+						Assert.AreNotEqual (name, renamedField, $"{owner}.{name} must really be obfuscated.");
+						Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
+							(string) e.Attribute ("source-type") == renamedOwner &&
+							(string) e.Attribute ("source-field-name") == name &&
+							(string) e.Attribute ("source-field-signature") == "I" &&
+							(string) e.Attribute ("target-field-name") == renamedField),
+							$"{owner}.{name} must survive retention in the runtime remapping table.");
+						Assert.IsFalse (dexDumps.Any (dump => ContainsField (dump, renamedOwner, name, "I")),
+							$"DEX must not contain the original name {renamedOwner}.{name}.");
+					}
+					Assert.IsTrue (dexDumps.Any (dump => ContainsField (dump, renamedOwner, renamedField, "I")),
+						$"DEX must contain mapped field {renamedOwner}.{renamedField}.");
+					TestContext.WriteLine ($"Field mapping: {owner}.{name}:I -> {renamedOwner}.{renamedField}:I");
+				}
+				Assert.IsTrue (dexDumps.Any (dump => ContainsField (dump, "example/RuntimePeer", "rawValue", "I")),
+					"Explicit keep rules must protect constant-name JNI/reflection access.");
+				Assert.IsTrue (dexDumps.Any (dump => ContainsField (dump,
+					"net/dot/android/ApplicationRegistration", "Context", "Landroid/content/Context;")),
+					"Application.Context uses a constant-name raw JNI field lookup.");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					Assert.IsTrue (dexDumps.Any (dump => ContainsField (dump,
+						"net/dot/jni/nativeaot/NativeAotEnvironmentVars", "systemProperties", "[Ljava/lang/String;")),
+						"The native bootstrap must read systemProperties before runtime remapping is available.");
+				}
+				Assert.AreEqual (runtime == AndroidRuntime.CoreCLR,
+					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg"))
+						.Contains ("-keepclassmembernames class * { <fields>; }", StringComparison.Ordinal));
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
 					(string) e.Attribute ("from") == "example/HiddenPeer" &&
 					(string) e.Attribute ("to") != "example/HiddenPeer"), "Java-to-managed activation must exercise a genuinely renamed class.");
@@ -223,15 +321,15 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreateBaseApk"));
 				}
 
-				var finalMapping = Path.Combine (intermediate, "r8-jni-final-mapping.txt");
-				FileAssert.Exists (finalMapping);
 				File.Delete (finalMapping);
 				Assert.IsTrue (builder.Build (proj), "A missing final mapping must rerun R8, not reuse stale tables.");
 				AssertR8Invocations (builder, 1, runtime);
 				FileAssert.Exists (finalMapping);
 
-				extraRules = "-keepclassmembernames class example.RuntimePeer { public int add(int); }";
+				extraRules = rawFieldRules + Environment.NewLine +
+					"-keepclassmembernames class example.RuntimePeer { public int add(int); }";
 				proj.Touch ("r8-custom.pro");
+				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 				Assert.IsTrue (builder.Install (proj), "Changed R8 rules must update the late-linked tables.");
 				AssertR8Invocations (builder, 1, runtime);
 				var changedElements = Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories)

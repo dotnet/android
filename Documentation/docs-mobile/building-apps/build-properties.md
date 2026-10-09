@@ -1189,7 +1189,26 @@ object and statically links the table afterward.
 
 Runtime-generated JNI names may require explicit remapping or keep rules.
 Conservative keep rules still protect native callbacks, bootstrap code, and
-resource-referenced names. No mode falls back to another mode; unrecognized
+resource-referenced names. In NativeAOT applications, generated binding field
+properties and handwritten field properties with `Register` metadata can be
+renamed when accessed through `JniPeerMembers.InstanceFields` or
+`JniPeerMembers.StaticFields`, including inherited fields. NativeAOT does not
+preserve field names globally. CoreCLR still preserves
+field names: linked metadata can retain a derived accessor without the declaring
+base type's field registration, preventing selection of an inherited field remap.
+Raw JNI field-ID lookups (such as `JNIEnv.GetFieldID` and `JNIEnv.GetStaticFieldID`) and Java reflection
+do not use the runtime member-remapping tables. Keep the names and existence of
+fields accessed this way using a `ProguardConfiguration` item, for example:
+
+```proguard
+-keepclassmembers class com.example.Peer {
+    int rawValue;
+    static int rawStaticValue;
+}
+```
+
+If the class itself is looked up by its original name outside the remapping path,
+also preserve that class name. No mode falls back to another mode; unrecognized
 values report [XA1050](../messages/xa1050.md) when R8 is enabled.
 
 When managed-trimmed CoreCLR builds use retained typemap rules, all Java
