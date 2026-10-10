@@ -13,8 +13,6 @@ namespace Java.Interop
 	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
 	public abstract class JavaArray<T> : JavaObject, IList, IList<T>
 	{
-		internal const DynamicallyAccessedMemberTypes ConstructorsAndInterfaces = Constructors | DynamicallyAccessedMemberTypes.Interfaces;
-
 		internal delegate TArray ArrayCreator<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			where TArray : JavaArray<T>;
 

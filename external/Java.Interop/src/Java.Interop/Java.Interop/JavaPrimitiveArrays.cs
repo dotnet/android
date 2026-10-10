@@ -161,7 +161,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -352,7 +351,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -543,7 +541,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -734,7 +731,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -925,7 +921,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -1116,7 +1111,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -1307,7 +1301,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -1498,7 +1491,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
