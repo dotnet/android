@@ -36,6 +36,7 @@ set(XAMARIN_MONODROID_SOURCES
   os-bridge.cc
   runtime-environment.cc
   runtime-util.cc
+  ../runtime-base/binary-blob-loader.cc
 )
 
 if(DEBUG_BUILD)

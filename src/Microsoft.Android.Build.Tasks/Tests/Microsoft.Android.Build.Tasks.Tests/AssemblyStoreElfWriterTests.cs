@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -141,6 +142,66 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		using var hashReader = new BinaryReader (new MemoryStream (NativeToolTestHelper.ReadSection (library, ".hash")));
 		CollectionAssert.AreEqual (new uint [] { 1, 2, 1, 0, 0 }, Enumerable.Range (0, 5).Select (_ => hashReader.ReadUInt32 ()));
 		Assert.AreEqual (hashReader.BaseStream.Length, hashReader.BaseStream.Position);
+	}
+
+	[Test]
+	public void WritesMultipleNamedPayloads (
+		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
+	{
+		byte [] first = [1, 2, 3];
+		byte [] second = [4, 5, 6, 7];
+		using var a = new MemoryStream (first);
+		using var b = new MemoryStream (second);
+		using var elf = new MemoryStream ();
+		AssemblyStoreElfWriter.Write (new [] { ("xa_first", (Stream)a), ("xa_second", (Stream)b) }, elf, arch, "libbinary_blobs.so");
+		byte [] image = elf.ToArray ();
+		bool is64Bit = arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
+		int wordSize = is64Bit ? 8 : 4;
+		int headerSize = is64Bit ? 64 : 52;
+		int programHeaderSize = is64Bit ? 56 : 32;
+		int symbolSize = is64Bit ? 24 : 16;
+		ulong symbolsOffset = checked ((ulong)((headerSize + 4 * programHeaderSize + wordSize - 1) & -wordSize));
+		ulong stringsOffset = symbolsOffset + (ulong)(3 * symbolSize);
+		ulong payloadOffset = is64Bit ? 16384u : 4096u;
+		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, payloadOffset, 1, 1, "xa_first", first);
+		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, payloadOffset + (ulong)first.Length,
+			2, "xa_first".Length + 2, "xa_second", second);
+		Assert.AreEqual (a.Length, a.Position);
+		Assert.AreEqual (b.Length, b.Position);
+	}
+
+	static void AssertPayloadSymbol (byte [] image, bool is64Bit, int symbolSize, ulong symbolsOffset, ulong stringsOffset,
+		ulong payloadOffset, int symbolIndex, int nameOffset, string name, byte [] payload)
+	{
+		int entryOffset = checked ((int)(symbolsOffset + (ulong)(symbolIndex * symbolSize)));
+		Assert.AreEqual ((uint)nameOffset, BinaryPrimitives.ReadUInt32LittleEndian (image.AsSpan (entryOffset, 4)));
+		int infoOffset = entryOffset + (is64Bit ? 4 : 12);
+		Assert.AreEqual (0x11, image [infoOffset], "The exported symbol must be a global object.");
+		Assert.AreEqual (0, image [infoOffset + 1], "The symbol must have default visibility.");
+		Assert.AreEqual (5, BinaryPrimitives.ReadUInt16LittleEndian (image.AsSpan (infoOffset + 2, 2)));
+		ulong value = is64Bit
+			? BinaryPrimitives.ReadUInt64LittleEndian (image.AsSpan (entryOffset + 8, 8))
+			: BinaryPrimitives.ReadUInt32LittleEndian (image.AsSpan (entryOffset + 4, 4));
+		ulong size = is64Bit
+			? BinaryPrimitives.ReadUInt64LittleEndian (image.AsSpan (entryOffset + 16, 8))
+			: BinaryPrimitives.ReadUInt32LittleEndian (image.AsSpan (entryOffset + 8, 4));
+		Assert.AreEqual (payloadOffset, value);
+		Assert.AreEqual ((ulong)payload.Length, size);
+		CollectionAssert.AreEqual (Encoding.UTF8.GetBytes (name + "\0"),
+			image.AsSpan (checked ((int)(stringsOffset + (ulong)nameOffset)), name.Length + 1).ToArray ());
+		CollectionAssert.AreEqual (payload, image.AsSpan (checked ((int)payloadOffset), payload.Length).ToArray ());
+	}
+
+	[Test]
+	public void MultiSymbolRejectsInvalidInputsBeforeWriting ()
+	{
+		using var first = new MemoryStream (new byte [] { 1 });
+		using var output = new MemoryStream ();
+		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
+			new [] { ("xa_same", (Stream)first), ("xa_same", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
+		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
+			new [] { ("bad\0name", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
+		Assert.Zero (output.Length);
 	}
 
 	[Test]
