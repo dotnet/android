@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Android.Runtime;
 using Java.Interop;
@@ -54,11 +53,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
-	}
-
-	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
-	{
-		throw new PlatformNotSupportedException ("Activating Java peers through the value manager is not supported.");
 	}
 
 	protected override void ConstructPeerCore (

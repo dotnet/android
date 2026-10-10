@@ -11,9 +11,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-using Java.Interop.Expressions;
-using System.Linq.Expressions;
-
 namespace Java.Interop {
 
 <#
@@ -186,7 +183,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -197,7 +193,6 @@ namespace Java.Interop {
 			public override IList<<#= info.TypeModifier #>> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
 					Type? targetType)
 			{
 				return JavaArray<<#= info.TypeModifier #>>.CreateValue (
@@ -221,18 +216,6 @@ namespace Java.Interop {
 			public override void DestroyGenericArgumentState ([AllowNull] IList<<#= info.TypeModifier #>> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<<#= info.ManagedType #>>.DestroyArgumentState<Java<#= info.TypeModifier #>Array> (value, ref state, synchronize);
-			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = Java<#= info.TypeModifier #>Array.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
 			}
 		}
 	}

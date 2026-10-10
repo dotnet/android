@@ -6,9 +6,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-using Java.Interop.Expressions;
-using System.Linq.Expressions;
-
 namespace Java.Interop {
 
 	partial class JniEnvironment {
@@ -199,18 +196,6 @@ namespace Java.Interop {
 			public override void DestroyGenericArgumentState ([AllowNull] IList<Boolean> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Boolean>.DestroyArgumentState<JavaBooleanArray> (value, ref state, synchronize);
-			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaBooleanArray.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
 			}
 		}
 	}
@@ -404,18 +389,6 @@ namespace Java.Interop {
 			{
 				JavaArray<SByte>.DestroyArgumentState<JavaSByteArray> (value, ref state, synchronize);
 			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaSByteArray.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
-			}
 		}
 	}
 
@@ -608,18 +581,6 @@ namespace Java.Interop {
 			{
 				JavaArray<Char>.DestroyArgumentState<JavaCharArray> (value, ref state, synchronize);
 			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaCharArray.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
-			}
 		}
 	}
 
@@ -778,7 +739,6 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -812,18 +772,6 @@ namespace Java.Interop {
 			public override void DestroyGenericArgumentState ([AllowNull] IList<Int16> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Int16>.DestroyArgumentState<JavaInt16Array> (value, ref state, synchronize);
-			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaInt16Array.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
 			}
 		}
 	}
@@ -1017,18 +965,6 @@ namespace Java.Interop {
 			{
 				JavaArray<Int32>.DestroyArgumentState<JavaInt32Array> (value, ref state, synchronize);
 			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaInt32Array.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
-			}
 		}
 	}
 
@@ -1220,18 +1156,6 @@ namespace Java.Interop {
 			public override void DestroyGenericArgumentState ([AllowNull] IList<Int64> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Int64>.DestroyArgumentState<JavaInt64Array> (value, ref state, synchronize);
-			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaInt64Array.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
 			}
 		}
 	}
@@ -1425,18 +1349,6 @@ namespace Java.Interop {
 			{
 				JavaArray<Single>.DestroyArgumentState<JavaSingleArray> (value, ref state, synchronize);
 			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaSingleArray.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
-			}
 		}
 	}
 
@@ -1628,18 +1540,6 @@ namespace Java.Interop {
 			public override void DestroyGenericArgumentState ([AllowNull] IList<Double> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Double>.DestroyArgumentState<JavaDoubleArray> (value, ref state, synchronize);
-			}
-
-			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
-			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
-			{
-				Func<IntPtr, Type?, object?>  m = JavaDoubleArray.CreateMarshaledValue;
-
-				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
-				return targetType == null
-					? (Expression) call
-					: Expression.Convert (call, targetType);
 			}
 		}
 	}

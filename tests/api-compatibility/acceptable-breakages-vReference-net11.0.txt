@@ -48,7 +48,9 @@ TypesMustExist : Type 'Android.Text.IInputType' does not exist in the implementa
 TypesMustExist : Type 'Xamarin.Android.Net.AndroidClientHandler' does not exist in the implementation but it does exist in the contract.
 CannotRemoveBaseTypeOrInterface : Type 'Android.Views.InputMethods.EditorInfo' does not implement interface 'Android.Text.IInputType' in the implementation but it does in the contract.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'Java.Interop.ExportAttribute' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute' exists on parameter 'targetType' on member 'Android.Graphics.ColorValueMarshaler.CreateGenericValue(Java.Interop.JniObjectReference, Java.Interop.JniObjectReferenceOptions, System.Type)' in the contract but not the implementation.
+TypesMustExist : Type 'Android.Graphics.ColorValueMarshaler' does not exist in the implementation but it does exist in the contract.
+CannotRemoveAttribute : Attribute 'Java.Interop.JniValueMarshalerAttribute' exists on 'Android.Graphics.Color' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'Java.Interop.JniValueMarshalerAttribute' exists on 'Android.Runtime.IJavaObject' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.SupportedOSPlatformAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.DisableSelf()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.SupportedOSPlatformAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.DispatchGesture(Android.AccessibilityServices.GestureDescription, Android.AccessibilityServices.AccessibilityService.GestureResultCallback, Android.OS.Handler)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.SupportedOSPlatformAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.GetMagnificationController()' in the contract but not the implementation.
