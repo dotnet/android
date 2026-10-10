@@ -107,7 +107,8 @@ public class CollectJarContentFilesForArchive : AndroidTask
 						continue;
 
 					if ((AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") && IsNativeLibrary (name)) {
-						bool reservedName = string.Equals (Path.GetFileName (name), "libbinary_blobs.so", StringComparison.Ordinal);
+						string normalizedName = name.Replace ('\\', '/');
+						bool reservedName = string.Equals (Path.GetFileName (normalizedName), "libbinary_blobs.so", StringComparison.Ordinal);
 						bool reservedSoname = false;
 						if (!reservedName) {
 							using var entryStream = jarItem.Open ();
@@ -140,9 +141,9 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 	static bool IsNativeLibrary (string path)
 	{
-		string normalized = path.Replace ('\\', '/');
-		return normalized.Contains ("/lib/", StringComparison.Ordinal) && normalized.EndsWith (".so", StringComparison.OrdinalIgnoreCase) ||
-			normalized.StartsWith ("lib/", StringComparison.Ordinal) && normalized.EndsWith (".so", StringComparison.OrdinalIgnoreCase);
+		string normalizedPath = path.Replace ('\\', '/');
+		return normalizedPath.Contains ("/lib/", StringComparison.Ordinal) && normalizedPath.EndsWith (".so", StringComparison.OrdinalIgnoreCase) ||
+			normalizedPath.StartsWith ("lib/", StringComparison.Ordinal) && normalizedPath.EndsWith (".so", StringComparison.OrdinalIgnoreCase);
 	}
 
 	static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -121,12 +122,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories));
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, true, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, true)]
-		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab, bool useSonameAlias)
+		[TestCase (AndroidRuntime.CoreCLR, false, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, false, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, true, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, true, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, true, true)]
+		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab, bool useSonameAlias, bool useShadowDynstr)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release))
 				return;
@@ -146,6 +148,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj));
 			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ());
+			if (useShadowDynstr)
+				library = CreateShadowDynstrLibrary (library);
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("Libraries/arm64-v8a/libcustom.so") {
 				BinaryContent = () => library,
 				Metadata = {
@@ -161,11 +165,13 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("error XA4330", builder.LastBuildOutput);
 		}
 
-		[TestCase (false, false, false)]
-		[TestCase (false, false, true)]
-		[TestCase (true, false, false)]
-		[TestCase (true, true, true)]
-		public void ReservedBinaryBlobLibraryInJarIsRejected (bool release, bool aab, bool useSonameAlias)
+		[TestCase (false, false, false, false, false)]
+		[TestCase (false, false, true, false, false)]
+		[TestCase (true, false, false, false, false)]
+		[TestCase (true, true, true, false, false)]
+		[TestCase (false, false, true, false, true)]
+		[TestCase (false, false, false, true, false)]
+		public void ReservedBinaryBlobLibraryInJarIsRejected (bool release, bool aab, bool useSonameAlias, bool useBackslashPath, bool useShadowDynstr)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release))
 				return;
@@ -186,7 +192,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj), "A clean application with remapping should build.");
 			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ());
-			string entryName = useSonameAlias ? "lib/arm64-v8a/libcustom.so" : "lib/arm64-v8a/libbinary_blobs.so";
+			if (useShadowDynstr)
+				library = CreateShadowDynstrLibrary (library);
+			else if (useBackslashPath)
+				library = RenameSoname (library, "libcustom_blobs.so");
+			string entryName = useBackslashPath
+				? "lib/arm64-v8a\\libbinary_blobs.so"
+				: useSonameAlias ? "lib/arm64-v8a/libcustom.so" : "lib/arm64-v8a/libbinary_blobs.so";
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "NativePayload.jar") {
 				BinaryContent = () => CreateJar (entryName, library),
 			});
@@ -206,6 +218,90 @@ namespace Xamarin.Android.Build.Tests
 				stream.Write (contents);
 			}
 			return jar.ToArray ();
+		}
+
+		static byte [] RenameSoname (byte [] elf, string soname)
+		{
+			byte [] original = Encoding.ASCII.GetBytes ("libbinary_blobs.so");
+			byte [] replacement = Encoding.ASCII.GetBytes (soname);
+			Assert.AreEqual (original.Length, replacement.Length, "The replacement SONAME must preserve the ELF string-table size.");
+			byte [] result = (byte [])elf.Clone ();
+			int offset = result.AsSpan ().IndexOf (original);
+			Assert.GreaterOrEqual (offset, 0, "The ELF fixture must contain the original SONAME.");
+			replacement.CopyTo (result, offset);
+			return result;
+		}
+
+		static byte [] CreateShadowDynstrLibrary (byte [] elf)
+		{
+			Assert.AreEqual (2, elf [4], "The generated fixture must be ELF64.");
+			Assert.AreEqual (1, elf [5], "The generated fixture must use little-endian encoding.");
+			ulong sectionHeadersOffset = BinaryPrimitives.ReadUInt64LittleEndian (elf.AsSpan (40, 8));
+			ushort sectionHeaderSize = BinaryPrimitives.ReadUInt16LittleEndian (elf.AsSpan (58, 2));
+			ushort sectionCount = BinaryPrimitives.ReadUInt16LittleEndian (elf.AsSpan (60, 2));
+			ushort sectionNamesIndex = BinaryPrimitives.ReadUInt16LittleEndian (elf.AsSpan (62, 2));
+			Assert.AreEqual (64, sectionHeaderSize);
+			Assert.AreEqual (7, sectionCount);
+			Assert.AreEqual (6, sectionNamesIndex);
+
+			int sectionHeadersOffsetInt = checked ((int)sectionHeadersOffset);
+			byte [] sectionHeaders = elf.AsSpan (sectionHeadersOffsetInt, sectionHeaderSize * sectionCount).ToArray ();
+			int dynamicStringsHeaderOffset = sectionHeaderSize * 2;
+			int sectionNamesHeaderOffset = sectionHeaderSize * sectionNamesIndex;
+			ulong dynamicStringsOffset = BinaryPrimitives.ReadUInt64LittleEndian (sectionHeaders.AsSpan (dynamicStringsHeaderOffset + 24, 8));
+			ulong dynamicStringsSize = BinaryPrimitives.ReadUInt64LittleEndian (sectionHeaders.AsSpan (dynamicStringsHeaderOffset + 32, 8));
+			ulong sectionNamesOffset = BinaryPrimitives.ReadUInt64LittleEndian (sectionHeaders.AsSpan (sectionNamesHeaderOffset + 24, 8));
+			ulong sectionNamesSize = BinaryPrimitives.ReadUInt64LittleEndian (sectionHeaders.AsSpan (sectionNamesHeaderOffset + 32, 8));
+			byte [] dynamicStrings = elf.AsSpan (checked ((int)dynamicStringsOffset), checked ((int)dynamicStringsSize)).ToArray ();
+			byte [] fakeDynamicStrings = (byte [])dynamicStrings.Clone ();
+			Assert.GreaterOrEqual (dynamicStrings.AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("libbinary_blobs.so")), 0,
+				"The ELF fixture's linked string table must contain the reserved SONAME.");
+			RenameSonameInStringTable (fakeDynamicStrings, "libbinary_blobs.so", "libcustom_blobs.so");
+
+			using var output = new MemoryStream ();
+			output.Write (elf);
+			ulong fakeDynamicStringsOffset = (ulong)output.Position;
+			output.Write (fakeDynamicStrings);
+
+			byte [] originalSectionNames = elf.AsSpan (checked ((int)sectionNamesOffset), checked ((int)sectionNamesSize)).ToArray ();
+			using var names = new MemoryStream ();
+			names.Write (originalSectionNames);
+			uint alternateNameIndex = checked ((uint)names.Position);
+			byte [] alternateName = Encoding.ASCII.GetBytes (".dynstr.primary\0");
+			names.Write (alternateName);
+			uint duplicateNameIndex = checked ((uint)names.Position);
+			names.Write (Encoding.ASCII.GetBytes (".dynstr\0"));
+			byte [] updatedSectionNames = names.ToArray ();
+			ulong updatedSectionNamesOffset = (ulong)output.Position;
+			output.Write (updatedSectionNames);
+
+			BinaryPrimitives.WriteUInt32LittleEndian (sectionHeaders.AsSpan (dynamicStringsHeaderOffset, 4), alternateNameIndex);
+			BinaryPrimitives.WriteUInt64LittleEndian (sectionHeaders.AsSpan (sectionNamesHeaderOffset + 24, 8), updatedSectionNamesOffset);
+			BinaryPrimitives.WriteUInt64LittleEndian (sectionHeaders.AsSpan (sectionNamesHeaderOffset + 32, 8), (ulong)updatedSectionNames.Length);
+			ulong newSectionHeadersOffset = (ulong)output.Position;
+			output.Write (sectionHeaders);
+			byte [] fakeSectionHeader = new byte [sectionHeaderSize];
+			BinaryPrimitives.WriteUInt32LittleEndian (fakeSectionHeader.AsSpan (0, 4), duplicateNameIndex);
+			BinaryPrimitives.WriteUInt32LittleEndian (fakeSectionHeader.AsSpan (4, 4), 3); // SHT_STRTAB
+			BinaryPrimitives.WriteUInt64LittleEndian (fakeSectionHeader.AsSpan (24, 8), fakeDynamicStringsOffset);
+			BinaryPrimitives.WriteUInt64LittleEndian (fakeSectionHeader.AsSpan (32, 8), (ulong)fakeDynamicStrings.Length);
+			BinaryPrimitives.WriteUInt64LittleEndian (fakeSectionHeader.AsSpan (48, 8), 1);
+			output.Write (fakeSectionHeader);
+
+			byte [] result = output.ToArray ();
+			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (40, 8), newSectionHeadersOffset);
+			BinaryPrimitives.WriteUInt16LittleEndian (result.AsSpan (60, 2), checked ((ushort)(sectionCount + 1)));
+			return result;
+		}
+
+		static void RenameSonameInStringTable (byte [] strings, string originalSoname, string replacementSoname)
+		{
+			byte [] original = Encoding.ASCII.GetBytes (originalSoname);
+			byte [] replacement = Encoding.ASCII.GetBytes (replacementSoname);
+			Assert.AreEqual (original.Length, replacement.Length, "The replacement SONAME must preserve the ELF string-table size.");
+			int offset = strings.AsSpan ().IndexOf (original);
+			Assert.GreaterOrEqual (offset, 0, "The ELF string-table fixture must contain its SONAME.");
+			replacement.CopyTo (strings, offset);
 		}
 
 		[TestCase (true)]
