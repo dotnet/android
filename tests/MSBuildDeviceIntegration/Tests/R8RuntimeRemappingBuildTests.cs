@@ -15,9 +15,8 @@ namespace Xamarin.Android.Build.Tests
 	public class R8RuntimeRemappingBuildTests : BaseTest
 	{
 		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true)]
 		[TestCase (AndroidRuntime.NativeAOT, true)]
-		public void BuildWithoutRemappingOmitsBinaryBlobs (AndroidRuntime runtime, bool release)
+		public void BuildWithoutRemappingKeepsOnlyCoreClrBootstrap (AndroidRuntime runtime, bool release)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release)) {
 				return;
@@ -33,21 +32,25 @@ namespace Xamarin.Android.Build.Tests
 			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var blobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
 				.ToArray ();
-			Assert.IsEmpty (blobs, "Empty remapping must not produce a data library.");
+			bool hasBootstrap = runtime == AndroidRuntime.CoreCLR;
+			Assert.AreEqual (hasBootstrap ? 1 : 0, blobs.Length,
+				"CoreCLR requires the bootstrap library even without remapping; NativeAOT does not.");
 			using (var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
 				proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
-				Assert.IsNull (apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so"));
+				Assert.AreEqual (hasBootstrap, apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so") != null);
 			}
-			Assert.IsTrue (builder.Build (proj), "The absent-payload no-op build should succeed.");
+			Assert.IsTrue (builder.Build (proj), "The no-op build should succeed.");
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"),
-				"Absence must be cached, not regenerated on every build.");
+				"The library presence must be cached, not regenerated on every build.");
 			var stamp = Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ();
-			Assert.AreEqual ("false", File.ReadAllText (stamp));
+			Assert.AreEqual (hasBootstrap ? "true" : "false", File.ReadAllText (stamp));
 			File.Delete (stamp);
-			Assert.IsTrue (builder.Build (proj), "A deleted absence stamp must be recreated.");
-			Assert.AreEqual ("false", File.ReadAllText (stamp));
+			Assert.IsTrue (builder.Build (proj), "A deleted presence stamp must be recreated.");
+			Assert.AreEqual (hasBootstrap ? "true" : "false", File.ReadAllText (stamp));
 			Assert.IsTrue (builder.Clean (proj));
 			FileAssert.DoesNotExist (stamp);
+			foreach (var blob in blobs)
+				FileAssert.DoesNotExist (blob);
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false)]
@@ -76,11 +79,12 @@ namespace Xamarin.Android.Build.Tests
 					: Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using var archive = ZipFile.OpenRead (archivePath);
 				string prefix = aab ? "base/" : "";
-				Assert.AreEqual (hasRemapping, archive.GetEntry ($"{prefix}lib/arm64-v8a/libbinary_blobs.so") != null);
+				bool hasLibrary = runtime == AndroidRuntime.CoreCLR || hasRemapping;
+				Assert.AreEqual (hasLibrary, archive.GetEntry ($"{prefix}lib/arm64-v8a/libbinary_blobs.so") != null);
 				Assert.IsNotNull (archive.GetEntry ($"{prefix}assets/ordinary.txt"));
 				Assert.IsNull (archive.GetEntry ($"{prefix}assets/xa-internal/xa-mam-mapping.xml"));
 				Assert.IsNull (archive.GetEntry ($"{prefix}assets/xa-internal/xa-remap-members.xml"));
-				Assert.AreEqual (hasRemapping ? "true" : "false",
+				Assert.AreEqual (hasLibrary ? "true" : "false",
 					File.ReadAllText (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ()));
 			}
 			Assert.IsTrue (builder.Build (proj));
@@ -114,7 +118,8 @@ namespace Xamarin.Android.Build.Tests
 			mapping = """{"ClassRewrites":[]}""";
 			proj.Touch ("mam.json");
 			Assert.IsTrue (builder.Build (proj));
-			Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
+			Assert.AreEqual (runtime == AndroidRuntime.CoreCLR ? 1 : 0,
+				Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
 			AssertPackage (false);
 			Assert.IsTrue (builder.Build (proj));
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"));
@@ -549,11 +554,12 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "Restoring data must not recompile ILC.");
 			remapping = "<replacements />";
 			proj.Touch ("explicit-remap.xml");
-			Assert.IsTrue (builder.Build (proj), "Empty R8 remapping must remove both ABI libraries.");
-			Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
+			Assert.IsTrue (builder.Build (proj), "Empty R8 remapping must remove unneeded ABI libraries.");
+			Assert.AreEqual (runtime == AndroidRuntime.CoreCLR ? 2 : 0,
+				Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
 			using (var archive = ZipFile.OpenRead (archivePath)) {
 				foreach (var abi in new [] { "arm64-v8a", "x86_64" })
-					Assert.IsNull (archive.GetEntry ($"lib/{abi}/libbinary_blobs.so"));
+					Assert.AreEqual (runtime == AndroidRuntime.CoreCLR, archive.GetEntry ($"lib/{abi}/libbinary_blobs.so") != null);
 			}
 			Assert.IsTrue (builder.Build (proj), "Empty per-RID remapping must be a no-op.");
 			Assert.AreEqual ((0, 0), ReadInvocationCounts ());

@@ -28,6 +28,7 @@ set(XAMARIN_NET_ANDROID_STATIC_LIB "${XAMARIN_NET_ANDROID_LIB}-static")
 set(XAMARIN_MONODROID_SOURCES
   assembly-store.cc
   host.cc
+  coreclr-bootstrap.cc
   host-jni.cc
   host-shared.cc
   host-util.cc

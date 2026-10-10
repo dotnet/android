@@ -71,6 +71,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var resolvedUserAssembliesList = resolvedUserAssemblies.Select (x => new TaskItem (x, metadata));
 			var resolvedAssembliesList = resolvedAssemblies.Select (x => new TaskItem (x, metadata));
+			string bootstrapPath = Path.Combine (path, "env", "coreclr-bootstrap.bin");
 
 			var packageManagerTask = new GeneratePackageManagerJava {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
@@ -82,8 +83,10 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
+				CoreClrBootstrapOutputFile = bootstrapPath,
 				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
+				AndroidRuntime = "CoreCLR",
 				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
 			};
 
@@ -91,17 +94,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 
 			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
-			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
-			StringAssert.Contains ("YYYY", txt, "environment.arm64-v8a.ll should contain 'YYYY'");
-			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
-			StringAssert.Contains ("YYYY", txt, "environment.x86.ll should contain 'YYYY'");
+			StringAssert.Contains ("YYYY", Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath)));
 
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=XXXX");
 			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed. (run 2)");
-			txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
-			StringAssert.Contains ("XXXX", txt, "environment.arm64-v8a.ll should contain 'XXXX'");
-			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
-			StringAssert.Contains ("XXXX", txt, "environment.x86.ll should contain 'XXXX'");
+			StringAssert.Contains ("XXXX", Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath)));
 		}
 
 		[Test]
@@ -118,6 +115,7 @@ namespace Xamarin.Android.Build.Tests
 			var skipped = new Dictionary<string, string> (metadata, StringComparer.OrdinalIgnoreCase) {
 				{ "AndroidSkipAddToPackage", "true" },
 			};
+			string bootstrapPath = Path.Combine (path, "env", "coreclr-bootstrap.bin");
 
 			var configTask = new GenerateNativeApplicationConfigSources {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
@@ -126,16 +124,18 @@ namespace Xamarin.Android.Build.Tests
 					new TaskItem ("linked/Mono.Android.Export.dll", skipped),
 				],
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
+				CoreClrBootstrapOutputFile = bootstrapPath,
 				SupportedAbis = ["arm64-v8a"],
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
+				AndroidRuntime = "CoreCLR",
 				Environments = [new TaskItem (Path.Combine (path, "myenv.txt"))],
 			};
 
 			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 
-			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
-			StringAssert.Contains ("ZZZZ", txt, "environment.arm64-v8a.ll should contain the custom environment value.");
-			StringAssert.DoesNotContain ("Mono.Android.Export.dll", txt, "environment.arm64-v8a.ll should not list assemblies excluded from packaging.");
+			string bootstrap = Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath));
+			StringAssert.Contains ("ZZZZ", bootstrap, "CoreCLR bootstrap should contain the custom environment value.");
+			StringAssert.DoesNotContain ("Mono.Android.Export.dll", bootstrap, "CoreCLR bootstrap should not list assemblies excluded from packaging.");
 		}
 	}
 }

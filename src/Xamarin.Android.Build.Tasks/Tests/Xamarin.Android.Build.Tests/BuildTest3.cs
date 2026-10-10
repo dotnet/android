@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -21,13 +20,13 @@ public partial class BuildTest3 : BaseTest
 		const string MyLibKeep1 = "libMyStuffKeep.so";
 		const string MyLibKeep2 = "libMyStuffKeep.so";
 
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibKeep1, MyLibKeep2);
 			}
 		);
-		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLibKeep1 });
+		NativeLibraryJniPreload_VerifyLibs (preloads, new List<string> { MyLibKeep1 });
 	}
 
 	[Test]
@@ -35,13 +34,13 @@ public partial class BuildTest3 : BaseTest
 	{
 		const string MyLib = "libMyStuff.so";
 
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLib);
 			}
 		);
-		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLib });
+		NativeLibraryJniPreload_VerifyLibs (preloads, new List<string> { MyLib });
 	}
 
 	[Test]
@@ -50,7 +49,7 @@ public partial class BuildTest3 : BaseTest
 		const string MyLibKeep = "libMyStuffKeep.so";
 		const string MyLibExempt = "libMyStuffExempt.so";
 
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibKeep, MyLibExempt);
@@ -59,7 +58,7 @@ public partial class BuildTest3 : BaseTest
 				);
 			}
 		);
-		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLibKeep });
+		NativeLibraryJniPreload_VerifyLibs (preloads, new List<string> { MyLibKeep });
 	}
 
 	[Test]
@@ -68,7 +67,7 @@ public partial class BuildTest3 : BaseTest
 		const string MyLibExempt1 = "libMyStuffExempt1.so";
 		const string MyLibExempt2 = "libMyStuffExempt2.so";
 
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibExempt1, MyLibExempt2);
@@ -80,13 +79,13 @@ public partial class BuildTest3 : BaseTest
 				);
 			}
 		);
-		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
+		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
 	[Test]
 	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAll ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, "libMyStuffOne.so", "libMyStuffTwo.so");
@@ -94,7 +93,7 @@ public partial class BuildTest3 : BaseTest
 			}
 		);
 		// With `$(AndroidIgnoreAllJniPreload)=true` we still must have the defaults in the generated code.
-		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
+		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
 	[Test]
@@ -103,7 +102,7 @@ public partial class BuildTest3 : BaseTest
 		const string MyLibExemptOne = "libMyStuffExemptOne.so";
 		const string MyLibExemptTwo = "libMyStuffExemptTwo.so";
 
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibExemptOne, MyLibExemptTwo);
@@ -116,7 +115,7 @@ public partial class BuildTest3 : BaseTest
 			}
 		);
 		// With all custom libraries ignored, we still must have the defaults in the generated code.
-		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
+		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
 	void NativeLibraryJniPreload_AddNativeLibraries (XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches, string libName, params string[]? moreLibNames)
@@ -147,7 +146,7 @@ public partial class BuildTest3 : BaseTest
 	[Test]
 	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				proj.SetProperty ("AndroidIgnoreAllJniPreload", "true");
@@ -155,22 +154,22 @@ public partial class BuildTest3 : BaseTest
 		);
 
 		// With `$(AndroidIgnoreAllJniPreload)=true` we still must have the defaults in the generated code.
-		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
+		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
 	[Test]
 	public void NativeLibraryJniPreload_DefaultsWork ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
-		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
-		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
+		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
+		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
-	void NativeLibraryJniPreload_VerifyDefaults (List<EnvironmentHelper.JniPreloads> allPreloads)
+	void NativeLibraryJniPreload_VerifyDefaults (EnvironmentHelper.JniPreloads preloads)
 	{
-		NativeLibraryJniPreload_VerifyLibs (allPreloads, additionalLibs: null);
+		NativeLibraryJniPreload_VerifyLibs (preloads, additionalLibs: null);
 	}
 
-	void NativeLibraryJniPreload_VerifyLibs (List<EnvironmentHelper.JniPreloads> allPreloads, List<string>? additionalLibs)
+	void NativeLibraryJniPreload_VerifyLibs (EnvironmentHelper.JniPreloads preloads, List<string>? additionalLibs)
 	{
 		int numberOfLibs = 1;
 		if (additionalLibs != null) {
@@ -178,42 +177,40 @@ public partial class BuildTest3 : BaseTest
 		}
 
 		int ExpectedEntryCount = ExpectedJniPreloadIndexStride * numberOfLibs;
-		foreach (EnvironmentHelper.JniPreloads preloads in allPreloads) {
-			Assert.IsTrue (preloads.IndexStride == (uint)ExpectedJniPreloadIndexStride, $"JNI preloads index stride should be {ExpectedJniPreloadIndexStride}, was {preloads.IndexStride} instead. Source file: {preloads.SourceFile}");
-			Assert.IsTrue (preloads.Entries.Count == ExpectedEntryCount, $"JNI preloads index entry count should be {ExpectedEntryCount}, was {preloads.Entries.Count} instead. Source file: {preloads.SourceFile}");
+		Assert.IsTrue (preloads.IndexStride == (uint)ExpectedJniPreloadIndexStride, $"JNI preloads index stride should be {ExpectedJniPreloadIndexStride}, was {preloads.IndexStride} instead. Source file: {preloads.SourceFile}");
+		Assert.IsTrue (preloads.Entries.Count == ExpectedEntryCount, $"JNI preloads index entry count should be {ExpectedEntryCount}, was {preloads.Entries.Count} instead. Source file: {preloads.SourceFile}");
 
-			// DSO cache entries are sorted based on their name's CRC32 hash, which
-			// won't change but builds may add/remove libraries and, thus, change the indexes after
-			// sorting. For that reason we don't verify the index values and use them just for reporting.
-			//
-			// Also, all the entries will point to the same library name. Name variations aren't
-			// stored directly in the DSO cache, just their hashes which are used for lookup at run time.
-			//
-			// We use a Dictionary<> here because there might be more libraries to preload in the future.
-			var expectedLibNames = new Dictionary<string, uint> (StringComparer.Ordinal) {
-				{ "libSystem.Security.Cryptography.Native.Android.so", 0 },
-			};
+		// DSO cache entries are sorted based on their name's CRC32 hash, which
+		// won't change but builds may add/remove libraries and, thus, change the indexes after
+		// sorting. For that reason we don't verify the index values and use them just for reporting.
+		//
+		// Also, all the entries will point to the same library name. Name variations aren't
+		// stored directly in the DSO cache, just their hashes which are used for lookup at run time.
+		//
+		// We use a Dictionary<> here because there might be more libraries to preload in the future.
+		var expectedLibNames = new Dictionary<string, uint> (StringComparer.Ordinal) {
+			{ "libSystem.Security.Cryptography.Native.Android.so", 0 },
+		};
 
-			if (additionalLibs != null) {
-				foreach (string extraLib in additionalLibs) {
-					expectedLibNames.Add (extraLib, 0);
-				}
+		if (additionalLibs != null) {
+			foreach (string extraLib in additionalLibs) {
+				expectedLibNames.Add (extraLib, 0);
 			}
+		}
 
-			for (int i = 0; i < preloads.Entries.Count; i++) {
-				EnvironmentHelper.JniPreloadsEntry entry = preloads.Entries[i];
-				Assert.IsFalse (entry.LibraryName == "libmonodroid.so", $"JNI preloads entry at index {i} refers to the .NET for Android native runtime. It must never be preloaded. Source file: {preloads.SourceFile}");
-				Assert.IsTrue (expectedLibNames.ContainsKey (entry.LibraryName), $"JNI preloads entry at index {i}, referring to library at DSO cache index {entry.Index} has unexpected name '{entry.LibraryName}';  Source file: {preloads.SourceFile}");
-				expectedLibNames[entry.LibraryName]++;
-			}
+		for (int i = 0; i < preloads.Entries.Count; i++) {
+			EnvironmentHelper.JniPreloadsEntry entry = preloads.Entries[i];
+			Assert.IsFalse (entry.LibraryName == "libmonodroid.so", $"JNI preloads entry at index {i} refers to the .NET for Android native runtime. It must never be preloaded. Source file: {preloads.SourceFile}");
+			Assert.IsTrue (expectedLibNames.ContainsKey (entry.LibraryName), $"JNI preloads entry at index {i}, referring to library at DSO cache index {entry.Index} has unexpected name '{entry.LibraryName}';  Source file: {preloads.SourceFile}");
+			expectedLibNames[entry.LibraryName]++;
+		}
 
-			foreach (var kvp in expectedLibNames) {
-				Assert.IsTrue (kvp.Value == ExpectedJniPreloadIndexStride, $"JNI preloads entry '{kvp.Key}' should have {ExpectedJniPreloadIndexStride} instances, it had {kvp.Value} instead. Source file: {preloads.SourceFile}");
-			}
+		foreach (var kvp in expectedLibNames) {
+			Assert.IsTrue (kvp.Value == ExpectedJniPreloadIndexStride, $"JNI preloads entry '{kvp.Key}' should have {ExpectedJniPreloadIndexStride} instances, it had {kvp.Value} instead. Source file: {preloads.SourceFile}");
 		}
 	}
 
-	List<EnvironmentHelper.JniPreloads> NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject, AndroidTargetArch[]>? configureProject = null)
+	EnvironmentHelper.JniPreloads NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject, AndroidTargetArch[]>? configureProject = null)
 	{
 		const bool isRelease = true;
 		AndroidTargetArch[] supportedArches = new [] {
@@ -232,15 +229,6 @@ public partial class BuildTest3 : BaseTest
 		Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 		string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-		List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
-			objDirPath,
-			String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
-			true
-		);
-
-		EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
-		uint numberOfDsoCacheEntries = app_config.number_of_dso_cache_entries;
-
-		return EnvironmentHelper.ReadJniPreloads (envFiles, numberOfDsoCacheEntries);
+		return EnvironmentHelper.ReadCoreClrBootstrap (objDirPath).Preloads;
 	}
 }
