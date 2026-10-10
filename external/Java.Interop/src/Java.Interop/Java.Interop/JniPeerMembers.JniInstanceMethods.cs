@@ -179,22 +179,6 @@ namespace Java.Interop
 			return r;
 		}
 
-		internal JniObjectReference AllocObject (Type declaringType)
-		{
-			var r   = GetConstructorsForType (declaringType)
-				.JniPeerType
-				.AllocObject ();
-			r.Flags = JniObjectReferenceFlags.Alloc;
-			return r;
-		}
-
-		internal unsafe JniObjectReference NewObject (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
-		{
-			var methods = GetConstructorsForType (declaringType);
-			var ctor    = methods.GetConstructor (constructorSignature);
-			return methods.JniPeerType.NewObject (ctor, parameters);
-		}
-
 		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JniArgumentValue* parameters)
 		{
 			if (constructorSignature == null)
