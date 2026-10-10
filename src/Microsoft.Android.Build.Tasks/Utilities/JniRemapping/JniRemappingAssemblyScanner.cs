@@ -9,7 +9,7 @@ using Microsoft.Android.Tasks;
 
 using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks.JniRemapping
+namespace Microsoft.Android.Tasks.JniRemapping
 {
 	/// <summary>
 	/// Reads linked managed metadata to identify JNI mappings that still have managed consumers.

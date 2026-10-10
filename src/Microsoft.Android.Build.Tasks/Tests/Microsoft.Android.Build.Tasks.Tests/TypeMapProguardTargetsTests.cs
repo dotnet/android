@@ -41,8 +41,8 @@ public class TypeMapProguardTargetsTests : BaseTest
 				new XElement ("_AndroidUseTypeMapProguardConfiguration", typemap),
 				new XElement ("AndroidR8ObfuscationMode", obfuscation),
 				new XElement ("AndroidLinkTool", "r8"),
-				new XElement ("IntermediateOutputPath", "obj/"),
-				new XElement ("_ProguardProjectConfiguration", "obj/proguard/proguard_project_references.cfg")),
+				new XElement ("IntermediateOutputPath", "obj" + Path.DirectorySeparatorChar),
+				new XElement ("_ProguardProjectConfiguration", Path.Combine ("obj", "proguard", "proguard_project_references.cfg"))),
 			target,
 			new XElement ("Target", new XAttribute ("Name", "Build"), new XAttribute ("DependsOnTargets", "_CalculateProguardConfigurationFiles"),
 				new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/configurations.txt"),
@@ -271,6 +271,75 @@ public class TypeMapProguardTargetsTests : BaseTest
 		File.SetLastWriteTimeUtc (map, DateTime.UtcNow.AddSeconds (1));
 		Build (project, "-t:_CompileToDalvik");
 		Assert.AreNotEqual (firstTime, File.GetLastWriteTimeUtc (stamp));
+	}
+
+	[Test]
+	public void R8RemappingTargetsTrackBothTaskAssemblies (
+		[Values ("_AndroidGenerateR8JniRemapping", "_AndroidGenerateR8JniRemappingNativeCode",
+			"_AndroidGenerateNativeAotR8Remapping", "_AndroidCompileNativeAotR8Remapping")] string targetName,
+		[Values ("_MicrosoftAndroidBuildTasksAssembly", "_XamarinAndroidBuildTasksAssembly")] string changedAssembly,
+		[Values (false, true)] bool relativePaths)
+	{
+		var runtime = targetName.Contains ("NativeAot", StringComparison.Ordinal) ? "NativeAOT" : "CoreCLR";
+		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks",
+			"Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.R8JniRemapping.targets"));
+		var inputsTarget = new XElement (source.Descendants ()
+			.Single (element => element.Name.LocalName == "Target" && (string?) element.Attribute ("Name") == "_AndroidR8JniRemappingInputs"));
+		var target = new XElement (source.Descendants ()
+			.Single (element => element.Name.LocalName == "Target" && (string?) element.Attribute ("Name") == targetName));
+		var output = Path.Combine (directory, "result.txt");
+		// Keep the shipped Inputs and path normalization, isolating the incremental decision from task execution.
+		target.SetAttributeValue ("DependsOnTargets", "_AndroidR8JniRemappingInputs");
+		target.SetAttributeValue ("Outputs", output);
+		target.ReplaceNodes (new XElement ("WriteLinesToFile", new XAttribute ("File", output),
+			new XAttribute ("Lines", "executed"), new XAttribute ("Overwrite", "true")));
+		foreach (var element in inputsTarget.DescendantsAndSelf ().Concat (target.DescendantsAndSelf ())) {
+			element.Name = element.Name.LocalName;
+		}
+
+		var modern = Write ("modern.dll", "modern tasks");
+		var legacy = Write ("legacy.dll", "legacy tasks");
+		var input = Write ("input.txt", "unchanged input");
+		var inputTimestamp = DateTime.UtcNow.AddMinutes (-2);
+		foreach (var file in new [] { modern, legacy, input }) {
+			File.SetLastWriteTimeUtc (file, inputTimestamp);
+		}
+		var project = Path.Combine (directory, "remapping.proj");
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup",
+				new XElement ("_AndroidR8RuntimeRemappingEnabled", "true"),
+				new XElement ("_AndroidRuntime", runtime),
+				new XElement ("_MicrosoftAndroidBuildTasksAssembly", relativePaths ? Path.GetFileName (modern) : modern),
+				new XElement ("_XamarinAndroidBuildTasksAssembly", relativePaths ? Path.GetFileName (legacy) : legacy),
+				new XElement ("_AndroidR8JniMappingFile", input),
+				new XElement ("_AndroidR8JniRemappingXml", input),
+				new XElement ("_AndroidNativeAotR8RemappingXml", input),
+				new XElement ("_AndroidBuildPropertiesCache", input),
+				new XElement ("NativeObject", input)),
+			new XElement ("ItemGroup",
+				new XElement ("_AndroidRemapMembers", new XAttribute ("Include", input)),
+				new XElement ("_AndroidR8JniRemappingAssembly", new XAttribute ("Include", input))),
+			inputsTarget, target,
+			new XElement ("Target", new XAttribute ("Name", "Build"), new XAttribute ("DependsOnTargets", targetName))))
+			.Save (project);
+
+		Build (project);
+		Assert.AreEqual ("executed", File.ReadAllText (output).Trim ());
+		File.SetLastWriteTimeUtc (output, DateTime.UtcNow.AddMinutes (-1));
+		var outputTimestamp = File.GetLastWriteTimeUtc (output);
+		Build (project);
+		Assert.AreEqual (outputTimestamp, File.GetLastWriteTimeUtc (output), "Unchanged inputs must skip the target.");
+
+		var changedFile = changedAssembly == "_MicrosoftAndroidBuildTasksAssembly" ? modern : legacy;
+		var unchangedFile = changedFile == modern ? legacy : modern;
+		File.SetLastWriteTimeUtc (changedFile, DateTime.UtcNow.AddSeconds (-10));
+		Build (project);
+		Assert.AreNotEqual (outputTimestamp, File.GetLastWriteTimeUtc (output), $"{targetName} must rerun when {changedAssembly} changes.");
+		Assert.AreEqual (inputTimestamp, File.GetLastWriteTimeUtc (unchangedFile));
+		Assert.AreEqual (inputTimestamp, File.GetLastWriteTimeUtc (input));
+		outputTimestamp = File.GetLastWriteTimeUtc (output);
+		Build (project);
+		Assert.AreEqual (outputTimestamp, File.GetLastWriteTimeUtc (output), "The target must be incremental again after regeneration.");
 	}
 
 	[TestCase ("-p:_AndroidEnableTypemapR8Trimming=false")]
