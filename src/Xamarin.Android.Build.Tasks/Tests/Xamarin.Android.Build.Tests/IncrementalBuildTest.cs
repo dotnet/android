@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -65,6 +66,78 @@ namespace Xamarin.Android.Build.Tests
 			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
 			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
 				"Subsequent R8 builds should still receive the merged AAPT2 rules.");
+		}
+
+		[Test]
+		public void AarConsumerRulesRemainInR8ConfigurationAfterAppProjectTimestampChange ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidAarLibrary ("consumer-rules.aar") {
+						BinaryContent = CreateAarWithProguardRules,
+					},
+					new AndroidItem.AndroidJavaSource ("Extra.java") {
+						TextContent = () => "public class Extra { }",
+						Encoding = Encoding.ASCII,
+						MetadataValues = "Bind=False",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (proj.ReleaseProperties, "TrimMode", "full");
+
+			using var builder = CreateApkBuilder ();
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+
+			var cacheFile = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
+			var projectFile = Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath);
+			File.SetLastWriteTimeUtc (projectFile, DateTime.UtcNow.AddMinutes (2));
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false),
+				"Build after touching the project file should succeed.");
+			builder.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
+			var rules = ReadCache (cacheFile).ProguardConfigFiles ?? [];
+			Assert.AreEqual (1, rules.Length, "The AAR consumer rule should remain in the imports cache.");
+			var proguardFile = Path.GetFullPath (rules [0].ItemSpec);
+			FileAssert.Exists (proguardFile);
+
+			// Force a subsequent R8 invocation to verify the rule recovered from the cache is passed through.
+			proj.Touch ("Extra.java");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false),
+				"Build after the timestamp-only project-file change should succeed.");
+			Assert.IsTrue (HasR8ProguardConfigInput (builder.LastBuildOutput, proguardFile),
+				$"R8 should receive '{proguardFile}' through --pg-conf after touching the project file.");
+		}
+
+		static byte [] CreateAarWithProguardRules ()
+		{
+			using var stream = new MemoryStream ();
+			using (var aar = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				using var entry = aar.CreateEntry ("proguard.txt").Open ();
+				using var writer = new StreamWriter (entry);
+				writer.WriteLine ("-keep class java.lang.String { *; }");
+			}
+			return stream.ToArray ();
+		}
+
+		static bool HasR8ProguardConfigInput (IEnumerable<string> buildOutput, string proguardFile)
+		{
+			var lines = buildOutput.Select (line => line.Trim ()).ToArray ();
+			for (int i = 0; i < lines.Length - 1; i++) {
+				if (lines [i].EndsWith ("--pg-conf", StringComparison.Ordinal) &&
+					lines [i + 1].EndsWith (proguardFile, StringComparison.OrdinalIgnoreCase)) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		[Test]
