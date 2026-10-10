@@ -27,6 +27,7 @@ namespace Android.Runtime
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
 			public IntPtr          jniRemappingData;
+			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public int             maxGrefCount;
 		}
