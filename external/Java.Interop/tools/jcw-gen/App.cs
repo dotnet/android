@@ -22,7 +22,7 @@ namespace Java.Interop.Tools
 			bool    help        = false;
 			string  outputPath  = null;
 			int     verbosity   = 0;
-			var     style       = JavaPeerStyle.XAJavaInterop1;
+			var     target      = new CallableWrapperWriterOptions ();
 
 			var options = new OptionSet {
 				"Usage: jcw-gen.exe OPTIONS* ASSEMBLY+ [@RESPONSE-FILES]",
@@ -40,7 +40,10 @@ namespace Java.Interop.Tools
 				  v => outputPath = v },
 				{ "codegen-target=",
 				  "STYLE of Java Callable Wrappers to generate",
-				  (JavaPeerStyle? v) => style = v.HasValue ? v.Value : style },
+				  (JavaPeerStyle? v) => {
+					  if (v.HasValue)
+						  target.CodeGenerationTarget = v.Value;
+				  } },
 				{ "v:",
 				  "Logging verbosity.",
 				  (int? v) => verbosity = v.HasValue ? v.Value : verbosity + 1 },
@@ -73,7 +76,11 @@ namespace Java.Interop.Tools
 				var types = scanner.GetJavaTypes (assemblies, resolver)
 					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache));
 				foreach (var type in types) {
-					GenerateJavaCallableWrapper (type, outputPath, cache, style);
+					if (type.IsInterface)
+						continue;
+
+					var wrapper = CecilImporter.CreateType (type, cache);
+					wrapper.Generate (outputPath, new CallableWrapperWriterOptions ());
 				}
 				return 0;
 			}
@@ -84,21 +91,6 @@ namespace Java.Interop.Tools
 			finally {
 				resolver.Dispose ();
 			}
-		}
-
-		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath, TypeDefinitionCache cache, JavaPeerStyle style)
-		{
-			if (type.IsInterface) {
-				return;
-			}
-
-			var t = CecilImporter.CreateType (type, cache);
-
-			var options = new CallableWrapperWriterOptions {
-				CodeGenerationTarget = style,
-			};
-
-			t.Generate (outputPath, options);
 		}
 	}
 }

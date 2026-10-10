@@ -73,27 +73,27 @@ public class CallableWrapperType
 			writer.WriteLine ();
 		}
 
-		GenerateHeader (writer, options);
+		writer.WriteLine ();
+
+		// Type annotations
+		foreach (var annotation in Annotations)
+			annotation.Generate (writer, "", options);
+
+		GenerateHeader (writer);
 
 		if (!isNested)
-			GenerateInfrastructure (writer, options);
+			GenerateInfrastructure (writer);
 
 		GenerateBody (writer, options);
 
 		foreach (var nested in NestedTypes)
 			nested.Generate (writer, options, true);
 
-		GenerateFooter (writer, options);
-	}	
+		GenerateFooter (writer);
+	}
 
-	void GenerateHeader (TextWriter sw, CallableWrapperWriterOptions options)
+	void GenerateHeader (TextWriter sw)
 	{
-		sw.WriteLine ();
-
-		// Type annotations
-		foreach (var annotation in Annotations)
-			annotation.Generate (sw, "", options);
-
 		sw.WriteLine ("public " + (IsAbstract ? "abstract " : "") + "class " + Name);
 
 		var extends = ExtendsType;
@@ -119,7 +119,7 @@ public class CallableWrapperType
 		sw.WriteLine ("{");
 	}
 
-	void GenerateInfrastructure (TextWriter writer, CallableWrapperWriterOptions options)
+	void GenerateInfrastructure (TextWriter writer)
 	{
 		var needCtor = false;
 
@@ -143,10 +143,10 @@ public class CallableWrapperType
 			writer.WriteLine ("\tstatic {");
 
 			if (HasDynamicallyRegisteredMethods)
-				GenerateRegisterType (writer, this, "__md_methods", options);
+				GenerateRegisterType (writer, this, "__md_methods");
 
 			for (var i = 0; i < NestedTypes.Count; ++i)
-				GenerateRegisterType (writer, NestedTypes [i], $"__md_{i + 1}_methods", options);
+				GenerateRegisterType (writer, NestedTypes [i], $"__md_{i + 1}_methods");
 
 			writer.WriteLine ("\t}");
 		}
@@ -166,10 +166,10 @@ public class CallableWrapperType
 			method.Generate (sw, options);
 
 		if (GenerateOnCreateOverrides && IsApplication && !Methods.Any (m => m.Name == "onCreate"))
-			WriteApplicationOnCreate (sw, options);
+			WriteApplicationOnCreate (sw);
 
 		if (GenerateOnCreateOverrides && IsInstrumentation && !Methods.Any (m => m.Name == "onCreate"))
-			WriteInstrumentationOnCreate (sw, options);
+			WriteInstrumentationOnCreate (sw);
 
 		sw.WriteLine ();
 		sw.WriteLine ("\tprivate java.util.ArrayList refList;");
@@ -189,12 +189,12 @@ public class CallableWrapperType
 		sw.WriteLine ("\t}");
 	}
 
-	void GenerateFooter (TextWriter sw, CallableWrapperWriterOptions options)
+	void GenerateFooter (TextWriter sw)
 	{
 		sw.WriteLine ("}");
 	}
 
-	void WriteApplicationOnCreate (TextWriter sw, CallableWrapperWriterOptions options)
+	void WriteApplicationOnCreate (TextWriter sw)
 	{
 		sw.WriteLine ();
 
@@ -211,7 +211,7 @@ public class CallableWrapperType
 		sw.WriteLine ("\t}");
 	}
 
-	void WriteInstrumentationOnCreate (TextWriter sw, CallableWrapperWriterOptions options)
+	void WriteInstrumentationOnCreate (TextWriter sw)
 	{
 		sw.WriteLine ();
 		sw.WriteLine ("\tpublic void onCreate (android.os.Bundle arguments)");
@@ -240,7 +240,7 @@ public class CallableWrapperType
 		sw.WriteLine ("\t}");
 	}
 
-	void GenerateRegisterType (TextWriter sw, CallableWrapperType self, string field, CallableWrapperWriterOptions options)
+	void GenerateRegisterType (TextWriter sw, CallableWrapperType self, string field)
 	{
 		if (!self.HasDynamicallyRegisteredMethods)
 			return;
