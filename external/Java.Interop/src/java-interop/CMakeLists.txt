@@ -19,10 +19,6 @@ if(ENABLE_OSX_ARCHITECTURES)
   set(CMAKE_OSX_ARCHITECTURES ${ENABLE_OSX_ARCHITECTURES})
 endif()
 
-foreach(dir ${MONO_INCLUDE_LIST})
-  include_directories(${dir})
-endforeach()
-
 if(OUTPUT_DIR)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_DIR}")
 endif()
@@ -31,7 +27,6 @@ add_library(
     java-interop-validation
     STATIC
     java-interop-dlfcn.cc
-    java-interop-mono.cc
     java-interop-util.cc
     java-interop.cc
 )
