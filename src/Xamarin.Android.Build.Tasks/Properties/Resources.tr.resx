@@ -690,8 +690,8 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>Android kod oluşturma hedefi '{0}' kullanımdan kaldırıldı ve Android için .NET'in gelecekteki bir sürümünde kaldırılacak. Proje özelliklerini 'XAJavaInterop1' kullanacak şekilde güncelleştirin.</value>
-    <comment>The following are literal names and should not be translated: XAJavaInterop1
+    <value>The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.</value>
+    <comment>The following are literal names and should not be translated: AndroidCodegenTarget, XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
@@ -929,6 +929,18 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
     <value>Satır {0} korunmuş geçersiz bir Java sınıfı adı içeriyor: '{1}'.</value>
     <comment>{0} - The one-based line number.
 {1} - The invalid input record.</comment>
+  </data>
+  <data name="XA4329_RequiredProperty" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping.
+{0} - The required MSBuild property name.
+{1} - The required literal value.
+{2} - The actual value, including quotes.</comment>
+  </data>
+  <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
+{0} - The runtime name.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>'{0}' Android NDK araç zincirleri dizini eksik. Lütfen Android NDK'yi yükleyin.</value>
@@ -1183,8 +1195,8 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>'AndroidR8ObfuscationMode' MSBuild özelliğinin '{0}' değeri geçersizdir. Geçerli değerler 'disabled' ve 'private-members'dir.</value>
-    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
@@ -1255,11 +1267,6 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <value>Manifest tarafından başvurulan '{0}' türü taranan derlemelerde bulunamadı. Bu bir framework türü olabilir.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
-  </data>
-  <data name="XA4251" xml:space="preserve">
-    <value>'{0}' türü, kırpılabilir tür eşlemesi tarafından desteklenmeyen [JniAddNativeMethodRegistrationAttribute] kullanır. Ekibin bunun desteklenip desteklenmeyeceğini değerlendirebilmesi için lütfen bu senaryoyu https://github.com/dotnet/android/issues adresinde bildirin.</value>
-    <comment>The following is a literal name and should not be translated: JniAddNativeMethodRegistrationAttribute.
-{0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
     <value>Güvenli olmayan HTTP Maven deposu URL'si ‘{0}’ kullanılamaz. Bu denetimi geçersiz kılmak için bir HTTPS URL'si kullanın veya öğede AllowInsecureHttp="true" meta verisini ayarlayın.</value>
