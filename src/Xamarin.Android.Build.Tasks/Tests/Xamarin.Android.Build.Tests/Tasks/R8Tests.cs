@@ -82,19 +82,21 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void WriteRuntimeRemappingRules ()
 		{
-			foreach (var runtime in new string? [] { null, "CoreCLR", "NativeAOT" }) {
-				using var writer = new StringWriter ();
-				R8.WriteObfuscationRules (writer, "runtime-remapping", runtime);
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "runtime-remapping");
 
-				var rules = writer.ToString ();
-				StringAssert.DoesNotContain ("-dontobfuscate", rules);
-				StringAssert.Contains ("-keepclassmembernames interface * { *; }", rules);
-				StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", rules);
-				StringAssert.Contains ("-keep class mono.android.Runtime { *; }", rules);
+			var rules = writer.ToString ();
+			StringAssert.DoesNotContain ("-dontobfuscate", rules);
+			StringAssert.Contains ("-keepclassmembernames interface * { *; }", rules);
+			StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", rules);
+			StringAssert.Contains ("-keep class mono.android.Runtime { *; }", rules);
+			StringAssert.Contains ("-keepclassmembernames class * { <fields>; }", rules);
+
+			foreach (var runtime in new [] { "CoreCLR", "NativeAOT" }) {
+				writer.GetStringBuilder ().Clear ();
+				R8.WriteObfuscationRules (writer, "runtime-remapping", runtime);
+				rules = writer.ToString ();
 				Assert.AreEqual (runtime != "NativeAOT", rules.Contains ("-keepclassmembernames class * { <fields>; }"));
-				if (runtime == "NativeAOT") {
-					StringAssert.Contains ("-keepclassmembers class net.dot.jni.nativeaot.NativeAotEnvironmentVars { static java.lang.String[] systemProperties; }", rules);
-				}
 			}
 		}
 
@@ -136,6 +138,7 @@ namespace Xamarin.Android.Build.Tests
 				var common = File.ReadAllText (task.ProguardCommonXamarinConfiguration);
 				StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", common);
 				StringAssert.DoesNotContain ("-keepclassmembernames class * { <fields>; }", common);
+				StringAssert.Contains ("-keepclassmembers class net.dot.jni.nativeaot.NativeAotEnvironmentVars { static java.lang.String[] systemProperties; }", common);
 			} finally {
 				Directory.Delete (directory, recursive: true);
 			}
