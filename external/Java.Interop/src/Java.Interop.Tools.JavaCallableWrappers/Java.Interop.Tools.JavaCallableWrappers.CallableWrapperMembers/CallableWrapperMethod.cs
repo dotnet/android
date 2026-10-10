@@ -34,18 +34,7 @@ public class CallableWrapperMethod
 		JniSignature = jniSignature;
 	}
 
-	public void Generate (TextWriter sw)
-	{
-		// Keep dispatch through the existing virtual entry point for custom methods and constructors.
-		Generate (sw, new CallableWrapperWriterOptions ());
-	}
-
 	public virtual void Generate (TextWriter sw, CallableWrapperWriterOptions options)
-	{
-		GenerateMethod (sw);
-	}
-
-	void GenerateMethod (TextWriter sw)
 	{
 		sw.WriteLine ();
 

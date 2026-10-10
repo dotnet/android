@@ -10,11 +10,6 @@ public class CallableWrapperConstructor : CallableWrapperMethod
 
 	public override void Generate (TextWriter sw, CallableWrapperWriterOptions options)
 	{
-		GenerateConstructor (sw);
-	}
-
-	void GenerateConstructor (TextWriter sw)
-	{
 		// TODO:  we only generate constructors so that Android types w/ no
 		//        default constructor can be subclasses by our generated code.
 		//
