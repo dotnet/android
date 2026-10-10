@@ -122,13 +122,14 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories));
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, false, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, true, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, true, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, true, true)]
-		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab, bool useSonameAlias, bool useShadowDynstr)
+		[TestCase (AndroidRuntime.CoreCLR, false, false, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, false, false, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, true, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, true, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, true, true, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, true, false, true)]
+		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab, bool useSonameAlias, bool useShadowDynstr, bool useTrailingDynamicEntry)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release))
 				return;
@@ -150,6 +151,8 @@ namespace Xamarin.Android.Build.Tests
 			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ());
 			if (useShadowDynstr)
 				library = CreateShadowDynstrLibrary (library);
+			if (useTrailingDynamicEntry)
+				library = AddTrailingDynamicStringTableSize (library);
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("Libraries/arm64-v8a/libcustom.so") {
 				BinaryContent = () => library,
 				Metadata = {
@@ -229,6 +232,36 @@ namespace Xamarin.Android.Build.Tests
 			int offset = result.AsSpan ().IndexOf (original);
 			Assert.GreaterOrEqual (offset, 0, "The ELF fixture must contain the original SONAME.");
 			replacement.CopyTo (result, offset);
+			return result;
+		}
+
+		static byte [] AddTrailingDynamicStringTableSize (byte [] elf)
+		{
+			Assert.AreEqual (2, elf [4], "The generated fixture must be ELF64.");
+			Assert.AreEqual (1, elf [5], "The generated fixture must use little-endian encoding.");
+			ulong sectionHeadersOffset = BinaryPrimitives.ReadUInt64LittleEndian (elf.AsSpan (40, 8));
+			ushort sectionHeaderSize = BinaryPrimitives.ReadUInt16LittleEndian (elf.AsSpan (58, 2));
+			int dynamicHeaderOffset = checked ((int)sectionHeadersOffset) + sectionHeaderSize * 4;
+			ulong dynamicOffset = BinaryPrimitives.ReadUInt64LittleEndian (elf.AsSpan (dynamicHeaderOffset + 24, 8));
+			ulong dynamicSize = BinaryPrimitives.ReadUInt64LittleEndian (elf.AsSpan (dynamicHeaderOffset + 32, 8));
+			Assert.AreEqual (112, dynamicSize, "Expected six dynamic tags and DT_NULL in the generated fixture.");
+
+			byte [] result = (byte [])elf.Clone ();
+			ulong dynamicTerminatorOffset = dynamicOffset + dynamicSize - 16;
+			Assert.AreEqual (0, BinaryPrimitives.ReadUInt64LittleEndian (result.AsSpan (checked ((int)dynamicTerminatorOffset), 8)));
+			ulong trailingEntryOffset = dynamicOffset + dynamicSize;
+			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (checked ((int)trailingEntryOffset), 8), 10); // DT_STRSZ
+			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (checked ((int)trailingEntryOffset + 8), 8), 0);
+			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (dynamicHeaderOffset + 32, 8), dynamicSize + 16);
+
+			const int ElfHeaderSize = 64;
+			const int ProgramHeaderSize = 56;
+			const int DynamicProgramHeaderIndex = 2;
+			int dynamicProgramHeaderOffset = ElfHeaderSize + ProgramHeaderSize * DynamicProgramHeaderIndex;
+			ulong programDynamicSize = BinaryPrimitives.ReadUInt64LittleEndian (result.AsSpan (dynamicProgramHeaderOffset + 32, 8));
+			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (dynamicProgramHeaderOffset + 32, 8), programDynamicSize + 16);
+			ulong programDynamicMemorySize = BinaryPrimitives.ReadUInt64LittleEndian (result.AsSpan (dynamicProgramHeaderOffset + 40, 8));
+			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (dynamicProgramHeaderOffset + 40, 8), programDynamicMemorySize + 16);
 			return result;
 		}
 

@@ -19,6 +19,7 @@ namespace Xamarin.Android.Tasks
 	static class ELFHelper
 	{
 		const string BinaryBlobLibraryName = "libbinary_blobs.so";
+		const int DynamicNullTag = 0;
 		const int DynamicStringTableTag = 5;
 		const int DynamicStringTableSizeTag = 10;
 		const int DynamicSonameTag = 14;
@@ -42,6 +43,8 @@ namespace Xamarin.Android.Tasks
 				ulong? stringTableSize = null;
 				var sonameOffsets = new List<ulong> ();
 				foreach (IDynamicEntry entry in dynamicSection.Entries) {
+					if ((int)entry.Tag == DynamicNullTag)
+						break;
 					if (!TryGetDynamicValue (entry, out ulong value))
 						continue;
 					switch ((int)entry.Tag) {
