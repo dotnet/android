@@ -25,7 +25,7 @@ public class CallableWrapperField
 		sw.WriteLine ();
 
 		foreach (var annotation in Annotations)
-			annotation.Generate (sw, "");
+			annotation.Generate (sw, "", options);
 
 		sw.Write ("\t");
 		sw.Write (Visibility);

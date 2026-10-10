@@ -16,11 +16,6 @@ public class CallableWrapperTypeAnnotation
 
 	public void Generate (TextWriter sw, string indent, CallableWrapperWriterOptions options)
 	{
-		Generate (sw, indent);
-	}
-
-	public void Generate (TextWriter sw, string indent)
-	{
 		sw.Write (indent);
 		sw.Write ('@');
 		sw.Write (Name);

@@ -76,7 +76,11 @@ namespace Java.Interop.Tools
 				var types = scanner.GetJavaTypes (assemblies, resolver)
 					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache));
 				foreach (var type in types) {
-					GenerateJavaCallableWrapper (type, outputPath, cache);
+					if (type.IsInterface)
+						continue;
+
+					var wrapper = CecilImporter.CreateType (type, cache);
+					wrapper.Generate (outputPath, new CallableWrapperWriterOptions ());
 				}
 				return 0;
 			}
@@ -87,17 +91,6 @@ namespace Java.Interop.Tools
 			finally {
 				resolver.Dispose ();
 			}
-		}
-
-		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath, TypeDefinitionCache cache)
-		{
-			if (type.IsInterface) {
-				return;
-			}
-
-			var t = CecilImporter.CreateType (type, cache);
-
-			t.Generate (outputPath);
 		}
 	}
 }

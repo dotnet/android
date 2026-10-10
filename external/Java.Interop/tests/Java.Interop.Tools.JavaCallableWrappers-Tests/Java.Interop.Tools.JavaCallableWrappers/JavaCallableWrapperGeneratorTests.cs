@@ -175,8 +175,10 @@ public class Name_ActivityLifecycleCallbacks
 
 			var o   = new StringWriter ();
 			var dir = Path.GetDirectoryName (typeof (JavaCallableWrapperGeneratorTests).Assembly.Location);
-			g.Generate (Path.Combine (dir, "__o"));
-			g.Generate (o);
+			var options = new CallableWrapperWriterOptions ();
+
+			g.Generate (Path.Combine (dir, "__o"), options);
+			g.Generate (o, options);
 
 			return o.ToString ();
 		}

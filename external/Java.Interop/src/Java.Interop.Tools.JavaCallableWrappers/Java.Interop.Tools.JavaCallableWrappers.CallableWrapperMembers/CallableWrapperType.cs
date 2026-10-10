@@ -73,6 +73,12 @@ public class CallableWrapperType
 			writer.WriteLine ();
 		}
 
+		writer.WriteLine ();
+
+		// Type annotations
+		foreach (var annotation in Annotations)
+			annotation.Generate (writer, "", options);
+
 		GenerateHeader (writer);
 
 		if (!isNested)
@@ -86,19 +92,8 @@ public class CallableWrapperType
 		GenerateFooter (writer);
 	}
 
-	public void Generate (TextWriter writer)
-	{
-		Generate (writer, new CallableWrapperWriterOptions ());
-	}
-
 	void GenerateHeader (TextWriter sw)
 	{
-		sw.WriteLine ();
-
-		// Type annotations
-		foreach (var annotation in Annotations)
-			annotation.Generate (sw, "");
-
 		sw.WriteLine ("public " + (IsAbstract ? "abstract " : "") + "class " + Name);
 
 		var extends = ExtendsType;
@@ -159,7 +154,6 @@ public class CallableWrapperType
 
 	void GenerateBody (TextWriter sw, CallableWrapperWriterOptions options)
 	{
-		// Preserve caller options at the virtual extension boundary, including null and custom state.
 		foreach (var ctor in Constructors)
 			ctor.Generate (sw, options);
 
@@ -294,12 +288,7 @@ public class CallableWrapperType
 	public void Generate (string outputPath, CallableWrapperWriterOptions options)
 	{
 		using (StreamWriter sw = OpenStream (outputPath))
-			Generate (sw, options);
-	}
-
-	public void Generate (string outputPath)
-	{
-		Generate (outputPath, new CallableWrapperWriterOptions ());
+			Generate (sw, options, false);
 	}
 
 	StreamWriter OpenStream (string outputPath)

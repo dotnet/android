@@ -17,7 +17,7 @@ public class CallableWrapperConstructor : CallableWrapperMethod
 		sw.WriteLine ();
 
 		foreach (var annotation in Annotations)
-			annotation.Generate (sw, "");
+			annotation.Generate (sw, "", options);
 
 		sw.Write ("\tpublic ");
 		sw.Write (Name);

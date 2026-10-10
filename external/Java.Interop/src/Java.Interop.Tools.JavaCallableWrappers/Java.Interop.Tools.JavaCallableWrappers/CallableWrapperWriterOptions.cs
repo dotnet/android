@@ -4,9 +4,6 @@ using System.Text;
 
 namespace Java.Interop.Tools.JavaCallableWrappers;
 
-/// <summary>
-/// Compatibility options for callers selecting the single supported XAJavaInterop1 style.
-/// </summary>
 public class CallableWrapperWriterOptions
 {
 	JavaPeerStyle codeGenerationTarget;

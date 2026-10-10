@@ -39,7 +39,7 @@ public class CallableWrapperMethod
 		sw.WriteLine ();
 
 		foreach (var annotation in Annotations)
-			annotation.Generate (sw, "");
+			annotation.Generate (sw, "", options);
 
 		sw.Write ("\t");
 
