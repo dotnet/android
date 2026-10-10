@@ -1,15 +1,12 @@
 using System;
 using MonoDroid.Generation;
 using NUnit.Framework;
-using Xamarin.Android.Binder;
 
 namespace generatortests;
 
 [TestFixture]
 class BlittableTypeTests : CodeGeneratorTestBase
 {
-	protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
-
 	[Test]
 	public void MethodWithBoolReturnType ()
 	{

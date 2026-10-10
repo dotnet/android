@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Java.Interop.Tools.Generator;
@@ -28,17 +27,12 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		internal JavaInteropCodeGenerator CreateCodeGenerator (TextWriter writer)
-		{
-			return new JavaInteropCodeGenerator (writer, this);
-		}
-
 		SymbolTable symbolTable;
 		public      SymbolTable             SymbolTable             {
 			get {
 				if (symbolTable != null)
 					return symbolTable;
-				return symbolTable = new SymbolTable (CodeGenerationTarget);
+				return symbolTable = new SymbolTable ();
 			}
 		}
 

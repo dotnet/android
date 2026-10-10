@@ -6,7 +6,6 @@ using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using NUnit.Framework;
-using Xamarin.Android.Binder;
 using Xamarin.Android.Tools.Bytecode;
 
 namespace generatortests
@@ -127,12 +126,10 @@ namespace generatortests
 		// JavaInteropCodeGenerator to produce the C# binding text.
 		static string GenerateCSharp (string apiXml, out List<GenBase> gens)
 		{
-			var options = new CodeGenerationOptions {
-				CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1,
-			};
+			var options = new CodeGenerationOptions ();
 			var sb = new System.Text.StringBuilder ();
 			var writer = new StringWriter (sb);
-			var generator = options.CreateCodeGenerator (writer);
+			var generator = new JavaInteropCodeGenerator (writer, options);
 
 			var doc = XDocument.Parse (apiXml);
 			gens = XmlApiImporter.Parse (doc, options);

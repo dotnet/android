@@ -4,7 +4,6 @@ using System.Reflection;
 using Mono.Cecil;
 using NUnit.Framework;
 using MonoDroid.Generation;
-using Xamarin.Android.Binder;
 
 namespace generatortests
 {
@@ -15,10 +14,7 @@ namespace generatortests
 	[TestFixture]
 	class UnmanagedCallersOnlyCallbackTests : CodeGeneratorTestBase
 	{
-		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
-
 		protected override CodeGenerationOptions CreateOptions () => new CodeGenerationOptions {
-			CodeGenerationTarget = Target,
 			SupportNullableReferenceTypes = true,
 			UseUnmanagedCallersOnlyCallbacks = true,
 			UseGlobal = true,
@@ -145,11 +141,10 @@ namespace generatortests
 		public void DefaultsAreUnchangedWhenFlagIsOff ()
 		{
 			options = new CodeGenerationOptions {
-				CodeGenerationTarget = Target,
 				SupportNullableReferenceTypes = true,
 				UseGlobal = true,
 			};
-			generator = options.CreateCodeGenerator (writer);
+			generator = new JavaInteropCodeGenerator (writer, options);
 
 			var source = GenerateWidget ();
 
@@ -207,7 +202,7 @@ namespace generatortests
 			builder = new System.Text.StringBuilder ();
 			writer = new System.IO.StringWriter (builder);
 			options = CreateOptions ();
-			generator = options.CreateCodeGenerator (writer);
+			generator = new JavaInteropCodeGenerator (writer, options);
 
 			return GenerateOverloads (type);
 		}
@@ -328,11 +323,10 @@ namespace generatortests
 		public void LegacyOutputIsUnchangedWhenFlagIsOff ()
 		{
 			options = new CodeGenerationOptions {
-				CodeGenerationTarget = Target,
 				SupportNullableReferenceTypes = true,
 				UseGlobal = true,
 			};
-			generator = options.CreateCodeGenerator (writer);
+			generator = new JavaInteropCodeGenerator (writer, options);
 
 			var source = GenerateOverloads ();
 
