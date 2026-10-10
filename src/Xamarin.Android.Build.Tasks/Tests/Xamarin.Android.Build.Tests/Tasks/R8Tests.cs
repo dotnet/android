@@ -90,6 +90,14 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("-keepclassmembernames interface * { *; }", rules);
 			StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", rules);
 			StringAssert.Contains ("-keep class mono.android.Runtime { *; }", rules);
+			StringAssert.Contains ("-keepclassmembernames class * { <fields>; }", rules);
+
+			foreach (var runtime in new [] { "CoreCLR", "NativeAOT" }) {
+				writer.GetStringBuilder ().Clear ();
+				R8.WriteObfuscationRules (writer, "runtime-remapping", runtime);
+				rules = writer.ToString ();
+				Assert.AreEqual (runtime != "NativeAOT", rules.Contains ("-keepclassmembernames class * { <fields>; }"));
+			}
 		}
 
 		[Test]
@@ -116,6 +124,7 @@ namespace Xamarin.Android.Build.Tests
 					UseScopedTypeMapMembers = true,
 					EnableShrinking = true,
 					ObfuscationMode = "runtime-remapping",
+					AndroidRuntime = "NativeAOT",
 					JavaSourceFiles = [new TaskItem (source)],
 					JavaPlatformJarPath = Path.Combine (directory, "android.jar"),
 					ProguardGeneratedApplicationConfiguration = Path.Combine (directory, "primary.cfg"),
@@ -128,7 +137,8 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ("-keep,allowobfuscation class example.UserSource { *; }", File.ReadAllText (task.ProguardGeneratedApplicationConfiguration));
 				var common = File.ReadAllText (task.ProguardCommonXamarinConfiguration);
 				StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", common);
-				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }", common);
+				StringAssert.DoesNotContain ("-keepclassmembernames class * { <fields>; }", common);
+				StringAssert.Contains ("-keepclassmembers class net.dot.jni.nativeaot.NativeAotEnvironmentVars { static java.lang.String[] systemProperties; }", common);
 			} finally {
 				Directory.Delete (directory, recursive: true);
 			}

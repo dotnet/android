@@ -1189,8 +1189,11 @@ object and statically links the table afterward.
 
 Runtime-generated JNI names may require explicit remapping or keep rules.
 Conservative keep rules still protect native callbacks, bootstrap code, and
-resource-referenced names. No mode falls back to another mode; unrecognized
-values report [XA1050](../messages/xa1050.md) when R8 is enabled.
+resource-referenced names. NativeAOT allows field renaming; CoreCLR preserves
+field names because linked metadata can lose inherited field registrations.
+Raw JNI field-ID lookups and Java reflection bypass member remapping and require
+explicit `ProguardConfiguration` keep rules. No mode falls back to another mode;
+unrecognized values report [XA1050](../messages/xa1050.md) when R8 is enabled.
 
 When managed-trimmed CoreCLR builds use retained typemap rules, all Java
 names are preserved regardless of this setting, but R8 optimization remains
