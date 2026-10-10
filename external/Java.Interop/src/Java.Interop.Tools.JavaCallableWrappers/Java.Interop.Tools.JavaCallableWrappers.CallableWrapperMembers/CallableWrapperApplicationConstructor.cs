@@ -13,11 +13,6 @@ public class CallableWrapperApplicationConstructor
 
 	public void Generate (TextWriter sw, CallableWrapperWriterOptions options)
 	{
-		Generate (sw);
-	}
-
-	public void Generate (TextWriter sw)
-	{
 		sw.WriteLine ();
 
 		sw.Write ("\tpublic ");

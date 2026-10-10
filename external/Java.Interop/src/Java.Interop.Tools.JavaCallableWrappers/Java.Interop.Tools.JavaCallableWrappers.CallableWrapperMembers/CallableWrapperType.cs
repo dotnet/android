@@ -159,14 +159,14 @@ public class CallableWrapperType
 
 	void GenerateBody (TextWriter sw, CallableWrapperWriterOptions options)
 	{
-		// Legacy options belong only at the virtual extension boundary, including null and custom state.
+		// Preserve caller options at the virtual extension boundary, including null and custom state.
 		foreach (var ctor in Constructors)
 			ctor.Generate (sw, options);
 
-		ApplicationConstructor?.Generate (sw);
+		ApplicationConstructor?.Generate (sw, options);
 
 		foreach (var field in Fields)
-			field.Generate (sw);
+			field.Generate (sw, options);
 
 		foreach (var method in Methods)
 			method.Generate (sw, options);
@@ -299,8 +299,7 @@ public class CallableWrapperType
 
 	public void Generate (string outputPath)
 	{
-		using (StreamWriter sw = OpenStream (outputPath))
-			Generate (sw);
+		Generate (outputPath, new CallableWrapperWriterOptions ());
 	}
 
 	StreamWriter OpenStream (string outputPath)
