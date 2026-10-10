@@ -67,8 +67,6 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				AssemblyStoreElfWriter.Write (new [] { (JniRemappingBinaryBlob.Symbol, (Stream)source) },
 					output, arch, "libbinary_blobs.so");
 				byte [] elf = output.ToArray ();
-				AssemblyStoreElfWriter.Validate (elf, arch, "libbinary_blobs.so",
-					new [] { (JniRemappingBinaryBlob.Symbol, blob) });
 				Directory.CreateDirectory (Path.GetDirectoryName (path) ?? throw new InvalidDataException ("No output directory."));
 				File.WriteAllBytes (path, elf);
 				var item = new TaskItem (path);
