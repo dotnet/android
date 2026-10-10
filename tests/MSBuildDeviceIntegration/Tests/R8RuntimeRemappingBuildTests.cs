@@ -121,11 +121,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories));
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, true)]
-		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab)
+		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, true, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, true)]
+		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab, bool useSonameAlias)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release))
 				return;
@@ -149,7 +150,7 @@ namespace Xamarin.Android.Build.Tests
 				BinaryContent = () => library,
 				Metadata = {
 					{ "Abi", "arm64-v8a" },
-					{ "ArchiveFileName", "libbinary_blobs.so" },
+					{ "ArchiveFileName", useSonameAlias ? "libcustom.so" : "libbinary_blobs.so" },
 				},
 			});
 			builder.ThrowOnBuildFailure = false;
@@ -158,6 +159,53 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Remove (remapping);
 			Assert.IsFalse (builder.Build (proj), "The library name remains reserved when no remapping data is generated.");
 			StringAssertEx.Contains ("error XA4330", builder.LastBuildOutput);
+		}
+
+		[TestCase (false, false, false)]
+		[TestCase (false, false, true)]
+		[TestCase (true, false, false)]
+		[TestCase (true, true, true)]
+		public void ReservedBinaryBlobLibraryInJarIsRejected (bool release, bool aab, bool useSonameAlias)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release))
+				return;
+			var remapping = new BuildItem ("_AndroidRemapMembers", "explicit-remap.xml") {
+				TextContent = () => """<replacements><replace-type from="example/Original" to="example/Replacement" /></replacements>""",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = release,
+				OtherBuildItems = {
+					remapping,
+					new BuildItem ("AndroidPackagingOptionsInclude", "**/*.so"),
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
+			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "A clean application with remapping should build.");
+			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ());
+			string entryName = useSonameAlias ? "lib/arm64-v8a/libcustom.so" : "lib/arm64-v8a/libbinary_blobs.so";
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "NativePayload.jar") {
+				BinaryContent = () => CreateJar (entryName, library),
+			});
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "JAR native entries must not bypass the reserved name or SONAME check.");
+			StringAssertEx.Contains ("error XA4330", builder.LastBuildOutput);
+			proj.OtherBuildItems.Remove (remapping);
+			Assert.IsFalse (builder.Build (proj), "The reserved JAR entry must also be rejected without remapping data.");
+			StringAssertEx.Contains ("error XA4330", builder.LastBuildOutput);
+		}
+
+		static byte [] CreateJar (string entryName, byte [] contents)
+		{
+			using var jar = new MemoryStream ();
+			using (var archive = new ZipArchive (jar, ZipArchiveMode.Create, leaveOpen: true)) {
+				using var stream = archive.CreateEntry (entryName).Open ();
+				stream.Write (contents);
+			}
+			return jar.ToArray ();
 		}
 
 		[TestCase (true)]

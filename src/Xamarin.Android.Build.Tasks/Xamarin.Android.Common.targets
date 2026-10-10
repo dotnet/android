@@ -2190,6 +2190,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
+      AndroidRuntime="$(_AndroidRuntime)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       IncludeFiles="@(AndroidPackagingOptionsInclude)"
       JavaSourceFiles="@(AndroidJavaSource)"
@@ -2199,6 +2200,7 @@ because xbuild doesn't support framework reference assemblies.
   </CollectJarContentFilesForArchive>
 
   <CollectNativeFilesForArchive
+      AndroidRuntime="$(_AndroidRuntime)"
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"
@@ -2313,6 +2315,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
+      AndroidRuntime="$(_AndroidRuntime)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       IncludeFiles="@(AndroidPackagingOptionsInclude)"
       JavaSourceFiles="@(AndroidJavaSource)"
@@ -2322,6 +2325,7 @@ because xbuild doesn't support framework reference assemblies.
   </CollectJarContentFilesForArchive>
 
   <CollectNativeFilesForArchive
+      AndroidRuntime="$(_AndroidRuntime)"
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"

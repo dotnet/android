@@ -20,6 +20,8 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 	public string AndroidPackageFormat { get; set; } = "";
 
+	public string AndroidRuntime { get; set; } = "";
+
 	public string [] ExcludeFiles { get; set; } = [];
 
 	public string [] IncludeFiles { get; set; } = [];
@@ -81,7 +83,6 @@ public class CollectJarContentFilesForArchive : AndroidTask
 					}
 
 					var path = rootPath + name;
-
 					// check for ignored items
 					bool exclude = false;
 					bool forceInclude = false;
@@ -105,6 +106,22 @@ public class CollectJarContentFilesForArchive : AndroidTask
 					if (exclude)
 						continue;
 
+					if ((AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") && IsNativeLibrary (name)) {
+						bool reservedName = string.Equals (Path.GetFileName (name), "libbinary_blobs.so", StringComparison.Ordinal);
+						bool reservedSoname = false;
+						if (!reservedName) {
+							using var entryStream = jarItem.Open ();
+							using var elfStream = new MemoryStream ();
+							entryStream.CopyTo (elfStream);
+							elfStream.Position = 0;
+							reservedSoname = ELFHelper.StreamHasBinaryBlobSoname (Log, elfStream, $"{jarFile}#{name}");
+						}
+						if (reservedName || reservedSoname) {
+							Log.LogCodedError ("XA4330", Properties.Resources.XA4330, $"{jarFile}#{name}", path);
+							continue;
+						}
+					}
+
 					if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
 						Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 						continue;
@@ -119,6 +136,13 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		FilesToAddToArchive = files.ToArray ();
 
 		return !Log.HasLoggedErrors;
+	}
+
+	static bool IsNativeLibrary (string path)
+	{
+		string normalized = path.Replace ('\\', '/');
+		return normalized.Contains ("/lib/", StringComparison.Ordinal) && normalized.EndsWith (".so", StringComparison.OrdinalIgnoreCase) ||
+			normalized.StartsWith ("lib/", StringComparison.Ordinal) && normalized.EndsWith (".so", StringComparison.OrdinalIgnoreCase);
 	}
 
 	static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)

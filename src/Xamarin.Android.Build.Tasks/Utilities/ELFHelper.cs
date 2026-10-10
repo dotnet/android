@@ -17,6 +17,42 @@ namespace Xamarin.Android.Tasks
 {
 	static class ELFHelper
 	{
+		const string BinaryBlobLibraryName = "libbinary_blobs.so";
+		const int DynamicSonameTag = 14;
+
+		public static bool StreamHasBinaryBlobSoname (TaskLoggingHelper log, Stream stream, string source)
+		{
+			try {
+				using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
+				return HasSoname (elf, BinaryBlobLibraryName);
+			} catch (Exception ex) {
+				log.LogDebugMessage ($"Attempt to read the SONAME from '{source}' failed with exception.");
+				log.LogDebugMessage (ex.ToString ());
+				return false;
+			}
+		}
+
+		static bool HasSoname (IELF elf, string soname)
+		{
+			var strings = GetSection (elf, ".dynstr") as IStringTable;
+			if (strings == null)
+				return false;
+			foreach (IDynamicSection section in elf.GetSections<IDynamicSection> ()) {
+				foreach (IDynamicEntry entry in section.Entries) {
+					if ((int)entry.Tag != DynamicSonameTag)
+						continue;
+					ulong offset = entry switch {
+						DynamicEntry<ulong> entry64 => entry64.Value,
+						DynamicEntry<uint> entry32 => entry32.Value,
+						_ => throw new InvalidDataException ("Unsupported ELF SONAME entry."),
+					};
+					if (string.Equals (strings [(long)offset], soname, StringComparison.Ordinal))
+						return true;
+				}
+			}
+			return false;
+		}
+
 		public static ELFInfo? GetInfo (TaskLoggingHelper log, string path)
 		{
 			try {
@@ -29,20 +65,24 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static void AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item)
+		public static bool AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item, string? reservedSoname = null)
 		{
 			if (path.IsNullOrEmpty () || !File.Exists (path)) {
-				return;
+				return false;
 			}
 
+			bool hasReservedSoname = false;
 			log.LogDebugMessage ($"Checking alignment to {alignmentInPages}k page boundary in shared library {path}");
 			try {
 				using IELF elf = ELFReader.Load (path);
+				if (!reservedSoname.IsNullOrEmpty ())
+					hasReservedSoname = HasSoname (elf, reservedSoname);
 				AssertValidLibraryAlignment (log, MonoAndroidHelper.ZipAlignmentToPageSize (alignmentInPages), path, elf, item);
 			} catch (Exception ex) {
 				log.LogCodedWarning ("XA0146", Properties.Resources.XA0146, path);
 				log.LogWarningFromException (ex, showStackTrace: true);
 			}
+			return hasReservedSoname;
 		}
 
 		static void AssertValidLibraryAlignment (TaskLoggingHelper log, uint pageSize, string path, IELF elf, ITaskItem? item)
@@ -121,7 +161,6 @@ namespace Xamarin.Android.Tasks
 			if (libraryPath.IsNullOrEmpty () || !File.Exists (libraryPath)) {
 				return false;
 			}
-
 			using IELF elf = ELFReader.Load (libraryPath);
 			var dynstr = GetSection (elf, ".dynstr") as IStringTable;
 			if (dynstr == null) {
