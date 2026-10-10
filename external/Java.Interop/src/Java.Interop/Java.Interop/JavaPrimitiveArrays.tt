@@ -54,8 +54,8 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int size)
-			: base ((IntPtr) elements, size)
+		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount)
+			: base ((IntPtr) elements, elementCount, sizeof (<#= info.ManagedType #>))
 		{
 			this.arrayHandle = arrayHandle;
 		}
@@ -68,6 +68,8 @@ namespace Java.Interop {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
+				if (index < 0 || index >= ElementCount)
+					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
 					return ref Elements [index];
 				}
@@ -120,7 +122,7 @@ namespace Java.Interop {
 			var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");
-			return new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements, Length*sizeof (<#= info.ManagedType #>));
+			return new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements, Length);
 		}
 
 		public override unsafe int IndexOf (<#= info.ManagedType #> item)
