@@ -690,8 +690,8 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>O destino da geração de código do Android "{0}" está obsoleto e será removido em uma versão futura do .NET para Android. Atualize as propriedades do projeto para usar "XAJavaInterop1".</value>
-    <comment>The following are literal names and should not be translated: XAJavaInterop1
+    <value>The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.</value>
+    <comment>The following are literal names and should not be translated: AndroidCodegenTarget, XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
@@ -929,6 +929,18 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
     <value>A linha {0} contém um nome de classe Java retido inválido: ''{1}''.</value>
     <comment>{0} - The one-based line number.
 {1} - The invalid input record.</comment>
+  </data>
+  <data name="XA4329_RequiredProperty" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping.
+{0} - The required MSBuild property name.
+{1} - The required literal value.
+{2} - The actual value, including quotes.</comment>
+  </data>
+  <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
+{0} - The runtime name.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>O diretório de cadeias de ferramentas '{0}' do Android NDK está ausente. Instale o Android NDK.</value>
@@ -1183,8 +1195,8 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>A propriedade 'AndroidR8ObfuscationMode' do MSBuild tem um valor inválido de '{0}'. Os valores válidos são 'disabled' e 'private-members'.</value>
-    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
@@ -1255,11 +1267,6 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <value>O tipo "{0}" referenciado pelo manifesto não foi encontrado em nenhum assembly verificado. Pode ser um tipo de estrutura.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
-  </data>
-  <data name="XA4251" xml:space="preserve">
-    <value>O tipo ''{0}'' usa [JniAddNativeMethodRegistrationAttribute], que não tem suporte do mapa de tipos trimmable. Relate este cenário em https://github.com/dotnet/android/issues para que a equipe possa avaliar se deve oferecer suporte a ele.</value>
-    <comment>The following is a literal name and should not be translated: JniAddNativeMethodRegistrationAttribute.
-{0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
     <value>A URL insegura do repositório Maven '{0}' não é permitida. Use uma URL HTTPS ou defina AllowInsecureHttp="true" nos metadados do item para ignorar essa verificação.</value>
