@@ -135,7 +135,9 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			return _members.InstanceMethods.InvokeVirtualInt32NoArgumentMethod ("hashCode.()I", this);
+			unsafe {
+				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			}
 		}
 
 		public override string? ToString ()
