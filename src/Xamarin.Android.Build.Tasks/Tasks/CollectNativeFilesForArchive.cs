@@ -52,9 +52,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
-
-	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
 
 	public string AndroidRuntime { get; set; } = "";
@@ -64,9 +61,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	[Output]
 	public ITaskItem[] FilesToAddToArchive { get; set; } = [];
-
-	[Output]
-	public ITaskItem [] DSODirectoriesToDelete { get; set; } = [];
 
 	[Output]
 	public ITaskItem [] StrippedLibraries { get; set; } = [];
@@ -85,8 +79,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 		bool success = false;
 		try {
 			var apk = new PackageFileListBuilder ();
-			var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, RuntimePackLibraryDirectories, IntermediateOutputPath);
-
 			var outputFiles = new List<string> {
 				ApkOutputPath
 			};
@@ -104,9 +96,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 			// Task output parameters
 			FilesToAddToArchive = apk.ToArray ();
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
-			DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig)
-				.Select (d => new TaskItem (d))
-				.ToArray ();
 			StrippedLibraries = strippedLibraries.ToArray ();
 			success = !Log.HasLoggedErrors;
 			return success;

@@ -237,13 +237,9 @@ _ResolveAssemblies MSBuild target.
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
 
-    <!-- This must be done as early as possible, so the runtime libraries location is known to all
-         the tasks that need it and so that the shared library files that are never to be packaged
-         are never taken into consideration in any context.
-    -->
+    <!-- Exclude runtime-pack system library stubs before native-library packaging. -->
     <ProcessRuntimePackLibraryDirectories
         ResolvedFilesToPublish="@(ResolvedFileToPublish)">
-      <Output TaskParameter="RuntimePackLibraryDirectories" ItemName="_RuntimePackLibraryDirectory" />
       <Output TaskParameter="NativeLibrariesToRemove" ItemName="_NativeLibraryToRemove" />
     </ProcessRuntimePackLibraryDirectories>
 

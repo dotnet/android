@@ -30,8 +30,6 @@ public class CreateAssemblyStore : AndroidTask
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
-	public bool UseAssemblyStore { get; set; }
-
 	[Output]
 	public ITaskItem [] AssembliesToAddToArchive { get; set; } = [];
 
@@ -39,11 +37,6 @@ public class CreateAssemblyStore : AndroidTask
 	{
 		// Get all the user and framework assemblies we may need to package
 		var assemblies = ResolvedFrameworkAssemblies.Concat (ResolvedUserAssemblies).Where (asm => !(ShouldSkipAssembly (asm))).ToArray ();
-
-		if (!UseAssemblyStore) {
-			AssembliesToAddToArchive = assemblies;
-			return !Log.HasLoggedErrors;
-		}
 
 		var store_builder = new AssemblyStoreBuilder (Log);
 		var per_arch_assemblies = MonoAndroidHelper.GetPerArchAssemblies (assemblies, SupportedAbis, true);

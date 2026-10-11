@@ -82,7 +82,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.WrapAssembliesAsSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WriteLockFile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2010,14 +2009,13 @@ because xbuild doesn't support framework reference assemblies.
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
       ResolvedUserAssemblies="@(_BuildApkResolvedUserAssemblies)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      UseAssemblyStore="$(_AndroidUseAssemblyStore)">
+      SupportedAbis="@(_BuildTargetAbis)">
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
 
   <WrapAssemblyStoresAsSharedLibraries
       MSBuildRuntime="NET"
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '$(_AndroidUseAssemblyStore)' == 'true' "
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       IntermediateOutputPath="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)">
     <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
@@ -2028,16 +2026,6 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <FilesToAddToArchive Include="@(_AndroidBinaryBlobLibrary)" />
   </ItemGroup>
-
-  <WrapAssembliesAsSharedLibraries
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '$(_AndroidUseAssemblyStore)' != 'true' "
-      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
-    <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
-  </WrapAssembliesAsSharedLibraries>
 
   <CollectDalvikFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
@@ -2070,11 +2058,9 @@ because xbuild doesn't support framework reference assemblies.
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
+      IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="_AndroidNativeFilesToAddToArchive" />
-    <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
     <Output TaskParameter="StrippedLibraries" ItemName="FileWrites" />
     <Output TaskParameter="StrippedLibraries" ItemName="_AndroidStrippedNativeLibraries" />
   </CollectNativeFilesForArchive>
@@ -2191,11 +2177,9 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
+      IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="_AndroidNativeFilesToAddToArchive" />
-    <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
     <Output TaskParameter="StrippedLibraries" ItemName="FileWrites" />
     <Output TaskParameter="StrippedLibraries" ItemName="_AndroidStrippedNativeLibraries" />
   </CollectNativeFilesForArchive>
