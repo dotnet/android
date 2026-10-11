@@ -457,8 +457,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				// This is a bit of a kludge to make a specific corner case work seamlessly from the LlvmIrModule user's point of view.
-				// The scenario is used in ApplicationConfigNativeAssemblyGenerator and it involves an array of structures where each
-				// array index contains the same object in structure.Obj but each instance needs to allocate a unique buffer at runtime.
+				// Each array index can contain the same object in structure.Obj but need a unique buffer at runtime.
 				// LlvmIrBufferManager makes it possible, but it must be able to uniquely identify each instance, which in this scenario
 				// wouldn't be possible if we had to rely only on the StructureInstance contents.  Enter `StructureInstance.IndexInArray`,
 				// which is used to create unique buffers and unambiguously assign them to each structure instance.

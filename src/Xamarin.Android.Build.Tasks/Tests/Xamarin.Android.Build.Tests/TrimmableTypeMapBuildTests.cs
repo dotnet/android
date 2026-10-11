@@ -2070,16 +2070,10 @@ namespace Xamarin.Android.Build.Tests {
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
-			var environmentFiles = Directory.GetFiles (builder.Output.GetIntermediaryPath ("android"), "environment.*.ll");
-			Assert.IsNotEmpty (environmentFiles, "Expected generated environment.<abi>.ll files.");
-
-			foreach (var environmentFile in environmentFiles) {
-				var abi = Path.GetFileNameWithoutExtension (environmentFile).Substring ("environment.".Length);
+			EnvironmentHelper.ReadCoreClrBootstrap (builder.Output.GetIntermediaryPath (""));
+			foreach (var abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 				var manifestFile = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so.manifest"));
-
-				if (!File.Exists (manifestFile)) {
-					continue;
-				}
+				FileAssert.Exists (manifestFile);
 
 				using var storeReader = new BinaryReader (File.OpenRead (Path.ChangeExtension (manifestFile, null)));
 				Assert.AreEqual (0x41424158u, storeReader.ReadUInt32 ());

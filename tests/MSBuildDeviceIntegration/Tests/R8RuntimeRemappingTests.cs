@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 			var build = BinaryLog.ReadBuild (binlog);
 			Assert.IsEmpty (build.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> (t =>
-				t.Name == "LinkNativeAotSharedLibrary" || t.Name == "LinkNativeRuntime" || t.Name == "LinkApplicationSharedLibraries"),
+				t.Name == "LinkNativeAotSharedLibrary" || t.Name == "LinkNativeRuntime"),
 				"Data-only remapping updates must not invoke the application native linker.");
 		}
 

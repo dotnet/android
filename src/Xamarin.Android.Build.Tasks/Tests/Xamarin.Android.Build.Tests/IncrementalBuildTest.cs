@@ -482,14 +482,9 @@ namespace Xamarin.Android.Build.Tests
 		void AssertDynamicJniRegistrationDisabled (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
 			EnvironmentHelper.ReadCoreClrBootstrap (objDirPath);
-			foreach (var envFile in envFiles) {
-				var source = File.ReadAllText (envFile.Path);
-				StringAssert.DoesNotContain ("jni_add_native_method_registration_attribute_present", source);
-				StringAssert.DoesNotContain ("jnienv_registerjninatives_method_token", source);
-				StringAssert.DoesNotContain ("marshal_methods_enabled", source);
-			}
+			Assert.IsEmpty (Directory.GetFiles (Path.Combine (objDirPath, "android"), "*.ll"),
+				"Dynamic registration should not depend on generated LLVM sources.");
 		}
 
 		Dictionary<string, DateTime> GetJniRemappingBlobTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
@@ -1752,7 +1747,6 @@ namespace Lib2
 
 					b.Output.AssertTargetIsNotSkipped ("CoreCompile");
 					b.Output.AssertTargetIsSkipped ("_CompileNativeAssemblySources");
-					b.Output.AssertTargetIsSkipped ("_CreateApplicationSharedLibraries");
 					b.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
 					b.Output.AssertTargetIsSkipped ("_Sign");
 					Assert.AreEqual (apkWriteTime, File.GetLastWriteTimeUtc (apk), $"{apk} should not be rewritten for an incremental C# change.");
@@ -1760,12 +1754,6 @@ namespace Lib2
 				}
 			}
 		}
-
-		readonly string [] ExpectedAssemblyFiles = new [] {
-			Path.Combine ("android", "environment.@ABI@.o"),
-			Path.Combine ("android", "environment.@ABI@.ll"),
-			Path.Combine ("app_shared_libraries", "@ABI@", "libxamarin-app.so")
-		};
 
 		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b, string abi, AndroidRuntime runtime)
 		{
@@ -1775,19 +1763,14 @@ namespace Lib2
 			}
 
 			var lines = File.ReadAllLines (Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
-			foreach (var fileRaw in ExpectedAssemblyFiles) {
-				string file = fileRaw.Replace ("@ABI@", abi);
-				var path = Path.Combine (intermediate, file);
-				CollectionAssert.Contains (lines, path, $"{file} is not in FileWrites!");
-				FileAssert.Exists (path);
-			}
 			var typeMapAssembly = Path.Combine (intermediate, "typemap", "_Microsoft.Android.TypeMaps.dll");
 			CollectionAssert.Contains (lines, typeMapAssembly, "The managed type map assembly should be in FileWrites.");
 			FileAssert.Exists (typeMapAssembly);
 
-			foreach (var obsoleteSource in new [] { $"typemap.{abi}.ll", $"marshal_methods.{abi}.ll" }) {
+			foreach (var obsoleteSource in new [] { $"environment.{abi}.ll", $"environment.{abi}.o", $"typemap.{abi}.ll", $"marshal_methods.{abi}.ll", $"jni_remap.{abi}.ll" }) {
 				FileAssert.DoesNotExist (Path.Combine (intermediate, "android", obsoleteSource));
 			}
+			FileAssert.DoesNotExist (Path.Combine (intermediate, "app_shared_libraries", abi, "libxamarin-app.so"));
 		}
 
 #pragma warning disable 414

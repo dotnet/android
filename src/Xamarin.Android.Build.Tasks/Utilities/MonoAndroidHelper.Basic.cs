@@ -217,18 +217,6 @@ partial class MonoAndroidHelper
 		return $"{MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER}{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 	}
 
-	/// <summary>
-	/// Returns size of the extension + length of the prefix for mangled assembly names. This is
-	/// used to pre-allocate space for assembly names in `libxamarin-app.so`
-	/// <seealso cref="MakeDiscreteAssembliesEntryName"/>
-	/// </summary>
-	public static ulong GetMangledAssemblyNameSizeOverhead ()
-	{
-		// Satellite marker is one character more, for the `-` closing the culture part
-		return (ulong)MANGLED_ASSEMBLY_NAME_EXT.Length +
-		       (ulong)Math.Max (MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.Length + 1, MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.Length);
-	}
-
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
 	public static byte[] Utf16StringToBytes (string str) => Encoding.Unicode.GetBytes (str);
 

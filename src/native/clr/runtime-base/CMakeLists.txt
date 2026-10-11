@@ -97,7 +97,6 @@ target_link_libraries(
   ${LIB_NAME}
   PRIVATE
   xa::shared
-  xa::xamarin-app
 )
 
 xa_add_compile_definitions(${LIB_NAME})

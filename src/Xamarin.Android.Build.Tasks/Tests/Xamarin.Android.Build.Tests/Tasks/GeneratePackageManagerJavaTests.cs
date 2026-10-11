@@ -82,7 +82,6 @@ namespace Xamarin.Android.Build.Tests
 			var configTask = new GenerateNativeApplicationConfigSources {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
-				EnvironmentOutputDirectory = Path.Combine (path, "env"),
 				CoreClrBootstrapOutputFile = bootstrapPath,
 				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
@@ -123,7 +122,6 @@ namespace Xamarin.Android.Build.Tests
 					new TaskItem ("linked/HelloAndroid.dll", metadata),
 					new TaskItem ("linked/Mono.Android.Export.dll", skipped),
 				],
-				EnvironmentOutputDirectory = Path.Combine (path, "env"),
 				CoreClrBootstrapOutputFile = bootstrapPath,
 				SupportedAbis = ["arm64-v8a"],
 				AndroidPackageName = "com.microsoft.net6.helloandroid",

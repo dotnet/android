@@ -155,9 +155,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1042](xa1042.md): The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.
 + [XA1043](xa1043.md): Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element.
 + [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
-+ [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
-+ [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
-+ [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported.
 + [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
@@ -370,7 +367,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `JVC` - `Javac`
 * `JTX` - `JarToXml`
 * `KEY` - `KeyTool`
-* `LAS` - `LinkApplicationSharedLibraries`
 * `LEF` - `LogErrorsForFiles`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`

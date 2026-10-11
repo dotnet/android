@@ -31,11 +31,18 @@ library images, as required by the Android Linux kernel.
 
 ## .NET for Android runtime, libraries and data
 
-`.NET for Android` runtime is composed of two libraries, one being the pre-compiled runtime
-itself (`libmonodroid.so` in the APK) and another library being built together with the
-application, containing application-specific dynamically generated code (`libxamarin-app.so`
-in the APK).  These two libraries together contain all the code and data to make the application
-run properly on all the supported targets.
+The default CoreCLR layout uses the precompiled `.NET for Android` runtime (`libmonodroid.so`
+in the APK). Application configuration is serialized as the ABI-independent XCFG bootstrap
+body and packaged in `libbinary_blobs.so`, with an exported `coreclr_bootstrap` symbol.
+Optional JNI remapping uses the `remapping_data` symbol in the same library. These data
+libraries contain no executable code and are written directly by managed ELF writers.
+The runtime owns the decoded configuration, DSO handles and assembly-store buffers.
+Applications no longer generate environment LLVM IR or link `libxamarin-app.so`.
+
+The private native-runtime-linking path still generates P/Invoke preservation LLVM IR
+and links selected native runtime archives. It is separate from the default prebuilt layout.
+NativeAOT continues to use the .NET native compiler and the official Android NDK linker;
+its Java environment bootstrap is unchanged.
 
 In addition to the above, `.NET for Android` ships a number of managed assemblies.  For a number
 of years (starting with `Mono for Android`, through `Xamarin.Android`), all the assemblies had
@@ -116,8 +123,8 @@ in the modern `Microsoft.Android.Build.Tasks` assembly. Its
 writes the ELF headers and dynamic metadata directly in managed code and stream-copies the raw store
 bytes unchanged. No assembler, linker, native dependency or executable code is needed for this wrapper.
 The existing assembly-store setting selects this task unconditionally for stores; discrete files
-continue to use `DSOWrapperGenerator` and `llvm-objcopy`. Other application-specific LLVM generation
-and bundled native tools are unaffected.
+continue to use `DSOWrapperGenerator` and `llvm-objcopy`. NDK linking, optional native-library
+stripping and discrete payload wrapping remain supported.
 
 The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm`,
 `llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.

@@ -294,9 +294,7 @@ namespace Xamarin.Android.Build.Tests
 				if (runtime == AndroidRuntime.CoreCLR) {
 					environmentVariables = EnvironmentHelper.ReadCoreClrBootstrap (intermediate).EnvironmentVariables;
 				} else {
-					var envFilesDir = Path.Combine (intermediate, "android-x64");
-					var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
-					environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
+					environmentVariables = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate);
 				}
 				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
