@@ -79,6 +79,13 @@ The required CoreCLR `coreclr_bootstrap` symbol contains the XCFG application
 configuration. The optional `remapping_data` symbol contains JNI remapping data
 and is absent when there are no semantic mappings.
 
+CoreCLR reads application configuration, environment variables, system properties,
+runtime properties, and JNI preloads from XCFG into runtime-owned state. It does
+not link to application configuration globals or a dummy `libxamarin-app` library.
+The native build targets Android only; the deprecated desktop Designer targets
+are no-ops and do not require a configuration stub. NativeAOT still initializes
+its environment and system properties through its Java bootstrap.
+
 The shared native loader owns `dlopen`/`dlsym`, BLBB envelope decoding, optional
 Zstandard decompression, and process-lifetime storage. Managed remapping lookup
 receives the existing single-pointer descriptor. The ELF layer does not change
