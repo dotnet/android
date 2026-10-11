@@ -98,7 +98,6 @@ stages:
         installerArtifactName: $(InstallerArtifactName)
         nugetArtifactName: $(NuGetArtifactName)
         testAssembliesArtifactName: $(TestAssembliesArtifactName)
-        windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
         buildResultArtifactName: Build Results - macOS
         use1ESTemplate: false
 
