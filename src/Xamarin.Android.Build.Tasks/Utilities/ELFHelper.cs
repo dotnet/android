@@ -45,7 +45,8 @@ namespace Xamarin.Android.Tasks
 				foreach (IDynamicEntry entry in dynamicSection.Entries) {
 					if ((int)entry.Tag == DynamicNullTag)
 						break;
-					if (!TryGetDynamicValue (entry, out ulong value))
+					var (hasValue, value) = GetDynamicValue (entry);
+					if (!hasValue)
 						continue;
 					switch ((int)entry.Tag) {
 						case DynamicStringTableTag:
@@ -81,20 +82,11 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		static bool TryGetDynamicValue (IDynamicEntry entry, out ulong value)
-		{
-			switch (entry) {
-				case DynamicEntry<ulong> entry64:
-					value = entry64.Value;
-					return true;
-				case DynamicEntry<uint> entry32:
-					value = entry32.Value;
-					return true;
-				default:
-					value = 0;
-					return false;
-			}
-		}
+		static (bool Success, ulong Value) GetDynamicValue (IDynamicEntry entry) => entry switch {
+			DynamicEntry<ulong> { Value: var value } => (true, value),
+			DynamicEntry<uint> { Value: var value } => (true, value),
+			_ => (false, 0),
+		};
 
 		static bool TryGetSectionAddress (IStringTable section, out ulong address, out ulong size)
 		{
