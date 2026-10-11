@@ -43,8 +43,10 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		string outputRoot = Path.Combine (Root, "temp", TestName);
 		string rawPath = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin");
 		string configPath = Path.Combine (outputRoot, "app.runtimeconfig.json");
+		string environmentPath = Path.Combine (outputRoot, "environment.txt");
 		Directory.CreateDirectory (outputRoot);
 		File.WriteAllText (configPath, """{"runtimeOptions":{"configProperties":{"Test.Feature":"enabled"}}}""");
+		File.WriteAllText (environmentPath, "BOOTSTRAP_VALUE=\u00e9\u65e5\nBOOTSTRAP_EMPTY=\n");
 		var task = new GenerateNativeApplicationConfigSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			ResolvedAssemblies = [new TaskItem (Path.Combine (outputRoot, "Example.dll"))],
@@ -55,10 +57,15 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = haveAssemblyStore,
 			ProjectRuntimeConfigFilePath = configPath,
+			Environments = [new TaskItem (environmentPath)],
 		};
 		Assert.IsTrue (task.Execute ());
-		var config = EnvironmentHelper.ReadCoreClrBootstrap (outputRoot).Config;
+		var bootstrap = EnvironmentHelper.ReadCoreClrBootstrap (outputRoot);
+		var config = bootstrap.Config;
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
+		Assert.AreEqual ("\u00e9\u65e5", bootstrap.EnvironmentVariables ["BOOTSTRAP_VALUE"]);
+		Assert.AreEqual ("", bootstrap.EnvironmentVariables ["BOOTSTRAP_EMPTY"]);
+		Assert.AreEqual (bootstrap.EnvironmentVariables.Count, config.environment_variable_count);
 		byte [] raw = File.ReadAllBytes (rawPath);
 		StringAssert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
 		StringAssert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));

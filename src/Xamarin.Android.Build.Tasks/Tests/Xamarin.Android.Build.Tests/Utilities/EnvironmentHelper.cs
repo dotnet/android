@@ -83,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 			public string SourceFile;
 		}
 
-		public static (ApplicationConfig Config, JniPreloads Preloads) ReadCoreClrBootstrap (string intermediateDirectory)
+		public static (ApplicationConfig Config, JniPreloads Preloads, Dictionary<string, string> EnvironmentVariables) ReadCoreClrBootstrap (string intermediateDirectory)
 		{
 			string [] files = Directory.GetFiles (intermediateDirectory, "coreclr-bootstrap.bin", SearchOption.AllDirectories);
 			Assert.AreEqual (1, files.Length, "Expected one shared CoreCLR bootstrap intermediate.");
@@ -92,15 +92,20 @@ namespace Xamarin.Android.Build.Tests
 			uint Read (uint offset) => BinaryPrimitives.ReadUInt32LittleEndian (data.AsSpan (checked ((int)offset), 4));
 
 			Assert.GreaterOrEqual (data.Length, 84);
+			uint environmentCount = Read (12);
 			uint dsoCount = Read (24);
 			uint preloadCount = Read (32);
 			uint preloadStride = Read (36);
+			uint environmentOffset = Read (40);
 			uint dsoOffset = Read (52);
 			uint preloadOffset = Read (56);
 			uint stringsOffset = Read (60);
 
-			string ReadName (uint offset)
+			string ReadString (uint offset, bool allowEmpty = false)
 			{
+				if (offset == 0 && allowEmpty) {
+					return "";
+				}
 				Assert.Greater (offset, stringsOffset);
 				Assert.Less (offset, (uint)data.Length);
 				int end = Array.IndexOf (data, (byte)0, checked ((int)offset));
@@ -109,11 +114,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var config = new ApplicationConfig {
+				environment_variable_count = environmentCount,
 				number_of_dso_cache_entries = dsoCount,
 				number_of_assemblies_in_apk = Read (72),
 				bundled_assembly_name_width = Read (76),
 				number_of_shared_libraries = Read (28),
-				android_package_name = ReadName (Read (80)),
+				android_package_name = ReadString (Read (80)),
 				have_assembly_store = (data [6] & 2) != 0,
 			};
 			var preloads = new JniPreloads {
@@ -126,10 +132,17 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Less (index, dsoCount);
 				preloads.Entries.Add (new JniPreloadsEntry {
 					Index = index,
-					LibraryName = ReadName (Read (dsoOffset + index * 12 + 8)),
+					LibraryName = ReadString (Read (dsoOffset + index * 12 + 8)),
 				});
 			}
-			return (config, preloads);
+			var environment = new Dictionary<string, string> (StringComparer.Ordinal);
+			for (uint i = 0; i < environmentCount; i++) {
+				uint offset = checked (environmentOffset + i * 8);
+				string name = ReadString (Read (offset));
+				Assert.IsNotEmpty (name, "Environment variable names must not be empty.");
+				environment.Add (name, ReadString (Read (offset + 4), allowEmpty: true));
+			}
+			return (config, preloads, environment);
 		}
 
 		const string ApplicationConfigSymbolName = "application_config";
