@@ -219,7 +219,9 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			return _members.InstanceMethods.InvokeVirtualInt32NoArgumentMethod ("hashCode.()I", this);
+			unsafe {
+				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			}
 		}
 
 		static string? GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
