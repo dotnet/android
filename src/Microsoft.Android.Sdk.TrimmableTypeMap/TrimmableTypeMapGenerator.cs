@@ -450,6 +450,9 @@ public class TrimmableTypeMapGenerator
 		bool generateRootAssembly = true,
 		IReadOnlyList<string>? preGeneratedTypeMapNames = null)
 	{
+		if (useSharedTypemapUniverse && preGeneratedTypeMapNames is { Count: > 0 }) {
+			throw new ArgumentException ("Pre-generated per-assembly type maps cannot be used in a shared universe.", nameof (preGeneratedTypeMapNames));
+		}
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
 		if (useSharedTypemapUniverse) {
@@ -498,26 +501,29 @@ public class TrimmableTypeMapGenerator
 		// skipped: it is emitted by the app build, which references the pre-generated per-assembly
 		// typemap alongside the app's own.
 		if (generateRootAssembly) {
+			var rootTypeMapNames = new List<string> (perAssemblyNames);
+			if (preGeneratedTypeMapNames is not null) {
+				rootTypeMapNames.AddRange (preGeneratedTypeMapNames);
+			}
+			rootTypeMapNames.Sort (StringComparer.Ordinal);
 			const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
 			bool generateRoot = true;
 			if (shouldGenerateTypeMapAssembly is not null) {
 				var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (
-					perAssemblyNames,
+					rootTypeMapNames,
 					systemRuntimeVersion,
 					useSharedTypemapUniverse,
-					includeBuiltInValueTypeUniverses,
-					preGeneratedTypeMapNames);
+					includeBuiltInValueTypeUniverses);
 				generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
 			}
 			if (generateRoot) {
 				var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
 				var rootStream = rootGenerator.GenerateToStream (
-					perAssemblyNames,
+					rootTypeMapNames,
 					useSharedTypemapUniverse,
-					includeBuiltInValueTypeUniverses,
-					preGeneratedTypeMapNames);
+					includeBuiltInValueTypeUniverses);
 				generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
-				logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count + (preGeneratedTypeMapNames?.Count ?? 0));
+				logger.LogGeneratedRootTypeMapInfo (rootTypeMapNames.Count);
 			}
 		}
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);

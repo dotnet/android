@@ -158,6 +158,50 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[TestCase ("37.1")]
+		[TestCase ("37.2")]
+		public void DifferentApiPackGeneratesFrameworkTypeMaps (string apiLevel)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android{apiLevel}",
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "A different API pack should fall back to framework typemap generation.");
+			AssertTrimmableTypeMapOutputs (builder.Output.GetIntermediaryPath ("typemap"), usePreGeneratedFrameworkTypeMaps: false);
+			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt"),
+				"An incompatible API pack must not consume the SDK's framework wrappers.");
+		}
+
+		[Test]
+		public void SwitchingPreGeneratedFrameworkTypeMapsInvalidatesGeneration ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Initial prebuilt typemap build should succeed.");
+			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
+			AssertTrimmableTypeMapOutputs (typemapDir, usePreGeneratedFrameworkTypeMaps: true);
+
+			proj.SetProperty ("_AndroidUsePreGeneratedMonoAndroidTypeMap", "false");
+			Assert.IsTrue (builder.Build (proj), "Switching to app-generated framework maps should succeed.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_GenerateTrimmableTypeMap"),
+				"Changing reuse eligibility must invalidate the typemap generation stamp.");
+			AssertTrimmableTypeMapOutputs (typemapDir, usePreGeneratedFrameworkTypeMaps: false);
+		}
+
 		[Test]
 		public void TrimmedBuildWithDebugSymbolsUsesPreGeneratedTypeMap ()
 		{

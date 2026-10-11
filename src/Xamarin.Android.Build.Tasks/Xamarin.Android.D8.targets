@@ -20,8 +20,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
   <Target Name="_SetR8AcwMapFile">
     <PropertyGroup>
       <_R8AcwMapFile>$(_AcwMapFile)</_R8AcwMapFile>
-      <_R8AcwMapFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_TrimmableTypeMapKeepRulesAcwMapFile)</_R8AcwMapFile>
-      <_R8AcwMapInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_R8AcwMapFile)</_R8AcwMapInput>
+      <_R8AcwMapFile Condition=" '$(_AndroidPreGeneratedTypeMapEnabled)' == 'true' ">$(_TrimmableTypeMapKeepRulesAcwMapFile)</_R8AcwMapFile>
+      <_R8AcwMapInput Condition=" '$(_AndroidPreGeneratedTypeMapEnabled)' == 'true' ">$(_R8AcwMapFile)</_R8AcwMapInput>
     </PropertyGroup>
   </Target>
 

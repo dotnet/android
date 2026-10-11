@@ -188,7 +188,7 @@
            out-of-date and run it on every build. -->
       <_PostTrimTrimmableTypeMapInputAssemblies Include="@(ResolvedFileToPublish)"
           Condition=" '%(Extension)' == '.dll' and Exists('%(FullPath)') and ('%(RuntimeIdentifier)' == '' or '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' or '%(RuntimeIdentifier)' == '$(_PostTrimTypeMapFirstRuntimeIdentifier)') " />
-      <_PostTrimPreGeneratedTypeMapAssemblyInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' "
+      <_PostTrimPreGeneratedTypeMapAssemblyInput Condition=" '$(_AndroidPreGeneratedTypeMapEnabled)' == 'true' "
           Include="@(_PostTrimTrimmableTypeMapInputAssemblies)" KeepDuplicates="false" />
       <_PostTrimPreGeneratedTypeMapAssemblyInput Remove="@(_PostTrimPreGeneratedTypeMapAssemblyInput)"
           Condition=" '%(Filename)' != 'Mono.Android' and '%(Filename)' != 'Java.Interop' " />
@@ -330,6 +330,9 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <PostprocessAssembly>true</PostprocessAssembly>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <!-- These generated assemblies always reference Mono.Android. Preserve this known fact so
+             ProcessAssemblies does not reopen and scan every per-assembly typemap DLL. -->
+        <HasMonoAndroidReference>true</HasMonoAndroidReference>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
@@ -346,6 +349,7 @@
         <RelativePath>%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <HasMonoAndroidReference>true</HasMonoAndroidReference>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>

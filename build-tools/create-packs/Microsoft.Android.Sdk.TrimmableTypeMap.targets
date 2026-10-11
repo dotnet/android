@@ -26,6 +26,7 @@
     <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
     <_PreBuiltTypeMapJavaInteropAssembly>$(_PreBuiltTypeMapOutputDir)_Java.Interop.TypeMap.dll</_PreBuiltTypeMapJavaInteropAssembly>
     <_PreBuiltTypeMapAcwMap>$(_PreBuiltTypeMapOutputDir)mono.android-acw-map.txt</_PreBuiltTypeMapAcwMap>
+    <_PreBuiltTypeMapProperties>$(_PreBuiltTypeMapOutputDir)framework.props</_PreBuiltTypeMapProperties>
     <_PreBuiltTypeMapJavaFilesList>$(_PreBuiltTypeMapIntDir)java-files.txt</_PreBuiltTypeMapJavaFilesList>
     <_PreBuiltTypeMapGenerationStamp>$(_PreBuiltTypeMapIntDir)_GeneratePreBuiltMonoAndroidTypeMap.stamp</_PreBuiltTypeMapGenerationStamp>
   </PropertyGroup>
@@ -65,7 +66,7 @@
     </ItemGroup>
     <Delete
         Files="$(_PreBuiltTypeMapGenerationStamp)"
-        Condition="Exists('$(_PreBuiltTypeMapGenerationStamp)') and (!Exists('$(_PreBuiltTypeMapAssembly)') or !Exists('$(_PreBuiltTypeMapJavaInteropAssembly)') or !Exists('$(_PreBuiltTypeMapAcwMap)') or !Exists('$(_PreBuiltTypeMapJavaFilesList)') or '@(_MissingPreBuiltTypeMapJavaFile->Count())' != '0' or '@(_UnexpectedPreBuiltTypeMapJavaFile->Count())' != '0')" />
+        Condition="Exists('$(_PreBuiltTypeMapGenerationStamp)') and (!Exists('$(_PreBuiltTypeMapAssembly)') or !Exists('$(_PreBuiltTypeMapJavaInteropAssembly)') or !Exists('$(_PreBuiltTypeMapAcwMap)') or !Exists('$(_PreBuiltTypeMapProperties)') or !Exists('$(_PreBuiltTypeMapJavaFilesList)') or '@(_MissingPreBuiltTypeMapJavaFile->Count())' != '0' or '@(_UnexpectedPreBuiltTypeMapJavaFile->Count())' != '0')" />
     <ItemGroup>
       <_ExpectedPreBuiltTypeMapJavaFile Remove="@(_ExpectedPreBuiltTypeMapJavaFile)" />
       <_ActualPreBuiltTypeMapJavaFile Remove="@(_ActualPreBuiltTypeMapJavaFile)" />
@@ -77,7 +78,7 @@
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
       BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
       DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMapInputs;_InvalidatePreBuiltMonoAndroidTypeMapStampIfOutputsMissing"
-      Inputs="@(_PreBuiltTypeMapInput);@(_PreBuiltTypeMapFramework);$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.dll;$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.TrimmableTypeMap.dll"
+      Inputs="@(_PreBuiltTypeMapInput);@(_PreBuiltTypeMapFramework);$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.dll;$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Sdk.TrimmableTypeMap.dll;$(MSBuildThisFileFullPath);$(XamarinAndroidSourcePath)Configuration.props"
       Outputs="$(_PreBuiltTypeMapGenerationStamp)">
     <MakeDir Directories="$(_PreBuiltTypeMapOutputDir);$(_PreBuiltTypeMapJavaDir)" />
     <GenerateTrimmableTypeMap
@@ -96,6 +97,11 @@
     <WriteLinesToFile
         File="$(_PreBuiltTypeMapJavaFilesList)"
         Lines="@(_GeneratedPreBuiltTypeMapJavaFile->'%(FullPath)')"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile
+        File="$(_PreBuiltTypeMapProperties)"
+        Lines="&lt;Project&gt;&lt;PropertyGroup&gt;&lt;_AndroidPreGeneratedTypeMapApiLevel&gt;$(AndroidApiLevel)&lt;/_AndroidPreGeneratedTypeMapApiLevel&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;"
         Overwrite="true"
         WriteOnlyWhenDifferent="true" />
     <Touch Files="$(_PreBuiltTypeMapGenerationStamp)" AlwaysCreate="true" />
@@ -153,6 +159,7 @@
       <FilesToPackage Include="@(_PreBuiltTypeMapAllAssemblies)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
       <FilesToPackage Include="$(_PreBuiltTypeMapJcwJar)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
       <FilesToPackage Include="$(_PreBuiltTypeMapAcwMap)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
+      <FilesToPackage Include="$(_PreBuiltTypeMapProperties)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
     </ItemGroup>
   </Target>
 

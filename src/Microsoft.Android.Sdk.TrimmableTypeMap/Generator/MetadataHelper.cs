@@ -170,8 +170,7 @@ static class MetadataHelper
 		IReadOnlyList<string> perAssemblyTypeMapNames,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
-		bool includeBuiltInValueTypeUniverses,
-		IReadOnlyList<string>? preGeneratedTypeMapNames = null)
+		bool includeBuiltInValueTypeUniverses)
 	{
 		// This method needs only one hash. The content sink is used as the writer's always-present
 		// sink; the returned value is still solely the incremental-build fingerprint for the root.
@@ -180,13 +179,8 @@ static class MetadataHelper
 		writer.WriteString (Sink.Content, systemRuntimeVersion.ToString ());
 		writer.WriteBoolean (Sink.Content, useSharedTypemapUniverse);
 		writer.WriteBoolean (Sink.Content, includeBuiltInValueTypeUniverses);
-		var allTypeMapNames = new List<string> (perAssemblyTypeMapNames);
-		if (preGeneratedTypeMapNames is not null) {
-			allTypeMapNames.AddRange (preGeneratedTypeMapNames);
-		}
-		allTypeMapNames.Sort (StringComparer.Ordinal);
-		writer.WriteInt32 (Sink.Content, allTypeMapNames.Count);
-		foreach (var assemblyName in allTypeMapNames) {
+		writer.WriteInt32 (Sink.Content, perAssemblyTypeMapNames.Count);
+		foreach (var assemblyName in perAssemblyTypeMapNames) {
 			writer.WriteString (Sink.Content, assemblyName);
 		}
 		return writer.GetContentFingerprint ();
