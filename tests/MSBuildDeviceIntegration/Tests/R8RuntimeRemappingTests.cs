@@ -168,15 +168,15 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("source-method-signature") == "(I)I" &&
 					(string) e.Attribute ("target-method-name") != "add"), "The exercised methods must really be obfuscated.");
 				foreach (var name in new [] { "value", "staticValue", "hiddenValue" }) {
-					Assert.AreEqual (runtime == AndroidRuntime.NativeAOT, elements.Any (e =>
+					Assert.IsFalse (elements.Any (e =>
 						e.Name == "replace-field" &&
 						(string) e.Attribute ("source-field-name") == name &&
 						(string) e.Attribute ("target-field-name") != name),
-						$"Only NativeAOT should rename the exercised field '{name}'.");
+						$"{runtime} must preserve the exercised field '{name}' to avoid inherited lookup collisions.");
 				}
-				Assert.AreEqual (runtime == AndroidRuntime.CoreCLR,
-					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg"))
-						.Contains ("-keepclassmembernames class * { <fields>; }", StringComparison.Ordinal));
+				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }",
+					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")),
+					$"{runtime} runtime-remapping must preserve field names to avoid inherited lookup collisions.");
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
 					(string) e.Attribute ("from") == "example/HiddenPeer" &&
 					(string) e.Attribute ("to") != "example/HiddenPeer"), "Java-to-managed activation must exercise a genuinely renamed class.");

@@ -39,7 +39,6 @@ namespace Xamarin.Android.Tasks
 		public bool UseTypeMapProguardConfiguration { get; set; }
 		public bool UseScopedTypeMapMembers { get; set; }
 		public string ObfuscationMode { get; set; } = "private-members";
-		public string? AndroidRuntime { get; set; }
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -200,8 +199,7 @@ namespace Xamarin.Android.Tasks
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
 						WriteObfuscationRules (
 							xamcfg,
-							UseTypeMapProguardConfiguration && !runtimeRemapping ? "disabled" : ObfuscationMode,
-							AndroidRuntime);
+							UseTypeMapProguardConfiguration && !runtimeRemapping ? "disabled" : ObfuscationMode);
 						xamcfg.WriteLine ();
 						xamcfg.Flush ();
 						if (UseTypeMapProguardConfiguration) {
@@ -267,7 +265,7 @@ namespace Xamarin.Android.Tasks
 
 		internal string KeepOption => string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase) ? "-keep,allowobfuscation" : "-keep";
 
-		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode, string? androidRuntime = null)
+		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
 		{
 			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
 				writer.WriteLine ("-dontobfuscate");
@@ -282,15 +280,10 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
 				writer.WriteLine ("-keepclassmembernames interface * { *; }");
 				writer.WriteLine ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }");
-				if (string.Equals (androidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase)) {
-					// NativeAOT reads this field before the runtime remapping tables are available.
-					writer.WriteLine ("-keepclassmembers class net.dot.jni.nativeaot.NativeAotEnvironmentVars { static java.lang.String[] systemProperties; }");
-				} else {
-					// Linked CoreCLR metadata can retain a derived field accessor without the
-					// declaring base type's Register property. The scanner cannot select that
-					// inherited field's remap; preserve names until it resolves declaring owners.
-					writer.WriteLine ("-keepclassmembernames class * { <fields>; }");
-				}
+				// Inherited field lookups try the original name before base remaps. A renamed
+				// subclass field can reuse the base field's original name and resolve to the
+				// wrong field, even when the declaring base's remap is retained.
+				writer.WriteLine ("-keepclassmembernames class * { <fields>; }");
 				writer.WriteLine ("-keepnames public class *");
 				writer.WriteLine ("-keepnames class **$*");
 				return;
