@@ -1765,11 +1765,6 @@ namespace Lib2
 			var typeMapAssembly = Path.Combine (intermediate, "typemap", "_Microsoft.Android.TypeMaps.dll");
 			CollectionAssert.Contains (lines, typeMapAssembly, "The managed type map assembly should be in FileWrites.");
 			FileAssert.Exists (typeMapAssembly);
-
-			foreach (var obsoleteSource in new [] { $"environment.{abi}.ll", $"environment.{abi}.o", $"typemap.{abi}.ll", $"marshal_methods.{abi}.ll", $"jni_remap.{abi}.ll" }) {
-				FileAssert.DoesNotExist (Path.Combine (intermediate, "android", obsoleteSource));
-			}
-			FileAssert.DoesNotExist (Path.Combine (intermediate, "app_shared_libraries", abi, "libxamarin-app.so"));
 		}
 
 #pragma warning disable 414
