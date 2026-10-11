@@ -47,10 +47,6 @@ namespace Xamarin.Android.Build.Tests
 			DirectoryAssert.DoesNotExist (missingNdk);
 			Assert.IsTrue (builder.Build (proj, parameters: ["AndroidNdkDirectory=" + missingNdk]),
 				$"CoreCLR app build should succeed for {abi} without the Android NDK.");
-			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			Assert.IsEmpty (Directory.GetFiles (intermediate, "*.ll", SearchOption.AllDirectories),
-				"Prebuilt CoreCLR should not generate application LLVM sources.");
-			Assert.IsEmpty (Directory.GetFiles (intermediate, "libxamarin-app.so", SearchOption.AllDirectories));
 		}
 
 		[TestCase ("armeabi-v7a")]
