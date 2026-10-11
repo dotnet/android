@@ -274,9 +274,9 @@ public class TypeMapProguardTargetsTests : BaseTest
 	}
 
 	[Test]
-	public void R8RemappingTargetsTrackBothTaskAssemblies (
-		[Values ("_AndroidGenerateR8JniRemapping", "_AndroidGenerateR8JniRemappingNativeCode",
-			"_AndroidGenerateNativeAotR8Remapping", "_AndroidCompileNativeAotR8Remapping")] string targetName,
+	public void R8RemappingTargetsTrackProducerAssemblies (
+		[Values ("_AndroidGenerateR8JniRemapping", "_AndroidGenerateR8BinaryBlobs",
+			"_AndroidGenerateNativeAotR8Remapping", "_AndroidGenerateNativeAotR8BinaryBlobs")] string targetName,
 		[Values ("_MicrosoftAndroidBuildTasksAssembly", "_XamarinAndroidBuildTasksAssembly")] string changedAssembly,
 		[Values (false, true)] bool relativePaths)
 	{
@@ -322,6 +322,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 			inputsTarget, target,
 			new XElement ("Target", new XAttribute ("Name", "Build"), new XAttribute ("DependsOnTargets", targetName))))
 			.Save (project);
+		File.SetLastWriteTimeUtc (project, inputTimestamp);
 
 		Build (project);
 		Assert.AreEqual ("executed", File.ReadAllText (output).Trim ());
@@ -334,7 +335,11 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var unchangedFile = changedFile == modern ? legacy : modern;
 		File.SetLastWriteTimeUtc (changedFile, DateTime.UtcNow.AddSeconds (-10));
 		Build (project);
-		Assert.AreNotEqual (outputTimestamp, File.GetLastWriteTimeUtc (output), $"{targetName} must rerun when {changedAssembly} changes.");
+		if (targetName.EndsWith ("BinaryBlobs", StringComparison.Ordinal) && changedAssembly == "_XamarinAndroidBuildTasksAssembly") {
+			Assert.AreEqual (outputTimestamp, File.GetLastWriteTimeUtc (output), "The managed ELF producer does not use the legacy task assembly.");
+		} else {
+			Assert.AreNotEqual (outputTimestamp, File.GetLastWriteTimeUtc (output), $"{targetName} must rerun when {changedAssembly} changes.");
+		}
 		Assert.AreEqual (inputTimestamp, File.GetLastWriteTimeUtc (unchangedFile));
 		Assert.AreEqual (inputTimestamp, File.GetLastWriteTimeUtc (input));
 		outputTimestamp = File.GetLastWriteTimeUtc (output);

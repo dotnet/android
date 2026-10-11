@@ -3,6 +3,7 @@
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/binary-blob-loader.hh>
 #include <runtime-base/app-system-properties.hh>
 #include <shared/log_functions.hh>
 #include <shared/log_types.hh>
@@ -61,7 +62,9 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		}
 		abort_unless (false, "Failed to create a global reference for mono/android/IGCUserPeer");
 	}
-	initArgs->jniRemappingData = &jni_remapping_data;
+	static BinaryBlobPayload remapping = {};
+	remapping = BinaryBlobLoader::load_optional ("remapping_data");
+	initArgs->jniRemappingData = remapping.data == nullptr ? nullptr : &remapping;
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
 }

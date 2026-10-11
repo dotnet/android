@@ -170,6 +170,7 @@
       <_RuntimeSources Include="clr\include\runtime-base\android-system.hh" />
       <_RuntimeSources Include="clr\host\host-shared.cc" />
       <_RuntimeSources Include="clr\runtime-base\android-system-shared.cc" />
+      <_RuntimeSources Include="clr\runtime-base\binary-blob-loader.cc" />
       <_RuntimeSources Include="nativeaot\include\**\*.hh" />
       <_RuntimeSources Include="nativeaot\host\*.cc" />
       <_RuntimeSources Include="nativeaot\runtime-base\*.cc" />

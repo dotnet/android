@@ -119,6 +119,9 @@ namespace Java.Lang {
 				if (value != IntPtr.Zero) {
 					SetJavaStackTrace (new JniObjectReference (value));
 				}
+			} catch {
+				Dispose ();
+				throw;
 			} finally {
 				JNIEnv.DeleteRef (value, transfer);
 			}
