@@ -49,6 +49,10 @@ namespace Xamarin.Android.Build.Tests
 			DirectoryAssert.DoesNotExist (missingNdk);
 			Assert.IsTrue (builder.Build (proj, parameters: ["AndroidNdkDirectory=" + missingNdk]),
 				$"CoreCLR app build should succeed for {abi} without the Android NDK.");
+			string packagePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
+			FileAssert.Exists (packagePath, "An NDK-free CoreCLR build must produce a signed package.");
+			using var package = ZipHelper.OpenZip (packagePath);
+			package.AssertContainsEntry (packagePath, $"lib/{abi}/libbinary_blobs.so");
 		}
 
 		[TestCase ("armeabi-v7a")]
