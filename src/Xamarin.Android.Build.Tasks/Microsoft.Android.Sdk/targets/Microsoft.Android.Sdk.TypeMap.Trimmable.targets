@@ -247,9 +247,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <!-- Install can invoke this after assembly resolution. ResolvedAssemblies then contains
+           trimmed or ReadyToRun publish outputs, not the unlinked inputs needed for this scan.
+           Runtime-only and binding implementations are resolved explicitly below. -->
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
-      <_TypeMapInputAssemblies Include="@(ResolvedAssemblies)" />
-      <_TypeMapInputAssemblies Include="@(ResolvedFrameworkAssemblies)" />
       <_TypeMapInputAssemblies Include="@(PrivateSdkAssemblies)" />
       <_TypeMapInputAssemblies Include="@(FrameworkAssemblies)" />
       <!-- Runtime-only framework assemblies that have no counterpart in @(ReferencePath) (e.g. the

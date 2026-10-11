@@ -66,7 +66,20 @@ namespace Xamarin.Android.Build.Tests
 
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
+			var manifestPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			var manifest = File.ReadAllText (manifestPath);
+			string [] runParameters = [];
+			var device = Environment.GetEnvironmentVariable ("ANDROID_SERIAL");
+			if (!string.IsNullOrEmpty (device)) {
+				runParameters = ["--device", device];
+			}
+			Assert.IsTrue (dotnet.Run (parameters: runParameters), "`dotnet run --no-build` should succeed");
+			if (typemapImplementation == "trimmable") {
+				Assert.AreEqual (manifest, File.ReadAllText (manifestPath),
+					"`dotnet run --no-build` must preserve the generated manifest, including the launchable activity.");
+				Assert.IsFalse (File.ReadLines (dotnet.ProcessLogFile).Any (line => line.Contains ("XA4257")),
+					"`dotnet run --no-build` must not skip Java peers by scanning trimmed assemblies as pre-trim inputs.");
+			}
 
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
