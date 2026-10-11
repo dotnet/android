@@ -24,8 +24,8 @@ sealed class CoreClrBootstrapBuilder
 	sealed class DsoCacheState
 	{
 		public List<DsoCacheEntry> Entries = [];
-		public List<DsoCacheEntry> JniPreloads = [];
-		public uint NameMutationsCount = 1;
+		public List<List<DsoCacheEntry>> JniPreloadGroups = [];
+		public int PreloadStride = 1;
 	}
 
 	readonly SortedDictionary<string, string> environmentVariables;
@@ -75,18 +75,23 @@ sealed class CoreClrBootstrapBuilder
 			libraries.Add ((entry.Hash, false, entry.IsJniLibrary, entry.RealName));
 		}
 		var preloads = new List<uint> ();
-		foreach (var entry in state.JniPreloads) {
-			int index = state.Entries.IndexOf (entry);
-			if (index < 0) {
-				throw new InvalidOperationException ("The CoreCLR JNI preload entry was not found in the DSO cache.");
+		foreach (var group in state.JniPreloadGroups) {
+			// XCFG uses one stride. Repeat this group's first index for padding so the
+			// runtime cannot assign its library handle to another DSO's aliases.
+			for (int i = 0; i < state.PreloadStride; i++) {
+				var entry = group [i < group.Count ? i : 0];
+				int index = state.Entries.IndexOf (entry);
+				if (index < 0) {
+					throw new InvalidOperationException ("The CoreCLR JNI preload entry was not found in the DSO cache.");
+				}
+				preloads.Add ((uint)index);
 			}
-			preloads.Add ((uint)index);
 		}
 		return CoreClrBootstrapBlob.Create (
 			IgnoreSplitConfigs, HaveAssemblyStore, (uint)PackageNamingPolicy,
 			(uint)NumberOfAssembliesInApk, (uint)BundledAssemblyNameWidth, (uint)NativeLibraries.Count,
 			AndroidPackageName, environmentVariables, systemProperties, runtimeProperties,
-			libraries, preloads, state.NameMutationsCount
+			libraries, preloads, (uint)state.PreloadStride
 		);
 	}
 
@@ -104,16 +109,13 @@ sealed class CoreClrBootstrapBuilder
 
 		var state = new DsoCacheState ();
 		var nameMutations = new List<string> ();
-		int nameMutationsCount = -1;
 		ICollection<string> ignorePreload = MakeJniPreloadIgnoreCollection (log, NativeLibrariesAlwaysJniPreload, NativeLibrariesNoJniPreload);
 		foreach (var dso in dsos) {
 			bool isJniLibrary = ELFHelper.IsJniLibrary (log, dso.item.ItemSpec);
 			bool ignoreForPreload = ShouldIgnoreForJniPreload (log, ignorePreload, dso.item);
 			nameMutations.Clear ();
 			AddNameMutations (dso.name);
-			if (nameMutationsCount == -1) {
-				nameMutationsCount = nameMutations.Count;
-			}
+			var preloadGroup = new List<DsoCacheEntry> ();
 
 			foreach (string entryName in nameMutations) {
 				var entry = new DsoCacheEntry {
@@ -121,14 +123,16 @@ sealed class CoreClrBootstrapBuilder
 					RealName = dso.name,
 					IsJniLibrary = isJniLibrary,
 				};
-				// Keep every alias adjacent in the preload index group, even after hash sorting.
 				if (isJniLibrary && !ignoreForPreload) {
-					state.JniPreloads.Add (entry);
+					preloadGroup.Add (entry);
 				}
 				state.Entries.Add (entry);
 			}
+			if (preloadGroup.Count > 0) {
+				state.JniPreloadGroups.Add (preloadGroup);
+				state.PreloadStride = Math.Max (state.PreloadStride, preloadGroup.Count);
+			}
 		}
-		state.NameMutationsCount = (uint)(nameMutationsCount <= 0 ? 1 : nameMutationsCount);
 		return state;
 
 		void AddNameMutations (string name)
