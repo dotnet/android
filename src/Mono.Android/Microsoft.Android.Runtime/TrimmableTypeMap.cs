@@ -85,7 +85,7 @@ public class TrimmableTypeMap
 		}
 	}
 
-	internal static unsafe void RegisterNativeMethods ()
+	internal static void RegisterNativeMethods ()
 	{
 		lock (s_initLock) {
 			if (s_nativeMethodsRegistered) {
@@ -98,10 +98,12 @@ public class TrimmableTypeMap
 			}
 
 			using var runtimeClass = new JniType ("mono/android/Runtime"u8);
-			fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
-				var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
-				var method = new JniNativeMethod (name, sig, onRegisterNatives);
-				JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+			unsafe {
+				fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
+					var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
+					var method = new JniNativeMethod (name, sig, onRegisterNatives);
+					JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+				}
 			}
 			s_nativeMethodsRegistered = true;
 		}

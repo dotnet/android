@@ -32,8 +32,8 @@ namespace Java.Interop
 		}
 
 		[SuppressMessage ("ApiDesign", "RS0022:Constructor make noninheritable base class inheritable", Justification = "Existing public API")]
-		public unsafe JavaObjectArray (int length)
-			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaObjectArray (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = NewArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);

@@ -32,7 +32,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self<#= invokeParams #>);
+				unsafe {
+					action (jnienv, self<#= invokeParams #>);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -48,7 +50,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self<#= invokeParams #>);
+				unsafe {
+					return action (jnienv, self<#= invokeParams #>);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;

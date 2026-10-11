@@ -159,17 +159,22 @@ namespace Java.Interop {
 
 		partial class References {
 
-			internal static unsafe int GetJavaVM (IntPtr jnienv, out IntPtr vm)
+			internal static int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
 				IntPtr _vm;
-				int r       = JniNativeMethods.GetJavaVM (jnienv, &_vm);
+				int r;
+				unsafe {
+					r = JniNativeMethods.GetJavaVM (jnienv, &_vm);
+				}
 				vm          = _vm;
 				return r;
 			}
 
 			internal static void RawDeleteLocalRef (IntPtr env, IntPtr localRef)
 			{
-				JniNativeMethods.DeleteLocalRef (env, localRef);
+				unsafe {
+					JniNativeMethods.DeleteLocalRef (env, localRef);
+				}
 			}
 		}
 
@@ -230,7 +235,7 @@ namespace Java.Interop {
 			Runtime             = runtime;
 		}
 
-		internal unsafe JniObjectReference ToJavaName (string jniTypeName)
+		internal JniObjectReference ToJavaName (string jniTypeName)
 		{
 			int index = jniTypeName.IndexOf ("/", StringComparison.Ordinal);
 
@@ -244,16 +249,18 @@ namespace Java.Interop {
 			if (nameBuffer == null)
 				nameBuffer = new char [NameBufferLength];
 
-			fixed (char* src = jniTypeName, dst = nameBuffer) {
-				char* src_ptr = src;
-				char* dst_ptr = dst;
-				char* end_ptr = src + length;
-				while (src_ptr < end_ptr) {
-					*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
-					src_ptr++;
-					dst_ptr++;
+			unsafe {
+				fixed (char* src = jniTypeName, dst = nameBuffer) {
+					char* src_ptr = src;
+					char* dst_ptr = dst;
+					char* end_ptr = src + length;
+					while (src_ptr < end_ptr) {
+						*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
+						src_ptr++;
+						dst_ptr++;
+					}
+					return JniEnvironment.Strings.NewString (dst, length);
 				}
-				return JniEnvironment.Strings.NewString (dst, length);
 			}
 		}
 

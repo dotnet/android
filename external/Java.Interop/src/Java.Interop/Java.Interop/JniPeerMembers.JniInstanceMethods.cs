@@ -110,6 +110,17 @@ namespace Java.Interop
 				static method => method.StaticRedirect?.Dispose ());
 		}
 
+		internal int InvokeVirtualInt32NoArgumentMethod (string encodedMember, IJavaPeerable self)
+		{
+			JniPeerMembers.GetNameAndSignature (encodedMember, out _, out var signature);
+			if (signature.Length != 3 || signature [0] != '(' || signature [1] != ')' || signature [2] != 'I')
+				throw new ArgumentException ("The encoded member must have the signature ()I.", nameof (encodedMember));
+
+			unsafe {
+				return InvokeVirtualInt32Method (encodedMember, self, null);
+			}
+		}
+
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var m              = (JniMethodInfo?) null;
@@ -188,7 +199,9 @@ namespace Java.Interop
 
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);
-			JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
+			unsafe {
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
+			}
 		}
 	}
 	}

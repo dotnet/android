@@ -20,13 +20,15 @@ namespace Java.Interop {
 	public sealed class JniType : IDisposable {
 
 		[return: NotNullIfNotNull ("classFileData")]
-		public static unsafe JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
+		public static JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
 			if (classFileData == null)
 				return null;
-			fixed (byte* buf = classFileData) {
-				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
-				return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+			unsafe {
+				fixed (byte* buf = classFileData) {
+					var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
+					return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+				}
 			}
 		}
 
@@ -58,7 +60,10 @@ namespace Java.Interop {
 			if (classname == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (classname));
 
-			var name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)classname);
+			ReadOnlySpan<byte> name;
+			unsafe {
+				name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)classname);
+			}
 			var peer = JniEnvironment.Types.FindClass (name);
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -125,7 +130,10 @@ namespace Java.Interop {
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
-			var t = new JniType (classname);
+			JniType t;
+			unsafe {
+				t = new JniType (classname);
+			}
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
@@ -223,7 +231,9 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			unsafe {
+				return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			}
 		}
 
 		public JniFieldInfo GetInstanceField (string name, string signature)
@@ -383,6 +393,7 @@ namespace Java.Interop {
 		/// <summary>
 		/// Creates a <see cref="JniType"/> from a null-terminated UTF-8 class name span.
 		/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
+		/// A NUL terminator is appended when the span does not already end with one.
 		/// </summary>
 		public JniType (ReadOnlySpan<byte> classname)
 		{
@@ -623,7 +634,7 @@ namespace Java.Interop {
 			StaticField,
 		}
 
-		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
 			// Match StringToCoTaskMemUTF8, including unpaired-surrogate replacement
 			// and embedded-NUL termination, rather than changing to JNI modified UTF-8.
@@ -639,22 +650,24 @@ namespace Java.Interop {
 				Encoding.UTF8.GetBytes (name, nameBuffer);
 				nameBuffer [nameLength - 1] = 0;
 
-				fixed (byte* nameStart = nameBuffer)
-					return GetMemberID ((IntPtr)nameStart, signature, kind, throwOnError);
+				unsafe {
+					fixed (byte* nameStart = nameBuffer)
+						return GetMemberID ((IntPtr)nameStart, signature, kind, throwOnError);
+				}
 			} finally {
 				if (rentedName != null)
 					ArrayPool<byte>.Shared.Return (rentedName);
 			}
 		}
 
-		unsafe IntPtr GetMemberID (IntPtr name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (IntPtr name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
 			if (name == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (name));
 			return GetMemberID (signature, name, false, kind, throwOnError);
 		}
 
-		unsafe IntPtr GetMemberID (IntPtr name, IntPtr signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (IntPtr name, IntPtr signature, MemberKind kind, bool throwOnError = true)
 		{
 			AssertValid ();
 			if (name == IntPtr.Zero)
@@ -663,14 +676,18 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (signature));
 
 			var env = JniEnvironment.EnvironmentPointer;
-			IntPtr id = kind switch {
-				MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, name, signature),
-				MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, name, signature),
-				MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, name, signature),
-				MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, name, signature),
-				_ => throw new ArgumentOutOfRangeException (nameof (kind)),
-			};
-			var thrown = JniNativeMethods.ExceptionOccurred (env);
+			IntPtr id;
+			IntPtr thrown;
+			unsafe {
+				id = kind switch {
+					MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, name, signature),
+					MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, name, signature),
+					MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, name, signature),
+					MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, name, signature),
+					_ => throw new ArgumentOutOfRangeException (nameof (kind)),
+				};
+				thrown = JniNativeMethods.ExceptionOccurred (env);
+			}
 			if (!throwOnError) {
 				if (thrown != IntPtr.Zero) {
 					JniEnvironment.Exceptions.ExceptionClear ();
@@ -689,14 +706,14 @@ namespace Java.Interop {
 			return id;
 		}
 
-		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, IntPtr signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (ReadOnlySpan<char> name, IntPtr signature, MemberKind kind, bool throwOnError = true)
 		{
 			if (signature == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (signature));
 			return GetMemberID (name, signature, true, kind, throwOnError);
 		}
 
-		unsafe IntPtr GetMemberID (ReadOnlySpan<char> value, IntPtr otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
+		IntPtr GetMemberID (ReadOnlySpan<char> value, IntPtr otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
 		{
 			int valueLength = checked (Encoding.UTF8.GetByteCount (value) + 1);
 			byte[]? rentedValue = null;
@@ -710,11 +727,13 @@ namespace Java.Interop {
 				Encoding.UTF8.GetBytes (value, valueBuffer);
 				valueBuffer [valueLength - 1] = 0;
 
-				fixed (byte* valueStart = valueBuffer) {
-					var valuePointer = (IntPtr)valueStart;
-					return valueIsName
-						? GetMemberID (valuePointer, otherValue, kind, throwOnError)
-						: GetMemberID (otherValue, valuePointer, kind, throwOnError);
+				unsafe {
+					fixed (byte* valueStart = valueBuffer) {
+						var valuePointer = (IntPtr)valueStart;
+						return valueIsName
+							? GetMemberID (valuePointer, otherValue, kind, throwOnError)
+							: GetMemberID (otherValue, valuePointer, kind, throwOnError);
+					}
 				}
 			} finally {
 				if (rentedValue != null)
