@@ -31,14 +31,20 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var trimming in trimmingTargets) {
 				Assert.LessOrEqual (trimming.EndTime, r8 [0].StartTime, "R8 must run after managed trimming/ILC.");
 			}
-			var nativeLinkTasks = tasks.Where (t =>
-				runtime == AndroidRuntime.NativeAOT
-					? t.Name == "LinkNativeAotSharedLibrary"
-					: t.Name == "LinkNativeRuntime" || t.Name == "LinkApplicationSharedLibraries").ToList ();
-			Assert.IsNotEmpty (nativeLinkTasks, "Expected the final native link after R8.");
-			foreach (var link in nativeLinkTasks) {
-				Assert.GreaterOrEqual (link.StartTime, r8 [0].EndTime, "Native linking must consume the final R8 mapping.");
+			var blobTasks = tasks.Where (t => t.Name == "GenerateJniRemappingBinaryBlobs").ToList ();
+			Assert.IsNotEmpty (blobTasks, "Expected binary-blob generation after R8.");
+			foreach (var blob in blobTasks) {
+				Assert.GreaterOrEqual (blob.StartTime, r8 [0].EndTime, "Binary blobs must consume the final R8 mapping.");
 			}
+		}
+
+		void AssertNoNativeLink (ProjectBuilder builder)
+		{
+			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
+			var build = BinaryLog.ReadBuild (binlog);
+			Assert.IsEmpty (build.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> (t =>
+				t.Name == "LinkNativeAotSharedLibrary" || t.Name == "LinkNativeRuntime" || t.Name == "LinkApplicationSharedLibraries"),
+				"Data-only remapping updates must not invoke the application native linker.");
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false)]
@@ -193,9 +199,11 @@ namespace Xamarin.Android.Build.Tests
 					timeout: 30), "Constructors, overloads, fields, and peer return values should work.");
 			}
 			Assert.IsTrue (builder.Install (proj), "Obfuscated app should build and install.");
-			AssertR8Invocations (builder, 1, runtime);
 			try {
+				AssertR8Invocations (builder, 1, runtime);
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+				string blobTarget = runtime == AndroidRuntime.NativeAOT
+					? "_AndroidGenerateNativeAotR8BinaryBlobs" : "_AndroidGenerateR8BinaryBlobs";
 				var remapFiles = Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories);
 				Assert.IsNotEmpty (remapFiles, "A compact runtime remapping file should be generated.");
 				var elements = remapFiles.SelectMany (file => XDocument.Load (file).Root.Elements ()).ToList ();
@@ -235,9 +243,12 @@ namespace Xamarin.Android.Build.Tests
 					FileAssert.Exists (aaptRules);
 					originalAaptRules = File.ReadAllText (aaptRules);
 				}
+				var blobTimestamp = File.GetLastWriteTimeUtc (binaryBlob);
 				Assert.IsTrue (builder.Build (proj), "A no-op build should succeed.");
 				AssertR8Invocations (builder, 0, runtime);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"));
+				Assert.IsTrue (builder.Output.IsTargetSkipped (blobTarget));
+				Assert.AreEqual (blobTimestamp, File.GetLastWriteTimeUtc (binaryBlob), "A no-op build must not rewrite the data library.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8Remapping"));
@@ -245,17 +256,6 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"));
 					FileAssert.Exists (aaptRules, "IncrementalClean must retain AAPT keep rules.");
 					Assert.AreEqual (originalAaptRules, File.ReadAllText (aaptRules));
-
-					var ilcObject = Directory.GetFiles (intermediate, $"{proj.ProjectName}.o", SearchOption.AllDirectories).Single ();
-					var ilcTimestamp = File.GetLastWriteTimeUtc (ilcObject);
-					File.Delete (binaryBlob);
-					Assert.IsTrue (builder.Build (proj), "A missing binary-blob library should be regenerated.");
-					AssertR8Invocations (builder, 0, runtime);
-					FileAssert.Exists (binaryBlob);
-					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the data library must not recompile IL.");
-					Assert.IsFalse (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8BinaryBlobs"));
-					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"),
-						"Remapping-data changes must not relink the application.");
 
 					File.Delete (aaptRules);
 					Assert.IsTrue (builder.Build (proj), "Missing resource keep rules should be regenerated.");
@@ -265,17 +265,35 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreateBaseApk"));
 				}
 
+				string? ilcObject = runtime == AndroidRuntime.NativeAOT
+					? Directory.GetFiles (intermediate, $"{proj.ProjectName}.o", SearchOption.AllDirectories).Single () : null;
+				var ilcTimestamp = ilcObject == null ? default : File.GetLastWriteTimeUtc (ilcObject);
+				File.Delete (binaryBlob);
+				Assert.IsTrue (builder.Build (proj), "A missing binary-blob library should be regenerated.");
+				AssertR8Invocations (builder, 0, runtime);
+				FileAssert.Exists (binaryBlob);
+				CollectionAssert.AreEqual (data, File.ReadAllBytes (binaryBlob), "Recovery must reproduce the same remapping payload.");
+				Assert.IsFalse (builder.Output.IsTargetSkipped (blobTarget));
+				AssertNoNativeLink (builder);
+				if (ilcObject != null)
+					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the data library must not recompile IL.");
+
 				var finalMapping = Path.Combine (intermediate, "r8-jni-final-mapping.txt");
 				FileAssert.Exists (finalMapping);
 				File.Delete (finalMapping);
 				Assert.IsTrue (builder.Build (proj), "A missing final mapping must rerun R8, not reuse stale tables.");
 				AssertR8Invocations (builder, 1, runtime);
 				FileAssert.Exists (finalMapping);
+				FileAssert.Exists (binaryBlob);
+				Assert.IsFalse (builder.Output.IsTargetSkipped (blobTarget));
+				AssertNoNativeLink (builder);
+				CollectionAssert.AreEqual (data, File.ReadAllBytes (binaryBlob));
 
 				extraRules = "-keepclassmembernames class example.RuntimePeer { public int add(int); }";
 				proj.Touch ("r8-custom.pro");
-				Assert.IsTrue (builder.Install (proj), "Changed R8 rules must update the late-linked tables.");
+				Assert.IsTrue (builder.Install (proj), "Changed R8 rules must update the binary blobs.");
 				AssertR8Invocations (builder, 1, runtime);
+				CollectionAssert.AreNotEqual (data, File.ReadAllBytes (binaryBlob), "Changed member mappings must change the payload.");
 				var changedElements = Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories)
 					.SelectMany (file => XDocument.Load (file).Root.Elements ()).ToList ();
 				Assert.IsFalse (changedElements.Any (e => e.Name == "replace-method" &&
