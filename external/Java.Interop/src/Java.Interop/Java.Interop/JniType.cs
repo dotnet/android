@@ -393,8 +393,11 @@ namespace Java.Interop {
 		/// <summary>
 		/// Creates a <see cref="JniType"/> from a null-terminated UTF-8 class name span.
 		/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
-		/// A NUL terminator is appended when the span does not already end with one.
 		/// </summary>
+		/// <remarks>
+		/// The backing storage must remain NUL-terminated. C# UTF-8 literals provide a
+		/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+		/// </remarks>
 		public JniType (ReadOnlySpan<byte> classname)
 		{
 			var peer = JniEnvironment.Types.FindClass (classname);

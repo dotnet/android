@@ -348,8 +348,11 @@ namespace Java.Interop
 			/// <summary>
 			/// Finds a Java class using a null-terminated UTF-8 class name span.
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
-			/// A NUL terminator is appended when the span does not already end with one.
 			/// </summary>
+			/// <remarks>
+			/// The backing storage must remain NUL-terminated. C# UTF-8 literals provide a
+			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+			/// </remarks>
 			public static JniObjectReference FindClass (ReadOnlySpan<byte> classname)
 			{
 				return TryFindClass (classname, throwOnError: true);
@@ -359,6 +362,10 @@ namespace Java.Interop
 			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
 			/// </summary>
+			/// <remarks>
+			/// The backing storage must remain NUL-terminated. C# UTF-8 literals provide a
+			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+			/// </remarks>
 			public static bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
 			{
 				instance = TryFindClass (classname, throwOnError: false);
@@ -369,6 +376,7 @@ namespace Java.Interop
 			{
 				if (classname.Length == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
+
 				var info = JniEnvironment.CurrentInfo;
 
 				var terminator = classname.IndexOf ((byte) 0);
@@ -394,18 +402,12 @@ namespace Java.Interop
 			static JniObjectReference TryFindClassFromPtr (JniEnvironmentInfo info, ReadOnlySpan<byte> classname, ReadOnlySpan<byte> findClassSpan, int terminator, bool throwOnError)
 			{
 				IntPtr c;
-				IntPtr thrown;
-				if (findClassSpan [^1] == 0) {
-					c = RawFindClass (info.EnvironmentPointer, findClassSpan, out thrown);
-				} else {
-					Span<byte> terminatedFindClassName = findClassSpan.Length + 1 <= 256
-						? stackalloc byte [findClassSpan.Length + 1]
-						: new byte [findClassSpan.Length + 1];
-					findClassSpan.CopyTo (terminatedFindClassName);
-					terminatedFindClassName [^1] = 0;
-					c = RawFindClass (info.EnvironmentPointer, terminatedFindClassName, out thrown);
+				unsafe {
+					fixed (byte* _classname_ptr = findClassSpan) {
+						c = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
+					}
 				}
-
+				var thrown = JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer);
 				if (thrown == IntPtr.Zero) {
 					var r = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
@@ -429,17 +431,6 @@ namespace Java.Interop
 				throw new InvalidOperationException ($"Could not find Java class '{errorClassName}'.");
 			}
 
-			static IntPtr RawFindClass (IntPtr env, scoped ReadOnlySpan<byte> classname, out IntPtr thrown)
-			{
-				IntPtr c;
-				unsafe {
-					fixed (byte* _classname_ptr = classname) {
-						c = JniNativeMethods.FindClass (env, (IntPtr) _classname_ptr);
-						thrown = JniNativeMethods.ExceptionOccurred (env);
-					}
-				}
-				return c;
-			}
 		}
 	}
 }
