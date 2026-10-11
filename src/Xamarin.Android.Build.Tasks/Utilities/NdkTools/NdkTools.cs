@@ -35,12 +35,9 @@ namespace Xamarin.Android.Tasks
 			{ NdkToolKind.Strip, "strip" },
 		};
 
-		string? osBinPath;
-
 		public NdkVersion Version { get; }
 		public string NdkRootDirectory { get; }
 		public bool UsesClang { get; protected set; }
-		public bool NoBinutils { get; protected set; }
 
 		// We can't use MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform here since it's
 		// not initialized while running tests and attempts to use cause a NREX
@@ -50,17 +47,6 @@ namespace Xamarin.Android.Tasks
 		protected bool IsWindows => OS.IsWindows;
 
 		protected TaskLoggingHelper? Log { get; }
-
-		public string OSBinPath {
-			get => osBinPath ?? MonoAndroidHelper.GetOSBinPath ();
-			set {
-				if (String.IsNullOrEmpty (value)) {
-					osBinPath = null;
-				} else {
-					osBinPath = value;
-				}
-			}
-		}
 
 		protected NdkTools (NdkVersion version, TaskLoggingHelper? log = null)
 		{
@@ -141,11 +127,6 @@ namespace Xamarin.Android.Tasks
 		public virtual string GetClangDeviceLibraryPath ()
 		{
 			throw new NotSupportedException ();
-		}
-
-		public static string GetBinutilsToolchainPrefix (AndroidTargetArch arch)
-		{
-			return $"{GetArchTriple (arch)}-";
 		}
 
 		public virtual string GetNdkToolchainPrefix (AndroidTargetArch arch)

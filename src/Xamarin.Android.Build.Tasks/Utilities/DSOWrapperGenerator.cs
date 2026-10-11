@@ -38,13 +38,11 @@ class DSOWrapperGenerator
 	internal class Config
 	{
 		public Dictionary<AndroidTargetArch, string> DSOStubPaths    { get; }
-		public string AndroidBinUtilsDirectory                       { get; }
 		public string BaseOutputDirectory                            { get; }
 
-		public Config (Dictionary<AndroidTargetArch, string> stubPaths, string androidBinUtilsDirectory, string baseOutputDirectory)
+		public Config (Dictionary<AndroidTargetArch, string> stubPaths, string baseOutputDirectory)
 		{
 			DSOStubPaths = stubPaths;
-			AndroidBinUtilsDirectory = androidBinUtilsDirectory;
 			BaseOutputDirectory = baseOutputDirectory;
 		}
 	};
@@ -54,7 +52,7 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
-	public static Config GetConfig (TaskLoggingHelper log, string androidBinUtilsDirectory, ITaskItem[] runtimePackLibraryDirs, string baseOutputDirectory)
+	public static Config GetConfig (TaskLoggingHelper log, ITaskItem[] runtimePackLibraryDirs, string baseOutputDirectory)
 	{
 		var stubPaths = new Dictionary<AndroidTargetArch, string> ();
 
@@ -74,7 +72,7 @@ class DSOWrapperGenerator
 			stubPaths.Add (arch, stubPath);
 		}
 
-		return new Config (stubPaths, androidBinUtilsDirectory, baseOutputDirectory);
+		return new Config (stubPaths, baseOutputDirectory);
 	}
 
 	const string WrappedSubDirectory = "wrapped";
@@ -101,29 +99,101 @@ class DSOWrapperGenerator
 			throw new InvalidOperationException ($"Internal error: archive DSO stub location not known for architecture '{targetArch}'");
 		}
 
-		File.Copy (stubPath, outputFile, overwrite: true);
-
-		string quotedOutputFile = MonoAndroidHelper.QuoteFileNameArgument (outputFile);
-		string objcopy = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-objcopy"));
-		var args = new List<string> {
-			"--add-section",
-			$"payload={MonoAndroidHelper.QuoteFileNameArgument (payloadFilePath)}",
-			quotedOutputFile,
-		};
-
-		int ret = MonoAndroidHelper.RunProcess (objcopy, String.Join (" ", args), log);
-		if (ret != 0) {
-			return outputFile;
+		bool success = false;
+		try {
+			using var stub = File.OpenRead (stubPath);
+			using var payload = File.OpenRead (payloadFilePath);
+			using var output = File.Create (outputFile);
+			WriteWrapper (stub, payload, output);
+			success = true;
+		} finally {
+			if (!success) {
+				File.Delete (outputFile);
+			}
 		}
-
-		args.Clear ();
-		args.Add ("--set-section-flags");
-		args.Add ("payload=readonly,data");
-		args.Add ($"--set-section-alignment payload={PayloadSectionAlignment}");
-		args.Add (quotedOutputFile);
-		ret = MonoAndroidHelper.RunProcess (objcopy, String.Join (" ", args), log);
-
 		return outputFile;
+	}
+
+	// Keep the SDK-built stub and its load segments intact. The runtime expects the
+	// non-allocated payload at 16 KiB and its section header appended last.
+	static void WriteWrapper (Stream stub, Stream payload, Stream output)
+	{
+		using var reader = new BinaryReader (stub, System.Text.Encoding.UTF8, leaveOpen: true);
+		using var writer = new BinaryWriter (output, System.Text.Encoding.UTF8, leaveOpen: true);
+		if (stub.Length < 64 || stub.Length > (long)PayloadSectionAlignment ||
+			reader.ReadUInt32 () != 0x464c457f) {
+			throw new InvalidDataException ("Invalid discrete payload ELF stub.");
+		}
+		byte elfClass = reader.ReadByte ();
+		if ((elfClass != 1 && elfClass != 2) || reader.ReadByte () != 1) {
+			throw new InvalidDataException ("The discrete payload stub must use little-endian ELF32 or ELF64.");
+		}
+		bool is64Bit = elfClass == 2;
+		ulong ReadWord () => is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+		void WriteWord (ulong value)
+		{
+			if (is64Bit) writer.Write (value);
+			else writer.Write (checked ((uint)value));
+		}
+		int sectionOffsetField = is64Bit ? 40 : 32;
+		stub.Position = sectionOffsetField;
+		ulong sectionOffset = ReadWord ();
+		stub.Position = is64Bit ? 58 : 46;
+		ushort entrySize = reader.ReadUInt16 ();
+		ushort count = reader.ReadUInt16 ();
+		ushort namesIndex = reader.ReadUInt16 ();
+		if (entrySize != (is64Bit ? 64 : 40) || count == 0 || count == ushort.MaxValue ||
+			namesIndex >= count || sectionOffset + (ulong)count * entrySize > (ulong)stub.Length) {
+			throw new InvalidDataException ("Invalid discrete payload ELF section table.");
+		}
+		stub.Position = checked ((long)sectionOffset);
+		byte [] sections = reader.ReadBytes (count * entrySize);
+		stub.Position = checked ((long)sectionOffset + namesIndex * entrySize + (is64Bit ? 24 : 16));
+		ulong namesOffset = ReadWord ();
+		ulong namesSize = ReadWord ();
+		if (namesOffset + namesSize > (ulong)stub.Length) {
+			throw new InvalidDataException ("Invalid discrete payload ELF section names.");
+		}
+		stub.Position = checked ((long)namesOffset);
+		byte [] names = reader.ReadBytes (checked ((int)namesSize));
+		ulong payloadSize = checked ((ulong)payload.Length);
+		ulong newNamesOffset = checked (PayloadSectionAlignment + payloadSize);
+		ulong newNamesSize = checked (namesSize + 8);
+		ulong newSectionOffset = checked (newNamesOffset + newNamesSize + 7) & ~7ul;
+		ulong fileSize = checked (newSectionOffset + (ulong)(count + 1) * entrySize);
+		if (!is64Bit && fileSize > uint.MaxValue) {
+			throw new NotSupportedException ("The discrete payload exceeds the ELF32 size limit.");
+		}
+		stub.Position = 0;
+		stub.CopyTo (output);
+		output.Position = checked ((long)PayloadSectionAlignment);
+		payload.CopyTo (output);
+		if ((ulong)output.Position != newNamesOffset || payload.Position != payload.Length) {
+			throw new IOException ("The discrete payload length changed while writing.");
+		}
+		writer.Write (names);
+		writer.Write (System.Text.Encoding.ASCII.GetBytes ("payload\0"));
+		output.Position = checked ((long)newSectionOffset);
+		writer.Write (sections);
+		output.Position = checked ((long)newSectionOffset + namesIndex * entrySize + (is64Bit ? 24 : 16));
+		WriteWord (newNamesOffset);
+		WriteWord (newNamesSize);
+		output.Position = checked ((long)newSectionOffset + count * entrySize);
+		writer.Write (checked ((uint)namesSize));
+		writer.Write (1u); // SHT_PROGBITS
+		WriteWord (0); // Non-allocated, read-only data.
+		WriteWord (0); // No virtual address.
+		WriteWord (PayloadSectionAlignment);
+		WriteWord (payloadSize);
+		writer.Write (0u);
+		writer.Write (0u);
+		WriteWord (PayloadSectionAlignment);
+		WriteWord (0);
+		output.Position = sectionOffsetField;
+		WriteWord (newSectionOffset);
+		output.Position = is64Bit ? 60 : 48;
+		writer.Write (checked ((ushort)(count + 1)));
+		output.SetLength (checked ((long)fileSize));
 	}
 
 	public static string [] GetDirectoriesToCleanUp (Config config)

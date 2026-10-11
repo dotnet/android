@@ -18,13 +18,9 @@ The `make prepare` build step (or `/t:Prepare` on Windows) will
 check that all required dependencies are present. If a dependency is
 missing, the build will fail and an error message will be displayed
 attempting to provide install instructions to obtain the missing
-dependency, e.g.:
-
-    error : Could not find required program '7za'. Please run: brew install 'p7zip'.
-
-Install any missing dependencies using your platform's package manager
-(e.g. `brew install p7zip` on macOS, `sudo apt-get install p7zip-full`
-on Debian/Ubuntu).
+dependency. Install missing dependencies using your platform's package manager.
+The obsolete bundled native-tool archive is no longer downloaded, so its
+`7za`/p7zip extraction prerequisite is no longer needed.
 
 <a name="homebrew" />
 
@@ -139,7 +135,6 @@ Suggested `brew install` commands:
 
     brew install cmake
     brew install libtool
-    brew install p7zip
     brew install gdk-pixbuf
     brew install gettext
     brew install coreutils

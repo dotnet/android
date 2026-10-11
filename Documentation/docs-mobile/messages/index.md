@@ -57,7 +57,6 @@ ms.date: 04/11/2024
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
 + [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
-+ [XA0037](xa0037.md): Unknown mode passed to the `PrepareAbiItems` task.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
@@ -177,7 +176,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA3002: Invalid AOT mode: {mode}
 + XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
 + XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
-+ XA3006: Could not compile native assembly file: {file}
 + [XA3007](xa3007.md): Could not link native shared library: {library}
 + [XA3008](xa3008.md): Failed to extract debug info from '{library}'
 
@@ -327,7 +325,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CLR` - `CreateLibraryResourceArchive`
 * `CMD` - `CreateMultiDexMainDexClassList`
 * `CML` - `CreateManagedLibraryResourceArchive`
-* `CNA` - `CompileNativeAssembly`
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
@@ -373,7 +370,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `LNT` - `Lint`
 * `LWF` - `LogWarningsForFiles`
 * `MDC` - `MDoc`
-* `PAI` - `PrepareAbiItems`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
 * `PWA` - `PrepareWearApplicationFiles`

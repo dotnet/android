@@ -277,6 +277,14 @@
 
     <Delete Files="@(_ObsoleteRuntimePackFile)" />
 
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_RuntimePackFiles Remove="@(_RuntimePackFiles)"
+          Condition=" '%(_RuntimePackFiles.Filename)%(_RuntimePackFiles.Extension)' == 'libnet-android.debug-static-debug.a' Or '%(_RuntimePackFiles.Filename)%(_RuntimePackFiles.Extension)' == 'libnet-android.release-static-release.a' " />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.debug-static-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.release-static-release.a')" />
+    </ItemGroup>
+    <Delete Files="@(_ObsoleteCoreClrArchive)" />
+
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
         DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.RuntimePackName).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"

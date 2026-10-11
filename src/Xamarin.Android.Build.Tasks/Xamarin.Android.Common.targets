@@ -60,7 +60,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeRuntimeLinkingSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -83,8 +82,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CompileNativeAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WrapAssembliesAsSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WriteLockFile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -257,7 +254,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
-	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
@@ -1490,17 +1486,6 @@ because xbuild doesn't support framework reference assemblies.
   </PropertyGroup>
 </Target>
 
-<Target Name="_PrepareNativeRuntimeLinkingSources">
-  <PrepareAbiItems
-    Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
-    BuildTargetAbis="@(_BuildTargetAbis)"
-    NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="runtime_linking">
-      <Output TaskParameter="AssemblySources" ItemName="_RuntimeLinkingAssemblySource" />
-  </PrepareAbiItems>
-</Target>
-
 <Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
   <ItemGroup>
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " />
@@ -1530,7 +1515,6 @@ because xbuild doesn't support framework reference assemblies.
     _AddStaticResources;
     $(_AfterAddStaticResources);
     _PrepareAssemblies;
-    _PrepareNativeRuntimeLinkingSources;
     _GenerateEnvironmentFiles;
     UpdateAndroidAssets;
     _IncludeNativeSystemLibraries;
@@ -1611,17 +1595,9 @@ because xbuild doesn't support framework reference assemblies.
       >
   </GenerateNativeApplicationConfigSources>
 
-  <GenerateNativeRuntimeLinkingSources
-      Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
-      EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      SupportedAbis="@(_BuildTargetAbis)">
-  </GenerateNativeRuntimeLinkingSources>
-
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="$(_AndroidCoreClrBootstrapFile)" Condition=" '$(_AndroidCoreClrBootstrapFile)' != '' " />
-    <FileWrites Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' " Include="@(_RuntimeLinkingAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -1757,7 +1733,6 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
-		_AndroidLinkBeforeR8;
 		$(_BeforeCompileToDalvik);
 		_GetLibraryImports;
 		_SetProguardMappingFileProperty;
@@ -1778,17 +1753,9 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileDexDependsOn>
 		_CompileToDalvik;
-		_AndroidLinkAfterR8;
+		_AndroidGenerateR8BinaryBlobs;
 	</_CompileDexDependsOn>
 </PropertyGroup>
-
-<Target Name="_AndroidLinkBeforeR8"
-    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
-    DependsOnTargets="$(_NativeRuntimeLinking)" />
-
-<Target Name="_AndroidLinkAfterR8"
-    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
-    DependsOnTargets="_AndroidGenerateR8BinaryBlobs;$(_NativeRuntimeLinking)" />
 
 <Target Name="_SetProguardMappingFileProperty">
 	<PropertyGroup>
@@ -1877,16 +1844,8 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
-  <ItemGroup>
-    <_NativeAssemblyTarget Include="@(_RuntimeLinkingAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-      <abi>%(_RuntimeLinkingAssemblySource.abi)</abi>
-    </_NativeAssemblyTarget>
-  </ItemGroup>
-</Target>
-
-<!-- Always register the pre-trimming descriptor indices, even when native compilation or
-     compression is up to date. The assembly-local registry is shared by the two modern tasks. -->
+<!-- Always register the pre-trimming descriptor indices, even when compression is
+     up to date. The assembly-local registry is shared by the two modern tasks. -->
 <Target Name="_AndroidCollectCompressedAssemblyInfo"
         DependsOnTargets="_AndroidResolveAssemblyCompressionInputs"
         Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
@@ -1899,22 +1858,6 @@ because xbuild doesn't support framework reference assemblies.
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
   />
-</Target>
-
-<Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_AndroidCollectCompressedAssemblyInfo"
-    Inputs="@(_RuntimeLinkingAssemblySource)"
-    Outputs="@(_NativeAssemblyTarget)"
-    Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
-  <CompileNativeAssembly
-      Sources="@(_RuntimeLinkingAssemblySource)"
-      DebugBuild="$(AndroidIncludeDebugSymbols)"
-      WorkingDirectory="$(_NativeAssemblySourceDir)"
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-  />
-  <ItemGroup>
-    <FileWrites Include="@(_NativeAssemblyTarget)" />
-  </ItemGroup>
 </Target>
 
 <Target Name="_PrepareBuildApk"
@@ -1974,7 +1917,6 @@ because xbuild doesn't support framework reference assemblies.
 		;@(AndroidNativeLibrary)
 		;@(_DexFile)
 		;$(_AndroidBuildPropertiesCache)
-                ;@(_ApplicationSharedLibrary)
 	</_BuildApkEmbedInputs>
 </PropertyGroup>
 
@@ -2089,7 +2031,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <WrapAssembliesAsSharedLibraries
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '$(_AndroidUseAssemblyStore)' != 'true' "
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
@@ -2124,13 +2065,11 @@ because xbuild doesn't support framework reference assemblies.
       BundleNativeLibraries="$(_BundleResultNativeLibraries)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(AndroidNativeLibrary)"
-      ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
       SupportedAbis="@(_BuildTargetAbis)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
@@ -2191,7 +2130,6 @@ because xbuild doesn't support framework reference assemblies.
 		;@(_ShrunkFrameworkAssemblies)
 		;@(_AndroidNativeLibraryForFastDev)
 		;@(_DexFileForFastDevInput)
-		;@(_ApplicationSharedLibrary)
 		;$(_AndroidBuildPropertiesCache)
 		;$(_AdbPropertiesCache)
 		;$(_PackagedResources)
@@ -2249,12 +2187,10 @@ because xbuild doesn't support framework reference assemblies.
       BundleNativeLibraries="$(_BundleNativeLibraries)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(_NativeLibraries)"
-      ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
       SupportedAbis="@(_BuildTargetAbis)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />

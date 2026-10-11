@@ -1746,7 +1746,6 @@ namespace Lib2
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "fourth build should have succeeded.");
 
 					b.Output.AssertTargetIsNotSkipped ("CoreCompile");
-					b.Output.AssertTargetIsSkipped ("_CompileNativeAssemblySources");
 					b.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
 					b.Output.AssertTargetIsSkipped ("_Sign");
 					Assert.AreEqual (apkWriteTime, File.GetLastWriteTimeUtc (apk), $"{apk} should not be rewritten for an incremental C# change.");

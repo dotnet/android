@@ -220,10 +220,6 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
     <value>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
-  <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -531,10 +527,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
   <data name="APT2265" xml:space="preserve">
     <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3006" xml:space="preserve">
-    <value>Could not compile native assembly file: {0}{1}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3007" xml:space="preserve">
     <value>Could not link native shared library: {0}{1}</value>

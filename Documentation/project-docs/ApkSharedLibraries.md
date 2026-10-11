@@ -39,8 +39,8 @@ libraries contain no executable code and are written directly by managed ELF wri
 The runtime owns the decoded configuration, DSO handles and assembly-store buffers.
 Applications no longer generate environment LLVM IR or link `libxamarin-app.so`.
 
-The private native-runtime-linking path still generates P/Invoke preservation LLVM IR
-and links selected native runtime archives. It is separate from the default prebuilt layout.
+The private static-CoreCLR/unified-runtime linking path has been removed together with
+its P/Invoke preservation generator. Static CoreCLR linking is deferred to future work.
 NativeAOT continues to use the .NET native compiler and the official Android NDK linker;
 its Java environment bootstrap is unchanged.
 
@@ -97,8 +97,10 @@ load it as we see fit.  The runtime `mmap`s the entire file, looks at the file h
 section, then stores that location in a pointer for further use.
 
 The way the data is placed in the ELF image is by appending a new section, called `payload`, to the stub binary at
-application build time.  This is done by using the `llvm-objcopy` utility, which we ship, and then the result is
-packaged into the `lib/{ABI}/` directory.  The section is properly aligned, the entire file is a valid ELF image.
+application build time. `DSOWrapperGenerator` writes the appended section and updates the ELF section
+table directly in managed code, retaining the fixed SDK-built stub's load segments. No native
+assembler, linker or objcopy executable is invoked. The section is aligned to 16 KiB and appended
+last in the section table, preserving the runtime's fixed payload offset and section-index contract.
 
 One downside of this approach is that if one were to run the `llvm-strip` or `strip` utility on the resulting
 shared libray, the `payload` section (as it uses a "non-standard" name) would be considered by the strip utility
@@ -123,8 +125,9 @@ in the modern `Microsoft.Android.Build.Tasks` assembly. Its
 writes the ELF headers and dynamic metadata directly in managed code and stream-copies the raw store
 bytes unchanged. No assembler, linker, native dependency or executable code is needed for this wrapper.
 The existing assembly-store setting selects this task unconditionally for stores; discrete files
-continue to use `DSOWrapperGenerator` and `llvm-objcopy`. NDK linking, optional native-library
-stripping and discrete payload wrapping remain supported.
+use the managed `DSOWrapperGenerator`. The workload no longer downloads or ships the historical
+bundled native tools. NativeAOT linking/objcopy and optional native-library stripping continue
+to use the official Android NDK; ordinary CoreCLR packaging does not require the NDK.
 
 The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm`,
 `llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.

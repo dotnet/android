@@ -304,15 +304,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown mode: {0}.
-        /// </summary>
-        public static string XA0037 {
-            get {
-                return ResourceManager.GetString("XA0037", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         public static string XA0100 {
@@ -1041,15 +1032,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2008 {
             get {
                 return ResourceManager.GetString("XA2008", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not compile native assembly file: {0}{1}.
-        /// </summary>
-        public static string XA3006 {
-            get {
-                return ResourceManager.GetString("XA3006", resourceCulture);
             }
         }
         

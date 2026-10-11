@@ -93,16 +93,12 @@ sealed class CoreClrBootstrapBuilder
 	DsoCacheState CreateDsoCache ()
 	{
 		var dsos = new List<(string name, ITaskItem item)> ();
-		var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 		foreach (ITaskItem item in NativeLibraries) {
 			string name = item.GetMetadata ("ArchiveFileName");
 			if (String.IsNullOrEmpty (name)) {
 				name = item.ItemSpec;
 			}
 			name = Path.GetFileName (name);
-			if (nameCache.Contains (name)) {
-				continue;
-			}
 			dsos.Add ((name, item));
 		}
 

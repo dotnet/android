@@ -20,9 +20,6 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 	public override string TaskPrefix => "WAS";
 
 	[Required]
-	public string AndroidBinUtilsDirectory { get; set; } = "";
-
-	[Required]
 	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 	public bool IncludeDebugSymbols { get; set; }
@@ -43,7 +40,7 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 	{
 		var files = new PackageFileListBuilder ();
 
-		var wrapper_config = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
+		var wrapper_config = DSOWrapperGenerator.GetConfig (Log, RuntimePackLibraryDirectories, IntermediateOutputPath);
 		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => WrapAssembly (log, arch, assembly, wrapper_config, files));
 
 		WrappedAssemblies = files.ToArray ();

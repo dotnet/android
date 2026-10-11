@@ -36,9 +36,13 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidUseAssemblyStore", "true");
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
 			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.OtherBuildItems.Add (new BuildItem ("None", "wrapper.dll.config") {
+				TextContent = () => "<configuration />",
+			});
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "The compressed-store build should succeed.");
+			AssertDiscreteWrappers ();
 			string archive = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
 			AssertArchive ();
 			DateTime archiveTimestamp = File.GetLastWriteTimeUtc (archive);
@@ -53,6 +57,60 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The changed-assembly build should succeed.");
 			Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "Changing an assembly must refresh the packaged stores.");
 			AssertArchive ();
+
+			void AssertDiscreteWrappers ()
+			{
+				string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+				string dll = Directory.GetFiles (projectDirectory, proj.ProjectName + ".dll", SearchOption.AllDirectories)
+					.First (path => !path.Contains (Path.DirectorySeparatorChar + "ref" + Path.DirectorySeparatorChar, StringComparison.Ordinal) &&
+						!path.Contains (Path.DirectorySeparatorChar + "refint" + Path.DirectorySeparatorChar, StringComparison.Ordinal));
+				string [] inputs = [dll, Path.ChangeExtension (dll, "pdb"), Path.Combine (projectDirectory, "wrapper.dll.config")];
+				var log = new Microsoft.Build.Utilities.TaskLoggingHelper (new MockBuildEngine (TestContext.Out), TestName);
+				var apiVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+				string api = apiVersion.Minor == 0 ? apiVersion.Major.ToString () : apiVersion.ToString ();
+				foreach (var arch in arches) {
+					string rid = MonoAndroidHelper.ArchToRid (arch);
+					string pack = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory,
+						$"Microsoft.Android.Runtime.CoreCLR.{api}.{rid}")).Single ();
+					string stub = Path.Combine (pack, "runtimes", rid, "native", DSOWrapperGenerator.StubFileName);
+					string output = builder.Output.GetIntermediaryPath (Path.Combine ("discrete-inspection", rid));
+					var config = new DSOWrapperGenerator.Config (new Dictionary<AndroidTargetArch, string> { [arch] = stub }, output);
+					using var original = NativeToolTestHelper.ReadElf (stub);
+					var originalElf = original.RootElement [0];
+					foreach (string input in inputs) {
+						FileAssert.Exists (input);
+						string wrapped = DSOWrapperGenerator.WrapIt (log, config, arch, input, Path.GetFileName (input) + ".so");
+						using var document = NativeToolTestHelper.ReadElf (wrapped);
+						var elf = document.RootElement [0];
+						Assert.AreEqual (originalElf.GetProperty ("ProgramHeaders").ToString (), elf.GetProperty ("ProgramHeaders").ToString (),
+							"The SDK stub's loaded segments must stay unchanged.");
+						Assert.AreEqual (originalElf.GetProperty ("DynamicSymbols").ToString (), elf.GetProperty ("DynamicSymbols").ToString ());
+						var sections = elf.GetProperty ("Sections").EnumerateArray ().Select (item => item.GetProperty ("Section")).ToArray ();
+						var payload = sections.Last ();
+						Assert.AreEqual ("payload", payload.GetProperty ("Name").GetProperty ("Name").GetString ());
+						Assert.AreEqual (0x4000, payload.GetProperty ("Offset").GetInt32 (), "The runtime uses this fixed payload offset.");
+						Assert.AreEqual (0, payload.GetProperty ("Address").GetInt32 ());
+						Assert.AreEqual (0, payload.GetProperty ("Flags").GetProperty ("Value").GetInt32 (),
+							"Discrete payloads must remain non-allocated and read-only.");
+						Assert.AreEqual (new FileInfo (input).Length, payload.GetProperty ("Size").GetInt64 ());
+						Assert.AreEqual (originalElf.GetProperty ("Sections").GetArrayLength () + 1,
+							sections.Length, "The runtime expects the new payload section at the old section count.");
+						CollectionAssert.AreEqual (File.ReadAllBytes (input), NativeToolTestHelper.ReadSection (wrapped, "payload"));
+						string previous = Path.Combine (Path.GetDirectoryName (wrapped), "previous-" + Path.GetFileName (wrapped));
+						NativeToolTestHelper.Run ("llvm-objcopy", "--add-section", "payload=" + input, stub, previous);
+						NativeToolTestHelper.Run ("llvm-objcopy", "--set-section-flags", "payload=readonly,data",
+							"--set-section-alignment", "payload=16384", previous);
+						using var previousDocument = NativeToolTestHelper.ReadElf (previous);
+						var previousPayload = previousDocument.RootElement [0].GetProperty ("Sections").EnumerateArray ().Last ().GetProperty ("Section");
+						Assert.AreEqual (previousPayload.GetProperty ("Offset").GetInt64 (), payload.GetProperty ("Offset").GetInt64 ());
+						Assert.AreEqual (previousPayload.GetProperty ("Size").GetInt64 (), payload.GetProperty ("Size").GetInt64 ());
+						CollectionAssert.AreEqual (NativeToolTestHelper.ReadSection (previous, "payload"), NativeToolTestHelper.ReadSection (wrapped, "payload"));
+						byte [] first = File.ReadAllBytes (wrapped);
+						DSOWrapperGenerator.WrapIt (log, config, arch, input, Path.GetFileName (input) + ".so");
+						CollectionAssert.AreEqual (first, File.ReadAllBytes (wrapped), "Discrete wrapping must be deterministic.");
+					}
+				}
+			}
 
 			void AssertArchive ()
 			{

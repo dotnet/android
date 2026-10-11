@@ -634,38 +634,6 @@ namespace Xamarin.Android.Tasks
 		}
 #endif // MSBUILD
 
-		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)
-		{
-			// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
-			// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
-			string relPath = Path.Combine ("..", "..");
-			if (!OS.IsWindows) {
-				// the `binutils` directory is one level down (${OS}/binutils) than the Windows one
-				relPath = Path.Combine (relPath, "..");
-			}
-
-			return relPath;
-		}
-
-#if MSBUILD
-		public static string? GetRuntimePackNativeLibDir (AndroidTargetArch arch, IEnumerable<ITaskItem> runtimePackLibDirs)
-		{
-			foreach (ITaskItem item in runtimePackLibDirs) {
-				string? rid = item.GetMetadata ("RuntimeIdentifier");
-				if (String.IsNullOrEmpty (rid)) {
-					continue;
-				}
-
-				AndroidTargetArch itemArch = RidToArch (rid);
-				if (itemArch == arch) {
-					return item.ItemSpec;
-				}
-			}
-
-			return null;
-		}
-#endif // MSBUILD
-
 		public static string? GetAssemblyCulture (ITaskItem assembly)
 		{
 			// The best option
