@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
@@ -13,8 +15,8 @@ sealed class AndroidNdkTools
 
 	public string ToolchainDirectory { get; }
 	public string BinDirectory => Path.Combine (ToolchainDirectory, "bin");
-	public static string HostTag => OperatingSystem.IsWindows () ? "windows-x86_64" :
-		OperatingSystem.IsMacOS () ? "darwin-x86_64" : "linux-x86_64";
+	public static string HostTag => RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "windows-x86_64" :
+		RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "darwin-x86_64" : "linux-x86_64";
 
 	AndroidNdkTools (string directory, TaskLoggingHelper log)
 	{
@@ -24,8 +26,10 @@ sealed class AndroidNdkTools
 
 	public static AndroidNdkTools? Create (string? ndkDirectory, TaskLoggingHelper log)
 	{
-		ArgumentNullException.ThrowIfNull (log);
-		if (string.IsNullOrEmpty (ndkDirectory) || !File.Exists (Path.Combine (ndkDirectory, "source.properties"))) {
+		if (log == null) {
+			throw new ArgumentNullException (nameof (log));
+		}
+		if (ndkDirectory.IsNullOrEmpty () || !File.Exists (Path.Combine (ndkDirectory, "source.properties"))) {
 			log.LogCodedError ("XA5104", Properties.Resources.XA5104);
 			return null;
 		}
@@ -39,7 +43,7 @@ sealed class AndroidNdkTools
 
 	public string? GetToolPath (string name)
 	{
-		string path = Path.Combine (BinDirectory, name + (OperatingSystem.IsWindows () ? ".exe" : ""));
+		string path = Path.Combine (BinDirectory, name + (RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? ".exe" : ""));
 		if (File.Exists (path)) {
 			return path;
 		}
@@ -49,22 +53,27 @@ sealed class AndroidNdkTools
 
 	public string? GetClangDeviceLibraryPath ()
 	{
-		string root = Path.Combine (ToolchainDirectory, "lib", "clang");
-		if (Directory.Exists (root)) {
-			foreach (string directory in Directory.EnumerateDirectories (root).OrderByDescending (GetVersion)) {
+		// Older Clang NDKs use lib64; current NDKs use lib.
+		foreach (string libDirectory in new [] { "lib", "lib64" }) {
+			string root = Path.Combine (ToolchainDirectory, libDirectory, "clang");
+			if (!Directory.Exists (root)) {
+				continue;
+			}
+			foreach (string directory in Directory.EnumerateDirectories (root)
+				.OrderByDescending (GetVersion).ThenByDescending (directory => directory, StringComparer.Ordinal)) {
 				string path = Path.Combine (directory, "lib", "linux");
 				if (Directory.Exists (path)) {
 					return path;
 				}
 			}
 		}
-		log.LogCodedError ("XA5101", Properties.Resources.XA5101, root);
+		log.LogCodedError ("XA5101", Properties.Resources.XA5101, Path.Combine (ToolchainDirectory, "lib", "clang"));
 		return null;
 
 		static Version GetVersion (string directory)
 		{
 			string name = Path.GetFileName (directory);
-			return Version.TryParse (name.Contains ('.') ? name : name + ".0", out var version) ? version : new Version ();
+			return Version.TryParse (name.IndexOf ('.') >= 0 ? name : name + ".0", out var version) ? version : new Version ();
 		}
 	}
 }

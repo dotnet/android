@@ -11,6 +11,7 @@ using Microsoft.Build.Framework;
 
 using ArchiveFileList = System.Collections.Generic.List<(string filePath, string archivePath)>;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Tasks;
 
@@ -247,12 +248,12 @@ public class CollectNativeFilesForArchive : AndroidTask
 			return;
 		}
 
-		NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: false, log: Log);
-		if (Log.HasLoggedErrors) {
-			return; // NdkTools.Create will log appropriate error
+		var ndk = AndroidNdkTools.Create (AndroidNdkDirectory, Log);
+		if (ndk == null) {
+			return;
 		}
 
-		string clangDir = ndk.GetClangDeviceLibraryPath ();
+		string? clangDir = ndk.GetClangDeviceLibraryPath ();
 		if (clangDir.IsNullOrEmpty ()) {
 			LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
 			return;

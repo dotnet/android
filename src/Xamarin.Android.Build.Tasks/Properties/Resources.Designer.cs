@@ -1998,24 +1998,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to C compiler for target {0} was not found. Tried paths: &quot;{1}&quot;.
-        /// </summary>
-        public static string XA5101_C_Compiler {
-            get {
-                return ResourceManager.GetString("XA5101_C_Compiler", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Toolchain directory for target {0} was not found..
-        /// </summary>
-        public static string XA5101_Toolchain {
-            get {
-                return ResourceManager.GetString("XA5101_Toolchain", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path..
         /// </summary>
         public static string XA5104 {
