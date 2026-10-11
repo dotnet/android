@@ -19,9 +19,9 @@
       <_AndroidBinaryBlobXml Condition=" '@(_AndroidRemapMembers->Count())' != '0' ">$(_XARemapMembersFilePath)</_AndroidBinaryBlobXml>
     </PropertyGroup>
     <ItemGroup>
-      <_AndroidRegularBinaryBlobLibrary Include="@(_BuildTargetAbis->'$(_AndroidBinaryBlobsDirectory)%(Identity)/libbinary_blobs.so')">
+      <_AndroidRegularBinaryBlobLibrary Include="@(_BuildTargetAbis->'$(_AndroidBinaryBlobsDirectory)%(Identity)/$(_AndroidBootstrapBinaryBlobsLibraryName)')">
         <Abi>%(_BuildTargetAbis.Identity)</Abi>
-        <ArchivePath>lib/%(_BuildTargetAbis.Identity)/libbinary_blobs.so</ArchivePath>
+        <ArchivePath>lib/%(_BuildTargetAbis.Identity)/$(_AndroidBootstrapBinaryBlobsLibraryName)</ArchivePath>
       </_AndroidRegularBinaryBlobLibrary>
       <_AndroidRegularBinaryBlobOutput Include="$(_AndroidBinaryBlobsStamp)" />
       <_AndroidBinaryBlobGenerationStamp Include="$(_AndroidBinaryBlobsStamp)" />
@@ -40,6 +40,7 @@
         MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidBinaryBlobXml)"
         BootstrapFilePath="$(_AndroidCoreClrBootstrapFile)"
+        LibraryName="$(_AndroidBootstrapBinaryBlobsLibraryName)"
         OutputDirectory="$(_AndroidBinaryBlobsDirectory)"
         SupportedAbis="@(_BuildTargetAbis)"
         Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
@@ -94,9 +95,9 @@
       <_AndroidCoreClrBinaryBlobsPresent Condition=" Exists('$(_AndroidR8BinaryBlobsStamp)') ">$([System.IO.File]::ReadAllText('$(_AndroidR8BinaryBlobsStamp)'))</_AndroidCoreClrBinaryBlobsPresent>
     </PropertyGroup>
     <ItemGroup>
-      <_AndroidCoreClrBinaryBlobLibrary Include="@(_BuildTargetAbis->'$(_AndroidR8BinaryBlobsDirectory)%(Identity)/libbinary_blobs.so')">
+      <_AndroidCoreClrBinaryBlobLibrary Include="@(_BuildTargetAbis->'$(_AndroidR8BinaryBlobsDirectory)%(Identity)/$(_AndroidBootstrapBinaryBlobsLibraryName)')">
         <Abi>%(_BuildTargetAbis.Identity)</Abi>
-        <ArchivePath>lib/%(_BuildTargetAbis.Identity)/libbinary_blobs.so</ArchivePath>
+        <ArchivePath>lib/%(_BuildTargetAbis.Identity)/$(_AndroidBootstrapBinaryBlobsLibraryName)</ArchivePath>
       </_AndroidCoreClrBinaryBlobLibrary>
       <_AndroidCoreClrBinaryBlobOutput Include="$(_AndroidR8BinaryBlobsStamp)" />
       <_AndroidBinaryBlobGenerationStamp Include="$(_AndroidR8BinaryBlobsStamp)" />
@@ -115,6 +116,7 @@
         MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidR8JniRemappingXml)"
         BootstrapFilePath="$(_AndroidCoreClrBootstrapFile)"
+        LibraryName="$(_AndroidBootstrapBinaryBlobsLibraryName)"
         OutputDirectory="$(_AndroidR8BinaryBlobsDirectory)"
         SupportedAbis="@(_BuildTargetAbis)"
         Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
@@ -166,9 +168,9 @@
       <_AndroidNativeAotBinaryBlobsPresent Condition=" Exists('$(_AndroidNativeAotBinaryBlobsStamp)') ">$([System.IO.File]::ReadAllText('$(_AndroidNativeAotBinaryBlobsStamp)'))</_AndroidNativeAotBinaryBlobsPresent>
     </PropertyGroup>
     <ItemGroup>
-      <_AndroidNativeAotExpectedBinaryBlobLibrary Include="@(_PrivateBuildTargetAbi->'$(_AndroidNativeAotBinaryBlobsDirectory)%(Identity)/libbinary_blobs.so')">
+      <_AndroidNativeAotExpectedBinaryBlobLibrary Include="@(_PrivateBuildTargetAbi->'$(_AndroidNativeAotBinaryBlobsDirectory)%(Identity)/$(_AndroidBootstrapBinaryBlobsLibraryName)')">
         <Abi>%(_PrivateBuildTargetAbi.Identity)</Abi>
-        <ArchivePath>lib/%(_PrivateBuildTargetAbi.Identity)/libbinary_blobs.so</ArchivePath>
+        <ArchivePath>lib/%(_PrivateBuildTargetAbi.Identity)/$(_AndroidBootstrapBinaryBlobsLibraryName)</ArchivePath>
       </_AndroidNativeAotExpectedBinaryBlobLibrary>
       <_AndroidNativeAotBinaryBlobOutput Include="$(_AndroidNativeAotBinaryBlobsStamp)" />
       <_AndroidNativeAotBinaryBlobOutput Include="@(_AndroidNativeAotExpectedBinaryBlobLibrary)"
@@ -185,6 +187,7 @@
     <GenerateJniRemappingBinaryBlobs
         MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidNativeAotR8RemappingXml)"
+        LibraryName="$(_AndroidBootstrapBinaryBlobsLibraryName)"
         OutputDirectory="$(_AndroidNativeAotBinaryBlobsDirectory)"
         SupportedAbis="@(_PrivateBuildTargetAbi)"
         Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />

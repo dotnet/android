@@ -274,6 +274,58 @@ public class TypeMapProguardTargetsTests : BaseTest
 	}
 
 	[Test]
+	public void BinaryBlobTargetsThreadLibraryName (
+		[Values ("_AndroidGenerateBinaryBlobs", "_AndroidGenerateR8BinaryBlobs", "_AndroidGenerateNativeAotR8BinaryBlobs")] string targetName)
+	{
+		const string libraryName = "libtest_bootstrap.so";
+		bool nativeAot = targetName.Contains ("NativeAot", StringComparison.Ordinal);
+		string remapping = Write ("remapping.xml", """<replacements><replace-type from="example/Original" to="example/Replacement" /></replacements>""");
+		string targets = Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks",
+			"Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.R8JniRemapping.targets");
+		string project = Path.Combine (directory, "binary-blobs.proj");
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup",
+				new XElement ("_AndroidRuntime", nativeAot ? "NativeAOT" : "CoreCLR"),
+				new XElement ("_AndroidR8RuntimeRemappingEnabled", targetName == "_AndroidGenerateBinaryBlobs" ? "false" : "true"),
+				new XElement ("_AndroidBootstrapBinaryBlobsLibraryName", libraryName),
+				new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GenerateJniRemappingBinaryBlobs).Assembly.Location),
+				new XElement ("IntermediateOutputPath", Path.Combine (directory, "obj") + Path.DirectorySeparatorChar),
+				new XElement ("NativeIntermediateOutputPath", Path.Combine (directory, "obj", "android-arm64", "native") + Path.DirectorySeparatorChar),
+				new XElement ("_XARemapMembersFilePath", remapping),
+				new XElement ("_AndroidR8JniRemappingXml", remapping),
+				new XElement ("_AndroidNativeAotR8RemappingXml", remapping),
+				new XElement ("_AndroidBuildPropertiesCache", remapping)),
+			new XElement ("ItemGroup",
+				new XElement ("_BuildTargetAbis", new XAttribute ("Include", "arm64-v8a;x86_64")),
+				new XElement ("_PrivateBuildTargetAbi", new XAttribute ("Include", "arm64-v8a")),
+				new XElement ("_AndroidRemapMembers", new XAttribute ("Include", remapping))),
+			new XElement ("Import", new XAttribute ("Project", targets)),
+			new [] { "_GeneratePackageManagerJava", "_ConvertAndroidMamMappingFileToXml", "_CollectAndroidRemapMembers",
+				"_AndroidGenerateR8JniRemapping", "_AndroidGenerateNativeAotR8Remapping" }
+				.Select (name => new XElement ("Target", new XAttribute ("Name", name))),
+			new XElement ("Target", new XAttribute ("Name", "Build"), new XAttribute ("DependsOnTargets", targetName),
+				new XElement ("WriteLinesToFile", new XAttribute ("File", Path.Combine (directory, "archive-paths.txt")),
+					new XAttribute ("Lines", "@(_AndroidBinaryBlobLibrary->'%(ArchivePath)');@(_AndroidNativeAotBinaryBlobLibrary->'%(ArchivePath)')"),
+					new XAttribute ("Overwrite", "true")))))
+			.Save (project);
+		Build (project);
+		string [] abis = nativeAot ? ["arm64-v8a"] : ["arm64-v8a", "x86_64"];
+		CollectionAssert.AreEquivalent (abis.Select (abi => $"lib/{abi}/{libraryName}"),
+			File.ReadAllLines (Path.Combine (directory, "archive-paths.txt")).Where (line => line.Length != 0));
+		var libraries = Directory.GetFiles (Path.Combine (directory, "obj"), "*.so", SearchOption.AllDirectories)
+			.ToDictionary (path => path, File.GetLastWriteTimeUtc);
+		Assert.AreEqual (abis.Length, libraries.Count);
+		Assert.IsTrue (libraries.Keys.All (path => Path.GetFileName (path) == libraryName));
+		Build (project);
+		foreach (var library in libraries)
+			Assert.AreEqual (library.Value, File.GetLastWriteTimeUtc (library.Key), "The name parameter must preserve no-op generation.");
+		string missing = libraries.Keys.First ();
+		File.Delete (missing);
+		Build (project);
+		FileAssert.Exists (missing, "Expected library paths must recover a missing output.");
+	}
+
+	[Test]
 	public void R8RemappingTargetsTrackProducerAssemblies (
 		[Values ("_AndroidGenerateR8JniRemapping", "_AndroidGenerateR8BinaryBlobs",
 			"_AndroidGenerateNativeAotR8Remapping", "_AndroidGenerateNativeAotR8BinaryBlobs")] string targetName,

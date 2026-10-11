@@ -65,6 +65,9 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	public string AndroidRuntime { get; set; } = "";
 
+	[Required]
+	public string BinaryBlobLibraryName { get; set; } = "";
+
 	[Output]
 	public ITaskItem[] OutputFiles { get; set; } = [];
 
@@ -368,12 +371,12 @@ public class CollectNativeFilesForArchive : AndroidTask
 	{
 		string fileName = archiveFileName.IsNullOrEmpty () ? Path.GetFileName (path) : archiveFileName!;
 		bool needsSonameCheck = (AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") &&
-			!string.Equals (Path.GetFileName (fileName), "libbinary_blobs.so", StringComparison.Ordinal);
+			!string.Equals (Path.GetFileName (fileName), BinaryBlobLibraryName, StringComparison.Ordinal);
 		bool hasReservedSoname = ELFHelper.AssertValidLibraryAlignment (
-			Log, ZipAlignmentPages, path, taskItem, needsSonameCheck ? "libbinary_blobs.so" : null);
+			Log, ZipAlignmentPages, path, taskItem, needsSonameCheck ? BinaryBlobLibraryName : null);
 		if (hasReservedSoname) {
 			Log.LogCodedError ("XA4330", Properties.Resources.XA4330, path,
-				MonoAndroidHelper.MakeZipArchivePath (ArchiveLibPath, abi, fileName));
+				MonoAndroidHelper.MakeZipArchivePath (ArchiveLibPath, abi, fileName), BinaryBlobLibraryName);
 			return;
 		}
 		var item = (filePath: path, archivePath: MakeArchiveLibPath (abi, fileName));

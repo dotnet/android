@@ -953,6 +953,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
 		<_PropertyCacheItems Include="_AndroidR8CompressBinaryBlobs=$(_AndroidR8CompressBinaryBlobs)" />
+		<_PropertyCacheItems Include="_AndroidBootstrapBinaryBlobsLibraryName=$(_AndroidBootstrapBinaryBlobsLibraryName)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -2199,6 +2200,7 @@ because xbuild doesn't support framework reference assemblies.
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       AndroidRuntime="$(_AndroidRuntime)"
+      BinaryBlobLibraryName="$(_AndroidBootstrapBinaryBlobsLibraryName)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       IncludeFiles="@(AndroidPackagingOptionsInclude)"
       JavaSourceFiles="@(AndroidJavaSource)"
@@ -2209,6 +2211,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <CollectNativeFilesForArchive
       AndroidRuntime="$(_AndroidRuntime)"
+      BinaryBlobLibraryName="$(_AndroidBootstrapBinaryBlobsLibraryName)"
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"
@@ -2233,10 +2236,10 @@ because xbuild doesn't support framework reference assemblies.
   </CollectNativeFilesForArchive>
 
   <AndroidError
-      Condition=" ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == 'libbinary_blobs.so' "
+      Condition=" ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == '$(_AndroidBootstrapBinaryBlobsLibraryName)' "
       Code="XA4330"
       ResourceName="XA4330"
-      FormatArguments="%(_AndroidNativeFilesToAddToArchive.Identity);%(_AndroidNativeFilesToAddToArchive.ArchivePath)" />
+      FormatArguments="%(_AndroidNativeFilesToAddToArchive.Identity);%(_AndroidNativeFilesToAddToArchive.ArchivePath);$(_AndroidBootstrapBinaryBlobsLibraryName)" />
   <ItemGroup>
     <FilesToAddToArchive Include="@(_AndroidNativeFilesToAddToArchive)" />
   </ItemGroup>
@@ -2324,6 +2327,7 @@ because xbuild doesn't support framework reference assemblies.
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       AndroidRuntime="$(_AndroidRuntime)"
+      BinaryBlobLibraryName="$(_AndroidBootstrapBinaryBlobsLibraryName)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       IncludeFiles="@(AndroidPackagingOptionsInclude)"
       JavaSourceFiles="@(AndroidJavaSource)"
@@ -2334,6 +2338,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <CollectNativeFilesForArchive
       AndroidRuntime="$(_AndroidRuntime)"
+      BinaryBlobLibraryName="$(_AndroidBootstrapBinaryBlobsLibraryName)"
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"
@@ -2357,10 +2362,10 @@ because xbuild doesn't support framework reference assemblies.
   </CollectNativeFilesForArchive>
 
   <AndroidError
-      Condition=" ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == 'libbinary_blobs.so' "
+      Condition=" ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == '$(_AndroidBootstrapBinaryBlobsLibraryName)' "
       Code="XA4330"
       ResourceName="XA4330"
-      FormatArguments="%(_AndroidNativeFilesToAddToArchive.Identity);%(_AndroidNativeFilesToAddToArchive.ArchivePath)" />
+      FormatArguments="%(_AndroidNativeFilesToAddToArchive.Identity);%(_AndroidNativeFilesToAddToArchive.ArchivePath);$(_AndroidBootstrapBinaryBlobsLibraryName)" />
   <ItemGroup>
     <FilesToAddToArchive Include="@(_AndroidNativeFilesToAddToArchive)" />
     <FilesToAddToArchive Include="@(_AndroidBinaryBlobLibrary)" />
@@ -2784,7 +2789,7 @@ because xbuild doesn't support framework reference assemblies.
  	<RemoveDirFixed Directories="$(IntermediateOutputPath)java" Condition="Exists ('$(IntermediateOutputPath)java')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)binary-blobs" Condition="Exists ('$(IntermediateOutputPath)binary-blobs')" />
 	<ItemGroup>
-		<_AndroidNativeAotBinaryBlobToClean Include="$(IntermediateOutputPath)android-*/native/binary-blobs/*/libbinary_blobs.so" />
+		<_AndroidNativeAotBinaryBlobToClean Include="$(IntermediateOutputPath)android-*/native/binary-blobs/*/$(_AndroidBootstrapBinaryBlobsLibraryName)" />
 	</ItemGroup>
 	<Delete Files="@(_AndroidNativeAotBinaryBlobToClean)" />
 	<RemoveDirFixed Directories="$(_AndroidProguardIntermediateDirectory)" Condition="Exists ('$(_AndroidProguardIntermediateDirectory)')" />

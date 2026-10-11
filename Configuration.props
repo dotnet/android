@@ -77,6 +77,8 @@
     <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>
     <_MonoAndroidNETDefaultOutDir>$(_MonoAndroidNETOutputRoot)$(AndroidApiLevel)\</_MonoAndroidNETDefaultOutDir>
     <NativeRuntimeOutputRootDir>$(BuildOutputDirectory)lib\runtimes\</NativeRuntimeOutputRootDir>
+    <!-- Baked into the SDK targets and native hosts together; not an application build setting. -->
+    <_AndroidBootstrapBinaryBlobsLibraryName Condition=" '$(_AndroidBootstrapBinaryBlobsLibraryName)' == '' ">libbootstrap_binary_blobs.so</_AndroidBootstrapBinaryBlobsLibraryName>
     <MicrosoftAndroidRefPackDir>$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\ref\$(DotNetTargetFramework)\</MicrosoftAndroidRefPackDir>
     <MicrosoftAndroidSdkPackDir>$(MicrosoftAndroidPacksRootDir)$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)tools\</MicrosoftAndroidSdkOutDir>

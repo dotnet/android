@@ -333,7 +333,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
-				string remapPath = Path.Combine (objDirPath, "binary-blobs", abi, "libbinary_blobs.so");
+				string remapPath = Path.Combine (objDirPath, "binary-blobs", abi, "libbootstrap_binary_blobs.so");
 				FileAssert.Exists (remapPath);
 				byte [] elf = File.ReadAllBytes (remapPath);
 				Assert.IsTrue (elf.AsSpan (0, 4).SequenceEqual (new byte [] { 0x7f, (byte)'E', (byte)'L', (byte)'F' }));
@@ -424,7 +424,7 @@ namespace Xamarin.Android.Build.Tests
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "binary-blobs");
 			var timestamps = new Dictionary<string, DateTime> (StringComparer.Ordinal);
 			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
-				string path = Path.Combine (objDirPath, abi, "libbinary_blobs.so");
+				string path = Path.Combine (objDirPath, abi, "libbootstrap_binary_blobs.so");
 				FileAssert.Exists (path);
 				timestamps.Add (path, File.GetLastWriteTimeUtc (path));
 			}

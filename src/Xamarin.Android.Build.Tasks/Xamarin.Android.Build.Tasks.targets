@@ -267,6 +267,7 @@
       <_BundledVersionsCacheLines Include="AndroidBuildApiLevel=$(_AndroidBuildApiLevels)" />
       <_BundledVersionsCacheLines Include="DotNetTargetFramework=$(DotNetTargetFramework)" />
       <_BundledVersionsCacheLines Include="DotNetTargetFrameworkVersion=$(DotNetTargetFrameworkVersion)" />
+      <_BundledVersionsCacheLines Include="_AndroidBootstrapBinaryBlobsLibraryName=$(_AndroidBootstrapBinaryBlobsLibraryName)" />
     </ItemGroup>
     <WriteLinesToFile
         File="$(IntermediateOutputPath)_GenerateBundledVersions.cache"
@@ -289,6 +290,7 @@
       <_BundledVersionsReplacement Include="@ANDROID_LATEST_UNSTABLE_API_LEVEL@=$(AndroidLatestUnstableApiLevel)" />
       <_BundledVersionsReplacement Include="@ANDROID_API_LEVELS@=$(_AndroidBuildApiLevels)" />
       <_BundledVersionsReplacement Include="@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" />
+      <_BundledVersionsReplacement Include="@BOOTSTRAP_BINARY_BLOBS_LIBRARY_NAME@=$(_AndroidBootstrapBinaryBlobsLibraryName)" />
     </ItemGroup>
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"

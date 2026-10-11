@@ -18,17 +18,16 @@ namespace Xamarin.Android.Tasks
 {
 	static class ELFHelper
 	{
-		const string BinaryBlobLibraryName = "libbinary_blobs.so";
 		const int DynamicNullTag = 0;
 		const int DynamicStringTableTag = 5;
 		const int DynamicStringTableSizeTag = 10;
 		const int DynamicSonameTag = 14;
 
-		public static bool StreamHasBinaryBlobSoname (TaskLoggingHelper log, Stream stream, string source)
+		public static bool StreamHasBinaryBlobSoname (TaskLoggingHelper log, Stream stream, string source, string libraryName)
 		{
 			try {
 				using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
-				return HasSoname (elf, BinaryBlobLibraryName);
+				return HasSoname (elf, libraryName);
 			} catch (Exception ex) {
 				log.LogDebugMessage ($"Attempt to read the SONAME from '{source}' failed with exception.");
 				log.LogDebugMessage (ex.ToString ());

@@ -30,14 +30,15 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj));
 			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var blobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
+			var blobs = Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories)
 				.ToArray ();
 			bool hasBootstrap = runtime == AndroidRuntime.CoreCLR;
 			Assert.AreEqual (hasBootstrap ? 1 : 0, blobs.Length,
 				"CoreCLR requires the bootstrap library even without remapping; NativeAOT does not.");
 			using (var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
 				proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
-				Assert.AreEqual (hasBootstrap, apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so") != null);
+				Assert.AreEqual (hasBootstrap, apk.GetEntry ("lib/arm64-v8a/libbootstrap_binary_blobs.so") != null);
+				Assert.IsNull (apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so"), "The former SDK library name must not be generated.");
 			}
 			Assert.IsTrue (builder.Build (proj), "The no-op build should succeed.");
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"),
@@ -80,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 				using var archive = ZipFile.OpenRead (archivePath);
 				string prefix = aab ? "base/" : "";
 				bool hasLibrary = runtime == AndroidRuntime.CoreCLR || hasRemapping;
-				Assert.AreEqual (hasLibrary, archive.GetEntry ($"{prefix}lib/arm64-v8a/libbinary_blobs.so") != null);
+				Assert.AreEqual (hasLibrary, archive.GetEntry ($"{prefix}lib/arm64-v8a/libbootstrap_binary_blobs.so") != null);
 				Assert.IsNotNull (archive.GetEntry ($"{prefix}assets/ordinary.txt"));
 				Assert.IsNull (archive.GetEntry ($"{prefix}assets/xa-internal/xa-mam-mapping.xml"));
 				Assert.IsNull (archive.GetEntry ($"{prefix}assets/xa-internal/xa-remap-members.xml"));
@@ -96,11 +97,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj), "MAM input must survive ordinary asset staging and support a no-op.");
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"));
 			AssertPackage (true);
-			foreach (var blob in Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories))
+			foreach (var blob in Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories))
 				File.Delete (blob);
 			Assert.IsTrue (builder.Build (proj), "A deleted data library must be regenerated.");
 			AssertPackage (true);
-			var binaryBlob = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ();
+			var binaryBlob = Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories).Single ();
 			var stamp = Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ();
 			File.Delete (binaryBlob);
 			Directory.CreateDirectory (binaryBlob);
@@ -119,7 +120,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.Touch ("mam.json");
 			Assert.IsTrue (builder.Build (proj));
 			Assert.AreEqual (runtime == AndroidRuntime.CoreCLR ? 1 : 0,
-				Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
+				Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories).Length);
 			AssertPackage (false);
 			Assert.IsTrue (builder.Build (proj));
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateBinaryBlobs"));
@@ -153,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj));
 			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ());
+			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories).Single ());
 			if (useShadowDynstr)
 				library = CreateShadowDynstrLibrary (library);
 			if (useTrailingDynamicEntry)
@@ -162,7 +163,7 @@ namespace Xamarin.Android.Build.Tests
 				BinaryContent = () => library,
 				Metadata = {
 					{ "Abi", "arm64-v8a" },
-					{ "ArchiveFileName", useSonameAlias ? "libcustom.so" : "libbinary_blobs.so" },
+					{ "ArchiveFileName", useSonameAlias ? "libcustom.so" : "libbootstrap_binary_blobs.so" },
 				},
 			});
 			builder.ThrowOnBuildFailure = false;
@@ -199,14 +200,14 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "A clean application with remapping should build.");
 			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ());
+			byte [] library = File.ReadAllBytes (Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories).Single ());
 			if (useShadowDynstr)
 				library = CreateShadowDynstrLibrary (library);
 			else if (useBackslashPath)
-				library = RenameSoname (library, "libcustom_blobs.so");
+				library = RenameSoname (library, "libcustom_bootstrap_blobs.so");
 			string entryName = useBackslashPath
-				? "lib/arm64-v8a\\libbinary_blobs.so"
-				: useSonameAlias ? "lib/arm64-v8a/libcustom.so" : "lib/arm64-v8a/libbinary_blobs.so";
+				? "lib/arm64-v8a\\libbootstrap_binary_blobs.so"
+				: useSonameAlias ? "lib/arm64-v8a/libcustom.so" : "lib/arm64-v8a/libbootstrap_binary_blobs.so";
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "NativePayload.jar") {
 				BinaryContent = () => CreateJar (entryName, library),
 			});
@@ -228,14 +229,48 @@ namespace Xamarin.Android.Build.Tests
 			return jar.ToArray ();
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void FormerBinaryBlobLibraryNameIsNotReserved (bool jar)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false))
+				return;
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			byte [] library = RenameSoname (File.ReadAllBytes (
+				Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories).Single ()),
+				"libbinary_blobs.so");
+			if (jar) {
+				proj.OtherBuildItems.Add (new BuildItem ("AndroidPackagingOptionsInclude", "**/*.so"));
+				proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "FormerName.jar") {
+					BinaryContent = () => CreateJar ("lib/arm64-v8a/libbinary_blobs.so", library),
+				});
+			} else {
+				proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("Libraries/arm64-v8a/libbinary_blobs.so") {
+					BinaryContent = () => library,
+					Metadata = { { "Abi", "arm64-v8a" } },
+				});
+			}
+			Assert.IsTrue (builder.Build (proj), "Only the new SDK library identity is reserved.");
+			using var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk"));
+			Assert.IsNotNull (apk.GetEntry ("lib/arm64-v8a/libbinary_blobs.so"));
+			Assert.IsNotNull (apk.GetEntry ("lib/arm64-v8a/libbootstrap_binary_blobs.so"));
+		}
+
 		static byte [] RenameSoname (byte [] elf, string soname)
 		{
-			byte [] original = Encoding.ASCII.GetBytes ("libbinary_blobs.so");
+			byte [] original = Encoding.ASCII.GetBytes ("libbootstrap_binary_blobs.so");
 			byte [] replacement = Encoding.ASCII.GetBytes (soname);
-			Assert.AreEqual (original.Length, replacement.Length, "The replacement SONAME must preserve the ELF string-table size.");
+			Assert.LessOrEqual (replacement.Length, original.Length, "The replacement SONAME must fit in the original ELF string-table slot.");
 			byte [] result = (byte [])elf.Clone ();
 			int offset = result.AsSpan ().IndexOf (original);
 			Assert.GreaterOrEqual (offset, 0, "The ELF fixture must contain the original SONAME.");
+			result.AsSpan (offset, original.Length).Clear ();
 			replacement.CopyTo (result, offset);
 			return result;
 		}
@@ -292,9 +327,9 @@ namespace Xamarin.Android.Build.Tests
 			ulong sectionNamesSize = BinaryPrimitives.ReadUInt64LittleEndian (sectionHeaders.AsSpan (sectionNamesHeaderOffset + 32, 8));
 			byte [] dynamicStrings = elf.AsSpan (checked ((int)dynamicStringsOffset), checked ((int)dynamicStringsSize)).ToArray ();
 			byte [] fakeDynamicStrings = (byte [])dynamicStrings.Clone ();
-			Assert.GreaterOrEqual (dynamicStrings.AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("libbinary_blobs.so")), 0,
+			Assert.GreaterOrEqual (dynamicStrings.AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("libbootstrap_binary_blobs.so")), 0,
 				"The ELF fixture's linked string table must contain the reserved SONAME.");
-			RenameSonameInStringTable (fakeDynamicStrings, "libbinary_blobs.so", "libcustom_blobs.so");
+			RenameSonameInStringTable (fakeDynamicStrings, "libbootstrap_binary_blobs.so", "libcustom_bootstrap_blobs.so");
 
 			using var output = new MemoryStream ();
 			output.Write (elf);
@@ -518,7 +553,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (2, first.NativeLinks, "Each RID should link once, after R8.");
 				Assert.AreEqual (2, Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories).Length);
 			}
-			var binaryBlobs = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories)
+			var binaryBlobs = Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories)
 				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 			Assert.AreEqual (2, binaryBlobs.Count, "Each ABI needs its own independent binary-blob library.");
 			var archivePath = aab
@@ -527,7 +562,8 @@ namespace Xamarin.Android.Build.Tests
 			using (var archive = ZipFile.OpenRead (archivePath)) {
 				foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
 					string prefix = aab ? "base/lib/" : "lib/";
-					Assert.IsNotNull (archive.GetEntry ($"{prefix}{abi}/libbinary_blobs.so"), $"Missing {abi} remapping data.");
+					Assert.IsNotNull (archive.GetEntry ($"{prefix}{abi}/libbootstrap_binary_blobs.so"), $"Missing {abi} remapping data.");
+					Assert.IsNull (archive.GetEntry ($"{prefix}{abi}/libbinary_blobs.so"), "The former SDK library name must not be generated.");
 					if (runtime == AndroidRuntime.NativeAOT)
 						Assert.IsNotNull (archive.GetEntry ($"{prefix}{abi}/lib{proj.ProjectName}.so"), $"Missing final {abi} native library.");
 				}
@@ -556,10 +592,10 @@ namespace Xamarin.Android.Build.Tests
 			proj.Touch ("explicit-remap.xml");
 			Assert.IsTrue (builder.Build (proj), "Empty R8 remapping must remove unneeded ABI libraries.");
 			Assert.AreEqual (runtime == AndroidRuntime.CoreCLR ? 2 : 0,
-				Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
+				Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories).Length);
 			using (var archive = ZipFile.OpenRead (archivePath)) {
 				foreach (var abi in new [] { "arm64-v8a", "x86_64" })
-					Assert.AreEqual (runtime == AndroidRuntime.CoreCLR, archive.GetEntry ($"lib/{abi}/libbinary_blobs.so") != null);
+					Assert.AreEqual (runtime == AndroidRuntime.CoreCLR, archive.GetEntry ($"lib/{abi}/libbootstrap_binary_blobs.so") != null);
 			}
 			Assert.IsTrue (builder.Build (proj), "Empty per-RID remapping must be a no-op.");
 			Assert.AreEqual ((0, 0), ReadInvocationCounts ());

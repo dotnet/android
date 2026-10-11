@@ -153,7 +153,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		using var a = new MemoryStream (first);
 		using var b = new MemoryStream (second);
 		using var elf = new MemoryStream ();
-		AssemblyStoreElfWriter.Write (new [] { ("xa_first", (Stream)a), ("xa_second", (Stream)b) }, elf, arch, "libbinary_blobs.so");
+		AssemblyStoreElfWriter.Write (new [] { ("xa_first", (Stream)a), ("xa_second", (Stream)b) }, elf, arch, "libbootstrap_binary_blobs.so");
 		byte [] image = elf.ToArray ();
 		bool is64Bit = arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
 		int wordSize = is64Bit ? 8 : 4;
@@ -198,9 +198,9 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		using var first = new MemoryStream (new byte [] { 1 });
 		using var output = new MemoryStream ();
 		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
-			new [] { ("xa_same", (Stream)first), ("xa_same", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
+			new [] { ("xa_same", (Stream)first), ("xa_same", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbootstrap_binary_blobs.so"));
 		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
-			new [] { ("bad\0name", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
+			new [] { ("bad\0name", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbootstrap_binary_blobs.so"));
 		Assert.Zero (output.Length);
 	}
 

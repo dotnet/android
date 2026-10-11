@@ -943,8 +943,8 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {0} - The runtime name.</comment>
   </data>
   <data name="XA4330" xml:space="preserve">
-    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
-    <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
+    <value>Native library '{0}' uses the reserved name '{2}' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <comment>{2} is the reserved binary data library filename.
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>

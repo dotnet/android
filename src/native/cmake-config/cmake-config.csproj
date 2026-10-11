@@ -39,9 +39,22 @@
     <_CMakePresetsOut>$(MSBuildThisFileDirectory)..\CMakePresets.json</_CMakePresetsOut>
   </PropertyGroup>
 
+  <Target Name="_GenerateCMakeFilesInputs">
+    <MakeDir Directories="$(_RepoRoot)bin\Build$(Configuration)" />
+    <WriteLinesToFile
+        File="$(_XaBuildConfigurationCMakeOut).library-name"
+        Lines="$(_AndroidBootstrapBinaryBlobsLibraryName)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_XaBuildConfigurationCMakeOut).library-name" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_GenerateCMakeFiles"
           BeforeTargets="Build"
-          Inputs="$(_XaBuildConfigurationCMakeIn);$(_CMakePresetsIn);$(_RepoRoot)Configuration.props;$(_RepoRoot)Directory.Build.props;$(_RepoRoot)eng\Versions.props"
+          DependsOnTargets="_GenerateCMakeFilesInputs"
+          Inputs="$(_XaBuildConfigurationCMakeIn);$(_CMakePresetsIn);$(_RepoRoot)Configuration.props;$(_RepoRoot)Directory.Build.props;$(_RepoRoot)eng\Versions.props;$(_XaBuildConfigurationCMakeOut).library-name"
           Outputs="$(_XaBuildConfigurationCMakeOut);$(_CMakePresetsOut)">
     <PropertyGroup>
       <_XAPackagesDirSlashes>$([System.String]::Copy('$(XAPackagesDir)').Replace('\','/').TrimEnd('/'))</_XAPackagesDirSlashes>
@@ -58,6 +71,7 @@
       <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_ARM@=$(_CoreClrRuntimePrefix)arm$(_CoreClrRuntimeSuffix)arm" />
       <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_ARM64@=$(_CoreClrRuntimePrefix)arm64$(_CoreClrRuntimeSuffix)arm64" />
       <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_X86_64@=$(_CoreClrRuntimePrefix)x64$(_CoreClrRuntimeSuffix)x64" />
+      <_XaBuildConfigurationReplacement Include="@BOOTSTRAP_BINARY_BLOBS_LIBRARY_NAME@=$(_AndroidBootstrapBinaryBlobsLibraryName)" />
 
       <_CMakePresetsReplacement Include="@AndroidNdkDirectory@=$(_AndroidNdkDirectorySlashes)" />
       <_CMakePresetsReplacement Include="@NinjaPath@=$(_NinjaPathSlashes)" />

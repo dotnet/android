@@ -45,11 +45,11 @@ namespace {
 
 	void open_library () noexcept
 	{
-		library = ::dlopen ("libbinary_blobs.so", RTLD_NOW | RTLD_LOCAL);
+		library = ::dlopen (XA_BOOTSTRAP_BINARY_BLOBS_LIBRARY_NAME, RTLD_NOW | RTLD_LOCAL);
 		if (library == nullptr) {
 			const char *error = ::dlerror ();
 			// Android's loader exposes missing-file status through dlerror, not errno.
-			if (error != nullptr && std::strstr (error, "library \"libbinary_blobs.so\" not found") != nullptr) {
+			if (error != nullptr && std::strstr (error, "library \"" XA_BOOTSTRAP_BINARY_BLOBS_LIBRARY_NAME "\" not found") != nullptr) {
 				log_debugf (LOG_ASSEMBLY, "Optional binary blob library is absent: %s", error);
 				return;
 			}
@@ -87,7 +87,7 @@ namespace {
 				return {};
 			}
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-				"Cannot load required binary blob '%s': libbinary_blobs.so was not found", symbol);
+				"Cannot load required binary blob '%s': %s was not found", symbol, XA_BOOTSTRAP_BINARY_BLOBS_LIBRARY_NAME);
 		}
 
 		const uint8_t *blob = static_cast<const uint8_t*> (::dlsym (library, symbol));

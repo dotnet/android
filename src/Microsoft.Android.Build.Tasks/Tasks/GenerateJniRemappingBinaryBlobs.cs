@@ -24,6 +24,9 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 	public string BootstrapFilePath { get; set; } = "";
 
 	[Required]
+	public string LibraryName { get; set; } = "";
+
+	[Required]
 	public string OutputDirectory { get; set; } = "";
 
 	[Required]
@@ -39,6 +42,8 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 	{
 		BinaryBlobLibraries = [];
 		try {
+			if (string.IsNullOrWhiteSpace (LibraryName) || LibraryName.IndexOfAny (['/', '\\', '\0']) >= 0)
+				throw new InvalidDataException ("A binary blob library filename is required.");
 			if (string.IsNullOrWhiteSpace (OutputDirectory) || SupportedAbis.Length == 0 ||
 				SupportedAbis.Any (string.IsNullOrWhiteSpace)) {
 				throw new InvalidDataException ("An output directory and at least one ABI are required.");
@@ -58,7 +63,7 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				if (arch is not (AndroidTargetArch.Arm or AndroidTargetArch.Arm64 or AndroidTargetArch.X86 or AndroidTargetArch.X86_64)) {
 					throw new InvalidDataException ($"Unsupported ABI: {abi}.");
 				}
-				libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), arch));
+				libraries.Add ((abi, Path.Combine (OutputDirectory, abi, LibraryName), arch));
 			}
 			string stamp = Path.Combine (OutputDirectory, "binary-blobs.stamp");
 			// Failed output writes must force generation on the next build.
@@ -83,13 +88,13 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 					payloads.Add ((CoreClrBootstrapBlob.Symbol, bootstrapSource));
 					expected.Add ((CoreClrBootstrapBlob.Symbol, bootstrap));
 				}
-				AssemblyStoreElfWriter.Write (payloads, output, arch, "libbinary_blobs.so");
+				AssemblyStoreElfWriter.Write (payloads, output, arch, LibraryName);
 				byte [] elf = output.ToArray ();
 				Directory.CreateDirectory (Path.GetDirectoryName (path) ?? throw new InvalidDataException ("No output directory."));
 				File.WriteAllBytes (path, elf);
 				var item = new TaskItem (path);
 				item.SetMetadata ("Abi", abi);
-				item.SetMetadata ("ArchivePath", $"lib/{abi}/libbinary_blobs.so");
+				item.SetMetadata ("ArchivePath", $"lib/{abi}/{LibraryName}");
 				BinaryBlobLibraries = [.. BinaryBlobLibraries, item];
 			}
 			Directory.CreateDirectory (OutputDirectory);

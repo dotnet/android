@@ -1182,18 +1182,19 @@ For example:
 ```
 
 CoreCLR and NativeAOT applications also package a separate per-ABI
-`libbinary_blobs.so` for ordinary JNI remapping in Debug and non-obfuscated
-builds that have remapping entries. Empty mappings omit the remapping symbol
-and do not require a data library. The remapping data is not compiled into the
-application's native code or shipped as an XML asset.
+`libbootstrap_binary_blobs.so` for ordinary JNI remapping in Debug and
+non-obfuscated builds that have remapping entries. Empty mappings omit the
+remapping symbol. CoreCLR still packages this library for its bootstrap data;
+NativeAOT omits it when there are no remapping entries. The remapping data is
+not compiled into the application's native code or shipped as an XML asset.
 
 The runtime-remapping mode leaves managed assemblies unchanged. It runs R8 once,
 after managed trimming or ILC, then uses the resulting R8 mapping to
-generate a per-ABI `libbinary_blobs.so` containing bounded, read-only JNI
+generate a per-ABI `libbootstrap_binary_blobs.so` containing bounded, read-only JNI
 remapping data. CoreCLR selects remaps from linked assemblies. NativeAOT
 selects remaps from retained JNI literals in ILC's native object. Neither
 runtime needs to compile the remapping table into application native code.
-The build validates the full ELF and remapping payload. The native host checks
+The build validates the remapping payload. The native host checks
 the payload envelope and passes bounded data to the managed lookup. The
 uncompressed payload remains mapped without copying by default.
 

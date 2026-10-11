@@ -28,6 +28,7 @@ public class CoreClrBootstrapBlobTests : BaseTest
 		var task = new GenerateJniRemappingBinaryBlobs {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			BootstrapFilePath = bootstrapPath,
+			LibraryName = "libbootstrap_binary_blobs.so",
 			OutputDirectory = Path.Combine (DirectoryPath, "out"),
 			SupportedAbis = ["arm64-v8a"],
 		};
@@ -52,11 +53,12 @@ public class CoreClrBootstrapBlobTests : BaseTest
 		var task = new GenerateJniRemappingBinaryBlobs {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			BootstrapFilePath = bootstrapPath,
+			LibraryName = "libbootstrap_binary_blobs.so",
 			OutputDirectory = Path.Combine (DirectoryPath, "out"),
 			SupportedAbis = ["arm64-v8a"],
 		};
 		Assert.IsFalse (task.Execute ());
-		FileAssert.DoesNotExist (Path.Combine (task.OutputDirectory, "arm64-v8a", "libbinary_blobs.so"));
+		FileAssert.DoesNotExist (Path.Combine (task.OutputDirectory, "arm64-v8a", task.LibraryName));
 	}
 
 	[Test]

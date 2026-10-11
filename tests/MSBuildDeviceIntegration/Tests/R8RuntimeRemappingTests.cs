@@ -114,7 +114,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Install (proj));
 			try {
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-				Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
+				Assert.IsEmpty (Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories));
 				Assert.AreEqual ("false",
 					File.ReadAllText (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ()));
 				ClearAdbLogcat ();
@@ -277,7 +277,7 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("target-method-name") != "hiddenAdd"), "Method lookups must use the renamed owner.");
 				Assert.IsFalse (elements.Any (e => (string) e.Attribute ("source-method-name") == "unusedMethod"),
 					"An unused method on a retained type must not occupy the runtime table.");
-				var binaryBlob = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ();
+				var binaryBlob = Directory.GetFiles (intermediate, "libbootstrap_binary_blobs.so", SearchOption.AllDirectories).Single ();
 				byte [] data = File.ReadAllBytes (binaryBlob);
 				int envelope = data.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
 				Assert.GreaterOrEqual (envelope, 0, "The ELF must contain the remapping payload.");
@@ -362,7 +362,7 @@ namespace Xamarin.Android.Build.Tests
 				using (var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
 					Assert.AreEqual (runtime == AndroidRuntime.CoreCLR,
-						apk.GetEntry ($"lib/{DeviceAbi}/libbinary_blobs.so") != null,
+						apk.GetEntry ($"lib/{DeviceAbi}/libbootstrap_binary_blobs.so") != null,
 						"Disabling obfuscation must leave CoreCLR's bootstrap library, but remove NativeAOT's remapping-only library.");
 				}
 				AssertAppRuns ("r8-disabled.log");

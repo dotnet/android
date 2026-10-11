@@ -22,6 +22,9 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 	public string AndroidRuntime { get; set; } = "";
 
+	[Required]
+	public string BinaryBlobLibraryName { get; set; } = "";
+
 	public string [] ExcludeFiles { get; set; } = [];
 
 	public string [] IncludeFiles { get; set; } = [];
@@ -108,17 +111,17 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 					if ((AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") && IsNativeLibrary (name)) {
 						string normalizedName = name.Replace ('\\', '/');
-						bool reservedName = string.Equals (Path.GetFileName (normalizedName), "libbinary_blobs.so", StringComparison.Ordinal);
+						bool reservedName = string.Equals (Path.GetFileName (normalizedName), BinaryBlobLibraryName, StringComparison.Ordinal);
 						bool reservedSoname = false;
 						if (!reservedName) {
 							using var entryStream = jarItem.Open ();
 							using var elfStream = new MemoryStream ();
 							entryStream.CopyTo (elfStream);
 							elfStream.Position = 0;
-							reservedSoname = ELFHelper.StreamHasBinaryBlobSoname (Log, elfStream, $"{jarFile}#{name}");
+							reservedSoname = ELFHelper.StreamHasBinaryBlobSoname (Log, elfStream, $"{jarFile}#{name}", BinaryBlobLibraryName);
 						}
 						if (reservedName || reservedSoname) {
-							Log.LogCodedError ("XA4330", Properties.Resources.XA4330, $"{jarFile}#{name}", path);
+							Log.LogCodedError ("XA4330", Properties.Resources.XA4330, $"{jarFile}#{name}", path, BinaryBlobLibraryName);
 							continue;
 						}
 					}
