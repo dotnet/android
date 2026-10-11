@@ -263,7 +263,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 				throw new BadImageFormatException ("Invalid or ambiguous NativeAOT type map group relocation.");
 			}
 			string groupSymbol = fields [2].Trim ();
-			bool isJavaGroup = IsJavaGroupSymbol (groupSymbol);
+			bool isJavaGroup = TypeMapKey.IsJavaGroupSymbol (groupSymbol);
 			LogDebugMessage ("NativeAOT type map group {0}: {1} ({2}).", index, groupSymbol, isJavaGroup ? "Java" : "not Java");
 			if (isJavaGroup) {
 				selected.Add (index);
@@ -276,27 +276,6 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 			throw new BadImageFormatException ("No Java type map group was found in the NativeAOT object.");
 		}
 		return selected;
-	}
-
-	static bool IsJavaGroupSymbol (string symbol)
-	{
-		int marker = symbol.IndexOf ("_ZTV", StringComparison.Ordinal);
-		if (marker < 0) {
-			return false;
-		}
-		int start = marker + 4;
-		int nameStart = start;
-		while (nameStart < symbol.Length && symbol [nameStart] >= '0' && symbol [nameStart] <= '9') {
-			nameStart++;
-		}
-		if (nameStart == start) {
-			return false;
-		}
-		string name = symbol.Substring (nameStart);
-		// Match the group identities emitted by TypeMapAssemblyEmitter, not the keys'
-		// appearance: the built-in JavaDictionary universe contains managed type names.
-		return name == "Mono_Android_Java_Lang_Object" ||
-			(name.StartsWith ("_", StringComparison.Ordinal) && name.EndsWith ("_TypeMap___TypeMapAnchor", StringComparison.Ordinal));
 	}
 
 	async Task ReadKeysAsync (string objectFile, FileStream stream, JsonElement root, ISet<string> keys)

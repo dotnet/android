@@ -44,7 +44,7 @@
 
   <ItemGroup>
     <Compile Remove="expected\**\*" />
-    <Compile Remove="expected.ji\**\*" />
+    <Compile Remove="TestInputs\**\*" />
     <Compile Remove="expected.xaji\**\*" />
     <Compile Remove="Tests-Core\**\*" />
     <Compile Remove="SupportFiles\**\*" />
@@ -52,7 +52,7 @@
     <None Include="expected\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="expected.ji\**\*">
+    <None Include="TestInputs\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="expected.xaji\**\*">

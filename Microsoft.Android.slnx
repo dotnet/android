@@ -27,6 +27,7 @@
     <Project Path="src/manifestmerger/manifestmerger.csproj" />
     <Project Path="src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj" />
     <Project Path="src/Microsoft.Android.Runtime.NativeAOT/Microsoft.Android.Runtime.NativeAOT.csproj" />
+    <Project Path="src/Microsoft.Android.TypeMaps.Ref/Microsoft.Android.TypeMaps.Ref.csproj" />
     <Project Path="src/Mono.Android.Export/Mono.Android.Export.csproj" />
     <Project Path="src/Mono.Android.Runtime/Mono.Android.Runtime.csproj" />
     <Project Path="src/Mono.Android/Mono.Android.csproj" />

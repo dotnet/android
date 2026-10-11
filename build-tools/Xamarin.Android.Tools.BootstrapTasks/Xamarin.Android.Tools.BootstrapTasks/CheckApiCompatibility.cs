@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.Tools.Zip;
+using Files = Microsoft.Android.Build.Tasks.Files;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
@@ -135,13 +136,25 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				var zipFiles = Directory.GetFiles (referenceContractPath.Parent.FullName, "*.zip");
 				foreach (var zipFile in zipFiles) {
 					var zipDateTime = File.GetLastWriteTimeUtc (zipFile);
-					using (var zip = ZipArchive.Open (zipFile, FileMode.Open)) {
-						foreach (var entry in zip) {
-							var path = Path.Combine (referenceContractPath.FullName, entry.NativeFullName);
+					using (var zip = ZipFile.OpenRead (zipFile)) {
+						var entries = zip.Entries.Select (entry => {
+							var isDirectory = entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal);
+							Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
+							return (Entry: entry, IsDirectory: isDirectory);
+						}).ToArray ();
+						foreach (var (entry, isDirectory) in entries) {
+							var path = Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
+							if (isDirectory) {
+								Directory.CreateDirectory (path);
+								continue;
+							}
 							if (!File.Exists (path) || File.GetLastWriteTimeUtc (path) < zipDateTime) {
 								Log.LogMessage ($"Extracting: {path}");
+								Directory.CreateDirectory (Path.GetDirectoryName (path));
+								File.Delete (path);
+								using (var entryStream = entry.Open ())
 								using (var fileStream = File.Create (path)) {
-									entry.Extract (fileStream);
+									entryStream.CopyTo (fileStream);
 								}
 							} else {
 								Log.LogMessage ($"Skipping, up to date: {path}");

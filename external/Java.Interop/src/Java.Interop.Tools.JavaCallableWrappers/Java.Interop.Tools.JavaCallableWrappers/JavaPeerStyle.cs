@@ -2,6 +2,5 @@
 {
 	public enum JavaPeerStyle {
 		XAJavaInterop1,
-		JavaInterop1,
 	}
 }

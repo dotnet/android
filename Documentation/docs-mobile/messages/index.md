@@ -161,6 +161,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported.
 + [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
++ [XA1051](xa1051.md): The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT.
 
 ## XA2xxx: Linker
 
@@ -180,8 +181,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
 + XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
 + XA3006: Could not compile native assembly file: {file}
-+ XA3007: Could not link native shared library: {library}
-+ XA3008: Failed to extract debug info from '{library}'
++ [XA3007](xa3007.md): Could not link native shared library: {library}
++ [XA3008](xa3008.md): Failed to extract debug info from '{library}'
 
 ## XA4xxx: Code generation
 
@@ -208,7 +209,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA4229: Unrecognized \`TransformFile\` root element: {element}.
 + XA4230: Error parsing XML: {exception}
 + [XA4231](xa4231.md): The Android class parser value 'jar2xml' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'class-parse'.
-+ [XA4232](xa4232.md): The Android code generation target 'XamarinAndroid' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.
++ [XA4232](xa4232.md): The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.
 + [XA4234](xa4234.md): '<{item}>' item '{itemspec}' is missing required attribute '{name}'.
 + [XA4235](xa4235.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id'.
 + [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}
@@ -238,9 +239,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4262](xa4262.md): Type '{type}' has an invalid [Export] SuperArgumentsString value '{value}'.
 + [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
 + [XA4264](xa4264.md): Java callable wrapper XML file '{path}' was not found.
-+ [XA4265](xa4265.md): Assembly '{assembly}' uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable.
++ [XA4265](xa4265.md): Assembly '{assembly}' uses an unsupported Java peer callback format.
 + [XA4266](xa4266.md): Assembly '{assembly}' has different Java peer callback metadata across runtime-specific implementations.
-+ [XA4267](xa4267.md): The 'llvm-ir' type map implementation is no longer supported. Remove the AndroidTypeMapImplementation property or set it to 'trimmable'.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -260,22 +260,26 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4316](xa4316.md): Specified input file '{file}' does not exist. Ignoring.
 + [XA4317](xa4317.md): Input file '{file}' does not start with `<replacements/>`. Skipping.
 + [XA4318](xa4318.md): Input file '{file}' could not be read: {message}. Skipping.
-+ [XA4319](xa4319.md): No NativeAOT DGML files were provided.
-+ [XA4320](xa4320.md): ACW map file '{file}' was not found.
-+ [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
++ [XA4319](xa4319.md): Retired: No NativeAOT DGML files were provided.
++ [XA4320](xa4320.md): Retired: ACW map file '{file}' was not found.
++ [XA4321](xa4321.md): Retired: NativeAOT DGML file '{file}' was not found.
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
++ [XA4325](xa4325.md): Failed to generate the JNI remapping data. {0}
++ [XA4326](xa4326.md): The R8 JNI remapping data is incomplete. {0}
 + [XA4327](xa4327.md): Could not extract Java type map keys from '{0}': {1}
 + [XA4328](xa4328.md): Could not generate typemap ProGuard configuration from '{0}': {1}
++ [XA4329](xa4329.md): Invalid or unsupported R8 obfuscation configuration.
++ [XA4330](xa4330.md): A native library uses the reserved libbinary_blobs.so archive name.
 
 ## XA5xxx: GCC and toolchain
 
-+ XA5101: Missing Android NDK toolchains directory '{path}'. Please install the Android NDK.
++ [XA5101](xa5101.md): Missing Android NDK toolchains directory '{path}'. Please install the Android NDK.
 + XA5102: Conversion from assembly to native code failed. Exit code {exitCode}
 + XA5103: NDK C compiler exited with an error. Exit code {0}
-+ XA5104: Could not locate the Android NDK.
-+ XA5105: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
++ [XA5104](xa5104.md): Could not locate the Android NDK.
++ [XA5105](xa5105.md): Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
 + XA5201: NDK linker exited with an error. Exit code {0}
 + [XA5205](xa5205.md): Cannot find `{ToolName}` in the Android SDK.
 + [XA5207](xa5207.md): Could not find android.jar for API level `{compileSdk}`.

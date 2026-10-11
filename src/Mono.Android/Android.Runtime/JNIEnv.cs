@@ -45,8 +45,7 @@ namespace Android.Runtime {
 			if (value == IntPtr.Zero)
 				return false;
 
-			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class) ||
-				IsInstanceOf (value, JNIEnvInit.grefGCUserPeerable_class);
+			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class);
 		}
 
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
@@ -349,7 +348,7 @@ namespace Android.Runtime {
 		/// <remarks>
 		/// Only <see cref="JniHandleOwnership.DoNotRegister"/> survives the conversion. The
 		/// handle-transfer bits intentionally do not: the caller keeps the incoming handle and
-		/// releases it with <see cref="DeleteRef"/> once construction finishes, so the peer must
+		/// releases it with <see cref="DeleteRef"/> in a finally, even if construction throws, so the peer must
 		/// always take a reference of its own — which is why
 		/// <see cref="JniObjectReferenceOptions.Copy"/> is always set.
 		/// </remarks>
@@ -484,13 +483,20 @@ namespace Android.Runtime {
 			return JniEnvironment.Strings.NewString (text).Handle;
 		}
 
-		public static unsafe IntPtr NewString (char[]? text, int length)
+		public static IntPtr NewString (char[]? text, int length)
 		{
 			if (text == null)
 				return IntPtr.Zero;
 
-			fixed (char *s = text)
-				return JniEnvironment.Strings.NewString (s, length).Handle;
+			if (length < 0 || length > text.Length)
+				throw new ArgumentOutOfRangeException (nameof (length));
+			if (length == 0)
+				return JniEnvironment.Strings.NewString ("").Handle;
+
+			unsafe {
+				fixed (char *s = text)
+					return JniEnvironment.Strings.NewString (s, length).Handle;
+			}
 		}
 
 		static void AssertCompatibleArrayTypes (Type srcElementType, IntPtr destArray)

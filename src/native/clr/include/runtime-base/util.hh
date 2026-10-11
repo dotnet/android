@@ -17,7 +17,8 @@
 #include "../constants.hh"
 #include <shared/helpers.hh>
 #include <runtime-base/jni-wrappers.hh>
-#include "logger.hh"
+#include <shared/log_functions.hh>
+#include <shared/log_types.hh>
 
 #if !defined(XA_HOST_NATIVEAOT)
 #include "archive-dso-stub-config.hh"

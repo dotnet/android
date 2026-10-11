@@ -9,14 +9,12 @@
   </Folder>
   <Folder Name="/Desktop-Tests/">
     <Project Path="tests/generator-Tests/generator-Tests.csproj" />
-    <Project Path="tests/Java.Interop-Tests/Java.Interop-Tests.csproj" />
     <Project Path="tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj" />
     <Project Path="tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj" />
     <Project Path="tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj" />
     <Project Path="tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj" />
     <Project Path="tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj" />
     <Project Path="tests/NativeTiming/NativeTiming.csproj" />
-    <Project Path="tests/TestJVM/TestJVM.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj" />
     <Project Path="tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj" />

@@ -973,11 +973,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos; and &apos;private-members&apos;..
+        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos;, &apos;private-members&apos;, and &apos;runtime-remapping&apos;..
         /// </summary>
         public static string XA1050 {
             get {
                 return ResourceManager.GetString("XA1050", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it..
+        /// </summary>
+        public static string XA1051 {
+            get {
+                return ResourceManager.GetString("XA1051", resourceCulture);
             }
         }
         
@@ -1333,7 +1342,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is no longer supported. The &apos;AndroidCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;..
         /// </summary>
         public static string XA4232 {
             get {
@@ -1526,15 +1535,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the &apos;llvm-ir&apos; type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
-        /// </summary>
-        public static string XA4251 {
-            get {
-                return ResourceManager.GetString("XA4251", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Trimmable type map Java source input directory &apos;{0}&apos; and output directory &apos;{1}&apos; must be different..
         /// </summary>
         public static string XA4254 {
@@ -1635,7 +1635,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable..
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; uses an unsupported Java peer callback format..
         /// </summary>
         public static string XA4265 {
             get {
@@ -1644,7 +1644,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable..
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata..
         /// </summary>
         public static string XA4266 {
             get {
@@ -1853,33 +1853,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to No NativeAOT DGML files were provided..
-        /// </summary>
-        public static string XA4319 {
-            get {
-                return ResourceManager.GetString("XA4319", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to ACW map file &apos;{0}&apos; was not found..
-        /// </summary>
-        public static string XA4320 {
-            get {
-                return ResourceManager.GetString("XA4320", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to NativeAOT DGML file &apos;{0}&apos; was not found..
-        /// </summary>
-        public static string XA4321 {
-            get {
-                return ResourceManager.GetString("XA4321", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Skipping library ProGuard configuration file &apos;{1}&apos; (from {2}) because it contains the unsupported global option &apos;{0}&apos;. Global ProGuard options are only allowed in application projects..
         /// </summary>
         public static string XA4322 {
@@ -1903,6 +1876,115 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4324 {
             get {
                 return ResourceManager.GetString("XA4324", resourceCulture);
+            }
+        }
+
+        public static string XA4325 {
+            get {
+                return ResourceManager.GetString("XA4325", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_MappingNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingDataFailure {
+            get {
+                return ResourceManager.GetString("XA4325_MappingDataFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyHasNoMetadata {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyHasNoMetadata", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AmbiguousEntry {
+            get {
+                return ResourceManager.GetString("XA4325_AmbiguousEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotModeRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotModeRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectFormat {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectFormat", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotInvalidSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotTruncatedSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotTruncatedSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotMissingSections {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotMissingSections", resourceCulture);
+            }
+
+        }
+
+        public static string XA4325_NativeAotInvalidDehydration {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidDehydration", resourceCulture);
+            }
+        }
+
+        public static string XA4326 {
+            get {
+                return ResourceManager.GetString("XA4326", resourceCulture);
+            }
+        }
+
+        public static string XA4326_ConflictingEntry {
+            get {
+                return ResourceManager.GetString("XA4326_ConflictingEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4326_UnsupportedSignature {
+            get {
+                return ResourceManager.GetString("XA4326_UnsupportedSignature", resourceCulture);
             }
         }
         
@@ -1939,6 +2021,24 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4328_InvalidName {
             get {
                 return ResourceManager.GetString("XA4328_InvalidName", resourceCulture);
+            }
+        }
+
+        public static string XA4329_RequiredProperty {
+            get {
+                return ResourceManager.GetString("XA4329_RequiredProperty", resourceCulture);
+            }
+        }
+
+        public static string XA4329_UnsupportedRuntime {
+            get {
+                return ResourceManager.GetString("XA4329_UnsupportedRuntime", resourceCulture);
+            }
+        }
+
+        public static string XA4330 {
+            get {
+                return ResourceManager.GetString("XA4330", resourceCulture);
             }
         }
 

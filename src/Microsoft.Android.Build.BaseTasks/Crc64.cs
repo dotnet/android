@@ -55,7 +55,7 @@ namespace Microsoft.Android.Build.Tasks
 			length = 0;
 		}
 
-		protected override unsafe void HashCore (byte [] array, int ibStart, int cbSize)
+		protected override void HashCore (byte [] array, int ibStart, int cbSize)
 		{
 			Crc64Helper.HashCore (array, ibStart, cbSize, ref crc, ref length);
 		}

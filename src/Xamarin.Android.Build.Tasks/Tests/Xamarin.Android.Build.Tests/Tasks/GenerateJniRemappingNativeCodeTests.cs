@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -190,11 +191,55 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				"ptr @.JniRemappingString.1_str",
 				"ptr @.JniRemappingString.2_str",
 				"ptr @.JniRemappingString.3_str",
+				"ptr @.JniRemappingString.4_str",
 				"ptr null",
-				"ptr @.JniRemappingString.4_str");
+				"ptr @.JniRemappingString.5_str");
 			AssertOrdered (ll, "c\"af", "c\"zf");
 			Assert.AreEqual (1, Info.ReplacementMethodIndexEntryCount);
 			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+		}
+
+		[Test]
+		public void DescriptorDistinctFieldsRemainSeparate ()
+		{
+			string ll = RunTask (
+				"""
+				<replacements>
+				  <replace-field source-type="a/B" source-field-name="value" source-field-signature="I"
+				      target-type="x/Y" target-field-name="integerTarget" target-field-signature="I" />
+				  <replace-field source-type="a/B" source-field-name="value" source-field-signature="Ljava/lang/String;"
+				      target-type="x/Y" target-field-name="stringTarget" target-field-signature="Ljava/lang/String;" />
+				</replacements>
+				""");
+
+			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+			StringAssert.Contains ("[2 x %struct.JniRemappingIndexFieldEntry]", ll);
+			StringAssert.Contains ("integerTarget", ll);
+			StringAssert.Contains ("stringTarget", ll);
+			StringAssert.Contains ("Ljava/lang/String;", ll);
+		}
+
+		[Test]
+		public void MissingFieldSignaturesAreBackwardCompatible ()
+		{
+			string ll = RunTask (
+				"""
+				<replacements>
+				  <replace-field source-type="a/B" source-field-name="value"
+				      target-type="x/Y" target-field-name="replacement" />
+				</replacements>
+				""");
+
+			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+			int fieldsStart = ll.IndexOf ("@mf_0 =", System.StringComparison.Ordinal);
+			int fieldsEnd = ll.IndexOf ("@jni_remapping_field_replacement_index", fieldsStart, System.StringComparison.Ordinal);
+			Assert.Greater (fieldsStart, -1);
+			Assert.Greater (fieldsEnd, fieldsStart);
+			string fieldArray = ll.Substring (fieldsStart, fieldsEnd - fieldsStart);
+			StringAssert.IsMatch (@"i32 0,\s+ptr @\.JniRemappingString\.\d+_str", fieldArray,
+				"An absent source-field-signature must be emitted as a zero-length lookup string.");
+			StringAssert.Contains ("ptr null", fieldArray,
+				"An absent target-field-signature must remain null so the runtime uses the source signature.");
 		}
 
 		[Test]
@@ -217,7 +262,11 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			StringAssert.Contains ("@mm_0", ll);
 			StringAssert.Contains ("@mm_1", ll);
 			StringAssert.Contains ("@mf_0", ll);
+			AssertCompilesLlvm ();
+		}
 
+		void AssertCompilesLlvm ()
+		{
 			string binUtils = Path.Combine (TestEnvironment.OSBinDirectory, "binutils", "bin");
 			var compile = new CompileNativeAssembly {
 				BuildEngine = engine,
@@ -235,10 +284,10 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		{
 			// '_' (0x5F) sorts after 'Z' (0x5A) but before 'a' (0x61); a culture-sensitive
 			// comparison would order these differently, and the native binary search would break.
-			Assert.Less (JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("Z"), Utf8 ("_")), 0);
-			Assert.Less (JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("_"), Utf8 ("a")), 0);
-			Assert.Less (JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("a"), Utf8 ("ab")), 0);
-			Assert.AreEqual (0, JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("a/B"), Utf8 ("a/B")));
+			Assert.Less (JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("Z"), Utf8 ("_")), 0);
+			Assert.Less (JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("_"), Utf8 ("a")), 0);
+			Assert.Less (JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("a"), Utf8 ("ab")), 0);
+			Assert.AreEqual (0, JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("a/B"), Utf8 ("a/B")));
 
 			static byte [] Utf8 (string s) => System.Text.Encoding.UTF8.GetBytes (s);
 		}

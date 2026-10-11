@@ -276,6 +276,8 @@
         href: messages/xa1049.md
       - name: XA1050
         href: messages/xa1050.md
+      - name: XA1051
+        href: messages/xa1051.md
     - name: "XA2xxx: Linker"
       items:
       - name: "XA2xxx: Linker"
@@ -287,7 +289,13 @@
       - name: XA2002
         href: messages/xa2002.md
     - name: "XA3xxx: Unmanaged code compilation"
-      href: "messages/index.md#xa3xxx-unmanaged-code-compilation"
+      items:
+      - name: "XA3xxx: Unmanaged code compilation"
+        href: "messages/index.md#xa3xxx-unmanaged-code-compilation"
+      - name: XA3007
+        href: messages/xa3007.md
+      - name: XA3008
+        href: messages/xa3008.md
     - name: "XA4xxx: Code generation"
       items:
       - name: "XA4xxx: Code generation"
@@ -356,8 +364,6 @@
         href: messages/xa4265.md
       - name: XA4266
         href: messages/xa4266.md
-      - name: XA4267
-        href: messages/xa4267.md
       - name: XA4301
         href: messages/xa4301.md
       - name: XA4302
@@ -390,14 +396,28 @@
         href: messages/xa4323.md
       - name: XA4324
         href: messages/xa4324.md
+      - name: XA4325
+        href: messages/xa4325.md
+      - name: XA4326
+        href: messages/xa4326.md
       - name: XA4327
         href: messages/xa4327.md
       - name: XA4328
         href: messages/xa4328.md
+      - name: XA4329
+        href: messages/xa4329.md
+      - name: XA4330
+        href: messages/xa4330.md
     - name: "XA5xxx: GCC and toolchain"
       items:
       - name: "XA5xxx: GCC and toolchain"
         href: "messages/index.md#xa5xxx-gcc-and-toolchain"
+      - name: XA5101
+        href: messages/xa5101.md
+      - name: XA5104
+        href: messages/xa5104.md
+      - name: XA5105
+        href: messages/xa5105.md
       - name: XA5205
         href: messages/xa5205.md
       - name: XA5207

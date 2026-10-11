@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
-using Xamarin.Android.Tasks.JniRemapping;
+using Microsoft.Android.Tasks.JniRemapping;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -78,8 +78,10 @@ namespace Xamarin.Android.Build.Tests
 			});
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidLinkTool", "r8");
+			// Exercise the general selective-obfuscation policy, not the retained-typemap path
+			// which intentionally disables all minification.
+			proj.SetProperty ("_AndroidEnableTypemapR8Trimming", "false");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "true");
 			proj.SetDefaultTargetDevice ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace (

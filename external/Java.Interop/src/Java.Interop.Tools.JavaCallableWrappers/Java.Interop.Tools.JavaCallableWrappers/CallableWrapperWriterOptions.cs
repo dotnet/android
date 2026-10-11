@@ -6,5 +6,14 @@ namespace Java.Interop.Tools.JavaCallableWrappers;
 
 public class CallableWrapperWriterOptions
 {
-	public JavaPeerStyle CodeGenerationTarget { get; set; }
+	JavaPeerStyle codeGenerationTarget;
+
+	public JavaPeerStyle CodeGenerationTarget {
+		get => codeGenerationTarget;
+		set {
+			if (value != JavaPeerStyle.XAJavaInterop1)
+				throw new NotSupportedException ($"The Java callable wrapper code generation target '{value}' is not supported. Use XAJavaInterop1 instead.");
+			codeGenerationTarget = value;
+		}
+	}
 }

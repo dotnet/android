@@ -1,5 +1,7 @@
 #nullable enable
 
+#pragma warning disable CS0618 // These tests intentionally exercise the obsolete AndroidMessageHandler.
+
 using System;
 using System.Diagnostics;
 using System.IO;

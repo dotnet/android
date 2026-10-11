@@ -18,7 +18,6 @@ namespace Xamarin.Android.JcwGenTests {
 	public class BindingTests {
 
 		const string JniReferenceLeakCategory = "JniReferenceLeak";
-		const int LeakCheckIterations = 100;
 
 		[Test]
 		public void TestTimingCreateTimingIsCorrectType ()
@@ -123,9 +122,11 @@ namespace Xamarin.Android.JcwGenTests {
 			var objectClass = Java.Interop.JniEnvironment.Types.FindClass ("java/lang/Object");
 			var retainedReferences = new List<Java.Interop.JniObjectReference> ();
 			try {
-				Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
+				var error = Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
 					retainedReferences.Add (objectClass.NewGlobalRef ());
 				}));
+				Assert.That (error?.Message, Does.Contain ("Operation should not leak global references"));
+				Assert.That (error?.Message, Does.Contain ("Delta=100"));
 			} finally {
 				foreach (var retainedReference in retainedReferences) {
 					var reference = retainedReference;
@@ -147,37 +148,7 @@ namespace Xamarin.Android.JcwGenTests {
 
 		static void AssertNoSustainedGlobalReferenceGrowth (Action action)
 		{
-			for (int i = 0; i < LeakCheckIterations; i++) {
-				action ();
-			}
-			CollectPeers ();
-
-			int grefsBefore = Java.Interop.Runtime.GlobalReferenceCount;
-			for (int i = 0; i < LeakCheckIterations; i++) {
-				action ();
-			}
-			CollectGarbage ();
-			int grefsAfter = Java.Interop.Runtime.GlobalReferenceCount;
-
-			Assert.LessOrEqual (grefsAfter, grefsBefore,
-					$"Operation should not leak global references after {LeakCheckIterations} iterations. " +
-					$"Before={grefsBefore}, After={grefsAfter}, Delta={grefsAfter - grefsBefore}");
-		}
-
-		static void CollectPeers ()
-		{
-			CollectGarbage ();
-			Java.Interop.JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
-			CollectGarbage ();
-		}
-
-		static void CollectGarbage ()
-		{
-			for (int i = 0; i < 3; i++) {
-				GC.Collect ();
-				GC.WaitForPendingFinalizers ();
-			}
+			Java.InteropTests.JniReferenceLeakMeasurement.AssertNoSustainedGlobalReferenceGrowth (action);
 		}
 
 		//

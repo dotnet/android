@@ -820,18 +820,6 @@ extends:
           parameters:
             condition: true
 
-    # Java.Interop Tests Stage
-    - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
-      parameters:
-        windowsPool:
-          name: $(NetCoreInternalPoolName)
-          image: $(WindowsPoolImageNetCoreInternal)
-          os: windows
-        macPool:
-          name: Azure Pipelines
-          vmImage: $(HostedMacImage)
-          os: macOS
-
     # MAUI Tests Stage
     - stage: maui_tests
       displayName: MAUI Tests

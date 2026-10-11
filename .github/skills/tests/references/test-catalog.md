@@ -36,6 +36,11 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 
+The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
+NativeAOT JNI property reader and loads it into a host JVM. On macOS/Linux, these tests require
+`JAVA_HOME` or `TEST_ANDROID_JDK_PATH` and a C++23 compiler (`clang++`, or `CXX`); they do not
+require an Android device or a locally built Android SDK.
+
 ---
 
 The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
@@ -129,7 +134,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
-| **trimmable type map** | Same project, built with `-p:AndroidTypeMapImplementation=trimmable` | Java-driven activation, direct UCO callbacks, exports, manifest-only rooting, and typemap lookups (`TrimmableTypeMapRuntimeCoverageTests`, `TrimmableTypeMapDirectCallbackTests`, `TrimmableTypeMapExportTests`, `TrimmableTypeMapManifestTests`, `ExportTests`, `ConstructorActivationTests`, `JavaConvertTest`) |
+| **trimmable type map** | Same project | Java-driven activation, direct UCO callbacks, exports, manifest-only rooting, and typemap lookups (`TrimmableTypeMapRuntimeCoverageTests`, `TrimmableTypeMapDirectCallbackTests`, `TrimmableTypeMapExportTests`, `TrimmableTypeMapManifestTests`, `ExportTests`, `ConstructorActivationTests`, `JavaConvertTest`) |
 | **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
 | **android app** | Same project — tests in `Android.App/` | `Application`, `Activity` tests |
@@ -145,8 +150,7 @@ Device: **Yes**
 
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
-- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`; excludes `Export` only when the trimmable typemap is off
-- **Trimmable typemap**: Excludes `NativeTypeMap`, `TrimmableTypeMapUnsupported`
+- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 
@@ -159,7 +163,7 @@ Command:
 )
 ```
 
-Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:AndroidTypeMapImplementation=trimmable`).
+Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
 
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash
@@ -173,18 +177,26 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 ## Java.Interop Tests — Mixed Tiers
 
 Tooling tests are standalone (listed in the Standalone Tests table above).
-JVM-based tests are full-build (require local SDK + JVM).
+Core JNI interop tests live in `tests/Mono.Android-Tests/Java.Interop-Tests/`
+and are compiled by its `Java.Interop-Tests.NET.csproj` default source glob
+and run with the on-device `Mono.Android.NET-Tests.csproj` suite. They require
+the locally built Android SDK and an Android device/emulator; use the on-device
+build/install and test commands above.
 
-Build (full-build only): `./dotnet-local.sh build external/Java.Interop/Java.Interop.slnx -c Debug`
-Device: **No** (runs on host JVM via `TestJVM`)
+Handwritten Android Java peers use `mono.android.IGCUserPeer`; their fixture JAR
+compiles against the Android platform and runtime JARs.
+`JavaMarshalGCBridgeTests.HandwrittenPeersUseAndroidGCReferenceContract` checks
+peer recognition and reference addition/clearing for those fixtures.
+
+CoreCLR and NativeAOT share the `Android.Runtime.JavaProxyThrowable` exception path.
+`ExceptionTest` covers original managed exception identity, Java causes, direct JNI
+throws, stack traces, and typed throwable/proxy array lookups; `ExportTests` covers
+exceptions through generated callbacks. `TransferredReferenceTests` checks that
+runtime exception lookup consumes transferred references exactly once when message,
+cause, or stack-trace extraction fails, while borrowed references remain valid.
 
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|
-| **java-interop** (core) | `external/Java.Interop/tests/Java.Interop-Tests/` | Core JNI interop tests |
-| **java-interop export** | `external/Java.Interop/tests/Java.Interop.Export-Tests/` | Export/callable wrapper tests |
-| **java-interop dynamic** | `external/Java.Interop/tests/Java.Interop.Dynamic-Tests/` | Dynamic interop |
-| **java-interop performance** | `external/Java.Interop/tests/Java.Interop-PerformanceTests/` | JNI performance benchmarks |
-| **java-base** | `external/Java.Interop/tests/Java.Base-Tests/` | Java.Base runtime tests |
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | Binding generator tests |
 | **java callable wrappers** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | JCW generation |
 | **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |
@@ -212,14 +224,13 @@ The object-extraction tests use synthetic metadata, so they need no NDK tools.
 The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
 because the UCO format marker is assembly-wide. The manifest-only Activity
 lives in the library assembly, which is not rooted wholesale by the test app.
-To run on-device tests with the trimmable typemap, pass the same property to
-both commands:
+To run the on-device typemap tests:
 
 ```bash
-./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj -p:AndroidTypeMapImplementation=trimmable
+./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 (
   cd tests/Mono.Android-Tests/Mono.Android-Tests
-  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release -p:AndroidTypeMapImplementation=trimmable --report-trx --results-directory ../../../bin/TestRelease/TestResults
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx --results-directory ../../../bin/TestRelease/TestResults
 )
 ```
 

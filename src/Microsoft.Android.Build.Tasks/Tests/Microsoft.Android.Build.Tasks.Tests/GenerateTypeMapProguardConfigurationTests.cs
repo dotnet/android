@@ -100,6 +100,69 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
+	[TestCase (false, false)]
+	[TestCase (false, true)]
+	[TestCase (true, false)]
+	[TestCase (true, true)]
+	public void FailedWriteCannotPublishPartialConfiguration (bool members, bool existingOutput)
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var input = Path.Combine (path, "input.keys");
+		var output = Path.Combine (path, "rules.cfg");
+		File.WriteAllText (input, "test/Live\n");
+		var old = DateTime.UtcNow.AddDays (-1);
+		if (existingOutput) {
+			File.WriteAllText (output, "previous output");
+			File.SetLastWriteTimeUtc (output, old);
+			old = File.GetLastWriteTimeUtc (output);
+		}
+		var errors = new List<BuildErrorEventArgs> ();
+		GenerateTypeMapProguardConfiguration failing = members ? new FailingMemberWriter () : new FailingClassWriter ();
+		failing.BuildEngine = new MockBuildEngine (TestContext.Out, errors);
+		failing.TypeMapKeyFiles = [new TaskItem (input)];
+		failing.OutputFile = output;
+
+		Assert.IsFalse (failing.Execute ());
+		Assert.AreEqual (1, errors.Count);
+		Assert.AreEqual ("XA4328", errors [0].Code);
+		if (existingOutput) {
+			Assert.AreEqual ("previous output", File.ReadAllText (output));
+			Assert.AreEqual (old, File.GetLastWriteTimeUtc (output));
+		} else {
+			FileAssert.DoesNotExist (output);
+		}
+		Assert.IsEmpty (Directory.GetFiles (path, "*.tmp"));
+
+		GenerateTypeMapProguardConfiguration retry = members ? new GenerateTypeMapMemberProguardConfiguration () : new GenerateTypeMapProguardConfiguration ();
+		retry.BuildEngine = new MockBuildEngine (TestContext.Out);
+		retry.TypeMapKeyFiles = failing.TypeMapKeyFiles;
+		retry.OutputFile = output;
+		Assert.IsTrue (retry.Execute ());
+		Assert.AreEqual (members
+			? "-keepclassmembers class test.Live { *; }\n-keepclassmembers interface test.Live { *; }\n"
+			: "-keep class test.Live\n-keep interface test.Live\n", File.ReadAllText (output));
+		Assert.Greater (File.GetLastWriteTimeUtc (output), old);
+	}
+
+	sealed class FailingClassWriter : GenerateTypeMapProguardConfiguration
+	{
+		protected override void WriteClassRule (TextWriter writer, string name)
+		{
+			base.WriteClassRule (writer, name);
+			throw new IOException ("Injected write failure.");
+		}
+	}
+
+	sealed class FailingMemberWriter : GenerateTypeMapMemberProguardConfiguration
+	{
+		protected override void WriteClassRule (TextWriter writer, string name)
+		{
+			base.WriteClassRule (writer, name);
+			throw new IOException ("Injected write failure.");
+		}
+	}
+
 	[Test]
 	public void RejectsInvalidUtf8 ()
 	{

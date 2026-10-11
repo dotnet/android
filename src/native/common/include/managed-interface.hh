@@ -3,23 +3,12 @@
 #include <cstdint>
 
 #include <jni.h>
+#include <runtime-base/binary-blob-loader.hh>
 
 namespace xamarin::android {
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
 
-	struct JniRemappingData {
-		const void *type_replacements;
-		const void *reverse_type_replacements;
-		const void *method_replacement_index;
-		const void *field_replacement_index;
-		uint32_t    type_replacement_count;
-		uint32_t    reverse_type_replacement_count;
-		uint32_t    method_replacement_index_count;
-		uint32_t    field_replacement_index_count;
-	};
-
 	extern "C" {
-		[[gnu::visibility("default")]] extern const JniRemappingData jni_remapping_data;
 	}
 
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
@@ -33,16 +22,8 @@ namespace xamarin::android {
 		uint8_t         brokenExceptionTransitions;
 		int             packageNamingPolicy;
 		uint8_t         boundExceptionType;
-		const JniRemappingData *jniRemappingData;
-		jobject         grefGCUserPeerable;
+		const BinaryBlobPayload *jniRemappingData;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
-		const char      *grefLogPath;
-		const char      *lrefLogPath;
-		const char      *referenceLogDirectory;
-		uint8_t         lightGref;
-		uint8_t         lightLref;
-		uint8_t         grefToLogcat;
-		uint8_t         lrefToLogcat;
 		int              maxGrefCount;
 	};
 

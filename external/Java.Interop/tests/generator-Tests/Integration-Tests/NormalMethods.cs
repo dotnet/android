@@ -7,14 +7,13 @@ namespace generatortests
 	[TestFixture]
 	public class NormalMethods : BaseGeneratorTest
 	{
-		protected override bool TryJavaInterop1 => false;
 
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "NormalMethods",
-					apiDescriptionFile:     "expected.ji/NormalMethods/NormalMethods.xml",
+					apiDescriptionFile:     "TestInputs/NormalMethods/NormalMethods.xml",
 					expectedRelativePath:   "NormalMethods");
 
 			var output = File.ReadAllText (FullPath ("out.xaji/NormalMethods/Xamarin.Test.SomeObject.cs"));

@@ -9,9 +9,3 @@ struct AppEnvironmentVariable {
 };
 
 #include <host/host-environment.hh>
-
-extern "C" {
-	extern const uint32_t __naot_android_app_system_property_count;
-	extern const AppEnvironmentVariable __naot_android_app_system_properties[];
-	extern const char __naot_android_app_system_property_contents[];
-}

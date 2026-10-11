@@ -8,6 +8,7 @@ namespace Java.InteropTests
 {
 	[TestFixture]
 	[Category ("NativeAOTIgnore")]
+	[Category ("JniRemapping")]
 	public class JniRemappingLookupTests
 	{
 		[Test]

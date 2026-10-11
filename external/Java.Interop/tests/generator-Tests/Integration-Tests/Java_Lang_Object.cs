@@ -1,8 +1,4 @@
-using System;
-using System.Linq;
 using NUnit.Framework;
-using MonoDroid.Generation;
-using System.Xml;
 
 namespace generatortests
 {
@@ -12,11 +8,10 @@ namespace generatortests
 		[Test]
 		public void Generated_OK ()
 		{
-			Run (target: Xamarin.Android.Binder.CodeGenerationTarget.JavaInterop1,
-					outputPath:         "out.ji/java.lang.Object",
-					apiDescriptionFile: "expected.ji/java.lang.Object/java.lang.Object.xml",
-					expectedPath:       "expected.ji/java.lang.Object");
+			RunTarget (
+					outputRelativePath: "java.lang.Object",
+					apiDescriptionFile: "TestInputs/java.lang.Object/java.lang.Object.xml",
+					expectedRelativePath: "java.lang.Object");
 		}
 	}
 }
-

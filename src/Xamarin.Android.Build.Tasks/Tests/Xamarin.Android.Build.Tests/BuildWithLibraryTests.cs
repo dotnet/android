@@ -218,9 +218,9 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
 				aar.AssertContainsEntry (aarPath, "res/raw/bar.txt");
 				aar.AssertContainsEntry (aarPath, ".net/__res_name_case_map.txt");
-				int envCount = aar.Count (e => e.FullName.StartsWith (".net/env/", StringComparison.Ordinal) && e.FullName.EndsWith (".env", StringComparison.Ordinal));
+				int envCount = aar.Entries.Count (e => e.FullName.StartsWith (".net/env/", StringComparison.Ordinal) && e.FullName.EndsWith (".env", StringComparison.Ordinal));
 				Assert.AreEqual (2, envCount, $"{aarPath} should contain 2 .env files under .net/env/");
-				int jarCount = aar.Count (e => e.FullName.StartsWith ("libs/", StringComparison.Ordinal) && e.FullName.EndsWith (".jar", StringComparison.Ordinal));
+				int jarCount = aar.Entries.Count (e => e.FullName.StartsWith ("libs/", StringComparison.Ordinal) && e.FullName.EndsWith (".jar", StringComparison.Ordinal));
 				Assert.AreEqual (2, jarCount, $"{aarPath} should contain 2 .jar files under libs/");
 				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
@@ -605,7 +605,7 @@ namespace Xamarin.Android.Build.Tests
 				var zipFile = Path.Combine (Root, b.ProjectDirectory, b.Output.OutputPath, $"{proj.ProjectName}.aar");
 				FileAssert.Exists (zipFile);
 				using (var zip = ZipHelper.OpenZip (zipFile)) {
-					Assert.IsTrue (zip.ContainsEntry ("res/values/foo.xml"), $"{zipFile} should contain a res/values/foo.xml entry");
+					Assert.IsNotNull (zip.GetEntry ("res/values/foo.xml"), $"{zipFile} should contain a res/values/foo.xml entry");
 				}
 			}
 		}

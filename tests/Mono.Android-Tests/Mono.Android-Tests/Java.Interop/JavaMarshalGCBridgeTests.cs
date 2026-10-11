@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -27,6 +28,55 @@ public class JavaMarshalGCBridgeTests
 		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target,
 		MarkCrossReferencesArgs* args);
 
+	[UnsafeAccessor (UnsafeAccessorKind.StaticMethod, Name = "get_BridgeJni")]
+	static extern JavaMarshalGCBridgeJni GetBridgeJni (
+		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target);
+
+	[TestCase ("net/dot/jni/test/GetThis")]
+	[TestCase ("net/dot/jni/test/CallNonvirtualBase")]
+	[TestCase ("net/dot/jni/test/CallNonvirtualDerived")]
+	public unsafe void HandwrittenPeersUseAndroidGCReferenceContract (string jniTypeName)
+	{
+		using var peerType = new JniType (jniTypeName);
+		using var listType = new JniType ("java/util/ArrayList");
+		using var destination = new Java.Interop.JavaObject ();
+		var peer = peerType.NewObject (peerType.GetConstructor ("()V"), null);
+		JniObjectReference references = default;
+		JniObjectReference retained = default;
+		try {
+			Assert.IsTrue (Java.Interop.Runtime.IsGCUserPeer (peer.Handle),
+				$"{jniTypeName} should be recognized as an Android GC peer.");
+			var field = peerType.GetInstanceField ("managedReferences", "Ljava/util/ArrayList;");
+			references = JniEnvironment.InstanceFields.GetObjectField (peer, field);
+			var size = listType.GetInstanceMethod ("size", "()I");
+			Assert.AreEqual (0, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+
+			var bridge = GetBridgeJni (null);
+			Assert.IsTrue (bridge.AddReference (peer, destination.PeerReference, knownGCUserPeer: false));
+			Assert.AreEqual (1, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+			JniArgumentValue* arguments = stackalloc JniArgumentValue [1];
+			arguments [0] = new JniArgumentValue (0);
+			retained = JniEnvironment.InstanceMethods.CallObjectMethod (
+				references, listType.GetInstanceMethod ("get", "(I)Ljava/lang/Object;"), arguments);
+			Assert.IsTrue (JniEnvironment.Types.IsSameObject (destination.PeerReference, retained));
+
+			bridge.ClearReferences (peer);
+			Assert.AreEqual (0, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+		} finally {
+			JniObjectReference.Dispose (ref retained);
+			JniObjectReference.Dispose (ref references);
+			JniObjectReference.Dispose (ref peer);
+		}
+	}
+
+	[Test]
+	public void OrdinaryJavaObjectsAreNotGCUserPeers ()
+	{
+		using var value = new Java.Interop.JavaObject ();
+		Assert.IsFalse (Java.Interop.Runtime.IsGCUserPeer (value.PeerReference.Handle));
+		Assert.IsFalse (Java.Interop.Runtime.IsGCUserPeer (IntPtr.Zero));
+	}
+
 	[Test]
 	public void NativeAndManagedBridgeLayoutsMatch ()
 	{
@@ -37,13 +87,13 @@ public class JavaMarshalGCBridgeTests
 		Type handleContext = typeof (HandleContext);
 		Assert.AreEqual (0, Marshal.OffsetOf (handleContext, "identityHashCode").ToInt32 ());
 		Assert.AreEqual (IntPtr.Size, Marshal.OffsetOf (handleContext, "controlBlock").ToInt32 ());
-		Assert.AreEqual (IntPtr.Size * 2, Marshal.SizeOf (handleContext));
+		Assert.AreEqual (IntPtr.Size * 2, Marshal.SizeOf<HandleContext> ());
 
 		Type controlBlock = typeof (HandleContext.JniObjectReferenceControlBlock);
 		Assert.AreEqual (0, Marshal.OffsetOf (controlBlock, "handle").ToInt32 ());
 		Assert.AreEqual (IntPtr.Size, Marshal.OffsetOf (controlBlock, "handle_type").ToInt32 ());
 		Assert.AreEqual (IntPtr.Size + sizeof (int), Marshal.OffsetOf (controlBlock, "refs_added").ToInt32 ());
-		Assert.AreEqual (IntPtr.Size + (2 * sizeof (int)), Marshal.SizeOf (controlBlock));
+		Assert.AreEqual (IntPtr.Size + (2 * sizeof (int)), Marshal.SizeOf<HandleContext.JniObjectReferenceControlBlock> ());
 	}
 
 	[TestCase (0ul, true)]
@@ -82,6 +132,7 @@ public class JavaMarshalGCBridgeTests
 
 	[Test]
 	[Category ("GCBridge")]
+	[Category ("ReferenceTracing")]
 	public void ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease ()
 	{
 		if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && !Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime)
@@ -89,11 +140,25 @@ public class JavaMarshalGCBridgeTests
 
 		WeakReference<BridgeCyclePeer> first;
 		WeakReference<BridgeCyclePeer> second;
+		using var listener = new ManagedObjectReferenceManagerTests.ReferenceListener (RuntimeEventSource.GlobalReferenceKeyword);
+		ulong firstHandle = 0, secondHandle = 0;
 		var roots = new JavaObjectArray<Java.Lang.Object> (1);
 		try {
-			CreatePeerCycle (roots, out first, out second);
+			CreatePeerCycle (roots, out first, out second, out firstHandle, out secondHandle);
 			WaitForBridgeRound (() => first.TryGetTarget (out _) && second.TryGetTarget (out _),
 				"Both peers in the managed cycle should survive while Java roots one peer.");
+			var weakHandles = listener.GetEvents ()
+				.Where (e => e.Id == 13 && Equals (e.Payload [7], (int)GCBridgeReferenceOperation.GlobalToWeak) &&
+					(Equals (e.Payload [0], firstHandle) || Equals (e.Payload [0], secondHandle)))
+				.Select (e => e.Payload [1])
+				.ToArray ();
+			Assert.IsNotEmpty (weakHandles, "The Java-rooted cycle must participate in global-to-weak bridge processing.");
+			var survivingHandles = listener.GetEvents ()
+				.Where (e => e.Id == 11 && Equals (e.Payload [7], (int)GCBridgeReferenceOperation.WeakToGlobal) &&
+					weakHandles.Contains (e.Payload [0]))
+				.Select (e => e.Payload [1] is ulong handle ? handle : throw new InvalidOperationException ("A global reference handle must be an unsigned integer."))
+				.ToArray ();
+			Assert.IsNotEmpty (survivingHandles, "Java-rooted peers must be promoted back to global references.");
 		} finally {
 			roots.Dispose ();
 		}
@@ -104,7 +169,7 @@ public class JavaMarshalGCBridgeTests
 
 	[MethodImpl (MethodImplOptions.NoInlining)]
 	static void CreatePeerCycle (JavaObjectArray<Java.Lang.Object> roots,
-		out WeakReference<BridgeCyclePeer> first, out WeakReference<BridgeCyclePeer> second)
+		out WeakReference<BridgeCyclePeer> first, out WeakReference<BridgeCyclePeer> second, out ulong firstHandle, out ulong secondHandle)
 	{
 		var a = new BridgeCyclePeer ();
 		var b = new BridgeCyclePeer ();
@@ -113,6 +178,8 @@ public class JavaMarshalGCBridgeTests
 		roots [0] = a;
 		first = new WeakReference<BridgeCyclePeer> (a, trackResurrection: true);
 		second = new WeakReference<BridgeCyclePeer> (b, trackResurrection: true);
+		firstHandle = unchecked((ulong)(nuint)a.PeerReference.Handle);
+		secondHandle = unchecked((ulong)(nuint)b.PeerReference.Handle);
 	}
 
 	static void WaitForBridgeRound (Func<bool> predicate, string message)
