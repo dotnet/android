@@ -115,7 +115,12 @@ namespace Java.Lang {
 						ref reference,
 						value == IntPtr.Zero ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy);
 				if (value != IntPtr.Zero) {
-					SetJavaStackTrace (new JniObjectReference (value));
+					try {
+						SetJavaStackTrace (new JniObjectReference (value));
+					} catch {
+						Dispose ();
+						throw;
+					}
 				}
 			} finally {
 				JNIEnv.DeleteRef (value, transfer);
