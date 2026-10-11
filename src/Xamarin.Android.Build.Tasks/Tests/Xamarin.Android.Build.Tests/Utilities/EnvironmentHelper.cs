@@ -114,6 +114,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var config = new ApplicationConfig {
+				ignore_split_configs = (data [6] & 1) != 0,
 				environment_variable_count = environmentCount,
 				number_of_dso_cache_entries = dsoCount,
 				number_of_assemblies_in_apk = Read (72),
