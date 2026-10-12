@@ -20,14 +20,9 @@
     <ItemGroup>
       <_AndroidNativeAotLinkedFileToPublish Include="@(ResolvedFileToPublish)"
           Condition=" '%(ResolvedFileToPublish.Identity)' == '$(_AndroidNativeAotSharedLibrary)' ">
-        <AndroidNativeAotRemappingDirectory>$(_AndroidNativeAotR8RemappingDirectory)</AndroidNativeAotRemappingDirectory>
       </_AndroidNativeAotLinkedFileToPublish>
-      <_AndroidNativeAotLinkedFileToPublish Include="@(_AndroidNativeAotBinaryBlobLibrary)">
-        <AndroidNativeAotRemappingDirectory>$(_AndroidNativeAotBinaryBlobsDirectory)</AndroidNativeAotRemappingDirectory>
-      </_AndroidNativeAotLinkedFileToPublish>
-      <_AndroidNativeAotLinkedFileToPublish Include="$(_AndroidNativeAotBinaryBlobsStamp)">
-        <AndroidNativeAotRemappingDirectory>$(_AndroidNativeAotBinaryBlobsDirectory)</AndroidNativeAotRemappingDirectory>
-        <AndroidBinaryBlobGenerationStamp>true</AndroidBinaryBlobGenerationStamp>
+      <_AndroidNativeAotLinkedFileToPublish Include="@(_NativeAotAdditionalObjects);$(_AndroidNativeAotRemappingStamp);$(_AndroidNativeAotRemappingInputs);$(_AndroidNativeAotBootstrapObjectInputs);$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml);$(_AndroidNativeAotR8RemappingInputs);$(_AndroidNativeAotLinkResponseFile);$(NativeIntermediateOutputPath)sections.ld;@(_AndroidNativeAotLinkOutputs)">
+        <AndroidNativeAotDataObject>true</AndroidNativeAotDataObject>
       </_AndroidNativeAotLinkedFileToPublish>
     </ItemGroup>
   </Target>
@@ -48,14 +43,10 @@
     </MSBuild>
     <ItemGroup>
       <ResolvedFileToPublish Remove="@(_AndroidNativeAotLinkedFileToPublish)"
-          Condition=" '%(Filename)%(Extension)' != 'libbinary_blobs.so' and '%(_AndroidNativeAotLinkedFileToPublish.AndroidBinaryBlobGenerationStamp)' != 'true' " />
+          Condition=" '%(_AndroidNativeAotLinkedFileToPublish.AndroidNativeAotDataObject)' != 'true' " />
       <ResolvedFileToPublish Include="@(_AndroidNativeAotLinkedFileToPublish)"
-          Condition=" '%(Filename)%(Extension)' != 'libbinary_blobs.so' and '%(_AndroidNativeAotLinkedFileToPublish.AndroidBinaryBlobGenerationStamp)' != 'true' " />
-      <_AndroidBinaryBlobLibrary Include="@(_AndroidNativeAotLinkedFileToPublish)"
-          Condition=" '%(Filename)%(Extension)' == 'libbinary_blobs.so' " />
-      <_AndroidBinaryBlobGenerationStamp Include="@(_AndroidNativeAotLinkedFileToPublish)"
-          Condition=" '%(_AndroidNativeAotLinkedFileToPublish.AndroidBinaryBlobGenerationStamp)' == 'true' " />
-      <FileWrites Include="@(_AndroidNativeAotLinkedFileToPublish->'%(AndroidNativeAotRemappingDirectory)**')" />
+          Condition=" '%(_AndroidNativeAotLinkedFileToPublish.AndroidNativeAotDataObject)' != 'true' " />
+      <FileWrites Include="@(_AndroidNativeAotLinkedFileToPublish)" />
     </ItemGroup>
   </Target>
 

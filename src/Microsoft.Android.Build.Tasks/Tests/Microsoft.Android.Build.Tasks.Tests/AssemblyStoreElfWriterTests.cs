@@ -20,6 +20,59 @@ public class AssemblyStoreElfWriterTests : BaseTest
 
 	[Test]
 	[Category ("RequiresAndroidNdk")]
+	public void WritesLinkableNativeAotDataObject (
+		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
+	{
+		byte [] data = [1, 2, 3, 4, 5, 6, 7];
+		using var output = new MemoryStream ();
+		NativeAotDataObjectWriter.Write (data, "nativeaot_bootstrap", output, arch);
+		byte [] image = output.ToArray ();
+		using var second = new MemoryStream ();
+		NativeAotDataObjectWriter.Write (data, "nativeaot_bootstrap", second, arch);
+		CollectionAssert.AreEqual (image, second.ToArray (), "Data objects must be deterministic.");
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		string objectFile = Path.Combine (directory, "bootstrap.o");
+		string library = Path.Combine (directory, "libapp.so");
+		File.WriteAllBytes (objectFile, image);
+		using var document = JsonDocument.Parse (NativeToolTestHelper.Run ("llvm-readobj",
+			"--elf-output-style=JSON", "--file-headers", "--sections", "--symbols", "--relocations", objectFile));
+		var elf = document.RootElement [0];
+		var header = elf.GetProperty ("ElfHeader");
+		Assert.AreEqual ("Relocatable (0x1)", header.GetProperty ("Type").GetString ());
+		Assert.AreEqual (0, header.GetProperty ("ProgramHeaderCount").GetInt32 ());
+		Assert.AreEqual (arch == AndroidTargetArch.Arm ? 0x05000000u : 0u, header.GetProperty ("Flags").GetProperty ("Value").GetUInt32 ());
+		Assert.AreEqual (arch switch {
+			AndroidTargetArch.Arm => 40,
+			AndroidTargetArch.Arm64 => 183,
+			AndroidTargetArch.X86_64 => 62,
+			_ => throw new ArgumentOutOfRangeException (nameof (arch)),
+		}, header.GetProperty ("Machine").GetProperty ("Value").GetInt32 ());
+		var sections = elf.GetProperty ("Sections").EnumerateArray ().Select (item => item.GetProperty ("Section")).ToArray ();
+		Assert.AreEqual (6, sections.Length);
+		var rodata = sections.Single (item => item.GetProperty ("Name").GetProperty ("Name").GetString () == ".rodata");
+		Assert.AreEqual (2u, rodata.GetProperty ("Flags").GetProperty ("Value").GetUInt32 ());
+		Assert.AreEqual (4u, rodata.GetProperty ("AddressAlignment").GetUInt32 ());
+		byte [] bytes = NativeToolTestHelper.ReadSection (objectFile, ".rodata");
+		CollectionAssert.AreEqual (data, bytes.Take (data.Length));
+		Assert.AreEqual (data.Length, BinaryPrimitives.ReadUInt32LittleEndian (bytes.AsSpan (8, 4)));
+		var symbols = elf.GetProperty ("Symbols").EnumerateArray ().Select (item => item.GetProperty ("Symbol")).ToArray ();
+		Assert.AreEqual (3, symbols.Length);
+		foreach (var symbol in symbols.Skip (1)) {
+			Assert.AreEqual (1, symbol.GetProperty ("Binding").GetProperty ("Value").GetInt32 ());
+			Assert.AreEqual (1, symbol.GetProperty ("Type").GetProperty ("Value").GetInt32 ());
+			Assert.AreEqual (2, symbol.GetProperty ("Other").GetProperty ("Value").GetInt32 ());
+		}
+		NativeToolTestHelper.Run ("ld.lld", "--shared", "--gc-sections", "--no-undefined",
+			"--undefined=nativeaot_bootstrap", objectFile, "-o", library);
+		CollectionAssert.AreEqual (bytes, NativeToolTestHelper.ReadSection (library, ".rodata"));
+		using var linked = NativeToolTestHelper.ReadElf (library);
+		Assert.IsFalse (linked.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
+			.Any (item => item.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString () == "nativeaot_bootstrap"));
+	}
+
+	[Test]
+	[Category ("RequiresAndroidNdk")]
 	public void WritesLoadableReadOnlyPayload (
 		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch,
 		[Values (1, 4, 4095, 4096, 4097, 16383, 16384, 16385)] int payloadSize)

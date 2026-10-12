@@ -169,6 +169,8 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 		foreach (string arg in ExtraLinkerArgs?.Split (';', StringSplitOptions.RemoveEmptyEntries) ?? []) {
 			writer.WriteLine (arg.Trim ());
 		}
+		writer.WriteLine ("--undefined=XA_Host_NativeAOT_InitializeEnvironment");
+		writer.WriteLine ("-init=XA_Host_NativeAOT_InitializeEnvironment");
 
 		var excludedExports = new List<string> ();
 		WriteLibraries (CrtStartFiles);

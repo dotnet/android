@@ -74,9 +74,7 @@ namespace Xamarin.Android.Tasks
 			envBuilder.Read (Environments);
 
 			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-				// NativeAOT sets all the environment variables from Java, we don't want to repeat that
-				// process in the native code. This is just a precaution, because NativeAOT builds should
-				// not even use this task.
+				// NativeAOT configuration is produced by GenerateNativeAotDataObject instead.
 				envBuilder.EnvironmentVariables.Clear ();
 			}
 

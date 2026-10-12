@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <source_location>
 #include <string>
+#include <jni.h>
 
 #include <runtime-base/app-system-properties.hh>
 #include <shared/helpers.hh>
@@ -15,14 +16,15 @@ void Helpers::abort_application (LogCategories, const char *message, bool, std::
 	std::exit (EXIT_FAILURE);
 }
 
-extern "C" JNIEXPORT jint JNICALL JNI_OnLoad (JavaVM *vm, void*)
+extern "C" JNIEXPORT void JNICALL Java_net_dot_jni_nativeaot_BootstrapProbe_initialize (JNIEnv *env, jclass, jbyteArray body)
 {
-	JNIEnv *env = nullptr;
-	if (vm->GetEnv (reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK || env == nullptr) {
-		return JNI_ERR;
+	jsize length = env->GetArrayLength (body);
+	auto data = static_cast<uint8_t*>(std::malloc (static_cast<size_t>(length)));
+	if (data == nullptr) {
+		Helpers::abort_application ("Unable to allocate test bootstrap body");
 	}
-	AppSystemProperties::initialize (env);
-	return JNI_VERSION_1_6;
+	env->GetByteArrayRegion (body, 0, length, reinterpret_cast<jbyte*>(data));
+	AppSystemProperties::initialize ({ data, static_cast<uint32_t>(length) });
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL Java_net_dot_jni_nativeaot_BootstrapProbe_lookup (JNIEnv *env, jclass, jbyteArray name)

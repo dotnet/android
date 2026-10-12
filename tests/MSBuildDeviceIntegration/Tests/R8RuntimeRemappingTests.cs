@@ -76,20 +76,27 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var trimming in trimmingTargets) {
 				Assert.LessOrEqual (trimming.EndTime, r8 [0].StartTime, "R8 must run after managed trimming/ILC.");
 			}
-			var blobTasks = tasks.Where (t => t.Name == "GenerateJniRemappingBinaryBlobs").ToList ();
+			var blobTasks = runtime == AndroidRuntime.NativeAOT
+				? build.FindChildrenRecursive<Target> (t => t.Name == "_AndroidGenerateNativeAotR8BinaryBlobs")
+					.SelectMany (t => t.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> ())
+					.Where (t => t.Name == "GenerateNativeAotDataObject").ToList ()
+				: tasks.Where (t => t.Name == "GenerateJniRemappingBinaryBlobs").ToList ();
 			Assert.IsNotEmpty (blobTasks, "Expected binary-blob generation after R8.");
 			foreach (var blob in blobTasks) {
 				Assert.GreaterOrEqual (blob.StartTime, r8 [0].EndTime, "Binary blobs must consume the final R8 mapping.");
 			}
 		}
 
-		void AssertNoNativeLink (ProjectBuilder builder)
+		void AssertDataOnlyNativeWork (ProjectBuilder builder, AndroidRuntime runtime)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 			var build = BinaryLog.ReadBuild (binlog);
-			Assert.IsEmpty (build.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> (t =>
-				t.Name == "LinkNativeAotSharedLibrary" || t.Name == "LinkNativeRuntime"),
-				"Data-only remapping updates must not invoke the application native linker.");
+			var links = build.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> (t =>
+				t.Name == "LinkNativeAotSharedLibrary" || t.Name == "LinkNativeRuntime").ToList ();
+			Assert.AreEqual (runtime == AndroidRuntime.NativeAOT ? 1 : 0, links.Count,
+				"Data-only updates relink the NativeAOT app but not CoreCLR.");
+			Assert.IsEmpty (build.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> (t => t.Name == "IlcCompile"),
+				"Updating static data must not recompile managed ILC output.");
 		}
 
 		[Test]
@@ -116,7 +123,7 @@ namespace Xamarin.Android.Build.Tests
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 				Assert.IsEmpty (Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories));
 				Assert.AreEqual ("false",
-					File.ReadAllText (Directory.GetFiles (intermediate, "binary-blobs.stamp", SearchOption.AllDirectories).Single ()));
+					File.ReadAllText (Directory.GetFiles (intermediate, "remapping-data.stamp", SearchOption.AllDirectories).Single ()));
 				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (MonitorAdbLogcat (line => line.Contains ("EMPTY_REMAP_SUCCESS", StringComparison.Ordinal),
@@ -172,6 +179,11 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "nativeaot-bootstrap-env.txt") {
+					TextContent = () => "DOTNET_GCHeapHardLimit=4000000\nNATIVEAOT_UTF8=caf\u00e9-\ud83d\ude80\n",
+				});
+			}
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetProperty ("AllowUnsafeBlocks", "true");
 			proj.SetProperty ("TrimMode", "full");
@@ -235,6 +247,14 @@ namespace Xamarin.Android.Build.Tests
 					throw new InvalidOperationException ("Obfuscated JNI lookup returned an incorrect value or managed type.");
 				Console.WriteLine ("R8_RUNTIME_REMAP_SUCCESS");
 				""");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.MainActivity = proj.MainActivity.Replace ("""Console.WriteLine ("R8_RUNTIME_REMAP_SUCCESS");""", """
+					if (System.GC.GetGCMemoryInfo ().TotalAvailableMemoryBytes != 67108864 ||
+							System.Environment.GetEnvironmentVariable ("NATIVEAOT_UTF8") != "caf\u00e9-\ud83d\ude80")
+						throw new System.InvalidOperationException ("NativeAOT bootstrap was not applied before runtime initialization.");
+					Console.WriteLine ("R8_RUNTIME_REMAP_SUCCESS");
+					""");
+			}
 
 			using var builder = CreateApkBuilder ();
 			void AssertAppRuns (string logFile)
@@ -280,7 +300,8 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("target-method-name") != "hiddenAdd"), "Method lookups must use the renamed owner.");
 				Assert.IsFalse (elements.Any (e => (string) e.Attribute ("source-method-name") == "unusedMethod"),
 					"An unused method on a retained type must not occupy the runtime table.");
-				var binaryBlob = Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Single ();
+				var binaryBlob = Directory.GetFiles (intermediate,
+					runtime == AndroidRuntime.CoreCLR ? "libbinary_blobs.so" : "remapping-data.o", SearchOption.AllDirectories).Single ();
 				byte [] data = File.ReadAllBytes (binaryBlob);
 				int envelope = data.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
 				Assert.GreaterOrEqual (envelope, 0, "The ELF must contain the remapping payload.");
@@ -325,7 +346,7 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (binaryBlob);
 				CollectionAssert.AreEqual (data, File.ReadAllBytes (binaryBlob), "Recovery must reproduce the same remapping payload.");
 				Assert.IsFalse (builder.Output.IsTargetSkipped (blobTarget));
-				AssertNoNativeLink (builder);
+				AssertDataOnlyNativeWork (builder, runtime);
 				if (ilcObject != null)
 					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the data library must not recompile IL.");
 
@@ -337,7 +358,7 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (finalMapping);
 				FileAssert.Exists (binaryBlob);
 				Assert.IsFalse (builder.Output.IsTargetSkipped (blobTarget));
-				AssertNoNativeLink (builder);
+				AssertDataOnlyNativeWork (builder, runtime);
 				CollectionAssert.AreEqual (data, File.ReadAllBytes (binaryBlob));
 
 				extraRules = "-keepclassmembernames class example.RuntimePeer { public int add(int); }";
@@ -370,6 +391,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 				AssertAppRuns ("r8-disabled.log");
 			} finally {
+				builder.BuildLogFile = "uninstall.log";
 				Assert.IsTrue (builder.Uninstall (proj), "Obfuscated app should uninstall.");
 			}
 		}

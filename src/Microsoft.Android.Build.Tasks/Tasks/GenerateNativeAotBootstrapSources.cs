@@ -7,7 +7,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Tasks;
 
@@ -21,8 +20,6 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 	[Required]
 	public string TargetName { get; set; } = "";
 
-	public ITaskItem []? Environments { get; set; }
-
 	public string [] AdditionalProviderSources { get; set; } = [];
 
 	[Output]
@@ -30,32 +27,19 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var environment = new EnvironmentBuilder (escapeValues: false);
-		environment.Read (Environments);
-
-		var names = new StringBuilder ();
-		var values = new StringBuilder ();
-		foreach (var variable in environment.EnvironmentVariables) {
-			AppendString (names, variable.Key);
-			AppendString (values, variable.Value);
-		}
-		var properties = new StringBuilder ();
-		foreach (var property in environment.SystemProperties) {
-			AppendString (properties, property.Key);
-			AppendString (properties, property.Value);
-		}
-
 		string outputDirectory = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot");
 		Directory.CreateDirectory (outputDirectory);
 		var sources = new List<string> {
 			WriteSource ("JavaInteropRuntime.java", ("@MAIN_ASSEMBLY_NAME@", EscapeJavaString (TargetName))),
-			WriteSource ("NativeAotEnvironmentVars.java",
-				("@ENVIRONMENT_VAR_NAMES@", names.ToString ()),
-				("@ENVIRONMENT_VAR_VALUES@", values.ToString ()),
-				("@SYSTEM_PROPERTIES@", properties.ToString ())),
 		};
 		sources.AddRange (RuntimeProviderSourceGenerator.WriteAdditionalRuntimeProviderSources (
 			OutputDirectory, isCoreCLR: false, AdditionalProviderSources, preserveTimestamp: false));
+		var selected = new HashSet<string> (sources, StringComparer.Ordinal);
+		foreach (string oldProvider in Directory.GetFiles (outputDirectory, "NativeAotRuntimeProvider_*.java")) {
+			if (Regex.IsMatch (Path.GetFileName (oldProvider), @"^NativeAotRuntimeProvider_[0-9]+\.java$") && !selected.Contains (oldProvider)) {
+				File.Delete (oldProvider);
+			}
+		}
 		GeneratedSources = sources.ToArray ();
 		return !Log.HasLoggedErrors;
 
@@ -67,20 +51,13 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 			}
 			string source = Regex.Replace (
 				RuntimeProviderSourceGenerator.ReadResource (name),
-				"@(MAIN_ASSEMBLY_NAME|ENVIRONMENT_VAR_NAMES|ENVIRONMENT_VAR_VALUES|SYSTEM_PROPERTIES)@",
+				"@MAIN_ASSEMBLY_NAME@",
 				match => replacementValues [match.Value]);
 			string path = Path.Combine (outputDirectory, name);
 			Log.LogDebugMessage ($"Writing: {path}");
 			File.WriteAllText (path, source, new UTF8Encoding (false));
 			return path;
 		}
-	}
-
-	static void AppendString (StringBuilder builder, string value)
-	{
-		builder.Append ("\t\t\"");
-		builder.Append (EscapeJavaString (value));
-		builder.Append ("\",\n");
 	}
 
 	internal static string EscapeJavaString (string value)

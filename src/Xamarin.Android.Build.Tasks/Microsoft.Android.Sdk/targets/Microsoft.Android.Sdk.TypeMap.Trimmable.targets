@@ -519,7 +519,7 @@
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis"
-      Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
+      Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_AndroidJavaStubEnvironment)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <!-- The generated Java Callable Wrappers are compiled in place from

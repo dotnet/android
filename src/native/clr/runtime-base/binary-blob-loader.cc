@@ -107,11 +107,26 @@ namespace {
 				"Invalid binary blob envelope for '%s'", symbol);
 		}
 
-		if (!header.is_compressed ()) {
-			return { blob + envelope_size, header.raw };
-		}
-		return decode_compressed_payload (blob, header, symbol);
+		return BinaryBlobLoader::decode (blob, envelope_size + static_cast<size_t>(header.stored), symbol);
 	}
+}
+
+auto BinaryBlobLoader::decode (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BinaryBlobPayload
+{
+	if (blob == nullptr || size < envelope_size) [[unlikely]] {
+		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+			"Missing or truncated binary blob '%s'", symbol);
+	}
+	BlobHeader header;
+	std::memcpy (&header, blob, sizeof (header));
+	if (!header.is_valid () || static_cast<uint64_t>(header.stored) + envelope_size != size) [[unlikely]] {
+		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+			"Invalid binary blob envelope for '%s'", symbol);
+	}
+	if (!header.is_compressed ()) {
+		return { blob + envelope_size, header.raw };
+	}
+	return decode_compressed_payload (blob, header, symbol);
 }
 
 auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload

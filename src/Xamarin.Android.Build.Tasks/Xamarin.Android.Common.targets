@@ -386,7 +386,15 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <PropertyGroup>
     <_AndroidMamRemappingXml>$(IntermediateOutputPath)xa-mam-mapping.xml</_AndroidMamRemappingXml>
     <_XARemapMembersFilePath Condition=" '$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT' ">$(IntermediateOutputPath)xa-remap-members.xml</_XARemapMembersFilePath>
+    <_AndroidNativeAotExplicitRemapInputs Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(IntermediateOutputPath)nativeaot-remapping.inputs</_AndroidNativeAotExplicitRemapInputs>
   </PropertyGroup>
+  <WriteLinesToFile Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+      File="$(_AndroidNativeAotExplicitRemapInputs)"
+      Lines="@(_AndroidRemapMembers->'%(FullPath)')"
+      Overwrite="true" WriteOnlyWhenDifferent="true" />
+  <ItemGroup Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">
+    <FileWrites Include="$(_AndroidNativeAotExplicitRemapInputs)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_ConvertAndroidMamMappingFileToXmlFile"
@@ -422,7 +430,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CollectAndroidRemapMembers"
     Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
     DependsOnTargets="_AndroidRemappingXmlInputs"
-    Inputs="@(_AndroidRemapMembers)"
+    Inputs="@(_AndroidRemapMembers);$(_AndroidNativeAotExplicitRemapInputs)"
     Outputs="$(_XARemapMembersFilePath)">
   <MakeDir
       Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
@@ -1345,25 +1353,35 @@ because xbuild doesn't support framework reference assemblies.
   </PropertyGroup>
 </Target>
 
-<Target Name="_AddStaticResources"
-		Inputs="$(_RuntimeJar);$(_AndroidBuildPropertiesCache)"
-		Outputs="$(_AndroidStaticResourcesFlag)"
+<Target Name="_AddStaticResourcesInputs"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources)">
+  <PropertyGroup>
+    <_AndroidRuntimeProviderSource>$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java</_AndroidRuntimeProviderSource>
+    <_AndroidRuntimeProviderSource Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(_AndroidIntermediateJavaSourceDirectory)net\dot\jni\nativeaot\NativeAotRuntimeProvider.java</_AndroidRuntimeProviderSource>
+    <_AndroidRuntimeProviderTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_XamarinAndroidBuildTasksAssembly)'))</_AndroidRuntimeProviderTaskAssembly>
+  </PropertyGroup>
+</Target>
+
+<Target Name="_AddStaticResources"
+		Inputs="$(_RuntimeJar);$(_AndroidBuildPropertiesCache);$(_AndroidRuntimeProviderTaskAssembly);$(MSBuildThisFileFullPath)"
+		Outputs="$(_AndroidStaticResourcesFlag);$(_AndroidRuntimeProviderSource)"
+		DependsOnTargets="_AddStaticResourcesInputs">
   <CopyResource
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
-      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
+      OutputPath="$(_AndroidRuntimeProviderSource)"
   />
   <CopyResource
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
       ResourceName="NativeAotRuntimeProvider.java"
-      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)net\dot\jni\nativeaot\NativeAotRuntimeProvider.java"
+      OutputPath="$(_AndroidRuntimeProviderSource)"
   />
 
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
+  <Touch Files="$(_AndroidRuntimeProviderSource)" />
 
   <ItemGroup>
-    <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java" />
+    <FileWrites Include="$(_AndroidRuntimeProviderSource)" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
 </Target>
@@ -1409,8 +1427,9 @@ because xbuild doesn't support framework reference assemblies.
     <_GenerateJavaStubsInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
-    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' and '$(_AndroidRuntime)' != 'NativeAOT' " />
     <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+    <_AndroidJavaStubEnvironment Include="@(_EnvironmentFiles)" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' " />
   </ItemGroup>
 </Target>
 
@@ -2061,7 +2080,7 @@ because xbuild doesn't support framework reference assemblies.
   </CollectNativeFilesForArchive>
 
   <AndroidError
-      Condition=" ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == 'libbinary_blobs.so' "
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == 'libbinary_blobs.so' "
       Code="XA4330"
       ResourceName="XA4330"
       FormatArguments="%(_AndroidNativeFilesToAddToArchive.Identity);%(_AndroidNativeFilesToAddToArchive.ArchivePath)" />
@@ -2180,7 +2199,7 @@ because xbuild doesn't support framework reference assemblies.
   </CollectNativeFilesForArchive>
 
   <AndroidError
-      Condition=" ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == 'libbinary_blobs.so' "
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$([System.IO.Path]::GetFileName(`%(_AndroidNativeFilesToAddToArchive.ArchivePath)`))' == 'libbinary_blobs.so' "
       Code="XA4330"
       ResourceName="XA4330"
       FormatArguments="%(_AndroidNativeFilesToAddToArchive.Identity);%(_AndroidNativeFilesToAddToArchive.ArchivePath)" />
@@ -2608,8 +2627,10 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)binary-blobs" Condition="Exists ('$(IntermediateOutputPath)binary-blobs')" />
 	<ItemGroup>
 		<_AndroidNativeAotBinaryBlobToClean Include="$(IntermediateOutputPath)android-*/native/binary-blobs/*/libbinary_blobs.so" />
+		<_AndroidNativeAotDataToClean Include="$(IntermediateOutputPath)android-*/native/data/*" />
 	</ItemGroup>
 	<Delete Files="@(_AndroidNativeAotBinaryBlobToClean)" />
+	<Delete Files="@(_AndroidNativeAotDataToClean)" />
 	<RemoveDirFixed Directories="$(_AndroidProguardIntermediateDirectory)" Condition="Exists ('$(_AndroidProguardIntermediateDirectory)')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />

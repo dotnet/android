@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -56,7 +57,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		string value = "\"C:\\quoted\"\t\u00e9\u4e2d\ud83d\ude80";
 		string key = "debug.bootstrap.\ud83d\ude80";
 		string contents = string.Join ("\n", Enumerable.Range (0, 1000).Select (i => $"debug.property.{i}=value-{i}"));
-		var result = RunProbe ($"{contents}\n{key}={value}\n", key);
+		var result = RunProbe ($"{key}=old\n{contents}\n{key}={value}\n", key);
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 		Assert.AreEqual (value, Encoding.UTF8.GetString (Convert.FromBase64String (result.Output)));
 		StringAssert.DoesNotContain ("WARNING in native method", result.Output + result.Error);
@@ -70,27 +71,33 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual ("missing", result.Output);
 	}
 
-	(int ExitCode, string Output, string Error) RunProbe (string contents, string key)
+	[Test]
+	public void RejectsMalformedBootstrapOffsets ()
+	{
+		var result = RunProbe ("debug.value=test\n", "debug.value", body => BitConverter.GetBytes (uint.MaxValue).CopyTo (body, 24));
+		Assert.AreNotEqual (0, result.ExitCode);
+		StringAssert.Contains ("Invalid NativeAOT bootstrap header", result.Error);
+	}
+
+	(int ExitCode, string Output, string Error) RunProbe (string contents, string key, Action<byte []>? corrupt = null)
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
 		string environmentFile = Path.Combine (path, "environment.txt");
 		File.WriteAllText (environmentFile, contents);
-		var task = new GenerateNativeAotBootstrapSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
-			OutputDirectory = path,
-			TargetName = "App",
-			Environments = [new TaskItem (environmentFile)],
-		};
-		Assert.IsTrue (task.Execute ());
+		var environment = new EnvironmentBuilder (escapeValues: false);
+		environment.Read ([new TaskItem (environmentFile)]);
+		string bodyFile = Path.Combine (path, "bootstrap.bin");
+		byte [] body = NativeAotBootstrapBlob.Create (environment.EnvironmentVariables, environment.SystemProperties);
+		corrupt?.Invoke (body);
+		File.WriteAllBytes (bodyFile, body);
 		string classesDirectory = Path.Combine (path, "classes");
 		Directory.CreateDirectory (classesDirectory);
 		var arguments = new List<string> { "-d", classesDirectory };
-		arguments.Add (task.GeneratedSources.Single (source => Path.GetFileName (source) == "NativeAotEnvironmentVars.java"));
 		arguments.AddRange (Directory.GetFiles (ResourcesDirectory, "*.java", SearchOption.AllDirectories));
 		var compile = NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("javac"), arguments.ToArray ());
 		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
 		return NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("java"),
-			"-Xcheck:jni", "-cp", classesDirectory, "net.dot.jni.nativeaot.BootstrapProbe", nativeLibrary, key);
+			"-Xcheck:jni", "-cp", classesDirectory, "net.dot.jni.nativeaot.BootstrapProbe", nativeLibrary, key, bodyFile);
 	}
 }

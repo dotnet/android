@@ -32,7 +32,7 @@
   </Target>
 
   <Target Name="_AndroidGenerateBinaryBlobs"
-      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') "
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
       DependsOnTargets="_AndroidGenerateBinaryBlobsInputs"
       Inputs="@(_AndroidRemapMembers);$(_AndroidCoreClrBootstrapFile);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="@(_AndroidRegularBinaryBlobOutput)">
@@ -134,13 +134,21 @@
       <_AndroidNativeAotR8RemappingDirectory>$(NativeIntermediateOutputPath)jni-remap/</_AndroidNativeAotR8RemappingDirectory>
       <_AndroidNativeAotR8GeneratedRemappingXml>$(_AndroidNativeAotR8RemappingDirectory)r8-jni-generated-remap.xml</_AndroidNativeAotR8GeneratedRemappingXml>
       <_AndroidNativeAotR8RemappingXml>$(_AndroidNativeAotR8RemappingDirectory)r8-jni-remap.xml</_AndroidNativeAotR8RemappingXml>
+      <_AndroidNativeAotR8RemappingInputs>$(_AndroidNativeAotR8RemappingDirectory)remap.inputs</_AndroidNativeAotR8RemappingInputs>
     </PropertyGroup>
+    <MakeDir Directories="$(_AndroidNativeAotR8RemappingDirectory)" />
+    <WriteLinesToFile File="$(_AndroidNativeAotR8RemappingInputs)"
+        Lines="Mapping=$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers->'%(FullPath)')"
+        Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidNativeAotR8RemappingInputs)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_AndroidGenerateNativeAotR8Remapping"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="_AndroidGenerateNativeAotR8RemappingInputs"
-      Inputs="$(NativeObject);$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly);$(_AndroidR8JniLegacyTaskAssembly)"
+      Inputs="$(NativeObject);$(_AndroidNativeAotR8RemappingInputs);$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly);$(_AndroidR8JniLegacyTaskAssembly);$(MSBuildThisFileFullPath)"
       Outputs="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)">
     <GenerateR8JniRemapping
         MappingFile="$(_AndroidR8JniMappingFile)"
@@ -158,41 +166,47 @@
   </Target>
 
   <Target Name="_AndroidGenerateNativeAotR8BinaryBlobsInputs"
-      DependsOnTargets="_AndroidGenerateNativeAotR8Remapping">
+      DependsOnTargets="_AndroidR8JniRemappingInputs;_ConvertAndroidMamMappingFileToXml;_CollectAndroidRemapMembers;_AndroidGenerateNativeAotR8Remapping;_PrepareNativeAotAndroidAppInputs">
     <PropertyGroup>
-      <_AndroidNativeAotBinaryBlobsDirectory>$(NativeIntermediateOutputPath)binary-blobs/</_AndroidNativeAotBinaryBlobsDirectory>
-      <_AndroidNativeAotBinaryBlobsStamp>$(_AndroidNativeAotBinaryBlobsDirectory)binary-blobs.stamp</_AndroidNativeAotBinaryBlobsStamp>
-      <_AndroidNativeAotBinaryBlobsPresent></_AndroidNativeAotBinaryBlobsPresent>
-      <_AndroidNativeAotBinaryBlobsPresent Condition=" Exists('$(_AndroidNativeAotBinaryBlobsStamp)') ">$([System.IO.File]::ReadAllText('$(_AndroidNativeAotBinaryBlobsStamp)'))</_AndroidNativeAotBinaryBlobsPresent>
+      <_AndroidNativeAotRemappingDirectory>$(NativeIntermediateOutputPath)data/</_AndroidNativeAotRemappingDirectory>
+      <_AndroidNativeAotRemappingObject>$(_AndroidNativeAotRemappingDirectory)remapping-data.o</_AndroidNativeAotRemappingObject>
+      <_AndroidNativeAotRemappingStamp>$(_AndroidNativeAotRemappingDirectory)remapping-data.stamp</_AndroidNativeAotRemappingStamp>
+      <_AndroidNativeAotRemappingInputs>$(_AndroidNativeAotRemappingDirectory)remapping.inputs</_AndroidNativeAotRemappingInputs>
+      <_AndroidNativeAotRemappingPresent></_AndroidNativeAotRemappingPresent>
+      <_AndroidNativeAotRemappingPresent Condition=" Exists('$(_AndroidNativeAotRemappingStamp)') ">$([System.IO.File]::ReadAllText('$(_AndroidNativeAotRemappingStamp)'))</_AndroidNativeAotRemappingPresent>
+      <_AndroidNativeAotSelectedRemappingXml></_AndroidNativeAotSelectedRemappingXml>
+      <_AndroidNativeAotSelectedRemappingXml Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' and '@(_AndroidRemapMembers->Count())' != '0' ">$(_XARemapMembersFilePath)</_AndroidNativeAotSelectedRemappingXml>
+      <_AndroidNativeAotSelectedRemappingXml Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">$(_AndroidNativeAotR8RemappingXml)</_AndroidNativeAotSelectedRemappingXml>
+      <_AndroidNativeAotAbi>@(_PrivateBuildTargetAbi)</_AndroidNativeAotAbi>
     </PropertyGroup>
+    <MakeDir Directories="$(_AndroidNativeAotRemappingDirectory)" />
+    <WriteLinesToFile File="$(_AndroidNativeAotRemappingInputs)"
+        Lines="Abi=$(_AndroidNativeAotAbi);Compress=$(_AndroidR8CompressBinaryBlobs);Mapping=$(_AndroidNativeAotSelectedRemappingXml)"
+        Overwrite="true" WriteOnlyWhenDifferent="true" />
     <ItemGroup>
-      <_AndroidNativeAotExpectedBinaryBlobLibrary Include="@(_PrivateBuildTargetAbi->'$(_AndroidNativeAotBinaryBlobsDirectory)%(Identity)/libbinary_blobs.so')">
-        <Abi>%(_PrivateBuildTargetAbi.Identity)</Abi>
-        <ArchivePath>lib/%(_PrivateBuildTargetAbi.Identity)/libbinary_blobs.so</ArchivePath>
-      </_AndroidNativeAotExpectedBinaryBlobLibrary>
-      <_AndroidNativeAotBinaryBlobOutput Include="$(_AndroidNativeAotBinaryBlobsStamp)" />
-      <_AndroidNativeAotBinaryBlobOutput Include="@(_AndroidNativeAotExpectedBinaryBlobLibrary)"
-          Condition=" '$(_AndroidNativeAotBinaryBlobsPresent)' != 'false' " />
-      <FileWrites Include="$(_AndroidNativeAotBinaryBlobsStamp)" />
+      <_AndroidNativeAotRemappingOutput Include="$(_AndroidNativeAotRemappingStamp)" />
+      <_AndroidNativeAotRemappingOutput Include="$(_AndroidNativeAotRemappingObject)"
+          Condition=" '$(_AndroidNativeAotRemappingPresent)' != 'false' " />
+      <FileWrites Include="$(_AndroidNativeAotRemappingInputs);$(_AndroidNativeAotRemappingStamp)" />
     </ItemGroup>
   </Target>
 
   <Target Name="_AndroidGenerateNativeAotR8BinaryBlobs"
-      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="_AndroidGenerateNativeAotR8BinaryBlobsInputs"
-      Inputs="$(_AndroidNativeAotR8RemappingXml);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
-      Outputs="@(_AndroidNativeAotBinaryBlobOutput)">
-    <GenerateJniRemappingBinaryBlobs
+      Inputs="$(_AndroidNativeAotRemappingInputs);$(_AndroidNativeAotSelectedRemappingXml);$(_AndroidR8JniTaskAssembly);$(MSBuildThisFileFullPath)"
+      Outputs="@(_AndroidNativeAotRemappingOutput)">
+    <GenerateNativeAotDataObject
         MSBuildRuntime="NET"
-        RemappingXmlFilePath="$(_AndroidNativeAotR8RemappingXml)"
-        OutputDirectory="$(_AndroidNativeAotBinaryBlobsDirectory)"
-        SupportedAbis="@(_PrivateBuildTargetAbi)"
+        Remapping="true" RemappingXmlFilePath="$(_AndroidNativeAotSelectedRemappingXml)"
+        OutputFile="$(_AndroidNativeAotRemappingObject)" Abi="@(_PrivateBuildTargetAbi)"
+        CompletionStamp="$(_AndroidNativeAotRemappingStamp)"
         Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
     <ItemGroup>
-      <_AndroidNativeAotBinaryBlobLibrary Include="@(_AndroidNativeAotExpectedBinaryBlobLibrary)"
-          Condition=" Exists('%(_AndroidNativeAotExpectedBinaryBlobLibrary.Identity)') " />
-      <FileWrites Include="@(_AndroidNativeAotExpectedBinaryBlobLibrary)"
-          Condition=" Exists('%(_AndroidNativeAotExpectedBinaryBlobLibrary.Identity)') " />
+      <_NativeAotAdditionalObjects Include="$(_AndroidNativeAotRemappingObject)"
+          Condition=" Exists('$(_AndroidNativeAotRemappingObject)') " />
+      <FileWrites Include="$(_AndroidNativeAotRemappingObject)"
+          Condition=" Exists('$(_AndroidNativeAotRemappingObject)') " />
     </ItemGroup>
   </Target>
 

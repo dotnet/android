@@ -37,7 +37,8 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 
 The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
-NativeAOT JNI property reader and loads it into a host JVM. On macOS/Linux, these tests require
+NativeAOT offset-based property reader and supplies its generated binary body through
+the existing host-JVM probe fixture. On macOS/Linux, these tests require
 `JAVA_HOME` or `TEST_ANDROID_JDK_PATH` and a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 

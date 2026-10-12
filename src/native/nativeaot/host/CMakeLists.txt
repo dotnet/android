@@ -30,6 +30,7 @@ set(XAMARIN_MONODROID_SOURCES
   host.cc
   host-environment.cc
   host-jni.cc
+  host-bootstrap.cc
 
   ../runtime-base/android-system.cc
   ../runtime-base/app-system-properties.cc
