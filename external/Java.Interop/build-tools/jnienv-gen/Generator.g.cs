@@ -1957,7 +1957,7 @@ namespace Xamarin.Java.Interop
 				Name          = "ReleasePrimitiveArrayCritical",
 				Visibility    = "public",
 				CallerSafetyRequirements = [
-					"The caller must ensure carray comes from a matching, still-active GetPrimitiveArrayCritical acquisition for array.",
+					"The caller must ensure <paramref name=\"carray\"/> comes from a matching, still-active GetPrimitiveArrayCritical acquisition for <paramref name=\"array\"/>.",
 					"The caller must obey JNI critical-region restrictions and use a valid release mode.",
 					"The pointer must not be reused after a final release.",
 				],
@@ -2011,9 +2011,9 @@ namespace Xamarin.Java.Interop
 				Visibility    = "public",
 				Throws        = true,
 				CallerSafetyRequirements = [
-					"The caller must ensure address refers to a valid memory region covering capacity bytes.",
+					"The caller must ensure <paramref name=\"address\"/> refers to a valid memory region covering <paramref name=\"capacity\"/> bytes.",
 					"The region must remain alive and accessible for all reads and writes performed by the returned buffer or any Java aliases.",
-					"The caller must ensure capacity is nonnegative and no greater than Int32.MaxValue.",
+					"The caller must ensure <paramref name=\"capacity\"/> is nonnegative and no greater than Int32.MaxValue.",
 				],
 				Prototype     = "jobject     (*NewDirectByteBuffer)(JNIEnv*, void*, jlong);",
 				ReturnType    = "jobject",

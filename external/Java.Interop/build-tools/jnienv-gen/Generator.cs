@@ -299,10 +299,10 @@ namespace Xamarin.Java.Interop
 			if (entry.CallerSafetyRequirements.Length == 0)
 				return;
 
-			o.WriteLine ("\t\t/// <remarks>");
+			o.WriteLine ("\t\t/// <safety>");
 			foreach (var requirement in entry.CallerSafetyRequirements)
 				o.WriteLine ("\t\t/// {0}", requirement);
-			o.WriteLine ("\t\t/// </remarks>");
+			o.WriteLine ("\t\t/// </safety>");
 		}
 
 		static string GetPinvokeName (string name)
