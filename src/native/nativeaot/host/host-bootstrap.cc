@@ -22,7 +22,7 @@ extern "C" {
 
 // Selected by the application link's DT_INIT, before its NativeAOT/C++ .init_array.
 // Dependencies have already run their constructors; this routine must not need JNI or managed code.
-extern "C" __attribute__((visibility("hidden"))) void XA_Host_NativeAOT_InitializeEnvironment () noexcept
+extern "C" __attribute__((visibility("hidden"))) void Host_NativeAOT_InitializeEnvironment () noexcept
 {
 	static bool initialized = false;
 	if (initialized) {

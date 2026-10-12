@@ -77,7 +77,7 @@ namespace Xamarin.Android.Build.Tests
 				string response = File.ReadAllText (responseFile);
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
 				StringAssert.Contains ("nativeaot-bootstrap.o", response, responseFile);
-				StringAssert.Contains ("-init=XA_Host_NativeAOT_InitializeEnvironment", response, responseFile);
+				StringAssert.Contains ("-init=Host_NativeAOT_InitializeEnvironment", response, responseFile);
 				StringAssert.DoesNotContain ("jni_init_funcs.", response, responseFile);
 				StringAssert.DoesNotContain ("environment.", response, responseFile);
 				foreach (string archiveName in CPlusPlusArchiveNames) {
@@ -104,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 				.Select (entry => entry.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
 			CollectionAssert.DoesNotContain (exports, "nativeaot_bootstrap");
 			CollectionAssert.DoesNotContain (exports, "nativeaot_bootstrap_size");
-			CollectionAssert.DoesNotContain (exports, "XA_Host_NativeAOT_InitializeEnvironment");
+			CollectionAssert.DoesNotContain (exports, "Host_NativeAOT_InitializeEnvironment");
 		}
 
 		[Test]
