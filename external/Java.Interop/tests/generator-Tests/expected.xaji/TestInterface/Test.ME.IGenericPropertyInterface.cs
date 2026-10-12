@@ -45,13 +45,17 @@ namespace Test.ME {
 		static IntPtr n_GetObject (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetObject);
 			}
 		}
 		private static IntPtr __n_GetObject (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.IGenericPropertyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.Object);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.IGenericPropertyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.Object);
+			}
 		}
 #pragma warning restore 0169
 
@@ -65,33 +69,43 @@ namespace Test.ME {
 		static void n_SetObject_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native__object)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native__object, &__n_SetObject_Ljava_lang_Object_);
 			}
 		}
 		private static void __n_SetObject_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native__object)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.IGenericPropertyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var @object = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native__object, JniHandleOwnership.DoNotTransfer);
-			__this.Object = @object;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.IGenericPropertyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var @object = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native__object, JniHandleOwnership.DoNotTransfer);
+				__this.Object = @object;
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe global::Java.Lang.Object Object {
+		public global::Java.Lang.Object Object {
 			get {
-				const string __id = "getObject.()Ljava/lang/Object;";
-				var __rm = _members_test_me_GenericPropertyInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "getObject.()Ljava/lang/Object;";
+					var __rm = _members_test_me_GenericPropertyInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				const string __id = "setObject.(Ljava/lang/Object;)V";
-				IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (native_value);
-					_members_test_me_GenericPropertyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-					JNIEnv.DeleteLocalRef (native_value);
-					global::System.GC.KeepAlive (value);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "setObject.(Ljava/lang/Object;)V";
+					IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
+					try {
+						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+						__args [0] = new JniArgumentValue (native_value);
+						_members_test_me_GenericPropertyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+					} finally {
+						JNIEnv.DeleteLocalRef (native_value);
+						global::System.GC.KeepAlive (value);
+					}
 				}
 			}
 		}

@@ -119,6 +119,21 @@ namespace generator.SourceWriters
 					Methods.Add (new ConstructorPartialMethod (klass.PeerConstructorPartialMethod));
 				}
 				Constructors.Add (new JavaLangObjectConstructor (klass, opt, klass.PeerConstructorPartialMethod));
+
+				if (SourceWriterExtensions.UsesDeferredThrowableConstructor (klass)) {
+					if (klass.Ctors.Any (c => c.Parameters.Count == 1 && c.Parameters [0].Type == "Java.Interop.JniObjectReferenceOptions"))
+						throw new InvalidOperationException ($"The deferred throwable constructor for '{klass.FullName}' conflicts with a bound Java constructor.");
+					var deferred = new ConstructorWriter {
+						Name = klass.Name,
+						BaseCall = "base (options)",
+					};
+					deferred.SetVisibility (klass.IsFinal ? "internal" : "protected");
+					deferred.Comments.Add ("// Initializes an empty peer; the Java constructor is invoked by the derived binding.");
+					deferred.Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("global::Java.Interop.JniObjectReferenceOptions")));
+					if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod))
+						deferred.Body.Add ($"{klass.PeerConstructorPartialMethod} ();");
+					Constructors.Add (deferred);
+				}
 			}
 
 			foreach (var ctor in klass.Ctors) {

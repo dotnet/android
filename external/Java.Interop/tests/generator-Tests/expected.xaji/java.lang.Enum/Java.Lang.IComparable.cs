@@ -39,30 +39,37 @@ namespace Java.Lang {
 		static int n_CompareTo_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_another)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_another, &__n_CompareTo_Ljava_lang_Object_);
 			}
 		}
 		private static int __n_CompareTo_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_another)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.IComparable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var another = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_another, JniHandleOwnership.DoNotTransfer);
-			int __ret = __this.CompareTo (another);
-			return __ret;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.IComparable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var another = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_another, JniHandleOwnership.DoNotTransfer);
+				int __ret = __this.CompareTo (another);
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe int CompareTo (global::Java.Lang.Object another)
+		public int CompareTo (global::Java.Lang.Object another)
 		{
-			const string __id = "compareTo.(Ljava/lang/Object;)I";
-			IntPtr native_another = JNIEnv.ToLocalJniHandle (another);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_another);
-				var __rm = _members_java_lang_Comparable.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				JNIEnv.DeleteLocalRef (native_another);
-				global::System.GC.KeepAlive (another);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "compareTo.(Ljava/lang/Object;)I";
+				IntPtr native_another = JNIEnv.ToLocalJniHandle (another);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_another);
+					var __rm = _members_java_lang_Comparable.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+					return __rm;
+				} finally {
+					JNIEnv.DeleteLocalRef (native_another);
+					global::System.GC.KeepAlive (another);
+				}
 			}
 		}
 

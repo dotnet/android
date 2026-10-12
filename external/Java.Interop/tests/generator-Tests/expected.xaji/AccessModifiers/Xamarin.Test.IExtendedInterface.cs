@@ -44,20 +44,27 @@ namespace Xamarin.Test {
 		static void n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_ExtendedMethod);
 			}
 		}
 		private static void __n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.ExtendedMethod ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.ExtendedMethod ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void ExtendedMethod ()
+		public void ExtendedMethod ()
 		{
-			const string __id = "extendedMethod.()V";
-			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "extendedMethod.()V";
+				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 		static Delegate cb_baseMethod_BaseMethod_V;
@@ -70,20 +77,27 @@ namespace Xamarin.Test {
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_BaseMethod);
 			}
 		}
 		private static void __n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.BaseMethod ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.BaseMethod ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void BaseMethod ()
+		public void BaseMethod ()
 		{
-			const string __id = "baseMethod.()V";
-			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "baseMethod.()V";
+				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

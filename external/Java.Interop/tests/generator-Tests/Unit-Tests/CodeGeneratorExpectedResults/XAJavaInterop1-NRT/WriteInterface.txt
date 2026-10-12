@@ -6,10 +6,13 @@ public abstract class MyInterface : Java.Lang.Object {
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='StaticMethod' and count(parameter)=0]"
 	[Register ("StaticMethod", "()V", "")]
-	public static unsafe void StaticMethod ()
+	public static void StaticMethod ()
 	{
-		const string __id = "StaticMethod.()V";
-		_members.StaticMethods.InvokeVoidMethod (__id, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "StaticMethod.()V";
+			_members.StaticMethods.InvokeVoidMethod (__id, null);
+		}
 	}
 
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
@@ -96,13 +99,17 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static int n_get_Count (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Count);
 		}
 	}
 	private static int __n_get_Count (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return __this.Count;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return __this.Count;
+		}
 	}
 #pragma warning restore 0169
 
@@ -116,27 +123,37 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_Count_I);
 		}
 	}
 	private static void __n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		__this.Count = value;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.Count = value;
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe int Count {
+	public int Count {
 		get {
-			const string __id = "get_Count.()I";
-			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-			return __rm;
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "get_Count.()I";
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			}
 		}
 		set {
-			const string __id = "set_Count.(I)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (value);
-			_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "set_Count.(I)V";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			}
 		}
 	}
 
@@ -150,13 +167,17 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Key);
 		}
 	}
 	private static IntPtr __n_get_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return JNIEnv.NewString (__this.Key);
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return JNIEnv.NewString (__this.Key);
+		}
 	}
 #pragma warning restore 0169
 
@@ -170,32 +191,42 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_value, &__n_set_Key_Ljava_lang_String_);
 		}
 	}
 	private static void __n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
-		__this.Key = value;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+			__this.Key = value;
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe string? Key {
+	public string? Key {
 		get {
-			const string __id = "get_Key.()Ljava/lang/String;";
-			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "get_Key.()Ljava/lang/String;";
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 		set {
-			const string __id = "set_Key.(Ljava/lang/String;)V";
-			IntPtr native_value = JNIEnv.NewString ((string?)value);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_value);
-				_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				JNIEnv.DeleteLocalRef (native_value);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "set_Key.(Ljava/lang/String;)V";
+				IntPtr native_value = JNIEnv.NewString ((string?)value);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_value);
+					_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_value);
+				}
 			}
 		}
 	}
@@ -210,13 +241,17 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_AbstractCount);
 		}
 	}
 	private static int __n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return __this.AbstractCount;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return __this.AbstractCount;
+		}
 	}
 #pragma warning restore 0169
 
@@ -230,27 +265,37 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_AbstractCount_I);
 		}
 	}
 	private static void __n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		__this.AbstractCount = value;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.AbstractCount = value;
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe int AbstractCount {
+	public int AbstractCount {
 		get {
-			const string __id = "get_AbstractCount.()I";
-			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-			return __rm;
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "get_AbstractCount.()I";
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+				return __rm;
+			}
 		}
 		set {
-			const string __id = "set_AbstractCount.(I)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (value);
-			_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "set_AbstractCount.(I)V";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			}
 		}
 	}
 
@@ -264,29 +309,36 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_key, &__n_GetCountForKey_Ljava_lang_String_);
 		}
 	}
 	private static int __n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
-		int __ret = __this.GetCountForKey (key);
-		return __ret;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+			int __ret = __this.GetCountForKey (key);
+			return __ret;
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe int GetCountForKey (string? key)
+	public int GetCountForKey (string? key)
 	{
-		const string __id = "GetCountForKey.(Ljava/lang/String;)I";
-		IntPtr native_key = JNIEnv.NewString ((string?)key);
-		try {
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (native_key);
-			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-			return __rm;
-		} finally {
-			JNIEnv.DeleteLocalRef (native_key);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "GetCountForKey.(Ljava/lang/String;)I";
+			IntPtr native_key = JNIEnv.NewString ((string?)key);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_key);
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+				return __rm;
+			} finally {
+				JNIEnv.DeleteLocalRef (native_key);
+			}
 		}
 	}
 
@@ -300,21 +352,28 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_Key);
 		}
 	}
 	private static IntPtr __n_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return JNIEnv.NewString (__this.Key ());
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return JNIEnv.NewString (__this.Key ());
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe string? Key ()
+	public string? Key ()
 	{
-		const string __id = "Key.()Ljava/lang/String;";
-		var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-		return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "Key.()Ljava/lang/String;";
+			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+		}
 	}
 
 	static Delegate? cb_AbstractMethod_AbstractMethod_V;
@@ -327,20 +386,27 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_AbstractMethod);
 		}
 	}
 	private static void __n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		__this.AbstractMethod ();
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.AbstractMethod ();
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe void AbstractMethod ()
+	public void AbstractMethod ()
 	{
-		const string __id = "AbstractMethod.()V";
-		_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "AbstractMethod.()V";
+			_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		}
 	}
 
 }

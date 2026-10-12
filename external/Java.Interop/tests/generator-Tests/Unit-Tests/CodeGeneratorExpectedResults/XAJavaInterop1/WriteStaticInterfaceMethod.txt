@@ -6,10 +6,13 @@ public abstract class MyInterface : Java.Lang.Object {
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoSomething' and count(parameter)=0]"
 	[Register ("DoSomething", "()V", "")]
-	public static unsafe void DoSomething ()
+	public static void DoSomething ()
 	{
-		const string __id = "DoSomething.()V";
-		_members.StaticMethods.InvokeVoidMethod (__id, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "DoSomething.()V";
+			_members.StaticMethods.InvokeVoidMethod (__id, null);
+		}
 	}
 
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
@@ -32,10 +35,13 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoSomething' and count(parameter)=0]"
 	[Register ("DoSomething", "()V", "")]
-	public static unsafe void DoSomething ()
+	public static void DoSomething ()
 	{
-		const string __id = "DoSomething.()V";
-		_members.StaticMethods.InvokeVoidMethod (__id, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "DoSomething.()V";
+			_members.StaticMethods.InvokeVoidMethod (__id, null);
+		}
 	}
 
 }

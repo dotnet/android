@@ -1,7 +1,6 @@
 ﻿
-// Generated file; DO NOT EDIT!
-//
-// To make changes, edit monodroid/tools/jnienv-gen and rerun
+// Compile-only JNI stubs. Raw array handle contracts are exercised by the
+// command-line compiler tests as well as the legacy Roslyn harness.
 #pragma warning disable
 using System;
 using System.Runtime.ExceptionServices;
@@ -882,44 +881,44 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (IntPtr src, byte[] dest)
+		public static unsafe void CopyArray (IntPtr src, byte[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
 		[UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl, CharSet=CharSet.Unicode)]
 		internal delegate void IntPtr_IntPtr_int_int_charArray_void_Delegate (IntPtr env, IntPtr array, int start, int len, char[] buf);
-		public static void CopyArray (IntPtr src, char[] dest)
+		public static unsafe void CopyArray (IntPtr src, char[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
 		internal delegate void IntPtr_IntPtr_int_int_shortArray_void_Delegate (IntPtr env, IntPtr array, int start, int len, short[] buf);
-		public static void CopyArray (IntPtr src, short[] dest)
+		public static unsafe void CopyArray (IntPtr src, short[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
 		internal delegate void IntPtr_IntPtr_int_int_intArray_void_Delegate (IntPtr env, IntPtr array, int start, int len, int[] buf);
-		public static void CopyArray (IntPtr src, int[] dest)
+		public static unsafe void CopyArray (IntPtr src, int[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
 		internal delegate void IntPtr_IntPtr_int_int_longArray_void_Delegate (IntPtr env, IntPtr array, int start, int len, long[] buf);
-		public static void CopyArray (IntPtr src, long[] dest)
+		public static unsafe void CopyArray (IntPtr src, long[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
 		internal delegate void IntPtr_IntPtr_int_int_floatArray_void_Delegate (IntPtr env, IntPtr array, int start, int len, float[] buf);
-		public static void CopyArray (IntPtr src, float[] dest)
+		public static unsafe void CopyArray (IntPtr src, float[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
 		internal delegate void IntPtr_IntPtr_int_int_doubleArray_void_Delegate (IntPtr env, IntPtr array, int start, int len, double[] buf);
-		public static void CopyArray (IntPtr src, double[] dest)
+		public static unsafe void CopyArray (IntPtr src, double[] dest)
 		{
 			throw new NotImplementedException ();
 		}
@@ -929,37 +928,37 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (byte[] src, IntPtr dest)
+		public static unsafe void CopyArray (byte[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (char[] src, IntPtr dest)
+		public static unsafe void CopyArray (char[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (short[] src, IntPtr dest)
+		public static unsafe void CopyArray (short[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (int[] src, IntPtr dest)
+		public static unsafe void CopyArray (int[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (long[] src, IntPtr dest)
+		public static unsafe void CopyArray (long[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (float[] src, IntPtr dest)
+		public static unsafe void CopyArray (float[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static void CopyArray (double[] src, IntPtr dest)
+		public static unsafe void CopyArray (double[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
@@ -1246,7 +1245,9 @@ namespace Android.Runtime {
 
 		public unsafe JniNativeInterfaceInvoker (JniNativeInterfaceStruct* p)
 		{
-			JniEnv = *p;
+			unsafe {
+				JniEnv = *p;
+			}
 		}
 
 

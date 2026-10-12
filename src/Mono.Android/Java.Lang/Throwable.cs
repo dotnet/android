@@ -13,6 +13,19 @@ namespace Java.Lang {
 	{
 		protected bool is_generated;
 
+		/// <summary>Initializes an empty peer for a derived binding to construct its Java throwable.</summary>
+		/// <param name="options">Must be <see cref="JniObjectReferenceOptions.None"/>.</param>
+		protected Throwable (JniObjectReferenceOptions options)
+			: base (default (JniObjectReference), options == JniObjectReferenceOptions.None
+					? JniObjectReferenceOptions.CopyAndDispose
+					: throw new ArgumentException ("Only JniObjectReferenceOptions.None is supported for empty peer initialization.", nameof (options)))
+		{
+			if (GetType () == typeof (Throwable))
+				is_generated = true;
+
+			SetHandle (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+		}
+
 		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
 			: base (GetThrowableReference (handle, transfer), JniObjectReferenceOptions.CopyAndDispose)
 		{

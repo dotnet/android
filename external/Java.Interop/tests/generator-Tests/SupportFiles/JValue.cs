@@ -7,6 +7,17 @@ namespace Android.Runtime {
 
 	[StructLayout(LayoutKind.Explicit)]
 	public struct JValue {
+#if UPDATED_MEMORY_SAFETY_RULES
+		[FieldOffset(0)] safe bool z;
+		[FieldOffset(0)] safe sbyte b;
+		[FieldOffset(0)] safe char c;
+		[FieldOffset(0)] safe short s;
+		[FieldOffset(0)] safe int i;
+		[FieldOffset(0)] safe long j;
+		[FieldOffset(0)] safe float f;
+		[FieldOffset(0)] safe double d;
+		[FieldOffset(0)] safe IntPtr l;
+#else
 		[FieldOffset(0)] bool z;
 		[FieldOffset(0)] sbyte b;
 		[FieldOffset(0)] char c;
@@ -16,6 +27,7 @@ namespace Android.Runtime {
 		[FieldOffset(0)] float f;
 		[FieldOffset(0)] double d;
 		[FieldOffset(0)] IntPtr l;
+#endif
 
 		public static JValue Zero = new JValue (IntPtr.Zero);
 

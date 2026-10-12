@@ -40,40 +40,50 @@ namespace Xamarin.Test {
 		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, partial, &__n_UsePartial_I);
 			}
 		}
 		private static IntPtr __n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.UsePartial (partial));
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.NewString (__this.UsePartial (partial));
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='usePartial' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("usePartial", "(I)Ljava/lang/String;", "GetUsePartial_IHandler")]
-		public virtual unsafe string UsePartial (int partial)
+		public virtual string UsePartial (int partial)
 		{
-			const string __id = "usePartial.(I)Ljava/lang/String;";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (partial);
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "usePartial.(I)Ljava/lang/String;";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (partial);
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='useThis' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 		[Register ("useThis", "(Ljava/lang/String;)Ljava/lang/String;", "")]
-		public static unsafe string UseThis (string this_)
+		public static string UseThis (string this_)
 		{
-			const string __id = "useThis.(Ljava/lang/String;)Ljava/lang/String;";
-			IntPtr native_this = JNIEnv.NewString ((string)this_);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_this);
-				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
-				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-				JNIEnv.DeleteLocalRef (native_this);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "useThis.(Ljava/lang/String;)Ljava/lang/String;";
+				IntPtr native_this = JNIEnv.NewString ((string)this_);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_this);
+					var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
+					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_this);
+				}
 			}
 		}
 

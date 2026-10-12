@@ -32,16 +32,19 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='TestClass']/constructor[@name='TestClass' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe TestClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public TestClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			const string __id = "()V";
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "()V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
 
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 		}
 
 		static Delegate cb_baseMethod_BaseMethod_V;
@@ -54,22 +57,29 @@ namespace Xamarin.Test {
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_BaseMethod);
 			}
 		}
 		private static void __n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.TestClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.BaseMethod ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.TestClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.BaseMethod ();
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='TestClass']/method[@name='baseMethod' and count(parameter)=0]"
 		[Register ("baseMethod", "()V", "GetBaseMethodHandler")]
-		public virtual unsafe void BaseMethod ()
+		public virtual void BaseMethod ()
 		{
-			const string __id = "baseMethod.()V";
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "baseMethod.()V";
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			}
 		}
 
 	}

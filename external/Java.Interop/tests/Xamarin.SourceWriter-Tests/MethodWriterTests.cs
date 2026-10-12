@@ -28,5 +28,26 @@ namespace Xamarin.SourceWriter.Tests
 
 			Assert.AreEqual (expected, sw.ToString ());
 		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void UnsafeBodyDoesNotChangeCallerContract (bool requiresUnsafe)
+		{
+			var method = new MethodWriter {
+				Name = "Read",
+				ReturnType = new TypeReferenceWriter ("int"),
+				IsPublic = true,
+				IsUnsafe = requiresUnsafe,
+				HasUnsafeBody = true,
+			};
+			method.Body.Add ("return ReadNative ();");
+
+			var sw = new StringWriter ();
+			method.Write (new CodeWriter (sw));
+
+			Assert.AreEqual (
+				$"public {(requiresUnsafe ? "unsafe " : "")}int Read ()\n{{\n\tunsafe {{\n\t\treturn ReadNative ();\n\t}}\n}}\n",
+				sw.ToString ().Replace ("\r\n", "\n"));
+		}
 	}
 }

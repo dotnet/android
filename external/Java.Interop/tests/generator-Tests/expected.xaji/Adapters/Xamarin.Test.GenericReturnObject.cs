@@ -40,23 +40,30 @@ namespace Xamarin.Test {
 		static IntPtr n_GenericReturn (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GenericReturn);
 			}
 		}
 		private static IntPtr __n_GenericReturn (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='GenericReturnObject']/method[@name='GenericReturn' and count(parameter)=0]"
 		[Register ("GenericReturn", "()Lxamarin/test/AdapterView;", "GetGenericReturnHandler")]
-		public virtual unsafe global::Xamarin.Test.AdapterView GenericReturn ()
+		public virtual global::Xamarin.Test.AdapterView GenericReturn ()
 		{
-			const string __id = "GenericReturn.()Lxamarin/test/AdapterView;";
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-			return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "GenericReturn.()Lxamarin/test/AdapterView;";
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 
 	}

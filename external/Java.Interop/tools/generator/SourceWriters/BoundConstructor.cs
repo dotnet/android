@@ -42,9 +42,11 @@ namespace generator.SourceWriters
 				Attributes.Add (new CustomAttr (constructor.Annotation));
 
 			SetVisibility (constructor.Visibility);
-			IsUnsafe = true;
+			HasUnsafeBody = true;
 
-			BaseCall = $"{(useBase ? "base" : "this")} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
+			BaseCall = SourceWriterExtensions.UsesDeferredThrowableConstructor (klass)
+				? $"{(useBase ? "base" : "this")} (global::Java.Interop.JniObjectReferenceOptions.None)"
+				: $"{(useBase ? "base" : "this")} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
 			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
 
 			this.AddMethodParameters (constructor.Parameters, opt);
@@ -52,6 +54,7 @@ namespace generator.SourceWriters
 
 		protected override void WriteBody (CodeWriter writer)
 		{
+			writer.WriteLine (SourceWriterExtensions.JniCallSafetyComment);
 			writer.WriteLine ("{0}string __id = \"{1}\";",
 						constructor.IsNonStaticNestedType ? "" : "const ",
 						constructor.IsNonStaticNestedType

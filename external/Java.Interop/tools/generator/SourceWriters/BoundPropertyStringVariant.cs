@@ -48,6 +48,8 @@ namespace generator.SourceWriters
 				return;
 
 			HasSet = true;
+			HasUnsafeSetterBody = true;
+			SetBody.Add ("// SAFETY: Temporary Java strings remain live until the property assignment completes.");
 
 			if (is_array) {
 				SetBody.Add ($"global::Java.Lang.ICharSequence[] jlsa = {arrayConvertMethod} (value);");
@@ -60,7 +62,6 @@ namespace generator.SourceWriters
 					SetBody.Add ($"if (jls != null) jls.Dispose ();");
 				} else {
 					// Emit a "fast" path if the property is non-virtual
-					IsUnsafe = true;
 					var method = property.Setter;
 					var parameter = method.Parameters [0];
 

@@ -17,22 +17,29 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	private static void n_DoDefault (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoDefault);
 		}
 	}
 	private static void __n_DoDefault (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.DoDefault ();
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.DoDefault ();
+		}
 	}
 #pragma warning restore 0169
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoDefault' and count(parameter)=0]"
 	[Register ("DoDefault", "()V", "GetDoDefaultHandler:java.code.IMyInterface, MyAssembly")]
-	virtual unsafe void DoDefault ()
+	virtual void DoDefault ()
 	{
-		const string __id = "DoDefault.()V";
-		_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "DoDefault.()V";
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+		}
 	}
 
 }
@@ -61,20 +68,27 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoDeclaration);
 		}
 	}
 	private static void __n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.DoDeclaration ();
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.DoDeclaration ();
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe void DoDeclaration ()
+	public void DoDeclaration ()
 	{
-		const string __id = "DoDeclaration.()V";
-		_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "DoDeclaration.()V";
+			_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+		}
 	}
 
 }

@@ -177,7 +177,7 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public virtual unsafe int Bar"));
+			Assert.True (writer.ToString ().Contains ("public virtual int Bar"));
 		}
 
 		[Test]

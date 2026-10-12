@@ -43,9 +43,10 @@ namespace generator.SourceWriters
 			if (iface.NeedsSender)
 				ctor.Parameters.Add (new MethodParameterWriter ("sender", TypeReferenceWriter.Object));
 
-			ctor.IsUnsafe = true;
+			ctor.HasUnsafeBody = true;
 			ctor.BaseCall = "base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
 
+			ctor.Body.Add (SourceWriterExtensions.JniCallSafetyComment);
 			ctor.Body.Add ("const string __id = \"()V\";");
 			ctor.Body.Add ("if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)");
 			ctor.Body.Add ("\treturn;");

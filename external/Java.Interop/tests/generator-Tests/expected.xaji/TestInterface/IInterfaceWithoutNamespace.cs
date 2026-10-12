@@ -36,20 +36,27 @@ internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Obj
 	static void n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Foo);
 		}
 	}
 	private static void __n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<IInterfaceWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.Foo ();
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<IInterfaceWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.Foo ();
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe void Foo ()
+	public void Foo ()
 	{
-		const string __id = "Foo.()V";
-		_members__InterfaceWithoutNamespace.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "Foo.()V";
+			_members__InterfaceWithoutNamespace.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		}
 	}
 
 }

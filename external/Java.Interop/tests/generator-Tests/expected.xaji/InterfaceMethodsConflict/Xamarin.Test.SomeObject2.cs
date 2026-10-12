@@ -40,22 +40,29 @@ namespace Xamarin.Test {
 		static void n_Irrelevant (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Irrelevant);
 			}
 		}
 		private static void __n_Irrelevant (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Irrelevant ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Irrelevant ();
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject2']/method[@name='irrelevant' and count(parameter)=0]"
 		[Register ("irrelevant", "()V", "GetIrrelevantHandler")]
-		public virtual unsafe void Irrelevant ()
+		public virtual void Irrelevant ()
 		{
-			const string __id = "irrelevant.()V";
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "irrelevant.()V";
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			}
 		}
 
 		static Delegate cb_close_Close_V;
@@ -68,13 +75,17 @@ namespace Xamarin.Test {
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Close);
 			}
 		}
 		private static void __n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Close ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Close ();
+			}
 		}
 #pragma warning restore 0169
 
@@ -100,10 +111,13 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='I1']/method[@name='close' and count(parameter)=0]"
 		[Register ("close", "()V", "GetCloseHandler")]
-		public override unsafe void Close ()
+		public override void Close ()
 		{
-			const string __id = "close.()V";
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "close.()V";
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

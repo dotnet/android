@@ -32,26 +32,35 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='publicMethod' and count(parameter)=0]"
 		[Register ("publicMethod", "()V", "")]
-		public unsafe void PublicMethod ()
+		public void PublicMethod ()
 		{
-			const string __id = "publicMethod.()V";
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "publicMethod.()V";
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='packageMethodB' and count(parameter)=0]"
 		[Register ("packageMethodB", "()V", "")]
-		public unsafe void PackageMethodB ()
+		public void PackageMethodB ()
 		{
-			const string __id = "packageMethodB.()V";
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "packageMethodB.()V";
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='packageMethodA' and count(parameter)=0]"
 		[Register ("packageMethodA", "()V", "")]
-		public unsafe void PackageMethodA ()
+		public void PackageMethodA ()
 		{
-			const string __id = "packageMethodA.()V";
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "packageMethodA.()V";
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

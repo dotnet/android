@@ -26,7 +26,13 @@ namespace Java.IO {
 			get { return _members; }
 		}
 
-		protected IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		/// <safety><paramref name="javaReference"/> must be a live JNI throwable reference compatible with this type; <paramref name="transfer"/> must match its ownership.</safety>
+		protected unsafe IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
+
+		// Initializes an empty peer; the Java constructor is invoked by the derived binding.
+		protected IOException (global::Java.Interop.JniObjectReferenceOptions options) : base (options)
 		{
 		}
 
@@ -40,29 +46,37 @@ namespace Java.IO {
 		static void n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_PrintStackTrace);
 			}
 		}
 		private static void __n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.IOException> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.PrintStackTrace ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.IOException> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.PrintStackTrace ();
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='IOException']/method[@name='printStackTrace' and count(parameter)=0]"
 		[Register ("printStackTrace", "()V", "GetPrintStackTraceHandler")]
-		public virtual unsafe void PrintStackTrace ()
+		public virtual void PrintStackTrace ()
 		{
-			const string __id = "printStackTrace.()V";
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "printStackTrace.()V";
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			}
 		}
 
 	}
 
 	[global::Android.Runtime.Register ("java/io/IOException", DoNotGenerateAcw=true)]
 	internal partial class IOExceptionInvoker : IOException {
-		public IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		/// <safety><paramref name="handle"/> must be a live JNI throwable reference compatible with this type; <paramref name="transfer"/> must match its ownership.</safety>
+		public unsafe IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
 

@@ -21,31 +21,40 @@ public abstract class Parent : Java.Lang.Object {
 	[global::System.Obsolete (@"Use 'Com.Xamarin.Android.IParent.ApiName'. This class will be removed in a future release.")]
 	public static string ApiName {
 		get {
-			const string __id = "API_NAME.Ljava/lang/String;";
+			unsafe {
+				// SAFETY: The string reference comes from the generated Java field and is consumed exactly once.
+				const string __id = "API_NAME.Ljava/lang/String;";
 
-			var __v = _members.StaticFields.GetObjectValue (__id);
-			return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				var __v = _members.StaticFields.GetObjectValue (__id);
+				return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparing' and count(parameter)=0]"
 	[global::System.Obsolete (@"Use 'Com.Xamarin.Android.IParent.Comparing'. This class will be removed in a future release.")]
 	[Register ("comparing", "()I", "")]
-	public static unsafe int Comparing ()
+	public static int Comparing ()
 	{
-		const string __id = "comparing.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "comparing.()I";
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparingOld' and count(parameter)=0]"
 	[global::System.Obsolete (@"deprecated")]
 	[Register ("comparingOld", "()I", "")]
-	public static unsafe int ComparingOld ()
+	public static int ComparingOld ()
 	{
-		const string __id = "comparingOld.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "comparingOld.()I";
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 	static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/Parent", typeof (Parent));
@@ -71,30 +80,39 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 	[Register ("API_NAME")]
 	public static string ApiName {
 		get {
-			const string __id = "API_NAME.Ljava/lang/String;";
+			unsafe {
+				// SAFETY: The string reference comes from the generated Java field and is consumed exactly once.
+				const string __id = "API_NAME.Ljava/lang/String;";
 
-			var __v = _members.StaticFields.GetObjectValue (__id);
-			return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				var __v = _members.StaticFields.GetObjectValue (__id);
+				return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparing' and count(parameter)=0]"
 	[Register ("comparing", "()I", "")]
-	public static unsafe int Comparing ()
+	public static int Comparing ()
 	{
-		const string __id = "comparing.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "comparing.()I";
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparingOld' and count(parameter)=0]"
 	[global::System.Obsolete (@"deprecated")]
 	[Register ("comparingOld", "()I", "")]
-	public static unsafe int ComparingOld ()
+	public static int ComparingOld ()
 	{
-		const string __id = "comparingOld.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "comparingOld.()I";
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 }

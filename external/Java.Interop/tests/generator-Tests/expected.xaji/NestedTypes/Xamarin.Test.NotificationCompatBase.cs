@@ -54,23 +54,30 @@ namespace Xamarin.Test {
 				static IntPtr n_Build_I (IntPtr jnienv, IntPtr native__this, int p0)
 				{
 					unsafe {
+						// SAFETY: JNI supplies live references matching the registered callback signature.
 						return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, p0, &__n_Build_I);
 					}
 				}
 				private static IntPtr __n_Build_I (IntPtr jnienv, IntPtr native__this, int p0)
 				{
-					var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action.IFactory> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-					return JNIEnv.ToLocalJniHandle (__this.Build (p0));
+					unsafe {
+						// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+						var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action.IFactory> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+						return JNIEnv.ToLocalJniHandle (__this.Build (p0));
+					}
 				}
 #pragma warning restore 0169
 
-				public unsafe global::Xamarin.Test.NotificationCompatBase.Action Build (int p0)
+				public global::Xamarin.Test.NotificationCompatBase.Action Build (int p0)
 				{
-					const string __id = "build.(I)Lxamarin/test/NotificationCompatBase$Action;";
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (p0);
-					var __rm = _members_xamarin_test_NotificationCompatBase_Action_Factory.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+					unsafe {
+						// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+						const string __id = "build.(I)Lxamarin/test/NotificationCompatBase$Action;";
+						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+						__args [0] = new JniArgumentValue (p0);
+						var __rm = _members_xamarin_test_NotificationCompatBase_Action_Factory.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+						return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+					}
 				}
 
 			}
@@ -122,19 +129,22 @@ namespace Xamarin.Test {
 
 			// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='NotificationCompatBase.InstanceInner']/constructor[@name='NotificationCompatBase.InstanceInner' and count(parameter)=1 and parameter[1][@type='xamarin.test.NotificationCompatBase']]"
 			[Register (".ctor", "(Lxamarin/test/NotificationCompatBase;)V", "")]
-			public unsafe InstanceInner (global::Xamarin.Test.NotificationCompatBase __self) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+			public InstanceInner (global::Xamarin.Test.NotificationCompatBase __self) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 			{
-				string __id = "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V";
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					string __id = "(L" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + ";)V";
 
-				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-					return;
+					if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+						return;
 
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((__self == null) ? IntPtr.Zero : ((global::Java.Lang.Object) __self).Handle);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-				global::System.GC.KeepAlive (__self);
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue ((__self == null) ? IntPtr.Zero : ((global::Java.Lang.Object) __self).Handle);
+					var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+					global::System.GC.KeepAlive (__self);
+				}
 			}
 
 		}

@@ -33,20 +33,27 @@ internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInter
 	static void n_DoSomething (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoSomething);
 		}
 	}
 	private static void __n_DoSomething (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.DoSomething ();
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.DoSomething ();
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe void DoSomething ()
+	public void DoSomething ()
 	{
-		const string __id = "DoSomething.()V";
-		_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "DoSomething.()V";
+			_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+		}
 	}
 
 }

@@ -32,16 +32,19 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='ExtendPublicClass']/constructor[@name='ExtendPublicClass' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe ExtendPublicClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public ExtendPublicClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			const string __id = "()V";
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "()V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
 
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 		}
 
 		static Delegate cb_foo_Foo_V;
@@ -54,22 +57,29 @@ namespace Xamarin.Test {
 		static void n_Foo (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Foo);
 			}
 		}
 		private static void __n_Foo (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.ExtendPublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Foo ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.ExtendPublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Foo ();
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='ExtendPublicClass']/method[@name='foo' and count(parameter)=0]"
 		[Register ("foo", "()V", "GetFooHandler")]
-		public virtual unsafe void Foo ()
+		public virtual void Foo ()
 		{
-			const string __id = "foo.()V";
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "foo.()V";
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			}
 		}
 
 	}

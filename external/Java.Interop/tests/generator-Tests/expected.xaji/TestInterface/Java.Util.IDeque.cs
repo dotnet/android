@@ -43,30 +43,37 @@ namespace Java.Util {
 		static sbyte n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_e, &__n_Add_Ljava_lang_Object_);
 			}
 		}
 		private static sbyte __n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var e = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_e, JniHandleOwnership.DoNotTransfer);
-			sbyte __ret = __this.Add (e) ? (sbyte)1 : (sbyte)0;
-			return __ret;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var e = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_e, JniHandleOwnership.DoNotTransfer);
+				sbyte __ret = __this.Add (e) ? (sbyte)1 : (sbyte)0;
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe bool Add (global::Java.Lang.Object e)
+		public bool Add (global::Java.Lang.Object e)
 		{
-			const string __id = "add.(Ljava/lang/Object;)Z";
-			IntPtr native_e = JNIEnv.ToLocalJniHandle (e);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_e);
-				var __rm = _members_java_util_Deque.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-				return __rm;
-			} finally {
-				JNIEnv.DeleteLocalRef (native_e);
-				global::System.GC.KeepAlive (e);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "add.(Ljava/lang/Object;)Z";
+				IntPtr native_e = JNIEnv.ToLocalJniHandle (e);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_e);
+					var __rm = _members_java_util_Deque.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+					return __rm;
+				} finally {
+					JNIEnv.DeleteLocalRef (native_e);
+					global::System.GC.KeepAlive (e);
+				}
 			}
 		}
 
@@ -80,20 +87,27 @@ namespace Java.Util {
 		static void n_Clear (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Clear);
 			}
 		}
 		private static void __n_Clear (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Clear ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Clear ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void Clear ()
+		public void Clear ()
 		{
-			const string __id = "clear.()V";
-			_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "clear.()V";
+				_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

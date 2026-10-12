@@ -38,20 +38,27 @@ namespace Xamarin.Test {
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Close);
 			}
 		}
 		private static void __n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.II1> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Close ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.II1> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Close ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void Close ()
+		public void Close ()
 		{
-			const string __id = "close.()V";
-			_members_xamarin_test_I1.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "close.()V";
+				_members_xamarin_test_I1.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

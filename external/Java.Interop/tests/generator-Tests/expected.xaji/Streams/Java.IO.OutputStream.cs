@@ -32,16 +32,19 @@ namespace Java.IO {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/constructor[@name='OutputStream' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe OutputStream () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public OutputStream () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			const string __id = "()V";
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "()V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
 
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 		}
 
 		static Delegate cb_close_Close_V;
@@ -54,22 +57,29 @@ namespace Java.IO {
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Close);
 			}
 		}
 		private static void __n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Close ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Close ();
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='close' and count(parameter)=0]"
 		[Register ("close", "()V", "GetCloseHandler")]
-		public virtual unsafe void Close ()
+		public virtual void Close ()
 		{
-			const string __id = "close.()V";
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "close.()V";
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			}
 		}
 
 		static Delegate cb_flush_Flush_V;
@@ -82,22 +92,29 @@ namespace Java.IO {
 		static void n_Flush (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Flush);
 			}
 		}
 		private static void __n_Flush (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Flush ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Flush ();
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='flush' and count(parameter)=0]"
 		[Register ("flush", "()V", "GetFlushHandler")]
-		public virtual unsafe void Flush ()
+		public virtual void Flush ()
 		{
-			const string __id = "flush.()V";
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "flush.()V";
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			}
 		}
 
 		static Delegate cb_write_Write_arrayB_V;
@@ -110,35 +127,42 @@ namespace Java.IO {
 		static void n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_buffer, &__n_Write_arrayB);
 			}
 		}
 		private static void __n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			__this.Write (buffer);
-			if (buffer != null)
-				JNIEnv.CopyArray (buffer, native_buffer);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				__this.Write (buffer);
+				if (buffer != null)
+					JNIEnv.CopyArray (buffer, native_buffer);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='byte[]']]"
 		[Register ("write", "([B)V", "GetWrite_arrayBHandler")]
-		public virtual unsafe void Write (byte[] buffer)
+		public virtual void Write (byte[] buffer)
 		{
-			const string __id = "write.([B)V";
-			IntPtr native_buffer = JNIEnv.NewArray (buffer);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_buffer);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				if (buffer != null) {
-					JNIEnv.CopyArray (native_buffer, buffer);
-					JNIEnv.DeleteLocalRef (native_buffer);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "write.([B)V";
+				IntPtr native_buffer = JNIEnv.NewArray (buffer);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_buffer);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					if (buffer != null) {
+						JNIEnv.CopyArray (native_buffer, buffer);
+						JNIEnv.DeleteLocalRef (native_buffer);
+					}
+					global::System.GC.KeepAlive (buffer);
 				}
-				global::System.GC.KeepAlive (buffer);
 			}
 		}
 
@@ -152,37 +176,44 @@ namespace Java.IO {
 		static void n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_buffer, offset, count, &__n_Write_arrayBII);
 			}
 		}
 		private static void __n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			__this.Write (buffer, offset, count);
-			if (buffer != null)
-				JNIEnv.CopyArray (buffer, native_buffer);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				__this.Write (buffer, offset, count);
+				if (buffer != null)
+					JNIEnv.CopyArray (buffer, native_buffer);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=3 and parameter[1][@type='byte[]'] and parameter[2][@type='int'] and parameter[3][@type='int']]"
 		[Register ("write", "([BII)V", "GetWrite_arrayBIIHandler")]
-		public virtual unsafe void Write (byte[] buffer, int offset, int count)
+		public virtual void Write (byte[] buffer, int offset, int count)
 		{
-			const string __id = "write.([BII)V";
-			IntPtr native_buffer = JNIEnv.NewArray (buffer);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [3];
-				__args [0] = new JniArgumentValue (native_buffer);
-				__args [1] = new JniArgumentValue (offset);
-				__args [2] = new JniArgumentValue (count);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				if (buffer != null) {
-					JNIEnv.CopyArray (native_buffer, buffer);
-					JNIEnv.DeleteLocalRef (native_buffer);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "write.([BII)V";
+				IntPtr native_buffer = JNIEnv.NewArray (buffer);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [3];
+					__args [0] = new JniArgumentValue (native_buffer);
+					__args [1] = new JniArgumentValue (offset);
+					__args [2] = new JniArgumentValue (count);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					if (buffer != null) {
+						JNIEnv.CopyArray (native_buffer, buffer);
+						JNIEnv.DeleteLocalRef (native_buffer);
+					}
+					global::System.GC.KeepAlive (buffer);
 				}
-				global::System.GC.KeepAlive (buffer);
 			}
 		}
 
@@ -196,13 +227,17 @@ namespace Java.IO {
 		static void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, oneByte, &__n_Write_I);
 			}
 		}
 		private static void __n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Write (oneByte);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Write (oneByte);
+			}
 		}
 #pragma warning restore 0169
 
@@ -228,12 +263,15 @@ namespace Java.IO {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("write", "(I)V", "GetWrite_IHandler")]
-		public override unsafe void Write (int oneByte)
+		public override void Write (int oneByte)
 		{
-			const string __id = "write.(I)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (oneByte);
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "write.(I)V";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (oneByte);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			}
 		}
 
 	}

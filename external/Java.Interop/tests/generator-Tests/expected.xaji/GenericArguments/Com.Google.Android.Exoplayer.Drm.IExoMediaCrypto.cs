@@ -38,29 +38,36 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static sbyte n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_p0, &__n_RequiresSecureDecoderComponent_Ljava_lang_String_);
 			}
 		}
 		private static sbyte __n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var p0 = JNIEnv.GetString (native_p0, JniHandleOwnership.DoNotTransfer);
-			sbyte __ret = __this.RequiresSecureDecoderComponent (p0) ? (sbyte)1 : (sbyte)0;
-			return __ret;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var p0 = JNIEnv.GetString (native_p0, JniHandleOwnership.DoNotTransfer);
+				sbyte __ret = __this.RequiresSecureDecoderComponent (p0) ? (sbyte)1 : (sbyte)0;
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe bool RequiresSecureDecoderComponent (string p0)
+		public bool RequiresSecureDecoderComponent (string p0)
 		{
-			const string __id = "requiresSecureDecoderComponent.(Ljava/lang/String;)Z";
-			IntPtr native_p0 = JNIEnv.NewString ((string)p0);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_p0);
-				var __rm = _members_com_google_android_exoplayer_drm_ExoMediaCrypto.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-				return __rm;
-			} finally {
-				JNIEnv.DeleteLocalRef (native_p0);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "requiresSecureDecoderComponent.(Ljava/lang/String;)Z";
+				IntPtr native_p0 = JNIEnv.NewString ((string)p0);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_p0);
+					var __rm = _members_com_google_android_exoplayer_drm_ExoMediaCrypto.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+					return __rm;
+				} finally {
+					JNIEnv.DeleteLocalRef (native_p0);
+				}
 			}
 		}
 

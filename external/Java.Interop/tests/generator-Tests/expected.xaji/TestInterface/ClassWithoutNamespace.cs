@@ -30,16 +30,19 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='']/class[@name='ClassWithoutNamespace']/constructor[@name='ClassWithoutNamespace' and count(parameter)=0]"
 	[Register (".ctor", "()V", "")]
-	public unsafe ClassWithoutNamespace () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	public ClassWithoutNamespace () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
-		const string __id = "()V";
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "()V";
 
-		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-			return;
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
 
-		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+		}
 	}
 
 	static Delegate cb_Foo_Foo_V;
@@ -52,13 +55,17 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 	static void n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Foo);
 		}
 	}
 	private static void __n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<ClassWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.Foo ();
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<ClassWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.Foo ();
+		}
 	}
 #pragma warning restore 0169
 
@@ -84,10 +91,13 @@ internal partial class ClassWithoutNamespaceInvoker : ClassWithoutNamespace {
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='']/interface[@name='InterfaceWithoutNamespace']/method[@name='Foo' and count(parameter)=0]"
 	[Register ("Foo", "()V", "GetFooHandler")]
-	public override unsafe void Foo ()
+	public override void Foo ()
 	{
-		const string __id = "Foo.()V";
-		_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "Foo.()V";
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		}
 	}
 
 }
