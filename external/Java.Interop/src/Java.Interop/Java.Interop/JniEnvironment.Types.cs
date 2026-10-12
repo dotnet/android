@@ -350,10 +350,11 @@ namespace Java.Interop
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
 			/// </summary>
 			/// <remarks>
-			/// The backing storage must remain NUL-terminated. C# UTF-8 literals provide a
+			/// The caller must ensure the backing storage remains readable and NUL-terminated
+			/// for the duration of the call. C# UTF-8 literals provide a
 			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
 			/// </remarks>
-			public static JniObjectReference FindClass (ReadOnlySpan<byte> classname)
+			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
 			{
 				return TryFindClass (classname, throwOnError: true);
 			}
@@ -363,10 +364,11 @@ namespace Java.Interop
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
 			/// </summary>
 			/// <remarks>
-			/// The backing storage must remain NUL-terminated. C# UTF-8 literals provide a
+			/// The caller must ensure the backing storage remains readable and NUL-terminated
+			/// for the duration of the call. C# UTF-8 literals provide a
 			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
 			/// </remarks>
-			public static bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
+			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
 			{
 				instance = TryFindClass (classname, throwOnError: false);
 				return instance.IsValid;

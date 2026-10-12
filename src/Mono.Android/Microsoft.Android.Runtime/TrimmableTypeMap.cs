@@ -97,8 +97,8 @@ public class TrimmableTypeMap
 					"TrimmableTypeMap has not been initialized. Ensure the JNI runtime is initialized.");
 			}
 
-			using var runtimeClass = new JniType ("mono/android/Runtime"u8);
 			unsafe {
+				using var runtimeClass = new JniType ("mono/android/Runtime"u8);
 				fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
 					var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
 					var method = new JniNativeMethod (name, sig, onRegisterNatives);

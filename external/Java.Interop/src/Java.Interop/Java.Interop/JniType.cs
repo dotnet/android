@@ -17,6 +17,11 @@ using Java.Interop;
 
 namespace Java.Interop {
 
+	/// <remarks>
+	/// For overloads accepting UTF-8 spans, the caller must ensure each span has readable
+	/// NUL-terminated backing storage for the duration of the call. Complete C# UTF-8 literals
+	/// provide a terminator beyond their span length; copies and slices do not carry that guarantee.
+	/// </remarks>
 	public sealed class JniType : IDisposable {
 
 		[return: NotNullIfNotNull ("classFileData")]
@@ -60,11 +65,11 @@ namespace Java.Interop {
 			if (classname == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (classname));
 
-			ReadOnlySpan<byte> name;
+			JniObjectReference peer;
 			unsafe {
-				name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)classname);
+				var name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)classname);
+				peer = JniEnvironment.Types.FindClass (name);
 			}
-			var peer = JniEnvironment.Types.FindClass (name);
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -395,114 +400,145 @@ namespace Java.Interop {
 		/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
 		/// </summary>
 		/// <remarks>
-		/// The backing storage must remain NUL-terminated. C# UTF-8 literals provide a
+		/// The caller must ensure the backing storage remains readable and NUL-terminated
+		/// for the duration of the call. C# UTF-8 literals provide a
 		/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
 		/// </remarks>
-		public JniType (ReadOnlySpan<byte> classname)
+		public unsafe JniType (ReadOnlySpan<byte> classname)
 		{
-			var peer = JniEnvironment.Types.FindClass (classname);
+			JniObjectReference peer;
+			unsafe {
+				peer = JniEnvironment.Types.FindClass (classname);
+			}
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		public static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
+		public static unsafe JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
-			var t = new JniType (classname);
+			JniType t;
+			unsafe {
+				t = new JniType (classname);
+			}
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
 			return cachedType;
 		}
 
-		public JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
+		public unsafe JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature);
+			unsafe {
+				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature);
+			}
 		}
 
-		public JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
+		public unsafe JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature);
+			unsafe {
+				return GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature);
+			}
 		}
 
-		public JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
+			}
 		}
 
-		public JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
-			var m = GetInstanceField (name, signature);
+			JniFieldInfo m;
+			unsafe {
+				m = GetInstanceField (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
 			return cachedField;
 		}
 
-		public JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
+			}
 		}
 
-		public JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
-			var m = GetStaticField (name, signature);
+			JniFieldInfo m;
+			unsafe {
+				m = GetStaticField (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
 			return cachedField;
 		}
 
-		public JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
+			}
 		}
 
-		public JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
-			var m = GetInstanceMethod (name, signature);
+			JniMethodInfo m;
+			unsafe {
+				m = GetInstanceMethod (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
 			return cachedMethod;
 		}
 
-		public JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
+			}
 		}
 
-		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		public unsafe JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
-			var m = GetStaticMethod (name, signature);
+			JniMethodInfo m;
+			unsafe {
+				m = GetStaticMethod (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
