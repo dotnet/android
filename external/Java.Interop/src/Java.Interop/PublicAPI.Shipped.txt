@@ -821,7 +821,7 @@ static unsafe Java.Interop.JniEnvironment.Strings.ReleaseStringChars(Java.Intero
 static Java.Interop.JniEnvironment.Strings.ToString(Java.Interop.JniObjectReference value) -> string?
 static Java.Interop.JniEnvironment.Strings.ToString(nint reference) -> string?
 static Java.Interop.JniEnvironment.Strings.ToString(ref Java.Interop.JniObjectReference value, Java.Interop.JniObjectReferenceOptions transfer) -> string?
-static Java.Interop.JniEnvironment.Types.DefineClass(string! name, Java.Interop.JniObjectReference loader, nint buffer, int bufferLength) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.Types.DefineClass(string! name, Java.Interop.JniObjectReference loader, nint buffer, int bufferLength) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Types.FindClass(string! classname) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Types.GetJniTypeNameFromClass(Java.Interop.JniObjectReference type) -> string?
 static Java.Interop.JniEnvironment.Types.GetJniTypeNameFromInstance(Java.Interop.JniObjectReference instance) -> string?
@@ -831,8 +831,8 @@ static Java.Interop.JniEnvironment.Types.GetTypeFromInstance(Java.Interop.JniObj
 static Java.Interop.JniEnvironment.Types.IsAssignableFrom(Java.Interop.JniObjectReference class1, Java.Interop.JniObjectReference class2) -> bool
 static Java.Interop.JniEnvironment.Types.IsInstanceOf(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type) -> bool
 static Java.Interop.JniEnvironment.Types.IsSameObject(Java.Interop.JniObjectReference object1, Java.Interop.JniObjectReference object2) -> bool
-static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods) -> void
-static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods, int numMethods) -> void
+static unsafe Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods) -> void
+static unsafe Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods, int numMethods) -> void
 static Java.Interop.JniEnvironment.Types.TryFindClass(string! classname, out Java.Interop.JniObjectReference instance) -> bool
 static Java.Interop.JniEnvironment.Types.UnregisterNatives(Java.Interop.JniObjectReference type) -> void
 static Java.Interop.JniEnvironment.WithinNewObjectScope.get -> bool
