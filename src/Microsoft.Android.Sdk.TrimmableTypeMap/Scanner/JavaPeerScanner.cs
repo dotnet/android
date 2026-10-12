@@ -839,8 +839,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		// Pass 4: detect interface method implementations.
 		// When a type implements a Java interface (e.g., IOnClickListener), the
-		// implementing method may not have [Register]. The legacy pipeline adds
-		// these via the interface loop in CecilImporter.cs lines 100-120.
+		// implementing method may not have [Register].
 		if (registeredMethodKeys is not null) {
 			CollectInterfaceMethodImplementations (typeDef, index, methods, registeredMethodKeys);
 		}
@@ -1083,7 +1082,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Detects methods from implemented Java interfaces that aren't directly [Register]'d
-	/// on the implementing type. Mirrors the legacy CecilImporter interface loop (lines 100-120):
+	/// on the implementing type:
 	/// for each implemented interface with [Register], adds its registered methods to the type.
 	/// </summary>
 	void CollectInterfaceMethodImplementations (TypeDefinition typeDef, AssemblyIndex index,
@@ -1174,7 +1173,6 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Detects Java constructors by chaining from base registered ctors.
-	/// Mirrors the legacy CecilImporter behavior:
 	/// 1. Walk the base type hierarchy collecting registered ctors (stopping at DoNotGenerateAcw)
 	/// 2. Add all base registered ctors as seed constructors (legacy adds them to the wrapper directly)
 	/// 3. For each ctor on this type without [Register], accept it if a base registered ctor
@@ -1200,8 +1198,6 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		// Add all base registered ctors as seed constructors.
-		// Legacy CecilImporter processes base types first (ctorTypes is reversed) and adds
-		// their registered ctors directly to the wrapper's Constructors list.
 		bool hasParameterlessBaseCtor = false;
 		foreach (var baseCtor in baseRegisteredCtors) {
 			var signature = baseCtor.RegisterInfo.Signature;
@@ -1253,7 +1249,6 @@ public sealed class JavaPeerScanner : IDisposable
 			// and compute its JNI signature from the managed parameter types.
 			// The generated Java ctor calls super() (the parameterless base ctor),
 			// then delegates to nctor_N(...) which handles the args on the managed side.
-			// This matches legacy CecilImporter behavior (CecilImporter.cs:394-397).
 			if (hasParameterlessBaseCtor) {
 				var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
 				var jniSignature = BuildJniCtorSignature (sig);
@@ -1477,7 +1472,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Walks the base type hierarchy collecting constructors that have [Register] attributes.
-	/// Stops after the first base type with DoNotGenerateAcw=true (matching legacy CecilImporter).
+	/// Stops after the first base type with DoNotGenerateAcw=true.
 	/// Returns them ordered from nearest base to furthest ancestor.
 	/// </summary>
 	List<BaseCtorInfo> CollectBaseRegisteredCtors (TypeDefinition typeDef, AssemblyIndex index)
@@ -1501,7 +1496,7 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			// Stop after the first MCW base type — its registered ctors are collected above,
-			// but we don't need to walk further up (matching legacy CecilImporter behavior).
+			// but we don't need to walk further up.
 			if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
 				break;
 			}
@@ -2208,7 +2203,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Parses an [ExportField] attribute as a marshal method registration.
 	/// [ExportField] methods use the managed method name as the JNI name and have
-	/// a connector of "__export__" (matching legacy CecilImporter behavior).
+	/// a connector of "__export__".
 	/// </summary>
 	(RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportFieldAsMethod (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{

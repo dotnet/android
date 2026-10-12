@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
@@ -2666,18 +2667,44 @@ namespace Xamarin.Android.Build.Tests {
 			var toolsDir = TestEnvironment.AndroidMSBuildDirectory;
 
 			foreach (var file in new [] {
+				"java_runtime_trimmable.jar",
+				"java_runtime_trimmable.dex",
+			}) {
+				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
+			}
+
+			foreach (var file in new [] {
 				"java_runtime.jar",
 				"java_runtime.dex",
 				"java_runtime_fastdev.jar",
 				"java_runtime_fastdev.dex",
-				"java_runtime_trimmable.jar",
-				"java_runtime_trimmable.dex",
 				"java_runtime_clr.jar",
 				"java_runtime_clr.dex",
 				"java_runtime_fastdev_clr.jar",
 				"java_runtime_fastdev_clr.dex",
 			}) {
-				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
+				FileAssert.DoesNotExist (Path.Combine (toolsDir, file), $"{file} should not exist in the SDK pack.");
+			}
+
+			using var runtimeJar = ZipFile.OpenRead (Path.Combine (toolsDir, "java_runtime_trimmable.jar"));
+			foreach (var entry in new [] {
+				"mono/android/Runtime.class",
+				"mono/android/IGCUserPeer.class",
+				"mono/android/GCUserPeer.class",
+				"mono/MonoPackageManager.class",
+				"mono/NativeLibraryHelper.class",
+			}) {
+				Assert.IsNotNull (runtimeJar.GetEntry (entry), $"{entry} must remain in the runtime JAR.");
+			}
+			foreach (var entry in new [] {
+				"mono/android/DebugRuntime.class",
+				"mono/android/BuildConfig.class",
+				"mono/android/app/XamarinAndroidEnvironmentVariables.class",
+				"mono/MonoPackageManager_Resources.class",
+				"net/dot/android/ApplicationRegistration.class",
+				"classes.dex",
+			}) {
+				Assert.IsNull (runtimeJar.GetEntry (entry), $"{entry} must not be packaged in the runtime JAR.");
 			}
 		}
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -11,6 +12,87 @@ namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Children)]
 	public class GenerateTrimmableTypeMapTests : BaseTest {
+
+		[TestCase (false, false, false)]
+		[TestCase (false, false, true)]
+		[TestCase (false, true, false)]
+		[TestCase (false, true, true)]
+		[TestCase (true, false, false)]
+		[TestCase (true, false, true)]
+		[TestCase (true, true, false)]
+		[TestCase (true, true, true)]
+		public void ConstructorCallbacksMatchJavaCallSites (bool isAbstract, bool deferred, bool hasCallback)
+		{
+			var constructor = new MarshalMethodInfo {
+				JniName = ".ctor",
+				JniSignature = "()V",
+				NativeCallbackName = "n_ctor",
+				ManagedMethodName = ".ctor",
+				IsConstructor = true,
+			};
+			var callback = new MarshalMethodInfo {
+				JniName = "onCallback",
+				JniSignature = "()V",
+				NativeCallbackName = "n_onCallback",
+				ManagedMethodName = "OnCallback",
+				Connector = "GetOnCallbackHandler",
+			};
+			var peer = new JavaPeerInfo {
+				JavaName = "example/Peer",
+				CompatJniName = "example/Peer",
+				ManagedTypeName = "Example.Peer",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Peer",
+				AssemblyName = "Example",
+				BaseJavaName = "java/lang/Object",
+				IsAbstract = isAbstract,
+				CannotRegisterInStaticConstructor = deferred,
+				ActivationCtor = new ActivationCtorInfo {
+					DeclaringTypeName = "Example.Peer",
+					DeclaringAssemblyName = "Example",
+					DeclaringType = new TypeRefData { ManagedTypeName = "Example.Peer", AssemblyName = "Example" },
+					Style = ActivationCtorStyle.XamarinAndroid,
+				},
+				JavaConstructors = [new JavaConstructorInfo { JniSignature = "()V", ConstructorIndex = 0 }],
+				MarshalMethods = hasCallback ? [constructor, callback] : [constructor],
+			};
+			using var writer = new StringWriter ();
+			new JcwJavaSourceGenerator ().Generate (peer, writer);
+			var java = writer.ToString ();
+			StringAssert.Contains ("public Peer ()", java);
+			StringAssert.Contains ("super ();", java);
+			StringAssert.Contains ("mono.android.IGCUserPeer", java);
+			StringAssert.Contains ("private java.util.ArrayList refList;", java);
+			StringAssert.DoesNotContain ("__md_methods", java);
+
+			bool hasNativeConstructor = !isAbstract && !deferred;
+			Assert.AreEqual (hasNativeConstructor, java.Contains ("if (getClass () == Peer.class) nctor_0 ();", StringComparison.Ordinal));
+			Assert.AreEqual (hasNativeConstructor, java.Contains ("private native void nctor_0 ();", StringComparison.Ordinal));
+			Assert.AreEqual (deferred && hasCallback, java.Contains ("private static boolean __md_natives_registered;", StringComparison.Ordinal));
+			Assert.AreEqual (deferred && hasCallback, java.Contains ("private static synchronized void __md_registerNatives ()", StringComparison.Ordinal));
+			Assert.AreEqual (deferred && hasCallback, java.Contains ("__md_registerNatives ();", StringComparison.Ordinal));
+			Assert.AreEqual (hasCallback, java.Contains ("public native void n_onCallback ();", StringComparison.Ordinal));
+
+			var generator = new TypeMapAssemblyGenerator (new Version (11, 0));
+			var model = generator.CreateModel ([peer], "_Example.TypeMap");
+			var proxy = model.ProxyTypes.Single ();
+			Assert.AreEqual (hasNativeConstructor ? 1 : 0, proxy.UcoConstructors.Count);
+			string [] expectedRegistrations = hasNativeConstructor
+				? (hasCallback ? ["nctor_0", "n_onCallback"] : ["nctor_0"])
+				: (hasCallback ? ["n_onCallback"] : []);
+			CollectionAssert.AreEquivalent (expectedRegistrations,
+				proxy.NativeRegistrations.Select (registration => registration.JniMethodName));
+			Assert.IsNotNull (proxy.ActivationCtor, "Managed peer creation must retain its activation constructor.");
+
+			using var stream = new MemoryStream ();
+			generator.Generate (model, stream, useSharedTypemapUniverse: false);
+			stream.Position = 0;
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
+			var emittedProxy = assembly.MainModule.Types.Single (type => type.Name == proxy.TypeName);
+			Assert.AreEqual (hasNativeConstructor, emittedProxy.Methods.Any (method => method.Name == "nctor_0_uco"));
+			Assert.IsTrue (emittedProxy.Methods.Any (method => method.Name == "CreateInstance"));
+			TestContext.Out.WriteLine ($"abstract={isAbstract}, deferred={deferred}, callback={hasCallback}: Java nctor={hasNativeConstructor}, native registrations=[{string.Join (", ", proxy.NativeRegistrations.Select (registration => registration.JniMethodName))}]");
+		}
 
 		[Test]
 		public void Execute_EmptyAssemblyList_Succeeds ()
