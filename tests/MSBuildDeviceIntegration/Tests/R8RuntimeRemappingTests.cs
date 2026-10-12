@@ -254,6 +254,18 @@ namespace Xamarin.Android.Build.Tests
 				""");
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.MainActivity = proj.MainActivity.Replace ("""Console.WriteLine ("R8_RUNTIME_REMAP_SUCCESS");""", """
+					using (var compressed = new System.IO.MemoryStream ()) {
+						byte [] bytes = System.Text.Encoding.UTF8.GetBytes ("managed-compression");
+						using (var writer = new System.IO.Compression.GZipStream (compressed,
+								System.IO.Compression.CompressionLevel.Fastest, leaveOpen: true))
+							writer.Write (bytes, 0, bytes.Length);
+						compressed.Position = 0;
+						using var reader = new System.IO.Compression.GZipStream (compressed, System.IO.Compression.CompressionMode.Decompress);
+						using var decoded = new System.IO.MemoryStream ();
+						reader.CopyTo (decoded);
+						if (System.Text.Encoding.UTF8.GetString (decoded.ToArray ()) != "managed-compression")
+							throw new System.InvalidOperationException ("Managed BCL compression must remain available on NativeAOT.");
+					}
 					if (System.GC.GetGCMemoryInfo ().TotalAvailableMemoryBytes != 67108864 ||
 							System.Environment.GetEnvironmentVariable ("NATIVEAOT_UTF8") != "caf\u00e9-\ud83d\ude80")
 						throw new System.InvalidOperationException ("NativeAOT bootstrap was not applied before runtime initialization.");
