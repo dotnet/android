@@ -117,12 +117,7 @@ namespace Java.Lang {
 							? JniObjectReferenceOptions.None
 							: JNIEnv.ToJniObjectReferenceOptions (transfer));
 				if (value != IntPtr.Zero) {
-					try {
-						SetJavaStackTrace (new JniObjectReference (value));
-					} catch {
-						Dispose ();
-						throw;
-					}
+					SetJavaStackTrace (new JniObjectReference (value));
 				}
 			} catch {
 				Dispose ();
