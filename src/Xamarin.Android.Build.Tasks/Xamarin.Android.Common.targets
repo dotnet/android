@@ -948,7 +948,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ProguardConfigFiles=$(ProguardConfigFiles)" />
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
-		<_PropertyCacheItems Include="_AndroidR8CompressBinaryBlobs=$(_AndroidR8CompressBinaryBlobs)" />
+		<_PropertyCacheItems Include="_AndroidR8CompressBinaryBlobs=$(_AndroidR8CompressBinaryBlobs)" Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"

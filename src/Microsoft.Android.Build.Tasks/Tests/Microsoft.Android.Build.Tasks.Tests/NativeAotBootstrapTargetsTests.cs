@@ -1,10 +1,12 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
+using ELFSharp.ELF;
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
 
@@ -48,9 +50,8 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			"NativeAOT must still receive the environment input for its binary data-object generator.");
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
-	public void OptionalDataObjectsInvalidateFailedWritesAndOmitEmptyMappings (bool compress)
+	[Test]
+	public void OptionalDataObjectsInvalidateFailedWritesAndOmitEmptyMappings ()
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
@@ -65,7 +66,6 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			CompletionStamp = stamp,
 			Remapping = true,
 			RemappingXmlFilePath = xml,
-			Compress = compress,
 		};
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("true", File.ReadAllText (stamp));
@@ -75,6 +75,10 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.GreaterOrEqual (symbols.IndexOf (Encoding.ASCII.GetBytes ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "_size\0")), 0);
 		Assert.AreEqual (-1, symbols.IndexOf (Encoding.ASCII.GetBytes ("\0remapping_data\0")),
 			"The static NativeAOT object must not use CoreCLR's dynamic lookup symbol.");
+		using (IELF elf = ELFReader.Load (output)) {
+			Assert.AreEqual (0, BinaryPrimitives.ReadUInt16LittleEndian (elf.GetSection (".rodata").GetContents ().AsSpan (6, 2)),
+				"NativeAOT remapping must always remain mapped, uncompressed data.");
+		}
 		File.WriteAllText (xml, "<replacements />");
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("false", File.ReadAllText (stamp));
@@ -171,6 +175,15 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (sourceFile), "A no-op build must skip the source generator.");
 		Assert.AreEqual (objectTimestamp, File.GetLastWriteTimeUtc (objectFile), "A no-op build must skip the data-object generator.");
 		FileAssert.DoesNotExist (legacySource);
+
+		var compressionOptIn = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile,
+			"-t:_FindJavaStubFiles;_AndroidGenerateNativeAotBootstrapObject", "-p:_AndroidR8CompressBinaryBlobs=true", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, compressionOptIn.ExitCode, compressionOptIn.Output + compressionOptIn.Error);
+		Assert.AreEqual (objectTimestamp, File.GetLastWriteTimeUtc (objectFile),
+			"CoreCLR's private compression opt-in must not invalidate NativeAOT data.");
+		using (IELF elf = ELFReader.Load (objectFile)) {
+			Assert.AreEqual (0, BinaryPrimitives.ReadUInt16LittleEndian (elf.GetSection (".rodata").GetContents ().AsSpan (6, 2)));
+		}
 
 		File.WriteAllText (environmentFile, "DOTNET_VALUE=second\ndebug.dotnet.max_grefc=5678\n");
 		File.SetLastWriteTimeUtc (environmentFile, objectTimestamp.AddSeconds (1));

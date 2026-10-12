@@ -18,27 +18,54 @@ namespace {
 	constexpr uint32_t blob_magic = 0x42424c42; // BLBB
 	constexpr uint32_t maximum_raw_size = 256 * 1024 * 1024;
 
-	struct BlobHeader {
-		uint32_t magic;
-		uint16_t version;
-		uint16_t flags;
-		uint32_t stored;
-		uint32_t raw;
+	// A view of BLBB's little-endian bytes, not a typed object cast or header copy.
+	class BlobHeader {
+		const uint8_t *data;
 
+	public:
+		static constexpr size_t Size = 16;
+		explicit BlobHeader (const uint8_t *data) noexcept : data { data } {}
+		[[nodiscard]] auto stored () const noexcept -> uint32_t { return read_uint32 (8); }
+		[[nodiscard]] auto raw () const noexcept -> uint32_t { return read_uint32 (12); }
 		// BLBB v1 flags: 0 = uncompressed mapped body, 1 = Zstd-compressed body.
 		[[nodiscard]] auto is_compressed () const noexcept -> bool
 		{
-			return flags == 1;
+			return read_uint16 (6) == 1;
 		}
 
 		[[nodiscard]] auto is_valid () const noexcept -> bool
 		{
-			return magic == blob_magic && version == 1 && flags <= 1 && stored != 0 &&
-				raw != 0 && raw <= maximum_raw_size && (is_compressed () || stored == raw);
+			return read_uint32 (0) == blob_magic && read_uint16 (4) == 1 && read_uint16 (6) <= 1 && stored () != 0 &&
+				raw () != 0 && raw () <= maximum_raw_size && (is_compressed () || stored () == raw ());
+		}
+
+	private:
+		auto read_uint16 (size_t offset) const noexcept -> uint16_t
+		{
+			return static_cast<uint16_t>(data[offset]) | static_cast<uint16_t>(data[offset + 1]) << 8;
+		}
+
+		auto read_uint32 (size_t offset) const noexcept -> uint32_t
+		{
+			return static_cast<uint32_t>(data[offset]) | static_cast<uint32_t>(data[offset + 1]) << 8 |
+				static_cast<uint32_t>(data[offset + 2]) << 16 | static_cast<uint32_t>(data[offset + 3]) << 24;
 		}
 	};
-	static_assert (sizeof (BlobHeader) == 16);
-	constexpr size_t envelope_size = sizeof (BlobHeader);
+	constexpr size_t envelope_size = BlobHeader::Size;
+
+	auto read_header (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BlobHeader
+	{
+		if (blob == nullptr || size < envelope_size) [[unlikely]] {
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Missing or truncated binary blob '%s'", symbol);
+		}
+		BlobHeader header { blob };
+		if (!header.is_valid () || static_cast<uint64_t>(header.stored ()) + envelope_size != size) [[unlikely]] {
+			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+				"Invalid binary blob envelope for '%s'", symbol);
+		}
+		return header;
+	}
 
 	pthread_once_t library_once = PTHREAD_ONCE_INIT;
 	void *library = nullptr;
@@ -61,19 +88,19 @@ namespace {
 	// Used only for payloads whose producer opted into Zstd compression.
 	auto decode_compressed_payload (const uint8_t *blob, const BlobHeader &header, const char *symbol) noexcept -> BinaryBlobPayload
 	{
-		void *decoded = std::malloc (header.raw);
+		void *decoded = std::malloc (header.raw ());
 		if (decoded == nullptr) [[unlikely]] {
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-				"Cannot allocate %u bytes for binary blob '%s'", header.raw, symbol);
+				"Cannot allocate %u bytes for binary blob '%s'", header.raw (), symbol);
 		}
-		size_t decompressed = ZSTD_decompress (decoded, header.raw, blob + envelope_size, header.stored);
-		if (ZSTD_isError (decompressed) || decompressed != header.raw) [[unlikely]] {
+		size_t decompressed = ZSTD_decompress (decoded, header.raw (), blob + envelope_size, header.stored ());
+		if (ZSTD_isError (decompressed) || decompressed != header.raw ()) [[unlikely]] {
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
 				"Cannot decode binary blob '%s': %s (expected %u bytes, got %zu)",
-				symbol, ZSTD_isError (decompressed) ? ZSTD_getErrorName (decompressed) : "wrong uncompressed size", header.raw, decompressed);
+				symbol, ZSTD_isError (decompressed) ? ZSTD_getErrorName (decompressed) : "wrong uncompressed size", header.raw (), decompressed);
 		}
 		// The lookup returns pointers into the decoded body, so it is retained for the process lifetime.
-		return { static_cast<const uint8_t*> (decoded), header.raw };
+		return { static_cast<const uint8_t*> (decoded), header.raw () };
 	}
 	auto load_payload (const char *symbol, bool optional) noexcept -> BinaryBlobPayload
 	{
@@ -100,33 +127,33 @@ namespace {
 				"Missing binary blob symbol '%s'", symbol);
 		}
 
-		BlobHeader header;
-		std::memcpy (&header, blob, sizeof (header));
+		BlobHeader header { blob };
 		if (!header.is_valid ()) [[unlikely]] {
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
 				"Invalid binary blob envelope for '%s'", symbol);
 		}
 
-		return BinaryBlobLoader::decode (blob, envelope_size + static_cast<size_t>(header.stored), symbol);
+		return BinaryBlobLoader::decode (blob, envelope_size + static_cast<size_t>(header.stored ()), symbol);
 	}
 }
 
 auto BinaryBlobLoader::decode (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BinaryBlobPayload
 {
-	if (blob == nullptr || size < envelope_size) [[unlikely]] {
-		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Missing or truncated binary blob '%s'", symbol);
-	}
-	BlobHeader header;
-	std::memcpy (&header, blob, sizeof (header));
-	if (!header.is_valid () || static_cast<uint64_t>(header.stored) + envelope_size != size) [[unlikely]] {
-		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-			"Invalid binary blob envelope for '%s'", symbol);
-	}
+	BlobHeader header = read_header (blob, size, symbol);
 	if (!header.is_compressed ()) {
-		return { blob + envelope_size, header.raw };
+		return { blob + envelope_size, header.raw () };
 	}
 	return decode_compressed_payload (blob, header, symbol);
+}
+
+auto BinaryBlobLoader::read_uncompressed (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BinaryBlobPayload
+{
+	BlobHeader header = read_header (blob, size, symbol);
+	if (header.is_compressed ()) [[unlikely]] {
+		Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
+			"Compressed NativeAOT binary blob '%s' is not supported", symbol);
+	}
+	return { blob + envelope_size, header.raw () };
 }
 
 auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload

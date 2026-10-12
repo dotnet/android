@@ -26,6 +26,11 @@ Static NativeAOT payload and size symbols use the `dotnet_android_nativeaot_`
 prefix to avoid collisions with application or dependency data objects.
 Bootstrap regeneration also removes the obsolete generated Java configuration
 source from existing intermediate directories.
+NativeAOT configuration and remapping objects are always uncompressed. Startup
+reads their mapped bytes directly, without allocating decoded buffers; CoreCLR's
+private binary-blob compression opt-in does not apply to NativeAOT.
+Each payload in CoreCLR's data library starts at a 4-byte-aligned offset, including
+compressed payloads, without changing the individual payload bytes or envelope version.
 
 The application linker selects the fixed native environment initializer as
 `DT_INIT`, before the application's initialization array and embedded NativeAOT

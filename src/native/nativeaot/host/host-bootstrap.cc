@@ -33,7 +33,7 @@ extern "C" __attribute__((visibility("hidden"))) void Host_NativeAOT_InitializeE
 		Helpers::abort_application ("Missing required NativeAOT bootstrap symbols");
 	}
 #endif
-	AppSystemProperties::initialize (BinaryBlobLoader::decode (
+	AppSystemProperties::initialize (BinaryBlobLoader::read_uncompressed (
 		dotnet_android_nativeaot_bootstrap, dotnet_android_nativeaot_bootstrap_size, "dotnet_android_nativeaot_bootstrap"));
 	for (const auto &variable : AppSystemProperties::environment ()) {
 		if (::setenv (variable.name, variable.value, 1) != 0) {
@@ -50,7 +50,7 @@ auto xamarin::android::load_nativeaot_remapping () noexcept -> BinaryBlobPayload
 	static bool initialized = false;
 	if (!initialized) {
 		if (dotnet_android_nativeaot_remapping_data != nullptr && &dotnet_android_nativeaot_remapping_data_size != nullptr) {
-			payload = BinaryBlobLoader::decode (
+			payload = BinaryBlobLoader::read_uncompressed (
 				dotnet_android_nativeaot_remapping_data, dotnet_android_nativeaot_remapping_data_size, "dotnet_android_nativeaot_remapping_data");
 		} else if (dotnet_android_nativeaot_remapping_data != nullptr || &dotnet_android_nativeaot_remapping_data_size != nullptr) {
 			Helpers::abort_application ("Incomplete NativeAOT remapping symbols");

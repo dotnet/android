@@ -119,7 +119,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </PropertyGroup>
     <MakeDir Directories="$(_AndroidNativeAotDataDirectory)" />
     <WriteLinesToFile File="$(_AndroidNativeAotBootstrapObjectInputs)"
-        Lines="Abi=$(_AndroidNativeAotAbi);Compress=$(_AndroidR8CompressBinaryBlobs);@(_EnvironmentFiles->'EnvironmentFile=%(FullPath)')"
+        Lines="Abi=$(_AndroidNativeAotAbi);@(_EnvironmentFiles->'EnvironmentFile=%(FullPath)')"
         Overwrite="true" WriteOnlyWhenDifferent="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidNativeAotBootstrapObjectInputs)" />
@@ -132,8 +132,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       Outputs="$(_AndroidNativeAotBootstrapObject)">
     <GenerateNativeAotDataObject MSBuildRuntime="NET"
         OutputFile="$(_AndroidNativeAotBootstrapObject)" Abi="@(_PrivateBuildTargetAbi)"
-        Environments="@(_EnvironmentFiles)"
-        Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
+        Environments="@(_EnvironmentFiles)" />
     <ItemGroup>
       <_NativeAotAdditionalObjects Include="$(_AndroidNativeAotBootstrapObject)" />
       <FileWrites Include="$(_AndroidNativeAotBootstrapObject)" />

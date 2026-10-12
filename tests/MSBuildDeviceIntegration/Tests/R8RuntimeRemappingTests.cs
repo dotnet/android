@@ -305,7 +305,15 @@ namespace Xamarin.Android.Build.Tests
 				byte [] data = File.ReadAllBytes (binaryBlob);
 				int envelope = data.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
 				Assert.GreaterOrEqual (envelope, 0, "The ELF must contain the remapping payload.");
-				Assert.AreEqual (compress ? 1 : 0, BitConverter.ToUInt16 (data, envelope + 6), "Unexpected compression mode.");
+				Assert.AreEqual (runtime == AndroidRuntime.CoreCLR && compress ? 1 : 0, BitConverter.ToUInt16 (data, envelope + 6),
+					"NativeAOT must ignore the private compression opt-in and read its linked data directly.");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					byte [] bootstrap = File.ReadAllBytes (Directory.GetFiles (intermediate, "nativeaot-bootstrap.o", SearchOption.AllDirectories).Single ());
+					int bootstrapEnvelope = bootstrap.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
+					Assert.GreaterOrEqual (bootstrapEnvelope, 0);
+					Assert.AreEqual (0, BitConverter.ToUInt16 (bootstrap, bootstrapEnvelope + 6),
+						"NativeAOT bootstrap configuration must remain raw even when the CoreCLR compression opt-in is set.");
+				}
 
 				AssertAppRuns ("r8-runtime-remap.log");
 

@@ -226,11 +226,13 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
 	{
 		byte [] first = [1, 2, 3];
-		byte [] second = [4, 5, 6, 7];
+		byte [] second = JniRemappingBinaryBlob.Wrap ([4, 5, 6, 7, 8], compress: true);
+		byte [] third = [9, 10, 11, 12, 13];
 		using var a = new MemoryStream (first);
 		using var b = new MemoryStream (second);
+		using var c = new MemoryStream (third);
 		using var elf = new MemoryStream ();
-		AssemblyStoreElfWriter.Write (new [] { ("xa_first", (Stream)a), ("xa_second", (Stream)b) }, elf, arch, "libbinary_blobs.so");
+		AssemblyStoreElfWriter.Write (new [] { ("xa_first", (Stream)a), ("xa_second", (Stream)b), ("xa_third", (Stream)c) }, elf, arch, "libbinary_blobs.so");
 		byte [] image = elf.ToArray ();
 		bool is64Bit = arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
 		int wordSize = is64Bit ? 8 : 4;
@@ -238,13 +240,23 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		int programHeaderSize = is64Bit ? 56 : 32;
 		int symbolSize = is64Bit ? 24 : 16;
 		ulong symbolsOffset = checked ((ulong)((headerSize + 4 * programHeaderSize + wordSize - 1) & -wordSize));
-		ulong stringsOffset = symbolsOffset + (ulong)(3 * symbolSize);
+		ulong stringsOffset = symbolsOffset + (ulong)(4 * symbolSize);
 		ulong payloadOffset = is64Bit ? 16384u : 4096u;
+		ulong secondOffset = payloadOffset + 4;
+		ulong thirdOffset = checked (secondOffset + (ulong)second.Length + 3) & ~3UL;
 		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, payloadOffset, 1, 1, "xa_first", first);
-		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, payloadOffset + (ulong)first.Length,
+		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, secondOffset,
 			2, "xa_first".Length + 2, "xa_second", second);
+		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, thirdOffset,
+			3, "xa_first".Length + "xa_second".Length + 3, "xa_third", third);
+		Assert.AreEqual (0, image [checked ((int)payloadOffset) + first.Length], "Padding must not change either symbol's payload bytes.");
+		foreach (byte padding in image.AsSpan (checked ((int)(secondOffset + (ulong)second.Length)),
+			checked ((int)(thirdOffset - secondOffset - (ulong)second.Length)))) {
+			Assert.AreEqual (0, padding);
+		}
 		Assert.AreEqual (a.Length, a.Position);
 		Assert.AreEqual (b.Length, b.Position);
+		Assert.AreEqual (c.Length, c.Position);
 	}
 
 	static void AssertPayloadSymbol (byte [] image, bool is64Bit, int symbolSize, ulong symbolsOffset, ulong stringsOffset,
@@ -263,6 +275,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 			? BinaryPrimitives.ReadUInt64LittleEndian (image.AsSpan (entryOffset + 16, 8))
 			: BinaryPrimitives.ReadUInt32LittleEndian (image.AsSpan (entryOffset + 8, 4));
 		Assert.AreEqual (payloadOffset, value);
+		Assert.AreEqual (0, value % 4, "Every independently sized payload must be uint32-aligned.");
 		Assert.AreEqual ((ulong)payload.Length, size);
 		CollectionAssert.AreEqual (Encoding.UTF8.GetBytes (name + "\0"),
 			image.AsSpan (checked ((int)(stringsOffset + (ulong)nameOffset)), name.Length + 1).ToArray ());

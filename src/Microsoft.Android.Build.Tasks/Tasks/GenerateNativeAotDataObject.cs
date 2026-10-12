@@ -25,7 +25,6 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 	public ITaskItem []? Environments { get; set; }
 	public string? RemappingXmlFilePath { get; set; }
 	public bool Remapping { get; set; }
-	public bool Compress { get; set; }
 	public string? CompletionStamp { get; set; }
 
 	public override bool RunTask ()
@@ -43,13 +42,13 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 			string symbol;
 			if (Remapping) {
 				symbol = RemappingSymbol;
-				blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, Compress);
+				blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, compress: false);
 			} else {
 				symbol = NativeAotBootstrapBlob.Symbol;
 				var environment = new EnvironmentBuilder (escapeValues: false);
 				environment.Read (Environments);
 				blob = JniRemappingBinaryBlob.Wrap (
-					NativeAotBootstrapBlob.Create (environment.EnvironmentVariables, environment.SystemProperties), Compress);
+					NativeAotBootstrapBlob.Create (environment.EnvironmentVariables, environment.SystemProperties), compress: false);
 			}
 			if (blob.Length == 0) {
 				File.Delete (OutputFile);

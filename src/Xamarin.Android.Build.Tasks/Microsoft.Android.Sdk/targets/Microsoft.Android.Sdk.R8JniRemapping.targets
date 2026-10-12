@@ -181,7 +181,7 @@
     </PropertyGroup>
     <MakeDir Directories="$(_AndroidNativeAotRemappingDirectory)" />
     <WriteLinesToFile File="$(_AndroidNativeAotRemappingInputs)"
-        Lines="Abi=$(_AndroidNativeAotAbi);Compress=$(_AndroidR8CompressBinaryBlobs);Mapping=$(_AndroidNativeAotSelectedRemappingXml)"
+        Lines="Abi=$(_AndroidNativeAotAbi);Mapping=$(_AndroidNativeAotSelectedRemappingXml)"
         Overwrite="true" WriteOnlyWhenDifferent="true" />
     <ItemGroup>
       <_AndroidNativeAotRemappingOutput Include="$(_AndroidNativeAotRemappingStamp)" />
@@ -200,8 +200,7 @@
         MSBuildRuntime="NET"
         Remapping="true" RemappingXmlFilePath="$(_AndroidNativeAotSelectedRemappingXml)"
         OutputFile="$(_AndroidNativeAotRemappingObject)" Abi="@(_PrivateBuildTargetAbi)"
-        CompletionStamp="$(_AndroidNativeAotRemappingStamp)"
-        Compress="$([MSBuild]::ValueOrDefault('$(_AndroidR8CompressBinaryBlobs)', 'false'))" />
+        CompletionStamp="$(_AndroidNativeAotRemappingStamp)" />
     <ItemGroup>
       <_NativeAotAdditionalObjects Include="$(_AndroidNativeAotRemappingObject)"
           Condition=" Exists('$(_AndroidNativeAotRemappingObject)') " />
