@@ -34,7 +34,7 @@ public class PostTrimmingPipeline : AndroidTask
 
 	public bool Deterministic { get; set; }
 
-	public bool EnableLegacyCompatibilityAssemblyFixups { get; set; } = true;
+	public bool EnableLegacyCompatibilityAssemblyFixups { get; set; }
 
 	public override bool RunTask ()
 	{
@@ -83,7 +83,7 @@ public class PostTrimmingPipeline : AndroidTask
 				EnableLegacyCompatibilityAssemblyFixups));
 		}
 
-		if (AddKeepAlives) {
+		if (EnableLegacyCompatibilityAssemblyFixups && AddKeepAlives) {
 			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
 			// regardless of how many assemblies/methods need KeepAlive injection.
 			AssemblyDefinition? corlibAssembly = null;

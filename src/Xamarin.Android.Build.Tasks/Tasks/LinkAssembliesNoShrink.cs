@@ -16,8 +16,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool AddKeepAlives { get; set; }
 
-		// MSBuild supplies the typemap-specific default. Keep direct task callers backward compatible.
-		public bool EnableLegacyCompatibilityAssemblyFixups { get; set; } = true;
+		public bool EnableLegacyCompatibilityAssemblyFixups { get; set; }
 
 		public bool UseDesignerAssembly { get; set; }
 
