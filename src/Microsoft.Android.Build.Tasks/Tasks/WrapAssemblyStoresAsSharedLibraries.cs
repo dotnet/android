@@ -13,7 +13,6 @@ namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Wraps raw per-ABI assembly stores as data-only ELF libraries for lib/ABI packaging.
-/// Discrete assemblies continue to use the legacy wrapper task.
 /// </summary>
 public class WrapAssemblyStoresAsSharedLibraries : AndroidTask
 {

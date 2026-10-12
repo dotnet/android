@@ -42,11 +42,11 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers ([abi]);
-			proj.SetProperty ("_SkipNdkResolution", "true");
-
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), $"CoreCLR app build should succeed for {abi} with the prebuilt runtime.");
-			builder.Output.AssertTargetIsSkipped ("_LinkNativeRuntime", defaultIfNotUsed: true);
+			string missingNdk = Path.Combine (Root, "missing-ndk-for-prebuilt-coreclr");
+			DirectoryAssert.DoesNotExist (missingNdk);
+			Assert.IsTrue (builder.Build (proj, parameters: ["AndroidNdkDirectory=" + missingNdk]),
+				$"CoreCLR app build should succeed for {abi} without the Android NDK.");
 		}
 
 		[TestCase ("armeabi-v7a")]

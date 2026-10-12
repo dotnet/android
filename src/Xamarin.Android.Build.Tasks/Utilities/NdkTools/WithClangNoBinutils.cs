@@ -15,8 +15,8 @@ namespace Xamarin.Android.Tasks
 		public NdkToolsWithClangNoBinutils (string androidNdkPath, NdkVersion version, TaskLoggingHelper? log)
 			: base (androidNdkPath, version, log)
 		{
-			NdkToolNames[NdkToolKind.Linker] = "ld";
-			NoBinutils = true;
+			NdkToolNames[NdkToolKind.Linker] = "ld.lld";
+			NdkToolNames[NdkToolKind.Strip] = "llvm-strip";
 
 			NeedClangWorkaround = IsWindows;
 			if (NeedClangWorkaround) {
@@ -36,7 +36,6 @@ namespace Xamarin.Android.Tasks
 				// place the NDK into a directory containing spaces.  The result is:
 				//
 				//   CC="C:\a\_work\1\a\TestRelease\06-13_18.07.09\temp\SDK Ümläüts\ndk\toolchains\llvm\prebuilt\windows-x86_64\bin\armv7a-linux-androideabi19-clang.CMD"
-				//   AS="C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Xamarin\Android\binutils\bin\arm-linux-androideabi-as.CMD"
 				//   …
 				//   [CC] "C:\a\_work\1\a\TestRelease\06-13_18.07.09\temp\SDK Ümläüts\ndk\toolchains\llvm\prebuilt\windows-x86_64\bin\armv7a-linux-androideabi19-clang.CMD" ^
 				//     -c -D__ANDROID_API__=19 -DANDROID -o obj\Release\bundles\armeabi-v7a\temp.o ^
@@ -58,9 +57,10 @@ namespace Xamarin.Android.Tasks
 		{
 			switch (kind) {
 				case NdkToolKind.Assembler:
+					return base.GetToolPath (NdkToolKind.CompilerC, arch, apiLevel);
 				case NdkToolKind.Linker:
 				case NdkToolKind.Strip:
-					return GetEmbeddedToolPath (kind, arch);
+					return MakeToolPath (GetToolName (kind));
 
 				default:
 					return base.GetToolPath (kind, arch, apiLevel);
@@ -80,15 +80,6 @@ namespace Xamarin.Android.Tasks
 
 			// Otherwise, they might be prefixed with llvm-
 			return MakeToolPath ($"llvm-{name}");
-		}
-
-		string GetEmbeddedToolPath (NdkToolKind kind, AndroidTargetArch arch)
-		{
-			string toolName = GetToolName (kind);
-			string triple = GetArchTriple (arch);
-			string binutilsDir = Path.Combine (OSBinPath, "binutils", "bin");
-
-			return GetExecutablePath (Path.Combine (binutilsDir, $"{triple}-{toolName}"), mustExist: true);
 		}
 
 		public override string GetCompilerTargetParameters (AndroidTargetArch arch, int apiLevel, bool forCPlusPlus = false)

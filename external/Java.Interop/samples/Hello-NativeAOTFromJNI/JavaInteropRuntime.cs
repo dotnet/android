@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 using Java.Interop;
@@ -96,15 +95,6 @@ static class JavaInteropRuntime
 		public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 		{
 			return null;
-		}
-
-		public override void ActivatePeer (
-			JniObjectReference reference,
-			Type type,
-			ConstructorInfo cinfo,
-			object?[]? argumentValues)
-		{
-			throw new NotSupportedException ();
 		}
 
 		protected override void ConstructPeerCore (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)

@@ -57,7 +57,6 @@ ms.date: 04/11/2024
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
 + [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
-+ [XA0037](xa0037.md): Unknown mode passed to the `PrepareAbiItems` task.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
@@ -155,9 +154,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1042](xa1042.md): The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.
 + [XA1043](xa1043.md): Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element.
 + [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
-+ [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
-+ [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
-+ [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported.
 + [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
@@ -180,7 +176,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA3002: Invalid AOT mode: {mode}
 + XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
 + XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
-+ XA3006: Could not compile native assembly file: {file}
 + [XA3007](xa3007.md): Could not link native shared library: {library}
 + [XA3008](xa3008.md): Failed to extract debug info from '{library}'
 
@@ -266,11 +261,12 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
-+ [XA4325](xa4325.md): Failed to generate the R8 JNI remapping data. {0}
++ [XA4325](xa4325.md): Failed to generate the JNI remapping data. {0}
 + [XA4326](xa4326.md): The R8 JNI remapping data is incomplete. {0}
 + [XA4327](xa4327.md): Could not extract Java type map keys from '{0}': {1}
 + [XA4328](xa4328.md): Could not generate typemap ProGuard configuration from '{0}': {1}
 + [XA4329](xa4329.md): Invalid or unsupported R8 obfuscation configuration.
++ [XA4330](xa4330.md): A native library uses the reserved libbinary_blobs.so archive name.
 
 ## XA5xxx: GCC and toolchain
 
@@ -329,7 +325,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CLR` - `CreateLibraryResourceArchive`
 * `CMD` - `CreateMultiDexMainDexClassList`
 * `CML` - `CreateManagedLibraryResourceArchive`
-* `CNA` - `CompileNativeAssembly`
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
@@ -369,14 +364,12 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `JVC` - `Javac`
 * `JTX` - `JarToXml`
 * `KEY` - `KeyTool`
-* `LAS` - `LinkApplicationSharedLibraries`
 * `LEF` - `LogErrorsForFiles`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
 * `LWF` - `LogWarningsForFiles`
 * `MDC` - `MDoc`
-* `PAI` - `PrepareAbiItems`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
 * `PWA` - `PrepareWearApplicationFiles`
