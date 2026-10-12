@@ -9,9 +9,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "StaticMethods",
-					apiDescriptionFile:     "expected.ji/StaticMethods/StaticMethod.xml",
+					apiDescriptionFile:     "TestInputs/StaticMethods/StaticMethod.xml",
 					expectedRelativePath:   "StaticMethods");
 		}
 	}

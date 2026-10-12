@@ -22,6 +22,20 @@ namespace Java.InteropTests
 	public class JnienvTest
 	{
 		[Test]
+		[Category ("JniStringLength")]
+		public void NewStringValidatesLengthAndSupportsPrefix ()
+		{
+			var text = new[] { 'f', 'o', 'o' };
+
+			Assert.Throws<ArgumentOutOfRangeException> (() => JNIEnv.NewString (text, -1));
+			Assert.Throws<ArgumentOutOfRangeException> (() => JNIEnv.NewString (text, text.Length + 1));
+			Assert.AreEqual (IntPtr.Zero, JNIEnv.NewString ((char[]?) null, -1));
+
+			IntPtr handle = JNIEnv.NewString (text, 2);
+			Assert.AreEqual ("fo", JNIEnv.GetString (handle, JniHandleOwnership.TransferLocalRef));
+		}
+
+		[Test]
 		public void TestMyPaintColor ()
 		{
 			using (var p = new MyPaint ()) {

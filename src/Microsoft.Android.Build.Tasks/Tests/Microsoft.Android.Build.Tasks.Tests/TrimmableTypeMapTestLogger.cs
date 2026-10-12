@@ -21,7 +21,6 @@ sealed class TrimmableTypeMapTestLogger : ITrimmableTypeMapLogger
 		string unresolvedTypeName,
 		string unresolvedAssemblyName,
 		string unresolvedAssemblyPath) { }
-	public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) { }
 	public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) { }
 	public void LogDuplicateJavaTypeError (string javaName) { }
 	public void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName) { }

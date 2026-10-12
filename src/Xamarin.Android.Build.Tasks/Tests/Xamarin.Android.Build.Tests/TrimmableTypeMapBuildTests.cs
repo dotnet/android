@@ -237,54 +237,6 @@ namespace Xamarin.Android.Build.Tests {
 			FileAssert.Exists (referenceImplementations);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void TrimmedNativeLinkingScansCombinedTypeMapInputs (bool readyToRun)
-		{
-			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("PublishTrimmed", "true");
-			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
-			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", "true");
-			proj.SetProperty (KnownProperties.RuntimeIdentifiers, "android-arm64;android-x64");
-			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
-			directoryBuildTargets.TextContent = () => """
-				<Project>
-				  <Target Name="_AndroidAssertCombinedNativeLinkingTypeMaps"
-				      BeforeTargets="_GeneratePackageManagerJava"
-				      DependsOnTargets="_PrepareTrimmableTypeMapAssemblies">
-				    <ItemGroup>
-				      <_AndroidPreTrimRoot Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
-				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
-				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' == 'true' " />
-				      <_AndroidFinalArm64Root Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
-				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
-				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' != 'true' " />
-				      <_AndroidFinalX64Root Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
-				              and '%(_ResolvedAssemblies.Abi)' == 'x86_64' " />
-				    </ItemGroup>
-				    <Error Condition=" '@(_AndroidPreTrimRoot->Count())' == '0' or '@(_AndroidFinalArm64Root->Count())' == '0' or '@(_AndroidFinalX64Root->Count())' == '0' "
-				        Text="The native linking regression requires both pre-trim and final per-ABI root typemaps." />
-				  </Target>
-				</Project>
-				""";
-
-			using var builder = CreateApkBuilder ();
-			builder.Target = "Compile;_GeneratePackageManagerJava";
-			// Compile defaults to design-time mode, but native-source generation requires a normal build.
-			Assert.IsTrue (builder.Build (proj, parameters: ["DesignTimeBuild=false"]),
-				"Trimmed multi-RID native sources should be generated with combined typemap inputs.");
-			builder.Output.AssertTargetIsNotSkipped ("_AndroidAssertCombinedNativeLinkingTypeMaps");
-			foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
-				var nativeSource = builder.Output.GetIntermediaryPath (Path.Combine ("android", $"pinvoke_preserve.{abi}.ll"));
-				FileAssert.Exists (nativeSource);
-				StringAssert.Contains ("@find_pinvoke", File.ReadAllText (nativeSource));
-			}
-		}
-
 		[Test]
 		public void BindingCallbackFormatSupportsDefaultConsumer ()
 		{
@@ -2070,16 +2022,10 @@ namespace Xamarin.Android.Build.Tests {
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
-			var environmentFiles = Directory.GetFiles (builder.Output.GetIntermediaryPath ("android"), "environment.*.ll");
-			Assert.IsNotEmpty (environmentFiles, "Expected generated environment.<abi>.ll files.");
-
-			foreach (var environmentFile in environmentFiles) {
-				var abi = Path.GetFileNameWithoutExtension (environmentFile).Substring ("environment.".Length);
+			EnvironmentHelper.ReadCoreClrBootstrap (builder.Output.GetIntermediaryPath (""));
+			foreach (var abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 				var manifestFile = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so.manifest"));
-
-				if (!File.Exists (manifestFile)) {
-					continue;
-				}
+				FileAssert.Exists (manifestFile);
 
 				using var storeReader = new BinaryReader (File.OpenRead (Path.ChangeExtension (manifestFile, null)));
 				Assert.AreEqual (0x41424158u, storeReader.ReadUInt32 ());
@@ -2190,7 +2136,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotEmpty (rspFiles, $"{ridIntermediateDir} should contain an ILC response file.");
 
 			var rspText = File.ReadAllText (rspFiles [0]);
-			StringAssert.Contains ("_Java.Interop.TypeMap.dll", rspText);
+			// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
+			StringAssert.DoesNotContain ("_Java.Interop.TypeMap.dll", rspText);
 			StringAssert.Contains ("_Mono.Android.TypeMap.dll", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Java.Interop.TypeMap", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Mono.Android.TypeMap", rspText);
@@ -2198,16 +2145,17 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable ()
+		public void TrimmableTypeMap_PackagesAndroidJavaProxyThrowable (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -2217,6 +2165,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				DexUtils.ContainsClassWithMethod ("Landroid/runtime/JavaProxyThrowable;", "<init>", "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should include `android.runtime.JavaProxyThrowable`.");
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/internal/JavaProxyThrowable;", dexFile, AndroidSdkPath));
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/internal/JavaProxyObject;", dexFile, AndroidSdkPath));
 		}
 
 		[Test]

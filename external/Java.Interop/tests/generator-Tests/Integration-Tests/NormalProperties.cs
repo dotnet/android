@@ -10,9 +10,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "NormalProperties",
-					apiDescriptionFile:     "expected.ji/NormalProperties/NormalProperties.xml",
+					apiDescriptionFile:     "TestInputs/NormalProperties/NormalProperties.xml",
 					expectedRelativePath:   "NormalProperties");
 
 			var output = File.ReadAllText (FullPath ("out.xaji/NormalProperties/Xamarin.Test.SomeObject.cs"));

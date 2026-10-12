@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class BoundInterface : InterfaceWriter
@@ -56,16 +54,7 @@ namespace generator.SourceWriters
 					? iface.FullName.Replace ('.', '/')
 					: iface.Namespace + "." + iface.FullName.Substring (iface.Namespace.Length + 1).Replace ('.', '/');
 
-				var noAcw       = false;
-				var memberType  = (MemberTypes?) null;
-				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-					noAcw       = true;
-					memberType  = MemberTypes.TypeInfo;
-				}
-
-				Attributes.Add (new RegisterAttr (iface.RawJniName, string.Empty, signature + "Invoker", noAcw, additionalProperties: iface.AdditionalAttributeString ()) {
-					MemberType	    = memberType,
-				});
+				Attributes.Add (new RegisterAttr (iface.RawJniName, string.Empty, signature + "Invoker", additionalProperties: iface.AdditionalAttributeString ()));
 			}
 
 			if (iface.TypeParameters != null && iface.TypeParameters.Any ())
@@ -111,8 +100,7 @@ namespace generator.SourceWriters
 
 			var staticMethods = iface.Methods.Where (m => m.IsStatic);
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 &&
-					(iface.Fields.Any () || staticMethods.Any ())) {
+			if (iface.Fields.Any () || staticMethods.Any ()) {
 				pre_sibling_types.Add (new InterfaceMemberAlternativeClass (iface, opt, context));
 			}
 		}
@@ -167,9 +155,7 @@ namespace generator.SourceWriters
 			}
 
 			if (Implements.Count == 0 && !iface.IsConstSugar (opt)) {
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					Implements.Add ("IJavaObject");
-				}
+				Implements.Add ("IJavaObject");
 				Implements.Add ("IJavaPeerable");
 			}
 		}

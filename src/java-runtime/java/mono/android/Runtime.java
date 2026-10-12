@@ -8,7 +8,6 @@ public class Runtime {
 	static java.lang.Class java_lang_System = java.lang.System.class;
 	static java.lang.Class mono_android_IGCUserPeer = mono.android.IGCUserPeer.class;
 	static java.lang.Class mono_android_GCUserPeer = mono.android.GCUserPeer.class;
-	static java.lang.Class net_dot_jni_GCUserPeerable = net.dot.jni.GCUserPeerable.class;
 
 	static {
 		Thread.setDefaultUncaughtExceptionHandler (new XamarinUncaughtExceptionHandler (Thread.getDefaultUncaughtExceptionHandler ()));

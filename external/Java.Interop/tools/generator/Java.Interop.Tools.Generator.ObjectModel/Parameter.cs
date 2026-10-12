@@ -60,9 +60,6 @@ namespace MonoDroid.Generation {
 				return c;
 			var h = sym.GetObjectHandleProperty (opt, c);
 			if (sym.PreCall (opt, Name).Length == 0) {
-				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-					return c;
-				}
 				return string.Format ("({0} == null) ? IntPtr.Zero : {1}", c, h);
 			}
 			return c;
@@ -274,11 +271,6 @@ namespace MonoDroid.Generation {
 				return string.Format ("{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
 			}
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
-					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType) +
-					$">(({name}?.PeerReference ?? default).Handle)";
-			}
 			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType),
 					name,

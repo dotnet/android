@@ -183,6 +183,18 @@ and run with the on-device `Mono.Android.NET-Tests.csproj` suite. They require
 the locally built Android SDK and an Android device/emulator; use the on-device
 build/install and test commands above.
 
+Handwritten Android Java peers use `mono.android.IGCUserPeer`; their fixture JAR
+compiles against the Android platform and runtime JARs.
+`JavaMarshalGCBridgeTests.HandwrittenPeersUseAndroidGCReferenceContract` checks
+peer recognition and reference addition/clearing for those fixtures.
+
+CoreCLR and NativeAOT share the `Android.Runtime.JavaProxyThrowable` exception path.
+`ExceptionTest` covers original managed exception identity, Java causes, direct JNI
+throws, stack traces, and typed throwable/proxy array lookups; `ExportTests` covers
+exceptions through generated callbacks. `TransferredReferenceTests` checks that
+runtime exception lookup consumes transferred references exactly once when message,
+cause, or stack-trace extraction fails, while borrowed references remain valid.
+
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | Binding generator tests |

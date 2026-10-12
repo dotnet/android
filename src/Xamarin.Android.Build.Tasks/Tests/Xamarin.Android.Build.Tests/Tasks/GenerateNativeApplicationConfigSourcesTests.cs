@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -23,48 +24,65 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		string configFile = Path.Combine (Root, "missing-bundle-config.json");
 
 		Assert.IsTrue (BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (log, configFile));
-		var warning = warnings.Single (warning => warning.Code == "XA4329");
+		var warning = warnings.Single (warning => warning.Code == "XA4331");
 		Assert.AreEqual ($"Failed to process bundle config file '{configFile}', split config files will be ignored at run time.", warning.Message);
+	}
+
+	[TestCase (null)]
+	[TestCase (" ")]
+	public void CoreClrRequiresBootstrapOutputFile (string? bootstrapPath)
+	{
+		string outputRoot = Path.Combine (Root, "temp", TestName);
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new GenerateNativeApplicationConfigSources {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			ResolvedAssemblies = [],
+			CoreClrBootstrapOutputFile = bootstrapPath,
+			SupportedAbis = ["arm64-v8a"],
+			AndroidPackageName = "com.example.bootstrap",
+			AndroidRuntime = "CoreCLR",
+		};
+
+		Assert.IsFalse (task.Execute ());
+		Assert.That (errors, Has.Count.EqualTo (1));
+		StringAssert.Contains ("CoreCLR bootstrap output path is required.", errors [0].Message);
+		FileAssert.DoesNotExist (Path.Combine (outputRoot, "environment.arm64-v8a.ll"));
 	}
 
 	[TestCase (false)]
 	[TestCase (true)]
-	public void HaveAssemblyStoreIsEmittedForCoreCLR (bool haveAssemblyStore)
+	public void CoreClrConfigurationUsesBinaryBootstrapInsteadOfApplicationGlobals (bool haveAssemblyStore)
 	{
-		string outputRoot = Path.Combine (Root, "temp", $"{nameof (HaveAssemblyStoreIsEmittedForCoreCLR)}-{haveAssemblyStore}");
-		string monoAndroidPath = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "Mono.Android.dll");
-		FileAssert.Exists (monoAndroidPath);
-
+		string outputRoot = Path.Combine (Root, "temp", TestName);
+		string rawPath = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin");
+		string configPath = Path.Combine (outputRoot, "app.runtimeconfig.json");
+		string environmentPath = Path.Combine (outputRoot, "environment.txt");
+		Directory.CreateDirectory (outputRoot);
+		File.WriteAllText (configPath, """{"runtimeOptions":{"configProperties":{"Test.Feature":"enabled"}}}""");
+		File.WriteAllText (environmentPath, "BOOTSTRAP_VALUE=\u00e9\u65e5\nBOOTSTRAP_EMPTY=\n");
 		var task = new GenerateNativeApplicationConfigSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
-			ResolvedAssemblies = [new TaskItem (monoAndroidPath)],
-			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
-			SupportedAbis = ["arm64-v8a"],
-			AndroidPackageName = "com.microsoft.android.assemblystoretest",
+			ResolvedAssemblies = [new TaskItem (Path.Combine (outputRoot, "Example.dll"))],
+			CoreClrBootstrapOutputFile = rawPath,
+			SupportedAbis = ["arm64-v8a", "x86"],
+			AndroidPackageName = "com.example.bootstrap",
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = haveAssemblyStore,
-			EmitLlvmIrComments = true,
+			ProjectRuntimeConfigFilePath = configPath,
+			Environments = [new TaskItem (environmentPath)],
 		};
-
-		Assert.IsTrue (task.Execute (), "GenerateNativeApplicationConfigSources should succeed.");
-
-		var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (
-			outputRoot,
-			"arm64-v8a",
-			required: true,
-			runtime: AndroidRuntime.CoreCLR
-		);
-		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
+		Assert.IsTrue (task.Execute ());
+		var bootstrap = EnvironmentHelper.ReadCoreClrBootstrap (outputRoot);
+		var config = bootstrap.Config;
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
-
-		string source = File.ReadAllText (Path.Combine (outputRoot, "android", "environment.arm64-v8a.ll"));
-		Assert.That (source, Does.Not.Contain ("jni_add_native_method_registration_attribute_present"));
-		Assert.That (source, Does.Not.Contain ("jnienv_registerjninatives_method_token"));
-		Assert.That (source, Does.Not.Contain ("marshal_methods_enabled"));
-		Assert.That (source, Does.Not.Contain ("android_runtime_jnienv_class_token"));
-		Assert.That (source, Does.Not.Contain ("jnienv_initialize_method_token"));
-		Assert.That (source, Does.Not.Contain ("jni_remapping_replacement_type_count"));
-		Assert.That (source, Does.Not.Contain ("jni_remapping_replacement_method_index_entry_count"));
+		Assert.AreEqual ("\u00e9\u65e5", bootstrap.EnvironmentVariables ["BOOTSTRAP_VALUE"]);
+		Assert.AreEqual ("", bootstrap.EnvironmentVariables ["BOOTSTRAP_EMPTY"]);
+		Assert.AreEqual (bootstrap.EnvironmentVariables.Count, config.environment_variable_count);
+		byte [] raw = File.ReadAllBytes (rawPath);
+		StringAssert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
+		StringAssert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));
+		Assert.IsEmpty (Directory.GetFiles (Path.Combine (outputRoot, "android"), "*.ll"),
+			"Application configuration should not generate LLVM sources for any ABI.");
 	}
 
 	[TestCase (false)]
@@ -78,7 +96,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		var task = new GenerateNativeApplicationConfigSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			ResolvedAssemblies = [new TaskItem (monoAndroidPath)],
-			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
+			CoreClrBootstrapOutputFile = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin"),
 			SupportedAbis = ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"],
 			AndroidPackageName = "com.microsoft.android.configtest",
 			AndroidRuntime = "CoreCLR",
@@ -87,9 +105,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 
 		Assert.IsTrue (task.Execute (), "Application config generation should only need assembly names, not metadata.");
 
-		var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (
-			outputRoot, string.Join (";", task.SupportedAbis), required: true, runtime: AndroidRuntime.CoreCLR);
-		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
+		var config = EnvironmentHelper.ReadCoreClrBootstrap (outputRoot).Config;
 		Assert.AreEqual (1u, config.number_of_assemblies_in_apk);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 		Assert.AreEqual (task.AndroidPackageName, config.android_package_name);
@@ -114,7 +130,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			ResolvedAssemblies = [new TaskItem (monoAndroidPath), typeMap],
 			AdditionalResolvedAssemblies = [new TaskItem (typeMapPath)],
-			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
+			CoreClrBootstrapOutputFile = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.typemapcounttest",
 			AndroidRuntime = "CoreCLR",
@@ -122,9 +138,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		};
 
 		Assert.IsTrue (task.Execute (), "GenerateNativeApplicationConfigSources should succeed.");
-		var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (
-			outputRoot, "arm64-v8a", required: true, runtime: AndroidRuntime.CoreCLR);
-		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
+		var config = EnvironmentHelper.ReadCoreClrBootstrap (outputRoot).Config;
 		Assert.AreEqual (2u, config.number_of_assemblies_in_apk, "The type map must not be counted again as a satellite assembly.");
 	}
 }

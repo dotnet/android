@@ -113,10 +113,15 @@ namespace Java.Lang {
 				var reference = new JniObjectReference (value);
 				Construct (
 						ref reference,
-						value == IntPtr.Zero ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy);
+						value == IntPtr.Zero
+							? JniObjectReferenceOptions.None
+							: JNIEnv.ToJniObjectReferenceOptions (transfer));
 				if (value != IntPtr.Zero) {
 					SetJavaStackTrace (new JniObjectReference (value));
 				}
+			} catch {
+				Dispose ();
+				throw;
 			} finally {
 				JNIEnv.DeleteRef (value, transfer);
 			}

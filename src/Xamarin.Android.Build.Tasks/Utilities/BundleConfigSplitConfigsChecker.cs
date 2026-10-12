@@ -5,8 +5,10 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tasks.Properties;
 
 /// <para>
 /// When bundle configuration uses standard settings for split configs, the per-ABI library
@@ -77,7 +79,7 @@ static class BundleConfigSplitConfigsChecker
 		try {
 			return DoShouldIgnoreSplitConfigs (log, configFilePath);
 		} catch (Exception ex) {
-			log.LogCodedWarning ("XA4329", Properties.Resources.XA4329, configFilePath);
+			log.LogCodedWarning ("XA4331", Resources.XA4331, configFilePath);
 			log.LogWarningFromException (ex);
 			return true;
 		}

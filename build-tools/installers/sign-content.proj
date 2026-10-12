@@ -23,7 +23,6 @@ ourself (using an empty signing identity) before passing these files to ESRP.
 
   <Target Name="AddMachOEntitlements" >
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
-    <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;%(_BinUtilsFilesUnixSignAndHarden.Identity)&quot;" />
   </Target>
 
 </Project>

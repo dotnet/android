@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -60,11 +59,8 @@ public class AssemblyModifierPipeline : AndroidTask
 	[Required]
 	public string TargetName { get; set; } = "";
 
-	protected JavaPeerStyle codeGenerationTarget;
-
 	public override bool RunTask ()
 	{
-		codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
 		JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicyEnum pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
 		if (SourceFiles.Length != DestinationFiles.Length)
@@ -142,7 +138,6 @@ public class AssemblyModifierPipeline : AndroidTask
 			?? throw new FileNotFoundException ($"Could not load assembly '{source.ItemSpec}'.", source.ItemSpec);
 
 		var context = new StepContext (source, destination) {
-			CodeGenerationTarget = codeGenerationTarget,
 			IsAndroidAssembly = MonoAndroidHelper.IsAndroidAssembly (source),
 			IsDebug = Debug,
 			IsFrameworkAssembly = MonoAndroidHelper.IsFrameworkAssembly (source),

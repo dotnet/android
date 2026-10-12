@@ -185,6 +185,7 @@ namespace Java.InteropTests
 			// thread when the JNI call returns to managed code.
 			var ex = Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, m));
 			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
+			Assert.AreSame (e.PrimitiveException, ex);
 			Assert.That (ex.Message, Contains.Substring ("boom"), "exception message should preserve 'boom'");
 		}
 
@@ -196,6 +197,7 @@ namespace Java.InteropTests
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for ThrowingString not found");
 			var ex = Assert.Catch (() => JNIEnv.CallObjectMethod (e.Handle, m));
 			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
+			Assert.AreSame (e.ObjectException, ex);
 		}
 
 		// Nested / re-entrant exception routing. The [Export] UCO wrapper sets a
@@ -240,6 +242,7 @@ namespace Java.InteropTests
 			Assert.AreNotEqual (IntPtr.Zero, outer, "JNI method id for ReentrantOuter not found");
 			var ex = Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, outer));
 			Assert.That (ex, Is.Not.Null, "expected an exception from the nested call, got null");
+			Assert.AreSame (e.InnerException, ex);
 			Assert.That (ex.Message, Contains.Substring ("reentrant-boom"),
 				"the original inner-export exception message must propagate through both [Export] wrappers");
 		}
@@ -384,11 +387,14 @@ namespace Java.InteropTests
 
 	class ExportThrowing : Java.Lang.Object
 	{
-		[Export]
-		public int Throwing () => throw new InvalidOperationException ("boom");
+		public InvalidOperationException PrimitiveException { get; } = new ("boom");
+		public InvalidOperationException ObjectException { get; } = new ("boom-string");
 
 		[Export]
-		public string ThrowingString () => throw new InvalidOperationException ("boom-string");
+		public int Throwing () => throw PrimitiveException;
+
+		[Export]
+		public string ThrowingString () => throw ObjectException;
 	}
 
 	// Re-entrancy fixture: the outer [Export] invokes the inner [Export] on `this`
@@ -396,8 +402,10 @@ namespace Java.InteropTests
 	// crosses both wrapper layers without losing its original message.
 	class ExportReentrant : Java.Lang.Object
 	{
+		public InvalidOperationException InnerException { get; } = new ("reentrant-boom");
+
 		[Export]
-		public int ReentrantInner () => throw new InvalidOperationException ("reentrant-boom");
+		public int ReentrantInner () => throw InnerException;
 
 		[Export]
 		public int ReentrantOuter ()

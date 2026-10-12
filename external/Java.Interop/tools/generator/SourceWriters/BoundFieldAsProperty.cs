@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	// This is a field that is not a constant, and thus we need to generate it as a
@@ -23,14 +21,9 @@ namespace generator.SourceWriters
 
 			Name = field.Name;
 
-			string fieldType;
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				fieldType = opt.GetTypeReferenceName (field);
-			} else {
-				fieldType = field.Symbol.IsArray
-					? "IList<" + field.Symbol.ElementType + ">" + opt.NullableOperator
-					: opt.GetTypeReferenceName (field);
-			}
+			string fieldType = field.Symbol.IsArray
+				? "IList<" + field.Symbol.ElementType + ">" + opt.NullableOperator
+				: opt.GetTypeReferenceName (field);
 
 			PropertyType = new TypeReferenceWriter (fieldType);
 
@@ -42,9 +35,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, field, opt);
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
-			}
+			Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, opt, field.IsDeprecated, isError: field.IsDeprecatedError, deprecatedSince: field.DeprecatedSince);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, field.AnnotatedVisibility, false, opt);
@@ -92,18 +83,6 @@ namespace generator.SourceWriters
 
 			writer.WriteLine ($"var __v = {field.Symbol.ReturnCast}_members.{indirect}.{invoke} (__id{(field.IsStatic ? "" : ", this")});");
 
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				if (field.Symbol.NativeType == field.Symbol.FullName || field.Symbol.OnlyFormatOnMarshal) {
-					writer.WriteLine ("return __v;");
-					return;
-				}
-				writer.Write ("return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<");
-				PropertyType.WriteTypeReference (writer);
-				writer.Write (">(ref __v, JniObjectReferenceOptions.Copy)");
-				writer.WriteLine (";");
-				return;
-			}
-
 			if (field.Symbol.IsArray) {
 				writer.WriteLine ($"return global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);");
 			} else if (field.Symbol.NativeType != field.Symbol.FullName && !field.Symbol.OnlyFormatOnMarshal) {
@@ -126,12 +105,8 @@ namespace generator.SourceWriters
 			bool have_prep = false;
 
 			if (field.Symbol.IsArray) {
-				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-					arg = "value";
-				} else {
-					arg = native_arg;
-					writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.ToLocalJniHandle (value);");
-				}
+				arg = native_arg;
+				writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.ToLocalJniHandle (value);");
 			} else {
 				foreach (var prep in field.SetParameters.GetCallPrep (opt)) {
 					have_prep = true;
@@ -143,22 +118,15 @@ namespace generator.SourceWriters
 					? opt.GetSafeIdentifier (param.Name)
 					: param.ToNative (opt);
 
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 &&
-						field.SetParameters.HasCleanup &&
-						!have_prep) {
+				if (field.SetParameters.HasCleanup && !have_prep) {
 					arg = native_arg;
 					writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);");
 				}
 			}
 
-			var needsFinally = field.Symbol.IsArray
-				? opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1
-				: SourceWriterExtensions.HasCallCleanup (field.SetParameters, opt) ||
-					(field.SetParameters.HasCleanup && !have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1);
-			var needsKeepAlive = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
-					field.Symbol.JniName != null &&
-					field.Symbol.JniName.Length > 1 &&
-					(field.Symbol.JniName [0] == 'L' || field.Symbol.JniName [0] == '[');
+			var needsFinally = field.Symbol.IsArray ||
+				SourceWriterExtensions.HasCallCleanup (field.SetParameters, opt) ||
+				(field.SetParameters.HasCleanup && !have_prep);
 
 			if (needsFinally) {
 				writer.WriteLine ("try {");
@@ -167,19 +135,7 @@ namespace generator.SourceWriters
 
 			writer.Write ($"_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
 
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				if (invokeType != "Object" || have_prep) {
-					if (field.SetParameters [0].Symbol.OnlyFormatOnMarshal)
-						writer.Write (opt.GetSafeIdentifier (field.SetParameters [0].Name));
-					else
-						writer.Write (arg);
-				} else {
-					writer.Write ($"{arg}?.PeerReference ?? default");
-				}
-				writer.WriteLine (");");
-			} else {
-				writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
-			}
+			writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
 
 			if (needsFinally) {
 				writer.WriteLine ("} finally {");
@@ -189,17 +145,12 @@ namespace generator.SourceWriters
 					writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
 				} else {
 					SourceWriterExtensions.WriteCallCleanup (writer, field.SetParameters, opt);
-					if (!have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+					if (!have_prep)
 						writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
 				}
 
-				if (needsKeepAlive)
-					writer.WriteLine ("GC.KeepAlive (value);");
-
 				writer.Unindent ();
 				writer.WriteLine ("}");
-			} else if (needsKeepAlive) {
-				writer.WriteLine ($"GC.KeepAlive (value);");
 			}
 		}
 	}

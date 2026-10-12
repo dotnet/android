@@ -193,17 +193,6 @@ Added in .NET 8.
 
 [feature-switches]: /dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0#trim-framework-library-features
 
-## AndroidBinUtilsPath
-
-A path to a directory containing
-the Android [binutils][binutils] such as `ld`, the native linker,
-and `as`, the native assembler. These tools are included in the
-.NET for Android workload.
-
-The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
-
-[binutils]: https://github.com/dotnet/android-native-tools/
-
 ## AndroidBoundExceptionType
 
 A string value that specifies how
@@ -307,10 +296,10 @@ Possible values include:
   Xamarin.Android 6.1 or later. Xamarin.Android 6.1 and later bind
   `Mono.Android.dll` with this value.
 
-- **JavaInterop1**: experimental value, currently the default for the
-  NativeAOT runtime.
+- **JavaInterop1**: this value is obsolete and is no longer supported.
 
-The default value is `XAJavaInterop1`.
+The default and only supported value is `XAJavaInterop1`, including for
+the NativeAOT runtime.
 
 ## AndroidCreatePackagePerAbi
 
@@ -1155,22 +1144,59 @@ documentation on [D8 and R8][d8-r8].
 An enum-style property that specifies how `r8` obfuscates Java names when
 [`$(AndroidLinkTool)`](#androidlinktool) is `r8`. Supported values are:
 
-- `private-members` preserves Java class and interface names and public or
-  protected member names. Private and package-private members can be
-  obfuscated, and R8 optimization is enabled.
-- `disabled` disables obfuscation, preserves all Java names, and uses the
-  non-optimizing Android R8 defaults.
+| Value | Behavior |
+|---|---|
+| `private-members` | Preserves Java class and interface names and public or protected member names. Private and package-private members can be obfuscated, and R8 optimization is enabled. |
+| `disabled` | Disables obfuscation, preserves all Java names, and uses the non-optimizing Android R8 defaults. |
+| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using a separate read-only binary data library. Available for trimmed CoreCLR and NativeAOT applications. |
 
-This property does not disable R8 code shrinking.
+This property does not disable R8 code shrinking. It was introduced in a .NET 10
+servicing release and defaults to `disabled` in .NET 10 and to `private-members`
+in .NET 11 and later. The experimental `runtime-remapping` value was added in
+.NET 11 and must be selected explicitly.
+
+The `runtime-remapping` value requires `AndroidLinkTool=r8`,
+`PublishTrimmed=true`, and either the CoreCLR or NativeAOT runtime. Explicit incompatible settings produce
+[XA4329](../messages/xa4329.md) rather than being silently changed. This
+runtime-remapping mode has no effect on library projects.
+
+For example:
+
+```xml
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <AndroidLinkTool>r8</AndroidLinkTool>
+  <PublishTrimmed>true</PublishTrimmed>
+  <AndroidR8ObfuscationMode>runtime-remapping</AndroidR8ObfuscationMode>
+</PropertyGroup>
+```
+
+CoreCLR and NativeAOT applications also package a separate per-ABI
+`libbinary_blobs.so` for ordinary JNI remapping in Debug and non-obfuscated
+builds that have remapping entries. Empty mappings omit the remapping symbol
+and do not require a data library. The remapping data is not compiled into the
+application's native code or shipped as an XML asset.
+
+The runtime-remapping mode leaves managed assemblies unchanged. It runs R8 once,
+after managed trimming or ILC, then uses the resulting R8 mapping to
+generate a per-ABI `libbinary_blobs.so` containing bounded, read-only JNI
+remapping data. CoreCLR selects remaps from linked assemblies. NativeAOT
+selects remaps from retained JNI literals in ILC's native object. Neither
+runtime needs to compile the remapping table into application native code.
+The build validates the full ELF and remapping payload. The native host checks
+the payload envelope and passes bounded data to the managed lookup. The
+uncompressed payload remains mapped without copying by default.
+
+Runtime-generated JNI names may require explicit remapping or keep rules.
+Conservative keep rules still protect native callbacks, bootstrap code, and
+resource-referenced names. No mode falls back to another mode; unrecognized
+values report [XA1050](../messages/xa1050.md) when R8 is enabled.
 
 When managed-trimmed CoreCLR builds use retained typemap rules, all Java
 names are preserved regardless of this setting, but R8 optimization remains
 enabled. This path uses the optimizing Android defaults together with
 `-dontobfuscate` and `--no-minification`; disabling renaming does not disable
-optimization.
-
-This property was introduced in a .NET 10 servicing release. It defaults to
-`disabled` in .NET 10 and to `private-members` in .NET 11 and later.
+optimization. The `runtime-remapping` mode uses its own renameable retention
+policy instead of this no-minification path.
 
 ## AndroidResgenExtraArgs
 

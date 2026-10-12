@@ -59,7 +59,8 @@ MSBuild logic related to *.runtimeconfig.json files.
       BeforeTargets="_PrepareTrimConfiguration;_GenerateRuntimeConfigurationFilesInputCache"
       DependsOnTargets="_ConvertAndroidMamMappingFileToXml">
     <PropertyGroup>
-      <_AndroidJniRemappingEnabled Condition=" '$(_AndroidJniRemappingEnabled)' == '' and '@(_AndroidRemapMembers->Count())' != '0' ">true</_AndroidJniRemappingEnabled>
+      <_AndroidJniRemappingEnabled
+          Condition=" '$(_AndroidJniRemappingEnabled)' == '' and ('@(_AndroidRemapMembers->Count())' != '0' or '$(_AndroidR8RuntimeRemappingEnabled)' == 'true') ">true</_AndroidJniRemappingEnabled>
       <_AndroidJniRemappingEnabled Condition=" '$(_AndroidJniRemappingEnabled)' == '' ">false</_AndroidJniRemappingEnabled>
     </PropertyGroup>
     <ItemGroup>

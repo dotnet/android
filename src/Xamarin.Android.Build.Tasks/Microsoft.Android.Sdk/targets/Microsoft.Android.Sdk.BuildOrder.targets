@@ -32,7 +32,6 @@ properties that determine build ordering.
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' And '$(_AndroidRuntime)' == 'CoreCLR' ">
-    <_NativeRuntimeLinking>_LinkNativeRuntime</_NativeRuntimeLinking>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'True' ">
@@ -80,8 +79,6 @@ properties that determine build ordering.
       $(AfterGenerateAndroidManifest);
       _ReadAndroidManifest;
       _CompileJava;
-      _CreateApplicationSharedLibraries;
-      $(_NativeRuntimeLinking);
       _CompileDex;
       $(_AfterCompileDex);
       _CreateBaseApk;

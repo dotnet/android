@@ -248,8 +248,7 @@ namespace Java.Interop {
 				if (type == null)
  					throw new ArgumentNullException (nameof (type));
 
-				var builtIn = GetBuiltInTypeSignature (type);
-				return builtIn.IsValid ? builtIn : GetTypeSignatureCore (type);
+				return GetTypeSignatureCore (type);
 			}
 
 			protected virtual JniTypeSignature GetTypeSignatureCore (Type type) => default;
@@ -261,10 +260,6 @@ namespace Java.Interop {
 
 				if (type == null)
 					return [];
-
-				var builtIn = GetBuiltInTypeSignature (type);
-				if (builtIn.IsValid)
-					return new [] { builtIn };
 
 				return GetTypeSignaturesCore (type);
 			}
@@ -297,27 +292,12 @@ namespace Java.Interop {
 
 			protected virtual IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference) => [];
 
-			static JniTypeSignature GetBuiltInTypeSignature (Type type)
-			{
-				if (type == typeof (JavaProxyObject))
-					return new JniTypeSignature (JavaProxyObject.JniTypeName, 0, false);
-				if (type == typeof (JavaProxyThrowable))
-					return new JniTypeSignature (JavaProxyThrowable.JniTypeName, 0, false);
-				return default;
-			}
-
 			static Type? GetBuiltInType (JniTypeSignature typeSignature)
 			{
 				if (typeSignature.ArrayRank != 0)
 					return null;
-				if (!typeSignature.IsKeyword) {
-					return typeSignature.SimpleReference switch {
-						JavaProxyObject.JniTypeName     => typeof (JavaProxyObject),
-						JavaProxyThrowable.JniTypeName  => typeof (JavaProxyThrowable),
-						ManagedPeer.JniTypeName         => typeof (ManagedPeer),
-						_                               => null,
-					};
-				}
+				if (!typeSignature.IsKeyword)
+					return null;
 				return typeSignature.SimpleReference switch {
 					"V" => typeof (void),
 					"Z" => typeof (bool),
