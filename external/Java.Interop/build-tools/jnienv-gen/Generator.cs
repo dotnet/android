@@ -189,10 +189,11 @@ namespace Xamarin.Java.Interop
 					continue;
 
 				var returnType = entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true);
-				bool requiresUnsafe = returnType.IndexOf ('*') >= 0 ||
+				bool requiresUnsafe = entry.CallerSafetyRequirements.Length > 0 || returnType.IndexOf ('*') >= 0 ||
 					entry.Parameters.Any (p => p.Type.GetMarshalType (isReturn: false, isPinvoke: true).IndexOf ('*') >= 0);
 
 				o.WriteLine ();
+				WriteCallerSafetyRequirements (o, entry);
 				o.WriteLine ("\t\t[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
 				o.Write ("\t\tinternal static {0}", requiresUnsafe ? "unsafe " : "");
 				o.Write (entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true));
@@ -236,7 +237,8 @@ namespace Xamarin.Java.Interop
 					continue;
 
 				o.WriteLine ();
-				bool requiresUnsafe = entry.GetManagedReturnType ().IndexOf ('*') >= 0 ||
+				WriteCallerSafetyRequirements (o, entry);
+				bool requiresUnsafe = entry.CallerSafetyRequirements.Length > 0 || entry.GetManagedReturnType ().IndexOf ('*') >= 0 ||
 					entry.Parameters.Any (p => p.Type.GetManagedType (isReturn: false).IndexOf ('*') >= 0);
 				o.Write ("\t\t{2} static {3}{0} {1} (", entry.GetManagedReturnType (), entry.ApiName, entry.Visibility, requiresUnsafe ? "unsafe " : "");
 				switch (entry.ApiName) {
@@ -290,6 +292,17 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ("\t\t}");
 			}
 			o.WriteLine ("\t}");
+		}
+
+		static void WriteCallerSafetyRequirements (TextWriter o, JniFunction entry)
+		{
+			if (entry.CallerSafetyRequirements.Length == 0)
+				return;
+
+			o.WriteLine ("\t\t/// <remarks>");
+			foreach (var requirement in entry.CallerSafetyRequirements)
+				o.WriteLine ("\t\t/// {0}", requirement);
+			o.WriteLine ("\t\t/// </remarks>");
 		}
 
 		static string GetPinvokeName (string name)
@@ -477,6 +490,8 @@ namespace Xamarin.Java.Interop
 		
 		public TypeInfo ReturnType;
 		public ParamInfo [] Parameters;
+
+		public string[] CallerSafetyRequirements = [];
 
 		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
 		public bool CustomWrapper = false;
