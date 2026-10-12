@@ -106,8 +106,19 @@ steps:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     run: |
-      existing_prs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=main&per_page=100" \
-        --jq '.[] | select(.title == "[skill-runner] update-androidsdk-packages") | .number')"
+      existing_prs="$(
+        set -e
+        page=1
+        while true; do
+          prs="$(gh api --method GET "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=main&per_page=100&page=${page}")"
+          printf '%s' "$prs" | jq -e 'type == "array"' > /dev/null
+          if [ "$(printf '%s' "$prs" | jq 'length')" -eq 0 ]; then
+            break
+          fi
+          printf '%s' "$prs" | jq -r '.[] | select(.title == "[skill-runner] update-androidsdk-packages") | .number'
+          page=$((page + 1))
+        done
+      )"
       if [ -n "$existing_prs" ]; then
         printf '{"type":"noop","message":"An open [skill-runner] update-androidsdk-packages PR already exists against main: #%s. No duplicate PR will be created."}\n' \
           "$(printf '%s' "$existing_prs" | paste -sd, -)" >> "$GH_AW_SAFE_OUTPUTS"
