@@ -12,13 +12,16 @@ public partial class MyClass {
 			return global::Java.Lang.Object.GetObject<java.code.Example> (__v.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 		set {
-			const string __id = "field.Ljava/code/Example;";
+			unsafe {
+				// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+				const string __id = "field.Ljava/code/Example;";
 
-			IntPtr native_value = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);
-			try {
-				_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-			} finally {
-				global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+				IntPtr native_value = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);
+				try {
+					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+				} finally {
+					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+				}
 			}
 		}
 	}
