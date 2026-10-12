@@ -10,13 +10,11 @@ namespace Android.Widget {
 	partial class AbsListView {
 
 		static Delegate? cb_getAdapter;
-#pragma warning disable 0169
 		static Delegate GetGetAdapterHandler ()
 		{
 			return cb_getAdapter ??= new _JniMarshal_PP_L (n_GetAdapter);
 		}
 
-		static IntPtr id_getAdapter;
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
@@ -35,7 +33,6 @@ namespace Android.Widget {
 		}
 
 		static Delegate? cb_setAdapter_Landroid_widget_Adapter_;
-#pragma warning disable 0169
 		static Delegate GetSetAdapter_Landroid_widget_ListAdapter_Handler ()
 		{
 			return cb_setAdapter_Landroid_widget_Adapter_ ??= new _JniMarshal_PPL_V (n_SetAdapter_Landroid_widget_ListAdapter_);
@@ -57,7 +54,6 @@ namespace Android.Widget {
 				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
 			}
 		}
-#pragma warning restore 0169
 
 #pragma warning disable CS8764 // AdapterView<T> predates NRT, but an AbsListView can have no adapter.
 		public abstract override IListAdapter? Adapter {
