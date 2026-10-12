@@ -1179,8 +1179,7 @@ namespace Android.Runtime {
 			if (array_ptr == IntPtr.Zero)
 				return null;
 
-			if (typeof (T).IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, destElementType: typeof (T));
+			AssertCompatibleArrayTypes (array_ptr, destElementType: typeof (T));
 
 			int cnt = _GetArrayLength (array_ptr);
 			T[] ret = new T [cnt];

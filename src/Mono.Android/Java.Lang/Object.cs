@@ -180,7 +180,14 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public T[]? ToArray<T>()
 		{
-			return JNIEnv.GetArray<T>(Handle);
+			try {
+				unsafe {
+					// SAFETY: this peer owns the JNI object reference; GetArray checks its compatible array kind before native access.
+					return JNIEnv.GetArray<T> (Handle);
+				}
+			} finally {
+				GC.KeepAlive (this);
+			}
 		}
 
 		public static Java.Lang.Object? FromArray<T>(T[] value)
