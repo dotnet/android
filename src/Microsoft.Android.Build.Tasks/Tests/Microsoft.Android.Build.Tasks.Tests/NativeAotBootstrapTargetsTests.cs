@@ -70,10 +70,11 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("true", File.ReadAllText (stamp));
 		FileAssert.Exists (output);
-		string symbols = Encoding.UTF8.GetString (File.ReadAllBytes (output));
-		StringAssert.Contains ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "\0", symbols);
-		StringAssert.Contains ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "_size\0", symbols);
-		StringAssert.DoesNotContain ("\0remapping_data\0", symbols, "The static NativeAOT object must not use CoreCLR's dynamic lookup symbol.");
+		ReadOnlySpan<byte> symbols = File.ReadAllBytes (output);
+		Assert.GreaterOrEqual (symbols.IndexOf (Encoding.ASCII.GetBytes ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "\0")), 0);
+		Assert.GreaterOrEqual (symbols.IndexOf (Encoding.ASCII.GetBytes ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "_size\0")), 0);
+		Assert.AreEqual (-1, symbols.IndexOf (Encoding.ASCII.GetBytes ("\0remapping_data\0")),
+			"The static NativeAOT object must not use CoreCLR's dynamic lookup symbol.");
 		File.WriteAllText (xml, "<replacements />");
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("false", File.ReadAllText (stamp));
