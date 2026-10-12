@@ -7,13 +7,20 @@ using Android.Runtime;
 namespace Java.Interop {
 
 	public static partial class TypeManager {
-		internal static string GetClassName (IntPtr class_ptr)
+		/// <safety>
+		/// <paramref name="class_ptr"/> must be a live JNI class reference usable on the current thread during lookup.
+		/// </safety>
+		internal static unsafe string GetClassName (IntPtr class_ptr)
 		{
-			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
-			string ret = Marshal.PtrToStringAnsi (ptr)!;
-			RuntimeNativeMethods.monodroid_free (ptr);
-
-			return ret;
+			unsafe {
+				// SAFETY: the caller retains the class; native lookup returns its own terminated string allocation, freed once below.
+				IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
+				try {
+					return Marshal.PtrToStringAnsi (ptr) ?? throw new InvalidOperationException ("Native class-name lookup returned no name.");
+				} finally {
+					RuntimeNativeMethods.monodroid_free (ptr);
+				}
+			}
 		}
 
 		class TypeNameComparer : IComparer<string> {

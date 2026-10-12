@@ -13,6 +13,8 @@
     <NoWarn>0618;0809;0108;0114;0465;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Allows audited safe declarations while this assembly still uses legacy memory-safety rules. -->
+    <LangVersion>preview</LangVersion>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>

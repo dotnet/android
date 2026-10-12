@@ -20,7 +20,8 @@ namespace Android.OS {
 	> : AsyncTask {
 
 		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		static extern ref readonly JniPeerMembers GetPeerMembers (AsyncTask? _);
+		// Accesses the exact managed static field without changing its type or allowing writes.
+		static safe extern ref readonly JniPeerMembers GetPeerMembers (AsyncTask? _);
 
 		protected override IntPtr ThresholdClass {
 			get { return GetPeerMembers (null).GetPeerTypeHandle (); }
@@ -39,13 +40,16 @@ namespace Android.OS {
 		public AsyncTask ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
-				return;
+			unsafe {
+				// SAFETY: the AsyncTask signatures match the argument/return ABI; the owned object array and retained receiver span invocation and copy-back.
+				if (Handle != IntPtr.Zero)
+					return;
 
-			SetHandle (
-					JNIEnv.StartCreateInstance (GetType (), "()V"),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+				SetHandle (
+						JNIEnv.StartCreateInstance (GetType (), "()V"),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 		}
 
 		protected override Java.Lang.Object? DoInBackground (params Java.Lang.Object[]? native_parms)
@@ -65,17 +69,20 @@ namespace Android.OS {
 		[Register ("execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;", "")]
 		public Android.OS.AsyncTask<TParams, TProgress, TResult>? Execute (params TParams[] @params)
 		{
-			if (id_execute_arrayLjava_lang_Object_ == IntPtr.Zero)
-				id_execute_arrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;");
-			IntPtr native__params = JNIEnv.NewObjectArray<TParams> (@params);
-			try {
-				var __ret = Java.Lang.Object.GetObject<Android.OS.AsyncTask<TParams, TProgress, TResult>> (JNIEnv.CallObjectMethod  (Handle, id_execute_arrayLjava_lang_Object_, new JValue (native__params)), JniHandleOwnership.TransferLocalRef);
-				if (@params != null)
-					JNIEnv.CopyObjectArray (native__params, @params);
-				return __ret;
-			} finally {
-				if (@params != null) {
-					JNIEnv.DeleteLocalRef (native__params);
+			unsafe {
+				// SAFETY: the AsyncTask signatures match the argument/return ABI; the owned object array and retained receiver span invocation and copy-back.
+				if (id_execute_arrayLjava_lang_Object_ == IntPtr.Zero)
+					id_execute_arrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;");
+				IntPtr native__params = JNIEnv.NewObjectArray<TParams> (@params);
+				try {
+					var __ret = Java.Lang.Object.GetObject<Android.OS.AsyncTask<TParams, TProgress, TResult>> (JNIEnv.CallObjectMethod  (Handle, id_execute_arrayLjava_lang_Object_, new JValue (native__params)), JniHandleOwnership.TransferLocalRef);
+					if (@params != null)
+						JNIEnv.CopyObjectArray (native__params, @params);
+					return __ret;
+				} finally {
+					if (@params != null) {
+						JNIEnv.DeleteLocalRef (native__params);
+					}
 				}
 			}
 		}
@@ -84,9 +91,12 @@ namespace Android.OS {
 		[Register ("get", "()Ljava/lang/Object;", "")]
 		public TResult? GetResult ()
 		{
-			if (id_get == IntPtr.Zero)
-				id_get = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "()Ljava/lang/Object;");
-			return JavaConvert.FromJniHandle<TResult>(JNIEnv.CallObjectMethod  (Handle, id_get), JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: the AsyncTask signatures match the argument/return ABI; the owned object array and retained receiver span invocation and copy-back.
+				if (id_get == IntPtr.Zero)
+					id_get = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "()Ljava/lang/Object;");
+				return JavaConvert.FromJniHandle<TResult>(JNIEnv.CallObjectMethod  (Handle, id_get), JniHandleOwnership.TransferLocalRef);
+			}
 		}
 
 		protected override void OnPostExecute (Java.Lang.Object? result)

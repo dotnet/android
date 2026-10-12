@@ -31,6 +31,11 @@ namespace Java.Lang {
 			return JniObjectReferenceOptions.CopyAndDispose;
 		}
 
+		/// <safety>
+		/// <paramref name="handle"/> must be null or a live JNI Throwable reference usable on the current thread
+		/// during construction. <paramref name="transfer"/> must describe reference ownership the caller actually
+		/// holds; transferred references must not be reused after this constructor releases them.
+		/// </safety>
 		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
 			: base (GetThrowableReference (handle, transfer), JniObjectReferenceOptions.CopyAndDispose)
 		{
@@ -114,13 +119,16 @@ namespace Java.Lang {
 			return ThresholdType;
 		}
 
-		public unsafe Java.Lang.Class? Class {
+		public Java.Lang.Class? Class {
 			[Register ("getClass", "()Ljava/lang/Class;", "GetGetClassHandler")]
 			get {
-				IntPtr value;
-				const string __id = "getClass.()Ljava/lang/Class;";
-				value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
-				return global::Java.Lang.Object.GetObject<Java.Lang.Class> (value, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: getClass is a parameterless instance call returning Class; its local reference transfers to the managed peer.
+					IntPtr value;
+					const string __id = "getClass.()Ljava/lang/Class;";
+					value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
+					return global::Java.Lang.Object.GetObject<Java.Lang.Class> (value, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 

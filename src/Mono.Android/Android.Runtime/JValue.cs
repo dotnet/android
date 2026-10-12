@@ -16,15 +16,16 @@ namespace Android.Runtime {
 	[StructLayout(LayoutKind.Explicit)]
 	public struct JValue {
 #pragma warning disable 0414
-		[FieldOffset(0)] bool z;
-		[FieldOffset(0)] sbyte b;
-		[FieldOffset(0)] char c;
-		[FieldOffset(0)] short s;
-		[FieldOffset(0)] int i;
-		[FieldOffset(0)] long j;
-		[FieldOffset(0)] float f;
-		[FieldOffset(0)] double d;
-		[FieldOffset(0)] IntPtr l;
+		// These JNI union members store scalar bits or a handle; reading them does not dereference that handle.
+		[FieldOffset(0)] safe bool z;
+		[FieldOffset(0)] safe sbyte b;
+		[FieldOffset(0)] safe char c;
+		[FieldOffset(0)] safe short s;
+		[FieldOffset(0)] safe int i;
+		[FieldOffset(0)] safe long j;
+		[FieldOffset(0)] safe float f;
+		[FieldOffset(0)] safe double d;
+		[FieldOffset(0)] safe IntPtr l;
 #pragma warning restore 0414
 
 		/// <summary>
@@ -150,4 +151,3 @@ namespace Android.Runtime {
 		}
 	}
 }
-

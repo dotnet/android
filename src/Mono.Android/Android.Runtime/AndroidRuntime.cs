@@ -11,7 +11,12 @@ namespace Android.Runtime {
 
 		public const string InternalDllName = RuntimeConstants.InternalDllName;
 
-		internal AndroidRuntime (IntPtr jnienv,
+		/// <safety>
+		/// <paramref name="vm"/> must be a live JavaVM for this runtime's lifetime. <paramref name="jnienv"/>
+		/// must be null (VM-only attachment) or a live environment for that VM on the current thread.
+		/// <paramref name="classLoader"/> must be null or a live global class-loader reference during initialization.
+		/// </safety>
+		internal unsafe AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
 				JniRuntime.JniTypeManager typeManager,
