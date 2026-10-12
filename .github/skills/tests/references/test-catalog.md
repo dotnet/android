@@ -39,6 +39,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
 NativeAOT offset-based property reader. Its native probe memory-maps the generated
 ELF `.o` and reads the raw bootstrap body without Java/JNI transport or payload copies.
+It uses the production raw-only envelope reader and checks compressed/truncated rejection.
 On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 

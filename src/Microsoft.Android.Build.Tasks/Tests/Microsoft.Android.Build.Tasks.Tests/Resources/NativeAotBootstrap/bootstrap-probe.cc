@@ -1,4 +1,5 @@
 #include <charconv>
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -23,10 +24,20 @@ void Helpers::abort_application (LogCategories, const char *message, bool, std::
 	std::exit (EXIT_FAILURE);
 }
 
+void Helpers::abort_applicationf (LogCategories, std::source_location, const char *format, ...) noexcept
+{
+	va_list args;
+	va_start (args, format);
+	std::vfprintf (stderr, format, args);
+	va_end (args);
+	std::fputc ('\n', stderr);
+	std::exit (EXIT_FAILURE);
+}
+
 int main (int argc, char **argv)
 {
 	if (argc != 5) {
-		Helpers::abort_application ("Expected object path, body offset, body size and property name");
+		Helpers::abort_application ("Expected object path, envelope offset, envelope size and property name");
 	}
 	size_t offset = 0;
 	uint32_t size = 0;
@@ -55,8 +66,14 @@ int main (int argc, char **argv)
 	if (::close (descriptor) != 0 || mapping == MAP_FAILED) {
 		Helpers::abort_application ("Unable to map generated bootstrap object");
 	}
-	auto body = static_cast<const uint8_t*>(mapping) + offset;
-	AppSystemProperties::initialize ({ body, size });
+	auto blob = static_cast<const uint8_t*>(mapping) + offset;
+	auto payload = BinaryBlobLoader::read_uncompressed (blob, size, "dotnet_android_nativeaot_bootstrap");
+	if (payload.data != blob + 16 || static_cast<uint64_t>(payload.size) + 16 != size) {
+		Helpers::abort_application ("Raw bootstrap payload must point directly into the mapped envelope");
+	}
+	auto body = payload.data;
+	size = payload.size;
+	AppSystemProperties::initialize (payload);
 
 	size_t value_length = 0;
 	const char *value = AppSystemProperties::lookup (argv[4], value_length);

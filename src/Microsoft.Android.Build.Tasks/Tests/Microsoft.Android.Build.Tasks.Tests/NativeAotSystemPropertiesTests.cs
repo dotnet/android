@@ -29,11 +29,13 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Directory.CreateDirectory (probeDirectory);
 		nativeProbe = Path.Combine (probeDirectory, "bootstrap-probe");
 		var compile = NativeAotBootstrapTestTools.Run (Environment.GetEnvironmentVariable ("CXX") ?? "clang++",
-			"-std=c++23",
+			"-std=c++23", "-O2", "-ffunction-sections", "-fdata-sections",
+			OperatingSystem.IsMacOS () ? "-Wl,-dead_strip" : "-Wl,--gc-sections",
 			"-I" + Path.Combine (root, "src", "native", "nativeaot", "include"),
 			"-I" + Path.Combine (root, "src", "native", "common", "include"),
 			"-I" + Path.Combine (root, "external", "Java.Interop", "src", "java-interop"),
 			Path.Combine (root, "src", "native", "nativeaot", "runtime-base", "app-system-properties.cc"),
+			Path.Combine (root, "src", "native", "clr", "runtime-base", "binary-blob-loader.cc"),
 			Path.Combine (ResourcesDirectory, "bootstrap-probe.cc"),
 			"-o", nativeProbe);
 		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
@@ -79,7 +81,25 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		StringAssert.Contains ("Invalid NativeAOT bootstrap header", result.Error);
 	}
 
-	(int ExitCode, string Output, string Error) RunProbe (string contents, string key, Action<byte []>? corrupt = null, string abi = "arm64-v8a")
+	[Test]
+	public void RejectsCompressedNativeAotData ()
+	{
+		var result = RunProbe ("debug.value=test\n", "debug.value", markCompressed: true);
+		Assert.AreNotEqual (0, result.ExitCode);
+		StringAssert.Contains ("Compressed NativeAOT binary blob", result.Error);
+	}
+
+	[Test]
+	public void RejectsTruncatedEnvelopeBeforeReadingHeader ()
+	{
+		var result = RunProbe ("debug.value=test\n", "debug.value", envelopeLengthOverride: 15);
+		Assert.AreNotEqual (0, result.ExitCode);
+		StringAssert.Contains ("Missing or truncated binary blob", result.Error);
+	}
+
+	(int ExitCode, string Output, string Error) RunProbe (
+		string contents, string key, Action<byte []>? corrupt = null, string abi = "arm64-v8a",
+		bool markCompressed = false, uint? envelopeLengthOverride = null)
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
@@ -118,13 +138,18 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual (bodyLength, BinaryPrimitives.ReadUInt32LittleEndian (envelope.Slice (8, 4)));
 		Assert.AreEqual ((ulong)bodyLength + EnvelopeSize, envelopeLength);
 		ulong bodyOffset = checked (envelopeOffset + EnvelopeSize);
-		if (corrupt != null) {
-			byte [] body = image.AsSpan (checked ((int)bodyOffset), checked ((int)bodyLength)).ToArray ();
-			corrupt (body);
-			body.CopyTo (image, checked ((int)bodyOffset));
+		if (corrupt != null || markCompressed) {
+			if (corrupt != null) {
+				byte [] body = image.AsSpan (checked ((int)bodyOffset), checked ((int)bodyLength)).ToArray ();
+				corrupt (body);
+				body.CopyTo (image, checked ((int)bodyOffset));
+			}
+			if (markCompressed) {
+				image [checked ((int)envelopeOffset) + 6] = 1;
+			}
 			File.WriteAllBytes (objectFile, image);
 		}
 		return NativeAotBootstrapTestTools.Run (nativeProbe, objectFile,
-			bodyOffset.ToString (CultureInfo.InvariantCulture), bodyLength.ToString (CultureInfo.InvariantCulture), key);
+			envelopeOffset.ToString (CultureInfo.InvariantCulture), (envelopeLengthOverride ?? envelopeLength).ToString (CultureInfo.InvariantCulture), key);
 	}
 }
