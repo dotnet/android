@@ -32,15 +32,4 @@ internal static class NativeAotBootstrapTestTools
 		}
 		return NativeToolTestHelper.Capture (startInfo, TimeSpan.FromMinutes (2));
 	}
-
-	internal static string JavaTool (string name)
-	{
-		string? javaHome = Environment.GetEnvironmentVariable ("JAVA_HOME")
-			?? Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
-		if (string.IsNullOrEmpty (javaHome)) {
-			Assert.Ignore ("Host JNI bootstrap tests require JAVA_HOME or TEST_ANDROID_JDK_PATH");
-		}
-		return Path.Combine (javaHome ?? throw new InvalidOperationException ("Java home is required"),
-			"bin", name + (OperatingSystem.IsWindows () ? ".exe" : ""));
-	}
 }

@@ -1,13 +1,14 @@
 using System;
-using System.Collections.Generic;
+using System.Buffers.Binary;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 
+using ELFSharp.ELF;
+using ELFSharp.ELF.Sections;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -15,52 +16,48 @@ namespace Xamarin.Android.Build.Tests;
 [Platform ("MacOsX,Linux")]
 public class NativeAotSystemPropertiesTests : BaseTest
 {
-	string nativeLibrary = "";
-	string libraryDirectory = "";
+	string nativeProbe = "";
+	string probeDirectory = "";
 
 	static string ResourcesDirectory => Path.Combine (TestContext.CurrentContext.TestDirectory, "Resources", "NativeAotBootstrap");
 
 	[OneTimeSetUp]
 	public void CompileProductionReader ()
 	{
-		string javaTool = NativeAotBootstrapTestTools.JavaTool ("java");
-		string javaHome = Path.GetDirectoryName (Path.GetDirectoryName (javaTool))
-			?? throw new InvalidOperationException ("Unable to locate JNI headers");
 		string root = NativeAotBootstrapTestTools.FindRepositoryRoot ();
-		libraryDirectory = Path.Combine (Root, "temp", nameof (NativeAotSystemPropertiesTests));
-		Directory.CreateDirectory (libraryDirectory);
-		nativeLibrary = Path.Combine (libraryDirectory, OperatingSystem.IsMacOS () ? "libbootstrap-probe.dylib" : "libbootstrap-probe.so");
+		probeDirectory = Path.Combine (Root, "temp", nameof (NativeAotSystemPropertiesTests));
+		Directory.CreateDirectory (probeDirectory);
+		nativeProbe = Path.Combine (probeDirectory, "bootstrap-probe");
 		var compile = NativeAotBootstrapTestTools.Run (Environment.GetEnvironmentVariable ("CXX") ?? "clang++",
-			"-std=c++23", "-shared", "-fPIC",
-			"-I" + Path.Combine (javaHome, "include"),
-			"-I" + Path.Combine (javaHome, "include", OperatingSystem.IsMacOS () ? "darwin" : "linux"),
+			"-std=c++23",
 			"-I" + Path.Combine (root, "src", "native", "nativeaot", "include"),
 			"-I" + Path.Combine (root, "src", "native", "common", "include"),
 			"-I" + Path.Combine (root, "external", "Java.Interop", "src", "java-interop"),
 			Path.Combine (root, "src", "native", "nativeaot", "runtime-base", "app-system-properties.cc"),
 			Path.Combine (ResourcesDirectory, "bootstrap-probe.cc"),
-			"-o", nativeLibrary);
+			"-o", nativeProbe);
 		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
 	}
 
 	[OneTimeTearDown]
-	public void DeleteProductionReaderLibrary ()
+	public void DeleteProductionReaderProbe ()
 	{
-		if (libraryDirectory.Length > 0 && Directory.Exists (libraryDirectory)) {
-			Directory.Delete (libraryDirectory, recursive: true);
+		if (probeDirectory.Length > 0 && Directory.Exists (probeDirectory)) {
+			Directory.Delete (probeDirectory, recursive: true);
 		}
 	}
 
-	[Test]
-	public void ReadsGeneratedPropertiesAsTrueUtf8BeforeOtherNativeInitialization ()
+	[TestCase ("armeabi-v7a")]
+	[TestCase ("arm64-v8a")]
+	[TestCase ("x86_64")]
+	public void ReadsPropertiesFromMappedDataObjectAsTrueUtf8 (string abi)
 	{
 		string value = "\"C:\\quoted\"\t\u00e9\u4e2d\ud83d\ude80";
 		string key = "debug.bootstrap.\ud83d\ude80";
 		string contents = string.Join ("\n", Enumerable.Range (0, 1000).Select (i => $"debug.property.{i}=value-{i}"));
-		var result = RunProbe ($"{key}=old\n{contents}\n{key}={value}\n", key);
+		var result = RunProbe ($"{key}=old\n{contents}\n{key}={value}\n", key, abi: abi);
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-		Assert.AreEqual (value, Encoding.UTF8.GetString (Convert.FromBase64String (result.Output)));
-		StringAssert.DoesNotContain ("WARNING in native method", result.Output + result.Error);
+		Assert.AreEqual (value, result.Output);
 	}
 
 	[Test]
@@ -69,6 +66,9 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		var result = RunProbe ("", "debug.missing");
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 		Assert.AreEqual ("missing", result.Output);
+		var emptyValue = RunProbe ("debug.empty=\n", "debug.empty");
+		Assert.AreEqual (0, emptyValue.ExitCode, emptyValue.Output + emptyValue.Error);
+		Assert.AreEqual ("", emptyValue.Output);
 	}
 
 	[Test]
@@ -79,25 +79,52 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		StringAssert.Contains ("Invalid NativeAOT bootstrap header", result.Error);
 	}
 
-	(int ExitCode, string Output, string Error) RunProbe (string contents, string key, Action<byte []>? corrupt = null)
+	(int ExitCode, string Output, string Error) RunProbe (string contents, string key, Action<byte []>? corrupt = null, string abi = "arm64-v8a")
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
 		string environmentFile = Path.Combine (path, "environment.txt");
 		File.WriteAllText (environmentFile, contents);
-		var environment = new EnvironmentBuilder (escapeValues: false);
-		environment.Read ([new TaskItem (environmentFile)]);
-		string bodyFile = Path.Combine (path, "bootstrap.bin");
-		byte [] body = NativeAotBootstrapBlob.Create (environment.EnvironmentVariables, environment.SystemProperties);
-		corrupt?.Invoke (body);
-		File.WriteAllBytes (bodyFile, body);
-		string classesDirectory = Path.Combine (path, "classes");
-		Directory.CreateDirectory (classesDirectory);
-		var arguments = new List<string> { "-d", classesDirectory };
-		arguments.AddRange (Directory.GetFiles (ResourcesDirectory, "*.java", SearchOption.AllDirectories));
-		var compile = NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("javac"), arguments.ToArray ());
-		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
-		return NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("java"),
-			"-Xcheck:jni", "-cp", classesDirectory, "net.dot.jni.nativeaot.BootstrapProbe", nativeLibrary, key, bodyFile);
+		string objectFile = Path.Combine (path, "nativeaot-bootstrap.o");
+		var task = new GenerateNativeAotDataObject {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			OutputFile = objectFile,
+			Abi = abi,
+			Environments = [new TaskItem (environmentFile)],
+		};
+		Assert.IsTrue (task.Execute ());
+		ulong envelopeOffset;
+		ulong envelopeLength;
+		using (IELF elf = ELFReader.Load (objectFile)) {
+			Assert.AreEqual (FileType.Relocatable, elf.Type);
+			var symbol = ((ISymbolTable)elf.GetSection (".symtab")).Entries.Single (entry => entry.Name == NativeAotBootstrapBlob.Symbol);
+			Assert.AreEqual (".rodata", symbol.PointedSection.Name);
+			if (symbol is SymbolEntry<ulong> s64 && symbol.PointedSection is Section<ulong> section64) {
+				envelopeOffset = checked (section64.Offset + s64.Value);
+				envelopeLength = s64.Size;
+			} else if (symbol is SymbolEntry<uint> s32 && symbol.PointedSection is Section<uint> section32) {
+				envelopeOffset = checked ((ulong)section32.Offset + s32.Value);
+				envelopeLength = s32.Size;
+			} else {
+				throw new InvalidDataException ("Unsupported bootstrap ELF symbol.");
+			}
+		}
+		const int EnvelopeSize = 16;
+		byte [] image = File.ReadAllBytes (objectFile);
+		var envelope = image.AsSpan (checked ((int)envelopeOffset), EnvelopeSize);
+		Assert.AreEqual (0x42424c42u, BinaryPrimitives.ReadUInt32LittleEndian (envelope));
+		Assert.AreEqual (0, BinaryPrimitives.ReadUInt16LittleEndian (envelope.Slice (6, 2)), "Mapped bootstrap data must be uncompressed.");
+		uint bodyLength = BinaryPrimitives.ReadUInt32LittleEndian (envelope.Slice (12, 4));
+		Assert.AreEqual (bodyLength, BinaryPrimitives.ReadUInt32LittleEndian (envelope.Slice (8, 4)));
+		Assert.AreEqual ((ulong)bodyLength + EnvelopeSize, envelopeLength);
+		ulong bodyOffset = checked (envelopeOffset + EnvelopeSize);
+		if (corrupt != null) {
+			byte [] body = image.AsSpan (checked ((int)bodyOffset), checked ((int)bodyLength)).ToArray ();
+			corrupt (body);
+			body.CopyTo (image, checked ((int)bodyOffset));
+			File.WriteAllBytes (objectFile, image);
+		}
+		return NativeAotBootstrapTestTools.Run (nativeProbe, objectFile,
+			bodyOffset.ToString (CultureInfo.InvariantCulture), bodyLength.ToString (CultureInfo.InvariantCulture), key);
 	}
 }
