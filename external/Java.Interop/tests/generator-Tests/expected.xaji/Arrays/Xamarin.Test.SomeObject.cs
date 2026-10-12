@@ -29,13 +29,16 @@ namespace Xamarin.Test {
 				return global::Android.Runtime.JavaArray<string>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-				const string __id = "myStrings.[Ljava/lang/String;";
+				unsafe {
+					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+					const string __id = "myStrings.[Ljava/lang/String;";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<string>.ToLocalJniHandle (value);
-				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					IntPtr native_value = global::Android.Runtime.JavaArray<string>.ToLocalJniHandle (value);
+					try {
+						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					} finally {
+						global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}
@@ -51,13 +54,16 @@ namespace Xamarin.Test {
 				return global::Android.Runtime.JavaArray<int>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-				const string __id = "myInts.[I";
+				unsafe {
+					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+					const string __id = "myInts.[I";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<int>.ToLocalJniHandle (value);
-				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					IntPtr native_value = global::Android.Runtime.JavaArray<int>.ToLocalJniHandle (value);
+					try {
+						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					} finally {
+						global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}
@@ -73,13 +79,16 @@ namespace Xamarin.Test {
 				return global::Android.Runtime.JavaArray<bool>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-				const string __id = "mybools.[Z";
+				unsafe {
+					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+					const string __id = "mybools.[Z";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<bool>.ToLocalJniHandle (value);
-				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					IntPtr native_value = global::Android.Runtime.JavaArray<bool>.ToLocalJniHandle (value);
+					try {
+						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					} finally {
+						global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}
@@ -95,13 +104,16 @@ namespace Xamarin.Test {
 				return global::Android.Runtime.JavaArray<global::Java.Lang.Object>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-				const string __id = "myObjects.[Ljava/lang/Object;";
+				unsafe {
+					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+					const string __id = "myObjects.[Ljava/lang/Object;";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<global::Java.Lang.Object>.ToLocalJniHandle (value);
-				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					IntPtr native_value = global::Android.Runtime.JavaArray<global::Java.Lang.Object>.ToLocalJniHandle (value);
+					try {
+						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					} finally {
+						global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}
@@ -117,13 +129,16 @@ namespace Xamarin.Test {
 				return global::Android.Runtime.JavaArray<float>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-				const string __id = "myfloats.[F";
+				unsafe {
+					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+					const string __id = "myfloats.[F";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<float>.ToLocalJniHandle (value);
-				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					IntPtr native_value = global::Android.Runtime.JavaArray<float>.ToLocalJniHandle (value);
+					try {
+						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					} finally {
+						global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}
@@ -139,13 +154,16 @@ namespace Xamarin.Test {
 				return global::Android.Runtime.JavaArray<double>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-				const string __id = "mydoubles.[D";
+				unsafe {
+					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+					const string __id = "mydoubles.[D";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<double>.ToLocalJniHandle (value);
-				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					IntPtr native_value = global::Android.Runtime.JavaArray<double>.ToLocalJniHandle (value);
+					try {
+						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					} finally {
+						global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}
@@ -161,13 +179,16 @@ namespace Xamarin.Test {
 				return global::Android.Runtime.JavaArray<long>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-				const string __id = "mylongs.[J";
+				unsafe {
+					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
+					const string __id = "mylongs.[J";
 
-				IntPtr native_value = global::Android.Runtime.JavaArray<long>.ToLocalJniHandle (value);
-				try {
-					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-				} finally {
-					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					IntPtr native_value = global::Android.Runtime.JavaArray<long>.ToLocalJniHandle (value);
+					try {
+						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+					} finally {
+						global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}
