@@ -15,11 +15,6 @@
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />
 
   <ItemGroup>
-    <AssemblyMetadata Include="MemorySafetyCompilerPath" Value="$(MSBuildToolsPath)/Roslyn/bincore/csc.dll" />
-    <AssemblyMetadata Include="MemorySafetyDotNetPath" Value="$(NetCoreRoot)dotnet$(ExeExtension)" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="nunit" />
