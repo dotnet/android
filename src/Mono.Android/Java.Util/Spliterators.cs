@@ -18,14 +18,17 @@ namespace Java.Util
 		{
 			public override unsafe bool TryAdvance (IConsumer? action)
 			{
-				const string __id = "tryAdvance.(Ljava/util/function/Consumer;)V";
+				const string __id = "tryAdvance.(Ljava/util/function/Consumer;)Z";
 				IntPtr native_action = JNIEnv.ToLocalJniHandle (action);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (native_action);
-					var __rm = _members.StaticMethods.InvokeBooleanMethod (__id, __args);
+					var __rm = _members.InstanceMethods.InvokeVirtualBooleanMethod (__id, this, __args);
 					return __rm;
 				} finally {
+					JNIEnv.DeleteLocalRef (native_action);
+					GC.KeepAlive (action);
+					GC.KeepAlive (this);
 				}
 			}
 		}
