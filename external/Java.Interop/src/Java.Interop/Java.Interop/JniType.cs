@@ -60,6 +60,8 @@ namespace Java.Interop {
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
+		// SAFETY: The caller must provide a valid pointer to readable NUL-terminated UTF-8
+		// storage that remains alive for the duration of the call.
 		internal unsafe JniType (IntPtr classname)
 		{
 			if (classname == IntPtr.Zero)
@@ -413,6 +415,10 @@ namespace Java.Interop {
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="classname"/> has readable NUL-terminated
+		/// backing storage for the duration of the call.
+		/// </remarks>
 		public static unsafe JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
@@ -427,6 +433,10 @@ namespace Java.Interop {
 			return cachedType;
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
+		/// backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -436,6 +446,10 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
+		/// backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -445,6 +459,10 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -454,6 +472,10 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -470,6 +492,10 @@ namespace Java.Interop {
 			return cachedField;
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -479,6 +505,10 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -495,6 +525,10 @@ namespace Java.Interop {
 			return cachedField;
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -504,6 +538,10 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -520,6 +558,10 @@ namespace Java.Interop {
 			return cachedMethod;
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -529,6 +571,10 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <remarks>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </remarks>
 		public unsafe JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
