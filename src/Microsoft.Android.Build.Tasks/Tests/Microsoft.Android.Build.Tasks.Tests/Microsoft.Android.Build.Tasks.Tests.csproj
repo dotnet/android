@@ -9,9 +9,6 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <Nullable>annotations</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>preview</LangVersion>
-    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
