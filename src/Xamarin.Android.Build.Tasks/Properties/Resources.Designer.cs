@@ -1996,22 +1996,13 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA5101", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to C compiler for target {0} was not found. Tried paths: &quot;{1}&quot;.
+        ///   Looks up a localized string similar to Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK..
         /// </summary>
-        public static string XA5101_C_Compiler {
+        public static string XA5101_ClangRuntime {
             get {
-                return ResourceManager.GetString("XA5101_C_Compiler", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Toolchain directory for target {0} was not found..
-        /// </summary>
-        public static string XA5101_Toolchain {
-            get {
-                return ResourceManager.GetString("XA5101_Toolchain", resourceCulture);
+                return ResourceManager.GetString("XA5101_ClangRuntime", resourceCulture);
             }
         }
         

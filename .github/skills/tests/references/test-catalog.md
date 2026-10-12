@@ -94,7 +94,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Package manager Java generation |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
-| **ndk** | `--filter "FullyQualifiedName~NdkUtilTests"` | NDK utility tasks |
+| **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools, Clang runtime discovery, and checked-build wrapper diagnostics |
 
 ---
 
