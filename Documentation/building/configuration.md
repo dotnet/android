@@ -2,6 +2,7 @@
 - [Build Configuration](#build-configuration)
   - [Options suitable to use in builds for public use](#options-suitable-to-use-in-builds-for-public-use)
   - [Options suitable for local development](#options-suitable-for-local-development)
+    - [Manifest merger (`src/manifestmerger`)](#manifest-merger-srcmanifestmerger)
     - [Native runtime (`src/native`)](#native-runtime-srcnative)
       - [Disable function inlining](#disable-function-inlining)
       - [Don't strip the runtime shared libraries](#dont-strip-the-runtime-shared-libraries)
@@ -113,6 +114,20 @@ Overridable MSBuild properties include:
      builds are not affected.
 
 ## Options suitable for local development
+
+### Manifest merger (`src/manifestmerger`)
+
+The Gradle `build` task uses ProGuard to shrink and optimize the bundled Java dependencies
+without obfuscation. It produces `build/libs/manifestmerger.jar`,
+which is copied into the SDK, and `build/libs/manifestmerger-unshrunk.jar` for
+comparison. Keep rules are in `src/manifestmerger/proguard.pro`.
+
+From the repository root, run
+`build-tools/gradle/gradlew -p src/manifestmerger build -PjavaSourceVer=17 -PjavaTargetVer=17`
+(use `gradlew.bat` on Windows). Manifest merging is covered by the existing
+Android project integration tests in `Xamarin.Android.Build.Tests`.
+Compare the two JAR sizes to measure the savings for the current dependencies.
+Set `JAVA_HOME` to the JDK used for the SDK build.
 
 ### Native runtime (`src/native`)
 
