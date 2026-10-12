@@ -124,6 +124,9 @@ namespace Java.Lang {
 						throw;
 					}
 				}
+			} catch {
+				Dispose ();
+				throw;
 			} finally {
 				JNIEnv.DeleteRef (value, transfer);
 			}

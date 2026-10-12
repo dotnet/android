@@ -220,11 +220,12 @@ namespace Java.InteropTests
 							failure = Assert.Throws<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
 						}
 						StringAssert.Contains ("transfer-extraction-" + stage, failure.Message);
+						if (stage == 4) {
+							Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (source)),
+								"Failed stack-trace extraction must release the partially constructed wrapper.");
+						}
 					} finally {
 						failure?.Dispose ();
-						// Stage 4 throws after SetHandle has registered the wrapper. Dispose that
-						// copied GREF independently so this assertion measures only the input.
-						JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (source))?.Dispose ();
 					}
 				});
 			} finally {
