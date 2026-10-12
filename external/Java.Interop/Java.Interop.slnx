@@ -41,7 +41,6 @@
     <Project Path="tools/class-parse/class-parse.csproj" />
     <Project Path="tools/generator/generator.csproj" />
     <Project Path="tools/java-source-utils/java-source-utils.csproj" />
-    <Project Path="tools/jcw-gen/jcw-gen.csproj" />
     <Project Path="tools/param-name-importer/param-name-importer.csproj" />
   </Folder>
 </Solution>
