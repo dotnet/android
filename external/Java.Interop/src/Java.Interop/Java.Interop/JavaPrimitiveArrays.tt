@@ -116,7 +116,12 @@ namespace Java.Interop {
 			}
 		}
 
-		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
+		/// <safety>
+		/// The caller must keep this array alive and undisposed until the returned elements are released.
+		/// Borrowed pointers and references must not be used after the elements are released or disposed.
+		/// The caller must prevent concurrent release or disposal while accessing the elements.
+		/// </safety>
+		public new unsafe Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
