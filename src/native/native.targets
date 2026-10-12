@@ -237,6 +237,8 @@
       <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.debug-static-debug.a')" />
       <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.release-static-release.a')" />
       <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libarchive-dso-stub.so')" />
+      <_ObsoleteCoreClrArchive Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
+      <_ObsoleteCoreClrArchive Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
     </ItemGroup>
     <Delete Files="@(_ObsoleteCoreClrArchive)" />
 
