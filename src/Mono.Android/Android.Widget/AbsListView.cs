@@ -91,18 +91,11 @@ namespace Android.Widget {
 		public unsafe override IListAdapter? Adapter {
 			get {
 				IntPtr value;
-#if JAVA_INTEROP
 				const string __id = "getAdapter.()Landroid/widget/Adapter;";
 				value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
-#else   // !JAVA_INTEROP
-				if (id_getAdapter == IntPtr.Zero)
-					id_getAdapter = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAdapter", "()Landroid/widget/Adapter;");
-				value = JNIEnv.CallObjectMethod (Handle, id_getAdapter);
-#endif	// !JAVA_INTEROP
 				return Java.Lang.Object.GetObject<IListAdapter> (value, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-#if JAVA_INTEROP
 				const string __id = "setAdapter.(Landroid/widget/Adapter;)V";
 				IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
 				try {
@@ -112,11 +105,6 @@ namespace Android.Widget {
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
-#else   // !JAVA_INTEROP
-				if (id_setAdapter_Landroid_widget_Adapter_ == IntPtr.Zero)
-					id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "setAdapter", "(Landroid/widget/ListAdapter;)V");
-				JNIEnv.CallVoidMethod (Handle, id_setAdapter_Landroid_widget_Adapter_, new JValue (JNIEnv.ToJniHandle (value)));
-#endif	// !JAVA_INTEROP
 			}
 		}
 	}
