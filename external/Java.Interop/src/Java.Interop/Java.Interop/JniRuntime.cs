@@ -239,6 +239,9 @@ namespace Java.Interop
 
 		static IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
 		{
+			if (envp == IntPtr.Zero)
+				throw new ArgumentException ("JNI environment pointer must not be zero.", nameof (envp));
+
 			IntPtr vm   = IntPtr.Zero;
 			int r;
 			unsafe {

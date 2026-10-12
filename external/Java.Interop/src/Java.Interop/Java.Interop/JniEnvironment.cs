@@ -161,6 +161,9 @@ namespace Java.Interop {
 
 			internal static int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
+				if (jnienv == IntPtr.Zero)
+					throw new ArgumentException ("JNI environment pointer must not be zero.", nameof (jnienv));
+
 				IntPtr _vm;
 				int r;
 				unsafe {
@@ -201,6 +204,8 @@ namespace Java.Interop {
 			set {
 				if (disposed)
 					throw new ObjectDisposedException (nameof (JniEnvironmentInfo));
+				if (value == IntPtr.Zero)
+					throw new ArgumentException ("JNI environment pointer must not be zero.", nameof (value));
 				if (environmentPointer == value)
 					return;
 
