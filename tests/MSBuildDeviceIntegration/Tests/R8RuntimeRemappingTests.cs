@@ -118,6 +118,11 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 				"""Console.WriteLine ("EMPTY_REMAP_SUCCESS");""");
 			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+			string sourceManifest = Path.Combine (Root, builder.ProjectDirectory, "Properties", "AndroidManifest.xml");
+			string? package = (string?)XDocument.Load (sourceManifest).Root?.Attribute ("package");
+			Assert.AreEqual (proj.PackageName, package);
+			TestContext.Out.WriteLine ($"Installing fixture package '{package}' from '{sourceManifest}' to '{Environment.GetEnvironmentVariable ("ADB_TARGET")}'.");
 			Assert.IsTrue (builder.Install (proj));
 			try {
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
@@ -257,6 +262,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+			string sourceManifest = Path.Combine (Root, builder.ProjectDirectory, "Properties", "AndroidManifest.xml");
+			string? package = (string?)XDocument.Load (sourceManifest).Root?.Attribute ("package");
+			Assert.AreEqual (proj.PackageName, package);
+			TestContext.Out.WriteLine ($"Installing fixture package '{package}' from '{sourceManifest}' to '{Environment.GetEnvironmentVariable ("ADB_TARGET")}'.");
 			void AssertAppRuns (string logFile)
 			{
 				ClearAdbLogcat ();
