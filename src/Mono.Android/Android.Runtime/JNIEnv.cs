@@ -281,6 +281,8 @@ namespace Android.Runtime {
 			return global_ref;
 		}
 
+		// SAFETY: The caller must provide readable NUL-terminated UTF-8 backing storage for the call.
+		// Complete C# u8 literals provide a terminator immediately beyond the span length.
 		static unsafe IntPtr FindClass (ReadOnlySpan<byte> classname)
 		{
 			JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
