@@ -15,6 +15,38 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 	static string TargetsPath => Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
 		"src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.NativeAOT.targets");
 
+	[TestCase ("NativeAOT", 0)]
+	[TestCase ("CoreCLR", 1)]
+	public void OnlyCoreClrConfigurationTracksEnvironmentInLegacyJavaTarget (string runtime, int expectedCount)
+	{
+		string path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		string commonTargets = Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
+			"src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets");
+		var inputs = new XElement (XDocument.Load (commonTargets).Descendants ()
+			.Single (element => element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_GetGenerateJavaStubsInputs"));
+		foreach (var element in inputs.DescendantsAndSelf ()) {
+			element.Name = element.Name.LocalName;
+		}
+		string projectFile = Path.Combine (path, "environment-inputs.proj");
+		new XDocument (
+			new XElement ("Project",
+				new XElement ("PropertyGroup", new XElement ("_AndroidRuntime", runtime)),
+				new XElement ("ItemGroup", new XElement ("AndroidEnvironment", new XAttribute ("Include", Path.Combine (path, "environment.txt")))),
+				new XElement ("Target", new XAttribute ("Name", "_GenerateEnvironmentFiles")),
+				inputs))
+			.Save (projectFile);
+		string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
+		var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile,
+			"-t:_GetGenerateJavaStubsInputs", "-getItem:_AndroidCoreClrEnvironmentInputs,_EnvironmentFiles", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
+		using var document = JsonDocument.Parse (result.Output);
+		var items = document.RootElement.GetProperty ("Items");
+		Assert.AreEqual (expectedCount, items.GetProperty ("_AndroidCoreClrEnvironmentInputs").GetArrayLength ());
+		Assert.AreEqual (1, items.GetProperty ("_EnvironmentFiles").GetArrayLength (),
+			"NativeAOT must still receive the environment input for its binary data-object generator.");
+	}
+
 	[TestCase (false)]
 	[TestCase (true)]
 	public void OptionalDataObjectsInvalidateFailedWritesAndOmitEmptyMappings (bool compress)

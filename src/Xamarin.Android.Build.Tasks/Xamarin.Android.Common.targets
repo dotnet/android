@@ -1429,7 +1429,7 @@ because xbuild doesn't support framework reference assemblies.
     <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
     <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' and '$(_AndroidRuntime)' != 'NativeAOT' " />
     <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
-    <_AndroidJavaStubEnvironment Include="@(_EnvironmentFiles)" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' " />
+    <_AndroidCoreClrEnvironmentInputs Include="@(_EnvironmentFiles)" Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   </ItemGroup>
 </Target>
 
