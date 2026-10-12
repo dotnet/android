@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
+using System.Xml.Linq;
 using NUnit.Framework;
 
 namespace generatortests
@@ -22,38 +24,54 @@ namespace generatortests
 			IEnumerable<string> sources, bool updatedRules, IEnumerable<string> references = null)
 		{
 			var name = "Fixture" + compilationCount++;
-			var assemblyPath = Path.Combine (directory, name + ".dll");
-			var referencePath = Path.Combine (directory, name + ".ref.dll");
-			var responsePath = Path.Combine (directory, name + ".rsp");
+			var projectDirectory = Path.Combine (directory, name);
+			Directory.CreateDirectory (projectDirectory);
+			var assemblyPath = Path.Combine (projectDirectory, "bin", name + ".dll");
+			var referencePath = Path.Combine (projectDirectory, "bin", "ref", name + ".dll");
+			var projectPath = Path.Combine (projectDirectory, name + ".csproj");
 			var sourcePaths = sources.Select ((source, index) => {
-				var path = Path.Combine (directory, name + "_" + index + ".cs");
+				var path = Path.Combine (projectDirectory, "Source" + index + ".cs");
 				File.WriteAllText (path, source);
 				return path;
 			}).ToArray ();
 
-			var arguments = new List<string> {
-				"-nostdlib", "-unsafe", "-target:library",
-				updatedRules ? "-langversion:preview" : "-langversion:9",
-				updatedRules ? "-features:updated-memory-safety-rules" : "-features:!updated-memory-safety-rules",
-				updatedRules ? "-define:NET,UPDATED_MEMORY_SAFETY_RULES" : "-define:NET",
-				"-out:" + Quote (assemblyPath),
-				"-refout:" + Quote (referencePath),
-			};
-			arguments.AddRange ((references ?? Compiler.GetReferencePaths ()).Select (p => "-r:" + Quote (p)));
-			arguments.AddRange (sourcePaths.Select (Quote));
-			File.WriteAllLines (responsePath, arguments);
+			var framework = typeof (CommandLineCompiler).Assembly.GetCustomAttribute<TargetFrameworkAttribute> ();
+			if (framework == null)
+				throw new InvalidOperationException ("The test assembly has no target framework.");
+			var frameworkName = new FrameworkName (framework.FrameworkName);
+			if (frameworkName.Identifier != ".NETCoreApp")
+				throw new NotSupportedException ("Compiler fixtures require a .NET target framework.");
+			var project = new XElement ("Project", new XAttribute ("Sdk", "Microsoft.NET.Sdk"),
+				new XElement ("PropertyGroup",
+					new XElement ("TargetFramework", $"net{frameworkName.Version.Major}.{frameworkName.Version.Minor}"),
+					new XElement ("AllowUnsafeBlocks", "true"),
+					new XElement ("LangVersion", updatedRules ? "preview" : "9"),
+					new XElement ("Features", updatedRules ? "$(Features);updated-memory-safety-rules" : "$(Features);!updated-memory-safety-rules"),
+					new XElement ("DefineConstants", updatedRules ? "NET;UPDATED_MEMORY_SAFETY_RULES" : "NET"),
+					new XElement ("DisableImplicitFrameworkReferences", "true"),
+					new XElement ("NoStdLib", "true"),
+					new XElement ("EnableDefaultCompileItems", "false"),
+					new XElement ("GenerateAssemblyInfo", "false"),
+					new XElement ("EnableNETAnalyzers", "false"),
+					new XElement ("ProduceReferenceAssembly", "true"),
+					new XElement ("ProduceReferenceAssemblyInOutDir", "true"),
+					new XElement ("AppendTargetFrameworkToOutputPath", "false"),
+					new XElement ("OutputPath", "bin/")),
+				new XElement ("ItemGroup", sourcePaths.Select (p => new XElement ("Compile", new XAttribute ("Include", p)))),
+				new XElement ("ItemGroup", (references ?? Compiler.GetReferencePaths ()).Select (p =>
+					new XElement ("Reference", new XAttribute ("Include", p),
+						new XElement ("Private", "false")))));
+			project.Save (projectPath);
 
-			var compilerPath = GetBuildMetadata ("MemorySafetyCompilerPath");
-			var hostPath = GetBuildMetadata ("MemorySafetyDotNetPath");
-			Assert.That (File.Exists (compilerPath), Is.True, "Build SDK compiler not found: " + compilerPath);
-			Assert.That (File.Exists (hostPath), Is.True, "Build SDK host not found: " + hostPath);
-			var startInfo = new ProcessStartInfo (hostPath, Quote (compilerPath) + " -noconfig @" + Quote (responsePath)) {
+			var hostPath = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH");
+			if (string.IsNullOrEmpty (hostPath))
+				hostPath = "dotnet";
+			var startInfo = new ProcessStartInfo (hostPath, "build " + Quote (projectPath) + " --nologo -v:quiet") {
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				CreateNoWindow = true,
 			};
-			startInfo.Environment ["DOTNET_ROOT"] = Path.GetDirectoryName (hostPath);
 			using (var process = Process.Start (startInfo)) {
 				if (process == null)
 					throw new InvalidOperationException ("Could not start the build SDK compiler.");
@@ -62,15 +80,11 @@ namespace generatortests
 				if (!process.WaitForExit (120000)) {
 					process.Kill ();
 					process.WaitForExit ();
-					Assert.Fail ("Build SDK compiler timed out: " + responsePath);
+					Assert.Fail ("Build SDK compiler timed out: " + projectPath);
 				}
 				return (process.ExitCode, stdout.GetAwaiter ().GetResult () + stderr.GetAwaiter ().GetResult (), assemblyPath, referencePath);
 			}
 		}
-
-		static string GetBuildMetadata (string key)
-			=> typeof (CommandLineCompiler).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
-				.Single (a => a.Key == key).Value;
 
 		static string Quote (string value)
 			=> "\"" + value.Replace ("\"", "\\\"") + "\"";
