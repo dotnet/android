@@ -62,6 +62,9 @@ namespace generatortests
 			        <parameter name='text' type='java.lang.CharSequence' />
 			      </constructor>
 			      <field name='label' type='java.lang.String' visibility='public' static='false' final='false' />
+			      <field name='peer' type='java.lang.Object' visibility='public' static='false' final='false' />
+			      <field name='sharedPeer' type='java.lang.Object' visibility='public' static='true' final='false' />
+			      <field name='peers' type='java.lang.Object[]' visibility='public' static='false' final='false' />
 			      <method name='describe' return='java.lang.String' visibility='public' abstract='false' final='false'>
 			        <parameter name='text' type='java.lang.String' />
 			      </method>
@@ -114,6 +117,10 @@ namespace generatortests
 			Assert.That (source, Does.Contain ("global::System.GC.KeepAlive (values);"));
 			Assert.That (source, Does.Contain ("public override string"));
 			Assert.That (source, Does.Contain ("OnChangedListenerImplementor"));
+			Assert.That (source, Does.Contain ("peer.Ljava/lang/Object;"));
+			Assert.That (source, Does.Contain ("sharedPeer.Ljava/lang/Object;"));
+			Assert.That (source, Does.Contain ("peers.[Ljava/lang/Object;"));
+			Assert.That (source, Does.Contain ("global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);"));
 
 			using (var compiler = new CommandLineCompiler ()) {
 				foreach (var updatedRules in new [] { false, true }) {
@@ -147,15 +154,21 @@ namespace generatortests
 						public string Read (IntPtr handle) {
 							return JNIEnv.GetString (handle, JniHandleOwnership.DoNotTransfer);
 						}
+						public void Release (IntPtr handle) {
+							JNIEnv.DeleteLocalRef (handle);
+						}
 					}
 					""";
 				var negative = compiler.Compile (new [] { unsafeCall }, updatedRules: true, references);
 				Assert.That (negative.ExitCode, Is.Not.Zero);
 				Assert.That (negative.Output, Does.Contain ("CS9362"), negative.Output);
+				Assert.That (negative.Output, Does.Contain ("JNIEnv.DeleteLocalRef"), negative.Output);
 
 				var audited = unsafeCall.Replace (
 					"return JNIEnv.GetString (handle, JniHandleOwnership.DoNotTransfer);",
-					"unsafe { return JNIEnv.GetString (handle, JniHandleOwnership.DoNotTransfer); }");
+					"unsafe { return JNIEnv.GetString (handle, JniHandleOwnership.DoNotTransfer); }").Replace (
+					"JNIEnv.DeleteLocalRef (handle);",
+					"unsafe { JNIEnv.DeleteLocalRef (handle); }");
 				var positive = compiler.Compile (new [] { audited }, updatedRules: true, references);
 				Assert.That (positive.ExitCode, Is.Zero, positive.Output);
 				var legacy = compiler.Compile (new [] { unsafeCall }, updatedRules: false, references);
@@ -324,6 +337,8 @@ namespace generatortests
 				AssertRulesMetadata (module, updatedRules);
 				var rawString = module.Types.Single (t => t.FullName == "Android.Runtime.JNIEnv").Methods.Single (m => m.Name == "GetString");
 				Assert.That (rawString.CustomAttributes.Any (a => a.AttributeType.FullName == RequiresUnsafe), Is.EqualTo (updatedRules), path);
+				var deleteLocal = module.Types.Single (t => t.FullName == "Android.Runtime.JNIEnv").Methods.Single (m => m.Name == "DeleteLocalRef");
+				Assert.That (deleteLocal.CustomAttributes.Any (a => a.AttributeType.FullName == RequiresUnsafe), Is.EqualTo (updatedRules), path);
 				foreach (var copy in module.Types.Single (t => t.FullName == "Android.Runtime.JNIEnv").Methods.Where (m => m.Name == "CopyArray"))
 					Assert.That (copy.CustomAttributes.Any (a => a.AttributeType.FullName == RequiresUnsafe), Is.EqualTo (updatedRules), copy.FullName);
 			}

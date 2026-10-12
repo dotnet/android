@@ -254,7 +254,8 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static void DeleteLocalRef (IntPtr jobject)
+		/// <safety><paramref name="jobject"/> must be zero or an owned live JNI local reference on the current thread.</safety>
+		public static unsafe void DeleteLocalRef (IntPtr jobject)
 		{
 			throw new NotImplementedException ();
 		}
