@@ -347,6 +347,37 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void UnchangedCoreClrBootstrapDoesNotRegenerateOnNextBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifier ("arm64-v8a");
+			proj.MainActivity = proj.DefaultMainActivity;
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			string bootstrap = Directory.GetFiles (intermediate, "coreclr-bootstrap.bin", SearchOption.AllDirectories).Single ();
+			byte [] contents = File.ReadAllBytes (bootstrap);
+			DateTime timestamp = File.GetLastWriteTimeUtc (bootstrap);
+
+			proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Changed assembly should rebuild.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePackageManagerJava");
+			CollectionAssert.AreEqual (contents, File.ReadAllBytes (bootstrap));
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (bootstrap), "Unchanged XCFG must retain its timestamp.");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+
+			File.Delete (bootstrap);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Missing bootstrap must be regenerated.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePackageManagerJava");
+			CollectionAssert.AreEqual (contents, File.ReadAllBytes (bootstrap));
+		}
+
+		[Test]
 		public void NoChangeBuildKeepsDynamicJniRegistrationDisabled ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -379,7 +410,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
-			EnvironmentHelper.ReadApplicationConfig (envFiles);
+			EnvironmentHelper.ReadCoreClrBootstrap (objDirPath);
 			foreach (var envFile in envFiles) {
 				var source = File.ReadAllText (envFile.Path);
 				StringAssert.DoesNotContain ("jni_add_native_method_registration_attribute_present", source);

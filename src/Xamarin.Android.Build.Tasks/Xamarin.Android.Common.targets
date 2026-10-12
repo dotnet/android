@@ -1595,8 +1595,16 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_GetGeneratePackageManagerJavaInputs">
+  <PropertyGroup>
+    <_AndroidCoreClrBootstrapFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">$(IntermediateOutputPath)android/coreclr-bootstrap.bin</_AndroidCoreClrBootstrapFile>
+  </PropertyGroup>
+  <!-- Bootstrap content is copied only when changed, so its timestamp can predate the stamp. -->
+  <Delete Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp"
+          Condition=" '$(_AndroidCoreClrBootstrapFile)' != '' and !Exists ('$(_AndroidCoreClrBootstrapFile)') " />
   <ItemGroup>
+    <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="@(_AllNativeLibraries)" />
     <!-- `configProperties` from these files are baked into the generated native application config -->
     <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
     <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
@@ -1608,6 +1616,8 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
+
+  <Delete Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
 
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
@@ -1629,10 +1639,6 @@ because xbuild doesn't support framework reference assemblies.
          "generic" name of the runtime library - the actual name of the file might be different. If
          this is the case, the `ArchiveFileName` will be set to `libmonodroid.so` -->
     <_AndroidNativeLibraryNeverJniPreload Include="libmonodroid.so" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(AndroidIgnoreAllJniPreload)' == 'true' ">
@@ -1657,6 +1663,7 @@ because xbuild doesn't support framework reference assemblies.
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       AndroidRuntime="$(_AndroidRuntime)"
+      CoreClrBootstrapOutputFile="$(_AndroidCoreClrBootstrapFile)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
       ProjectRuntimeConfigDevFilePath="$(ProjectRuntimeConfigDevFilePath)"
       >
@@ -1672,6 +1679,7 @@ because xbuild doesn't support framework reference assemblies.
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
+    <FileWrites Include="$(_AndroidCoreClrBootstrapFile)" Condition=" '$(_AndroidCoreClrBootstrapFile)' != '' " />
     <FileWrites Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' " Include="@(_RuntimeLinkingAssemblySource)" />
   </ItemGroup>
 </Target>
