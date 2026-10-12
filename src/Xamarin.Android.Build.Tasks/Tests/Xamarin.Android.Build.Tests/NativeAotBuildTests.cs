@@ -343,7 +343,8 @@ namespace Xamarin.Android.Build.Tests
 				string runtimeDirectory = ndk.GetClangDeviceLibraryPath () ??
 					throw new InvalidOperationException ("Clang runtime libraries must be available.");
 				string sanitizerLibrary = $"libclang_rt.{(checkedBuild == "asan" ? "asan" : "ubsan_standalone")}-aarch64-android.so";
-				sanitizerArchivePath = $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/{sanitizerLibrary}";
+				sanitizerArchivePath = Path.Combine (packageFormat == "aab" ? "base" : "", "lib", "arm64-v8a", sanitizerLibrary)
+					.Replace (Path.DirectorySeparatorChar, '/');
 				sanitizerRuntimePath = Path.Combine (runtimeDirectory, sanitizerLibrary);
 				Assert.IsNotNull (ZipHelper.ReadFileFromZip (package, sanitizerArchivePath), "Checked builds must package the official NDK sanitizer runtime.");
 			}
