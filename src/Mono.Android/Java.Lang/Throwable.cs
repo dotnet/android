@@ -117,15 +117,25 @@ namespace Java.Lang {
 							? JniObjectReferenceOptions.None
 							: JNIEnv.ToJniObjectReferenceOptions (transfer));
 				if (value != IntPtr.Zero) {
-					try {
-						SetJavaStackTrace (new JniObjectReference (value));
-					} catch {
-						Dispose ();
+					SetJavaStackTrace (new JniObjectReference (value));
+				}
+			} catch (System.Exception exception) {
+				// Reentrant Java throws can surface this peer directly or as a cause.
+				var causes = new List<System.Exception> ();
+				for (System.Exception? cause = exception; cause != null; cause = cause.InnerException) {
+					if (ReferenceEquals (cause, this)) {
 						throw;
 					}
+					if (causes.Exists (previous => ReferenceEquals (previous, cause))) {
+						break;
+					}
+					causes.Add (cause);
 				}
-			} catch {
-				Dispose ();
+				try {
+					Dispose ();
+				} catch (System.Exception cleanupException) {
+					Logger.Log (LogLevel.Error, "monodroid", "Failed to dispose a partially constructed Throwable: " + cleanupException);
+				}
 				throw;
 			} finally {
 				JNIEnv.DeleteRef (value, transfer);
