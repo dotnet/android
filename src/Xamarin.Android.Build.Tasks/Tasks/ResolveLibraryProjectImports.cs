@@ -265,7 +265,12 @@ namespace Xamarin.Android.Tasks
 						}
 						// embedded jars (EmbeddedJar, EmbeddedReferenceJar)
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
-							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
+							Stream stream;
+							// SAFETY: This reader owns resource and outlives the stream's using scope.
+							unsafe {
+								stream = pe.GetEmbeddedResourceStream (resource);
+							}
+							using (stream) {
 								AddJar (jars, importsDir, name, assemblyPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 								updated |= Files.CopyIfStreamChanged (stream, Files.GetArchiveExtractionPath (importsDir, name));
 							}
@@ -273,7 +278,12 @@ namespace Xamarin.Android.Tasks
 						// embedded native libraries
 						else if (name == "__AndroidNativeLibraries__.zip") {
 							List<string> files = new List<string> ();
-							using (var stream = pe.GetEmbeddedResourceStream (resource))
+							Stream stream;
+							// SAFETY: This reader owns resource and outlives both using scopes.
+							unsafe {
+								stream = pe.GetEmbeddedResourceStream (resource);
+							}
+							using (stream)
 							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, nativeimportsDir, modifyCallback: (entryFullName) => {
@@ -297,7 +307,12 @@ namespace Xamarin.Android.Tasks
 						else if (name == "__AndroidLibraryProjects__.zip") {
 							// temporarily extracted directory will look like:
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
-							using (var stream = pe.GetEmbeddedResourceStream (resource))
+							Stream stream;
+							// SAFETY: This reader owns resource and outlives both using scopes.
+							unsafe {
+								stream = pe.GetEmbeddedResourceStream (resource);
+							}
+							using (stream)
 							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
