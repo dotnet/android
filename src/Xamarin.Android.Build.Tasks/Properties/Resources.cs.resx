@@ -822,8 +822,8 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the R8 JNI remapping data. {0}</value>
-    <comment>The following are literal names and should not be translated: R8, JNI.
+    <value>Failed to generate the JNI remapping data. {0}</value>
+    <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
   <data name="XA4325_MappingNotFound" xml:space="preserve">
@@ -941,6 +941,12 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
 {0} - The runtime name.</comment>
+  </data>
+  <data name="XA4330" xml:space="preserve">
+    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
+{0} - The source native library path.
+{1} - The conflicting archive path.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Chybí adresář sady nástrojů Android NDK {0}. Nainstalujte prosím sadu Android NDK.</value>
