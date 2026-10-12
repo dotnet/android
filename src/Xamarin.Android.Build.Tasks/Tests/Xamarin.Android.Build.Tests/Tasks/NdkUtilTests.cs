@@ -33,7 +33,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				var ndkDir = AndroidNdkPath;
 				var sdkDir = AndroidSdkPath;
 				NdkTools ndk = NdkTools.Create (ndkDir, log: log);
-				ndk.OSBinPath = TestEnvironment.OSBinDirectory;
 				MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => { }, sdkDir, ndkDir, AndroidSdkResolver.GetJavaSdkPath ());
 				var platforms = ndk.GetSupportedPlatforms ();
 				Assert.AreNotEqual (0, platforms.Count (), "No platforms found");
@@ -51,6 +50,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				var gas = ndk.GetToolPath (NdkToolKind.Assembler, arch, level);
 				Assert.AreEqual (0, errors.Count, "NdkTools.GetToolPath should not have errored.");
 				Assert.NotNull (gas, "NdkTools.GetToolPath returned null for NdkToolKind.Assembler.");
+				StringAssert.StartsWith (ndkDir, gas, "The assembler must come from the official NDK, not the SDK.");
 				var inc = ndk.GetDirectoryPath (NdkToolchainDir.PlatformInclude, arch, level);
 				Assert.NotNull (inc, " NdkTools.GetToolPath should not return null for NdkToolchainDir.PlatformInclude");
 				var libPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
@@ -58,6 +58,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				string ld = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
 				Assert.AreEqual (0, errors.Count, "NdkTools.GetToolPath should not have errored.");
 				Assert.NotNull (ld, "NdkTools.GetToolPath returned null for NdkToolKind.Linker.");
+				StringAssert.StartsWith (ndkDir, ld, "The linker must come from the official NDK, not the SDK.");
 			}
 		}
 	}

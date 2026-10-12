@@ -211,16 +211,12 @@ public class NativeLibraryLoadTests : DeviceTest
 			libraryName = $"lib{proj.ProjectName}.so";
 			removeLibraryItems = $@"
 			<FrameworkNativeLibrary Remove=""@(FrameworkNativeLibrary)""
-				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == '{libraryName}' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == '{libraryName}' "" />
-			<_ApplicationSharedLibrary Remove=""@(_ApplicationSharedLibrary)""
-				Condition="" '%(_ApplicationSharedLibrary.ArchiveFileName)' == '{libraryName}' or '%(_ApplicationSharedLibrary.FileName)%(_ApplicationSharedLibrary.Extension)' == '{libraryName}' "" />";
+				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == '{libraryName}' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == '{libraryName}' "" />";
 		} else {
 			libraryName = "libmonodroid.so";
 			removeLibraryItems = @"
 			<FrameworkNativeLibrary Remove=""@(FrameworkNativeLibrary)""
-				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == 'libmonodroid.so' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == 'libmonodroid.so' "" />
-			<_ApplicationSharedLibrary Remove=""@(_ApplicationSharedLibrary)""
-				Condition="" '%(_ApplicationSharedLibrary.ArchiveFileName)' == 'libmonodroid.so' or '%(_ApplicationSharedLibrary.FileName)%(_ApplicationSharedLibrary.Extension)' == 'libmonodroid.so' "" />";
+				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == 'libmonodroid.so' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == 'libmonodroid.so' "" />";
 		}
 
 		proj.Imports.Add (new Import (() => "Directory.Build.targets") {

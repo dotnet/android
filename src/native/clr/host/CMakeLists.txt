@@ -3,8 +3,6 @@
 include(CheckIncludeFile)
 include(CheckCXXSymbolExists)
 
-set(BUILD_STATIC_LIBRARY ON)
-
 if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
   # will force a -O0 on us and our "debug" build is not really for debugging of our native code but
@@ -23,7 +21,6 @@ set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}
 # Sources
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NET_ANDROID_SUFFIX)
 set(XAMARIN_NET_ANDROID_LIB "net-android${CHECKED_BUILD_INFIX}.${XAMARIN_NET_ANDROID_SUFFIX}")
-set(XAMARIN_NET_ANDROID_STATIC_LIB "${XAMARIN_NET_ANDROID_LIB}-static")
 
 set(XAMARIN_MONODROID_SOURCES
   assembly-store.cc
@@ -58,20 +55,6 @@ add_library(
   SHARED ${XAMARIN_MONODROID_SOURCES}
 )
 strip_unneeded_elf_sections(${XAMARIN_NET_ANDROID_LIB})
-
-if(BUILD_STATIC_LIBRARY)
-  add_library(
-    ${XAMARIN_NET_ANDROID_STATIC_LIB}
-    STATIC
-    ${XAMARIN_MONODROID_SOURCES}
-  )
-  set_static_library_suffix(${XAMARIN_NET_ANDROID_STATIC_LIB})
-  target_compile_definitions(
-    ${XAMARIN_NET_ANDROID_STATIC_LIB}
-    PRIVATE
-    DYNAMIC_RUNTIME_LINKING
-  )
-endif()
 
 macro(lib_target_options TARGET_NAME)
   target_compile_definitions(
@@ -135,7 +118,6 @@ macro(lib_target_options TARGET_NAME)
 
   target_link_libraries(
     ${TARGET_NAME}
-    xa::xamarin-app
     ${SHARED_LIB_NAME}
     xa::runtime-base
     xa::java-interop
@@ -156,9 +138,3 @@ target_link_options(${XAMARIN_NET_ANDROID_LIB}
   -Wl,--version-script,${CMAKE_SOURCE_DIR}/clr/libnet-android.map.txt
   -Wl,--no-undefined-version
 )
-
-if(BUILD_STATIC_LIBRARY)
-  lib_target_options(${XAMARIN_NET_ANDROID_STATIC_LIB})
-  xa_add_compile_definitions(${XAMARIN_NET_ANDROID_STATIC_LIB})
-  xa_add_include_directories(${XAMARIN_NET_ANDROID_STATIC_LIB})
-endif()

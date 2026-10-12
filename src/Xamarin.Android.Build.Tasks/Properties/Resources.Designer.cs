@@ -304,15 +304,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown mode: {0}.
-        /// </summary>
-        public static string XA0037 {
-            get {
-                return ResourceManager.GetString("XA0037", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         public static string XA0100 {
@@ -928,33 +919,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Input file `{0}` does not start with `&lt;replacements/&gt;`..
-        /// </summary>
-        public static string XA1045 {
-            get {
-                return ResourceManager.GetString("XA1045", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Attribute &apos;{0}&apos; in element &apos;{1}&apos; has value &apos;{2}&apos; that cannot be parsed as boolean; {3} line {4}..
-        /// </summary>
-        public static string XA1046 {
-            get {
-                return ResourceManager.GetString("XA1046", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Required attribute &apos;{0}&apos; missing from element &apos;{1}&apos;; {2} line {3}..
-        /// </summary>
-        public static string XA1047 {
-            get {
-                return ResourceManager.GetString("XA1047", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; does not contain an &lt;instrumentation&gt; element. Add an Android.App.Instrumentation subclass to the application, or set the $(AndroidInstrumentation) MSBuild property to the name of one..
         /// </summary>
         public static string XA1048 {
@@ -1068,15 +1032,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2008 {
             get {
                 return ResourceManager.GetString("XA2008", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not compile native assembly file: {0}{1}.
-        /// </summary>
-        public static string XA3006 {
-            get {
-                return ResourceManager.GetString("XA3006", resourceCulture);
             }
         }
         

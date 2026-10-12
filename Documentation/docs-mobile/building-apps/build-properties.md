@@ -193,17 +193,6 @@ Added in .NET 8.
 
 [feature-switches]: /dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0#trim-framework-library-features
 
-## AndroidBinUtilsPath
-
-A path to a directory containing
-the Android [binutils][binutils] such as `ld`, the native linker,
-and `as`, the native assembler. These tools are included in the
-.NET for Android workload.
-
-The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
-
-[binutils]: https://github.com/dotnet/android-native-tools/
-
 ## AndroidBoundExceptionType
 
 A string value that specifies how

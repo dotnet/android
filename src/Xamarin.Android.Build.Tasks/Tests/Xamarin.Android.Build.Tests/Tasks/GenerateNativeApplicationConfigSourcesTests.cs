@@ -23,7 +23,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		var task = new GenerateNativeApplicationConfigSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
 			ResolvedAssemblies = [],
-			EnvironmentOutputDirectory = outputRoot,
 			CoreClrBootstrapOutputFile = bootstrapPath,
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.example.bootstrap",
@@ -50,7 +49,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		var task = new GenerateNativeApplicationConfigSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			ResolvedAssemblies = [new TaskItem (Path.Combine (outputRoot, "Example.dll"))],
-			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			CoreClrBootstrapOutputFile = rawPath,
 			SupportedAbis = ["arm64-v8a", "x86"],
 			AndroidPackageName = "com.example.bootstrap",
@@ -69,11 +67,8 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		byte [] raw = File.ReadAllBytes (rawPath);
 		StringAssert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
 		StringAssert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));
-		string arm64 = File.ReadAllText (Path.Combine (task.EnvironmentOutputDirectory, "environment.arm64-v8a.ll"));
-		string x86 = File.ReadAllText (Path.Combine (task.EnvironmentOutputDirectory, "environment.x86.ll"));
-		Assert.That (arm64, Does.Not.Contain ("com.example.bootstrap"));
-		Assert.That (arm64, Does.Not.Contain ("Test.Feature"));
-		Assert.That (x86, Does.Not.Contain ("com.example.bootstrap"));
+		Assert.IsEmpty (Directory.GetFiles (Path.Combine (outputRoot, "android"), "*.ll"),
+			"Application configuration should not generate LLVM sources for any ABI.");
 	}
 
 	[TestCase (false)]
@@ -87,7 +82,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		var task = new GenerateNativeApplicationConfigSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			ResolvedAssemblies = [new TaskItem (monoAndroidPath)],
-			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			CoreClrBootstrapOutputFile = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin"),
 			SupportedAbis = ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"],
 			AndroidPackageName = "com.microsoft.android.configtest",
@@ -122,7 +116,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			ResolvedAssemblies = [new TaskItem (monoAndroidPath), typeMap],
 			AdditionalResolvedAssemblies = [new TaskItem (typeMapPath)],
-			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			CoreClrBootstrapOutputFile = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.typemapcounttest",
