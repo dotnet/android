@@ -104,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			var s = new XmlReaderSettings {
 				XmlResolver = null,
 			};
-			var r = XmlReader.Create ("https://dl-ssl.google.com/android/repository/repository2-3.xml", s);
+			var r = XmlReader.Create ("https://dl.google.com/android/repository/repository2-3.xml", s);
 			var d = XDocument.Load (r);
 
 			var platformToolsPackage    = d.Root.Elements ("remotePackage")
