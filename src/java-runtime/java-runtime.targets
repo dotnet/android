@@ -10,6 +10,14 @@
   </_RuntimeOutput>
 </ItemGroup>
 
+<Target Name="_CleanRetiredJavaRuntimeArtifacts" BeforeTargets="Build;Clean">
+  <ItemGroup>
+    <_RetiredJavaRuntimeName Include="java_runtime;java_runtime_fastdev;java_runtime_clr;java_runtime_fastdev_clr" />
+    <_RetiredJavaRuntimeArtifact Include="@(_RetiredJavaRuntimeName->'$(OutputPath)%(Identity).jar');@(_RetiredJavaRuntimeName->'$(OutputPath)%(Identity).dex')" />
+  </ItemGroup>
+  <Delete Files="@(_RetiredJavaRuntimeArtifact)" />
+</Target>
+
 <Target Name="_BuildJavaRuntimeJar"
       BeforeTargets="Build"
       Inputs="@(AllRuntimeSource);$(MSBuildProjectFullPath);$(MSBuildThisFileFullPath)"
