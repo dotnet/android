@@ -29,7 +29,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Directory.CreateDirectory (probeDirectory);
 		nativeProbe = Path.Combine (probeDirectory, "bootstrap-probe");
 		var compile = NativeAotBootstrapTestTools.Run (Environment.GetEnvironmentVariable ("CXX") ?? "clang++",
-			"-std=c++23", "-O2", "-ffunction-sections", "-fdata-sections",
+			"-std=c++23", "-O2", "-DXA_HOST_NATIVEAOT", "-ffunction-sections", "-fdata-sections",
 			OperatingSystem.IsMacOS () ? "-Wl,-dead_strip" : "-Wl,--gc-sections",
 			"-I" + Path.Combine (root, "src", "native", "nativeaot", "include"),
 			"-I" + Path.Combine (root, "src", "native", "common", "include"),

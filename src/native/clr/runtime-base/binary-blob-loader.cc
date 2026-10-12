@@ -2,15 +2,18 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <dlfcn.h>
-#include <pthread.h>
 #include <source_location>
 
 #include <runtime-base/binary-blob-loader.hh>
-#include <runtime-base/zstd.hh>
 #include <shared/helpers.hh>
 #include <shared/log_functions.hh>
 #include <shared/log_types.hh>
+
+#if !defined (XA_HOST_NATIVEAOT)
+#include <dlfcn.h>
+#include <pthread.h>
+#include <runtime-base/zstd.hh>
+#endif // !defined (XA_HOST_NATIVEAOT)
 
 using namespace xamarin::android;
 
@@ -67,6 +70,7 @@ namespace {
 		return header;
 	}
 
+#if !defined (XA_HOST_NATIVEAOT)
 	pthread_once_t library_once = PTHREAD_ONCE_INIT;
 	void *library = nullptr;
 
@@ -135,8 +139,10 @@ namespace {
 
 		return BinaryBlobLoader::decode (blob, envelope_size + static_cast<size_t>(header.stored ()), symbol);
 	}
+#endif // !defined (XA_HOST_NATIVEAOT)
 }
 
+#if !defined (XA_HOST_NATIVEAOT)
 auto BinaryBlobLoader::decode (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BinaryBlobPayload
 {
 	BlobHeader header = read_header (blob, size, symbol);
@@ -145,6 +151,7 @@ auto BinaryBlobLoader::decode (const uint8_t *blob, size_t size, const char *sym
 	}
 	return decode_compressed_payload (blob, header, symbol);
 }
+#endif // !defined (XA_HOST_NATIVEAOT)
 
 auto BinaryBlobLoader::read_uncompressed (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BinaryBlobPayload
 {
@@ -156,6 +163,7 @@ auto BinaryBlobLoader::read_uncompressed (const uint8_t *blob, size_t size, cons
 	return { blob + envelope_size, header.raw () };
 }
 
+#if !defined (XA_HOST_NATIVEAOT)
 auto BinaryBlobLoader::load (const char *symbol) noexcept -> BinaryBlobPayload
 {
 	return load_payload (symbol, false);
@@ -165,3 +173,4 @@ auto BinaryBlobLoader::load_optional (const char *symbol) noexcept -> BinaryBlob
 {
 	return load_payload (symbol, true);
 }
+#endif // !defined (XA_HOST_NATIVEAOT)

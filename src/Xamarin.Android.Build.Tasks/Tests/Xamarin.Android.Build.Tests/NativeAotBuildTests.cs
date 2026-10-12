@@ -107,6 +107,13 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data");
 			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data_size");
 			CollectionAssert.DoesNotContain (exports, "Host_NativeAOT_InitializeEnvironment");
+			string definitions = NativeToolTestHelper.Run ("llvm-nm", "--demangle", "--defined-only",
+				Path.ChangeExtension (applicationLibrary, ".dbg.so"));
+			StringAssert.Contains ("BinaryBlobLoader::read_uncompressed(", definitions);
+			StringAssert.DoesNotContain ("BinaryBlobLoader::decode(", definitions,
+				"The NativeAOT host must not retain the CoreCLR blob decompression path.");
+			StringAssert.DoesNotContain ("BinaryBlobLoader::load(", definitions);
+			StringAssert.DoesNotContain ("BinaryBlobLoader::load_optional(", definitions);
 		}
 
 		[Test]

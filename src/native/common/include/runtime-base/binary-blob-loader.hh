@@ -11,12 +11,14 @@ namespace xamarin::android {
 
 	class BinaryBlobLoader {
 	public:
+#if !defined (XA_HOST_NATIVEAOT)
 		// The returned bytes and the containing DSO remain valid for the process lifetime.
 		static auto load (const char *symbol) noexcept -> BinaryBlobPayload;
 		// Missing optional libraries or symbols return an empty payload.
 		static auto load_optional (const char *symbol) noexcept -> BinaryBlobPayload;
 		// CoreCLR may opt into compression; decoded bodies remain valid for the process lifetime.
 		static auto decode (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BinaryBlobPayload;
+#endif // !defined (XA_HOST_NATIVEAOT)
 		// NativeAOT only accepts mapped raw bodies, never allocating a decompression buffer.
 		static auto read_uncompressed (const uint8_t *blob, size_t size, const char *symbol) noexcept -> BinaryBlobPayload;
 	};
