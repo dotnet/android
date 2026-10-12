@@ -281,7 +281,7 @@ namespace Android.Runtime {
 			return global_ref;
 		}
 
-		static IntPtr FindClass (ReadOnlySpan<byte> classname)
+		static unsafe IntPtr FindClass (ReadOnlySpan<byte> classname)
 		{
 			JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
 			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
@@ -537,8 +537,11 @@ namespace Android.Runtime {
 		static JniObjectReference FindArrayClassByElementType (Type elementType)
 		{
 			var builtInArrayJniClassName = GetBuiltInArrayJniClassNameUtf8 (elementType);
-			if (!builtInArrayJniClassName.IsEmpty)
-				return JniEnvironment.Types.FindClass (builtInArrayJniClassName);
+			if (!builtInArrayJniClassName.IsEmpty) {
+				unsafe {
+					return JniEnvironment.Types.FindClass (builtInArrayJniClassName);
+				}
+			}
 
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
 			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
@@ -1409,7 +1412,9 @@ namespace Android.Runtime {
 		{
 			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassNameUtf8 (elementType);
 			if (!boxedPrimitiveJniClassName.IsEmpty) {
-				return FindClass (boxedPrimitiveJniClassName);
+				unsafe {
+					return FindClass (boxedPrimitiveJniClassName);
+				}
 			}
 
 			return FindClass (elementType);
