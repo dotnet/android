@@ -90,6 +90,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("-keepclassmembernames interface * { *; }", rules);
 			StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", rules);
 			StringAssert.Contains ("-keep class mono.android.Runtime { *; }", rules);
+			StringAssert.Contains ("-keepclassmembernames class * { <fields>; }", rules);
 		}
 
 		[Test]
