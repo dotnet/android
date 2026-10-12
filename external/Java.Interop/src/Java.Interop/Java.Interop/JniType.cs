@@ -60,8 +60,10 @@ namespace Java.Interop {
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		// SAFETY: The caller must provide a valid pointer to readable NUL-terminated UTF-8
-		// storage that remains alive for the duration of the call.
+		/// <safety>
+		/// The caller must ensure <paramref name="classname"/> points to readable NUL-terminated
+		/// UTF-8 storage that remains alive for the duration of the call.
+		/// </safety>
 		internal unsafe JniType (IntPtr classname)
 		{
 			if (classname == IntPtr.Zero)
@@ -401,11 +403,11 @@ namespace Java.Interop {
 		/// Creates a <see cref="JniType"/> from a null-terminated UTF-8 class name span.
 		/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
 		/// </summary>
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure the backing storage remains readable and NUL-terminated
 		/// for the duration of the call. C# UTF-8 literals provide a
 		/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniType (ReadOnlySpan<byte> classname)
 		{
 			JniObjectReference peer;
@@ -415,10 +417,10 @@ namespace Java.Interop {
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="classname"/> has readable NUL-terminated
 		/// backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public static unsafe JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
@@ -433,10 +435,10 @@ namespace Java.Interop {
 			return cachedType;
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
 		/// backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -446,10 +448,10 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
 		/// backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -459,10 +461,10 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -472,10 +474,10 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -492,10 +494,10 @@ namespace Java.Interop {
 			return cachedField;
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -505,10 +507,10 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -525,10 +527,10 @@ namespace Java.Interop {
 			return cachedField;
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -538,10 +540,10 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -558,10 +560,10 @@ namespace Java.Interop {
 			return cachedMethod;
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
@@ -571,10 +573,10 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <remarks>
+		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
-		/// </remarks>
+		/// </safety>
 		public unsafe JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();

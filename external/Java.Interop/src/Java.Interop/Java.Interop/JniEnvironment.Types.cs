@@ -349,11 +349,11 @@ namespace Java.Interop
 			/// Finds a Java class using a null-terminated UTF-8 class name span.
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
 			/// </summary>
-			/// <remarks>
+			/// <safety>
 			/// The caller must ensure the backing storage remains readable and NUL-terminated
 			/// for the duration of the call. C# UTF-8 literals provide a
 			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
-			/// </remarks>
+			/// </safety>
 			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
 			{
 				return TryFindClass (classname, throwOnError: true);
@@ -363,11 +363,11 @@ namespace Java.Interop
 			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
 			/// </summary>
-			/// <remarks>
+			/// <safety>
 			/// The caller must ensure the backing storage remains readable and NUL-terminated
 			/// for the duration of the call. C# UTF-8 literals provide a
 			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
-			/// </remarks>
+			/// </safety>
 			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
 			{
 				instance = TryFindClass (classname, throwOnError: false);

@@ -14,10 +14,11 @@ namespace Java.Interop {
 			/// Looks up a JNI instance field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// </summary>
-			/// <remarks>
-			/// The caller must ensure both spans have readable NUL-terminated backing storage for
-			/// the duration of the call. C# UTF-8 literals provide a terminator beyond the span length.
-			/// </remarks>
+			/// <safety>
+			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+			/// readable NUL-terminated backing storage for the duration of the call.
+			/// C# UTF-8 literals provide a terminator beyond the span length.
+			/// </safety>
 			public static unsafe JniFieldInfo GetFieldID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
 				if (!type.IsValid)
@@ -48,10 +49,11 @@ namespace Java.Interop {
 			/// Looks up a JNI instance method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// </summary>
-			/// <remarks>
-			/// The caller must ensure both spans have readable NUL-terminated backing storage for
-			/// the duration of the call. C# UTF-8 literals provide a terminator beyond the span length.
-			/// </remarks>
+			/// <safety>
+			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+			/// readable NUL-terminated backing storage for the duration of the call.
+			/// C# UTF-8 literals provide a terminator beyond the span length.
+			/// </safety>
 			public static unsafe JniMethodInfo GetMethodID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
 				if (!type.IsValid)
@@ -82,10 +84,11 @@ namespace Java.Interop {
 			/// Looks up a JNI static field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// </summary>
-			/// <remarks>
-			/// The caller must ensure both spans have readable NUL-terminated backing storage for
-			/// the duration of the call. C# UTF-8 literals provide a terminator beyond the span length.
-			/// </remarks>
+			/// <safety>
+			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+			/// readable NUL-terminated backing storage for the duration of the call.
+			/// C# UTF-8 literals provide a terminator beyond the span length.
+			/// </safety>
 			public static unsafe JniFieldInfo GetStaticFieldID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
 				if (!type.IsValid)
@@ -116,10 +119,11 @@ namespace Java.Interop {
 			/// Looks up a JNI static method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// </summary>
-			/// <remarks>
-			/// The caller must ensure both spans have readable NUL-terminated backing storage for
-			/// the duration of the call. C# UTF-8 literals provide a terminator beyond the span length.
-			/// </remarks>
+			/// <safety>
+			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+			/// readable NUL-terminated backing storage for the duration of the call.
+			/// C# UTF-8 literals provide a terminator beyond the span length.
+			/// </safety>
 			public static unsafe JniMethodInfo GetStaticMethodID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
 				if (!type.IsValid)
