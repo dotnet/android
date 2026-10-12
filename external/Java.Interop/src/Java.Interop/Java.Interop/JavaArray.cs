@@ -416,7 +416,12 @@ namespace Java.Interop
 			}
 		}
 
-		public JniArrayElements GetElements ()
+		/// <safety>
+		/// The caller must keep this array alive and undisposed until the returned elements are released.
+		/// Borrowed pointers and references must not be used after the elements are released or disposed.
+		/// The caller must prevent concurrent release or disposal while accessing the elements.
+		/// </safety>
+		public unsafe JniArrayElements GetElements ()
 		{
 			return CreateElements ();
 		}

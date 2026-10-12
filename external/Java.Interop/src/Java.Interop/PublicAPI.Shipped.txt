@@ -50,19 +50,19 @@ Java.Interop.JavaArray<T>.IsReadOnly.get -> bool
 Java.Interop.JavaArray<T>.Length.get -> int
 Java.Interop.JavaArray<T>.ToArray() -> T[]!
 Java.Interop.JavaBooleanArray
-Java.Interop.JavaBooleanArray.GetElements() -> Java.Interop.JniBooleanArrayElements!
+unsafe Java.Interop.JavaBooleanArray.GetElements() -> Java.Interop.JniBooleanArrayElements!
 Java.Interop.JavaBooleanArray.JavaBooleanArray(int length) -> void
 Java.Interop.JavaBooleanArray.JavaBooleanArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaBooleanArray.JavaBooleanArray(System.Collections.Generic.IEnumerable<bool>! value) -> void
 Java.Interop.JavaBooleanArray.JavaBooleanArray(System.Collections.Generic.IList<bool>! value) -> void
 Java.Interop.JavaCharArray
-Java.Interop.JavaCharArray.GetElements() -> Java.Interop.JniCharArrayElements!
+unsafe Java.Interop.JavaCharArray.GetElements() -> Java.Interop.JniCharArrayElements!
 Java.Interop.JavaCharArray.JavaCharArray(int length) -> void
 Java.Interop.JavaCharArray.JavaCharArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaCharArray.JavaCharArray(System.Collections.Generic.IEnumerable<char>! value) -> void
 Java.Interop.JavaCharArray.JavaCharArray(System.Collections.Generic.IList<char>! value) -> void
 Java.Interop.JavaDoubleArray
-Java.Interop.JavaDoubleArray.GetElements() -> Java.Interop.JniDoubleArrayElements!
+unsafe Java.Interop.JavaDoubleArray.GetElements() -> Java.Interop.JniDoubleArrayElements!
 Java.Interop.JavaDoubleArray.JavaDoubleArray(int length) -> void
 Java.Interop.JavaDoubleArray.JavaDoubleArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaDoubleArray.JavaDoubleArray(System.Collections.Generic.IEnumerable<double>! value) -> void
@@ -83,19 +83,19 @@ Java.Interop.JavaException.SetPeerReference(ref Java.Interop.JniObjectReference 
 Java.Interop.JavaException.UnregisterFromRuntime() -> void
 Java.Interop.JavaException.~JavaException() -> void
 Java.Interop.JavaInt16Array
-Java.Interop.JavaInt16Array.GetElements() -> Java.Interop.JniInt16ArrayElements!
+unsafe Java.Interop.JavaInt16Array.GetElements() -> Java.Interop.JniInt16ArrayElements!
 Java.Interop.JavaInt16Array.JavaInt16Array(int length) -> void
 Java.Interop.JavaInt16Array.JavaInt16Array(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaInt16Array.JavaInt16Array(System.Collections.Generic.IEnumerable<short>! value) -> void
 Java.Interop.JavaInt16Array.JavaInt16Array(System.Collections.Generic.IList<short>! value) -> void
 Java.Interop.JavaInt32Array
-Java.Interop.JavaInt32Array.GetElements() -> Java.Interop.JniInt32ArrayElements!
+unsafe Java.Interop.JavaInt32Array.GetElements() -> Java.Interop.JniInt32ArrayElements!
 Java.Interop.JavaInt32Array.JavaInt32Array(int length) -> void
 Java.Interop.JavaInt32Array.JavaInt32Array(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaInt32Array.JavaInt32Array(System.Collections.Generic.IEnumerable<int>! value) -> void
 Java.Interop.JavaInt32Array.JavaInt32Array(System.Collections.Generic.IList<int>! value) -> void
 Java.Interop.JavaInt64Array
-Java.Interop.JavaInt64Array.GetElements() -> Java.Interop.JniInt64ArrayElements!
+unsafe Java.Interop.JavaInt64Array.GetElements() -> Java.Interop.JniInt64ArrayElements!
 Java.Interop.JavaInt64Array.JavaInt64Array(int length) -> void
 Java.Interop.JavaInt64Array.JavaInt64Array(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaInt64Array.JavaInt64Array(System.Collections.Generic.IEnumerable<long>! value) -> void
@@ -118,15 +118,15 @@ Java.Interop.JavaObjectArray<T>.JavaObjectArray(System.Collections.Generic.IEnum
 Java.Interop.JavaObjectArray<T>.JavaObjectArray(System.Collections.Generic.IList<T>! value) -> void
 Java.Interop.JavaPeerableExtensions
 Java.Interop.JavaPrimitiveArray<T>
-Java.Interop.JavaPrimitiveArray<T>.GetElements() -> Java.Interop.JniArrayElements!
+unsafe Java.Interop.JavaPrimitiveArray<T>.GetElements() -> Java.Interop.JniArrayElements!
 Java.Interop.JavaSByteArray
-Java.Interop.JavaSByteArray.GetElements() -> Java.Interop.JniSByteArrayElements!
+unsafe Java.Interop.JavaSByteArray.GetElements() -> Java.Interop.JniSByteArrayElements!
 Java.Interop.JavaSByteArray.JavaSByteArray(int length) -> void
 Java.Interop.JavaSByteArray.JavaSByteArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaSByteArray.JavaSByteArray(System.Collections.Generic.IEnumerable<sbyte>! value) -> void
 Java.Interop.JavaSByteArray.JavaSByteArray(System.Collections.Generic.IList<sbyte>! value) -> void
 Java.Interop.JavaSingleArray
-Java.Interop.JavaSingleArray.GetElements() -> Java.Interop.JniSingleArrayElements!
+unsafe Java.Interop.JavaSingleArray.GetElements() -> Java.Interop.JniSingleArrayElements!
 Java.Interop.JavaSingleArray.JavaSingleArray(int length) -> void
 Java.Interop.JavaSingleArray.JavaSingleArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JavaSingleArray.JavaSingleArray(System.Collections.Generic.IEnumerable<float>! value) -> void
