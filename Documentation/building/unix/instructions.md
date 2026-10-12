@@ -81,11 +81,6 @@ Build the project with:
 Using the `dotnet-local` script will execute the `dotnet` provisioned in
 `bin/$(Configuration)/dotnet` and will use the locally built binaries.
 
-The Android workload manifest must extend the versioned Mono tooling
-workloads for each supported target framework. When updating to a newer
-.NET SDK, the unversioned current tooling workload alone does not provide
-the tooling packs for earlier target frameworks.
-
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
 # Creating installers
