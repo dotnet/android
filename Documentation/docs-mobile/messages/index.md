@@ -267,6 +267,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4328](xa4328.md): Could not generate typemap ProGuard configuration from '{0}': {1}
 + [XA4329](xa4329.md): Invalid or unsupported R8 obfuscation configuration.
 + [XA4330](xa4330.md): A native library uses the reserved libbinary_blobs.so archive name.
++ [XA4331](xa4331.md): Failed to process bundle config file '{0}', split config files will be ignored at run time.
 
 ## XA5xxx: GCC and toolchain
 

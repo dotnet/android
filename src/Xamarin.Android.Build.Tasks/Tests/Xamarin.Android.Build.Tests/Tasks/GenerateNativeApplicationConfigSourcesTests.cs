@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 using Microsoft.Build.Framework;
@@ -14,6 +15,19 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 [TestFixture]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
+	[Test]
+	public void InvalidBundleConfigUsesCodedWarning ()
+	{
+		var warnings = new List<BuildWarningEventArgs> ();
+		var engine = new MockBuildEngine (TestContext.Out, warnings: warnings);
+		var log = new TaskLoggingHelper (engine, nameof (BundleConfigSplitConfigsChecker));
+		string configFile = Path.Combine (Root, "missing-bundle-config.json");
+
+		Assert.IsTrue (BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (log, configFile));
+		var warning = warnings.Single (warning => warning.Code == "XA4331");
+		Assert.AreEqual ($"Failed to process bundle config file '{configFile}', split config files will be ignored at run time.", warning.Message);
+	}
+
 	[TestCase (null)]
 	[TestCase (" ")]
 	public void CoreClrRequiresBootstrapOutputFile (string? bootstrapPath)
