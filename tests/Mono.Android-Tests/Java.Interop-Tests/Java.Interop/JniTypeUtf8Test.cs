@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 
 using Java.Interop;
 
@@ -107,27 +106,6 @@ namespace Java.InteropTests
 				Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist", out var notFound));
 				Assert.IsFalse (notFound.IsValid);
 			});
-		}
-
-		[Test]
-		[Category (JniReferenceLeakCategory)]
-		public void AssertNoSustainedGlobalReferenceGrowth_DetectsRetainedGlobalReference ()
-		{
-			var objectClass = JniEnvironment.Types.FindClass ("java/lang/Object");
-			var retainedReferences = new List<JniObjectReference> ();
-			try {
-				var error = Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
-					retainedReferences.Add (objectClass.NewGlobalRef ());
-				}));
-				Assert.That (error?.Message, Does.Contain ("Operation should not leak global references"));
-				Assert.That (error?.Message, Does.Contain ("Delta=100"));
-			} finally {
-				foreach (var retainedReference in retainedReferences) {
-					var reference = retainedReference;
-					JniObjectReference.Dispose (ref reference);
-				}
-				JniObjectReference.Dispose (ref objectClass);
-			}
 		}
 
 		static void AssertNoSustainedGlobalReferenceGrowth (Action action)

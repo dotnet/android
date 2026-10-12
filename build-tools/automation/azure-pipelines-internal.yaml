@@ -130,10 +130,6 @@ extends:
             artifactName: $(NuGetArtifactName)-symbols
             targetPath: $(System.DefaultWorkingDirectory)/android/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
           - output: pipelineArtifact
-            displayName: upload Windows toolchain pdb files
-            artifactName: $(WindowsToolchainPdbArtifactName)
-            targetPath: $(System.DefaultWorkingDirectory)/android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
-          - output: pipelineArtifact
             displayName: upload test assemblies
             artifactName: $(TestAssembliesArtifactName)
             targetPath: $(System.DefaultWorkingDirectory)/android/bin/Test$(XA.Build.Configuration)
@@ -160,7 +156,6 @@ extends:
             installerArtifactName: $(InstallerArtifactName)
             nugetArtifactName: $(NuGetArtifactName)
             testAssembliesArtifactName: $(TestAssembliesArtifactName)
-            windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
             buildResultArtifactName: Build Results - macOS
             use1ESTemplate: true
 

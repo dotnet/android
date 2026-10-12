@@ -117,7 +117,7 @@ namespace xamarin::android {
 
 			// System.loadLibrary call is going to be slow anyway, so we can spend some more time generating an
 			// undecorated library name here instead of at build time. This saves us a little bit of space in
-			// `libxamarin-app.so` and makes the build code less complicated.
+			// the bootstrap blob and makes the build code less complicated.
 			auto get_undecorated_name = [&get_file_name](std::string_view const& full_name, bool is_path) -> std::string_view {
 				std::string_view name;
 

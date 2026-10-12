@@ -6,6 +6,8 @@ using System.Text.Json;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
+using Microsoft.Android.Tasks;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -42,11 +44,15 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers ([abi]);
-			proj.SetProperty ("_SkipNdkResolution", "true");
-
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), $"CoreCLR app build should succeed for {abi} with the prebuilt runtime.");
-			builder.Output.AssertTargetIsSkipped ("_LinkNativeRuntime", defaultIfNotUsed: true);
+			string missingNdk = Path.Combine (Root, "missing-ndk-for-prebuilt-coreclr");
+			DirectoryAssert.DoesNotExist (missingNdk);
+			Assert.IsTrue (builder.Build (proj, parameters: ["AndroidNdkDirectory=" + missingNdk]),
+				$"CoreCLR app build should succeed for {abi} without the Android NDK.");
+			string packagePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
+			FileAssert.Exists (packagePath, "An NDK-free CoreCLR build must produce a signed package.");
+			using var package = ZipHelper.OpenZip (packagePath);
+			package.AssertContainsEntry (packagePath, $"lib/{abi}/libbinary_blobs.so");
 		}
 
 		[TestCase ("armeabi-v7a")]
@@ -290,9 +296,11 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("error XA5104:", builder.LastBuildOutput, "A missing NDK should produce XA5104.");
 		}
 
-		[TestCase ("apk", false)]
-		[TestCase ("aab", true)]
-		public void BuildCoreClrWithNativeLibraryStripping (string packageFormat, bool isRelease)
+		[TestCase ("apk", false, "")]
+		[TestCase ("aab", true, "")]
+		[TestCase ("apk", false, "asan")]
+		[TestCase ("aab", true, "ubsan")]
+		public void BuildCoreClrWithNativeLibraryStripping (string packageFormat, bool isRelease, string checkedBuild)
 		{
 			string fixture = GetInstalledRuntimePackFile ("libnet-android.debug.so");
 			byte [] original = File.ReadAllBytes (fixture);
@@ -315,6 +323,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetProperty ("AndroidStripNativeLibraries", "true");
 			proj.SetProperty ("AndroidIncludeWrapSh", "true");
+			proj.SetProperty ("_AndroidCheckedBuild", checkedBuild);
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), $"The {proj.Configuration} {packageFormat} build should strip native libraries using the NDK.");
@@ -326,6 +335,19 @@ namespace Xamarin.Android.Build.Tests
 			Assert.Less (stripped.Length, original.Length, "The packaged native library should be smaller after stripping.");
 			CollectionAssert.AreEqual (wrapper, ZipHelper.ReadFileFromZip (package, $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/wrap.sh"),
 				"Linked wrapper scripts must be packaged unchanged.");
+			string sanitizerArchivePath = "";
+			string sanitizerRuntimePath = "";
+			if (checkedBuild != "") {
+				var ndk = AndroidNdkTools.Create (AndroidNdkPath, new TaskLoggingHelper (new MockBuildEngine (TestContext.Out), TestName)) ??
+					throw new InvalidOperationException ("The configured NDK must be available.");
+				string runtimeDirectory = ndk.GetClangDeviceLibraryPath () ??
+					throw new InvalidOperationException ("Clang runtime libraries must be available.");
+				string sanitizerLibrary = $"libclang_rt.{(checkedBuild == "asan" ? "asan" : "ubsan_standalone")}-aarch64-android.so";
+				sanitizerArchivePath = Path.Combine (packageFormat == "aab" ? "base" : "", "lib", "arm64-v8a", sanitizerLibrary)
+					.Replace (Path.DirectorySeparatorChar, '/');
+				sanitizerRuntimePath = Path.Combine (runtimeDirectory, sanitizerLibrary);
+				Assert.IsNotNull (ZipHelper.ReadFileFromZip (package, sanitizerArchivePath), "Checked builds must package the official NDK sanitizer runtime.");
+			}
 			using (var stream = new MemoryStream (stripped)) {
 				using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
 				Assert.AreEqual (FileType.SharedObject, elf.Type);
@@ -341,9 +363,13 @@ namespace Xamarin.Android.Build.Tests
 			builder.BuildLogFile = "stripping-disabled.log";
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
 				"AndroidStripNativeLibraries=false",
-				"_SkipNdkResolution=true",
-			]), "Disabling stripping on an incremental build should not require an NDK.");
+				"_SkipNdkResolution=" + (checkedBuild == "" ? "true" : "false"),
+			]), "Disabling stripping should only retain the NDK requirement for checked builds.");
 			CollectionAssert.AreEqual (original, ZipHelper.ReadFileFromZip (package, archivePath), "Toggling stripping off must repackage the original.");
+			if (checkedBuild != "") {
+				CollectionAssert.AreEqual (File.ReadAllBytes (sanitizerRuntimePath), ZipHelper.ReadFileFromZip (package, sanitizerArchivePath),
+					"Checked builds must package the resolved runtime unchanged when stripping is disabled.");
+			}
 
 			builder.BuildLogFile = "stripping-enabled.log";
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [

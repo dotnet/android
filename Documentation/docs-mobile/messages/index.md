@@ -57,7 +57,6 @@ ms.date: 04/11/2024
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
 + [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
-+ [XA0037](xa0037.md): Unknown mode passed to the `PrepareAbiItems` task.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
@@ -150,14 +149,11 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1037](xa1037.md): Unsupported @(Reference) item: {item}
 + [XA1038](xa1038.md): The '{0}' MSBuild property has an invalid value. Valid values are {1}.
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
-+ [XA1040](xa1040.md): The NativeAOT runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
++ XA1040: Removed in .NET 12.
 + [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
 + [XA1042](xa1042.md): The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.
 + [XA1043](xa1043.md): Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element.
 + [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
-+ [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
-+ [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
-+ [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported.
 + [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
@@ -180,7 +176,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA3002: Invalid AOT mode: {mode}
 + XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
 + XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
-+ XA3006: Could not compile native assembly file: {file}
 + [XA3007](xa3007.md): Could not link native shared library: {library}
 + [XA3008](xa3008.md): Failed to extract debug info from '{library}'
 
@@ -329,7 +324,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CLR` - `CreateLibraryResourceArchive`
 * `CMD` - `CreateMultiDexMainDexClassList`
 * `CML` - `CreateManagedLibraryResourceArchive`
-* `CNA` - `CompileNativeAssembly`
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
@@ -369,14 +363,12 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `JVC` - `Javac`
 * `JTX` - `JarToXml`
 * `KEY` - `KeyTool`
-* `LAS` - `LinkApplicationSharedLibraries`
 * `LEF` - `LogErrorsForFiles`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
 * `LWF` - `LogWarningsForFiles`
 * `MDC` - `MDoc`
-* `PAI` - `PrepareAbiItems`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
 * `PWA` - `PrepareWearApplicationFiles`

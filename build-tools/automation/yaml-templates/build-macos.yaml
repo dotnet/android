@@ -14,7 +14,6 @@ parameters:
   stageName: mac_build
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
-  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
   use1ESTemplate: true
 
 stages:
@@ -54,10 +53,6 @@ stages:
           artifactName: ${{ parameters.nugetArtifactName }}-symbols
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
         - output: pipelineArtifact
-          displayName: upload Windows toolchain pdb files
-          artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
-          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
-        - output: pipelineArtifact
           displayName: upload test assemblies
           artifactName: ${{ parameters.testAssembliesArtifactName }}
           targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
@@ -89,7 +84,6 @@ stages:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
-        windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
         buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 

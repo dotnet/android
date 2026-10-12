@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -32,15 +33,19 @@ public partial class BuildTest3 : BaseTest
 	[Test]
 	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
-		const string MyLib = "libMyStuff.so";
+		string [] libraries = ["MyStuffPlain.so", "libMyStuff.so", "libMyStuffManaged.dll.so"];
 
 		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
-				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLib);
+				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, libraries [0], libraries [1], libraries [2]);
 			}
 		);
-		NativeLibraryJniPreload_VerifyLibs (preloads, new List<string> { MyLib });
+		NativeLibraryJniPreload_VerifyLibs (preloads, libraries.ToList (), expectedStride: 6);
+		for (int i = 0; i < libraries.Length; i++) {
+			Assert.AreEqual ((i + 1) * 2, preloads.Entries.Where (entry => entry.LibraryName == libraries [i])
+				.Select (entry => entry.Index).Distinct ().Count (), "Every real alias must remain in its preload group.");
+		}
 	}
 
 	[Test]
@@ -169,15 +174,15 @@ public partial class BuildTest3 : BaseTest
 		NativeLibraryJniPreload_VerifyLibs (preloads, additionalLibs: null);
 	}
 
-	void NativeLibraryJniPreload_VerifyLibs (EnvironmentHelper.JniPreloads preloads, List<string>? additionalLibs)
+	void NativeLibraryJniPreload_VerifyLibs (EnvironmentHelper.JniPreloads preloads, List<string>? additionalLibs, int expectedStride = ExpectedJniPreloadIndexStride)
 	{
 		int numberOfLibs = 1;
 		if (additionalLibs != null) {
 			numberOfLibs += additionalLibs.Count;
 		}
 
-		int ExpectedEntryCount = ExpectedJniPreloadIndexStride * numberOfLibs;
-		Assert.IsTrue (preloads.IndexStride == (uint)ExpectedJniPreloadIndexStride, $"JNI preloads index stride should be {ExpectedJniPreloadIndexStride}, was {preloads.IndexStride} instead. Source file: {preloads.SourceFile}");
+		int ExpectedEntryCount = expectedStride * numberOfLibs;
+		Assert.IsTrue (preloads.IndexStride == (uint)expectedStride, $"JNI preloads index stride should be {expectedStride}, was {preloads.IndexStride} instead. Source file: {preloads.SourceFile}");
 		Assert.IsTrue (preloads.Entries.Count == ExpectedEntryCount, $"JNI preloads index entry count should be {ExpectedEntryCount}, was {preloads.Entries.Count} instead. Source file: {preloads.SourceFile}");
 
 		// DSO cache entries are sorted based on their name's CRC32 hash, which
@@ -200,13 +205,15 @@ public partial class BuildTest3 : BaseTest
 
 		for (int i = 0; i < preloads.Entries.Count; i++) {
 			EnvironmentHelper.JniPreloadsEntry entry = preloads.Entries[i];
+			Assert.AreEqual (preloads.Entries [i - i % expectedStride].LibraryName, entry.LibraryName,
+				"A JNI preload group must not assign its handle to another library's aliases.");
 			Assert.IsFalse (entry.LibraryName == "libmonodroid.so", $"JNI preloads entry at index {i} refers to the .NET for Android native runtime. It must never be preloaded. Source file: {preloads.SourceFile}");
 			Assert.IsTrue (expectedLibNames.ContainsKey (entry.LibraryName), $"JNI preloads entry at index {i}, referring to library at DSO cache index {entry.Index} has unexpected name '{entry.LibraryName}';  Source file: {preloads.SourceFile}");
 			expectedLibNames[entry.LibraryName]++;
 		}
 
 		foreach (var kvp in expectedLibNames) {
-			Assert.IsTrue (kvp.Value == ExpectedJniPreloadIndexStride, $"JNI preloads entry '{kvp.Key}' should have {ExpectedJniPreloadIndexStride} instances, it had {kvp.Value} instead. Source file: {preloads.SourceFile}");
+			Assert.IsTrue (kvp.Value == expectedStride, $"JNI preloads entry '{kvp.Key}' should have {expectedStride} instances, it had {kvp.Value} instead. Source file: {preloads.SourceFile}");
 		}
 	}
 

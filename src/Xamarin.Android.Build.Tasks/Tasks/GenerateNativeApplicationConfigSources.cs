@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks
 	using PackageNamingPolicyEnum   = PackageNamingPolicy;
 
 	/// <summary>
-	/// Creates the native assembly containing the application config.
+	/// Creates the binary CoreCLR application configuration.
 	/// </summary>
 	public class GenerateNativeApplicationConfigSources : AndroidTask
 	{
@@ -35,9 +35,6 @@ namespace Xamarin.Android.Tasks
 		public bool UseAssemblyStore { get; set; }
 
 		[Required]
-		public string EnvironmentOutputDirectory { get; set; } = "";
-
-		[Required]
 		public string [] SupportedAbis { get; set; } = [];
 
 		[Required]
@@ -48,21 +45,12 @@ namespace Xamarin.Android.Tasks
 
 		public string? CoreClrBootstrapOutputFile { get; set; }
 
-		/// <summary>
-		/// When <c>true</c>, descriptive comments are written into the generated LLVM IR.  They make
-		/// the <c>.ll</c> far easier to read, but have no effect on the object code produced from it.
-		/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
-		/// </summary>
-		public bool EmitLlvmIrComments { get; set; }
-
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? ProjectRuntimeConfigDevFilePath { get; set; }
 
 		public string? PackageNamingPolicy { get; set; }
 		public ITaskItem[]? Environments { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
-
-		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi) => MonoAndroidHelper.AbiToTargetArch (abi);
 
 		AndroidRuntime androidRuntime;
 
@@ -192,7 +180,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
-			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
+			var bootstrapBuilder = new CoreClrBootstrapBuilder (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
 				AndroidPackageName = AndroidPackageName,
 				PackageNamingPolicy = pnp,
 				NumberOfAssembliesInApk = assemblyCount,
@@ -202,32 +190,12 @@ namespace Xamarin.Android.Tasks
 				NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				HaveAssemblyStore = UseAssemblyStore,
-				CoreClrBootstrap = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR,
 			};
-			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
-			appConfigAsmGen.EmitComments = EmitLlvmIrComments;
 
 			if (bootstrapPath != null) {
-				byte [] raw = appConfigAsmGen.CreateCoreClrBootstrap ();
+				byte [] raw = bootstrapBuilder.Create ();
 				using var stream = new MemoryStream (raw, writable: false);
 				Files.CopyIfStreamChanged (stream, bootstrapPath);
-			}
-
-			foreach (string abi in SupportedAbis) {
-				string targetAbi = abi.ToLowerInvariant ();
-				string environmentBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{targetAbi}");
-				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
-				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
-
-				using var appConfigWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
-				try {
-					appConfigAsmGen.Generate (appConfigModule, targetArch, appConfigWriter, environmentLlFilePath);
-				} catch {
-					throw;
-				} finally {
-					appConfigWriter.Flush ();
-					Files.CopyIfStreamChanged (appConfigWriter.BaseStream, environmentLlFilePath);
-				}
 			}
 
 			return !Log.HasLoggedErrors;

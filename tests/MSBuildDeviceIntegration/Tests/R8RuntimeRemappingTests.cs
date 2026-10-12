@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 			var build = BinaryLog.ReadBuild (binlog);
 			Assert.IsEmpty (build.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> (t =>
-				t.Name == "LinkNativeAotSharedLibrary" || t.Name == "LinkNativeRuntime" || t.Name == "LinkApplicationSharedLibraries"),
+				t.Name == "LinkNativeAotSharedLibrary" || t.Name == "LinkNativeRuntime"),
 				"Data-only remapping updates must not invoke the application native linker.");
 		}
 
@@ -259,13 +259,16 @@ namespace Xamarin.Android.Build.Tests
 					(string) e.Attribute ("source-method-name") == "add" &&
 					(string) e.Attribute ("source-method-signature") == "(I)I" &&
 					(string) e.Attribute ("target-method-name") != "add"), "The exercised methods must really be obfuscated.");
-				Assert.IsFalse (elements.Any (e => e.Name == "replace-field" &&
-					((string) e.Attribute ("source-field-name") == "value" ||
-						(string) e.Attribute ("source-field-name") == "staticValue" ||
-						(string) e.Attribute ("source-field-name") == "hiddenValue")),
-					"Fields with stable names and signatures do not need member remapping entries.");
+				foreach (var name in new [] { "value", "staticValue", "hiddenValue" }) {
+					Assert.IsFalse (elements.Any (e =>
+						e.Name == "replace-field" &&
+						(string) e.Attribute ("source-field-name") == name &&
+						(string) e.Attribute ("target-field-name") != name),
+						$"{runtime} must preserve the exercised field '{name}' to avoid inherited lookup collisions.");
+				}
 				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }",
-					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
+					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")),
+					$"{runtime} runtime-remapping must preserve field names to avoid inherited lookup collisions.");
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
 					(string) e.Attribute ("from") == "example/HiddenPeer" &&
 					(string) e.Attribute ("to") != "example/HiddenPeer"), "Java-to-managed activation must exercise a genuinely renamed class.");

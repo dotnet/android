@@ -1,13 +1,10 @@
 // Dear Emacs, this is a -*- C++ -*- header
 #pragma once
 
-#include <array>
 #include <cstdint>
 
-#include <jni.h>
 #include <runtime-base/crc32.hh>
 
-static constexpr uint64_t FORMAT_TAG = 0x00045E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x535A4158; // 'XAZS', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 
@@ -136,9 +133,7 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 	const AssemblyStoreEntryDescriptor *descriptor;
 };
 
-// Keep in strict sync with:
-//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
-//   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
+// Populated from the XCFG binary bootstrap by CoreClrBootstrap.
 struct ApplicationConfig
 {
 	bool ignore_split_configs;
@@ -163,64 +158,8 @@ struct DSOCacheEntry
 	void           *handle;
 };
 
-struct JniRemappingString
-{
-	const uint32_t  length;
-	const char     *str;
-};
-
-struct JniRemappingReplacementMethod
-{
-	const char    *target_type;
-	const char    *target_name;
-	const char    *target_signature;
-	const bool     is_static;
-};
-
-struct JniRemappingIndexMethodEntry
-{
-	const JniRemappingString            name;
-	const JniRemappingString            signature;
-	const JniRemappingReplacementMethod replacement;
-};
-
-struct JniRemappingIndexTypeEntry
-{
-	const JniRemappingString            name;
-	const uint32_t             method_count;
-	const JniRemappingIndexMethodEntry *methods;
-};
-
-struct JniRemappingTypeReplacementEntry
-{
-	const JniRemappingString  name;
-	const char      *replacement;
-};
-
 struct AppEnvironmentVariable
 {
 	const uint32_t name_index;
 	const uint32_t value_index;
 };
-
-extern "C" {
-	[[gnu::visibility("default")]] extern const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
-	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
-
-	[[gnu::visibility("default")]] extern const uint64_t format_tag;
-
-	[[gnu::visibility("default")]] extern const ApplicationConfig application_config;
-	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_environment_variables[];
-	[[gnu::visibility("default")]] extern const char app_environment_variable_contents[];
-	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_system_properties[];
-	[[gnu::visibility("default")]] extern const char app_system_property_contents[];
-
-	[[gnu::visibility("default")]] extern DSOCacheEntry dso_cache[];
-	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_stride;
-	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_count;
-	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
-	[[gnu::visibility("default")]] extern const char dso_names_data[];
-
-	[[gnu::visibility("default")]] extern const char *init_runtime_property_names[];
-	[[gnu::visibility("default")]] extern char *init_runtime_property_values[];
-}

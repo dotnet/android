@@ -55,9 +55,6 @@
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 171584
     },
-    "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 3288
-    },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
     },
