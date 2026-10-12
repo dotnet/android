@@ -56,6 +56,7 @@ properties that determine build ordering.
       _PrepareAssemblies;
       _CompileDex;
       $(_AfterCompileDex);
+      _AndroidGenerateCoreClrBootstrap;
       _AddFilesToFileWrites;
       $(IncrementalCleanDependsOn);
     </IncrementalCleanDependsOn>
@@ -87,6 +88,7 @@ properties that determine build ordering.
       _CheckApkPerAbiFlag;
       _LintChecks;
       _IncludeNativeSystemLibraries;
+      _AndroidGenerateCoreClrBootstrap;
       _CheckGoogleSdkRequirements;
       BuildAndroidAssetPacks;
     </_PrepareBuildApkDependsOnTargets>

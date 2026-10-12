@@ -20,6 +20,27 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 	static string TargetsPath => Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
 		"src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.NativeAOT.targets");
 
+	[Test]
+	public void CoreClrBootstrapGenerationIsIndependentOfPackageManagerJava ()
+	{
+		string root = NativeAotBootstrapTestTools.FindRepositoryRoot ();
+		var common = XDocument.Load (Path.Combine (root, "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		var bootstrap = common.Descendants ().Single (element =>
+			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_AndroidGenerateCoreClrBootstrap");
+		StringAssert.Contains ("'$(_AndroidRuntime)' == 'CoreCLR'", (string?)bootstrap.Attribute ("Condition"));
+		Assert.IsTrue (bootstrap.Elements ().Any (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources"));
+		var java = common.Descendants ().Single (element =>
+			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_GeneratePackageManagerJava");
+		Assert.IsFalse (java.Elements ().Any (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources"));
+		var remapping = XDocument.Load (Path.Combine (root, "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.R8JniRemapping.targets"));
+		foreach (string target in new [] { "_AndroidGenerateBinaryBlobsInputs", "_AndroidGenerateR8BinaryBlobsInputs" }) {
+			string dependencies = (string?)remapping.Descendants ().Single (element =>
+				element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == target).Attribute ("DependsOnTargets") ?? "";
+			StringAssert.Contains ("_AndroidGenerateCoreClrBootstrap", dependencies);
+			StringAssert.DoesNotContain ("_GeneratePackageManagerJava", dependencies);
+		}
+	}
+
 	[TestCase ("NativeAOT", 0)]
 	[TestCase ("CoreCLR", 1)]
 	public void OnlyCoreClrConfigurationTracksEnvironmentInLegacyJavaTarget (string runtime, int expectedCount)

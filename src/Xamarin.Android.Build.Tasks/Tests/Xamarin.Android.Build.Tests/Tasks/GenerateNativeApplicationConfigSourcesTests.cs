@@ -15,6 +15,22 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 [TestFixture]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
+	[TestCase ("NativeAOT", "only supports CoreCLR bootstrap configuration")]
+	public void RejectsUnsupportedRuntimesWithoutWritingBootstrap (string runtime, string message)
+	{
+		string bootstrapPath = Path.Combine (Root, "temp", TestName, "coreclr-bootstrap.bin");
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new GenerateNativeApplicationConfigSources {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			AndroidRuntime = runtime,
+			CoreClrBootstrapOutputFile = bootstrapPath,
+		};
+		Assert.IsFalse (task.Execute ());
+		Assert.That (errors, Has.Count.EqualTo (1));
+		StringAssert.Contains (message, errors [0].Message);
+		FileAssert.DoesNotExist (bootstrapPath);
+	}
+
 	[Test]
 	public void InvalidBundleConfigUsesCodedWarning ()
 	{
@@ -49,17 +65,37 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		FileAssert.DoesNotExist (Path.Combine (outputRoot, "environment.arm64-v8a.ll"));
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
-	public void CoreClrConfigurationUsesBinaryBootstrapInsteadOfApplicationGlobals (bool haveAssemblyStore)
+	[TestCase (false, false)]
+	[TestCase (false, true)]
+	[TestCase (true, false)]
+	[TestCase (true, true)]
+	public void CoreClrConfigurationUsesBinaryBootstrapInsteadOfApplicationGlobals (bool haveAssemblyStore, bool ignoreSplitConfigs)
 	{
 		string outputRoot = Path.Combine (Root, "temp", TestName);
 		string rawPath = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin");
 		string configPath = Path.Combine (outputRoot, "app.runtimeconfig.json");
+		string devConfigPath = Path.Combine (outputRoot, "app.runtimeconfig.dev.json");
+		string bundleConfigPath = Path.Combine (outputRoot, "BundleConfig.json");
 		string environmentPath = Path.Combine (outputRoot, "environment.txt");
 		Directory.CreateDirectory (outputRoot);
 		File.WriteAllText (configPath, """{"runtimeOptions":{"configProperties":{"Test.Feature":"enabled"}}}""");
-		File.WriteAllText (environmentPath, "BOOTSTRAP_VALUE=\u00e9\u65e5\nBOOTSTRAP_EMPTY=\n");
+		File.WriteAllText (devConfigPath, """{"runtimeOptions":{"configProperties":{"Test.Feature":"dev-override","Test.Empty":""}}}""");
+		File.WriteAllText (bundleConfigPath, $$"""
+			{
+			  "optimizations": {
+			    "splitsConfig": {
+			      "splitDimension": [{"value":"ABI","negate":{{ignoreSplitConfigs.ToString ().ToLowerInvariant ()}}}]
+			    }
+			  }
+			}
+			""");
+		File.WriteAllText (environmentPath, "BOOTSTRAP_VALUE=\u00e9\u65e5\nBOOTSTRAP_EMPTY=\nDOTNET_MODIFIABLE_ASSEMBLIES=Debug\ndebug.dotnet.log=gref\n");
+		var libraries = new List<ITaskItem> ();
+		foreach (string name in new [] { "plain.so", "libprefixed.so", "libmanaged.dll.so" }) {
+			string libraryPath = Path.Combine (outputRoot, name);
+			File.Copy (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "android-arm64", "libtest-jni-library.so"), libraryPath, overwrite: true);
+			libraries.Add (new TaskItem (libraryPath));
+		}
 		var task = new GenerateNativeApplicationConfigSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			ResolvedAssemblies = [new TaskItem (Path.Combine (outputRoot, "Example.dll"))],
@@ -69,18 +105,29 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = haveAssemblyStore,
 			ProjectRuntimeConfigFilePath = configPath,
+			ProjectRuntimeConfigDevFilePath = devConfigPath,
+			CustomBundleConfigFile = bundleConfigPath,
+			NativeLibraries = libraries.ToArray (),
+			NativeLibrariesNoJniPreload = ignoreSplitConfigs ? [new TaskItem ("libprefixed.so"), new TaskItem ("libmanaged.dll.so")] : [],
+			NativeLibrariesAlwaysJniPreload = [new TaskItem ("libprefixed.so")],
 			Environments = [new TaskItem (environmentPath)],
 		};
 		Assert.IsTrue (task.Execute ());
 		var bootstrap = EnvironmentHelper.ReadCoreClrBootstrap (outputRoot);
 		var config = bootstrap.Config;
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
+		Assert.AreEqual (ignoreSplitConfigs, config.ignore_split_configs);
+		Assert.AreEqual (12, config.number_of_dso_cache_entries, "The 2/4/6-alias libraries must retain all cache entries.");
+		Assert.AreEqual (ignoreSplitConfigs ? 4 : 6, bootstrap.Preloads.IndexStride);
+		Assert.AreEqual (ignoreSplitConfigs ? 8 : 18, bootstrap.Preloads.Entries.Count);
 		Assert.AreEqual ("\u00e9\u65e5", bootstrap.EnvironmentVariables ["BOOTSTRAP_VALUE"]);
 		Assert.AreEqual ("", bootstrap.EnvironmentVariables ["BOOTSTRAP_EMPTY"]);
 		Assert.AreEqual (bootstrap.EnvironmentVariables.Count, config.environment_variable_count);
 		byte [] raw = File.ReadAllBytes (rawPath);
 		StringAssert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
 		StringAssert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));
+		StringAssert.Contains ("dev-override", Encoding.UTF8.GetString (raw));
+		StringAssert.DoesNotContain ("enabled", Encoding.UTF8.GetString (raw));
 		Assert.IsEmpty (Directory.GetFiles (Path.Combine (outputRoot, "android"), "*.ll"),
 			"Application configuration should not generate LLVM sources for any ABI.");
 	}

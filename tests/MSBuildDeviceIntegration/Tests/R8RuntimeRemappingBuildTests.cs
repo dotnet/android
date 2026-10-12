@@ -57,6 +57,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true)]
 		[TestCase (AndroidRuntime.NativeAOT, true)]
 		public void MamRemappingTransitionsUpdatePackages (AndroidRuntime runtime, bool aab)
 		{
@@ -73,6 +74,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
 			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			if (runtime == AndroidRuntime.CoreCLR) {
+				proj.SetProperty ("AndroidNdkDirectory", Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs"));
+			}
 			using var builder = CreateApkBuilder ();
 			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			void AssertPackage (bool hasRemapping)
@@ -504,6 +508,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
 			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			if (runtime == AndroidRuntime.CoreCLR) {
+				proj.SetProperty ("AndroidNdkDirectory", Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs"));
+			}
 
 			using var builder = CreateApkBuilder ();
 			(int R8, int NativeLinks) ReadInvocationCounts ()

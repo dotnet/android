@@ -52,17 +52,14 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[]? Environments { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
 
-		AndroidRuntime androidRuntime;
-
 		public override bool RunTask ()
 		{
-			androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
-			string? bootstrapPath = null;
-			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
-				bootstrapPath = CoreClrBootstrapOutputFile;
-				if (string.IsNullOrWhiteSpace (bootstrapPath)) {
-					throw new InvalidOperationException ("CoreCLR bootstrap output path is required.");
-				}
+			if (MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime) != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
+				throw new InvalidOperationException ("GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration.");
+			}
+			string? bootstrapPath = CoreClrBootstrapOutputFile;
+			if (bootstrapPath.IsNullOrWhiteSpace ()) {
+				throw new InvalidOperationException ("CoreCLR bootstrap output path is required.");
 			}
 
 			if (!Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicy pnp)) {
@@ -72,11 +69,6 @@ namespace Xamarin.Android.Tasks
 			// Include generated environment files from the later stages of the build.
 			var envBuilder = new EnvironmentBuilder ();
 			envBuilder.Read (Environments);
-
-			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-				// NativeAOT configuration is produced by GenerateNativeAotDataObject instead.
-				envBuilder.EnvironmentVariables.Clear ();
-			}
 
 			int assemblyNameWidth = 0;
 			Encoding assemblyNameEncoding = Encoding.UTF8;
@@ -190,11 +182,9 @@ namespace Xamarin.Android.Tasks
 				HaveAssemblyStore = UseAssemblyStore,
 			};
 
-			if (bootstrapPath != null) {
-				byte [] raw = bootstrapBuilder.Create ();
-				using var stream = new MemoryStream (raw, writable: false);
-				Files.CopyIfStreamChanged (stream, bootstrapPath);
-			}
+			byte [] raw = bootstrapBuilder.Create ();
+			using var stream = new MemoryStream (raw, writable: false);
+			Files.CopyIfStreamChanged (stream, bootstrapPath);
 
 			return !Log.HasLoggedErrors;
 		}
