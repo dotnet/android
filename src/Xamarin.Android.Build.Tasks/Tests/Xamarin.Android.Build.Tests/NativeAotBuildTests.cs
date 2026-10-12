@@ -237,8 +237,14 @@ namespace Xamarin.Android.Build.Tests
 				string [] deviceParameters = [.. renamedParameters, "AdbTarget=" + deviceTarget];
 				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
 				try {
+					RunAdbCommand ("logcat -c");
 					Assert.IsTrue (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
-					StringAssert.Contains ("second:first", RunAdbCommand ("logcat -d -s BootstrapFlavor:I"),
+					string startupLog = "";
+					WaitFor (TimeSpan.FromSeconds (30), () => {
+						startupLog = RunAdbCommand ("logcat -d -s BootstrapFlavor:I");
+						return startupLog.Contains ("second:first", StringComparison.Ordinal);
+					}, intervalInMS: 250);
+					StringAssert.Contains ("second:first", startupLog,
 						"The renamed app and secondary-process provider must read the selected bootstrap environment.");
 				} finally {
 					Assert.IsTrue (builder.RunTarget (proj, "Uninstall", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
