@@ -245,6 +245,61 @@ namespace Java.InteropTests
 			});
 		}
 
+		[Test]
+		public void ThrowableExtractionPreservesEscapingPeer (
+			[Values (5, 6)] int stage,
+			[Values (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef,
+				JniHandleOwnership.TransferGlobalRef, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister)] JniHandleOwnership ownership)
+		{
+			var source = JNIEnv.CreateInstance ("net/dot/android/test/TransferFailureThrowable", "(I)V", new JValue (stage));
+			try {
+				WithInput (source, ownership, (handle, transfer) => {
+					var sourceClass = JNIEnv.GetObjectClass (source);
+					try {
+						JNIEnv.CallVoidMethod (source, JNIEnv.GetMethodID (sourceClass, "reset", "()V"));
+					} finally {
+						JNIEnv.DeleteLocalRef (sourceClass);
+					}
+					var failure = Assert.Catch<System.Exception> (() => new Java.Lang.Throwable (handle, transfer));
+					var escaped = (stage == 5 ? failure : failure?.InnerException) as Java.Lang.Throwable;
+					try {
+						Assert.IsNotNull (escaped, "The Java failure must surface the source throwable directly or as its cause.");
+						if (escaped == null)
+							throw new AssertionException ("The escaping Throwable peer is missing.");
+						Assert.IsTrue (escaped.PeerReference.IsValid, "Constructor cleanup must not dispose an escaping peer.");
+						Assert.IsTrue (JNIEnv.IsSameObject (source, escaped.Handle));
+						Assert.AreSame (escaped, JniEnvironment.Runtime.ValueManager.PeekPeer (escaped.PeerReference));
+						if (JniEnvironment.Runtime.ObjectReferenceManager is ReferenceObserver observer) {
+							Assert.AreEqual (1, observer.OwnedCopies.Count,
+								"Only the escaping peer may retain a source GREF; an unpublished alias must be released.");
+						}
+						using var peerClass = escaped.Class;
+						Assert.IsNotNull (peerClass, "The escaping peer must still support JNI calls.");
+
+						JniObjectReference pending = default;
+						try {
+							JniEnvironment.Runtime.RaisePendingException (escaped);
+							pending = JniEnvironment.Exceptions.ExceptionOccurred ();
+							JniEnvironment.Exceptions.ExceptionClear ();
+							JniEnvironment.References.CreatedReference (pending);
+							Assert.IsTrue (pending.IsValid);
+							Assert.AreSame (escaped, JniEnvironment.Runtime.GetExceptionForThrowable (
+								ref pending, JniObjectReferenceOptions.CopyAndDispose));
+						} finally {
+							JniEnvironment.Exceptions.ExceptionClear ();
+							JniObjectReference.Dispose (ref pending);
+						}
+					} finally {
+						(failure as IDisposable)?.Dispose ();
+						if (!ReferenceEquals (failure, escaped))
+							escaped?.Dispose ();
+					}
+				});
+			} finally {
+				JNIEnv.DeleteLocalRef (source);
+			}
+		}
+
 		[TestCase (JniHandleOwnership.DoNotTransfer)]
 		[TestCase (JniHandleOwnership.TransferLocalRef)]
 		[TestCase (JniHandleOwnership.TransferGlobalRef)]
