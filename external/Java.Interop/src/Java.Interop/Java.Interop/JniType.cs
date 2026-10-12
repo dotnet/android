@@ -153,10 +153,10 @@ namespace Java.Interop {
 		{
 			if (!PeerReference.IsValid)
 				return;
-			if (registered)
-				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
+			if (registered)
+				JniEnvironment.Runtime.UnTrack (this);
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
@@ -189,11 +189,14 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-#pragma warning disable 0414
-		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
-		JniNativeMethodRegistration[]? methods;
-#pragma warning restore 0414
+		List<JniNativeMethodRegistration[]>? methods;
 
+		/// <remarks>
+		/// Snapshots and retains delegates from every attempted registration, including failed
+		/// or partial registrations, until successful unregistration. Coordinate registration,
+		/// unregistration, and disposal with native invocations so no callbacks are in flight
+		/// when unregistering.
+		/// </remarks>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
@@ -202,10 +205,13 @@ namespace Java.Interop {
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
 
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
-			// Prevents method delegates from being GC'd so long as this type remains
-			this.methods = methods;
+			var snapshot = (JniNativeMethodRegistration[]) methods.Clone ();
 			RegisterWithRuntime ();
+			this.methods ??= new List<JniNativeMethodRegistration[]> ();
+			this.methods.Add (snapshot);
+			unsafe {
+				JniEnvironment.Types.RegisterNatives (PeerReference, snapshot, snapshot.Length);
+			}
 		}
 
 		public void UnregisterNativeMethods ()
@@ -213,6 +219,7 @@ namespace Java.Interop {
 			AssertValid ();
 
 			JniEnvironment.Types.UnregisterNatives (PeerReference);
+			methods = null;
 		}
 
 		public JniMethodInfo GetConstructor (string signature)

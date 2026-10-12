@@ -33,6 +33,11 @@ namespace Xamarin.Java.Interop
 				Name          = "DefineClass",
 				Visibility    = "public",
 				Throws        = true,
+				CallerSafetyRequirements = [
+					"The caller must ensure <paramref name=\"buffer\"/> addresses at least <paramref name=\"bufferLength\"/> initialized bytes that JNI may read.",
+					"The backing storage must remain alive and at a stable address, pinned when managed, for the duration of the call.",
+					"The caller must ensure <paramref name=\"bufferLength\"/> is nonnegative.",
+				],
 				Prototype     = "jclass      (*DefineClass)(JNIEnv*, const char, jobject, const jbyte*, jsize);",
 				ReturnType    = "jclass",
 				Parameters    = new ParamInfo [] {new ParamInfo ("const char*", "name"), new ParamInfo ("jobject", "loader"), new ParamInfo ("const jbyte*", "buffer"), new ParamInfo ("jsize", "bufferLength")},

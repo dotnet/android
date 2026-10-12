@@ -230,14 +230,30 @@ namespace Java.Interop
 				return value.Replace ('.', '/');
 			}
 
+			/// <safety>
+			/// The caller must keep the Marshaler delegates in <paramref name="methods"/> strongly
+			/// reachable for as long as JNI can invoke their callbacks, including after a failed
+			/// or partially completed registration. Returning from this call does not end that lifetime.
+			/// Release those roots only after successful unregistration and completion of all
+			/// in-flight callbacks.
+			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
+			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
 			{
-				RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				unsafe {
+					RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				}
 			}
 
+			/// <safety>
+			/// The caller must keep the Marshaler delegates in the first <paramref name="numMethods"/>
+			/// entries of <paramref name="methods"/> strongly reachable for as long as JNI can invoke
+			/// their callbacks, including after a failed or partially completed registration.
+			/// Returning from this call does not end that lifetime. Release those roots only after
+			/// successful unregistration and completion of all in-flight callbacks.
+			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
+			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
 			{
 				if ((numMethods < 0) ||
 						(numMethods > (methods?.Length ?? 0))) {
@@ -292,13 +308,12 @@ namespace Java.Interop
 					unsafe {
 						RegisterNatives (type, natives);
 					}
-					// Keep the Marshaler delegates alive at least until JNI has consumed the function pointers.
-					GC.KeepAlive (methods);
 				} finally {
 					for (int i = 0; i < unmanagedStrings.Length; ++i) {
 						if (unmanagedStrings [i] != IntPtr.Zero)
 							Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
 					}
+					GC.KeepAlive (methods);
 				}
 			}
 
