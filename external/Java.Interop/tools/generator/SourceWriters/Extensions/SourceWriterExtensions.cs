@@ -12,6 +12,27 @@ namespace generator.SourceWriters
 {
 	public static class SourceWriterExtensions
 	{
+		internal const string JniCallSafetyComment = "// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.";
+
+		internal static bool IsThrowable (ClassGen klass)
+		{
+			for (var type = klass; type != null; type = type.BaseGen)
+				if (type.RawJniName == "java/lang/Throwable")
+					return true;
+			return false;
+		}
+
+		internal static bool UsesDeferredThrowableConstructor (ClassGen klass)
+		{
+			if (!IsThrowable (klass))
+				return false;
+			if (!klass.IsGeneratable)
+				return klass.HasDeferredThrowableConstructor;
+			if (klass.RawJniName == "java/lang/Throwable")
+				return true;
+			return klass.BaseGen != null && UsesDeferredThrowableConstructor (klass.BaseGen);
+		}
+
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{
 			if (field.NeedsProperty)
@@ -231,6 +252,7 @@ namespace generator.SourceWriters
 
 		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
 		{
+			body.Add (JniCallSafetyComment);
 			body.Add ($"const string __id = \"{method.JavaName}.{method.JniSignature}\";");
 
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
@@ -458,6 +480,9 @@ namespace generator.SourceWriters
 
 		public static void WriteMethodStringOverloadBody (CodeWriter writer, Method method, CodeGenerationOptions opt, bool haveSelf)
 		{
+			writer.WriteLine ("unsafe {");
+			writer.Indent ();
+			writer.WriteLine ("// SAFETY: Temporary Java strings remain live until the managed binding call completes.");
 			var call = new StringBuilder ();
 
 			foreach (var p in method.Parameters) {
@@ -501,6 +526,9 @@ namespace generator.SourceWriters
 
 			if (!method.RetVal.IsVoid)
 				writer.WriteLine ($"return __rsval{opt.GetNullForgiveness (method.RetVal)};");
+
+			writer.Unindent ();
+			writer.WriteLine ("}");
 		}
 
 		public static TypeWriter BuildManagedTypeModel (GenBase gen, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)

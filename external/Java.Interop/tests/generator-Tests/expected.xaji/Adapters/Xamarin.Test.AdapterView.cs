@@ -41,13 +41,17 @@ namespace Xamarin.Test {
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetAdapter);
 			}
 		}
 		private static IntPtr __n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.RawAdapter);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.RawAdapter);
+			}
 		}
 #pragma warning restore 0169
 
@@ -61,14 +65,18 @@ namespace Xamarin.Test {
 		static void n_SetAdapter_Lxamarin_test_Adapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_adapter, &__n_SetAdapter_Lxamarin_test_Adapter_);
 			}
 		}
 		private static void __n_SetAdapter_Lxamarin_test_Adapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var adapter = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_adapter, JniHandleOwnership.DoNotTransfer);
-			__this.RawAdapter = adapter;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var adapter = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_adapter, JniHandleOwnership.DoNotTransfer);
+				__this.RawAdapter = adapter;
+			}
 		}
 #pragma warning restore 0169
 
@@ -98,26 +106,32 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		protected override unsafe global::Java.Lang.Object RawAdapter {
+		protected override global::Java.Lang.Object RawAdapter {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='getAdapter' and count(parameter)=0]"
 			[Register ("getAdapter", "()Lxamarin/test/Adapter;", "GetGetAdapterHandler")]
 			get {
-				const string __id = "getAdapter.()Lxamarin/test/Adapter;";
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "getAdapter.()Lxamarin/test/Adapter;";
+					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='T']]"
 			[Register ("setAdapter", "(Lxamarin/test/Adapter;)V", "GetSetAdapter_Lxamarin_test_Adapter_Handler")]
 			set {
-				const string __id = "setAdapter.(Lxamarin/test/Adapter;)V";
-				IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (native_value);
-					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-					JNIEnv.DeleteLocalRef (native_value);
-					global::System.GC.KeepAlive (value);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "setAdapter.(Lxamarin/test/Adapter;)V";
+					IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
+					try {
+						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+						__args [0] = new JniArgumentValue (native_value);
+						_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+					} finally {
+						JNIEnv.DeleteLocalRef (native_value);
+						global::System.GC.KeepAlive (value);
+					}
 				}
 			}
 		}

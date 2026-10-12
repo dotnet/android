@@ -126,6 +126,33 @@ for that later opt-in; it is not enforced for pointer-free signatures under
 legacy rules. Generated JNI wrappers and T4 inputs keep implementation unsafe
 blocks local without changing marshaling, dispatch, or cleanup.
 
+## Generated managed binding safety
+
+The binding generator keeps managed method, constructor, and property contracts
+safe. JNI argument storage, invocation, string conversion, array copy-back, and
+reference cleanup live in local `unsafe` implementation regions. SourceWriter's
+`HasUnsafeBody` and accessor-body flags are independent of `IsUnsafe`, which
+continues to describe a caller obligation. Abstract and interface declarations
+are not made caller-unsafe to accommodate their implementations.
+
+These blocks use existing C# syntax so generated bindings remain usable with
+legacy compilers. Generator tests retain the legacy Roslyn harness and also use
+the build SDK's actual compiler with updated memory-safety rules, including
+implementation/reference metadata and negative callsite checks. This preparation
+does not enable those rules on Mono.Android or customer projects.
+
+Throwable-derived bindings have a separate deferred-peer constructor taking
+`JniObjectReferenceOptions.None`. The protected forwarding chain has no Java
+constructor registration and creates no Java peer; the managed binding
+constructor still performs the original JNI construction. Existing peer-constructor
+partial hooks are preserved in the forwarding path. Raw-handle constructors
+retain their caller obligations. For a referenced intermediate base, the generator
+checks whether the actual assembly exposes this constructor. Older bases without
+it keep legacy zero-handle initialization rather than receiving an unresolvable
+constructor call. If an updated base marks its raw constructor requires-unsafe
+but lacks the deferred constructor, a safe generated constructor fails the
+updated-rules compilation; regenerating the base supplies the safe path. Legacy
+reference metadata does not enforce the new raw caller contract.
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java

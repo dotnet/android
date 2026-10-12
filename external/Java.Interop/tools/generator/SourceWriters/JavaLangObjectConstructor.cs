@@ -14,6 +14,9 @@ namespace generator.SourceWriters
 		public JavaLangObjectConstructor (ClassGen klass, CodeGenerationOptions opt, string callPartialMethod)
 		{
 			Name = klass.Name;
+			IsUnsafe = SourceWriterExtensions.IsThrowable (klass);
+			if (IsUnsafe)
+				Comments.Add ("/// <safety><paramref name=\"javaReference\"/> must be a live JNI throwable reference compatible with this type; <paramref name=\"transfer\"/> must match its ownership.</safety>");
 
 			if (klass.IsFinal)
 				IsInternal = true;

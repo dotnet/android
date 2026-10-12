@@ -32,16 +32,19 @@ namespace Test.ME {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='GenericObjectPropertyImplementation']/constructor[@name='GenericObjectPropertyImplementation' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe GenericObjectPropertyImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public GenericObjectPropertyImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			const string __id = "()V";
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "()V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
 
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 		}
 
 		static Delegate cb_getObject_GetObject_Ljava_lang_Object_;
@@ -54,13 +57,17 @@ namespace Test.ME {
 		static IntPtr n_GetObject (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetObject);
 			}
 		}
 		private static IntPtr __n_GetObject (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericObjectPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.Object);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericObjectPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.Object);
+			}
 		}
 #pragma warning restore 0169
 
@@ -74,33 +81,43 @@ namespace Test.ME {
 		static void n_SetObject_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native__object)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native__object, &__n_SetObject_Ljava_lang_Object_);
 			}
 		}
 		private static void __n_SetObject_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native__object)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericObjectPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var @object = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native__object, JniHandleOwnership.DoNotTransfer);
-			__this.Object = @object;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericObjectPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var @object = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native__object, JniHandleOwnership.DoNotTransfer);
+				__this.Object = @object;
+			}
 		}
 #pragma warning restore 0169
 
-		public virtual unsafe global::Java.Lang.Object Object {
+		public virtual global::Java.Lang.Object Object {
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericObjectPropertyImplementation']/method[@name='getObject' and count(parameter)=0]"
 			[Register ("getObject", "()Ljava/lang/Object;", "GetGetObjectHandler")]
 			get {
-				const string __id = "getObject.()Ljava/lang/Object;";
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "getObject.()Ljava/lang/Object;";
+					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericObjectPropertyImplementation']/method[@name='setObject' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 			[Register ("setObject", "(Ljava/lang/Object;)V", "GetSetObject_Ljava_lang_Object_Handler")]
 			set {
-				const string __id = "setObject.(Ljava/lang/Object;)V";
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-				global::System.GC.KeepAlive (value);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "setObject.(Ljava/lang/Object;)V";
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+					global::System.GC.KeepAlive (value);
+				}
 			}
 		}
 

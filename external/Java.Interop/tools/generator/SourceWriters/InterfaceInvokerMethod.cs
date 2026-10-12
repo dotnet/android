@@ -21,7 +21,7 @@ namespace generator.SourceWriters
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
 			IsPublic = true;
-			IsUnsafe = true;
+			HasUnsafeBody = true;
 			IsStatic = method.IsStatic;
 
 			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence, iface.FullName + "Invoker");
