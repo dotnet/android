@@ -83,8 +83,21 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		public void MissingClangRuntimeIsDiagnosed ()
 		{
 			var ndk = CreateNdk ();
-			Assert.IsNull (ndk.GetClangDeviceLibraryPath ());
-			Assert.AreEqual ("XA5101", errors.Single ().Code);
+			string modernRoot = Path.Combine (ndk.ToolchainDirectory, "lib", "clang");
+			string olderRoot = Path.Combine (ndk.ToolchainDirectory, "lib64", "clang");
+			foreach (bool rootsExist in new [] { false, true }) {
+				if (rootsExist) {
+					Directory.CreateDirectory (Path.Combine (modernRoot, "19"));
+					Directory.CreateDirectory (Path.Combine (olderRoot, "19"));
+				}
+				Assert.IsNull (ndk.GetClangDeviceLibraryPath ());
+				var error = errors.Single ();
+				Assert.AreEqual ("XA5101", error.Code);
+				StringAssert.Contains ("Could not locate Android NDK Clang runtime libraries", error.Message);
+				StringAssert.Contains (modernRoot, error.Message);
+				StringAssert.Contains (olderRoot, error.Message);
+				errors.Clear ();
+			}
 		}
 
 		[TestCase (false, "AndroidIncludeWrapSh")]

@@ -54,8 +54,11 @@ sealed class AndroidNdkTools
 	public string? GetClangDeviceLibraryPath ()
 	{
 		// Older Clang NDKs use lib64; current NDKs use lib.
-		foreach (string libDirectory in new [] { "lib", "lib64" }) {
-			string root = Path.Combine (ToolchainDirectory, libDirectory, "clang");
+		string [] roots = [
+			Path.Combine (ToolchainDirectory, "lib", "clang"),
+			Path.Combine (ToolchainDirectory, "lib64", "clang"),
+		];
+		foreach (string root in roots) {
 			if (!Directory.Exists (root)) {
 				continue;
 			}
@@ -67,7 +70,7 @@ sealed class AndroidNdkTools
 				}
 			}
 		}
-		log.LogCodedError ("XA5101", Properties.Resources.XA5101, Path.Combine (ToolchainDirectory, "lib", "clang"));
+		log.LogCodedError ("XA5101", Properties.Resources.XA5101_ClangRuntime, string.Join ("; ", roots));
 		return null;
 
 		static Version GetVersion (string directory)

@@ -1996,6 +1996,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA5101", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK..
+        /// </summary>
+        public static string XA5101_ClangRuntime {
+            get {
+                return ResourceManager.GetString("XA5101_ClangRuntime", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path..
