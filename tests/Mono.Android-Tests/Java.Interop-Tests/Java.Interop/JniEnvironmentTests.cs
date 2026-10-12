@@ -15,7 +15,7 @@ namespace Java.InteropTests
 		public void Transition_RejectsNullEnvironmentPointer ()
 		{
 			var environmentPointer = JniEnvironment.EnvironmentPointer;
-			Assert.Throws<ArgumentException> (() => new JniTransition (IntPtr.Zero));
+			Assert.Throws<ArgumentNullException> (() => new JniTransition (IntPtr.Zero));
 			Assert.AreEqual (environmentPointer, JniEnvironment.EnvironmentPointer);
 		}
 
