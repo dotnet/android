@@ -673,7 +673,7 @@ static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseDoubleArrayElements(Java
 static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseFloatArrayElements(Java.Interop.JniObjectReference array, float* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
 static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseIntArrayElements(Java.Interop.JniObjectReference array, int* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
 static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseLongArrayElements(Java.Interop.JniObjectReference array, long* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleasePrimitiveArrayCritical(Java.Interop.JniObjectReference array, nint carray, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleasePrimitiveArrayCritical(Java.Interop.JniObjectReference array, nint carray, Java.Interop.JniReleaseArrayElementsMode mode) -> void
 static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseShortArrayElements(Java.Interop.JniObjectReference array, short* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
 static unsafe Java.Interop.JniEnvironment.Arrays.SetBooleanArrayRegion(Java.Interop.JniObjectReference array, int start, int length, bool* buffer) -> void
 static unsafe Java.Interop.JniEnvironment.Arrays.SetByteArrayRegion(Java.Interop.JniObjectReference array, int start, int length, sbyte* buffer) -> void
@@ -755,7 +755,7 @@ static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.In
 static Java.Interop.JniEnvironment.InstanceMethods.GetMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
 static Java.Interop.JniEnvironment.IO.GetDirectBufferAddress(Java.Interop.JniObjectReference buffer) -> nint
 static Java.Interop.JniEnvironment.IO.GetDirectBufferCapacity(Java.Interop.JniObjectReference buffer) -> long
-static Java.Interop.JniEnvironment.IO.NewDirectByteBuffer(nint address, long capacity) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.IO.NewDirectByteBuffer(nint address, long capacity) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.JniVersion.get -> Java.Interop.JniVersion
 static Java.Interop.JniEnvironment.LocalReferenceCount.get -> int
 static Java.Interop.JniEnvironment.Monitors.MonitorEnter(Java.Interop.JniObjectReference instance) -> void

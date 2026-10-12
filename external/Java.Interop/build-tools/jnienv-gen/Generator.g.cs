@@ -1956,6 +1956,11 @@ namespace Xamarin.Java.Interop
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleasePrimitiveArrayCritical",
 				Visibility    = "public",
+				CallerSafetyRequirements = [
+					"The caller must ensure carray comes from a matching, still-active GetPrimitiveArrayCritical acquisition for array.",
+					"The caller must obey JNI critical-region restrictions and use a valid release mode.",
+					"The pointer must not be reused after a final release.",
+				],
 				Prototype     = "void        (*ReleasePrimitiveArrayCritical)(JNIEnv*, jarray, void*, jint);",
 				ReturnType    = "void",
 				Parameters    = new ParamInfo [] {new ParamInfo ("jarray", "array"), new ParamInfo ("void*", "carray"), new ParamInfo ("JniReleaseArrayElementsMode", "mode")},
@@ -2005,6 +2010,11 @@ namespace Xamarin.Java.Interop
 				Name          = "NewDirectByteBuffer",
 				Visibility    = "public",
 				Throws        = true,
+				CallerSafetyRequirements = [
+					"The caller must ensure address refers to a valid memory region covering capacity bytes.",
+					"The region must remain alive and accessible for all reads and writes performed by the returned buffer or any Java aliases.",
+					"The caller must ensure capacity is nonnegative and no greater than Int32.MaxValue.",
+				],
 				Prototype     = "jobject     (*NewDirectByteBuffer)(JNIEnv*, void*, jlong);",
 				ReturnType    = "jobject",
 				Parameters    = new ParamInfo [] {new ParamInfo ("void*", "address"), new ParamInfo ("jlong", "capacity")},
