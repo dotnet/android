@@ -19,6 +19,9 @@ namespace generator.SourceWriters
 			this.field = field;
 			this.opt = opt;
 
+			HasUnsafeGetterBody = field.Symbol is StringSymbol;
+			HasUnsafeSetterBody = field.Symbol is StringSymbol;
+
 			Name = field.Name;
 
 			string fieldType = field.Symbol.IsArray
@@ -72,6 +75,8 @@ namespace generator.SourceWriters
 
 		protected override void WriteGetterBody (CodeWriter writer)
 		{
+			if (HasUnsafeGetterBody)
+				writer.WriteLine ("// SAFETY: The string reference comes from the generated Java field and is consumed exactly once.");
 			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
 			writer.WriteLine ();
 
@@ -94,6 +99,8 @@ namespace generator.SourceWriters
 
 		protected override void WriteSetterBody (CodeWriter writer)
 		{
+			if (HasUnsafeSetterBody)
+				writer.WriteLine ("// SAFETY: The owned Java string reference remains live through the field assignment and is released in finally.");
 			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
 			writer.WriteLine ();
 

@@ -33,5 +33,30 @@ namespace Xamarin.SourceWriter.Tests
 
 			Assert.AreEqual (expected, sw.ToString ());
 		}
+
+		[TestCase (true, false)]
+		[TestCase (false, true)]
+		[TestCase (true, true)]
+		public void UnsafeAccessorBodiesDoNotChangeCallerContract (bool unsafeGetter, bool unsafeSetter)
+		{
+			var property = new PropertyWriter {
+				Name = "Value",
+				PropertyType = new TypeReferenceWriter ("int"),
+				IsPublic = true,
+				HasGet = true,
+				HasSet = true,
+				HasUnsafeGetterBody = unsafeGetter,
+				HasUnsafeSetterBody = unsafeSetter,
+			};
+			property.GetBody.Add ("return ReadNative ();");
+			property.SetBody.Add ("WriteNative (value);");
+
+			var sw = new StringWriter ();
+			property.Write (new CodeWriter (sw));
+
+			var getter = unsafeGetter ? "get {\n\t\tunsafe {\n\t\t\treturn ReadNative ();\n\t\t}\n\t}" : "get { return ReadNative (); }";
+			var setter = unsafeSetter ? "set {\n\t\tunsafe {\n\t\t\tWriteNative (value);\n\t\t}\n\t}" : "set { WriteNative (value); }";
+			Assert.AreEqual ($"public int Value {{\n\t{getter}\n\t{setter}\n}}\n", sw.ToString ().Replace ("\r\n", "\n"));
+		}
 	}
 }

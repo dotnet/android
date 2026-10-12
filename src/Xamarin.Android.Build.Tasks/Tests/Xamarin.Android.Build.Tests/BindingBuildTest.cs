@@ -968,8 +968,8 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 				var cs = b.Output.GetIntermediaryAsText (Path.Combine ("generated", "src", "Com.Xamarin.Test.IDefaultInterfaceMethods.cs"));
 				Assert.IsTrue (cs.Contains ("int Quux ();"), "Quux not generated.");
-				Assert.IsTrue (cs.Contains ("virtual unsafe int Foo ()"), "Foo not generated.");
-				Assert.IsTrue (cs.Contains ("virtual unsafe int Bar {"), "Bar not generated.");
+				Assert.IsTrue (cs.Contains ("virtual int Foo ()"), "Foo not generated.");
+				Assert.IsTrue (cs.Contains ("virtual int Bar {"), "Bar not generated.");
 				Assert.IsTrue (cs.Contains ("set {"), "(Baz) setter not generated.");
 			}
 		}
@@ -1048,7 +1048,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				var generatedCode = Path.Combine (Root, libBuilder.ProjectDirectory, lib.IntermediateOutputPath,
 					"generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceTestExtension.cs");
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have been generated.");
-				StringAssertEx.ContainsText (File.ReadAllLines (generatedCode), "public virtual unsafe string GreetWithQuestion (string name, global::Java.Util.Date date, string question)");
+				StringAssertEx.ContainsText (File.ReadAllLines (generatedCode), "public virtual string GreetWithQuestion (string name, global::Java.Util.Date date, string question)");
 				var generatedIface = Path.Combine (Root, libBuilder.ProjectDirectory, lib.IntermediateOutputPath,
 					"generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.IJavaSourceTestInterface.cs");
 				StringAssertEx.ContainsText (File.ReadAllLines (generatedIface), "string GreetWithQuestion (string name, global::Java.Util.Date date, string question);");
