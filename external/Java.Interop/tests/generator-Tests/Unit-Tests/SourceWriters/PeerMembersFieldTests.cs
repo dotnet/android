@@ -1,7 +1,6 @@
 using generator.SourceWriters;
 using MonoDroid.Generation;
 using NUnit.Framework;
-using Xamarin.Android.Binder;
 
 namespace generatortests.SourceWriters
 {
@@ -11,7 +10,7 @@ namespace generatortests.SourceWriters
 		[Test]
 		public void PeerMembersField_XamarinAndroidClass ()
 		{
-			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1 }, "B", "MyJavaType", false);
+			var field = new PeerMembersField (new CodeGenerationOptions (), "B", "MyJavaType", false);
 
 			Assert.AreEqual ("static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (MyJavaType));", GetOutput (field).Trim ());
 		}
@@ -19,7 +18,7 @@ namespace generatortests.SourceWriters
 		[Test]
 		public void PeerMembersField_XAInterface ()
 		{
-			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1 }, "B", "IMyJavaType", true);
+			var field = new PeerMembersField (new CodeGenerationOptions (), "B", "IMyJavaType", true);
 
 			Assert.AreEqual ("private static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (IMyJavaType), isInterface: true);", GetOutput (field).Trim ());
 		}

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Xamarin.Android.Tasks.JniRemapping
+namespace Microsoft.Android.Tasks.JniRemapping
 {
 	static class JniDescriptorText
 	{

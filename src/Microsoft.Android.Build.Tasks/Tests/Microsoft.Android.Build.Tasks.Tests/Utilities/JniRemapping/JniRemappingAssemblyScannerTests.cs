@@ -2,6 +2,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -9,13 +10,12 @@ using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
 
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Tasks;
 using Cecil = Mono.Cecil;
 using Mono.Cecil.Cil;
 using NUnit.Framework;
 
-using Xamarin.Android.Tasks;
-using Xamarin.Android.Tasks.JniRemapping;
-using Xamarin.ProjectTools;
+using Microsoft.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -188,12 +188,21 @@ namespace Xamarin.Android.Build.Tests
 			}
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/Marker", localAnchor: true), "_Fixture.TypeMap.dll");
 			string linkedDirectory = Path.Combine (Path.GetDirectoryName (path) ?? throw new AssertionException ("Fixture has no directory."), "linked");
-			var (code, output, error) = RunProcessWithExitCode (
-				Path.Combine (TestEnvironment.DotNetPreviewDirectory, TestEnvironment.IsWindows ? "dotnet.exe" : "dotnet"),
+			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
+			var info = new ProcessStartInfo (dotnet,
 				$"\"{linker}\" -reference \"{path}\" -a _Fixture.TypeMap all -d \"{frameworkDirectory}\" " +
 				$"--action copyused --action link _Fixture.TypeMap --ignore-link-attributes " +
-				$"--skip-unresolved false -out \"{linkedDirectory}\"", timeoutInSeconds: 120);
-			Assert.AreEqual (0, code, output + error);
+				$"--skip-unresolved false -out \"{linkedDirectory}\"") {
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+			};
+			TestContext.Out.WriteLine ($"Process.RunAndCaptureText: {info.FileName} {info.Arguments}");
+			var result = Process.RunAndCaptureText (info, TimeSpan.FromSeconds (120));
+			Assert.IsFalse (result.ExitStatus.Canceled, $"Process timed out after 120 seconds.{Environment.NewLine}{result.StandardOutput}{result.StandardError}");
+			Assert.AreEqual (0, result.ExitStatus.ExitCode, result.StandardOutput.Trim () + result.StandardError.Trim ());
 			string linkedFile = Path.Combine (linkedDirectory, "_Fixture.TypeMap.dll");
 			using (var linked = Cecil.AssemblyDefinition.ReadAssembly (linkedFile)) {
 				var attribute = linked.CustomAttributes [0];

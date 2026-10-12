@@ -23,12 +23,9 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <_MonoNativePath>$(NuGetPackageRoot)microsoft.netcore.app.runtime.mono.$(NETCoreSdkRuntimeIdentifier)/$(DotNetRuntimePacksVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native/</_MonoNativePath>
-      <_MonoIncludePath>$(_MonoNativePath)include/mono-2.0</_MonoIncludePath>
       <_DEnableOsxArchitectures Condition=" $([MSBuild]::IsOSPlatform ('osx')) ">"-DENABLE_OSX_ARCHITECTURES=$(_CmakeOsxArch)"</_DEnableOsxArchitectures>
-      <_DMonoDirs>"-DMONO_INCLUDE_LIST=$(_MonoIncludePath)"</_DMonoDirs>
       <_DOutputDir>"-DOUTPUT_DIR=$(MSBuildThisFileDirectory)$(IntermediateOutputPath)"</_DOutputDir>
-      <_ExtraArgs>$([MSBuild]::Escape('$(_DMonoDirs) $(_DEnableOsxArchitectures) $(_DOutputDir)'))</_ExtraArgs>
+      <_ExtraArgs>$([MSBuild]::Escape('$(_DEnableOsxArchitectures) $(_DOutputDir)'))</_ExtraArgs>
     </PropertyGroup>
   </Target>
 

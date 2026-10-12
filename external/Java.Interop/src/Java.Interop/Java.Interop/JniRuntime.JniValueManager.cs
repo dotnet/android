@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Java.Interop
@@ -82,11 +81,6 @@ namespace Java.Interop
 			public abstract void FinalizePeer (IJavaPeerable value);
 			public abstract IJavaPeerable? PeekPeer (JniObjectReference reference);
 			public abstract List<JniSurfacedPeerInfo> GetSurfacedPeers ();
-			public abstract void ActivatePeer (
-				JniObjectReference reference,
-				Type type,
-				ConstructorInfo cinfo,
-				object?[]? argumentValues);
 
 			public void ConstructPeer (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
 			{
@@ -297,16 +291,6 @@ namespace Java.Interop
 				JniObjectReferenceOptions options,
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null);
-
-			internal Type? GetRuntimeType (JniObjectReference reference)
-			{
-				if (!reference.IsValid)
-					return null;
-				JniTypeSignature signature;
-				if (!JniTypeSignature.TryParse (JniEnvironment.Types.GetJniTypeNameFromInstance (reference)!, out signature))
-					return null;
-				return Runtime.TypeManager.GetType (signature);
-			}
 
 			public JniValueMarshaler GetValueMarshaler (Type type) => GetValueMarshalerCore (type);
 			protected abstract JniValueMarshaler GetValueMarshalerCore (Type type);

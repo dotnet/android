@@ -143,7 +143,7 @@ namespace MonoDroid.Generation
 					sw.WriteLine ();
 				}
 
-				var generator = opt.CreateCodeGenerator (sw);
+				var generator = new JavaInteropCodeGenerator (sw, opt);
 				generator.WriteType (this, hasNamespace ? "\t" : string.Empty, gen_info);
 
 				if (hasNamespace) {

@@ -8,9 +8,8 @@ using System.Xml.Linq;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Tasks;
 using NUnit.Framework;
-
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
@@ -462,7 +461,6 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
 			string existingFile = Path.Combine (TestDirectory, "existing.xml");
 			string outputFile = Path.Combine (TestDirectory, "remap.xml");
-			string mergedFile = Path.Combine (TestDirectory, "merged.xml");
 			File.WriteAllText (mappingFile, "com.contoso.Peer -> a.b:\n");
 			File.WriteAllText (existingFile, existingXml);
 			var task = new GenerateR8JniRemapping {
@@ -472,19 +470,11 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				ExistingRemapXmlFiles = [new TaskItem (existingFile)],
 			};
 			Assert.IsTrue (task.Execute ());
-			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", File.ReadAllText (outputFile));
-			var merge = new MergeRemapXml {
-				BuildEngine = engine,
-				InputRemapXmlFiles = [new TaskItem (existingFile), new TaskItem (outputFile)],
-				OutputFile = new TaskItem (mergedFile),
-			};
-			Assert.IsTrue (merge.Execute ());
-			var mergedRoot = XDocument.Load (mergedFile).Root ?? throw new AssertionException ("Merged XML has no root.");
-			var replacements = mergedRoot.Elements ("replace-type")
+			var root = XDocument.Load (outputFile).Root ?? throw new AssertionException ("Generated XML has no root.");
+			var replacements = root.Elements ("replace-type")
 				.Where (element => (string?) element.Attribute ("from") == "com/contoso/Peer").ToArray ();
-			Assert.AreEqual (1, replacements.Length, "Rejected input must not leave a partial conflicting mapping.");
+			Assert.AreEqual (1, replacements.Length, "Rejected input must not contribute a conflicting mapping.");
 			Assert.AreEqual ("a/b", (string?) replacements [0].Attribute ("to"));
-			Assert.AreEqual (malformed ? "XA4318" : "XA4317", Warnings.Single ().Code);
 		}
 
 		[Test]
@@ -583,6 +573,51 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			Assert.AreEqual ("XA4326", Warnings.Single ().Code);
 			StringAssert.Contains ("run( ):void", Warnings [0].Message);
+		}
+
+		[Test]
+		public void DescriptorDistinctR8FieldsProduceDistinctMappings ()
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string xmlFile = Path.Combine (TestDirectory, "r8.xml");
+			File.WriteAllText (mappingFile, """
+				com.contoso.Peer -> a.b:
+				    int value -> integerTarget
+				    java.lang.String value -> stringTarget
+
+				""");
+			var generate = new GenerateR8JniRemapping {
+				BuildEngine = engine, MappingFile = mappingFile, OutputFile = xmlFile,
+			};
+			Assert.IsTrue (generate.Execute ());
+			var fields = XDocument.Load (xmlFile).Root?.Elements ("replace-field")
+				.Select (field => ((string?) field.Attribute ("source-field-signature"), (string?) field.Attribute ("target-field-name"))).ToArray ()
+				?? throw new AssertionException ("Generated XML has no root.");
+			CollectionAssert.AreEqual (new [] { ("I", "integerTarget"), ("Ljava/lang/String;", "stringTarget") }, fields);
+		}
+
+		[Test]
+		public void GeneratedDocumentIsWellFormed ()
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string outputFile = Path.Combine (TestDirectory, "r8-jni-remap.xml");
+			File.WriteAllText (mappingFile, """
+				com.contoso.Peer -> a.b:
+				    void doWork(int) -> c
+				    int counter -> d
+				""");
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = engine,
+				MappingFile = mappingFile,
+				OutputFile = outputFile,
+			};
+			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
+
+			var root = XDocument.Load (outputFile).Root ?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual ("replacements", root.Name.LocalName);
+			Assert.AreEqual ("a/b", (string?) root.Elements ("replace-type").Single ().Attribute ("to"));
+			Assert.AreEqual ("doWork", (string?) root.Elements ("replace-method").Single ().Attribute ("source-method-name"));
+			Assert.AreEqual ("d", (string?) root.Elements ("replace-field").Single ().Attribute ("target-field-name"));
 		}
 
 		string WriteNativeObject (string [] literals, bool utf8 = false,

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
-using Xamarin.Android.Tasks.JniRemapping;
+using Microsoft.Android.Tasks.JniRemapping;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests

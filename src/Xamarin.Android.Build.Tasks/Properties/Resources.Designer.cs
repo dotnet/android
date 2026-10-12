@@ -2036,6 +2036,12 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
 
+        public static string XA4330 {
+            get {
+                return ResourceManager.GetString("XA4330", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>

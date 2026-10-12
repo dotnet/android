@@ -121,7 +121,7 @@ namespace generatortests
 
 		protected void RunTarget (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null, string metadataFile = null)
 		{
-			Run (CodeGenerationTarget.XAJavaInterop1,   Path.Combine ("out.xaji", outputRelativePath),  apiDescriptionFile,     Path.Combine ("expected.xaji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
+			Run (Path.Combine ("out.xaji", outputRelativePath), apiDescriptionFile, Path.Combine ("expected.xaji", expectedRelativePath), additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile, metadataFile);
 		}
 
 		protected string FullPath (string path)
@@ -130,12 +130,11 @@ namespace generatortests
 			return Path.Combine (dir, path.Replace ('/', Path.DirectorySeparatorChar));
 		}
 
-		protected void Run (CodeGenerationTarget target, string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null, string metadataFile = null)
+		protected void Run (string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null, string metadataFile = null)
 		{
 			Cleanup (outputPath);
 			AdditionalSourceDirectories.Clear ();
 
-			Options.CodeGenerationTarget                        = target;
 			Options.ApiDescriptionFile                          = FullPath (apiDescriptionFile);
 			Options.ManagedCallableWrapperSourceOutputDirectory = FullPath (outputPath);
 

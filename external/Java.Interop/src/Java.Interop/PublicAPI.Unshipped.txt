@@ -1,6 +1,7 @@
 #nullable enable
 *REMOVED*Java.Interop.JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent.get -> bool
 *REMOVED*Java.Interop.JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent.set -> void
+*REMOVED*Java.Interop.JniRuntime.CreationOptions.MarshalMemberBuilder.set -> void
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(nint jniSimpleReferenceUtf8, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeInfoCore(string! jniSimpleReference, out string? replacement, out nint replacementUtf8) -> void
@@ -87,7 +88,6 @@ static Java.Interop.JniMarshal.SafeInvokeFunc<T0, T1, T2, TResult>(nint jnienv, 
 static Java.Interop.JniMarshal.SafeInvokeFunc<T0, T1, TResult>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<nint, nint, T0, T1, TResult> action) -> TResult
 static Java.Interop.JniMarshal.SafeInvokeFunc<T0, TResult>(nint jnienv, nint self, T0 p0, delegate*<nint, nint, T0, TResult> action) -> TResult
 static Java.Interop.JniMarshal.SafeInvokeFunc<TResult>(nint jnienv, nint self, delegate*<nint, nint, TResult> action) -> TResult
-abstract Java.Interop.JniRuntime.JniValueManager.ActivatePeer(Java.Interop.JniObjectReference reference, System.Type! type, System.Reflection.ConstructorInfo! cinfo, object?[]? argumentValues) -> void
 abstract Java.Interop.JniRuntime.JniValueManager.ConstructPeerCore(Java.Interop.IJavaPeerable! peer, ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
 abstract Java.Interop.JniRuntime.JniValueManager.CreateValueCore(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> object?
 abstract Java.Interop.JniRuntime.JniValueManager.CreateValueCore<T>(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> T
@@ -122,3 +122,34 @@ override Java.Interop.JniRuntime.ReplacementFieldInfo.ToString() -> string!
 static Java.Interop.JniRuntime.ReplacementFieldInfo.operator !=(Java.Interop.JniRuntime.ReplacementFieldInfo a, Java.Interop.JniRuntime.ReplacementFieldInfo b) -> bool
 static Java.Interop.JniRuntime.ReplacementFieldInfo.operator ==(Java.Interop.JniRuntime.ReplacementFieldInfo a, Java.Interop.JniRuntime.ReplacementFieldInfo b) -> bool
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementFieldInfoCore(string! jniSimpleReference, string! jniFieldName, string! jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
+*REMOVED*abstract Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateConstructActivationPeerExpression(System.Reflection.ConstructorInfo! constructor) -> System.Linq.Expressions.Expression<System.Func<System.Reflection.ConstructorInfo!, Java.Interop.JniObjectReference, object?[]?, object!>!>!
+*REMOVED*abstract Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateMarshalToManagedExpression(System.Reflection.MethodInfo! method) -> System.Linq.Expressions.LambdaExpression!
+*REMOVED*abstract Java.Interop.JniRuntime.JniMarshalMemberBuilder.GetExportedMemberRegistrations(System.Type! declaringType) -> System.Collections.Generic.IEnumerable<Java.Interop.JniNativeMethodRegistration>!
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext.CleanupStatements.get -> System.Collections.ObjectModel.Collection<System.Linq.Expressions.Expression!>!
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext.CreationStatements.get -> System.Collections.ObjectModel.Collection<System.Linq.Expressions.Expression!>!
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext.JniValueMarshalerContext(System.Linq.Expressions.Expression! runtime) -> void
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext.JniValueMarshalerContext(System.Linq.Expressions.Expression! runtime, System.Linq.Expressions.Expression? vm) -> void
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext.LocalVariables.get -> System.Collections.ObjectModel.KeyedCollection<string!, System.Linq.Expressions.ParameterExpression!>!
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext.Runtime.get -> System.Linq.Expressions.Expression!
+*REMOVED*Java.Interop.Expressions.JniValueMarshalerContext.ValueManager.get -> System.Linq.Expressions.Expression?
+*REMOVED*Java.Interop.JniRuntime.CreationOptions.MarshalMemberBuilder.get -> Java.Interop.JniRuntime.JniMarshalMemberBuilder?
+*REMOVED*Java.Interop.JniRuntime.CreationOptions.UseMarshalMemberBuilder.get -> bool
+*REMOVED*Java.Interop.JniRuntime.CreationOptions.UseMarshalMemberBuilder.set -> void
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateConstructActivationPeerFunc(System.Reflection.ConstructorInfo! constructor) -> System.Func<System.Reflection.ConstructorInfo!, Java.Interop.JniObjectReference, object?[]?, object!>!
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateMarshalToManagedDelegate(System.Delegate! value) -> System.Delegate!
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.Dispose() -> void
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.GetJniMethodSignature(System.Reflection.MethodBase! member) -> string!
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.GetParameterMarshaler(System.Reflection.ParameterInfo! parameter) -> Java.Interop.JniValueMarshaler!
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.IsDirectMethod(System.Reflection.ParameterInfo![]! methodParameters) -> bool
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.JniMarshalMemberBuilder() -> void
+*REMOVED*Java.Interop.JniRuntime.JniMarshalMemberBuilder.Runtime.get -> Java.Interop.JniRuntime!
+*REMOVED*Java.Interop.JniRuntime.MarshalMemberBuilder.get -> Java.Interop.JniRuntime.JniMarshalMemberBuilder!
+*REMOVED*Java.Interop.JniValueMarshaler.ReturnObjectReferenceToJni(Java.Interop.Expressions.JniValueMarshalerContext! context, string? namePrefix, System.Linq.Expressions.Expression! sourceValue) -> System.Linq.Expressions.Expression!
+*REMOVED*static Java.Interop.JniValueMarshaler.DisposeObjectReference(System.Linq.Expressions.Expression! sourceValue) -> System.Linq.Expressions.Expression!
+*REMOVED*virtual Java.Interop.JniRuntime.JniMarshalMemberBuilder.Dispose(bool disposing) -> void
+*REMOVED*virtual Java.Interop.JniRuntime.JniMarshalMemberBuilder.OnSetRuntime(Java.Interop.JniRuntime! runtime) -> void
+*REMOVED*virtual Java.Interop.JniValueMarshaler.CreateParameterFromManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue, System.Reflection.ParameterAttributes synchronize) -> System.Linq.Expressions.Expression!
+*REMOVED*virtual Java.Interop.JniValueMarshaler.CreateParameterToManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None, System.Type? targetType = null) -> System.Linq.Expressions.Expression!
+*REMOVED*virtual Java.Interop.JniValueMarshaler.CreateReturnValueFromManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue) -> System.Linq.Expressions.Expression!

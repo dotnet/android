@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Xamarin.Android.Tasks.JniRemapping;
+using Microsoft.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Build.Tests
 {

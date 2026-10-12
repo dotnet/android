@@ -12,17 +12,6 @@
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DotNetRuntimePacksVersion>8.0.13</DotNetRuntimePacksVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageDownload
-        Include="Microsoft.NETCore.App.Runtime.Mono.$(NETCoreSdkRuntimeIdentifier)"
-        Version="[$(DotNetRuntimePacksVersion)]"
-    />
-  </ItemGroup>
-
   <Import Project="java-interop.targets" />
 
 </Project>

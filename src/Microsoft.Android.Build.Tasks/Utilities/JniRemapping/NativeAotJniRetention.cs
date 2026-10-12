@@ -11,8 +11,9 @@ using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
 using Microsoft.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks.JniRemapping
+namespace Microsoft.Android.Tasks.JniRemapping
 {
 	static class NativeAotJniRetention
 	{

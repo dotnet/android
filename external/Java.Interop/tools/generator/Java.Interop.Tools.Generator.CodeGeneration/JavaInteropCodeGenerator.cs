@@ -5,10 +5,10 @@ using Xamarin.SourceWriter;
 
 namespace MonoDroid.Generation
 {
-	class JavaInteropCodeGenerator
+	sealed class JavaInteropCodeGenerator
 	{
-		protected TextWriter writer;
-		protected CodeGenerationOptions opt;
+		readonly TextWriter writer;
+		readonly CodeGenerationOptions opt;
 
 		public CodeGeneratorContext Context { get; } = new CodeGeneratorContext ();
 
@@ -36,7 +36,7 @@ namespace MonoDroid.Generation
 			};
 		}
 
-		public virtual void WriteType (GenBase gen, string indent, GenerationInfo gen_info)
+		public void WriteType (GenBase gen, string indent, GenerationInfo gen_info)
 		{
 			TypeWriter type_writer;
 
@@ -59,4 +59,3 @@ namespace MonoDroid.Generation
 		}
 	}
 }
-
