@@ -270,23 +270,29 @@ go straight to Phase 4 and report the failure instead.
 ## Phase 3: Commit and Open the PR (only if changes were made and validated)
 
 1. Immediately before creating a PR, run a deterministic open-PR check keyed to this workflow and the
-   selected skill. Search all open PRs against `main` using the exact workflow title prefix, with a
-   paginated query that is not limited to the first page and not derived from a loose semantic match:
+   selected skill. Enumerate all open PRs against `main` using the REST API:
 
-   `gh pr list --state open --base main --limit 100 --search '"[skill-runner]" "<skill-name>"' --json number,title,headRefName,body`
+   `gh api --method GET "repos/${{ github.repository }}/pulls?state=open&base=main&per_page=100&page=<page>"`
 
-   Repeat/paginate until exhausted, then compare every returned title against the exact prefix
-   `"[skill-runner] <skill-name>"`. If any open PR matches that same workflow/skill key, do not create
-   another PR; report a no-op with the existing PR number and continue to Phase 4. Do not fall back to
-   a looser heuristic or a manually judged "equivalent" match. The uniqueness check is mandatory and
-   must be enforced before any `create_pull_request` call.
+   Start at page 1 and increment the page number until the API returns an empty JSON array. Use the
+   relative endpoint above for every page; do not use `--paginate` or follow absolute `Link` URLs,
+   which can bypass the configured gh-proxy. Do not use `gh pr list --search`: its host-version
+   detection fails through gh-proxy with `malformed version:`.
+
+   Compare every returned title for exact equality with `"[skill-runner] <skill-name>"`, matching the
+   startup guard. If any open PR matches, do not create another PR; report a no-op with the existing
+   PR number and continue to Phase 4. If any request fails, returns malformed data, or pagination
+   cannot be completed, stop and report a failure in Phase 4 — never treat an incomplete check as
+   proof that no PR exists. Do not fall back to a looser heuristic or a manually judged "equivalent"
+   match. The uniqueness check is mandatory before any commit or `create_pull_request` call.
 2. Commit with a concise message describing exactly what changed, per the skill's own guidance, ending
    in:
 
    `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
 
    The workflow configures Git as `github-actions[bot]` — keep that author identity.
-3. Call `create_pull_request` exactly once. Use a short branch name, explicitly target `main`, and use a PR body with this
+3. Call `create_pull_request` exactly once. Set its title to `<skill-name>` (the configured title prefix
+   produces exactly `[skill-runner] <skill-name>`). Use a short branch name, explicitly target `main`, and use a PR body with this
    structure:
 
    ```markdown
