@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -69,6 +70,10 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("true", File.ReadAllText (stamp));
 		FileAssert.Exists (output);
+		string symbols = Encoding.UTF8.GetString (File.ReadAllBytes (output));
+		StringAssert.Contains ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "\0", symbols);
+		StringAssert.Contains ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "_size\0", symbols);
+		StringAssert.DoesNotContain ("\0remapping_data\0", symbols, "The static NativeAOT object must not use CoreCLR's dynamic lookup symbol.");
 		File.WriteAllText (xml, "<replacements />");
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("false", File.ReadAllText (stamp));
@@ -122,10 +127,20 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 				new XElement ("Target", new XAttribute ("Name", "_FindJavaStubFiles"))))
 			.Save (projectFile);
 
+		string sourceDirectory = Path.Combine (path, "android", "src", "net", "dot", "jni", "nativeaot");
+		Directory.CreateDirectory (sourceDirectory);
+		string legacySource = Path.Combine (sourceDirectory, "NativeAotEnvironmentVars.java");
+		File.WriteAllText (legacySource, """
+			package net.dot.jni.nativeaot;
+			public class NativeAotEnvironmentVars {
+				static String[] envNames = { "REMOVED_APP_SETTING" };
+				static String[] envValues = { "obsolete-value" };
+			}
+			""");
 		string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
 		var first = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles;_AndroidGenerateNativeAotBootstrapObject", "-getItem:FileWrites", "-v:quiet", "-nr:false");
 		Assert.AreEqual (0, first.ExitCode, first.Output + first.Error);
-		string sourceDirectory = Path.Combine (path, "android", "src", "net", "dot", "jni", "nativeaot");
+		FileAssert.DoesNotExist (legacySource, "An upgraded intermediate directory must not retain Java configuration for obsolete environment values.");
 		string sourceFile = Path.Combine (sourceDirectory, "JavaInteropRuntime.java");
 		string objectFile = Path.Combine (path, "native", "data", "nativeaot-bootstrap.o");
 		FileAssert.Exists (objectFile);
@@ -154,6 +169,7 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.AreEqual (0, second.ExitCode, second.Output + second.Error);
 		Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (sourceFile), "A no-op build must skip the source generator.");
 		Assert.AreEqual (objectTimestamp, File.GetLastWriteTimeUtc (objectFile), "A no-op build must skip the data-object generator.");
+		FileAssert.DoesNotExist (legacySource);
 
 		File.WriteAllText (environmentFile, "DOTNET_VALUE=second\ndebug.dotnet.max_grefc=5678\n");
 		File.SetLastWriteTimeUtc (environmentFile, objectTimestamp.AddSeconds (1));

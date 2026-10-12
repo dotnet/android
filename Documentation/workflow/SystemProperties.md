@@ -22,6 +22,10 @@ The fixed SDK native host reads the offset-based UTF-8 data directly, without
 generated Java configuration arrays or JNI string copies. Optional JNI remapping
 is linked as another data object; empty remapping does not produce an object or
 a separate `libbinary_blobs.so`. CoreCLR's binary data library is unchanged.
+Static NativeAOT payload and size symbols use the `dotnet_android_nativeaot_`
+prefix to avoid collisions with application or dependency data objects.
+Bootstrap regeneration also removes the obsolete generated Java configuration
+source from existing intermediate directories.
 
 The application linker selects the fixed native environment initializer as
 `DT_INIT`, before the application's initialization array and embedded NativeAOT

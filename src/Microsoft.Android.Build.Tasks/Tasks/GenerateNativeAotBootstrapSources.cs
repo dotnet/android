@@ -29,6 +29,7 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 	{
 		string outputDirectory = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot");
 		Directory.CreateDirectory (outputDirectory);
+		File.Delete (Path.Combine (outputDirectory, "NativeAotEnvironmentVars.java"));
 		var sources = new List<string> {
 			WriteSource ("JavaInteropRuntime.java", ("@MAIN_ASSEMBLY_NAME@", EscapeJavaString (TargetName))),
 		};

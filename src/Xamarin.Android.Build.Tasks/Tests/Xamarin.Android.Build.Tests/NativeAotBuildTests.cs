@@ -102,8 +102,10 @@ namespace Xamarin.Android.Build.Tests
 			using var elf = NativeToolTestHelper.ReadElf (applicationLibrary);
 			var exports = elf.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
 				.Select (entry => entry.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
-			CollectionAssert.DoesNotContain (exports, "nativeaot_bootstrap");
-			CollectionAssert.DoesNotContain (exports, "nativeaot_bootstrap_size");
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap");
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap_size");
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data");
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data_size");
 			CollectionAssert.DoesNotContain (exports, "Host_NativeAOT_InitializeEnvironment");
 		}
 
@@ -156,14 +158,27 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			string [] firstParameters = ["AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=first", "DefineConstants=BOOTSTRAP_FIRST"];
 			string [] renamedParameters = ["AssemblyName=BootstrapRenamed", "_BootstrapEnvironmentFlavor=reverse", "DefineConstants=BOOTSTRAP_SECOND"];
-			Assert.IsTrue (builder.Build (proj, parameters: firstParameters));
-			builder.AutomaticNuGetRestore = false;
-
+			builder.Save (proj);
 			string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
 			string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath);
+			string legacySource = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "NativeAotEnvironmentVars.java");
+			Directory.CreateDirectory (Path.GetDirectoryName (legacySource));
+			File.WriteAllText (legacySource, """
+				package net.dot.jni.nativeaot;
+				public class NativeAotEnvironmentVars {
+					static String[] envNames = { "REMOVED_APP_SETTING" };
+					static String[] envValues = { "obsolete-value" };
+				}
+				""");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: firstParameters));
+			builder.AutomaticNuGetRestore = false;
+
 			string sourceFile = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "JavaInteropRuntime.java");
 			string environmentObject = Path.Combine (intermediate, "android-arm64", "native", "data", "nativeaot-bootstrap.o");
-			FileAssert.DoesNotExist (Path.Combine (Path.GetDirectoryName (sourceFile), "NativeAotEnvironmentVars.java"));
+			FileAssert.DoesNotExist (legacySource, "Upgrading an existing intermediate directory must remove obsolete Java environment data.");
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/nativeaot/NativeAotEnvironmentVars;",
+				Path.Combine (intermediate, "android", "bin", "classes.dex"), AndroidSdkPath),
+				"The obsolete environment class must not remain in the application's DEX.");
 			string [] inputs = [
 				Path.Combine (projectDirectory, proj.ProjectFilePath),
 				Path.Combine (projectDirectory, "BootstrapEnvironment.targets"),

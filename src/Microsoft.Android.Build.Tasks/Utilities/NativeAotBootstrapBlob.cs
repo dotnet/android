@@ -7,7 +7,7 @@ namespace Microsoft.Android.Tasks;
 
 internal static class NativeAotBootstrapBlob
 {
-	public const string Symbol = "nativeaot_bootstrap";
+	public const string Symbol = "dotnet_android_nativeaot_bootstrap";
 	public const uint Magic = 0x4746434e; // NCFG
 	public const int HeaderSize = 32;
 	const int MaximumSize = 256 * 1024 * 1024;

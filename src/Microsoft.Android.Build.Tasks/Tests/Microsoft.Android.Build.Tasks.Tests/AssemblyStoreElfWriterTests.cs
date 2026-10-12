@@ -25,10 +25,10 @@ public class AssemblyStoreElfWriterTests : BaseTest
 	{
 		byte [] data = [1, 2, 3, 4, 5, 6, 7];
 		using var output = new MemoryStream ();
-		NativeAotDataObjectWriter.Write (data, "nativeaot_bootstrap", output, arch);
+		NativeAotDataObjectWriter.Write (data, NativeAotBootstrapBlob.Symbol, output, arch);
 		byte [] image = output.ToArray ();
 		using var second = new MemoryStream ();
-		NativeAotDataObjectWriter.Write (data, "nativeaot_bootstrap", second, arch);
+		NativeAotDataObjectWriter.Write (data, NativeAotBootstrapBlob.Symbol, second, arch);
 		CollectionAssert.AreEqual (image, second.ToArray (), "Data objects must be deterministic.");
 		string directory = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (directory);
@@ -63,12 +63,36 @@ public class AssemblyStoreElfWriterTests : BaseTest
 			Assert.AreEqual (1, symbol.GetProperty ("Type").GetProperty ("Value").GetInt32 ());
 			Assert.AreEqual (2, symbol.GetProperty ("Other").GetProperty ("Value").GetInt32 ());
 		}
+		CollectionAssert.AreEqual (new [] { NativeAotBootstrapBlob.Symbol, NativeAotBootstrapBlob.Symbol + "_size" },
+			symbols.Skip (1).Select (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString ()));
 		NativeToolTestHelper.Run ("ld.lld", "--shared", "--gc-sections", "--no-undefined",
-			"--undefined=nativeaot_bootstrap", objectFile, "-o", library);
+			"--undefined=" + NativeAotBootstrapBlob.Symbol, objectFile, "-o", library);
 		CollectionAssert.AreEqual (bytes, NativeToolTestHelper.ReadSection (library, ".rodata"));
 		using var linked = NativeToolTestHelper.ReadElf (library);
 		Assert.IsFalse (linked.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
-			.Any (item => item.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString () == "nativeaot_bootstrap"));
+			.Any (item => item.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString () == NativeAotBootstrapBlob.Symbol));
+
+		string [] names = [NativeAotBootstrapBlob.Symbol, GenerateNativeAotDataObject.RemappingSymbol, "nativeaot_bootstrap", "remapping_data"];
+		var arguments = new List<string> { "--shared", "--gc-sections", "--no-undefined" };
+		foreach (string name in names) {
+			string file = Path.Combine (directory, name + ".o");
+			using var contents = new MemoryStream ();
+			NativeAotDataObjectWriter.Write (data, name, contents, arch);
+			File.WriteAllBytes (file, contents.ToArray ());
+			arguments.Add ("--undefined=" + name);
+			arguments.Add (file);
+		}
+		string collisionLibrary = Path.Combine (directory, "libapp-with-generic-data.so");
+		arguments.AddRange (["-o", collisionLibrary]);
+		NativeToolTestHelper.Run ("ld.lld", arguments.ToArray ());
+		using var collision = JsonDocument.Parse (NativeToolTestHelper.Run ("llvm-readobj",
+			"--elf-output-style=JSON", "--symbols", collisionLibrary));
+		var linkedNames = collision.RootElement [0].GetProperty ("Symbols").EnumerateArray ()
+			.Select (item => item.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
+		foreach (string name in names) {
+			CollectionAssert.Contains (linkedNames, name, "SDK payloads must coexist with generic application/dependency data symbols.");
+			CollectionAssert.Contains (linkedNames, name + "_size");
+		}
 	}
 
 	[Test]

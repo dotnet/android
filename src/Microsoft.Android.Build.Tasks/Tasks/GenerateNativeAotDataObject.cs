@@ -12,6 +12,8 @@ namespace Microsoft.Android.Tasks;
 
 public sealed class GenerateNativeAotDataObject : AndroidTask
 {
+	internal const string RemappingSymbol = "dotnet_android_nativeaot_remapping_data";
+
 	public override string TaskPrefix => "GNADO";
 
 	[Required]
@@ -40,7 +42,7 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 			byte [] blob;
 			string symbol;
 			if (Remapping) {
-				symbol = JniRemappingBinaryBlob.Symbol;
+				symbol = RemappingSymbol;
 				blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, Compress);
 			} else {
 				symbol = NativeAotBootstrapBlob.Symbol;
