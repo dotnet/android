@@ -4,6 +4,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using ELFSharp.ELF;
+using ELFSharp.ELF.Sections;
 using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -521,6 +523,19 @@ namespace Xamarin.Android.Build.Tests
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.AreEqual (2, first.NativeLinks, "Each RID should link once, after R8.");
 				Assert.AreEqual (2, Directory.GetFiles (intermediate, "r8-jni-remap.xml", SearchOption.AllDirectories).Length);
+				string [] nativeLibraries = Directory.GetFiles (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath),
+					$"lib{proj.ProjectName}.dbg.so", SearchOption.AllDirectories);
+				Assert.AreEqual (2, nativeLibraries.Length);
+				foreach (string library in nativeLibraries) {
+					using IELF elf = ELFReader.Load (library);
+					var symbols = ((ISymbolTable)elf.GetSection (".symtab")).Entries
+						.Where (symbol => !symbol.IsPointedIndexSpecial && symbol.PointedSection.Name == ".rodata")
+						.Select (symbol => symbol.Name).ToArray ();
+					foreach (string name in new [] { "dotnet_android_nativeaot_bootstrap", "dotnet_android_nativeaot_remapping_data" }) {
+						CollectionAssert.Contains (symbols, name, "The final app must retain SDK-qualified bootstrap and remapping data.");
+						CollectionAssert.Contains (symbols, name + "_size");
+					}
+				}
 			}
 			string dataFileName = runtime == AndroidRuntime.CoreCLR ? "libbinary_blobs.so" : "remapping-data.o";
 			var binaryBlobs = Directory.GetFiles (intermediate, dataFileName, SearchOption.AllDirectories)
