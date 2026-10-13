@@ -56,7 +56,7 @@ public class CommandLineToolsResolverTests
 		Assert.That (selected?.Revision, Is.EqualTo ("22.0"));
 		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
 		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			CommandLineToolsResolver.Find (SdkDirectory, "avdmanager", ExecutableExtension)?.Path,
 			Is.EqualTo (expectedAvdManager));
 	}
 
@@ -74,7 +74,7 @@ public class CommandLineToolsResolverTests
 		Assert.That (selected?.Path, Is.EqualTo (expectedSdkManager));
 		Assert.That (selected?.Revision, Is.EqualTo ("19.0"));
 		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			CommandLineToolsResolver.Find (SdkDirectory, "avdmanager", ExecutableExtension)?.Path,
 			Is.EqualTo (expectedAvdManager));
 	}
 
@@ -90,7 +90,7 @@ public class CommandLineToolsResolverTests
 
 		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
 		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			CommandLineToolsResolver.Find (SdkDirectory, "avdmanager", ExecutableExtension)?.Path,
 			Is.EqualTo (expectedAvdManager));
 	}
 
@@ -108,7 +108,7 @@ public class CommandLineToolsResolverTests
 		Assert.That (selected?.Path, Is.EqualTo (expectedSdkManager));
 		Assert.That (selected?.Revision, Is.Null);
 		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			CommandLineToolsResolver.Find (SdkDirectory, "avdmanager", ExecutableExtension)?.Path,
 			Is.EqualTo (expectedAvdManager));
 	}
 
@@ -123,7 +123,7 @@ public class CommandLineToolsResolverTests
 
 		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
 		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			CommandLineToolsResolver.Find (SdkDirectory, "avdmanager", ExecutableExtension)?.Path,
 			Is.EqualTo (expectedAvdManager));
 	}
 
@@ -139,7 +139,7 @@ public class CommandLineToolsResolverTests
 
 		Assert.That (manager.FindSdkManagerPath (), Is.Null);
 		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			CommandLineToolsResolver.Find (SdkDirectory, "avdmanager", ExecutableExtension)?.Path,
 			Is.Null);
 	}
 
@@ -155,7 +155,7 @@ public class CommandLineToolsResolverTests
 
 		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
 		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			CommandLineToolsResolver.Find (SdkDirectory, "avdmanager", ExecutableExtension)?.Path,
 			Is.EqualTo (expectedAvdManager));
 	}
 

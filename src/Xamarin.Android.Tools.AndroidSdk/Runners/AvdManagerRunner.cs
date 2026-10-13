@@ -37,15 +37,24 @@ public class AvdManagerRunner
 
 	public async Task<IReadOnlyList<AvdInfo>> ListAvdsAsync (CancellationToken cancellationToken = default)
 	{
-		using var stdout = new StringWriter ();
-		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (avdManagerPath, "list", "avd");
+		cancellationToken.ThrowIfCancellationRequested ();
+		var psi = new ProcessStartInfo (avdManagerPath) {
+			ArgumentList = { "list", "avd" },
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		if (environmentVariables != null) {
+			foreach (var variable in environmentVariables)
+				psi.Environment [variable.Key] = variable.Value;
+		}
 		logger.Invoke (TraceLevel.Verbose, "Running: avdmanager list avd");
-		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
-
-		ProcessUtils.ThrowIfFailed (exitCode, "avdmanager list avd", stderr, stdout);
-
-		return ParseAvdListOutput (stdout.ToString ());
+		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+		cancellationToken.ThrowIfCancellationRequested ();
+		if (result.ExitStatus.ExitCode != 0)
+			throw new InvalidOperationException ($"'avdmanager list avd' failed with exit code {result.ExitStatus.ExitCode}. stderr:{Environment.NewLine}{result.StandardError} stdout:{Environment.NewLine}{result.StandardOutput}");
+		return ParseAvdListOutput (result.StandardOutput);
 	}
 
 	/// <summary>
@@ -76,23 +85,46 @@ public class AvdManagerRunner
 		if (force)
 			args.Add ("--force");
 
-		using var stdout = new StringWriter ();
-		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (avdManagerPath, args.ToArray ());
-		psi.RedirectStandardInput = true;
+		cancellationToken.ThrowIfCancellationRequested ();
+		var psi = new ProcessStartInfo (avdManagerPath) {
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardInput = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		foreach (var argument in args)
+			psi.ArgumentList.Add (argument);
+		if (environmentVariables != null) {
+			foreach (var variable in environmentVariables)
+				psi.Environment [variable.Key] = variable.Value;
+		}
+		using var process = new Process { StartInfo = psi };
+		process.Start ();
+		using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+		var capture = process.ReadAllTextAsync (execution.Token);
+		using var stdout = process.StandardOutput;
+		using var stderr = process.StandardError;
+		using var input = process.StandardInput;
 
 		// avdmanager prompts "Do you wish to create a custom hardware profile?" — answer "no"
-		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables,
-			onStarted: p => {
-				try {
-					p.StandardInput.WriteLine ("no");
-					p.StandardInput.Close ();
-				} catch (IOException ex) {
-					logger.Invoke (TraceLevel.Warning, $"Failed to write to avdmanager stdin: {ex.Message}");
-				}
-			}).ConfigureAwait (false);
-
-		ProcessUtils.ThrowIfFailed (exitCode, $"avdmanager create avd -n {name}", stderr, stdout);
+		try {
+			try {
+				input.WriteLine ("no");
+				input.Close ();
+			} catch (IOException ex) {
+				logger.Invoke (TraceLevel.Warning, $"Failed to write to avdmanager stdin: {ex.Message}");
+			}
+			var result = await capture.ConfigureAwait (false);
+			var status = await exit.ConfigureAwait (false);
+			cancellationToken.ThrowIfCancellationRequested ();
+			if (status.ExitCode != 0)
+				throw new InvalidOperationException ($"'avdmanager create avd -n {name}' failed with exit code {status.ExitCode}. stderr:{Environment.NewLine}{result.StandardError} stdout:{Environment.NewLine}{result.StandardOutput}");
+		} finally {
+			execution.Cancel ();
+			await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+		}
 
 		// Re-list to get the actual path from avdmanager (respects ANDROID_USER_HOME/ANDROID_AVD_HOME)
 		var avds = await ListAvdsAsync (cancellationToken).ConfigureAwait (false);
@@ -115,11 +147,21 @@ public class AvdManagerRunner
 			return;
 		}
 
-		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (avdManagerPath, "delete", "avd", "--name", name);
-		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
-
-		ProcessUtils.ThrowIfFailed (exitCode, $"avdmanager delete avd --name {name}", stderr);
+		var psi = new ProcessStartInfo (avdManagerPath) {
+			ArgumentList = { "delete", "avd", "--name", name },
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		if (environmentVariables != null) {
+			foreach (var variable in environmentVariables)
+				psi.Environment [variable.Key] = variable.Value;
+		}
+		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+		cancellationToken.ThrowIfCancellationRequested ();
+		if (result.ExitStatus.ExitCode != 0)
+			throw new InvalidOperationException ($"'avdmanager delete avd --name {name}' failed with exit code {result.ExitStatus.ExitCode}. stderr:{Environment.NewLine}{result.StandardError}");
 	}
 
 	/// <summary>
@@ -127,15 +169,24 @@ public class AvdManagerRunner
 	/// </summary>
 	public async Task<IReadOnlyList<AvdDeviceProfile>> ListDeviceProfilesAsync (CancellationToken cancellationToken = default)
 	{
-		using var stdout = new StringWriter ();
-		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (avdManagerPath, "list", "device", "--compact");
+		cancellationToken.ThrowIfCancellationRequested ();
+		var psi = new ProcessStartInfo (avdManagerPath) {
+			ArgumentList = { "list", "device", "--compact" },
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		if (environmentVariables != null) {
+			foreach (var variable in environmentVariables)
+				psi.Environment [variable.Key] = variable.Value;
+		}
 		logger.Invoke (TraceLevel.Verbose, "Running: avdmanager list device --compact");
-		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
-
-		ProcessUtils.ThrowIfFailed (exitCode, "avdmanager list device --compact", stderr, stdout);
-
-		return ParseCompactDeviceListOutput (stdout.ToString ());
+		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+		cancellationToken.ThrowIfCancellationRequested ();
+		if (result.ExitStatus.ExitCode != 0)
+			throw new InvalidOperationException ($"'avdmanager list device --compact' failed with exit code {result.ExitStatus.ExitCode}. stderr:{Environment.NewLine}{result.StandardError} stdout:{Environment.NewLine}{result.StandardOutput}");
+		return ParseCompactDeviceListOutput (result.StandardOutput);
 	}
 
 	internal static IReadOnlyList<AvdDeviceProfile> ParseCompactDeviceListOutput (string output)
@@ -177,4 +228,3 @@ public class AvdManagerRunner
 	}
 
 }
-

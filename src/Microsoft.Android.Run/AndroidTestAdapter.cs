@@ -1,4 +1,5 @@
 using System.Text;
+using System.Diagnostics;
 using System.Threading.Channels;
 using System.Xml.Linq;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -102,6 +103,14 @@ class AndroidTestAdapter(
 		if (verbose)
 			Console.WriteLine ($"Running: adb {psi.Arguments}");
 
+		cancellationToken.ThrowIfCancellationRequested ();
+		using var process = new Process { StartInfo = psi };
+		process.Start ();
+		using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		using var reading = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+		var monitor = BoundInstrumentationDrainAsync ();
+
 		// Completed status blocks are handed off to a single async consumer that
 		// publishes them to MTP, so the synchronous stdout read loop is never
 		// blocked on an async PublishAsync.
@@ -128,19 +137,40 @@ class AndroidTestAdapter(
 		});
 
 		var parser = new StatusStreamParser (channel.Writer, fullOutput, verbose);
-		using var stdout = new LineWriter (parser.OnLine);
-
 		int exitCode = 0;
 		try {
-			exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken);
+			await foreach (var line in process.ReadAllLinesAsync (reading.Token)) {
+				if (line.StandardError)
+					stderr.WriteLine (line.Content);
+				else if (line.Content.Length > 0)
+					parser.OnLine (line.Content);
+			}
+			var status = await exit.WaitAsync (cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested ();
+			exitCode = status.ExitCode;
+		} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+			throw new TimeoutException ("The instrumentation adb client exited, but its output did not close within 30 seconds.");
+		} catch (OperationCanceledException ex) {
+			throw new OperationCanceledException (ex.Message, ex, cancellationToken);
 		} finally {
-			// Flush the trailing partial line, discard any unterminated status
-			// block, then complete the channel and always observe the consumer —
-			// even if StartProcess threw or was cancelled.
-			stdout.Flush ();
+			reading.Cancel ();
+			execution.Cancel ();
+			process.StandardOutput.Dispose ();
+			process.StandardError.Dispose ();
 			parser.Complete ();
 			channel.Writer.Complete ();
-			await consumer;
+			try {
+				await consumer;
+			} finally {
+				await exit.WaitAsync (TimeSpan.FromSeconds (5));
+				await monitor;
+			}
+		}
+
+		async Task BoundInstrumentationDrainAsync ()
+		{
+			await exit;
+			reading.CancelAfter (TimeSpan.FromSeconds (30));
 		}
 
 		var output = fullOutput.ToString ();
@@ -541,50 +571,6 @@ class InstrumentationStatus
 {
 	public required IReadOnlyDictionary<string, string> Values { get; init; }
 	public int Code { get; init; }
-}
-
-/// <summary>
-/// A <see cref="TextWriter"/> that splits the (arbitrarily chunked) writes it
-/// receives from <c>ProcessUtils.StartProcess</c> into complete lines and invokes
-/// a callback for each one, so instrumentation output can be parsed as it streams.
-/// </summary>
-sealed class LineWriter (Action<string> onLine) : TextWriter
-{
-	readonly StringBuilder buffer = new ();
-
-	public override Encoding Encoding => Encoding.UTF8;
-
-	public override void Write (char value)
-	{
-		if (value == '\n')
-			Flush ();
-		else if (value != '\r')
-			buffer.Append (value);
-	}
-
-	public override void Write (char[] buffer, int index, int count)
-	{
-		for (int i = 0; i < count; i++)
-			Write (buffer [index + i]);
-	}
-
-	public override void Write (string? value)
-	{
-		if (value == null)
-			return;
-		foreach (var c in value)
-			Write (c);
-	}
-
-	// Emit whatever has been buffered as a completed line.
-	public override void Flush ()
-	{
-		if (buffer.Length == 0)
-			return;
-		var line = buffer.ToString ();
-		buffer.Clear ();
-		onLine (line);
-	}
 }
 
 /// <summary>

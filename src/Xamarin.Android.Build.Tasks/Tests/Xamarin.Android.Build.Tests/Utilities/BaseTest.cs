@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -123,30 +124,84 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
+			return RunApkDiffCommandAsync (args, logFilePath).GetAwaiter ().GetResult ();
+		}
+
+		static async Task<(int code, string stdOutput, string stdError)> RunApkDiffCommandAsync (string args, string logFilePath)
+		{
 			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
 			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
 			};
-			using var stdOutput = new StringWriter ();
-			using var stdError = new StringWriter ();
 			int timeoutInSeconds = TestEnvironment.IsRunningOnCI ? 120 : 30;
-			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
-			int processId = -1;
-			int exitCode;
+			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
+			using var outputDeadline = new CancellationTokenSource ();
+			using var process = Process.Start (info) ?? throw new InvalidOperationException ("Failed to start apkdiff.");
+			// Killing on the execution deadline lets the native raw-text reader retain partial diagnostics.
+			async Task<bool> ObserveExitAsync ()
+			{
+				try {
+					await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+					return true;
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					if (!process.HasExited) {
+						try {
+							process.Kill (entireProcessTree: true);
+						} catch (InvalidOperationException) when (process.HasExited) {
+							// The process exited before the kill request.
+						}
+						if (!process.WaitForExit (30000))
+							throw new TimeoutException ($"apkdiff process {process.Id} did not exit after termination.");
+					}
+					return false;
+				} finally {
+					outputDeadline.CancelAfter (TimeSpan.FromSeconds (2));
+				}
+			}
+			var exited = ObserveExitAsync ();
+			var stdOutput = new StringBuilder ();
+			var stdError = new StringBuilder ();
+			// All-at-once capture loses its result on cancellation; apkdiff needs raw partial diagnostics.
+			async Task CaptureAsync (StreamReader reader, StringBuilder output)
+			{
+				char [] buffer = ArrayPool<char>.Shared.Rent (4096);
+				try {
+					int read;
+					while ((read = await reader.ReadAsync (buffer.AsMemory (), outputDeadline.Token).ConfigureAwait (false)) > 0)
+						output.Append (buffer, 0, read);
+				} finally {
+					ArrayPool<char>.Shared.Return (buffer);
+				}
+			}
+			bool outputTimedOut = false;
+			bool completed;
 			try {
-				exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
-					info,
-					stdOutput,
-					stdError,
-					cancellationTokenSource.Token,
-					onStarted: process => processId = process.Id
-				).GetAwaiter ().GetResult ();
-			} catch (OperationCanceledException) {
-				exitCode = -1;
-				stdError.WriteLine ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {processId}).");
+				try {
+					await Task.WhenAll (
+						CaptureAsync (process.StandardOutput, stdOutput),
+						CaptureAsync (process.StandardError, stdError)
+					).ConfigureAwait (false);
+				} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+					outputTimedOut = true;
+				}
+				completed = await exited.ConfigureAwait (false);
+			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
+				executionDeadline.Cancel ();
+				await exited.ConfigureAwait (false);
 			}
 
+			int exitCode = completed ? process.ExitCode : -1;
+			if (!completed)
+				stdError.AppendLine ().Append (CultureInfo.CurrentCulture, $"apkdiff timed out after {timeoutInSeconds} seconds (PID {process.Id}).");
+			if (outputTimedOut)
+				stdError.AppendLine ().Append (CultureInfo.CurrentCulture, $"apkdiff exited or timed out with redirected output still open after 2 seconds (PID {process.Id}).");
 			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
 			var logContent = $"apkdiff exited with code: {exitCode}" +
 				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +

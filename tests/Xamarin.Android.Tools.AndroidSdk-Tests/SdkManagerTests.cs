@@ -33,6 +33,42 @@ public class SdkManagerTests
 	}
 
 	[Test]
+	[Platform ("Linux,MacOsX")]
+	public async Task GetPendingLicensesAsync_ObservesNativeInputLoopAndDeclinesTheLicense ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), $"sdk-license-{Guid.NewGuid ():N}");
+		var bin = Path.Combine (root, "cmdline-tools", "latest", "bin");
+		Directory.CreateDirectory (bin);
+		var executable = Path.Combine (bin, "sdkmanager");
+		try {
+			File.WriteAllText (executable, """
+				#!/bin/sh
+				printf 'License test-license:\nlicense terms\nAccept? (y/N):\n'
+				IFS= read -r answer
+				printf '%s\n' "$answer" > "$0.answer"
+				[ "$answer" = "n" ] || exit 2
+				exit 1
+				""");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			manager.AndroidSdkPath = root;
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (5));
+			var licenses = await manager.GetPendingLicensesAsync (deadline.Token);
+			Assert.AreEqual ("n", File.ReadAllText (executable + ".answer").Trim ());
+			Assert.AreEqual (1, licenses.Count);
+			Assert.AreEqual ("test-license", licenses [0].Id);
+			Assert.AreEqual ("license terms", licenses [0].Text);
+		} finally {
+			File.Delete (executable + ".answer");
+			File.Delete (executable);
+			Directory.Delete (bin);
+			Directory.Delete (Path.GetDirectoryName (bin));
+			Directory.Delete (Path.Combine (root, "cmdline-tools"));
+			Directory.Delete (root);
+		}
+	}
+
+	[Test]
 	public void ParseManifest_CmdlineTools_ReturnsComponents ()
 	{
 		var xml = @"<?xml version=""1.0"" encoding=""utf-8""?>

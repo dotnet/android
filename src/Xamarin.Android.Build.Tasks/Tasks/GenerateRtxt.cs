@@ -30,6 +30,7 @@ namespace Xamarin.Android.Tasks
 			// Parse the Resource files and then generate an R.txt file
 			var writer = new RtxtWriter ();
 
+			ArgumentNullException.ThrowIfNull (CaseMapFile);
 			var resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
 			var javaPlatformDirectory = JavaPlatformJarPath.IsNullOrEmpty () ? "" : Path.GetDirectoryName (JavaPlatformJarPath);

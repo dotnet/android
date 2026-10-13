@@ -90,6 +90,7 @@ namespace Xamarin.Android.Tasks {
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			try {
+				ArgumentNullException.ThrowIfNull (AssemblyIdentityMapFile);
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 				resourceSymbolsTextFileTemp = GetTempFile ();
@@ -148,7 +149,9 @@ namespace Xamarin.Android.Tasks {
 		string [] GenerateCommandLineCommands (string ManifestFile, string? currentAbi, string currentResourceOutputFile)
 		{
 			List<string> cmd = new List<string> ();
-			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");
+			string manifestDir = Path.Combine (
+				Path.GetDirectoryName (ManifestFile) ?? throw new ArgumentException ("Manifest path must have a directory.", nameof (ManifestFile)),
+				currentAbi != null ? currentAbi : "manifest");
 			Directory.CreateDirectory (manifestDir);
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			string targetSdkVersion = AndroidApiLevel;

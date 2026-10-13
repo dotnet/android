@@ -165,6 +165,9 @@ namespace Mono.Security.Cryptography
       }
       catch (CryptographicException)
       {
+        if (!OperatingSystem.IsWindows())
+          throw;
+
         // this may cause problem when this code is run under
         // the SYSTEM identity on Windows (e.g. ASP.NET). See
         // http://bugzilla.ximian.com/show_bug.cgi?id=77559
@@ -239,6 +242,9 @@ namespace Mono.Security.Cryptography
         }
         catch (CryptographicException)
         {
+          if (!OperatingSystem.IsWindows())
+            throw;
+
           // this may cause problem when this code is run under
           // the SYSTEM identity on Windows (e.g. ASP.NET). See
           // http://bugzilla.ximian.com/show_bug.cgi?id=77559

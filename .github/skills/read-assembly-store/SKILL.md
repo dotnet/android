@@ -5,7 +5,8 @@ description: Inspect and list managed assemblies in .NET for Android APK, AAB, l
 
 # Read Assembly Store
 
-Inspect the package locally with the bundled C# file-based app. Never upload customer packages or extracted code.
+Inspect the package locally with the bundled C# file-based app using a .NET 11 SDK.
+Never upload customer packages or extracted code.
 
 ## Workflow
 

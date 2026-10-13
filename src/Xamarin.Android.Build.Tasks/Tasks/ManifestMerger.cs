@@ -70,7 +70,9 @@ namespace Xamarin.Android.Tasks
 		public override bool Execute ()
 		{
 			tempFile = OutputManifestFile + ".tmp";
-			responseFile = Path.Combine (Path.GetDirectoryName (OutputManifestFile), "manifestmerger.rsp");
+			responseFile = Path.Combine (
+				Path.GetDirectoryName (OutputManifestFile) ?? throw new InvalidOperationException ("Manifest output path must have a directory."),
+				"manifestmerger.rsp");
 			bool result = false;
 			try {
 				result = base.Execute ();
@@ -143,6 +145,7 @@ namespace Xamarin.Android.Tasks
 			}
 			sb.AppendLine ("--out");
 			sb.AppendLine (tempFile);
+			ArgumentNullException.ThrowIfNull (responseFile);
 			File.WriteAllText (responseFile, sb.ToString ());
 			cmd.AppendFileNameIfNotNull (responseFile);
 			return cmd;

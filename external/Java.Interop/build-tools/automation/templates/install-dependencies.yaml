@@ -6,3 +6,17 @@ steps:
   displayName: Use .NET $(DotNetCoreVersion)
   inputs:
     version: $(DotNetCoreVersion)
+
+- pwsh: |
+    $dotnetRoot = "$(System.DefaultWorkingDirectory)/bin/$(Build.Configuration)/dotnet"
+    if ($IsWindows) {
+        & "$(System.DefaultWorkingDirectory)/eng/install-dotnet.ps1" -configuration "$(Build.Configuration)"
+        $dotnetPath = Join-Path $dotnetRoot "dotnet.exe"
+    } else {
+        $env:CONFIGURATION = "$(Build.Configuration)"
+        & bash "$(System.DefaultWorkingDirectory)/eng/install-dotnet.sh"
+        $dotnetPath = Join-Path $dotnetRoot "dotnet"
+    }
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "##vso[task.setvariable variable=JavaInteropDotNetTool]$dotnetPath"
+  displayName: Install pinned .NET SDK for native Java.Interop consumers

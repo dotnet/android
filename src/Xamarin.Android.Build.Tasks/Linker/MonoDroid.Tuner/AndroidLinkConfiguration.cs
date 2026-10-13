@@ -17,7 +17,7 @@ namespace MonoDroid.Tuner
 
 		public static AndroidLinkConfiguration GetInstance (LinkContext context)
 		{
-			if (!configurations.TryGetValue (context, out AndroidLinkConfiguration config)) {
+			if (!configurations.TryGetValue (context, out var config)) {
 				config = new AndroidLinkConfiguration ();
 				configurations.Add (context, config);
 			}

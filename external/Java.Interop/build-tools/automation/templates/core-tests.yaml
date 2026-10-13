@@ -30,6 +30,7 @@ steps:
   parameters:
     testRunTitle: Xamarin.Android.Tools.Bytecode (${{ parameters.platformName }})
     testAssemblyName: Xamarin.Android.Tools.Bytecode-Tests
+    targetFrameworkPathSuffix: -net11.0
 
 - template: run-dotnet-test.yaml
   parameters:
@@ -50,13 +51,6 @@ steps:
   parameters:
     testRunTitle: Java.Interop.Tools.Maven (${{ parameters.platformName }})
     testAssemblyName: Java.Interop.Tools.Maven-Tests
-
-- template: run-dotnet-test.yaml
-  parameters:
-    testRunTitle: Java.Interop ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    testAssemblyName: Java.Interop-Tests
-    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-    retryCount: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: java-source-utils'

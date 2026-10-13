@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -354,6 +355,8 @@ namespace Xamarin.Android.Manifest {
 			}
 		}
 
+		[UnconditionalSuppressMessage ("Interoperability", "CA1416:Validate platform compatibility",
+			Justification = "Only enum constants are read to format desktop-host manifest metadata; no Android runtime APIs are invoked.")]
 		static string ToString (WindowRotationAnimation value)
 		{
 			switch (value) {
@@ -372,6 +375,8 @@ namespace Xamarin.Android.Manifest {
 			return ToString (typeDef, cache);
 		}
 
+		[UnconditionalSuppressMessage ("Interoperability", "CA1416:Validate platform compatibility",
+			Justification = "Only enum constants are read to format desktop-host manifest metadata; no Android runtime APIs are invoked.")]
 		static string ToString (ForegroundService value)
 		{
 			// This attribute allows multiple values
@@ -413,6 +418,8 @@ namespace Xamarin.Android.Manifest {
 			return string.Join ("|", values.ToArray ());
 		}
 
+		[UnconditionalSuppressMessage ("Interoperability", "CA1416:Validate platform compatibility",
+			Justification = "Only enum constants are read to format desktop-host manifest metadata; no Android runtime APIs are invoked.")]
 		static string ToString (ApplicationCategories value)
 		{
 			return value switch {
@@ -441,6 +448,8 @@ namespace Xamarin.Android.Manifest {
 			};
 		}
 
+		[UnconditionalSuppressMessage ("Interoperability", "CA1416:Validate platform compatibility",
+			Justification = "Only enum constants are read to format desktop-host manifest metadata; no Android runtime APIs are invoked.")]
 		static string ToString (GwpAsan value)
 		{
 			return value switch {

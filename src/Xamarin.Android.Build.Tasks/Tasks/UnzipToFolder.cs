@@ -20,10 +20,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (Sources == null)
-				throw new ArgumentNullException (nameof (Sources));
-			if (DestinationDirectories == null)
-				throw new ArgumentNullException (nameof (DestinationDirectories));
+			ArgumentNullException.ThrowIfNull (Sources);
+			ArgumentNullException.ThrowIfNull (DestinationDirectories);
 			if (Sources.Length != DestinationDirectories.Length)
 				throw new ArgumentException ("Each source archive must have a destination directory.", nameof (DestinationDirectories));
 

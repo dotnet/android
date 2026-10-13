@@ -12,5 +12,5 @@
       <Compile Include="$(IntermediateOutputPath)JniEnvironment.g.cs" KeepDuplicates="false" />
     </ItemGroup>
   </Target>
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
 </Project>

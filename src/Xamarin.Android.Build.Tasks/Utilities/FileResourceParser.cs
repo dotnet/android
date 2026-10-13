@@ -91,7 +91,7 @@ namespace Xamarin.Android.Tasks
 						if (!entry.FullName.StartsWith ("res"))
 							continue;
 						var ext = Path.GetExtension (entry.FullName);
-						var path = Directory.GetParent (entry.FullName).Name;
+						var path = (Directory.GetParent (entry.FullName) ?? throw new InvalidOperationException ($"Resource archive entry has no parent directory: {entry.FullName}")).Name;
 						if (ext == ".xml" || ext == ".axml") {
 							if (string.Compare (path, "raw", StringComparison.OrdinalIgnoreCase) != 0) {
 								var ms = MemoryStreamPool.Shared.Rent ();
@@ -220,7 +220,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			if (fileName.EndsWith (".9", StringComparison.OrdinalIgnoreCase))
 				fileName = Path.GetFileNameWithoutExtension (fileName);
-			var path = Directory.GetParent (file).Name;
+			var path = (Directory.GetParent (file) ?? throw new InvalidOperationException ($"Resource file has no parent directory: {file}")).Name;
 			if (!processXml) {
 				CreateResourceField (path, fileName, resources);
 				return;

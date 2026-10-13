@@ -766,24 +766,32 @@ namespace Xamarin.Android.Tasks
 			}
 			adbArguments.AddRange (arguments);
 
-			var psi = ProcessUtils.CreateProcessStartInfo (adb, adbArguments.ToArray ());
+			var psi = new System.Diagnostics.ProcessStartInfo (adb) {
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
+			};
+			foreach (var argument in adbArguments)
+				psi.ArgumentList.Add (argument);
+			if (environmentVariables != null) {
+				foreach (var variable in environmentVariables)
+					psi.Environment [variable.Key] = variable.Value;
+			}
 			psi.WorkingDirectory = Path.GetTempPath ();
 			psi.WindowStyle = ProcessWindowStyle.Hidden;
 
-			// psi.Arguments holds the exact, correctly quoted command line whenever ProcessUtils
-			// joined the arguments itself; it is empty when it used ProcessStartInfo.ArgumentList.
-			string commandLine = !string.IsNullOrEmpty (psi.Arguments)
-				? psi.Arguments
-				: string.Join (" ", adbArguments.Select (a => $"[{a}]"));
+			string commandLine = string.Join (" ", adbArguments.Select (a => $"[{a}]"));
 			LogDiagnostic ($"adb command: {psi.FileName} {commandLine}");
 
-			using var stdout = new StringWriter ();
-			using var stderr = new StringWriter ();
-			int exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, CancellationToken, environmentVariables);
+			CancellationToken.ThrowIfCancellationRequested ();
+			var capture = await System.Diagnostics.Process.RunAndCaptureTextAsync (psi, CancellationToken);
+			CancellationToken.ThrowIfCancellationRequested ();
 			var result = new AdbCommandResult {
-				ExitCode = exitCode,
-				StandardOutput = stdout.ToString ().Trim (),
-				StandardError = stderr.ToString ().Trim (),
+				ExitCode = capture.ExitStatus.ExitCode,
+				StandardOutput = capture.StandardOutput.Trim (),
+				StandardError = capture.StandardError.Trim (),
 			};
 			LogAdbCommandResult (result);
 			return result;

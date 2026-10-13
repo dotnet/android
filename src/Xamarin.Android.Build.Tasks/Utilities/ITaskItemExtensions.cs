@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks
 			var value = item.GetMetadata (name);
 
 			if (value.IsNullOrWhiteSpace ()) {
-				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
+				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item, name);
 				return null;
 			}
 
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tasks
 			value = item.GetMetadata (name);
 
 			if (value.IsNullOrWhiteSpace ()) {
-				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
+				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item, name);
 				return false;
 			}
 

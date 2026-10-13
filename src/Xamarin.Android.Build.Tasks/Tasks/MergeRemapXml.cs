@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile.ItemSpec));
+			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile.ItemSpec) ?? throw new InvalidOperationException ("Remapping output path must have a directory."));
 
 			var settings = new XmlWriterSettings () {
 				Encoding            = new UTF8Encoding (false),

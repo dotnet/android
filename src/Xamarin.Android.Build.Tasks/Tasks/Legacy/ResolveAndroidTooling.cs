@@ -25,6 +25,7 @@ namespace Xamarin.Android.Tasks.Legacy
 			if (!ValidateApiLevels ())
 				return false;
 
+			ArgumentNullException.ThrowIfNull (TargetFrameworkVersion);
 			if (!MonoAndroidHelper.SupportedVersions.FrameworkDirectories.Any (p => Directory.Exists (Path.Combine (p, TargetFrameworkVersion)))) {
 				Log.LogError (
 					subcategory: string.Empty,

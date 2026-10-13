@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -87,21 +88,25 @@ namespace Xamarin.Installer.AndroidSDK
 
 			var result = 0uL;
 			var duCommand = "/usr/bin/du";
-			var process = ProcessUtils.CreateProcessStartInfo (duCommand, "-sk", directory);
+			var process = new ProcessStartInfo (duCommand) {
+				ArgumentList = { "-sk", directory },
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			};
 			string sizeOutput = null;
 			try {
-				using (var output = new StringWriter ())
-				using (var error = new StringWriter ()) {
-					int exitCode = await ProcessUtils.StartProcess (process, output, error, CancellationToken.None);
-					if (exitCode != 0)
-						throw new InvalidOperationException ($"{duCommand} exited with code {exitCode}: {error}");
-					sizeOutput = output.ToString ();
-				}
+				using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+				var output = await Process.RunAndCaptureTextAsync (process, deadline.Token);
+				if (output.ExitStatus.ExitCode != 0 || output.ExitStatus.Canceled)
+					throw new InvalidOperationException ($"{duCommand} exited with code {output.ExitStatus.ExitCode}: {output.StandardError}");
+				sizeOutput = output.StandardOutput;
 			} catch (Exception ex) {
 				if (ex?.Message?.Contains ("No such file or directory") == true) {
 					Logger.Debug ($"[DirectorySizeMonitoringTimer] WARN! Dir \"{directory}\" was removed before \"/usr/bin/du\" could calculate its size");
 				} else {
-					Logger.Warning ($"[DirectorySizeMonitoringTimer] ProcessUtils.StartProcess failed to execute {duCommand}.\n{ex}");
+					Logger.Warning ($"[DirectorySizeMonitoringTimer] Failed to execute {duCommand}.\n{ex}");
 				}
 			}
 

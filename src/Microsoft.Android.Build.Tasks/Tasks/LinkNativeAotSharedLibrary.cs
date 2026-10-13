@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -204,25 +204,33 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 
 	async Task<bool> RunToolAsync (string tool, string errorCode, string errorMessage, params string [] arguments)
 	{
-		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
 		LogDebugMessage ("{0} {1}", tool, string.Join (" ", arguments));
-		int exitCode;
+		CancellationToken.ThrowIfCancellationRequested ();
+		var startInfo = new ProcessStartInfo (tool) {
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		foreach (string argument in arguments) {
+			startInfo.ArgumentList.Add (argument);
+		}
+		ProcessTextOutput result;
 		try {
-			exitCode = await ProcessUtils.StartProcess (
-				ProcessUtils.CreateProcessStartInfo (tool, arguments), stdout, stderr, CancellationToken
-			).ConfigureAwait (false);
+			result = await Process.RunAndCaptureTextAsync (startInfo, CancellationToken).ConfigureAwait (false);
 		} catch (Win32Exception e) {
 			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary), Environment.NewLine + e.Message);
 			return false;
 		}
+		CancellationToken.ThrowIfCancellationRequested ();
+		int exitCode = result.ExitStatus.ExitCode;
 		if (exitCode != 0) {
 			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary),
-				$"{Environment.NewLine}{Path.GetFileName (tool)} exited with code {exitCode}.{Environment.NewLine}{stdout}{stderr}");
+				$"{Environment.NewLine}{Path.GetFileName (tool)} exited with code {exitCode}.{Environment.NewLine}{result.StandardOutput}{result.StandardError}");
 			return false;
 		}
-		LogDebugMessage (stdout.ToString ());
-		LogDebugMessage (stderr.ToString ());
+		LogDebugMessage (result.StandardOutput);
+		LogDebugMessage (result.StandardError);
 		return true;
 	}
 

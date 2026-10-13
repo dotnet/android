@@ -72,7 +72,7 @@ partial class AssemblyStoreGenerator
 
 	public void Add (AssemblyStoreAssemblyInfo asmInfo)
 	{
-		if (!assemblies.TryGetValue (asmInfo.Arch, out List<AssemblyStoreAssemblyInfo> infos)) {
+		if (!assemblies.TryGetValue (asmInfo.Arch, out var infos)) {
 			infos = new List<AssemblyStoreAssemblyInfo> ();
 			assemblies.Add (asmInfo.Arch, infos);
 		}
@@ -121,7 +121,7 @@ partial class AssemblyStoreGenerator
 		// We'll start writing to the stream after we seek to the position just after the header, index, descriptors and name data.
 		ulong curPos = assemblyDataStart;
 
-		Directory.CreateDirectory (Path.GetDirectoryName (storePath));
+		Directory.CreateDirectory (Path.GetDirectoryName (storePath) ?? throw new InvalidOperationException ($"Assembly store path has no directory: {storePath}"));
 		using var fs = File.Open (storePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 

@@ -2,6 +2,9 @@
   <PropertyGroup>
     <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
     <_BinlogPathPrefix>$(_Root)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogPathPrefix>
+    <!-- A provisioned SDK must not inherit the outer MSBuild host's SDK selection. -->
+    <_DotNetSdkDirectory>$(DotNetPreviewPath)sdk\$(MicrosoftNETSdkPackageVersion)\</_DotNetSdkDirectory>
+    <_DotNetBuildEnvironmentVariables>MSBuildSDKsPath=$(_DotNetSdkDirectory)Sdks;MSBUILD_EXE_PATH=$(_DotNetSdkDirectory)MSBuild.dll;MSBuildExtensionsPath=$(_DotNetSdkDirectory);DOTNET_HOST_PATH=$(DotNetPreviewPath)dotnet</_DotNetBuildEnvironmentVariables>
     <MauiUseLocalPacks Condition=" '$(MauiUseLocalPacks)' == '' ">false</MauiUseLocalPacks>
     <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(_Root)..\maui</MauiSourcePath>
     <!-- Arcade SDK outputs packages to artifacts/packages/Configuration/Shipping/ -->
@@ -18,6 +21,7 @@
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_Root)src\openjdk\openjdk.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-openjdk.binlog"
         WorkingDirectory="$(_Root)"
+        EnvironmentVariables="$(_DotNetBuildEnvironmentVariables)"
     />
   </Target>
 
@@ -26,6 +30,7 @@
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.slnx -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
         WorkingDirectory="$(_Root)external\Java.Interop"
+        EnvironmentVariables="$(_DotNetBuildEnvironmentVariables)"
     />
   </Target>
 

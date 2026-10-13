@@ -224,6 +224,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Regex issueReplaceRegex = new Regex ($"\b{issueToRemove}\b(,)?");
 			if (!issues.IsNullOrEmpty () && issues.Contains (issueToRemove)) {
+				ArgumentNullException.ThrowIfNull (DisabledIssues);
 				var match = issueReplaceRegex.Match (DisabledIssues);
 				if (match.Success) {
 					issues = issues.Replace (match.Value, string.Empty);
@@ -345,7 +346,8 @@ namespace Xamarin.Android.Tasks
 			config.Add (lintRoot);
 			foreach (var configFile in ConfigFiles ?? []) {
 				var doc = XDocument.Load (configFile.ItemSpec);
-				var issues = doc.Element ("lint").Elements ("issue");
+				var lint = doc.Element ("lint") ?? throw new System.Xml.XmlException ($"Lint configuration has no lint element: {configFile.ItemSpec}");
+				var issues = lint.Elements ("issue");
 				lintRoot.Add (issues);
 			}
 			return config;
@@ -376,9 +378,9 @@ namespace Xamarin.Android.Tasks
 			var versionInfo = sb.ToString ();
 			if (result != 0 || versionInfo.Contains ("unknown")) {
 				// lets try to parse the lint-xx-x-x-dev.jar filename to get the version
-				var libPath = Path.Combine (Path.GetDirectoryName (tool), "..", "lib");
+				var libPath = Path.Combine (Path.GetDirectoryName (tool) ?? throw new ArgumentException ("Lint tool path must have a directory.", nameof (tool)), "..", "lib");
 				if (Directory.Exists (libPath)) {
-					Version v;
+					Version? v;
 					foreach (var file in Directory.EnumerateFiles (libPath, "lint-??.?.?-dev.jar")) {
 						var split = Path.GetFileName (file).Split ('-');
 						if (split.Length != 3)
@@ -395,7 +397,7 @@ namespace Xamarin.Android.Tasks
 			}
 			// lint: version 26.0.2
 			var versionNumberMatch = lintVersionRegex.Match (versionInfo);
-			Version versionNumber;
+			Version? versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
 				return versionNumber;
 			}

@@ -66,7 +66,7 @@ namespace Xamarin.Android.Tasks
 				}
 				
 				if (RemoveDirectories) {
-					var knownDirs = new HashSet<string> (knownFiles.Select (d => Path.GetDirectoryName (d)));
+					var knownDirs = new HashSet<string> (knownFiles.Select (d => Path.GetDirectoryName (d) ?? throw new InvalidOperationException ($"Known file path has no directory: {d}")));
 					var dirs = System.IO.Directory.GetDirectories (absDir, "*", SearchOption.AllDirectories);
 
 					foreach (string d in dirs.OrderByDescending (s => s.Length)) {

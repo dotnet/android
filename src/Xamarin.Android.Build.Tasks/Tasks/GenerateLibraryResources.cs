@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tasks
 					LogDebugMessage ($"Skipping, AndroidManifest.xml does not have a packageName: {manifestFile}");
 					continue;
 				}
-				if (!libraries.TryGetValue (packageName, out Package library)) {
+				if (!libraries.TryGetValue (packageName, out var library)) {
 					libraries.Add (packageName, library = new Package {
 						Name = packageName,
 					});
@@ -169,8 +169,8 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		IEnumerable<string []> ParseFile (StreamReader reader)
 		{
-			while (!reader.EndOfStream) {
-				var line = reader.ReadLine ();
+			string? line;
+			while ((line = reader.ReadLine ()) != null) {
 				var items = line.Split (Delimiter, 4);
 				if (items.Length == 4)
 					yield return items;

@@ -71,7 +71,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 
 			// Ensure our output directory exists
-			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
+			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile) ?? throw new InvalidOperationException ("Binding output path must have a directory."));
 
 			return base.RunTask ();
 		}
@@ -106,7 +106,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Arguments sent to jar2xml
-			var jarpath = Path.Combine (MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions), "android.jar");
+			var platformDirectory = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions) ??
+				throw new InvalidOperationException ($"Android platform directory was not found for API level {AndroidApiLevel}.");
+			var jarpath = Path.Combine (platformDirectory, "android.jar");
 			cmd.AppendSwitchIfNotNull ("--ref=", Path.GetFullPath (jarpath));
 
 			cmd.AppendSwitchIfNotNull ("--out=", Path.GetFullPath (OutputFile));
@@ -135,7 +137,8 @@ namespace Xamarin.Android.Tasks
 				foreach (var doc in JavaDocs) {
 					var opt = GetJavadocOption (doc.ItemSpec);
 					if (opt != null)
-						cmd.AppendSwitchIfNotNull (opt, Path.GetFullPath (Path.GetDirectoryName (doc.ItemSpec)));
+						cmd.AppendSwitchIfNotNull (opt, Path.GetFullPath (Path.GetDirectoryName (doc.ItemSpec) ??
+							throw new InvalidOperationException ($"Javadoc path has no directory: {doc.ItemSpec}")));
 				}
 			return cmd.ToString ();
 		}

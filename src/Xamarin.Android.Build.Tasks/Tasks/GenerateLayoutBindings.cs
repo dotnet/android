@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 
 			var layoutGroups = new Dictionary <string, LayoutGroup> (StringComparer.Ordinal);
 			string layoutGroupName;
-			LayoutGroup group;
+			LayoutGroup? group;
 
 			foreach (ITaskItem item in ResourceFiles) {
 				if (item == null)
@@ -361,6 +361,7 @@ namespace Xamarin.Android.Tasks
 			if (!needsFullCheck && widget.WidgetType != LayoutWidgetType.Unknown)
 				return;
 
+			ArgumentNullException.ThrowIfNull (widget.AllTypes);
 			if (widget.AllTypes.All (wt => wt == LayoutWidgetType.View))
 				widget.WidgetType = LayoutWidgetType.View;
 			else if (widget.AllTypes.All (wt => wt == LayoutWidgetType.Fragment))
