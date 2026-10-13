@@ -162,15 +162,15 @@ Java.Interop.JniArrayElements.Release(Java.Interop.JniReleaseArrayElementsMode r
 Java.Interop.JniArrayElements.Size.get -> int
 Java.Interop.JniBooleanArrayElements
 Java.Interop.JniBooleanArrayElements.Elements.get -> bool*
-Java.Interop.JniBooleanArrayElements.this[int index].get -> bool
+unsafe Java.Interop.JniBooleanArrayElements.this[int index].get -> bool
 Java.Interop.JniCharArrayElements
 Java.Interop.JniCharArrayElements.Elements.get -> char*
-Java.Interop.JniCharArrayElements.this[int index].get -> char
+unsafe Java.Interop.JniCharArrayElements.this[int index].get -> char
 Java.Interop.JniConstructorSignatureAttribute
 Java.Interop.JniConstructorSignatureAttribute.JniConstructorSignatureAttribute(string! memberSignature) -> void
 Java.Interop.JniDoubleArrayElements
 Java.Interop.JniDoubleArrayElements.Elements.get -> double*
-Java.Interop.JniDoubleArrayElements.this[int index].get -> double
+unsafe Java.Interop.JniDoubleArrayElements.this[int index].get -> double
 Java.Interop.JniEnvironment
 Java.Interop.JniEnvironment.Arrays
 Java.Interop.JniEnvironment.Exceptions
@@ -193,13 +193,13 @@ Java.Interop.JniFieldInfo.Name.get -> string!
 Java.Interop.JniFieldInfo.Signature.get -> string!
 Java.Interop.JniInt16ArrayElements
 Java.Interop.JniInt16ArrayElements.Elements.get -> short*
-Java.Interop.JniInt16ArrayElements.this[int index].get -> short
+unsafe Java.Interop.JniInt16ArrayElements.this[int index].get -> short
 Java.Interop.JniInt32ArrayElements
 Java.Interop.JniInt32ArrayElements.Elements.get -> int*
-Java.Interop.JniInt32ArrayElements.this[int index].get -> int
+unsafe Java.Interop.JniInt32ArrayElements.this[int index].get -> int
 Java.Interop.JniInt64ArrayElements
 Java.Interop.JniInt64ArrayElements.Elements.get -> long*
-Java.Interop.JniInt64ArrayElements.this[int index].get -> long
+unsafe Java.Interop.JniInt64ArrayElements.this[int index].get -> long
 Java.Interop.JniManagedPeerStates
 Java.Interop.JniManagedPeerStates.Activatable = 1 -> Java.Interop.JniManagedPeerStates
 Java.Interop.JniManagedPeerStates.None = 0 -> Java.Interop.JniManagedPeerStates
@@ -462,10 +462,10 @@ Java.Interop.JniRuntime.WeakGlobalReferenceCount.get -> int
 Java.Interop.JniRuntime.~JniRuntime() -> void
 Java.Interop.JniSByteArrayElements
 Java.Interop.JniSByteArrayElements.Elements.get -> sbyte*
-Java.Interop.JniSByteArrayElements.this[int index].get -> sbyte
+unsafe Java.Interop.JniSByteArrayElements.this[int index].get -> sbyte
 Java.Interop.JniSingleArrayElements
 Java.Interop.JniSingleArrayElements.Elements.get -> float*
-Java.Interop.JniSingleArrayElements.this[int index].get -> float
+unsafe Java.Interop.JniSingleArrayElements.this[int index].get -> float
 Java.Interop.JniSurfacedPeerInfo
 Java.Interop.JniSurfacedPeerInfo.JniIdentityHashCode.get -> int
 Java.Interop.JniSurfacedPeerInfo.JniSurfacedPeerInfo(int jniIdentityHashCode, System.WeakReference<Java.Interop.IJavaPeerable!>! surfacedPeer) -> void
