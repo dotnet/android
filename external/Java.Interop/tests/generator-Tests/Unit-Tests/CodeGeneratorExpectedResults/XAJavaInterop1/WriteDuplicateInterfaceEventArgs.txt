@@ -35,23 +35,30 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 	static sbyte n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, param1, &__n_OnAnimationEnd_I);
 		}
 	}
 	private static sbyte __n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		return __this.OnAnimationEnd (param1) ? (sbyte)1 : (sbyte)0;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.OnAnimationEnd (param1) ? (sbyte)1 : (sbyte)0;
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe bool OnAnimationEnd (int param1)
+	public bool OnAnimationEnd (int param1)
 	{
-		const string __id = "OnAnimationEnd.(I)Z";
-		JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-		__args [0] = new JniArgumentValue (param1);
-		var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-		return __rm;
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "OnAnimationEnd.(I)Z";
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (param1);
+			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+			return __rm;
+		}
 	}
 
 	static Delegate cb_OnAnimationEnd_OnAnimationEnd_II_Z;
@@ -64,24 +71,31 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 	static sbyte n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, param1, param2, &__n_OnAnimationEnd_II);
 		}
 	}
 	private static sbyte __n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		return __this.OnAnimationEnd (param1, param2) ? (sbyte)1 : (sbyte)0;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.OnAnimationEnd (param1, param2) ? (sbyte)1 : (sbyte)0;
+		}
 	}
 #pragma warning restore 0169
 
-	public unsafe bool OnAnimationEnd (int param1, int param2)
+	public bool OnAnimationEnd (int param1, int param2)
 	{
-		const string __id = "OnAnimationEnd.(II)Z";
-		JniArgumentValue* __args = stackalloc JniArgumentValue [2];
-		__args [0] = new JniArgumentValue (param1);
-		__args [1] = new JniArgumentValue (param2);
-		var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-		return __rm;
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "OnAnimationEnd.(II)Z";
+			JniArgumentValue* __args = stackalloc JniArgumentValue [2];
+			__args [0] = new JniArgumentValue (param1);
+			__args [1] = new JniArgumentValue (param2);
+			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+			return __rm;
+		}
 	}
 
 }
@@ -127,15 +141,18 @@ internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Ob
 
 	object sender;
 
-	public unsafe AnimatorListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	public AnimatorListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
-		const string __id = "()V";
-		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-			return;
-		var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-		SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
-		JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
-		this.sender = sender;
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "()V";
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+			var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
+			JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
+			this.sender = sender;
+		}
 	}
 
 	#pragma warning disable 0649

@@ -9,36 +9,42 @@ public partial class MyClass {
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='java.code']/class[@name='MyClass']/constructor[@name='MyClass' and count(parameter)=0]"
 	[Register (".ctor", "()V", "")]
-	unsafe MyClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	MyClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
-		const string __id = "()V";
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "()V";
 
-		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-			return;
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
 
-		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+		}
 	}
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='java.code']/class[@name='MyClass']/constructor[@name='MyClass' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 	[Register (".ctor", "(Ljava/lang/String;)V", "")]
-	unsafe MyClass (string? p0) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	MyClass (string? p0) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
-		const string __id = "(Ljava/lang/String;)V";
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "(Ljava/lang/String;)V";
 
-		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-			return;
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
 
-		IntPtr native_p0 = JNIEnv.NewString ((string?)p0);
-		try {
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (native_p0);
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-		} finally {
-			JNIEnv.DeleteLocalRef (native_p0);
+			IntPtr native_p0 = JNIEnv.NewString ((string?)p0);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_p0);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+			} finally {
+				JNIEnv.DeleteLocalRef (native_p0);
+			}
 		}
 	}
 
@@ -52,13 +58,17 @@ public partial class MyClass {
 	static int n_get_Count (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Count);
 		}
 	}
 	private static int __n_get_Count (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return __this.Count;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return __this.Count;
+		}
 	}
 #pragma warning restore 0169
 
@@ -72,31 +82,41 @@ public partial class MyClass {
 	static void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_Count_I);
 		}
 	}
 	private static void __n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		__this.Count = value;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.Count = value;
+		}
 	}
 #pragma warning restore 0169
 
-	public virtual unsafe int Count {
+	public virtual int Count {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_Count' and count(parameter)=0]"
 		[Register ("get_Count", "()I", "Getget_CountHandler")]
 		get {
-			const string __id = "get_Count.()I";
-			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-			return __rm;
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "get_Count.()I";
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Count' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("set_Count", "(I)V", "Getset_Count_IHandler")]
 		set {
-			const string __id = "set_Count.(I)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (value);
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "set_Count.(I)V";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			}
 		}
 	}
 
@@ -110,13 +130,17 @@ public partial class MyClass {
 	static IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Key);
 		}
 	}
 	private static IntPtr __n_get_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return JNIEnv.NewString (__this.Key);
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return JNIEnv.NewString (__this.Key);
+		}
 	}
 #pragma warning restore 0169
 
@@ -130,55 +154,71 @@ public partial class MyClass {
 	static void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_value, &__n_set_Key_Ljava_lang_String_);
 		}
 	}
 	private static void __n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
-		__this.Key = value;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+			__this.Key = value;
+		}
 	}
 #pragma warning restore 0169
 
-	public virtual unsafe string? Key {
+	public virtual string? Key {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_Key' and count(parameter)=0]"
 		[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler")]
 		get {
-			const string __id = "get_Key.()Ljava/lang/String;";
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "get_Key.()Ljava/lang/String;";
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 		[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler")]
 		set {
-			const string __id = "set_Key.(Ljava/lang/String;)V";
-			IntPtr native_value = JNIEnv.NewString ((string?)value);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_value);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				JNIEnv.DeleteLocalRef (native_value);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "set_Key.(Ljava/lang/String;)V";
+				IntPtr native_value = JNIEnv.NewString ((string?)value);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_value);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_value);
+				}
 			}
 		}
 	}
 
-	public static unsafe int StaticCount {
+	public static int StaticCount {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_StaticCount' and count(parameter)=0]"
 		[Register ("get_StaticCount", "()I", "")]
 		get {
-			const string __id = "get_StaticCount.()I";
-			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-			return __rm;
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "get_StaticCount.()I";
+				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+				return __rm;
+			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_StaticCount' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("set_StaticCount", "(I)V", "")]
 		set {
-			const string __id = "set_StaticCount.(I)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (value);
-			_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "set_StaticCount.(I)V";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			}
 		}
 	}
 
@@ -192,13 +232,17 @@ public partial class MyClass {
 	static int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_AbstractCount);
 		}
 	}
 	private static int __n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return __this.AbstractCount;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return __this.AbstractCount;
+		}
 	}
 #pragma warning restore 0169
 
@@ -212,13 +256,17 @@ public partial class MyClass {
 	static void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_AbstractCount_I);
 		}
 	}
 	private static void __n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		__this.AbstractCount = value;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.AbstractCount = value;
+		}
 	}
 #pragma warning restore 0169
 
@@ -242,31 +290,38 @@ public partial class MyClass {
 	static int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_key, &__n_GetCountForKey_Ljava_lang_String_);
 		}
 	}
 	private static int __n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
-		int __ret = __this.GetCountForKey (key);
-		return __ret;
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+			int __ret = __this.GetCountForKey (key);
+			return __ret;
+		}
 	}
 #pragma warning restore 0169
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 	[Register ("GetCountForKey", "(Ljava/lang/String;)I", "GetGetCountForKey_Ljava_lang_String_Handler")]
-	public virtual unsafe int GetCountForKey (string? key)
+	public virtual int GetCountForKey (string? key)
 	{
-		const string __id = "GetCountForKey.(Ljava/lang/String;)I";
-		IntPtr native_key = JNIEnv.NewString ((string?)key);
-		try {
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (native_key);
-			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-			return __rm;
-		} finally {
-			JNIEnv.DeleteLocalRef (native_key);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "GetCountForKey.(Ljava/lang/String;)I";
+			IntPtr native_key = JNIEnv.NewString ((string?)key);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_key);
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+				return __rm;
+			} finally {
+				JNIEnv.DeleteLocalRef (native_key);
+			}
 		}
 	}
 
@@ -280,31 +335,41 @@ public partial class MyClass {
 	static IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_Key);
 		}
 	}
 	private static IntPtr __n_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		return JNIEnv.NewString (__this.Key ());
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return JNIEnv.NewString (__this.Key ());
+		}
 	}
 #pragma warning restore 0169
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Key' and count(parameter)=0]"
 	[Register ("Key", "()Ljava/lang/String;", "GetKeyHandler")]
-	public virtual unsafe string? Key ()
+	public virtual string? Key ()
 	{
-		const string __id = "Key.()Ljava/lang/String;";
-		var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-		return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "Key.()Ljava/lang/String;";
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='StaticMethod' and count(parameter)=0]"
 	[Register ("StaticMethod", "()V", "")]
-	public static unsafe void StaticMethod ()
+	public static void StaticMethod ()
 	{
-		const string __id = "StaticMethod.()V";
-		_members.StaticMethods.InvokeVoidMethod (__id, null);
+		unsafe {
+			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+			const string __id = "StaticMethod.()V";
+			_members.StaticMethods.InvokeVoidMethod (__id, null);
+		}
 	}
 
 	static Delegate? cb_AbstractMethod_AbstractMethod_V;
@@ -317,13 +382,17 @@ public partial class MyClass {
 	static void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies live references matching the registered callback signature.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_AbstractMethod);
 		}
 	}
 	private static void __n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-		__this.AbstractMethod ();
+		unsafe {
+			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.AbstractMethod ();
+		}
 	}
 #pragma warning restore 0169
 

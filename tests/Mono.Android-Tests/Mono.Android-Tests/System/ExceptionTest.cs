@@ -15,6 +15,72 @@ namespace Xamarin.Android.RuntimeTests {
 	[TestFixture]
 	public class ExceptionTest {
 
+		sealed class DeferredThrowable : Java.Lang.Throwable
+		{
+			public DeferredThrowable (JniObjectReferenceOptions options) : base (options)
+			{
+			}
+
+			public unsafe DeferredThrowable (bool legacy) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+			{
+			}
+
+			public bool IsGenerated => is_generated;
+		}
+
+		[Test]
+		[Category ("BindingSafetyLifecycle")]
+		public void DeferredThrowableConstructorPreservesEmptyPeerState ()
+		{
+			using var prepared = new DeferredThrowable (JniObjectReferenceOptions.None);
+			DeferredThrowable legacy;
+			unsafe {
+				legacy = new DeferredThrowable (legacy: true);
+			}
+			using (legacy) {
+				Assert.AreEqual (IntPtr.Zero, prepared.Handle);
+				Assert.IsFalse (prepared.PeerReference.IsValid);
+				Assert.IsFalse (prepared.IsGenerated);
+				Assert.AreEqual (legacy.JniManagedPeerState, prepared.JniManagedPeerState);
+				Assert.Throws<ObjectDisposedException> (() => { _ = legacy.Message; });
+				Assert.Throws<ObjectDisposedException> (() => { _ = prepared.Message; });
+			}
+		}
+
+		[TestCase (JniObjectReferenceOptions.Copy)]
+		[TestCase (JniObjectReferenceOptions.CopyAndDispose)]
+		[Category ("BindingSafetyLifecycle")]
+		public void DeferredThrowableConstructorRejectsPeerOwnershipOptions (JniObjectReferenceOptions options)
+		{
+			var exception = Assert.Throws<ArgumentException> (() => new DeferredThrowable (options));
+			Assert.IsNotNull (exception);
+			if (exception == null)
+				throw new AssertionException ("The unsupported ownership option was accepted.");
+			Assert.AreEqual ("options", exception.ParamName);
+		}
+
+		[Test]
+		[Category ("BindingSafetyLifecycle")]
+		public void BoundThrowableHierarchySupportsManagedConstructionAndBorrowedRawAlias ()
+		{
+			using var managed = new Java.Lang.IllegalStateException ("prepared hierarchy");
+			Assert.IsTrue (managed.PeerReference.IsValid);
+			Assert.AreEqual ("prepared hierarchy", managed.Message);
+			var reference = managed.PeerReference.NewLocalRef ();
+			try {
+				Java.Lang.Throwable alias;
+				unsafe {
+					alias = new Java.Lang.Throwable (reference.Handle, JniHandleOwnership.DoNotTransfer);
+				}
+				using (alias) {
+					Assert.IsTrue (JniEnvironment.Types.IsSameObject (managed.PeerReference, alias.PeerReference));
+					Assert.AreEqual (managed.Message, alias.Message);
+				}
+			} finally {
+				JniObjectReference.Dispose (ref reference);
+			}
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public void ExceptionProxyLookupPreservesRequestedType (bool generic)
@@ -111,6 +177,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		[Category ("BindingSafetyLifecycle")]
 		public unsafe void UnregisteredJavaThrowableCreatesAndroidException ()
 		{
 			using var type = new JniType ("java/lang/IllegalStateException");
@@ -137,6 +204,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		[Category ("BindingSafetyLifecycle")]
 		public void InnerExceptionIsNotAProxy ()
 		{
 			var expected = new InvalidOperationException ("managed cause");
@@ -177,6 +245,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		[Category ("BindingSafetyLifecycle")]
 		[Category ("NativeAOTIgnore")] // NativeAOT has very limited stack traces
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void InnerExceptionIsSet ()

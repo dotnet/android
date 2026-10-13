@@ -30,23 +30,30 @@ namespace Java.Lang {
 		static IntPtr n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetMessage);
 			}
 		}
 		private static IntPtr __n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.Message);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.NewString (__this.Message);
+			}
 		}
 #pragma warning restore 0169
 
-		public new virtual unsafe string Message {
+		public new virtual string Message {
 			// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/class[@name='Throwable']/method[@name='getMessage' and count(parameter)=0]"
 			[Register ("getMessage", "()Ljava/lang/String;", "GetGetMessageHandler")]
 			get {
-				const string __id = "getMessage.()Ljava/lang/String;";
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "getMessage.()Ljava/lang/String;";
+					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 

@@ -24,6 +24,7 @@ namespace Xamarin.SourceWriter
 		public bool IsProtected { get => visibility == Visibility.Protected; set => visibility = value ? Visibility.Protected : Visibility.Default; }
 		public bool IsOverride { get; set; }
 		public bool IsUnsafe { get; set; }
+		public bool HasUnsafeBody { get; set; }
 		public bool IsVirtual { get; set; }
 		public bool IsShadow { get; set; }
 		public bool IsAbstract { get; set; }
@@ -130,7 +131,17 @@ namespace Xamarin.SourceWriter
 			writer.WriteLine ("{");
 			writer.Indent ();
 
+			if (HasUnsafeBody) {
+				writer.WriteLine ("unsafe {");
+				writer.Indent ();
+			}
+
 			WriteBody (writer);
+
+			if (HasUnsafeBody) {
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			}
 
 			writer.Unindent ();
 

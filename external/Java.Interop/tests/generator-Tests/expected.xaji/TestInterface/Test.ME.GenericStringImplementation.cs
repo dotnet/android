@@ -32,16 +32,19 @@ namespace Test.ME {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='GenericStringImplementation']/constructor[@name='GenericStringImplementation' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe GenericStringImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public GenericStringImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			const string __id = "()V";
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "()V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
 
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 		}
 
 		static Delegate cb_SetObject_SetObject_arrayLjava_lang_String__V;
@@ -54,35 +57,42 @@ namespace Test.ME {
 		static void n_SetObject_arrayLjava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_value, &__n_SetObject_arrayLjava_lang_String_);
 			}
 		}
 		private static void __n_SetObject_arrayLjava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var value = (string[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (string));
-			__this.SetObject (value);
-			if (value != null)
-				JNIEnv.CopyArray (value, native_value);
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var value = (string[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (string));
+				__this.SetObject (value);
+				if (value != null)
+					JNIEnv.CopyArray (value, native_value);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericStringImplementation']/method[@name='SetObject' and count(parameter)=1 and parameter[1][@type='java.lang.String[]']]"
 		[Register ("SetObject", "([Ljava/lang/String;)V", "GetSetObject_arrayLjava_lang_String_Handler")]
-		public virtual unsafe void SetObject (string[] value)
+		public virtual void SetObject (string[] value)
 		{
-			const string __id = "SetObject.([Ljava/lang/String;)V";
-			IntPtr native_value = JNIEnv.NewArray (value);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_value);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				if (value != null) {
-					JNIEnv.CopyArray (native_value, value);
-					JNIEnv.DeleteLocalRef (native_value);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "SetObject.([Ljava/lang/String;)V";
+				IntPtr native_value = JNIEnv.NewArray (value);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_value);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					if (value != null) {
+						JNIEnv.CopyArray (native_value, value);
+						JNIEnv.DeleteLocalRef (native_value);
+					}
+					global::System.GC.KeepAlive (value);
 				}
-				global::System.GC.KeepAlive (value);
 			}
 		}
 

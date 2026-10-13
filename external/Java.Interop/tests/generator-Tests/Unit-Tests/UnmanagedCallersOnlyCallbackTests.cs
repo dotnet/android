@@ -274,7 +274,7 @@ namespace generatortests
 			var source = GetGeneratedTypeOutput (ParseApiDefinition (api).Single (g => g.Name == "Widget"));
 
 			CompileCallbacks (source);
-			Assert.True (source.Contains ("public virtual unsafe void m0 ()"), source);
+			Assert.True (source.Contains ("public virtual void m0 ()"), source);
 			Assert.True (source.Contains ("&global::Com.Example.Widget.m0_1);"), source);
 			Assert.True (source.Contains ("private static void m0_1 (global::Com.Example.Widget __this)"), source);
 			Assert.True (source.Contains ("[Register (\"work\", \"()V\", \"n_Work_1\")]"), source);
@@ -345,22 +345,28 @@ namespace generatortests
 			delegate long _JniMarshal_PPI_J (IntPtr env, IntPtr self, int value);
 			delegate void _JniMarshal_PPJ_V (IntPtr env, IntPtr self, long value);
 			delegate void _JniMarshal_PPI_V (IntPtr env, IntPtr self, int value);
+			""" + TypedCompilationSupport + """
 			namespace Java.Interop {
-				public static unsafe class JniMarshalTyped {
-					public static void Invoke_X<TSelf> (IntPtr env, IntPtr self, delegate*<TSelf, void> target)
-						where TSelf : class, Android.Runtime.IJavaObject { }
-					public static void Invoke_SX<TSelf, T> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, void> target)
-						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged { }
-					public static T Invoke_S<TSelf, T> (IntPtr env, IntPtr self, delegate*<TSelf, T> target)
-						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged => default;
-					public static TResult Invoke_SS<TSelf, T, TResult> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, TResult> target)
-						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged where TResult : unmanaged => default;
+				public static class JniMarshal {
+					public static unsafe void SafeInvokeAction<T1, T2> (IntPtr env, IntPtr self, T1 a, T2 b, delegate*<IntPtr, IntPtr, T1, T2, void> target) { }
+					public static unsafe void SafeInvokeAction<T> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, void> target) { }
+					public static unsafe T SafeInvokeFunc<T> (IntPtr env, IntPtr self, delegate*<IntPtr, IntPtr, T> target) => default;
+					public static unsafe TResult SafeInvokeFunc<T, TResult> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, TResult> target) => default;
 				}
-				public static unsafe class JniMarshal {
-					public static void SafeInvokeAction<T1, T2> (IntPtr env, IntPtr self, T1 a, T2 b, delegate*<IntPtr, IntPtr, T1, T2, void> target) { }
-					public static void SafeInvokeAction<T> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, void> target) { }
-					public static T SafeInvokeFunc<T> (IntPtr env, IntPtr self, delegate*<IntPtr, IntPtr, T> target) => default;
-					public static TResult SafeInvokeFunc<T, TResult> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, TResult> target) => default;
+			}
+			""";
+
+		internal const string TypedCompilationSupport = """
+			namespace Java.Interop {
+				public static class JniMarshalTyped {
+					public static unsafe void Invoke_X<TSelf> (IntPtr env, IntPtr self, delegate*<TSelf, void> target)
+						where TSelf : class, Android.Runtime.IJavaObject { }
+					public static unsafe void Invoke_SX<TSelf, T> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, void> target)
+						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged { }
+					public static unsafe T Invoke_S<TSelf, T> (IntPtr env, IntPtr self, delegate*<TSelf, T> target)
+						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged => default;
+					public static unsafe TResult Invoke_SS<TSelf, T, TResult> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, TResult> target)
+						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged where TResult : unmanaged => default;
 				}
 			}
 			""";

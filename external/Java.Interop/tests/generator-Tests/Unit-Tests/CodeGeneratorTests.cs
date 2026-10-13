@@ -168,7 +168,7 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public virtual unsafe int DoStuff ()"), $"was: `{writer.ToString ()}`");
+			Assert.True (writer.ToString ().Contains ("public virtual int DoStuff ()"), $"was: `{writer.ToString ()}`");
 		}
 
 		[Test]
@@ -192,7 +192,7 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public override unsafe int DoStuff ()"), $"was: `{writer.ToString ()}`");
+			Assert.True (writer.ToString ().Contains ("public override int DoStuff ()"), $"was: `{writer.ToString ()}`");
 		}
 
 		[Test]
@@ -241,7 +241,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This would contain 'virtual' if the 'managedOverride' was not working
-			Assert.True (writer.ToString ().Contains ("public unsafe int DoStuff ()"), $"was: `{writer}`");
+			Assert.True (writer.ToString ().Contains ("public int DoStuff ()"), $"was: `{writer}`");
 		}
 
 		[Test]
@@ -290,7 +290,7 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public virtual unsafe int Name {"), $"was: `{writer.ToString ()}`");
+			Assert.True (writer.ToString ().Contains ("public virtual int Name {"), $"was: `{writer.ToString ()}`");
 		}
 
 		[Test]
@@ -314,7 +314,7 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public override unsafe int Name {"), $"was: `{writer.ToString ()}`");
+			Assert.True (writer.ToString ().Contains ("public override int Name {"), $"was: `{writer.ToString ()}`");
 		}
 
 		[Test]
@@ -339,7 +339,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This would contain 'virtual' if the 'managedOverride' was not working
-			Assert.True (writer.ToString ().Contains ("public unsafe int Name {"), $"was: `{writer}`");
+			Assert.True (writer.ToString ().Contains ("public int Name {"), $"was: `{writer}`");
 		}
 
 		[Test]
@@ -897,7 +897,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use [Obsolete] on the entire property because the getter is obsolete and there is no setter
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual unsafe int Count".NormalizeLineEndings ()), writer.ToString ());
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual int Count".NormalizeLineEndings ()), writer.ToString ());
 
 			// Ensure we don't write getter attribute
 			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
@@ -1013,7 +1013,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use [Obsolete] on the entire property because the getter and setter are both obsoleted with the same message
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual unsafe int Count".NormalizeLineEndings ()), writer.ToString ());
+			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual int Count".NormalizeLineEndings ()), writer.ToString ());
 
 			// Ensure we don't write getter/setter attributes
 			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
@@ -1626,7 +1626,7 @@ namespace generatortests
 			var actual = GetGeneratedTypeOutput (klass);
 
 			Assert.IsNotNull (property.Setter, "The removed setter must be tested as a property accessor.");
-			StringAssert.Contains ("public virtual unsafe Java.Lang.Object Value {", actual);
+			StringAssert.Contains ("public virtual Java.Lang.Object Value {", actual);
 			StringAssert.Contains ("set {", actual);
 			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
 		}
@@ -1747,22 +1747,28 @@ namespace generatortests
 			if (final == "true") {
 				Assert.True (writer.ToString ().Contains (
 		@"set {
-			const string __id = ""setText.(Ljava/lang/CharSequence;)V"";
-			global::Java.Interop.JniObjectReference native_text = global::Java.Interop.JniEnvironment.Strings.NewString (value);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_text);
-				_members.InstanceMethods.InvokeNonvirtualVoidMethod (__id, this, __args);
-			} finally {
-				global::Java.Interop.JniObjectReference.Dispose (ref native_text);
+			unsafe {
+				// SAFETY: Temporary Java strings remain live until the property assignment completes.
+				const string __id = ""setText.(Ljava/lang/CharSequence;)V"";
+				global::Java.Interop.JniObjectReference native_text = global::Java.Interop.JniEnvironment.Strings.NewString (value);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_text);
+					_members.InstanceMethods.InvokeNonvirtualVoidMethod (__id, this, __args);
+				} finally {
+					global::Java.Interop.JniObjectReference.Dispose (ref native_text);
+				}
 			}
 		}"), $"was: `{writer}`");
 			} else {
 				Assert.True (writer.ToString ().Contains (
 		@"set {
-			var jls = value == null ? null : new global::Java.Lang.String (value);
-			TextFormatted = jls;
-			if (jls != null) jls.Dispose ();
+			unsafe {
+				// SAFETY: Temporary Java strings remain live until the property assignment completes.
+				var jls = value == null ? null : new global::Java.Lang.String (value);
+				TextFormatted = jls;
+				if (jls != null) jls.Dispose ();
+			}
 		}"), $"was: `{writer}`");
 			}
 		}
