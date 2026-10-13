@@ -4,7 +4,6 @@
     <Project Path="build-tools/jnienv-gen/jnienv-gen.csproj" />
   </Folder>
   <Folder Name="/Core/">
-    <Project Path="src/java-interop/java-interop.csproj" />
     <Project Path="src/Java.Interop/Java.Interop.csproj" />
   </Folder>
   <Folder Name="/Desktop-Tests/">

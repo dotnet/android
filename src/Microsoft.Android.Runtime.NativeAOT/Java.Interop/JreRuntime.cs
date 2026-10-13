@@ -52,9 +52,7 @@ namespace Java.Interop {
 					string.IsNullOrEmpty (builder.JvmLibraryPath))
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
-#if NET
 			builder.TypeManager     ??= CreateDefaultTypeManager ();
-#endif  // NET
 
 			builder.ValueManager            ??= CreateDefaultValueManager ();
 			builder.ObjectReferenceManager  ??= new Android.Runtime.ManagedObjectReferenceManager ();

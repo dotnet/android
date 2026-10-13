@@ -1,4 +1,3 @@
-#if JAVA_INTEROP
 using System;
 using System.Globalization;
 using System.Threading;
@@ -204,4 +203,3 @@ namespace Android.Runtime {
 		}
 	}
 }
-#endif // JAVA_INTEROP
