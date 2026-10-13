@@ -8,7 +8,7 @@
     <!--
       Once BuildTestJarFile has written these, the SDK's default @(AndroidLibrary)
       glob (**\*.jar, %(Bind)=true) would bind our own test JAR on any later
-      evaluation. Both variants are listed because they can coexist in Jars\.
+      evaluation. Also exclude the legacy variant left by earlier builds.
       See dotnet/android#12254.
     -->
     <AndroidLibrary Remove="Jars\Mono.Android-Test-classes.jar" />
@@ -21,34 +21,16 @@
     </TestJarEntry>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <!--
-      java-trimmable/net/dot/jni/test/GetThis.java is added explicitly via
-      TestJarEntry below; it must be
-      removed from the implicit AndroidJavaSource glob so the .NET SDK does
-      not also try to compile it as a regular AndroidJavaSource (which would
-      collide with the desktop GetThis.java in the test JAR).
-    -->
-    <AndroidJavaSource Remove="java-trimmable\**\*.java" />
+    <!-- These fixtures are compiled into the test JAR, not individually by the Android SDK. -->
+    <AndroidJavaSource Remove="java\**\*.java" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--
-      java-trimmable/net/dot/jni/test/GetThis.java is the Android trimmable
-      typemap variant of the Java.Interop GetThis.java test fixture. It omits
-      the desktop-JVM static initializer (net.dot.jni.ManagedPeer.registerNativeMembers /
-      ManagedPeer.construct) that is only registered by the Java.Interop test
-      JVM and throws UnsatisfiedLinkError on Android. Both files declare
-      `public class net.dot.jni.test.GetThis`, so always select the Android
-      variant, even before the default type map property has been evaluated.
-      The trimmable variant lives in this
-      project (not the submodule) and in a parallel directory because javac
-      requires the file name match the public class name.
-    -->
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
-                  Exclude="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java" />
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)java-trimmable\net\dot\jni\test\GetThis.java" />
+    <TestJarEntry Include="$(MSBuildThisFileDirectory)java\**\*.java" />
   </ItemGroup>
-  <Target Name="_CopyTestJarFiles">
+  <Target Name="_CopyTestJarFiles"
+      Inputs="%(TestJarEntry.OutputFile)"
+      Outputs="$(OutputPath)$([System.IO.Path]::GetFileName($([MSBuild]::NormalizePath('%(TestJarEntry.OutputFile)'))))">
     <Copy
         SourceFiles="%(TestJarEntry.OutputFile)"
         DestinationFolder="$(OutputPath)"

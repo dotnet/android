@@ -28,8 +28,8 @@ and [Architecture][architecture] pages.
 
 In the dotnet/android checkout, SDK-consuming bootstrap and test assemblies
 require the explicit .NET 11 runtime floor. CI provisions the repository-pinned
-SDK for solution preparation/builds and selects that executable for the two
-native .NET 11 test owners. Unrelated .NET 10 tests keep their own host; a wildcard
+SDK for solution preparation/builds and selects that executable for the
+SDK-consuming native test owner. Unrelated .NET 10 tests keep their own host; a wildcard
 .NET 11 preview installation can be older than the required runtime.
 
 `Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:

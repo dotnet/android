@@ -10,13 +10,11 @@ namespace Android.Widget {
 	partial class AbsListView {
 
 		static Delegate? cb_getAdapter;
-#pragma warning disable 0169
 		static Delegate GetGetAdapterHandler ()
 		{
 			return cb_getAdapter ??= new _JniMarshal_PP_L (n_GetAdapter);
 		}
 
-		static IntPtr id_getAdapter;
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
@@ -35,7 +33,6 @@ namespace Android.Widget {
 		}
 
 		static Delegate? cb_setAdapter_Landroid_widget_Adapter_;
-#pragma warning disable 0169
 		static Delegate GetSetAdapter_Landroid_widget_ListAdapter_Handler ()
 		{
 			return cb_setAdapter_Landroid_widget_Adapter_ ??= new _JniMarshal_PPL_V (n_SetAdapter_Landroid_widget_ListAdapter_);
@@ -57,7 +54,6 @@ namespace Android.Widget {
 				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
 			}
 		}
-#pragma warning restore 0169
 
 #pragma warning disable CS8764 // AdapterView<T> predates NRT, but an AbsListView can have no adapter.
 		public abstract override IListAdapter? Adapter {
@@ -91,18 +87,11 @@ namespace Android.Widget {
 		public unsafe override IListAdapter? Adapter {
 			get {
 				IntPtr value;
-#if JAVA_INTEROP
 				const string __id = "getAdapter.()Landroid/widget/Adapter;";
 				value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
-#else   // !JAVA_INTEROP
-				if (id_getAdapter == IntPtr.Zero)
-					id_getAdapter = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAdapter", "()Landroid/widget/Adapter;");
-				value = JNIEnv.CallObjectMethod (Handle, id_getAdapter);
-#endif	// !JAVA_INTEROP
 				return Java.Lang.Object.GetObject<IListAdapter> (value, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
-#if JAVA_INTEROP
 				const string __id = "setAdapter.(Landroid/widget/Adapter;)V";
 				IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
 				try {
@@ -112,11 +101,6 @@ namespace Android.Widget {
 				} finally {
 					JNIEnv.DeleteLocalRef (native_value);
 				}
-#else   // !JAVA_INTEROP
-				if (id_setAdapter_Landroid_widget_Adapter_ == IntPtr.Zero)
-					id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "setAdapter", "(Landroid/widget/ListAdapter;)V");
-				JNIEnv.CallVoidMethod (Handle, id_setAdapter_Landroid_widget_Adapter_, new JValue (JNIEnv.ToJniHandle (value)));
-#endif	// !JAVA_INTEROP
 			}
 		}
 	}

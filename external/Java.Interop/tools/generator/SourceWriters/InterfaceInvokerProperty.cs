@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class InterfaceInvokerProperty : PropertyWriter
@@ -53,10 +51,8 @@ namespace generator.SourceWriters
 
 		public override void Write (CodeWriter writer)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.XAJavaInterop1) {
-				getter_callback?.Write (writer);
-				setter_callback?.Write (writer);
-			}
+			getter_callback?.Write (writer);
+			setter_callback?.Write (writer);
 
 			base.Write (writer);
 		}

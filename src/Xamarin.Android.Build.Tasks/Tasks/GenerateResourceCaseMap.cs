@@ -9,7 +9,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
-//using Xamarin.Tools.Zip;
 using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks

@@ -236,7 +236,7 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 	if (out_of_memory) {
 		// FastDev is a Debug-only convenience, so fall back to the probe-only path rather than
 		// aborting the application.
-		log_warn (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list");
+		log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list");
 		std::free (tpa_list.data);
 		return nullptr;
 	}

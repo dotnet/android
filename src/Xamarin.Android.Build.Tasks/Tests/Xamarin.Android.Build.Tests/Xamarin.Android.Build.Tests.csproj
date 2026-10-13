@@ -4,7 +4,6 @@
     <TargetFramework>net11.0</TargetFramework>
     <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
     <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>

@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class GenericExplicitInterfaceImplementationProperty : PropertyWriter
@@ -31,34 +29,9 @@ namespace generator.SourceWriters
 
 				SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
 
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen.Gen, property.Getter, opt) + ":" + property.Getter.GetAdapterName (opt, adapter), additionalProperties: property.Getter.AdditionalAttributeString ()));
-				}
+				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen.Gen, property.Getter, opt) + ":" + property.Getter.GetAdapterName (opt, adapter), additionalProperties: property.Getter.AdditionalAttributeString ()));
 
-				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
-						mappings.Values.Any (v => v == "string")) {
-					// Hackity Hack; `Java.Lang.Object` doesn't (currently) provide an
-					// implicit conversion from `string`, meaning that given
-					// `tests/generator-Tests/Integration-Tests/Interfaces.cs` output:
-					//
-					//    /* 1 */ partial class GenericStringPropertyImplementation : IGenericPropertyInterface {
-					//    /* 2 */     public string Object { get; set;}
-					//    /* 3 */     Java.Lang.Object IGenericPropertyInterface.Object {
-					//    /* 4 */         get { return Object; }
-					//    /* 5 */         set { Object = value?.ToString (); }
-					//    /* 6 */     }
-					//    /* 7 */ }
-					//
-					// then when building for JavaInterop1 line 4 will result in:
-					//
-					//    error CS0029: Cannot implicitly convert type 'string' to 'Java.Lang.Object'
-					//
-					// Explicitly construct a `Java.Lang.String` to avoid this.
-					GetBody.Add ($"return new Java.Lang.String ({property.Name});");
-				}
-				else {
-					GetBody.Add ($"return {property.Name};");
-				}
+				GetBody.Add ($"return {property.Name};");
 			}
 
 			if (property.Setter != null) {
@@ -71,9 +44,7 @@ namespace generator.SourceWriters
 
 				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen.Gen, property.Setter, opt) + ":" + property.Setter.GetAdapterName (opt, adapter), additionalProperties: property.Setter.AdditionalAttributeString ()));
-				}
+				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen.Gen, property.Setter, opt) + ":" + property.Setter.GetAdapterName (opt, adapter), additionalProperties: property.Setter.AdditionalAttributeString ()));
 
 				// Temporarily rename the parameter to "value"
 				var pname = property.Setter.Parameters [0].Name;

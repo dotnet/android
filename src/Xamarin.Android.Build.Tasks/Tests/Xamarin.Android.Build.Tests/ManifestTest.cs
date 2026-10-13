@@ -13,7 +13,7 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 using PropertyAttribute = Android.App.PropertyAttribute;
 
 namespace Xamarin.Android.Build.Tests
@@ -894,24 +894,30 @@ namespace Bug12935
 			byte [] classesJar = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.classes.jar");
 			byte [] data;
 			using (var ms = new MemoryStream ()) {
-				using (var zip = ZipArchive.Create (ms)) {
-					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
-<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
-    <uses-sdk android:minSdkVersion='16'/>
-    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
-    <application>
-        <activity android:name='.signin.internal.SignInHubActivity' />
-        <provider
-            android:authorities='${applicationId}.FacebookInitProvider'
-            android:name='.internal.FacebookInitProvider'
-            android:exported='false' />
-        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
-    </application>
-</manifest>
-", encoding: System.Text.Encoding.UTF8);
-					zip.CreateDirectory ("res");
-					zip.AddEntry (classesJar, "classes.jar");
-					zip.AddEntry ("R.txt", " ", encoding: System.Text.Encoding.UTF8);
+				using (var zip = new ZipArchive (ms, ZipArchiveMode.Create, leaveOpen: true)) {
+					using (var writer = new StreamWriter (zip.CreateEntry ("AndroidManifest.xml").Open ())) {
+						writer.Write (
+							"""
+							<?xml version='1.0'?>
+							<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
+							    <uses-sdk android:minSdkVersion='16'/>
+							    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
+							    <application>
+							        <activity android:name='.signin.internal.SignInHubActivity' />
+							        <provider
+							            android:authorities='${applicationId}.FacebookInitProvider'
+							            android:name='.internal.FacebookInitProvider'
+							            android:exported='false' />
+							        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
+							    </application>
+							</manifest>
+							""");
+					}
+					zip.CreateEntry ("res/");
+					using (var entryStream = zip.CreateEntry ("classes.jar").Open ())
+						entryStream.Write (classesJar, 0, classesJar.Length);
+					using (var writer = new StreamWriter (zip.CreateEntry ("R.txt").Open ()))
+						writer.Write (" ");
 				}
 				data = ms.ToArray ();
 			}

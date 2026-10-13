@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Xml;
@@ -13,7 +14,6 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
@@ -93,8 +93,9 @@ namespace Xamarin.Android.Tasks {
 				var temporaryArchive = Path.Combine (outputArchive, $"{Path.GetRandomFileName ()}.zip");
 				lock (lockObject)
 					temporaryArchives.Add (temporaryArchive);
-				using (var zip = new ZipArchiveEx (temporaryArchive, FileMode.CreateNew)) {
-					zip.AddDirectory (fileOrDirectory, "res");
+				using (var zip = ZipFile.Open (temporaryArchive, ZipArchiveMode.Create)) {
+					foreach (var (filename, archivePath) in Files.EnumerateArchiveFiles (fileOrDirectory))
+						zip.CreateEntryFromFile (filename, "res/" + archivePath);
 				}
 				fileOrDirectory = temporaryArchive;
 				isArchive = true;

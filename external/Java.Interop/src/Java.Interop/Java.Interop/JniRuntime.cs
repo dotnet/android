@@ -81,7 +81,6 @@ namespace Java.Interop
 			public  JniObjectReferenceManager?  ObjectReferenceManager      {get; set;}
 			public  JniTypeManager?             TypeManager                 {get; set;}
 			public  string?                     JvmLibraryPath              {get; set;}
-			public  bool                        JniAddNativeMethodRegistrationAttributePresent { get; set; } = true;
 
 			public CreationOptions ()
 			{
@@ -174,7 +173,6 @@ namespace Java.Interop
 		public      JniVersion                          JniVersion          {get; private set;}
 
 		internal    bool                                TrackIDs            {get; private set;}
-		internal    bool                                JniAddNativeMethodRegistrationAttributePresent { get; }
 
 		protected JniRuntime (CreationOptions options)
 		{
@@ -185,7 +183,6 @@ namespace Java.Interop
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
-			JniAddNativeMethodRegistrationAttributePresent = options.JniAddNativeMethodRegistrationAttributePresent;
 
 			JniVersion          = options.JniVersion;
 
@@ -232,19 +229,6 @@ namespace Java.Interop
 					JniObjectReference.Dispose (ref loader);
 				}
 			}
-
-#if !XA_JI_EXCLUDE
-			if (RuntimeFeature.ManagedPeerNativeRegistration) {
-				InitManagedPeer ();
-			}
-
-			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
-				Justification = "The code is only executed when the feature is explicitly enabled.")]
-			static void InitManagedPeer ()
-			{
-				ManagedPeer.Init ();
-			}
-#endif  // !XA_JI_EXCLUDE
 		}
 
 		static unsafe IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
@@ -446,7 +430,13 @@ namespace Java.Interop
 
 		public virtual void RaisePendingException (Exception pendingException)
 		{
-			JniEnvironment.Exceptions.Throw (pendingException);
+			if (pendingException == null)
+				throw new ArgumentNullException (nameof (pendingException));
+			if (pendingException is not JavaException throwable)
+				throw new NotSupportedException ($"Runtime '{GetType ().FullName}' must override {nameof (RaisePendingException)} to marshal managed exceptions to Java.");
+
+			JniEnvironment.Exceptions.Throw (throwable.PeerReference);
+			GC.KeepAlive (throwable);
 		}
 	}
 }

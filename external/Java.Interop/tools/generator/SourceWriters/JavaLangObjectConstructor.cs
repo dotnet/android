@@ -20,17 +20,10 @@ namespace generator.SourceWriters
 			else
 				IsProtected = true;
 
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				Parameters.Add (new MethodParameterWriter ("reference", new TypeReferenceWriter ("ref JniObjectReference")));
-				Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("JniObjectReferenceOptions")));
+			Parameters.Add (new MethodParameterWriter ("javaReference", TypeReferenceWriter.IntPtr));
+			Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
 
-				BaseCall = "base (ref reference, options)";
-			} else {
-				Parameters.Add (new MethodParameterWriter ("javaReference", TypeReferenceWriter.IntPtr));
-				Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
-
-				BaseCall = "base (javaReference, transfer)";
-			}
+			BaseCall = "base (javaReference, transfer)";
 			if (!string.IsNullOrWhiteSpace (callPartialMethod)) {
 				Body.Add ($"{callPartialMethod} ();");
 			}

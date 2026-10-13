@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Android.App;
 using Android.OS;
@@ -26,9 +29,6 @@ namespace Xamarin.Android.RuntimeTests
 				// TODO: https://github.com/dotnet/android/issues/10069
 				categories.Add ("CoreCLRIgnore");
 				categories.Add ("NTLM");
-
-				categories.Add ("NativeTypeMap");
-				categories.Add ("TrimmableTypeMapUnsupported");
 
 				// Build-time flags flow in via runtimeconfig.json properties
 				// (see <RuntimeHostConfigurationOption> entries in Mono.Android.NET-Tests.csproj).
@@ -84,6 +84,8 @@ namespace Xamarin.Android.RuntimeTests
 			base.OnCreate (arguments);
 		}
 
+		// Keep the expression fixture rooted for its linker regression test.
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods, typeof (System.LinqTests.LinqExpressionTest))]
 		protected override IEnumerable<Assembly> GetTestAssemblies ()
 		{
 			return [

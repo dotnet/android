@@ -2,7 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</ProjectGuid>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <TargetFramework>net11.0</TargetFramework>
     <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
     <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>

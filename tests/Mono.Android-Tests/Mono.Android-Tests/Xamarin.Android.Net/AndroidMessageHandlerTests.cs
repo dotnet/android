@@ -13,6 +13,8 @@ using Xamarin.Android.Net;
 
 using NUnit.Framework;
 
+#pragma warning disable CS0618 // These tests intentionally exercise the obsolete AndroidMessageHandler.
+
 namespace Xamarin.Android.NetTests
 {
 	[TestFixture]
@@ -292,7 +294,7 @@ namespace Xamarin.Android.NetTests
 			var response = await client.GetAsync (server.GetUri ("echo-client-certificate"));
 			var content = await response.EnsureSuccessStatusCode ().Content.ReadAsStringAsync ();
 
-			X509Certificate2 certificate2 = new X509Certificate2 (global::System.Convert.FromBase64String (content));
+			using X509Certificate2 certificate2 = X509CertificateLoader.LoadCertificate (global::System.Convert.FromBase64String (content));
 			Assert.AreEqual (certificate.Thumbprint, certificate2.Thumbprint);
 			server.AssertNoUnhandledExceptions ();
 		}

@@ -4,7 +4,6 @@ using System.Threading;
 
 using Java.Interop;
 
-#if JAVA_INTEROP
 namespace Android.Runtime {
 
 	class AndroidRuntime : JniRuntime {
@@ -45,25 +44,7 @@ namespace Android.Runtime {
 
 		public override Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-			if (!reference.IsValid)
-				return null;
-			var peeked      = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
-			if (peeked is JavaProxyThrowable proxyThrowable) {
-				JniObjectReference.Dispose (ref reference, options);
-				return proxyThrowable.InnerException;
-			}
-			var peekedExc   = peeked as Exception;
-			if (peekedExc == null) {
-				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
-				JniObjectReference.Dispose (ref reference, options);
-				return throwable;
-			}
-			JniObjectReference.Dispose (ref reference, options);
-			var unwrapped = JniEnvironment.Runtime.ValueManager.PeekValue (peeked!.PeerReference) as Exception;
-			if (unwrapped != null) {
-				return unwrapped;
-			}
-			return peekedExc;
+			return AndroidExceptionManager.GetExceptionForThrowable (ref reference, options);
 		}
 
 		public override void OnUserUnhandledException (ref JniTransition transition, Exception e)
@@ -81,12 +62,7 @@ namespace Android.Runtime {
 
 		public override void RaisePendingException (Exception pendingException)
 		{
-			var je  = pendingException as JavaException;
-			if (je == null) {
-				je  = JavaProxyThrowable.Create (pendingException);
-			}
-			JniEnvironment.Exceptions.Throw (je.PeerReference);
-			GC.KeepAlive (je);
+			AndroidExceptionManager.RaisePendingException (pendingException);
 		}
 	}
 
@@ -103,8 +79,6 @@ namespace Android.Runtime {
 			ObjectReferenceManager  = new ManagedObjectReferenceManager ();
 			TypeManager             = typeManager;
 			ValueManager            = valueManager;
-			JniAddNativeMethodRegistrationAttributePresent = false;
 		}
 	}
 }
-#endif // JAVA_INTEROP

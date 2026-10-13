@@ -27,4 +27,13 @@ internal struct JniObjectReferenceControlBlock {
 		NativeMemory.Free (value);
 		value   = null;
 	}
+
+	public static unsafe void FreeIfInvalid (ref JniObjectReferenceControlBlock* value)
+	{
+		// Reference-tracking contexts must already be detached. Preserve a
+		// valid reference reconstructed by the finalization callback.
+		if (value != null && value->handle == IntPtr.Zero) {
+			Free (ref value);
+		}
+	}
 }

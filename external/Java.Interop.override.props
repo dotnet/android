@@ -7,7 +7,7 @@
        Java.Interop's own DotNetTargetFrameworkVersion. -->
   <Import Project="$(MSBuildThisFileDirectory)..\eng\Versions.props" />
 
-  <PropertyGroup Condition=" '$(MSBuildProjectName)' == 'Java.Interop.BootstrapTasks' Or '$(MSBuildProjectName)' == 'TestJVM' Or '$(MSBuildProjectName)' == 'Xamarin.Android.Tools.Bytecode-Tests' Or '$(MSBuildProjectName)' == 'Java.Interop-Tests' ">
+  <PropertyGroup Condition=" '$(MSBuildProjectName)' == 'Java.Interop.BootstrapTasks' Or '$(MSBuildProjectName)' == 'Xamarin.Android.Tools.Bytecode-Tests' ">
     <DotNetTargetFrameworkVersion>11.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net11.0</DotNetTargetFramework>
   </PropertyGroup>

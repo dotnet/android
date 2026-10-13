@@ -1,8 +1,5 @@
 <replacements>
   <replace-type
-      from="net/dot/jni/test/RenameClassBase1"
-      to="net/dot/jni/test/RenameClassBase2" />
-  <replace-type
       from="net/dot/jni/test/AndroidInterface"
       to="net/dot/jni/test/DesugarAndroidInterface$_CC" />
   <replace-type
@@ -50,12 +47,6 @@
       source-method-name="remappedToGetRuntime"
       target-type="java/lang/Runtime"
       target-method-name="getRuntime" target-method-instance-to-static="false" />
-  <replace-method
-      source-type="net/dot/jni/test/RenameClassBase2"
-      source-method-name="hashCode"
-      source-method-signature="()"
-      target-type="net/dot/jni/test/RenameClassBase2"
-      target-method-name="myNewHashCode" target-method-instance-to-static="false" />
   <replace-method
       source-type="net/dot/android/remap/ManagedLookup"
       source-method-name="overload"

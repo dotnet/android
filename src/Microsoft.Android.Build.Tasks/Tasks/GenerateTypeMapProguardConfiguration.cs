@@ -53,9 +53,16 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 			if (directory != null && directory.Length > 0) {
 				Directory.CreateDirectory (directory);
 			}
-			using var writer = new StreamWriter (OutputFile, append: false, new UTF8Encoding (false)) { NewLine = "\n" };
-			foreach (var name in classes) {
-				WriteClassRule (writer, name);
+			string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+			try {
+				using (var writer = new StreamWriter (temporaryOutputFile, append: false, new UTF8Encoding (false)) { NewLine = "\n" }) {
+					foreach (var name in classes) {
+						WriteClassRule (writer, name);
+					}
+				}
+				File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+			} finally {
+				File.Delete (temporaryOutputFile);
 			}
 		} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is DecoderFallbackException ||
 				ex is ArgumentException || ex is NotSupportedException) {
@@ -72,35 +79,5 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 	}
 
 	internal static bool IsClassName (string name)
-	{
-		bool first = true;
-		for (int i = 0; i < name.Length; i++) {
-			if (name [i] == '/') {
-				if (first) {
-					return false;
-				}
-				first = true;
-				continue;
-			}
-
-			var category = CharUnicodeInfo.GetUnicodeCategory (name, i);
-			bool start = category == UnicodeCategory.UppercaseLetter ||
-				category == UnicodeCategory.LowercaseLetter ||
-				category == UnicodeCategory.TitlecaseLetter ||
-				category == UnicodeCategory.ModifierLetter ||
-				category == UnicodeCategory.OtherLetter ||
-				category == UnicodeCategory.LetterNumber ||
-				category == UnicodeCategory.CurrencySymbol ||
-				category == UnicodeCategory.ConnectorPunctuation;
-			if (!start && (first || (category != UnicodeCategory.DecimalDigitNumber &&
-				category != UnicodeCategory.NonSpacingMark && category != UnicodeCategory.SpacingCombiningMark))) {
-				return false;
-			}
-			if (char.IsHighSurrogate (name [i])) {
-				i++;
-			}
-			first = false;
-		}
-		return !first;
-	}
+		=> TypeMapClassName.IsClassName (name);
 }

@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class InterfaceInvokerMethod : MethodWriter
@@ -26,9 +24,7 @@ namespace generator.SourceWriters
 			IsUnsafe = true;
 			IsStatic = method.IsStatic;
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence, iface.FullName + "Invoker");
-			}
+			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence, iface.FullName + "Invoker");
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
 			this.AddMethodParameters (method.Parameters, opt);
@@ -37,9 +33,7 @@ namespace generator.SourceWriters
 
 		public override void Write (CodeWriter writer)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.XAJavaInterop1) {
-				method_callback?.Write (writer);
-			}
+			method_callback?.Write (writer);
 
 			base.Write (writer);
 		}

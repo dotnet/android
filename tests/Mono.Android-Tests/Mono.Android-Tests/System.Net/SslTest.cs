@@ -30,6 +30,7 @@ namespace System.NetTests {
 		}
 
 		// https://xamarin.desk.com/agent/case/35534
+#pragma warning disable SYSLIB0014 // Regression coverage for WebClient and ServicePointManager.
 		[Test]
 		public void SslWithinTasksShouldWork ()
 		{
@@ -67,6 +68,7 @@ namespace System.NetTests {
 			Assert.AreEqual (TaskStatus.RanToCompletion, status);
 			server.AssertNoUnhandledExceptions ();
 		}
+#pragma warning restore SYSLIB0014
 
 		[Test]
 		public void HttpsShouldWork ()
@@ -78,6 +80,7 @@ namespace System.NetTests {
 			RunIgnoringWebException (DoHttpsShouldWork);
 		}
 
+#pragma warning disable SYSLIB0014 // Regression coverage for HttpWebRequest and ServicePointManager.
 		void DoHttpsShouldWork ()
 		{
 			using var server = LocalHttpsServer.Start ();
@@ -106,6 +109,7 @@ namespace System.NetTests {
 				ServicePointManager.ServerCertificateValidationCallback = callback;
 			}
 		}
+#pragma warning restore SYSLIB0014
 
 		[Test (Description="Bug https://bugzilla.xamarin.com/show_bug.cgi?id=18962")]
 		public void VerifyTrustedCertificates ()

@@ -2,25 +2,11 @@ using System;
 using System.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
-using Xamarin.Android.Binder;
 
 namespace generatortests
 {
-#if TODO_JAVA_INTEROP1
 	[TestFixture]
-	class JavaInteropDefaultInterfaceMethodsTests : DefaultInterfaceMethodsTests
-	{
-		protected override CodeGenerationTarget Target => CodeGenerationTarget.JavaInterop1;
-	}
-#endif  // TODO_JAVA_INTEROP1
-
-	[TestFixture]
-	class XAJavaInteropDefaultInterfaceMethodsTests : DefaultInterfaceMethodsTests
-	{
-		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
-	}
-
-	abstract class DefaultInterfaceMethodsTests : CodeGeneratorTestBase
+	class XAJavaInteropDefaultInterfaceMethodsTests : CodeGeneratorTestBase
 	{
 		protected override CodeGenerationOptions CreateOptions ()
 		{
