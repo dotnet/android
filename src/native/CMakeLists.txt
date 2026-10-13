@@ -193,7 +193,6 @@ endif()
 
 file(REAL_PATH "../../" REPO_ROOT_DIR)
 set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
-set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 #
 # Include directories
 #
@@ -207,8 +206,6 @@ if(IS_CLR_RUNTIME)
     set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
   endif()
 endif()
-
-set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
 
 include_directories(common/include)
 
@@ -586,8 +583,6 @@ endmacro()
 if(BUILD_TEST_JNI_LIBRARY)
   add_subdirectory(common/test-jni-library)
 else()
-  add_subdirectory(common/java-interop)
-
   if (IS_CLR_RUNTIME)
     add_subdirectory(${SOURCES_PREFIX}/runtime-base)
     add_subdirectory(${SOURCES_PREFIX}/shared)

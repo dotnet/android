@@ -220,10 +220,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>'AndroidSupportedAbis' MSBuild 속성은 더 이상 지원되지 않습니다. 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidSupportedAbis' 사용을 모두 제거한 후 대신 'RuntimeIdentifiers' MSBuild 속성을 사용하세요.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
-  <data name="XA0037" xml:space="preserve">
-    <value>알 수 없는 모드: {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0100" xml:space="preserve">
     <value>Android 애플리케이션 프로젝트의 EmbeddedNativeLibrary '{0}'이(가) 잘못되었습니다. 대신 AndroidNativeLibrary를 사용하세요.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -532,10 +528,6 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <value>프로젝트의 파일 이름 또는 경로에 ASCII가 아닌 문자가 있기 때문에 이러한 문제가 발생할 수 있습니다. 자세한 내용은 https://learn.microsoft.com/dotnet/android/messages/apt2265를 참조하세요.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
-  <data name="XA3006" xml:space="preserve">
-    <value>네이티브 어셈블리 파일을 컴파일할 수 없음: {0}{1}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
-  </data>
   <data name="XA3007" xml:space="preserve">
     <value>네이티브 공유 라이브러리를 연결할 수 없음: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
@@ -827,31 +819,31 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - A sentence describing the specific failure.</comment>
   </data>
   <data name="XA4325_MappingNotFound" xml:space="preserve">
-    <value>The R8 mapping file '{0}' was not found.</value>
+    <value>'{0}' R8 매핑 파일을 찾을 수 없습니다.</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the missing mapping file.</comment>
   </data>
   <data name="XA4325_MappingDataFailure" xml:space="preserve">
-    <value>The R8 mapping file '{0}' could not be read: {1}</value>
+    <value>R8 매핑 파일 '{0}'을(를) 읽을 수 없음: {1}</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the mapping file.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyReadFailure" xml:space="preserve">
-    <value>The linked managed assembly '{0}' could not be read: {1}</value>
+    <value>연결된 관리되는 어셈블리 '{0}' 읽을 수 없습니다. {1}</value>
     <comment>{0} - The path of the managed assembly.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyNotFound" xml:space="preserve">
-    <value>The linked managed assembly '{0}' was not found.</value>
+    <value>연결된 관리되는 어셈블리 '{0}' 찾을 수 없습니다.</value>
     <comment>{0} - The path of the missing managed assembly.</comment>
   </data>
   <data name="XA4325_AssemblyHasNoMetadata" xml:space="preserve">
-    <value>The linked managed assembly '{0}' does not contain managed metadata.</value>
+    <value>연결된 관리되는 어셈블리 '{0}'에 관리되는 메타데이터가 포함되어 있지 않습니다.</value>
     <comment>{0} - The path of the input file.</comment>
   </data>
   <data name="XA4325_AmbiguousEntry" xml:space="preserve">
-    <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
+    <value>'{1}'에 대해 생성된 '{0}' 항목에 충돌하는 런타임 대상 '{2}' 및 '{3}'이(가) 있으며, JNI 다시 매핑 테이블로는 이 항목을 나타낼 수 없습니다.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The runtime lookup key.
@@ -859,12 +851,12 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {3} - The conflicting target.</comment>
   </data>
   <data name="XA4325_NativeAotObjectRequired" xml:space="preserve">
-    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <value>NativeAOT JNI 보존에는 기존 사후 ILC NativeAotObjectFile이 필요합니다. '{0}' 찾을 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
 {0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
   </data>
   <data name="XA4325_NativeAotObjectReadFailure" xml:space="preserve">
-    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <value>NativeAOT 보존 개체 '{0}'을(를) 읽을 수 없음: {1}</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.
 {0} - The path of the ILC native object.
 {1} - The exception message.</comment>
@@ -874,32 +866,32 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
   </data>
   <data name="XA4325_NativeAotObjectFormat" xml:space="preserve">
-    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <value>32비트 또는 64비트 Little Endian 재배치 가능 NativeAOT ELF 개체가 필요합니다.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <value>NativeAOT ELF 개체에 잘못된 섹션 익스텐트가 포함되어 있습니다.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotTruncatedSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <value>NativeAOT ELF 개체에 잘린 섹션 데이터가 포함되어 있습니다.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotMissingSections" xml:space="preserve">
-    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <value>NativeAOT 개체에는 할당된 __managedcode 섹션과 초기화된 데이터 섹션이 포함되어야 합니다.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidDehydration" xml:space="preserve">
-    <value>The NativeAOT object contains an invalid data dehydration stream.</value>
+    <value>NativeAOT 개체에 잘못된 데이터 디하이드레이션 스트림이 포함되어 있습니다.</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <value>R8 JNI 다시 매핑 데이터가 불완전합니다. {0}</value>
     <comment>The following are literal names and should not be translated: R8, JNI.
 {0} - A sentence describing the specific omission.</comment>
   </data>
   <data name="XA4326_ConflictingEntry" xml:space="preserve">
-    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <value>'{1}'에 대한 '{0}' 항목을 내보내지 않음: 다른 JNI 다시 매핑 입력에서 이미 이를 '{2}'에 매핑했으며, 이는 생성된 대상 '{3}'와(과) 충돌합니다.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The source lookup key.
@@ -907,7 +899,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {3} - The generated target.</comment>
   </data>
   <data name="XA4326_UnsupportedSignature" xml:space="preserve">
-    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <value>'{0}'에 대한 항목을 내보내지 않음: 해당 서명 '{1}'을(를) JNI 설명자로 변환할 수 없습니다.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The member the entry describes.
 {1} - The Java signature which could not be converted.</comment>
@@ -948,19 +940,17 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>
+  <data name="XA4331" xml:space="preserve">
+    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <comment>{0} - The bundle config file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK 도구 체인 디렉터리 '{0}'이(가) 없습니다. Android NDK를 설치하세요.</value>
     <comment>{0} - The path of the missing directory</comment>
   </data>
-  <data name="XA5101_C_Compiler" xml:space="preserve">
-    <value>대상 {0}용 C 컴파일러를 찾을 수 없습니다. 시도한 경로: "{1}"</value>
-    <comment>The following are literal names and should not be translated: C
-{0} - The target architecture, such as Arm, Arm64, or X86_64
-{1} - Semicolon-separated list of the paths searched</comment>
-  </data>
-  <data name="XA5101_Toolchain" xml:space="preserve">
-    <value>대상 {0}용 도구 체인 디렉터리를 찾을 수 없습니다.</value>
-    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
+  <data name="XA5101_ClangRuntime" xml:space="preserve">
+    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
     <value>Android NDK를 찾을 수 없습니다. Android SDK 관리자에 Android NDK가 설치되어 있는지 확인하거나, 사용자 지정 NDK 경로를 사용하는 경우 $(AndroidNdkDirectory) MSBuild 속성이 사용자 지정 경로로 설정되어 있는지 확인하세요.</value>
@@ -1143,11 +1133,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>Android 지원 라이브러리는 .NET 9 이상에서 지원되지 않습니다. AndroidX로 마이그레이션하세요. 자세한 내용은 https://aka.ms/net-android/androidx를 참조하세요.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
-  <data name="XA1040" xml:space="preserve">
-    <value>Android의 {0} 런타임은 실험적 기능이며 프로덕션 용도에 아직 적합하지 않습니다. 파일 문제: https://github.com/dotnet/android/issues</value>
-    <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as NativeAOT.</comment>
-  </data>
   <data name="XA1041" xml:space="preserve">
     <value>'{0}' MSBuild 속성의 '{1}' 값이 잘못되었습니다. 값은 자산 또는 리소스의 상대 위치를 나타내는 디렉터리 경로여야 합니다.</value>
     <comment>The following are literal names and should not be translated: .NET.
@@ -1177,18 +1162,6 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
     <value>MSBuild 속성 'RunAOTCompilation'은 CoreCLR 런타임과 호환되지 않습니다. 이 속성이 'false'로 설정된 상태에서는 빌드를 계속할 수 없습니다. 속성을 제거합니다. .NET 11부터는 R2R(ReadyToRun) AOT 컴파일을 사용하지 않으려면 'PublishReadyToRun'을 'false'로 설정하세요.</value>
     <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
-  </data>
-  <data name="XA1045" xml:space="preserve">
-    <value>입력 파일 `{0}`이(가) `&lt;replacements/&gt;`로 시작하지 않습니다.</value>
-    <comment>{0} - file path</comment>
-  </data>
-  <data name="XA1046" xml:space="preserve">
-    <value>요소 '{1}'의 특성 '{0}'에는 부울로 구문 분석할 수 없는 값 '{2}'이 있습니다. {3} 줄 {4}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
-  </data>
-  <data name="XA1047" xml:space="preserve">
-    <value>필수 특성 '{0}'이(가) 요소 '{1}'에 없습니다. {2} 줄 {3}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
   </data>
   <data name="XA1048" xml:space="preserve">
     <value>'{0}'에 &lt;instrumentation&gt; 요소가 포함되어 있지 않습니다. 애플리케이션에 Android.App.Instrumentation 하위 클래스를 추가하거나 $(AndroidInstrumentation) MSBuild 속성을 해당 클래스의 이름으로 설정하세요.</value>
@@ -1356,7 +1329,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <value>어셈블리 '{0}'의 런타임별 구현 '{1}' 및 '{2}'에서 Java 피어 콜백 메타데이터가 다릅니다. 모든 RuntimeIdentifiers는 동등한 콜백 메타데이터를 제공해야 합니다.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path

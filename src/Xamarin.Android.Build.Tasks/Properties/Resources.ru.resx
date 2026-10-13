@@ -220,10 +220,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Свойство MSBuild "AndroidSupportedAbis" больше не поддерживается. Откройте файл проекта в текстовом редакторе, удалите все вхождения "AndroidSupportedAbis" и используйте вместо них свойство MSBuild "RuntimeIdentifiers".</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
-  <data name="XA0037" xml:space="preserve">
-    <value>Неизвестный режим: {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0100" xml:space="preserve">
     <value>Библиотека EmbeddedNativeLibrary "{0}" недопустима в проектах приложений Android. Используйте библиотеку AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -532,10 +528,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Возможно, проект содержит в имени файла или пути символы, отличные от ASCII. Подробные сведения см. на странице https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
-  <data name="XA3006" xml:space="preserve">
-    <value>Не удалось скомпилировать платформенный файл сборки: {0}{1}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
-  </data>
   <data name="XA3007" xml:space="preserve">
     <value>Не удалось связать платформенную общую библиотеку: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
@@ -827,31 +819,31 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - A sentence describing the specific failure.</comment>
   </data>
   <data name="XA4325_MappingNotFound" xml:space="preserve">
-    <value>The R8 mapping file '{0}' was not found.</value>
+    <value>Файл сопоставления R8 '{0}' не найден.</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the missing mapping file.</comment>
   </data>
   <data name="XA4325_MappingDataFailure" xml:space="preserve">
-    <value>The R8 mapping file '{0}' could not be read: {1}</value>
+    <value>Не удалось прочитать '{0}' файла сопоставления R8: {1}</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the mapping file.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyReadFailure" xml:space="preserve">
-    <value>The linked managed assembly '{0}' could not be read: {1}</value>
+    <value>Не удалось прочитать '{0}' связанной управляемой сборки: {1}</value>
     <comment>{0} - The path of the managed assembly.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyNotFound" xml:space="preserve">
-    <value>The linked managed assembly '{0}' was not found.</value>
+    <value>Связанную управляемую сборку "{0}" не удалось найти.</value>
     <comment>{0} - The path of the missing managed assembly.</comment>
   </data>
   <data name="XA4325_AssemblyHasNoMetadata" xml:space="preserve">
-    <value>The linked managed assembly '{0}' does not contain managed metadata.</value>
+    <value>Связанная управляемая сборка '{0}' не содержит управляемых метаданных.</value>
     <comment>{0} - The path of the input file.</comment>
   </data>
   <data name="XA4325_AmbiguousEntry" xml:space="preserve">
-    <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
+    <value>Созданные записи '{0}' для '{1}' имеют конфликтующие целевые объекты среды выполнения '{2}' и '{3}', которые не могут быть представлены таблицами повторного сопоставления JNI.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The runtime lookup key.
@@ -859,47 +851,47 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {3} - The conflicting target.</comment>
   </data>
   <data name="XA4325_NativeAotObjectRequired" xml:space="preserve">
-    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <value>Для хранения NativeAOT JNI требуется существующий файл NativeAotObjectFile после ILC; '{0}' не найден.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
 {0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
   </data>
   <data name="XA4325_NativeAotObjectReadFailure" xml:space="preserve">
-    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <value>Не удалось прочитать '{0}' объекта хранения NativeAOT: {1}</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.
 {0} - The path of the ILC native object.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_NativeAotModeRequired" xml:space="preserve">
-    <value>NativeAotObjectFile requires NativeAot=true.</value>
+    <value>Для NativeAotObjectFile требуется NativeAot=true.</value>
     <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
   </data>
   <data name="XA4325_NativeAotObjectFormat" xml:space="preserve">
-    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <value>Ожидался 32- или 64-битный перемещаемый объект ELF NativeAOT с порядком байтов little-endian.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <value>Объект ELF NativeAOT содержит недопустимое расширение раздела.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotTruncatedSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <value>Объект ELF NativeAOT содержит усеченные данные раздела.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotMissingSections" xml:space="preserve">
-    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <value>Объект NativeAOT должен содержать выделенный раздел __managedcode и инициализированные разделы данных.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidDehydration" xml:space="preserve">
-    <value>The NativeAOT object contains an invalid data dehydration stream.</value>
+    <value>Объект NativeAOT содержит недопустимый поток дегидратации данных.</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <value>Неполные данные повторного сопоставления R8 JNI. {0}</value>
     <comment>The following are literal names and should not be translated: R8, JNI.
 {0} - A sentence describing the specific omission.</comment>
   </data>
   <data name="XA4326_ConflictingEntry" xml:space="preserve">
-    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <value>Запись '{0}' для '{1}' не была создана: другой вход повторного сопоставления JNI уже сопоставляет его с '{2}', что конфликтует с '{3}'.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The source lookup key.
@@ -907,7 +899,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {3} - The generated target.</comment>
   </data>
   <data name="XA4326_UnsupportedSignature" xml:space="preserve">
-    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <value>Запись для '{0}' не была создана: ее '{1}' подписи не удалось преобразовать в дескриптор JNI.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The member the entry describes.
 {1} - The Java signature which could not be converted.</comment>
@@ -948,19 +940,17 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>
+  <data name="XA4331" xml:space="preserve">
+    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <comment>{0} - The bundle config file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Отсутствует каталог цепочек инструментов Android NDK "{0}". Установите Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
   </data>
-  <data name="XA5101_C_Compiler" xml:space="preserve">
-    <value>Компилятор C для целевой архитектуры {0} не найден. Проверенные пути: "{1}".</value>
-    <comment>The following are literal names and should not be translated: C
-{0} - The target architecture, such as Arm, Arm64, or X86_64
-{1} - Semicolon-separated list of the paths searched</comment>
-  </data>
-  <data name="XA5101_Toolchain" xml:space="preserve">
-    <value>Каталог цепочки инструментов для целевой архитектуры {0} не найден.</value>
-    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
+  <data name="XA5101_ClangRuntime" xml:space="preserve">
+    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
     <value>Не удалось найти Android NDK. Проверьте установку этого пакета в Диспетчере SDK Android, а если используется особый путь к NDK, этот путь должен быть задан в свойстве MSBuild $(AndroidNdkDirectory).</value>
@@ -1143,11 +1133,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>Библиотеки поддержки Android не поддерживаются в .NET 9 и более поздних версиях. Перейдите на AndroidX. Подробные сведения см. на странице https://aka.ms/net-android/androidx.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
-  <data name="XA1040" xml:space="preserve">
-    <value>Среда выполнения {0} на Android представляет собой экспериментальную функцию и пока не подходит для использования в производственной среде. Регистрируйте проблемы по адресу: https://github.com/dotnet/android/issues</value>
-    <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as NativeAOT.</comment>
-  </data>
   <data name="XA1041" xml:space="preserve">
     <value>Свойство MSBuild "{0}" имеет недопустимое значение "{1}". Ожидается, что значение будет путем к каталогу, представляющим относительное расположение ваших ресурсов.</value>
     <comment>The following are literal names and should not be translated: .NET.
@@ -1177,18 +1162,6 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
     <value>Свойство MSBuild "RunAOTCompilation" несовместимо со средой выполнения CoreCLR. Сборка не может продолжаться, пока этому свойству задано значение false. Удалите свойство. Начиная с .NET 11, задайте для свойства PublishReadyToRun значение false, чтобы отключить AOT-компиляцию ReadyToRun (R2R).</value>
     <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
-  </data>
-  <data name="XA1045" xml:space="preserve">
-    <value>Входной файл `{0}` не начинается с `&lt;replacements/&gt;`.</value>
-    <comment>{0} - file path</comment>
-  </data>
-  <data name="XA1046" xml:space="preserve">
-    <value>Атрибут "{0}" в элементе "{1}" использует значение "{2}", которое невозможно проанализировать как логическое; {3} строка {4}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
-  </data>
-  <data name="XA1047" xml:space="preserve">
-    <value>Необходимый атрибут "{0}" отсутствует в элементе "{1}"; {2} строка {3}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
   </data>
   <data name="XA1048" xml:space="preserve">
     <value>"{0}" не содержит элемент &lt;instrumentation&gt;. Добавьте в приложение подкласс Android.App.Instrumentation или настройте в свойстве MSBuild $(AndroidInstrumentation) имя одного из них.</value>
@@ -1351,12 +1324,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <value>Сборка "{0}" использует неподдерживаемый формат обратного вызова одноранговых узлов Java.</value>
     <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <value>В сборке "{0}" метаданные обратного вызова одноранговых узлов Java различаются в реализациях "{1}" и "{2}", специфичных для конкретной среды выполнения. Все RuntimeIdentifiers должны предоставлять эквивалентные метаданные обратного вызова.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
