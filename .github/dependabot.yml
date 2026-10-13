@@ -45,6 +45,7 @@ updates:
   - package-ecosystem: "gradle"
     directories:
       - "/external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
+      - "/src/bundletool"
       - "/src/r8"
       - "/src/proguard-android"
       - "/tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib"

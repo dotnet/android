@@ -23,8 +23,6 @@ namespace Xamarin.Android.Tasks
 
 		static readonly string [] UncompressedByDefault = new [] {
 			// .NET for Android specific files
-			"typemap.mj",
-			"typemap.jm",
 			"assemblies/**",
 			// Android specific files, listed here:
 			// https://github.com/google/bundletool/blob/5ac94cb61e949f135c50f6ce52bbb5f00e8e959f/src/main/java/com/android/tools/build/bundletool/io/ApkSerializerHelper.java#L111-L115

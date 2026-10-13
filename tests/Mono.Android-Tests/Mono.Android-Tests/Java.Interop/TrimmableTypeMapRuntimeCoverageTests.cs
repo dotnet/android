@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 using Android.Text;
@@ -21,7 +22,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaToManagedTextWatcherCallback_MarshalsStringAndPrimitiveParameters ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
 			TrimmableRuntimeTextWatcher.Reset ();
 
 			using var watcher = new TrimmableRuntimeTextWatcher ();
@@ -46,7 +46,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaToManagedClickCallback_MarshalsObjectParameter ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
 			TrimmableRuntimeClickListener.Reset ();
 
 			using var listener = new TrimmableRuntimeClickListener ();
@@ -62,7 +61,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaToManagedLongClickCallback_MarshalsBooleanReturn ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
 			TrimmableRuntimeClickListener.Reset ();
 
 			using var listener = new TrimmableRuntimeClickListener ();
@@ -79,7 +77,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaToManagedInvocationHandlerCallback_MarshalsObjectArrayParameter ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
 			TrimmableRuntimeInvocationHandler.Reset ();
 
 			using var handler = new TrimmableRuntimeInvocationHandler ();
@@ -104,7 +101,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaActivatedPeer_DisposeCanAccessThisAndInvokeVirtualMember ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
 			TrimmableRuntimeDisposePeer.Reset ();
 
 			using (var peer = CreateFromJava<TrimmableRuntimeDisposePeer> ()) {
@@ -120,8 +116,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaListAliasGroup_TargetHintSelectsGenericAndNonGenericManagedTypes ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var targetTypes = new List<Type> ();
 			foreach (var targetType in TrimmableTypeMap.Instance.GetTargetTypes ("java/util/ArrayList")) {
 				targetTypes.Add (targetType);
@@ -160,7 +154,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaCreatedHandle_UsesJavaInteropStyleActivationConstructor ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
 			TrimmableRuntimeJavaInteropPeer.Reset ();
 
 			var handle = JNIEnv.CreateInstance ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer", "()V");
@@ -176,8 +169,6 @@ namespace Java.InteropTests
 		[Test]
 		public void NonGenericCollection_CopyTo_ViewArray_UsesTrimmableTypeMapForArrayElementConversion ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			using (var arrayList = new Java.Util.ArrayList ()) {
 				var viewClass = JniEnvironment.Types.FindClass ("android/view/View");
 				var viewHandle = IntPtr.Zero;
@@ -203,8 +194,6 @@ namespace Java.InteropTests
 		[Test]
 		public void NonGenericCollection_CopyTo_ObjectArray_PreservesNullElement ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			using (var arrayList = new Java.Util.ArrayList ()) {
 				arrayList.Add (42);
 				arrayList.Add (null);
@@ -224,8 +213,6 @@ namespace Java.InteropTests
 		[Test]
 		public void NonGenericCollection_CopyTo_StringArray_ConvertsJavaString ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			using (var arrayList = new Java.Util.ArrayList ()) {
 				arrayList.Add ("alpha");
 
@@ -259,7 +246,9 @@ namespace Java.InteropTests
 			JNIEnv.CallBooleanMethod (arrayList.Handle, add, new JValue (handle));
 		}
 
-		static T CreateFromJava<T> ()
+		static T CreateFromJava<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> ()
 			where T : Java.Lang.Object
 		{
 			var instance = JNIEnv.StartCreateInstance (typeof (T), "()V");
@@ -267,13 +256,6 @@ namespace Java.InteropTests
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
 			return result;
-		}
-
-		static void AssumeTrimmableTypeMapEnabled ()
-		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
 		}
 	}
 

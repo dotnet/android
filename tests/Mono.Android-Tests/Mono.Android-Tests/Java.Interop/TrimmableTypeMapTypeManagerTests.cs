@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,6 +21,14 @@ namespace Java.InteropTests
 		// TrimmableTypeMap.Instance, so those tests can run without an initialized singleton.
 		sealed class TestableTrimmableTypeMapTypeManager : TrimmableTypeMapTypeManager
 		{
+		}
+
+		[Test]
+		public void ExplicitTypeRegistrationIsNotSupported ()
+		{
+			var exception = Assert.Throws<NotSupportedException> (() =>
+				Java.Interop.TypeManager.RegisterType ("example/CustomPeer", typeof (Java.Lang.Object)));
+			Assert.That (exception?.Message, Does.Contain ("trimmable type map"));
 		}
 
 		[TestCase ("android/app/Activity", "android/app/DesugarActivity$_CC", "android/app/Activity$-CC")]
@@ -48,8 +58,6 @@ namespace Java.InteropTests
 		[Test]
 		public void GetType_RepeatedJavaToManagedLookup_DoesNotAllocate ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string jniName = "android/view/View";
 			const int iterationCount = 1_000;
 			var typeMap = TrimmableTypeMap.Instance;
@@ -61,7 +69,7 @@ namespace Java.InteropTests
 
 			var signature = new JniTypeSignature (jniName);
 			var manager = JniEnvironment.Runtime.TypeManager;
-			Type result = typeof (void);
+			Type? result = typeof (void);
 			for (int i = 0; i < iterationCount; i++) {
 				result = manager.GetType (signature);
 			}
@@ -79,8 +87,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetTargetType_MissingEntry_ReturnsFalse ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			Assert.IsFalse (TrimmableTypeMap.Instance.TryGetTargetType ("net/dot/android/test/MissingType", out var targetType));
 			Assert.IsNull (targetType);
 		}
@@ -88,8 +94,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JniProxyCache_SingleMappingStoresProxyDirectly ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string jniName = "android/view/View";
 			var instance = TrimmableTypeMap.Instance;
 			var cache = GetJniProxyCache (instance);
@@ -104,8 +108,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JniProxyCache_AliasMappingStoresProxyArray ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string jniName = "java/util/ArrayList";
 			var instance = TrimmableTypeMap.Instance;
 			var cache = GetJniProxyCache (instance);
@@ -123,8 +125,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JniProxyCache_MissingMappingStoresEmptyProxyArray ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string jniName = "net/dot/android/test/MissingProxyCacheEntry";
 			var instance = TrimmableTypeMap.Instance;
 			var cache = GetJniProxyCache (instance);
@@ -144,8 +144,6 @@ namespace Java.InteropTests
 		[Test]
 		public void JniProxyCache_UnexpectedEntryTypeThrows ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string jniName = "net/dot/android/test/InvalidProxyCacheEntry";
 			var instance = TrimmableTypeMap.Instance;
 			var cache = GetJniProxyCache (instance);
@@ -177,8 +175,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_ClosedGeneric_ResolvesViaGenericTypeDefinition ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var instance = TrimmableTypeMap.Instance;
 
 			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<>), out var openJniName),
@@ -197,8 +193,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_NonGenericType_ResolvesDirectly ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			// Regression: the GTD fallback must not disturb the non-generic hot path.
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (typeof (JavaList), out var jniName));
 			Assert.IsFalse (string.IsNullOrEmpty (jniName));
@@ -207,8 +201,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_UnknownClosedGeneric_ReturnsFalse ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			// System.Collections.Generic.List<T> has no TypeMapAssociation — both the
 			// direct lookup AND the GTD fallback must miss, and the API must return false.
 			Assert.IsFalse (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (
@@ -219,8 +211,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_RepeatedClosedGenericLookup_IsCached ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			// Closed generic peers normalize to their open generic definition, so
 			// repeated lookups reuse the same cached proxy.
 			var instance = TrimmableTypeMap.Instance;
@@ -233,8 +223,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_DifferentClosedGenerics_UseGenericDefinitionCacheKey ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var instance = TrimmableTypeMap.Instance;
 			var cache = GetProxyCache (instance);
 
@@ -253,8 +241,6 @@ namespace Java.InteropTests
 		[Test]
 		public void GetProxyForJavaObject_SealedTarget_ReturnsProxy ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			using var value = new Java.Lang.String ("value");
 			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.String));
 
@@ -268,9 +254,9 @@ namespace Java.InteropTests
 		[Test]
 		public void GetProxyForJavaObject_IncompatibleSealedTarget_ReturnsNull ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var value = new Java.Lang.Integer (42);
+#pragma warning restore CA1422
 			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.String));
 
 			Assert.IsNull (proxy);
@@ -279,8 +265,6 @@ namespace Java.InteropTests
 		[Test]
 		public void CreateInstance_SealedClosedGenericTarget_ReturnsClosedPeer ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			using var value = new Java.Util.ArrayList ();
 			var peer = TrimmableTypeMap.Instance.CreateInstance (value.Handle, typeof (JavaCollection<int>));
 			if (peer is not JavaCollection<int> collection) {
@@ -295,8 +279,6 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisteredPeer_Dispose_InvokesDisposing ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			bool disposed = false;
 			bool finalized = false;
 			var value = new TrimmableRegisteredDisposedObject {
@@ -313,8 +295,6 @@ namespace Java.InteropTests
 		[Test]
 		public async Task RegisteredPeer_Dispose_Finalized ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var disposed = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var finalized = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -340,8 +320,6 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisteredPeer_NestedDisposeInvocations ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var value = new TrimmableRegisteredNestedDisposableObject ();
 			value.Dispose ();
 			value.Dispose ();
@@ -350,8 +328,6 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisteredPeer_CanCreateGenericHolder ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			using var holder = new TrimmableRegisteredGenericHolder<int> ();
 			holder.Value = 42;
 
@@ -361,8 +337,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TrimmableJavaProxyObject_CreateLocalObjectReferenceArgumentUsesProxyType ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var value = new object ();
 			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
 
@@ -376,8 +350,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TrimmableJavaProxyObject_CanBeUsedInObjectArray ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			using var values = new JavaObjectArray<object> (1);
 			values [0] = new object ();
 
@@ -387,8 +359,6 @@ namespace Java.InteropTests
 		[Test]
 		public void TrimmableJavaProxyObject_ObjectMethodsUseJavaIdentitySemantics ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var value = new object ();
 			var other = new object ();
 			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
@@ -414,7 +384,8 @@ namespace Java.InteropTests
 							Assert.AreEqual (
 								JNIEnv.CallStaticIntMethod (systemClass.Handle, identityHashCode, new JValue (localProxy.Handle)),
 								JNIEnv.CallIntMethod (localProxy.Handle, hashCode));
-							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef);
+							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef)
+								?? throw new AssertionException ("Java proxy ToString returned null.");
 							Assert.IsTrue (
 								proxyString.StartsWith ("net.dot.jni.internal.TrimmableJavaProxyObject@", StringComparison.Ordinal),
 								proxyString);
@@ -505,7 +476,8 @@ namespace Java.InteropTests
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
-			Assert.IsNotNull (field);
+			if (field == null)
+				throw new AssertionException ("Unable to find TrimmableTypeMap proxy cache field.");
 
 			var value = field.GetValue (instance);
 			Assert.IsNotNull (value);
@@ -521,7 +493,8 @@ namespace Java.InteropTests
 		static ConcurrentDictionary<string, object> GetJniProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_jniProxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
-			Assert.IsNotNull (field);
+			if (field == null)
+				throw new AssertionException ("Unable to find TrimmableTypeMap JNI proxy cache field.");
 
 			var value = field.GetValue (instance);
 			Assert.IsNotNull (value);
@@ -541,12 +514,6 @@ namespace Java.InteropTests
 			return fallbacks ?? throw new InvalidOperationException ("Expected fallback types.");
 		}
 
-		static void AssumeTrimmableTypeMapEnabled ()
-		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
-		}
 
 		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
 		{
@@ -698,6 +665,6 @@ namespace Java.InteropTests
 	[Register ("net/dot/android/test/TrimmableRegisteredGenericHolder")]
 	class TrimmableRegisteredGenericHolder<T> : Java.Lang.Object
 	{
-		public T Value { get; set; }
+		public T? Value { get; set; }
 	}
 }

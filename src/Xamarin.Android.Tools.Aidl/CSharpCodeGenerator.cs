@@ -257,7 +257,7 @@ namespace Xamarin.Android.Tools.Aidl
 		protected override bool OnTransact (int code, global::Android.OS.Parcel data, global::Android.OS.Parcel reply, int flags)
 		{{
 			switch (code) {{
-			case global::Android.OS.BinderConsts.InterfaceTransaction:
+			case global::Android.OS.IBinder.InterfaceTransaction:
 				reply.WriteString (descriptor);
 				return true;",
 // end of long formatted output...
@@ -632,24 +632,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return "if (" + arg + " == null) { " + parcel + ".WriteInt(-1); } else { " + parcel + ".WriteInt(" + arg + ".Length); }";
 			} else
 				return "";
-		}
-
-		// FIXME: should this be used?
-		string GetCreatorName (TypeName type)
-		{
-			string csname = name_cache.ToCSharp (type);
-			switch (csname) {
-			case "String":
-			case "Java.Lang.ICharSequence":
-				return "Android.OS.Parcel.StringCreator";
-			case "List":
-			case "Android.Runtime.JavaList":
-				return "Android.OS.Parcel.ArrayListCreator";
-			default:
-				if (name_cache.IsParcelable (type))
-					return csname + ".Creator";
-				return String.Empty;
-			}
 		}
 
 		string [] cs_units;

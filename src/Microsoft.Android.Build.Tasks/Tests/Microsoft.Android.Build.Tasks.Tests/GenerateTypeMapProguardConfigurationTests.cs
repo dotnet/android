@@ -100,6 +100,69 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
+	[TestCase (false, false)]
+	[TestCase (false, true)]
+	[TestCase (true, false)]
+	[TestCase (true, true)]
+	public void FailedWriteCannotPublishPartialConfiguration (bool members, bool existingOutput)
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var input = Path.Combine (path, "input.keys");
+		var output = Path.Combine (path, "rules.cfg");
+		File.WriteAllText (input, "test/Live\n");
+		var old = DateTime.UtcNow.AddDays (-1);
+		if (existingOutput) {
+			File.WriteAllText (output, "previous output");
+			File.SetLastWriteTimeUtc (output, old);
+			old = File.GetLastWriteTimeUtc (output);
+		}
+		var errors = new List<BuildErrorEventArgs> ();
+		GenerateTypeMapProguardConfiguration failing = members ? new FailingMemberWriter () : new FailingClassWriter ();
+		failing.BuildEngine = new MockBuildEngine (TestContext.Out, errors);
+		failing.TypeMapKeyFiles = [new TaskItem (input)];
+		failing.OutputFile = output;
+
+		Assert.IsFalse (failing.Execute ());
+		Assert.AreEqual (1, errors.Count);
+		Assert.AreEqual ("XA4328", errors [0].Code);
+		if (existingOutput) {
+			Assert.AreEqual ("previous output", File.ReadAllText (output));
+			Assert.AreEqual (old, File.GetLastWriteTimeUtc (output));
+		} else {
+			FileAssert.DoesNotExist (output);
+		}
+		Assert.IsEmpty (Directory.GetFiles (path, "*.tmp"));
+
+		GenerateTypeMapProguardConfiguration retry = members ? new GenerateTypeMapMemberProguardConfiguration () : new GenerateTypeMapProguardConfiguration ();
+		retry.BuildEngine = new MockBuildEngine (TestContext.Out);
+		retry.TypeMapKeyFiles = failing.TypeMapKeyFiles;
+		retry.OutputFile = output;
+		Assert.IsTrue (retry.Execute ());
+		Assert.AreEqual (members
+			? "-keepclassmembers class test.Live { *; }\n-keepclassmembers interface test.Live { *; }\n"
+			: "-keep class test.Live\n-keep interface test.Live\n", File.ReadAllText (output));
+		Assert.Greater (File.GetLastWriteTimeUtc (output), old);
+	}
+
+	sealed class FailingClassWriter : GenerateTypeMapProguardConfiguration
+	{
+		protected override void WriteClassRule (TextWriter writer, string name)
+		{
+			base.WriteClassRule (writer, name);
+			throw new IOException ("Injected write failure.");
+		}
+	}
+
+	sealed class FailingMemberWriter : GenerateTypeMapMemberProguardConfiguration
+	{
+		protected override void WriteClassRule (TextWriter writer, string name)
+		{
+			base.WriteClassRule (writer, name);
+			throw new IOException ("Injected write failure.");
+		}
+	}
+
 	[Test]
 	public void RejectsInvalidUtf8 ()
 	{
@@ -149,6 +212,51 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		Assert.AreEqual (1, errors.Count);
 		Assert.AreEqual ("XA4328", errors [0].Code);
+	}
+
+	[Test]
+	public void MemberGeneratorScopesRulesToCanonicalKeys ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var first = Path.Combine (path, "first.keys");
+		var second = Path.Combine (path, "second.keys");
+		File.WriteAllText (first, "test/Peer\ntest/Contract\n");
+		File.WriteAllText (second, "test/Peer\ntest/Base\n");
+		var task = new GenerateTypeMapMemberProguardConfiguration {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			TypeMapKeyFiles = [new TaskItem (first), new TaskItem (second)],
+			OutputFile = Path.Combine (path, "members.cfg"),
+		};
+
+		Assert.IsTrue (task.Execute ());
+		Assert.AreEqual (
+			"-keepclassmembers class test.Base { *; }\n-keepclassmembers interface test.Base { *; }\n" +
+			"-keepclassmembers class test.Contract { *; }\n-keepclassmembers interface test.Contract { *; }\n" +
+			"-keepclassmembers class test.Peer { *; }\n-keepclassmembers interface test.Peer { *; }\n",
+			File.ReadAllText (task.OutputFile));
+	}
+
+	[Test]
+	public void MemberGeneratorRejectsInvalidKeysWithoutOverwritingOutput ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var input = Path.Combine (path, "invalid.keys");
+		var output = Path.Combine (path, "members.cfg");
+		File.WriteAllText (input, "test/Peer\ntest/*\n");
+		File.WriteAllText (output, "previous output");
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new GenerateTypeMapMemberProguardConfiguration {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			TypeMapKeyFiles = [new TaskItem (input)],
+			OutputFile = output,
+		};
+
+		Assert.IsFalse (task.Execute ());
+		Assert.AreEqual (1, errors.Count);
+		Assert.AreEqual ("XA4328", errors [0].Code);
+		Assert.AreEqual ("previous output", File.ReadAllText (output));
 	}
 
 	static GenerateTypeMapProguardConfiguration CreateTask (string input, string output) => new () {

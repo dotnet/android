@@ -68,7 +68,6 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 |-----------|------|---------------|
 | `android-platform-tools-base/` | android/platform/tools/base | https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE (Apache 2.0) |
 | `bionic/` | google/bionic | https://android.googlesource.com/platform/bionic/ (Apache 2.0) |
-| `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
 | `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
 
 Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
@@ -80,10 +79,8 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 |---------|------------|-------------|
 | ELFSharp | KonradKuczynski/ELFSharp | https://elfsharp.it/ (MIT + LLVM) |
 | K4os.Compression.LZ4 | MiloszKrajewski/K4os.Compression.LZ4 | https://github.com/MiloszKrajewski/K4os.Compression.LZ4/ (MIT) |
-| Xamarin.LibZipSharp | xamarin/LibZipSharp | https://github.com/xamarin/LibZipSharp/ (MIT) |
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
-| Newtonsoft.Json | JamesNK/Newtonsoft.Json | https://github.com/JamesNK/Newtonsoft.Json (MIT) |
-| NuGet.ProjectModel | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
+| NuGet.Versioning | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
 | Mono.Cecil | mono/cecil | https://github.com/mono/cecil/ (MIT) |
 | Microsoft.Xml.SgmlReader | lovettchris/SgmlReader | https://github.com/lovettchris/SgmlReader/ (Apache 2.0) |
 
@@ -109,14 +106,6 @@ These are downloaded and shipped with the SDK:
 | aapt2 | google/aapt2 | https://mvnrepository.com/artifact/com.android.tools.build/aapt2 (Apache 2.0) |
 | bundletool | google/bundletool | https://github.com/google/bundletool (Apache 2.0) |
 | r8 | google/r8 | https://r8.googlesource.com/r8/ (BSD-3-Clause) |
-| binutils | gnu/binutils | https://sourceware.org/git/?p=binutils-gdb.git;a=tree;hb=HEAD (GPLv3) |
-
-#### libzip (via LibZipSharp NuGet)
-LibZipSharp bundles libzip internally:
-
-| Source | Name in TPN | License Location |
-|--------|------------|-----------------|
-| libzip (in LibZipSharp NuGet) | nih-at/libzip | LibZipSharp NuGet `Licences/libzip/LICENSE` or https://github.com/nih-at/libzip/ (BSD-3-Clause) |
 
 ### Step 2 — Cross-reference
 

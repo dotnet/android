@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class BoundMethodAbstractDeclaration : MethodWriter
@@ -47,9 +45,7 @@ namespace generator.SourceWriters
 			if (method.ManagedOverride?.ToLowerInvariant () == "override")
 				IsOverride = true;
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
-			}
+			method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
 
 			method.JavadocInfo?.AddJavadocs (Comments);
 
@@ -61,9 +57,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (impl, method, opt), additionalProperties: method.AdditionalAttributeString ()));
-			}
+			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (impl, method, opt), additionalProperties: method.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
 		}

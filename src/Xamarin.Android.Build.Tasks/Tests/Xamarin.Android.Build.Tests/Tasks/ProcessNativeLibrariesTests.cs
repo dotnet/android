@@ -19,7 +19,6 @@ public class ProcessNativeLibrariesTests : BaseTest
 		var task = new ProcessNativeLibraries {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
 			InputLibraries = [component, runtimeLibrary],
-			KnownRuntimeNativeLibraries = [],
 		};
 
 		Assert.IsTrue (task.Execute ());

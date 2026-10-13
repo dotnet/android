@@ -10,7 +10,6 @@
 		</type>
 		<type fullname="Android.Runtime.JNIEnvInit">
 			<method name="Initialize" />
-			<method name="RegisterJniNatives" />
 		</type>
 		<type fullname="Android.Runtime.JNINativeWrapper" />
 		<type fullname="Android.Runtime.JObjectRefType" />
@@ -30,7 +29,6 @@
 		<type fullname="Android.Runtime.XmlReaderResourceParser" />
 		<type fullname="Android.Runtime.XmlReaderPullParser" />
 		-->
-		<type fullname="Java.Interop.TypeManager*JavaTypeManager" />
 		<type fullname="Java.Lang.AbstractMethodError">
 			<method name=".ctor" />
 		</type>

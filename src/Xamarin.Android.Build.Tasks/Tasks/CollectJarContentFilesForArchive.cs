@@ -2,12 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks;
 
@@ -19,6 +19,8 @@ public class CollectJarContentFilesForArchive : AndroidTask
 	public override string TaskPrefix => "CJC";
 
 	public string AndroidPackageFormat { get; set; } = "";
+
+	public string AndroidRuntime { get; set; } = "";
 
 	public string [] ExcludeFiles { get; set; } = [];
 
@@ -71,9 +73,9 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 		foreach (var jarFile in jarFilePaths) {
 			using (var stream = File.OpenRead (jarFile))
-			using (var jar = ZipArchive.Open (stream)) {
-				foreach (var jarItem in jar) {
-					if (jarItem.IsDirectory)
+			using (var jar = new ZipArchive (stream, ZipArchiveMode.Read)) {
+				foreach (var jarItem in jar.Entries) {
+					if (jarItem.IsDirectory ())
 						continue;
 					var name = jarItem.FullName;
 					if (!PackagingUtils.CheckEntryForPackaging (name)) {
@@ -81,7 +83,6 @@ public class CollectJarContentFilesForArchive : AndroidTask
 					}
 
 					var path = rootPath + name;
-
 					// check for ignored items
 					bool exclude = false;
 					bool forceInclude = false;
@@ -105,6 +106,23 @@ public class CollectJarContentFilesForArchive : AndroidTask
 					if (exclude)
 						continue;
 
+					if ((AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") && IsNativeLibrary (name)) {
+						string normalizedName = name.Replace ('\\', '/');
+						bool reservedName = string.Equals (Path.GetFileName (normalizedName), "libbinary_blobs.so", StringComparison.Ordinal);
+						bool reservedSoname = false;
+						if (!reservedName) {
+							using var entryStream = jarItem.Open ();
+							using var elfStream = new MemoryStream ();
+							entryStream.CopyTo (elfStream);
+							elfStream.Position = 0;
+							reservedSoname = ELFHelper.StreamHasBinaryBlobSoname (Log, elfStream, $"{jarFile}#{name}");
+						}
+						if (reservedName || reservedSoname) {
+							Log.LogCodedError ("XA4330", Properties.Resources.XA4330, $"{jarFile}#{name}", path);
+							continue;
+						}
+					}
+
 					if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
 						Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 						continue;
@@ -119,6 +137,13 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		FilesToAddToArchive = files.ToArray ();
 
 		return !Log.HasLoggedErrors;
+	}
+
+	static bool IsNativeLibrary (string path)
+	{
+		string normalizedPath = path.Replace ('\\', '/');
+		return normalizedPath.Contains ("/lib/", StringComparison.Ordinal) && normalizedPath.EndsWith (".so", StringComparison.OrdinalIgnoreCase) ||
+			normalizedPath.StartsWith ("lib/", StringComparison.Ordinal) && normalizedPath.EndsWith (".so", StringComparison.OrdinalIgnoreCase);
 	}
 
 	static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)

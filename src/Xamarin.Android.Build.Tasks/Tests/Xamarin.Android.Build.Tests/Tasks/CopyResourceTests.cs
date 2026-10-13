@@ -48,10 +48,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreNotEqual (0, new FileInfo (tempFile).Length, "file should be non-empty!");
 		}
 
-		[Test]
-		public void FileThatDoesNotExist ()
+		[TestCase ("thisdoesnotexist")]
+		[TestCase ("ApplicationRegistration.java")]
+		public void FileThatDoesNotExist (string resourceName)
 		{
-			var resourceName = "thisdoesnotexist";
 			var task = new CopyResource {
 				BuildEngine = engine,
 				ResourceName = resourceName,

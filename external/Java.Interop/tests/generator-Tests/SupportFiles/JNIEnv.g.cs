@@ -1,5 +1,4 @@
-﻿#if !JAVA_INTEROP1
-
+﻿
 // Generated file; DO NOT EDIT!
 //
 // To make changes, edit monodroid/tools/jnienv-gen and rerun
@@ -2645,5 +2644,3 @@ namespace Android.Runtime {
 	}
 }
 #pragma warning restore
-
-#endif  // !JAVA_INTEROP1

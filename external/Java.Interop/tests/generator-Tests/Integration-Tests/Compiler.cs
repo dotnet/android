@@ -8,8 +8,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generatortests
 {
 	public static class Compiler
@@ -37,9 +35,6 @@ namespace generatortests
 			}
 
 			var preprocessorSymbols = new List<string> ();
-			if (options.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				preprocessorSymbols.Add ("JAVA_INTEROP1");
-			}
 			preprocessorSymbols.Add ("NET");
 
 			var parseOptions = new CSharpParseOptions (preprocessorSymbols:preprocessorSymbols);

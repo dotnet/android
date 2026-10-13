@@ -9,7 +9,6 @@ using Java.Interop.Tools.Generator.Enumification;
 using MonoDroid.Generation;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
-using Xamarin.Android.Binder;
 
 namespace generatortests
 {
@@ -17,8 +16,6 @@ namespace generatortests
 	class EnumGeneratorTests : CodeGeneratorTestBase
 	{
 		protected new EnumGenerator generator;
-
-		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
 
 		[SetUp]
 		public new void SetUp ()

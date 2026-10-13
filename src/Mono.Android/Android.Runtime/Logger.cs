@@ -12,36 +12,16 @@ namespace Android.Runtime {
 			get {return (Categories & LogCategories.Assembly) != 0;}
 		}
 
-		internal static bool LogDebugger {
-			get {return (Categories & LogCategories.Debugger) != 0;}
-		}
-
 		internal static bool LogGC {
 			get {return (Categories & LogCategories.GC) != 0;}
-		}
-
-		internal static bool LogGlobalRef {
-			get {return (Categories & LogCategories.GlobalRef) != 0;}
-		}
-
-		internal static bool LogLocalRef {
-			get {return (Categories & LogCategories.LocalRef) != 0;}
 		}
 
 		internal static bool LogTiming {
 			get {return (Categories & LogCategories.Timing) != 0;}
 		}
 
-		internal static bool LogBundle {
-			get {return (Categories & LogCategories.Bundle) != 0;}
-		}
-
 		internal static bool LogNet {
 			get {return (Categories & LogCategories.Net) != 0;}
-		}
-
-		internal static bool LogNetlink {
-			get {return (Categories & LogCategories.Netlink) != 0;}
 		}
 
 		[LibraryImport ("liblog", StringMarshalling = StringMarshalling.Utf8)]

@@ -68,7 +68,6 @@ about the various Microsoft.Android workloads.
       <_WorkloadDepProp Include="DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
       <_WorkloadDepProp Include="MicrosoftAndroidSdkOutDir=$(MicrosoftAndroidSdkOutDir)" />
       <_WorkloadDepProp Include="MonoOptionsVersion=$(MonoOptionsVersion)" />
-      <_WorkloadDepProp Include="NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
       <_WorkloadDepProp Include="WorkloadDependenciesPath=$(WorkloadDependenciesPath)" />
       <_WorkloadDepProp Include="WorkloadVersion=$(WorkloadVersion)" />
     </ItemGroup>

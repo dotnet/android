@@ -1,13 +1,48 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
+using Xamarin.Android.Binder;
 
 namespace generatortests
 {
 	[TestFixture]
 	public class CodeGenerationOptionsTests
 	{
+		[TestCase ("JavaInterop1")]
+		[TestCase ("javainterop1")]
+		[TestCase ("JAVAINTEROP1")]
+		public void RetiredCodeGenerationTargetIsRejected (string target)
+		{
+			var error = Assert.Throws<NotSupportedException> (() =>
+				CodeGeneratorOptions.Parse (new [] { $"--codegen-target={target}", "api.xml" }));
+			Assert.That (error?.Message, Does.Contain ("no longer supported").And.Contain ("XAJavaInterop1"));
+		}
+
+		[Test]
+		public void DefaultCodeGenerationTarget ()
+		{
+			var options = CodeGeneratorOptions.Parse (new [] { "--public", "api.xml" });
+			Assert.That (options?.CodeGenerationTarget, Is.EqualTo (CodeGenerationTarget.XAJavaInterop1));
+			Assert.That (new CodeGenerationOptions ().CodeGenerationTarget, Is.EqualTo (CodeGenerationTarget.XAJavaInterop1));
+		}
+
+		[TestCase ("XAJavaInterop1")]
+		[TestCase ("xajavainterop1")]
+		public void SupportedCodeGenerationTargetIsParsed (string target)
+		{
+			var options = CodeGeneratorOptions.Parse (new [] { $"--codegen-target={target}", "api.xml" });
+			Assert.That (options?.CodeGenerationTarget, Is.EqualTo (CodeGenerationTarget.XAJavaInterop1));
+		}
+
+		[Test]
+		public void UndefinedCodeGenerationTargetIsRejected ()
+		{
+			Assert.Throws<NotSupportedException> (() =>
+				new CodeGenerationOptions { CodeGenerationTarget = (CodeGenerationTarget) 1 });
+		}
+
 		[Test]
 		public void GetOutputNameUseGlobal ()
 		{

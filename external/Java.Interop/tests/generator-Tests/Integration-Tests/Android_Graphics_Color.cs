@@ -9,9 +9,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "Android.Graphics.Color",
-					apiDescriptionFile:     "expected.ji/Android.Graphics.Color/Android.Graphics.Color.xml",
+					apiDescriptionFile:     "TestInputs/Android.Graphics.Color/Android.Graphics.Color.xml",
 					expectedRelativePath:   "Android.Graphics.Color");
 		}
 	}

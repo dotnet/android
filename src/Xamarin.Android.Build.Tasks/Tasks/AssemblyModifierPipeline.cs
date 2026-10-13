@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -26,8 +25,6 @@ public class AssemblyModifierPipeline : AndroidTask
 {
 	public override string TaskPrefix => "AMP";
 
-	public string ApplicationJavaClass { get; set; } = "";
-
 	public string CodeGenerationTarget { get; set; } = "";
 
 	public bool Debug { get; set; }
@@ -36,10 +33,6 @@ public class AssemblyModifierPipeline : AndroidTask
 	public ITaskItem [] DestinationFiles { get; set; } = [];
 
 	public bool Deterministic { get; set; }
-
-	public bool EnableMarshalMethods { get; set; }
-
-	public bool ErrorOnCustomJavaObject { get; set; }
 
 	public string? PackageNamingPolicy { get; set; }
 
@@ -66,13 +59,8 @@ public class AssemblyModifierPipeline : AndroidTask
 	[Required]
 	public string TargetName { get; set; } = "";
 
-	public string? AndroidTypeMapImplementation { get; set; }
-
-	protected JavaPeerStyle codeGenerationTarget;
-
 	public override bool RunTask ()
 	{
-		codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
 		JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicyEnum pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
 		if (SourceFiles.Length != DestinationFiles.Length)
@@ -132,18 +120,6 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	protected virtual void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 	{
-		if (!string.Equals (AndroidTypeMapImplementation, "trimmable", StringComparison.OrdinalIgnoreCase)) {
-			// The trimmable generator reads assemblies directly and supports exports the legacy scanner cannot import.
-			var findJavaObjectsStep = new FindJavaObjectsStep (Log) {
-				ApplicationJavaClass = ApplicationJavaClass,
-				ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
-				UseMarshalMethods = EnableMarshalMethods,
-			};
-
-			findJavaObjectsStep.Initialize (context);
-			pipeline.Steps.Add (findJavaObjectsStep);
-		}
-
 		// SaveChangedAssemblyStep
 		var writerParameters = new WriterParameters {
 			DeterministicMvid = Deterministic,
@@ -151,17 +127,6 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		var saveChangedAssemblyStep = new SaveChangedAssemblyStep (Log, writerParameters);
 		pipeline.Steps.Add (saveChangedAssemblyStep);
-
-		if (!string.Equals (AndroidTypeMapImplementation, "trimmable", StringComparison.OrdinalIgnoreCase)) {
-			// FindTypeMapObjectsStep - this must be run after the assembly has been saved, as saving changes the MVID
-			var findTypeMapObjectsStep = new FindTypeMapObjectsStep (Log) {
-				ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
-				Debug = Debug,
-			};
-
-			findTypeMapObjectsStep.Initialize (context);
-			pipeline.Steps.Add (findTypeMapObjectsStep);
-		}
 	}
 
 	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)
@@ -173,8 +138,6 @@ public class AssemblyModifierPipeline : AndroidTask
 			?? throw new FileNotFoundException ($"Could not load assembly '{source.ItemSpec}'.", source.ItemSpec);
 
 		var context = new StepContext (source, destination) {
-			CodeGenerationTarget = codeGenerationTarget,
-			EnableMarshalMethods = EnableMarshalMethods,
 			IsAndroidAssembly = MonoAndroidHelper.IsAndroidAssembly (source),
 			IsDebug = Debug,
 			IsFrameworkAssembly = MonoAndroidHelper.IsFrameworkAssembly (source),

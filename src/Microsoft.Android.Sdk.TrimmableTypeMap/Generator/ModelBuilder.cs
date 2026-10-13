@@ -374,10 +374,8 @@ static class ModelBuilder
 			return;
 		}
 
-		// Abstract types are never directly instantiated from Java — the ACW
-		// constructor's getClass() guard prevents activation. Skip generating
-		// UCO constructor wrappers for them.
-		if (peer.IsAbstract) {
+		// Abstract and deferred JCWs do not call native constructor callbacks.
+		if (peer.IsAbstract || peer.CannotRegisterInStaticConstructor) {
 			return;
 		}
 

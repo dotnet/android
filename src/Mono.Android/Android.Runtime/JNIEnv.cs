@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -20,9 +19,6 @@ namespace Android.Runtime {
 	public static partial class JNIEnv {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-		[ThreadStatic]
-		static byte[]? mvid_bytes;
-
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
 		static Array ArrayCreateInstance (Type elementType, int length)
@@ -31,11 +27,7 @@ namespace Android.Runtime {
 				return Array.CreateInstance (elementType, length);
 			}
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return SafeArrayFactory.CreateInstance (elementType, rank: 1, length);
-			}
-
-			throw new NotSupportedException ($"It is not possible to create an array with element type '{elementType}'.");
+			return SafeArrayFactory.CreateInstance (elementType, rank: 1, length);
 		}
 
 		internal static IntPtr IdentityHash (IntPtr v)
@@ -53,8 +45,7 @@ namespace Android.Runtime {
 			if (value == IntPtr.Zero)
 				return false;
 
-			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class) ||
-				IsInstanceOf (value, JNIEnvInit.grefGCUserPeerable_class);
+			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class);
 		}
 
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
@@ -273,17 +264,7 @@ namespace Android.Runtime {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
 				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
-				var jni = Java.Interop.TypeManager.GetJniTypeName (type);
-				if (jni != null) {
-					e.Dispose ();
-					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
-				}
-
-				// Though it's tempting to call TypeManager.RegisterType() to avoid
-				// calling GetCustomAttributes() again, this isn't necessary as
-				// JNIEnv.FindClass() will invoke the static constructor for the type,
-				// which will (indirectly) call TypeManager.RegisterType().
-				jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
+				var jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();
 					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
@@ -367,7 +348,7 @@ namespace Android.Runtime {
 		/// <remarks>
 		/// Only <see cref="JniHandleOwnership.DoNotRegister"/> survives the conversion. The
 		/// handle-transfer bits intentionally do not: the caller keeps the incoming handle and
-		/// releases it with <see cref="DeleteRef"/> once construction finishes, so the peer must
+		/// releases it with <see cref="DeleteRef"/> in a finally, even if construction throws, so the peer must
 		/// always take a reference of its own — which is why
 		/// <see cref="JniObjectReferenceOptions.Copy"/> is always set.
 		/// </remarks>
@@ -431,59 +412,9 @@ namespace Android.Runtime {
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
 
-		internal static void LogTypemapTrace (StackTrace st)
+		internal static string? TypemapManagedToJava (Type type)
 		{
-			string? trace = st.ToString ()?.Trim ();
-			if (String.IsNullOrEmpty (trace))
-				return;
-
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, "typemap: called from");
-			foreach (string line in trace!.Split ('\n')) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
-			}
-		}
-
-		internal static unsafe string? TypemapManagedToJava (Type type)
-		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				// The trimmable typemap doesn't use the native typemap tables.
-				// Delegate to the managed TrimmableTypeMap instead.
-				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
-			}
-
-			byte[]? mvid_data = null;
-			// The Debug CoreCLR typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
-			if (!RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
-				if (mvid_bytes == null)
-					mvid_bytes = new byte[16];
-
-				var mvid = new Span<byte>(mvid_bytes);
-				if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
-					mvid_data = type.Module.ModuleVersionId.ToByteArray ();
-				} else {
-					mvid_data = mvid_bytes;
-				}
-			}
-
-			if (type.FullName is null)
-				return null;
-			string? assemblyFullName = RuntimeFeature.ManagedToJavaUsesAssemblyFullName ? type.Assembly.FullName : null;
-			IntPtr ret;
-			fixed (byte* mvidptr = mvid_data) {
-				ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, (IntPtr)mvidptr);
-			}
-
-			if (ret == IntPtr.Zero) {
-				if (Logger.LogAssembly) {
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
-					LogTypemapTrace (new StackTrace (true));
-				}
-
-				return null;
-			}
-
-			return Marshal.PtrToStringAnsi (ret);
+			return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
 		}
 
 		public static string GetJniName (Type type)
@@ -552,13 +483,20 @@ namespace Android.Runtime {
 			return JniEnvironment.Strings.NewString (text).Handle;
 		}
 
-		public static unsafe IntPtr NewString (char[]? text, int length)
+		public static IntPtr NewString (char[]? text, int length)
 		{
 			if (text == null)
 				return IntPtr.Zero;
 
-			fixed (char *s = text)
-				return JniEnvironment.Strings.NewString (s, length).Handle;
+			if (length < 0 || length > text.Length)
+				throw new ArgumentOutOfRangeException (nameof (length));
+			if (length == 0)
+				return JniEnvironment.Strings.NewString ("").Handle;
+
+			unsafe {
+				fixed (char *s = text)
+					return JniEnvironment.Strings.NewString (s, length).Handle;
+			}
 		}
 
 		static void AssertCompatibleArrayTypes (Type srcElementType, IntPtr destArray)

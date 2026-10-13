@@ -101,8 +101,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void JavaToManagedTypeMapLookup_EmitsOnlyForCachePopulation ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string jniName = "net/dot/android/test/RuntimeEventSourceMappedPeer";
 			var instance = TrimmableTypeMap.Instance;
 			GetJniProxyCache (instance).TryRemove (jniName, out _);
@@ -129,8 +127,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void ManagedToJavaTypeMapLookup_EmitsOnlyForCachePopulation ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var managedType = typeof (RuntimeEventSourceMappedPeer);
 			var instance = TrimmableTypeMap.Instance;
 			GetProxyCache (instance).TryRemove (managedType, out _);
@@ -157,8 +153,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void FailedTypeMapLookups_EmitMatchedPairs ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string missingJniName = "net/dot/android/test/RuntimeEventSourceMissingType";
 			var missingManagedType = typeof (RuntimeEventSourceTests);
 			var instance = TrimmableTypeMap.Instance;
@@ -189,8 +183,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void ThrowingTypeMapLookups_EmitMatchedPairsAndPropagate ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var instance = CreateTrimmableTypeMap (new ThrowingTypeMap ());
 			var eventSourceType = GetRuntimeEventSourceType ();
 			int startEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
@@ -261,6 +253,7 @@ namespace Android.RuntimeTests
 			_ = new Java.Lang.String ("bridge");
 		}
 
+		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicFields | DynamicallyAccessedMemberTypes.NonPublicMethods)]
 		static Type GetRuntimeEventSourceType ()
 		{
 			return Type.GetType ("Microsoft.Android.Runtime.RuntimeEventSource, Mono.Android", throwOnError: true)
@@ -294,14 +287,7 @@ namespace Android.RuntimeTests
 			return (TrimmableTypeMap) constructor.Invoke ([typeMap]);
 		}
 
-		static void AssumeTrimmableTypeMapEnabled ()
-		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
-		}
-
-		static T GetConstant<T> (Type type, string name)
+		static T GetConstant<T> ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicFields)] Type type, string name)
 		{
 			var field = type.GetField (name, BindingFlags.NonPublic | BindingFlags.Static)
 				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
@@ -326,14 +312,14 @@ namespace Android.RuntimeTests
 			AssertEvent (events [offset + 1], stopEventId, "TypeMapLookupStop", keyword, task, EventOpcode.Stop, direction);
 		}
 
-		static void Invoke (Type type, string name, params object?[] arguments)
+		static void Invoke ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, params object?[] arguments)
 		{
 			var method = type.GetMethod (name, BindingFlags.NonPublic | BindingFlags.Static)
 				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
 			method.Invoke (null, arguments);
 		}
 
-		static T Invoke<T> (Type type, string name, params object?[] arguments)
+		static T Invoke<T> ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, params object?[] arguments)
 		{
 			var method = type.GetMethod (name, BindingFlags.NonPublic | BindingFlags.Static)
 				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
@@ -458,7 +444,7 @@ namespace Android.RuntimeTests
 				throw new InvalidOperationException (ExceptionMessage);
 			}
 
-			public bool TryGetProxyType (Type managedType, out Type? proxyType)
+			public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
 			{
 				proxyType = null;
 				throw new InvalidOperationException (ExceptionMessage);

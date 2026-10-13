@@ -36,13 +36,12 @@ namespace Android.Runtime {
 			if (dlg.Method == null)
 				throw new ArgumentException ();
 
-			var delegateType = dlg.GetType ();
-			var result = CreateBuiltInDelegate (dlg, delegateType);
+			var result = CreateBuiltInDelegate (dlg);
 			if (result != null)
 				return result;
 
 			if (Logger.LogAssembly) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
+				RuntimeNativeMethods.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{dlg.GetType ()}': {dlg.Method}");
 			}
 
 			get_runtime_types ();

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace MonoDroid.Generation
 {
 	public class NamespaceMapping
@@ -24,20 +22,18 @@ namespace MonoDroid.Generation
 				sw.WriteLine ("using System;");
 				sw.WriteLine ();
 
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					// Only the experimental format is marked: the absence of the attribute means
-					// JavaPeerCallbackFormatAttribute.ConnectorDelegates, so existing bindings and
-					// existing consumers are unaffected.
-					if (opt.UseUnmanagedCallersOnlyCallbacks) {
-						sw.WriteLine ("[assembly:global::Java.Interop.JavaPeerCallbackFormat (global::Java.Interop.JavaPeerCallbackFormatAttribute.UnmanagedCallersOnlyCallbacks)]");
-						sw.WriteLine ();
-					}
-
-					foreach (var p in mappings) {
-						sw.WriteLine ($"[assembly:global::Android.Runtime.NamespaceMapping (Java = \"{p.Key}\", Managed=\"{p.Value}\")]");
-					}
+				// Only the experimental format is marked: the absence of the attribute means
+				// JavaPeerCallbackFormatAttribute.ConnectorDelegates, so existing bindings and
+				// existing consumers are unaffected.
+				if (opt.UseUnmanagedCallersOnlyCallbacks) {
+					sw.WriteLine ("[assembly:global::Java.Interop.JavaPeerCallbackFormat (global::Java.Interop.JavaPeerCallbackFormatAttribute.UnmanagedCallersOnlyCallbacks)]");
 					sw.WriteLine ();
 				}
+
+				foreach (var p in mappings) {
+					sw.WriteLine ($"[assembly:global::Android.Runtime.NamespaceMapping (Java = \"{p.Key}\", Managed=\"{p.Value}\")]");
+				}
+				sw.WriteLine ();
 
 				// [UnmanagedFunctionPointer (CallingConvention.Winapi)]
 				// delegate bool _JniMarshal_PPL_Z (IntPtr jnienv, IntPtr klass, IntPtr a);

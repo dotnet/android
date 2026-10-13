@@ -7,16 +7,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.SetIlcToolchainPath" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
-    <_AndroidUseWorkloadNativeLinker Condition=" '$(_AndroidUseWorkloadNativeLinker)' == '' ">true</_AndroidUseWorkloadNativeLinker>
-    <AndroidTypeMapImplementation Condition=" '$(AndroidTypeMapImplementation)' == '' ">trimmable</AndroidTypeMapImplementation>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
@@ -37,7 +34,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <!-- Default property values for NativeAOT Debug configuration -->
   <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
     <NativeDebugSymbols>true</NativeDebugSymbols>
-    <StripSymbols>false</StripSymbols>
     <CompressSymbols>false</CompressSymbols>
   </PropertyGroup>
 
@@ -62,8 +58,55 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       _AndroidComputeIlcCompileInputs;
       $(IlcCompileDependsOn)
     </IlcCompileDependsOn>
-    <_AndroidBeforeIlcCompileDependsOn>_CreatePropertiesCache</_AndroidBeforeIlcCompileDependsOn>
+    <_AndroidBeforeIlcCompileDependsOn>_AndroidValidateNativeAotJniInitFunctions;_CreatePropertiesCache;_AndroidResolveNdk</_AndroidBeforeIlcCompileDependsOn>
   </PropertyGroup>
+
+  <Target Name="_AndroidValidateNativeAotJniInitFunctions"
+      BeforeTargets="_GenerateTrimmableTypeMap;_GenerateJavaStubs">
+    <AndroidError Code="XA1051"
+        ResourceName="XA1051"
+        Condition=" '@(AndroidStaticJniInitFunction->Count())' != '0' " />
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotBootstrapSourcesInputs"
+      DependsOnTargets="_GenerateJavaStubs;_GetGenerateJavaStubsInputs">
+    <PropertyGroup>
+      <_AndroidNativeAotBootstrapDirectory>$(IntermediateOutputPath)android</_AndroidNativeAotBootstrapDirectory>
+      <_AndroidNativeAotBootstrapInputsFile>$(IntermediateOutputPath)nativeaot-bootstrap.inputs</_AndroidNativeAotBootstrapInputsFile>
+    </PropertyGroup>
+    <!-- Command-line library names and environment selection/order can change without newer file inputs. -->
+    <WriteLinesToFile
+        File="$(_AndroidNativeAotBootstrapInputsFile)"
+        Lines="TargetName=$(TargetName);@(_EnvironmentFiles->'EnvironmentFile=%(FullPath)')"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->
+    <GetNativeAotRuntimeProviders MSBuildRuntime="NET" ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
+      <Output TaskParameter="AdditionalProviderSources" ItemName="_AndroidNativeAotRuntimeProvider" />
+    </GetNativeAotRuntimeProviders>
+    <ItemGroup>
+      <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/JavaInteropRuntime.java" />
+      <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/NativeAotEnvironmentVars.java" />
+      <_AndroidNativeAotBootstrapSource Include="@(_AndroidNativeAotRuntimeProvider->'$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/%(Identity).java')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotBootstrapSources"
+      BeforeTargets="_FindJavaStubFiles"
+      DependsOnTargets="_AndroidGenerateNativeAotBootstrapSourcesInputs"
+      Inputs="$(_AndroidNativeAotBootstrapInputsFile);@(_EnvironmentFiles);$(IntermediateOutputPath)AndroidManifest.xml;$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Outputs="@(_AndroidNativeAotBootstrapSource)">
+    <GenerateNativeAotBootstrapSources
+        MSBuildRuntime="NET"
+        OutputDirectory="$(_AndroidNativeAotBootstrapDirectory)"
+        TargetName="$(TargetName)"
+        Environments="@(_EnvironmentFiles)"
+        AdditionalProviderSources="@(_AndroidNativeAotRuntimeProvider)" />
+    <ItemGroup>
+      <FileWrites Include="@(_AndroidNativeAotBootstrapSource)" />
+      <FileWrites Include="$(_AndroidNativeAotBootstrapInputsFile)" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="_AndroidBeforeIlcCompile"
       DependsOnTargets="$(_AndroidBeforeIlcCompileDependsOn)"
@@ -82,52 +125,40 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64-linux-android</_NdkSysrootAbi>
       <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64-linux-android</_NdkSysrootAbi>
       <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">arm-linux-androideabi</_NdkSysrootAbi>
-      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
-      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
-      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
 
       <!-- We need to explicitly specify the extension on Windows, since some Android NDK versions
            for Windows contain bash shell scripts without the extension, in addition to the
            Windows-specific .cmd ones. We must use the latter since end users might not have bash
            installed on Windows -->
       <_NdkWrapperScriptExt Condition=" $([MSBuild]::IsOSPlatform('windows')) ">.cmd</_NdkWrapperScriptExt>
-      <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
-      <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
+      <_NdkToolExecutableExt Condition=" $([MSBuild]::IsOSPlatform('windows')) ">.exe</_NdkToolExecutableExt>
+      <_NdkSysrootDir>$(_AndroidNdkToolchainDirectory)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
+      <_NdkBinDir>$([MSBuild]::NormalizeDirectory('$(_AndroidNdkToolchainDirectory)', 'bin'))</_NdkBinDir>
 
       <!--
           Don't call `clang` directly, use the wrapper scripts instead since they properly pass
           arguments required to link the application using the right API level libraries.
-          Using the script also makes it certain that we're not invoking a random `clang` in
-          from the system but rather the NDK one.
-
-          Also, we cannot use $(_NdkBinDir) here because, on Windows, the `Exec` task will get
-          confused by the forward slash in the path (even though it's a valid path separator
-          character on Windows) and signal the following error:
-
-            SetupOSSpecificProps:
-              where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"
-            1>EXEC : error : Invalid pattern is specified in "path:pattern".
-            The command "where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"" exited with code 2.
-
-          This could be fixed by making sure $(_NdkBinDir) path is fixed-up to use the canonical
-          form of path separation for the host OS, but it's simpler to just use the NDK-specific
-          compiler/linker wrapper script name.
+          Explicit tool paths avoid changing the MSBuild process's PATH.
 
           Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
           application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
           added to pass `-nostdlib++` to it.
       -->
-      <CppCompilerAndLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
-      <CppLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
-      <ObjCopyName>llvm-objcopy</ObjCopyName>
+      <CppCompilerAndLinker>$([MSBuild]::NormalizePath('$(_NdkBinDir)', '$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)'))</CppCompilerAndLinker>
+      <CppLinker>$(CppCompilerAndLinker)</CppLinker>
+      <CppLibCreator>$([MSBuild]::NormalizePath('$(_NdkBinDir)', 'llvm-ar$(_NdkToolExecutableExt)'))</CppLibCreator>
+      <ObjCopyName>$(_AndroidNdkObjcopyToolPath)</ObjCopyName>
+      <_AndroidIlcToolchainPath>$(_NdkBinDir)$([System.IO.Path]::PathSeparator)$([System.Environment]::GetEnvironmentVariable('PATH'))</_AndroidIlcToolchainPath>
+      <_IlcEnvironmentVariables>$(_IlcEnvironmentVariables);PATH=$([MSBuild]::Escape($(_AndroidIlcToolchainPath)))</_IlcEnvironmentVariables>
+
+      <!-- Android owns the final link, stripping, and debug sidecars. Disable ILC's unused
+           stripping phase and its Windows tool probe, which rejects absolute tool paths. -->
+      <StripSymbols>false</StripSymbols>
 
       <!-- We must ensure this is `false`, so that the compiler driver does not add libc++,
            which NativeAOT applications do not link. -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
     </PropertyGroup>
-
-    <SetIlcToolchainPath ToolchainBinDirectory="$(_NdkBinDir)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' " />
-    <SetIlcToolchainPath ToolchainBinDirectory="$(AndroidBinUtilsDirectory)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' " />
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">
@@ -159,87 +190,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
+      <!-- The managed JNI_OnLoad calls this initializer even when the app has no crypto P/Invokes. -->
+      <DirectPInvoke Include="System.Security.Cryptography.Native.Android!AndroidCryptoNative_InitLibraryOnLoad" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_PrepareNativeAotAndroidAppInputs">
+  <Target Name="_PrepareNativeAotAndroidAppInputs"
+      DependsOnTargets="_AndroidValidateNativeAotJniInitFunctions">
     <ItemGroup>
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' " Include="armeabi-v7a" />
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' " Include="arm64-v8a" />
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' " Include="x86_64" />
     </ItemGroup>
-
-    <PrepareAbiItems
-        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
-        NativeSourcesDir="$(_NativeAssemblySourceDir)"
-        Debug="$(AndroidIncludeDebugSymbols)"
-        Mode="jni_init">
-      <Output TaskParameter="AssemblySources" ItemName="_PrivateJniInitFuncsAssemblySource" />
-    </PrepareAbiItems>
-
-    <PrepareAbiItems
-        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
-        NativeSourcesDir="$(_NativeAssemblySourceDir)"
-        Debug="$(AndroidIncludeDebugSymbols)"
-        Mode="environment">
-      <Output TaskParameter="AssemblySources" ItemName="_PrivateEnvironmentAssemblySource" />
-    </PrepareAbiItems>
-
-    <ItemGroup>
-      <_PrivateJniInitFuncsNativeObjectFile Include="@(_PrivateJniInitFuncsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-        <abi>%(_PrivateJniInitFuncsAssemblySource.abi)</abi>
-      </_PrivateJniInitFuncsNativeObjectFile>
-
-      <_PrivateEnvironmentNativeObjectFile Include="@(_PrivateEnvironmentAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-        <abi>%(_PrivateEnvironmentAssemblySource.abi)</abi>
-      </_PrivateEnvironmentNativeObjectFile>
-
-      <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
-      <!-- In .NET 11+, the SDK's ILLink target populates ResolvedFileToPublish with linked assemblies
-           (via _LinkedResolvedFileToPublish) WITHOUT RuntimeIdentifier metadata. _AndroidComputeIlcCompileInputs
-           adds the same items WITH RuntimeIdentifier, but ->Distinct() keeps the first occurrence (without metadata).
-           Stamp RuntimeIdentifier on any items that lack it, since we're in the inner build with a single RID. -->
-      <_PrivateAndroidNaotResolvedAssemblyFiles
-          Update="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
-          Condition=" '%(_PrivateAndroidNaotResolvedAssemblyFiles.RuntimeIdentifier)' == '' "
-          RuntimeIdentifier="$(RuntimeIdentifier)"
-      />
-    </ItemGroup>
-  </Target>
-
-  <Target
-      Name="_GenerateNativeAotAndroidAppAssemblerSources"
-      DependsOnTargets="_GenerateEnvironmentFiles;_PrepareNativeAotAndroidAppInputs"
-      Inputs="@(_PrivateAndroidNaotResolvedAssemblyFiles);@(AndroidEnvironment);@(LibraryEnvironments)"
-      Outputs="@(_PrivateJniInitFuncsAssemblySource);@(_PrivateJniInitFuncsNativeObjectFile);@(_PrivateEnvironmentAssemblySource);@(_PrivateEnvironmentNativeObjectFile)">
-    <GenerateNativeAotLibraryLoadAssemblerSources
-        ResolvedAssemblies="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
-        CustomJniInitFunctions="@(AndroidStaticJniInitFunction)"
-        OutputSources="@(_PrivateJniInitFuncsAssemblySource)" />
-
-    <GenerateNativeAotEnvironmentAssemblerSources
-        Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
-        OutputSources="@(_PrivateEnvironmentAssemblySource)"
-        RID="$(RuntimeIdentifier)" />
-
-    <CompileNativeAssembly
-        Sources="@(_PrivateJniInitFuncsAssemblySource);@(_PrivateEnvironmentAssemblySource)"
-        DebugBuild="$(AndroidIncludeDebugSymbols)"
-        WorkingDirectory="$(_NativeAssemblySourceDir)"
-        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
-
-    <ItemGroup>
-      <LinkerArg Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
-      <LinkerArg Include="@(_PrivateEnvironmentNativeObjectFile)" />
-    </ItemGroup>
-  </Target>
-
-  <!-- Make sure we have a chance to generate our application-specific static library before linking
-       takes place. We must run after `IlcCompile`, which is a dependency of `LinkNative`  -->
-  <Target
-      Name="_GenerateNativeAotAndroidAppLibrary"
-      AfterTargets="IlcCompile"
-      DependsOnTargets="_GenerateNativeAotAndroidAppAssemblerSources">
   </Target>
 
   <!--
@@ -247,47 +209,17 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     libs into a .so.  LinkNative is overridden as a no-op in Microsoft.Android.Sdk.After.targets
     (which is imported after the ILC NuGet targets).
   -->
-  <Target Name="_AndroidLinkNativeAotSharedLibrary"
-      AfterTargets="LinkNative"
-      DependsOnTargets="_PrepareNativeAotAndroidAppInputs"
-      Inputs="$(NativeObject);@(NativeLibrary)"
-      Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
+  <Target Name="_AndroidLinkNativeAotSharedLibraryInputs"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidResolveNdk;_AndroidGenerateNativeAotR8BinaryBlobs">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
-    </PropertyGroup>
-
-    <!-- Resolve the runtime pack native directory for workload-provided linker dependencies.
-         _RuntimePackLibraryDirectory is not populated for NativeAOT, so derive the path from
-         the libnaot-android RuntimePackAsset item. -->
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
-      <_NativeAotRuntimePackAsset Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.release-static-release'))" />
-    </ItemGroup>
-    <PropertyGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
-      <_NativeAotRuntimePackNativeDir>@(_NativeAotRuntimePackAsset->'%(RootDir)%(Directory)')</_NativeAotRuntimePackNativeDir>
-      <_NativeAotLinkerBinDir>$(AndroidBinUtilsDirectory)</_NativeAotLinkerBinDir>
-    </PropertyGroup>
-
-    <!-- NDK paths (default, when not using workload linker) -->
-    <PropertyGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' ">
+      <_AndroidNativeAotAbi>@(_PrivateBuildTargetAbi)</_AndroidNativeAotAbi>
+      <_AndroidNativeAotLinkResponseFile>$(NativeIntermediateOutputPath)ld.$([System.IO.Path]::GetFileNameWithoutExtension('$(_AndroidNativeAotSharedLibrary)')).$(_AndroidNativeAotAbi).rsp</_AndroidNativeAotLinkResponseFile>
       <_NdkApiSysrootDir>$(_NdkSysrootDir)$(_NDKApiLevel)/</_NdkApiSysrootDir>
-      <_NdkClangResourceDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/lib/clang</_NdkClangResourceDir>
-      <_NativeAotLinkerBinDir>$(_NdkBinDir)</_NativeAotLinkerBinDir>
     </PropertyGroup>
-
-    <!-- CRT and toolchain items from workload runtime pack -->
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
-      <_NativeAotCrtStartFiles Include="$(_NativeAotRuntimePackNativeDir)/crtbegin_so.o">
-        <Abi>@(_PrivateBuildTargetAbi)</Abi>
-      </_NativeAotCrtStartFiles>
-      <_NativeAotCrtEndFiles Include="$(_NativeAotRuntimePackNativeDir)/crtend_so.o">
-        <Abi>@(_PrivateBuildTargetAbi)</Abi>
-      </_NativeAotCrtEndFiles>
-      <_NativeAotLibSearchPaths Include="$(_NativeAotRuntimePackNativeDir)" />
-      <_NativeAotCompilerRtLibs Include="$(_NativeAotRuntimePackNativeDir)/libclang_rt.builtins-$(_NdkAbi)-android.a" />
-    </ItemGroup>
 
     <!-- CRT and toolchain items from NDK -->
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' ">
+    <ItemGroup>
       <_NativeAotCrtStartFiles Include="$(_NdkApiSysrootDir)crtbegin_so.o">
         <Abi>@(_PrivateBuildTargetAbi)</Abi>
       </_NativeAotCrtStartFiles>
@@ -296,34 +228,33 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       </_NativeAotCrtEndFiles>
       <_NativeAotLibSearchPaths Include="$(_NdkApiSysrootDir)" />
       <_NativeAotLibSearchPaths Include="$(_NdkSysrootDir)" />
-      <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/libclang_rt.builtins-$(_NdkAbi)-android.a" />
+      <_NativeAotCompilerRtLibs Include="$(_AndroidNdkClangRuntimeDirectory)/libclang_rt.builtins-$(_NdkAbi)-android.a" />
     </ItemGroup>
 
-    <!-- Common items (same regardless of linker source) -->
     <ItemGroup>
       <!-- Supplied by the SDK-resolved NativeAOT runtime pack, including the BCL native archives. -->
-      <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
-      <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
-      <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
+      <_NativeAotLinkLibraries Include="@(NativeLibrary);@(_NdkLibs)" />
       <_NativeAotSystemLibraries Include="dl" />
       <_NativeAotSystemLibraries Include="z" />
       <_NativeAotSystemLibraries Include="log" />
       <_NativeAotSystemLibraries Include="m" />
       <_NativeAotSystemLibraries Include="c" />
+      <_AndroidNativeAotLinkOutputs Include="$(_AndroidNativeAotSharedLibrary)" />
+      <_AndroidNativeAotLinkOutputs Include="$([System.IO.Path]::ChangeExtension('$(_AndroidNativeAotSharedLibrary)', '.dbg.so'))" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
     </ItemGroup>
-    <!-- When using workload linker, resolve libnaot from runtime pack dir.
-         When using NDK, @(_NdkLibs) already has the right NDK sysroot paths. -->
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
-      <_NativeAotLinkLibraries Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.release-static-release'))" />
-    </ItemGroup>
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' ">
-      <_NativeAotLinkLibraries Include="@(_NdkLibs)" />
-    </ItemGroup>
+  </Target>
 
+  <Target Name="_AndroidLinkNativeAotSharedLibrary"
+      AfterTargets="LinkNative"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' or '$(_AndroidNativeAotLinkAfterR8)' == 'true' "
+      DependsOnTargets="_AndroidLinkNativeAotSharedLibraryInputs"
+      Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotAdditionalObjects);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
+      Outputs="@(_AndroidNativeAotLinkOutputs)">
     <LinkNativeAotSharedLibrary
-        AndroidBinUtilsDirectory="$(_NativeAotLinkerBinDir)"
+        MSBuildRuntime="NET"
+        LinkerToolPath="$(_AndroidNdkLinkerToolPath)"
+        ObjcopyToolPath="$(_AndroidNdkObjcopyToolPath)"
         IntermediateOutputPath="$(NativeIntermediateOutputPath)"
-        RuntimePackLibraryDirectories="@(RuntimePackLibraryDirectories)"
         NativeObject="$(NativeObject)"
         OutputSharedLibrary="$(_AndroidNativeAotSharedLibrary)"
         NativeLibraries="@(_NativeAotLinkLibraries)"
@@ -337,13 +268,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         LinkerScript="$(NativeIntermediateOutputPath)sections.ld"
         LinkerScriptContent="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }"
         ExtraLinkerArgs="$(_AndroidNativeAotExtraLinkerArgs)"
-        SupportedAbis="@(_PrivateBuildTargetAbi)"
+        Abi="$(_AndroidNativeAotAbi)"
         DebugBuild="$(AndroidIncludeDebugSymbols)"
     />
 
     <ItemGroup>
-      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
-      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
+      <FileWrites Include="@(_AndroidNativeAotLinkOutputs)" />
+      <FileWrites Include="$(_AndroidNativeAotLinkResponseFile)" />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
       <FileWrites Include="$(NativeIntermediateOutputPath)libRuntime.WorkstationGC.arm-ehabi.a" Condition=" '$(RuntimeIdentifier)' == 'android-arm' " />
     </ItemGroup>
@@ -372,7 +303,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <!-- The linker target is not always scheduled during incremental deployment builds. -->
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
-      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)" Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') ">
+      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)"
+          Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') or '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
         <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>

@@ -144,7 +144,11 @@ namespace Java.Interop
 		void IJavaPeerable.Finalized ()
 		{
 			managedPeerState    |= Disposed;
-			Dispose (disposing: false);
+			try {
+				Dispose (disposing: false);
+			} finally {
+				Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
+			}
 		}
 
 		void IJavaPeerable.SetJniIdentityHashCode (int value)
