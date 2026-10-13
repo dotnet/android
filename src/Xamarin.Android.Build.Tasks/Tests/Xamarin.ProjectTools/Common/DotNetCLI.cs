@@ -158,7 +158,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public bool New (string template, string output = null, bool noRestore = false)
+		public bool New (string template, string output = null, bool noRestore = false, string framework = null)
 		{
 			var arguments = new List<string> {
 				"new",
@@ -167,6 +167,10 @@ namespace Xamarin.ProjectTools
 			};
 			if (noRestore) {
 				arguments.Add ("--no-restore");
+			}
+			if (!string.IsNullOrEmpty (framework)) {
+				arguments.Add ("--framework");
+				arguments.Add (framework);
 			}
 			return Execute (arguments.ToArray ());
 		}

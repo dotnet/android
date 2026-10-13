@@ -51,6 +51,25 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetNewFramework (
+			[Values ("android", "androidlib", "android-bindinglib", "androidwear", "androidtest")] string template,
+			[Values (null, "net11.0-android", "net10.0-android")] string framework)
+		{
+			var templateName = TestName.Replace ("-", "");
+			var templatePath = Path.Combine (Root, "temp", templateName);
+			if (Directory.Exists (templatePath))
+				Directory.Delete (templatePath, true);
+
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
+			var projectFile = Path.Combine (templatePath, $"{templateName}.csproj");
+			var dotnet = new DotNetCLI (projectFile);
+			Assert.IsTrue (dotnet.New (template, noRestore: true, framework: framework), $"`dotnet new {template}` should succeed with framework '{framework}'");
+
+			var project = System.Xml.Linq.XDocument.Load (projectFile);
+			Assert.AreEqual (framework ?? "net11.0-android", project.Root.Element ("PropertyGroup").Element ("TargetFramework").Value);
+		}
+
+		[Test]
 		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear")] string template)
 		{
 			var templateName = TestName.Replace ("-", "");
