@@ -15,6 +15,10 @@ namespace MonoDroid.Generation
 				IsAbstract = t.IsAbstract,
 				IsFinal = t.IsSealed,
 				IsShallow = opt.UseShallowReferencedTypes,
+				HasDeferredThrowableConstructor = t.Methods.Any (m => m.IsConstructor &&
+					(m.IsFamily || m.IsFamilyOrAssembly || m.IsPublic) && m.Parameters.Count == 1 &&
+					m.Parameters [0].ParameterType.FullName == "Java.Interop.JniObjectReferenceOptions" &&
+					!m.CustomAttributes.Any (a => a.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.RequiresUnsafeAttribute")),
 			};
 
 			foreach (var ifaceImpl in t.Interfaces) {

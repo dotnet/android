@@ -16,6 +16,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
+	[Category ("BindingSafetyLifecycle")]
 	public class ConstructorActivationTests
 	{
 		[Test]

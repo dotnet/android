@@ -34,12 +34,15 @@ namespace generator.SourceWriters
 			ConstructorWriter ctor = new ConstructorWriter {
 				Name        = Name,
 				IsPublic    = true,
+				IsUnsafe    = SourceWriterExtensions.IsThrowable (klass),
 				BaseCall    = "base (handle, transfer)",
 				Parameters  = {
 					new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr),
 					new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
 				},
 			};
+			if (ctor.IsUnsafe)
+				ctor.Comments.Add ("/// <safety><paramref name=\"handle\"/> must be a live JNI throwable reference compatible with this type; <paramref name=\"transfer\"/> must match its ownership.</safety>");
 
 			Constructors.Add (ctor);
 

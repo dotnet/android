@@ -40,30 +40,37 @@ namespace Android.Text {
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_p0, &__n_GetSpanFlags_Ljava_lang_Object_);
 			}
 		}
 		private static int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableStringInternal> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var p0 = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_p0, JniHandleOwnership.DoNotTransfer);
-			int __ret = (int) __this.GetSpanFlags (p0);
-			return __ret;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableStringInternal> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var p0 = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_p0, JniHandleOwnership.DoNotTransfer);
+				int __ret = (int) __this.GetSpanFlags (p0);
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.text']/class[@name='SpannableStringInternal']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[return:global::Android.Runtime.GeneratedEnum]
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler")]
-		public virtual unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object p0)
+		public virtual global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object p0)
 		{
-			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-			var __result = (global::Android.Text.SpanTypes) __rm;
-			global::System.GC.KeepAlive (p0);
-			return __result;
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+				var __result = (global::Android.Text.SpanTypes) __rm;
+				global::System.GC.KeepAlive (p0);
+				return __result;
+			}
 		}
 
 	}
