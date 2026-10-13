@@ -56,8 +56,10 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			typeManager.GetReplacementTypeInfo (jniPeerTypeName, out var replacement, out var replacementUtf8);
-			if (replacementUtf8 == IntPtr.Zero)
+			if (replacementUtf8 == IntPtr.Zero) {
 				return new JniPeerTypeNameInfo (jniPeerTypeName, replacement);
+			}
+
 			unsafe {
 				return new JniPeerTypeNameInfo (jniPeerTypeName, (byte*) replacementUtf8);
 			}
@@ -237,8 +239,10 @@ namespace Java.Interop {
 
 		JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
-			if (jniPeerTypeNameUtf8 == IntPtr.Zero)
+			if (jniPeerTypeNameUtf8 == IntPtr.Zero) {
 				return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeName ?? sourceJniPeerTypeName, method, signature);
+			}
+
 			unsafe {
 				return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature);
 			}
@@ -256,6 +260,7 @@ namespace Java.Interop {
 					return new JniType (info.TargetJniTypeUtf8);
 				}
 			}
+
 			if (info.TargetJniType != null)
 				return new JniType (info.TargetJniType);
 			return new JniType (fallbackTypeName);
@@ -321,6 +326,7 @@ namespace Java.Interop {
 					return GetStringFromNullTerminated ((byte*) info.TargetJniTypeUtf8);
 				}
 			}
+
 			if (info.TargetJniType != null)
 				return info.TargetJniType;
 			return fallback.JniPeerTypeName;
@@ -333,6 +339,7 @@ namespace Java.Interop {
 					return GetStringFromNullTerminated ((byte*) info.TargetJniMethodNameUtf8);
 				}
 			}
+
 			if (info.TargetJniMethodName != null)
 				return info.TargetJniMethodName;
 			return fallback.ToString ();
@@ -345,6 +352,7 @@ namespace Java.Interop {
 					return GetStringFromNullTerminated ((byte*) info.TargetJniMethodSignatureUtf8);
 				}
 			}
+
 			if (info.TargetJniMethodSignature != null)
 				return info.TargetJniMethodSignature;
 			return fallback.ToString ();
