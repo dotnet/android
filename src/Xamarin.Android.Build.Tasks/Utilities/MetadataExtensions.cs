@@ -69,15 +69,23 @@ namespace Xamarin.Android.Tasks
 		///		https://github.com/dotnet/corefx/issues/23372
 		///		https://gist.github.com/nguerrera/6864d2a907cb07d869be5a2afed8d764
 		/// </summary>
+		/// <safety>
+		/// <paramref name="resource"/> must be an embedded resource from <paramref name="peReader"/>.
+		/// The caller must keep <paramref name="peReader"/> undisposed until the returned stream
+		/// has been disposed, because the stream borrows its unmanaged image memory.
+		/// </safety>
 		public static unsafe Stream GetEmbeddedResourceStream (this PEReader peReader, ManifestResource resource)
 		{
 			checked // arithmetic overflow here could cause AV
 			{
 				// Locate start and end of PE image in unmanaged memory.
 				var block = peReader.GetEntireImage ();
-				Debug.Assert (block.Pointer != null && block.Length > 0);
-
-				byte* peImageStart = block.Pointer;
+				byte* peImageStart;
+				// SAFETY: This image belongs to peReader, whose lifetime is the caller's obligation.
+				unsafe {
+					Debug.Assert (block.Pointer != null && block.Length > 0);
+					peImageStart = block.Pointer;
+				}
 				byte* peImageEnd = peImageStart + block.Length;
 
 				// Locate offset to resources within PE image.
@@ -93,13 +101,20 @@ namespace Xamarin.Android.Tasks
 					throw new BadImageFormatException ("resource offset out of bounds.");
 				}
 
-				int resourceLength = new BlobReader (resourceStart, sizeof (int)).ReadInt32 ();
+				int resourceLength;
+				// SAFETY: The length prefix is within the image; the caller keeps peReader alive.
+				unsafe {
+					resourceLength = new BlobReader (resourceStart, sizeof (int)).ReadInt32 ();
+				}
 				resourceStart += sizeof (int);
 				if (resourceLength < 0 || resourceStart >= peImageEnd - resourceLength) {
 					throw new BadImageFormatException ("resource offset or length out of bounds.");
 				}
 
-				return new UnmanagedMemoryStream (resourceStart, resourceLength);
+				// SAFETY: The resource fits in the image; the caller owns the borrowed memory's lifetime.
+				unsafe {
+					return new UnmanagedMemoryStream (resourceStart, resourceLength);
+				}
 			}
 		}
 	}
