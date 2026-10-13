@@ -823,6 +823,8 @@ extends:
       jobs:
       - job: maui_tests_integration
         displayName: MAUI Integration
+        # Re-enable when dotnet/maui's net12.0 branch exists: https://github.com/dotnet/android/issues/13088
+        condition: 'false'
         pool:
           name: $(NetCoreInternalPoolName)
           image: 1es-windows-2022

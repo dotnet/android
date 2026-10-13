@@ -448,42 +448,6 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot generate Java wrapper for type &apos;{0}&apos;. Only &apos;class&apos; types are supported..
-        /// </summary>
-        public static string JavaCallableWrappers_XA4200 {
-            get {
-                return ResourceManager.GetString("JavaCallableWrappers_XA4200", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot determine JNI name for type &apos;{0}&apos;..
-        /// </summary>
-        public static string JavaCallableWrappers_XA4201 {
-            get {
-                return ResourceManager.GetString("JavaCallableWrappers_XA4201", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;Name&apos; property must be a fully qualified type like &apos;com.example.MyClass&apos; and no package was found for &apos;{0}&apos;..
-        /// </summary>
-        public static string JavaCallableWrappers_XA4203 {
-            get {
-                return ResourceManager.GetString("JavaCallableWrappers_XA4203", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to resolve interface type &apos;{0}&apos;. Are you missing an assembly reference?.
-        /// </summary>
-        public static string JavaCallableWrappers_XA4204 {
-            get {
-                return ResourceManager.GetString("JavaCallableWrappers_XA4204", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to [ExportField] can only be used on methods with 0 parameters..
         /// </summary>
         public static string JavaCallableWrappers_XA4205 {
@@ -516,15 +480,6 @@ namespace Java.Interop.Localization {
         public static string JavaCallableWrappers_XA4208 {
             get {
                 return ResourceManager.GetString("JavaCallableWrappers_XA4208", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot override Kotlin-generated method &apos;{0}&apos; because it is not a valid Java method name. This method can only be overridden from Kotlin..
-        /// </summary>
-        public static string JavaCallableWrappers_XA4217 {
-            get {
-                return ResourceManager.GetString("JavaCallableWrappers_XA4217", resourceCulture);
             }
         }
         

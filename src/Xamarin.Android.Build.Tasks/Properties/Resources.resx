@@ -940,6 +940,10 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>
+  <data name="XA4331" xml:space="preserve">
+    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <comment>{0} - The bundle config file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

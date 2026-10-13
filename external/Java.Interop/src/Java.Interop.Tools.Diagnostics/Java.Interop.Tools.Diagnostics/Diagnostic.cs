@@ -91,10 +91,6 @@ namespace Java.Interop.Tools.Diagnostics {
 	//					XA4110	The registrar cannot marshal the out parameter of type `{0}` in signature for method `{1}`.
 	//					XA4111	The registrar cannot build a signature for type `{0}' in method `{1}`.
 	//			XA42xx	ACW generation
-	//					XA4200	Can only generate ACW's for `claas` types.
-	//					XA4201	Unable to determine JNI name for type {0}.
-	//					XA4203	The specified type name must be fully qualified.
-	//					XA4204	Unable to resolve interface type '{0}'. Are you missing an assembly reference?
 	//					XA4205	[ExportField] can only be used on methods with 0 parameters.
 	//					XA4206	[Export] cannot be used on a generic type.
 	//					XA4207	[ExportField] cannot be used on a generic type.
@@ -103,7 +99,6 @@ namespace Java.Interop.Tools.Diagnostics {
 	//					XA4210 "You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute."
 	//					XA4211  AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{1} for ACW compilation.
 	//					XA4212  Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.
-	//					XA4217  Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin."
 	// XA5xxx	GCC and toolchain
 	//			XA32xx	.apk generation
 	//					XA4300  Unsupported $(AndroidSupportedAbis) value '{0}'; ignoring.
@@ -195,4 +190,3 @@ namespace Java.Interop.Tools.Diagnostics {
 		}
 	}
 }
-

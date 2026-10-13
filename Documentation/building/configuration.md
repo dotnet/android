@@ -3,6 +3,7 @@
   - [Options suitable to use in builds for public use](#options-suitable-to-use-in-builds-for-public-use)
   - [Options suitable for local development](#options-suitable-for-local-development)
     - [Manifest merger (`src/manifestmerger`)](#manifest-merger-srcmanifestmerger)
+    - [Bundletool (`src/bundletool`)](#bundletool-srcbundletool)
     - [Native runtime (`src/native`)](#native-runtime-srcnative)
       - [Disable function inlining](#disable-function-inlining)
       - [Don't strip the runtime shared libraries](#dont-strip-the-runtime-shared-libraries)
@@ -128,6 +129,38 @@ From the repository root, run
 Android project integration tests in `Xamarin.Android.Build.Tests`.
 Compare the two JAR sizes to measure the savings for the current dependencies.
 Set `JAVA_HOME` to the JDK used for the SDK build.
+
+### Bundletool (`src/bundletool`)
+
+MSBuild downloads the GitHub release JAR specified by `XABundleToolVersion` and
+verifies `XABundleToolHash` before processing it with Gradle and ProGuard.
+Bundletool is not built from source. The Gradle `build` task removes the bundled
+aapt2 executables and JNA content, then shrinks and optimizes without obfuscation
+using `src/bundletool/proguard.pro`. It preserves the executable manifest,
+service providers, and reflection-based protobuf and APK signing APIs.
+
+The already-obfuscated embedded R8 classes are supplied to ProGuard as a library
+and copied into the final JAR byte-for-byte unchanged. Processing those classes
+with ProGuard 7.10.0 produces invalid JVM stack-map frames. Archive processing
+does not extract classes to disk, preserving case-distinct R8 class names on
+Windows.
+
+After preparing the repository, run
+`dotnet-local.cmd build src\bundletool\bundletool.csproj` on Windows, or
+`./dotnet-local.sh build src/bundletool/bundletool.csproj` on macOS/Linux.
+`src/bundletool/build/libs/bundletool.jar` is copied into the SDK;
+`bundletool-unshrunk.jar` in the same directory is the stripped, unprocessed
+comparison artifact. The original downloaded JAR remains in the toolchain cache.
+Compare these sizes to distinguish ProGuard savings from removal of native tools.
+
+Existing `CheckAppBundle`, `UniversalApkFromBundleIsIncremental`, and
+`AssetPackTests` in `Xamarin.Android.Build.Tests`, plus `BundleToolTests` and
+`BundleToolNoAbiSplitTests` in `MSBuildDeviceIntegration`, cover bundle creation,
+configuration, signing, APK generation, and installation. Run them against the
+locally built SDK after `PackDotNet`; use `JAVA_TOOL_OPTIONS=-Xverify:all` to also
+check JVM verification during these integration tests.
+When several devices are connected, set both `ADB_TARGET` (the test harness)
+and `AdbTarget` (MSBuild) to `-s <device-serial>`.
 
 ### Native runtime (`src/native`)
 
