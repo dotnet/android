@@ -116,8 +116,10 @@ namespace Java.Interop {
 		public      Type        ManagedPeerType {get; private set;}
 		public      string      JniPeerTypeName {
 			get {
-				if (jniPeerTypeNameUtf8 == IntPtr.Zero)
+				if (jniPeerTypeNameUtf8 == IntPtr.Zero) {
 					return jniPeerTypeName ?? sourceJniPeerTypeName;
+				}
+
 				unsafe {
 					return jniPeerTypeName ??= GetStringFromNullTerminated ((byte*) jniPeerTypeNameUtf8);
 				}
