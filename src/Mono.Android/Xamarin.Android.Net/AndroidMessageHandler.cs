@@ -1068,8 +1068,9 @@ namespace Xamarin.Android.Net
 			if (request.Content is null)
 				return;
 
-			var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+			Stream? stream = null;
 			try {
+				stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
 				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
 			} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
 				// When the caller cancels the request while the body is being uploaded, the connection
@@ -1077,7 +1078,7 @@ namespace Xamarin.Android.Net
 				// to an OperationCanceledException so callers observe cancellation instead of a WebException.
 				throw new System.OperationCanceledException ("Request body upload was canceled.", ex, cancellationToken);
 			} catch (global::System.IO.IOException ex) {
-				// OutputStreamInvoker translates Java transport errors into managed IOException.
+				// Content streams and OutputStreamInvoker can surface managed I/O failures.
 				throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.UnknownError);
 			} finally {
 				//
@@ -1102,7 +1103,7 @@ namespace Xamarin.Android.Net
 				//
 				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
 				//
-				if (stream.CanSeek)
+				if (stream != null && stream.CanSeek)
 					stream.Seek (0, SeekOrigin.Begin);
 			}
 		}
