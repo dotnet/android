@@ -3,6 +3,8 @@ using System.Security.Cryptography;
 using Java.Interop.Tools.JavaCallableWrappers;
 using NUnit.Framework;
 
+#pragma warning disable CS0618 // These tests intentionally exercise the obsolete public compatibility wrapper.
+
 namespace Java.Interop.Tools.JavaCallableWrappersTests
 {
 	[TestFixture]
