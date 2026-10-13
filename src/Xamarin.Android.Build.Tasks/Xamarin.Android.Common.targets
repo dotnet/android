@@ -534,7 +534,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_RemoveLegacyDesigner"
-		Condition=" '$(Language)' == 'C#' and '$(ManagedDesignTimeBuild)' != 'true' ">
+		Condition=" '$(Language)' == 'C#' And ('$(DesignTimeBuild)' != 'True' Or '$(AndroidUseDesignerAssembly)' != 'True') ">
 	<ItemGroup>
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'true' And '$(AndroidResgenFile)' != '' And '%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
 		<!-- Forcably Remove the old Resource.designer.cs even if the AndroidResgenFile is not set.-->
@@ -874,7 +874,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' ">$(IntermediateOutputPath)$(_AndroidResourceDesigner)</_AndroidResourceDesignerFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
-	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
 </PropertyGroup>
 
 <Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion;_ResolveMonoAndroidSdks">
@@ -956,71 +955,16 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
-<Target Name="_BeforeManagedUpdateAndroidResgen">
-  <PropertyGroup>
-    <_ManagedUpdateAndroidResgenInputs>
-      @(_AndroidMSBuildAllProjects);
-      @(AndroidResource);
-      @(AndroidBoundLayout);
-      @(_MonoAndroidReferencePath);
-      @(_LibraryResourceDirectoryStamps);
-      $(_AndroidBuildPropertiesCache);
-      $(ProjectAssetsFile);
-    </_ManagedUpdateAndroidResgenInputs>
-  </PropertyGroup>
-  <PropertyGroup>
-    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidResourcePathsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
-    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
-    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryProjectImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryProjectImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
-  </PropertyGroup>
-</Target>
-
-<!-- Managed DesignTime Resource Generation -->
-<Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And  '$(AndroidUseDesignerAssembly)' != 'True' "
-		Inputs="$(_ManagedUpdateAndroidResgenInputs)"
-		Outputs="$(_AndroidManagedResourceDesignerFile)"
-		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_ValidateAndroidPackageProperties;_GenerateResourceCaseMap;_BeforeManagedUpdateAndroidResgen">
-	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" />
-	<!-- Parse primary R.java and create Resources.Designer.cs -->
-	<GenerateResourceDesigner
-		ContinueOnError="$(DesignTimeBuild)"
-		NetResgenOutputFile="$(_AndroidManagedResourceDesignerFile)"
-		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
-		RTxtFile="$(IntermediateOutputPath)R.txt"
-		Namespace="$(AndroidResgenNamespace)"
-		AssemblyName="$(AssemblyName)"
-		ProjectDir="$(ProjectDir)"
-		Resources="@(AndroidResource);@(AndroidBoundLayout)"
-		ResourceDirectory="$(MonoAndroidResourcePrefix)"
-		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-		IsApplication="$(AndroidApplication)"
-		References="@(_MonoAndroidReferencePath)"
-		UseManagedResourceGenerator="True"
-		DesignTimeBuild="$(DesignTimeBuild)"
-		JavaPlatformJarPath="$(JavaPlatformJarPath)"
-		ResourceFlagFile="$(_AndroidResFlagFile)"
-		CaseMapFile="$(_GenerateResourceCaseMapFile)"
-		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
-	/>
-	<Touch Condition="Exists ('$(_AndroidManagedResourceDesignerFile)')" Files="$(_AndroidManagedResourceDesignerFile)" />
-	<ItemGroup>
-		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
-		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == 'Resources\Resource.designer.cs'"/>
-		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And '%(CorrectCasedItem.Identity)' != '' "/>
-		<Compile Include="$(_AndroidManagedResourceDesignerFile)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And Exists ('$(_AndroidManagedResourceDesignerFile)')" />
-	</ItemGroup>
-</Target>
-
 <!-- Resource Build -->
 
 <Target Name="_UpdateAndroidResources"
-    Condition=" '$(ManagedDesignTimeBuild)' == 'False' "
+    Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseDesignerAssembly)' != 'True' "
     DependsOnTargets="$(_UpdateAndroidResourcesDependsOn)"
 />
 
 <Target Name="UpdateAndroidResources"
     Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
-    DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_BuildResourceDesigner;_UpdateAndroidResources"
+    DependsOnTargets="_SetupDesignTimeBuildForCompile;_BuildResourceDesigner;_UpdateAndroidResources"
 />
 
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
@@ -1241,7 +1185,6 @@ because xbuild doesn't support framework reference assemblies.
 		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseDesignerAssembly)' != 'True' "
 		ContinueOnError="$(DesignTimeBuild)"
 		NetResgenOutputFile="$(_AndroidResourceDesignerFile)"
-		DesignTimeOutputFile="$(_AndroidManagedResourceDesignerFile)"
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		RTxtFile="$(IntermediateOutputPath)R.txt"
 		Namespace="$(AndroidResgenNamespace)"

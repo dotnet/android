@@ -147,13 +147,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void TargetsSkipped ([Values(false, true)] bool useManagedResourceGenerator)
+		public void TargetsSkipped ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 			};
-			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
-			var b = CreateApkBuilder ($"temp/FastDevTargetsSkipped_{useManagedResourceGenerator}", cleanupOnDispose: false);
+			var b = CreateApkBuilder ("temp/FastDevTargetsSkipped", cleanupOnDispose: false);
 			Assert.IsTrue (b.Build (proj), "1 build should have succeeded.");
 
 			// unchanged build
@@ -195,22 +194,13 @@ namespace Xamarin.Android.Build.Tests
 			var designTimeParams = new string [] { "BuildingInsideVisualStudio=true", "BuildProject=false" };
 			Assert.IsTrue (b.Build (proj, true, designTimeParams, false), "5 update resources should have succeeded.");
 			// _UpdateAndroidResgen should be built.
-			if (useManagedResourceGenerator)
-				Assert.IsTrue (!b.Output.IsTargetSkipped ("_ManagedUpdateAndroidResgen"), $"5 first _ManagedUpdateAndroidResgen was skipped");
-			else
-				Assert.IsTrue (!b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), $"5 first _UpdateAndroidResgen was skipped");
+			Assert.IsTrue (!b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 first _UpdateAndroidResgen was skipped");
 			b.Target = "Build";
 			Assert.IsTrue (b.Build (proj, true, null, false), "5 build should have succeeded.");
 			// _UpdateAndroidResgen should not be built.
-			if (useManagedResourceGenerator) {
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was skipped");
-				// CoreCompile should be built.
-				Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
-			} else {
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was not skipped");
-				// CoreCompile should not be built.
-				Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
-			}
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was not skipped");
+			// CoreCompile should not be built.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
 
 			// _CompileToDalvik should not be built either.
 			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvik"), "5 _CompileToDalvik should be skipped");

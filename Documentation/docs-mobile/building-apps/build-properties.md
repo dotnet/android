@@ -1407,6 +1407,13 @@ faster startup time.
 
 The default value is `true` in .NET 8.
 
+When this property is `true`, design-time builds use the managed resource
+parser to generate the designer assembly on all platforms.
+
+Starting in .NET 12, design-time builds with this property set to `false` use
+the normal `aapt2` resource pipeline to generate `Resource.Designer.cs`. The
+separate managed design-time source generator has been removed.
+
 As a Nuget Author it is recommended that you ship three versions of
 the assembly if you want to maintain backward compatibility.
 One for MonoAndroid, one for net6.0-android and
@@ -1468,9 +1475,14 @@ property is used.
 
 ## AndroidUseManagedDesignTimeResourceGenerator
 
-A boolean property that
-will switch over the design time builds to use the managed resource parser rather
-than `aapt`.
+A boolean property that switched design-time builds to use the managed resource
+parser rather than `aapt`.
+
+Removed in .NET 12. Use
+[`$(AndroidUseDesignerAssembly)`](#androidusedesignerassembly) instead.
+When `true` (the default), design-time builds use managed designer assembly
+generation on all platforms. When `false`, they use the normal `aapt2` resource
+pipeline to generate `Resource.Designer.cs`.
 
 ## AndroidUseNegotiateAuthentication
 

@@ -20,7 +20,7 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
       <_AndroidUseJavaExeVersion Condition=" '$(_AndroidUseJavaExeVersion)' == '' ">false</_AndroidUseJavaExeVersion>
     </PropertyGroup>
     <ValidateJavaVersion
-        Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
+        Condition=" '$(DesignTimeBuild)' != 'True' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         JavaSdkPath="$(_JavaSdkDirectory)"
         JavaToolExe="$(JavaToolExe)"

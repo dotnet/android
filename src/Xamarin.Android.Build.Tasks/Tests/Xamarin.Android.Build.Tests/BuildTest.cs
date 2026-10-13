@@ -898,12 +898,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Category ("SmokeTests")]
 		public void BuildInDesignTimeMode (
 				[Values (false, true)]
-				bool useManagedParser,
+				bool buildingInsideVisualStudio,
 				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)]
 				AndroidRuntime runtime
 			)
 		{
-			var path = Path.Combine (Root, "temp", $"BuildInDesignTimeMode_{useManagedParser}_{runtime}");
+			var path = Path.Combine (Root, "temp", $"BuildInDesignTimeMode_{buildingInsideVisualStudio}_{runtime}");
+			var parameters = new [] { "DesignTimeBuild=true", $"BuildingInsideVisualStudio={buildingInsideVisualStudio}" };
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib1",
 				Sources = {
@@ -918,7 +919,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				},
 			};
 			lib.SetRuntime (runtime);
-			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
@@ -933,15 +933,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
-				libBuilder.DesignTimeBuild (lib);
+				Assert.IsTrue (libBuilder.DesignTimeBuild (lib, parameters: parameters), "Library design-time build should have succeeded.");
 				builder.Target = "UpdateAndroidResources";
-				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
+				Assert.IsTrue (builder.Build (proj, parameters: parameters), "First design-time build should have succeeded.");
 				builder.Output.AssertTargetIsNotSkipped ("_CreatePropertiesCache");
 				builder.Output.AssertTargetIsNotSkipped ("_GenerateRtxt");
-				builder.Build (proj, parameters: new string [] { "DesignTimeBuild=true" });
+				builder.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen", defaultIfNotUsed: true);
+				Assert.IsTrue (builder.Build (proj, parameters: parameters), "Second design-time build should have succeeded.");
 				builder.Output.AssertTargetIsNotSkipped ("_CreatePropertiesCache");
 				builder.Output.AssertTargetIsSkipped ("_GenerateRtxt");
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
@@ -949,7 +949,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (File.Exists (rTxtFile), $"'{rTxtFile}' should exist.");
 				rTxtFile = Path.Combine (intermediate, "R.txt");
 				Assert.IsFalse (File.Exists (rTxtFile), $"'{rTxtFile}' should not exist.");
-				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
+				Assert.IsTrue (builder.Build (proj, parameters: parameters), "Third design-time build should have succeeded.");
 				builder.Output.AssertTargetIsNotSkipped ("_CreatePropertiesCache");
 				builder.Output.AssertTargetIsSkipped ("_GenerateRtxt");
 				Assert.IsTrue (builder.Clean (proj), "Clean Should have succeeded");
