@@ -1,5 +1,10 @@
 # Exception Handling
 
+> This document describes historical Xamarin.Android/Mono debugger behavior.
+> .NET for Android 12 removes the `JNINativeWrapper.CreateDelegate` API described
+> below. Current generated callbacks use the shared `JniMarshal` safe-invocation
+> helpers; see the [JNI interop guide](../guides/internals/JavaJNI_Interop.md).
+
 Outside of Xamarin.Android, .NET exception handling
 [when a debugger is attached][0] potentially involves walking the runtime stack
 *twice*, involving three interactions between the runtime and the debugger:

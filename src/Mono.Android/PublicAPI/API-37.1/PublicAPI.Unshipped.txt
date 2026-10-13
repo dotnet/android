@@ -1,4 +1,6 @@
 #nullable enable
+*REMOVED*Android.Runtime.JNINativeWrapper
+*REMOVED*static Android.Runtime.JNINativeWrapper.CreateDelegate(System.Delegate! dlg) -> System.Delegate!
 *REMOVED*Xamarin.Android.Net.IAndroidAuthenticationModule.Authenticate(string! challenge, Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization!
 *REMOVED*Xamarin.Android.Net.IAndroidAuthenticationModule.PreAuthenticate(Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization!
 *REMOVED*override Android.AccessibilityServices.AccessibilityButtonController.AccessibilityButtonCallback.ThresholdClass.get -> nint

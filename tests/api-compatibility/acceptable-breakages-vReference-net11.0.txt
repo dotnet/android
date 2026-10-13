@@ -49,6 +49,7 @@ TypesMustExist : Type 'Xamarin.Android.Net.AndroidClientHandler' does not exist 
 CannotRemoveBaseTypeOrInterface : Type 'Android.Views.InputMethods.EditorInfo' does not implement interface 'Android.Text.IInputType' in the implementation but it does in the contract.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'Java.Interop.ExportAttribute' in the contract but not the implementation.
 TypesMustExist : Type 'Android.Graphics.ColorValueMarshaler' does not exist in the implementation but it does exist in the contract.
+TypesMustExist : Type 'Android.Runtime.JNINativeWrapper' does not exist in the implementation but it does exist in the contract.
 CannotRemoveAttribute : Attribute 'Java.Interop.JniValueMarshalerAttribute' exists on 'Android.Graphics.Color' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'Java.Interop.JniValueMarshalerAttribute' exists on 'Android.Runtime.IJavaObject' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.SupportedOSPlatformAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.DisableSelf()' in the contract but not the implementation.
