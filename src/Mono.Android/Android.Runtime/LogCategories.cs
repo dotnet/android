@@ -4,7 +4,7 @@ using System;
 namespace Android.Runtime
 {
 	// Keep in sync with the LogCategories enum in
-	// external/Java.Interop/src/java-interop/java-interop-logger.h
+	// src/native/common/include/shared/log_categories.hh
 	[Flags]
 	internal enum LogCategories {
 		None      = 0,

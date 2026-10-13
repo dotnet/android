@@ -220,10 +220,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>已不再支援 'AndroidSupportedAbis' MSBuild 屬性。請在文字編輯器中編輯專案檔、移除使用的任何 'AndroidSupportedAbis'，並改為使用 'RuntimeIdentifiers' MSBuild 屬性。</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
-  <data name="XA0037" xml:space="preserve">
-    <value>未知的模式: {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' 在 Android 應用程式專案中無效。請改用 AndroidNativeLibrary。</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -532,10 +528,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>這可能是因為專案的檔案名稱或路徑中包含非 ASCII 字元所造成。如需詳細資訊，請參閱 https://learn.microsoft.com/dotnet/android/messages/apt2265。</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
-  <data name="XA3006" xml:space="preserve">
-    <value>無法編譯原生組件檔: {0}{1}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
-  </data>
   <data name="XA3007" xml:space="preserve">
     <value>無法連結原生共用程式庫: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
@@ -827,31 +819,31 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - A sentence describing the specific failure.</comment>
   </data>
   <data name="XA4325_MappingNotFound" xml:space="preserve">
-    <value>The R8 mapping file '{0}' was not found.</value>
+    <value>找不到 R8 對應檔案 '{0}'。</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the missing mapping file.</comment>
   </data>
   <data name="XA4325_MappingDataFailure" xml:space="preserve">
-    <value>The R8 mapping file '{0}' could not be read: {1}</value>
+    <value>無法讀取 R8 對應檔案 '{0}'： {1}</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the mapping file.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyReadFailure" xml:space="preserve">
-    <value>The linked managed assembly '{0}' could not be read: {1}</value>
+    <value>無法讀取連結的 Managed 組件 '{0}'： {1}</value>
     <comment>{0} - The path of the managed assembly.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyNotFound" xml:space="preserve">
-    <value>The linked managed assembly '{0}' was not found.</value>
+    <value>找不到連結的受控組件 '{0}'。</value>
     <comment>{0} - The path of the missing managed assembly.</comment>
   </data>
   <data name="XA4325_AssemblyHasNoMetadata" xml:space="preserve">
-    <value>The linked managed assembly '{0}' does not contain managed metadata.</value>
+    <value>已連結的受控組件 '{0}' 不包含受控中繼資料。</value>
     <comment>{0} - The path of the input file.</comment>
   </data>
   <data name="XA4325_AmbiguousEntry" xml:space="preserve">
-    <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
+    <value>產生的 '{0}' 項目 (適用於 '{1}') 具有衝突的執行階段目標 '{2}' 和 '{3}'，而 JNI 重新對應資料表無法表示這種衝突。</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The runtime lookup key.
@@ -859,47 +851,47 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {3} - The conflicting target.</comment>
   </data>
   <data name="XA4325_NativeAotObjectRequired" xml:space="preserve">
-    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <value>NativeAOT JNI 保留作業需要現有的 post-ILC NativeAotObjectFile；找不到 '{0}'。</value>
     <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
 {0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
   </data>
   <data name="XA4325_NativeAotObjectReadFailure" xml:space="preserve">
-    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <value>無法讀取 NativeAOT 保留物件 '{0}'： {1}</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.
 {0} - The path of the ILC native object.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_NativeAotModeRequired" xml:space="preserve">
-    <value>NativeAotObjectFile requires NativeAot=true.</value>
+    <value>NativeAotObjectFile 需要 NativeAot=true。</value>
     <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
   </data>
   <data name="XA4325_NativeAotObjectFormat" xml:space="preserve">
-    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <value>預期會有 32 位元或 64 位元、小端序且可重定位的 NativeAOT ELF 物件。</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <value>NativeAOT ELF 物件包含無效的區段範圍。</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotTruncatedSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <value>NativeAOT ELF 物件包含遭截斷的區段資料。</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotMissingSections" xml:space="preserve">
-    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <value>NativeAOT 物件必須包含已配置的 __managedcode 區段和已初始化的資料區段。</value>
     <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidDehydration" xml:space="preserve">
-    <value>The NativeAOT object contains an invalid data dehydration stream.</value>
+    <value>NativeAOT 物件包含無效的資料脫水資料流。</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <value>R8 JNI 重新對應資料不完整。{0}</value>
     <comment>The following are literal names and should not be translated: R8, JNI.
 {0} - A sentence describing the specific omission.</comment>
   </data>
   <data name="XA4326_ConflictingEntry" xml:space="preserve">
-    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <value>'{0}' 項目 (適用於 '{1}') 未發出：另一個 JNI 重新對應輸入已將其對應至 '{2}'，而這與 '{3}' 發生衝突。</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The source lookup key.
@@ -907,7 +899,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {3} - The generated target.</comment>
   </data>
   <data name="XA4326_UnsupportedSignature" xml:space="preserve">
-    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <value>'{0}' 的項目未發出: 其簽章 '{1}' 無法轉換成 JNI 描述元。</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The member the entry describes.
 {1} - The Java signature which could not be converted.</comment>
@@ -948,19 +940,17 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>
+  <data name="XA4331" xml:space="preserve">
+    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <comment>{0} - The bundle config file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具鏈目錄 '{0}'。請安裝 Android NDK。</value>
     <comment>{0} - The path of the missing directory</comment>
   </data>
-  <data name="XA5101_C_Compiler" xml:space="preserve">
-    <value>找不到目標 {0} 的 C 編譯器。已嘗試的路徑: "{1}"</value>
-    <comment>The following are literal names and should not be translated: C
-{0} - The target architecture, such as Arm, Arm64, or X86_64
-{1} - Semicolon-separated list of the paths searched</comment>
-  </data>
-  <data name="XA5101_Toolchain" xml:space="preserve">
-    <value>找不到目標 {0} 的工具鏈目錄。</value>
-    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
+  <data name="XA5101_ClangRuntime" xml:space="preserve">
+    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
     <value>找不到 Android NDK。請確認 Android NDK 已安裝在 Android SDK 管理員中，若使用自訂的 NDK 路徑，請確認 $(AndroidNdkDirectory) MSBuild 屬性已設定為自訂路徑。</value>
@@ -1143,11 +1133,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>.NET 9 及更新版本不支援 Android 支援程式庫，請移轉至 AndroidX。如需詳細資料，請參閲 https://aka.ms/net-android/androidx。</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
-  <data name="XA1040" xml:space="preserve">
-    <value>Android 上的 {0} 執行階段是一項實驗性功能，尚不適合用於生產環境。請在以下位置舉報問題： https://github.com/dotnet/android/issues</value>
-    <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as NativeAOT.</comment>
-  </data>
   <data name="XA1041" xml:space="preserve">
     <value>MSBuild 屬性 '{0}' 有無效的 '{1}' 值。此值應該是代表資產或資源相對位置的目錄路徑。</value>
     <comment>The following are literal names and should not be translated: .NET.
@@ -1177,18 +1162,6 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
     <value>MSBuild 屬性 'RunAOTCompilation' 與 CoreCLR 執行階段不相容。此屬性設為 'false' 時，建置無法繼續。移除屬性。從 .NET 11 開始，將 'PublishReadyToRun' 設為 'false'，即可停用 ReadyToRun (R2R) AOT 編譯。</value>
     <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
-  </data>
-  <data name="XA1045" xml:space="preserve">
-    <value>輸入檔案 `{0}` 不是以 `&lt;replacements/&gt;` 開頭。</value>
-    <comment>{0} - file path</comment>
-  </data>
-  <data name="XA1046" xml:space="preserve">
-    <value>元素 t '{1}' 中的屬性 '{0}' 具有無法剖析為布林值的值 '{2}'; {3} 行 {4}。</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
-  </data>
-  <data name="XA1047" xml:space="preserve">
-    <value>元素 '{1}' 缺少必要的屬性 '{0}'; {2} 行 {3}。</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
   </data>
   <data name="XA1048" xml:space="preserve">
     <value>'{0}' 不包含 &lt;instrumentation&gt; 元素。請將 Android.App.Instrumentation 子類別新增至應用程式，或將 $(AndroidInstrumentation) MSBuild 屬性設為其中一個的名稱。</value>
@@ -1351,12 +1324,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <value>組件 '{0}' 使用不支援的 Java 對等回撥格式。</value>
     <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <value>組件 '{0}' 在執行階段特定實作 '{1}' 和 '{2}' 中有不同的 Java 對等中繼資料。所有 RuntimeIdentifiers 都必須提供對等的回撥中繼資料。</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path

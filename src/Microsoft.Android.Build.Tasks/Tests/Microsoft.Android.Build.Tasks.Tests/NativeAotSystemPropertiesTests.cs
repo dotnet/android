@@ -35,7 +35,6 @@ public class NativeAotSystemPropertiesTests : BaseTest
 			"-I" + Path.Combine (javaHome, "include", OperatingSystem.IsMacOS () ? "darwin" : "linux"),
 			"-I" + Path.Combine (root, "src", "native", "nativeaot", "include"),
 			"-I" + Path.Combine (root, "src", "native", "common", "include"),
-			"-I" + Path.Combine (root, "external", "Java.Interop", "src", "java-interop"),
 			Path.Combine (root, "src", "native", "nativeaot", "runtime-base", "app-system-properties.cc"),
 			Path.Combine (ResourcesDirectory, "bootstrap-probe.cc"),
 			"-o", nativeLibrary);
