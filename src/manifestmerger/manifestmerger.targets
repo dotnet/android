@@ -3,17 +3,19 @@
     <_Destination>$(MicrosoftAndroidSdkOutDir)manifestmerger.jar</_Destination>
   </PropertyGroup>
 
+  <Target Name="_BuildManifestMergerInputs">
+    <ItemGroup>
+      <_AndroidManifestMergerSource Include="$(MSBuildThisFileDirectory)src\**\*.java" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_BuildManifestMerger"
       BeforeTargets="Build"
-      Inputs="$(MSBuildThisFile);build.gradle"
+      DependsOnTargets="_BuildManifestMergerInputs"
+      Inputs="$(MSBuildThisFile);build.gradle;settings.gradle;gradle.properties;proguard.pro;@(_AndroidManifestMergerSource)"
       Outputs="$(_Destination)">
     <Exec
         Command="&quot;$(GradleWPath)&quot; build $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
-    <Exec
-        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
@@ -22,6 +24,9 @@
         DestinationFiles="$(_Destination)"
     />
     <Touch Files="$(_Destination)" />
+    <ItemGroup>
+      <FileWrites Include="$(_Destination)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_CleanManifestMerger" BeforeTargets="Clean">

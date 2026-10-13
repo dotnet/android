@@ -64,8 +64,6 @@ namespace Xamarin.Android.Tasks
 
 			ModifiedFiles = modifiedFiles.ToArray ();
 
-			Log.LogDebugTaskItems (" ModifiedFiles:", ModifiedFiles);
-
 			return true;
 		}
 	}

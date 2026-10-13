@@ -17,8 +17,6 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void*) noexcept -> jint
 	JNIEnv *env = nullptr;
 	jint result = vm->GetEnv (reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
 	abort_unless (result == JNI_OK && env != nullptr, "Unable to get JNI environment for NativeAOT startup");
-	AppSystemProperties::initialize (env);
-
 	HostCommon::init_logging_categories ();
 	HostEnvironment::init ();
 	jvm = vm;
@@ -48,7 +46,7 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 	initArgs->initializeGCBridge = &GCBridge::initialize_callback;
 	initArgs->grefIGCUserPeer = create_igc_user_peer_global_ref (env);
 	static BinaryBlobPayload remapping = {};
-	remapping = BinaryBlobLoader::load_optional ("remapping_data");
+	remapping = load_nativeaot_remapping ();
 	initArgs->jniRemappingData = remapping.data == nullptr ? nullptr : &remapping;
 }
 

@@ -193,17 +193,7 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual void LogOutputs ()
 		{
-			Log.LogDebugMessage ($"{nameof (ResolveAndroidTooling)} Outputs:");
-			Log.LogDebugMessage ($"  {nameof (AndroidApiLevel)}: {AndroidApiLevel}");
-			Log.LogDebugMessage ($"  {nameof (AndroidApiLevelName)}: {AndroidApiLevelName}");
-			Log.LogDebugMessage ($"  {nameof (AndroidSdkBuildToolsPath)}: {AndroidSdkBuildToolsPath}");
-			Log.LogDebugMessage ($"  {nameof (AndroidSdkBuildToolsBinPath)}: {AndroidSdkBuildToolsBinPath}");
-			Log.LogDebugMessage ($"  {nameof (ZipAlignPath)}: {ZipAlignPath}");
-			Log.LogDebugMessage ($"  {nameof (LintToolPath)}: {LintToolPath}");
-			Log.LogDebugMessage ($"  {nameof (ApkSignerJar)}: {ApkSignerJar}");
-			Log.LogDebugMessage ($"  {nameof (AndroidUseApkSigner)}: {AndroidUseApkSigner}");
-			Log.LogDebugMessage ($"  {nameof (Aapt2Version)}: {Aapt2Version}");
-			Log.LogDebugMessage ($"  {nameof (Aapt2ToolPath)}: {Aapt2ToolPath}");
+			// Retain the virtual hook for existing task subclasses.
 		}
 
 		//  Android Asset Packaging Tool (aapt) 2:19

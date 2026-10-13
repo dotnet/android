@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
@@ -76,6 +77,8 @@ namespace Xamarin.Android.Build.Tests
 			foreach (string responseFile in responseFiles) {
 				string response = File.ReadAllText (responseFile);
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
+				StringAssert.Contains ("nativeaot-bootstrap.o", response, responseFile);
+				StringAssert.Contains ("-init=Host_NativeAOT_InitializeEnvironment", response, responseFile);
 				StringAssert.DoesNotContain ("jni_init_funcs.", response, responseFile);
 				StringAssert.DoesNotContain ("environment.", response, responseFile);
 				foreach (string archiveName in CPlusPlusArchiveNames) {
@@ -91,6 +94,27 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
 			CollectionAssert.Contains (standardOutput.Split ('\n').Select (line => line.Trim ()), "U AndroidCryptoNative_InitLibraryOnLoad",
 				"The managed JNI_OnLoad must retain a direct crypto initializer reference even without application crypto calls.");
+			string applicationLibrary = Directory.GetFiles (
+				Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath), $"lib{proj.ProjectName}.so", SearchOption.AllDirectories).Single ();
+			string dynamic = NativeToolTestHelper.Run ("llvm-readelf", "--dynamic", applicationLibrary);
+			StringAssert.Contains ("(INIT)", dynamic, "The fixed environment hook must survive as DT_INIT.");
+			StringAssert.Contains ("(INIT_ARRAY)", dynamic, "NativeAOT's initialization array must remain intact.");
+			StringAssert.DoesNotContain ("libbinary_blobs.so", dynamic, "NativeAOT data must not introduce a dynamic library dependency.");
+			using var elf = NativeToolTestHelper.ReadElf (applicationLibrary);
+			var exports = elf.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
+				.Select (entry => entry.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap");
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap_size");
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data");
+			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data_size");
+			CollectionAssert.DoesNotContain (exports, "Host_NativeAOT_InitializeEnvironment");
+			string definitions = NativeToolTestHelper.Run ("llvm-nm", "--demangle", "--defined-only",
+				Path.ChangeExtension (applicationLibrary, ".dbg.so"));
+			StringAssert.Contains ("BinaryBlobLoader::read_uncompressed(", definitions);
+			StringAssert.DoesNotContain ("BinaryBlobLoader::decode(", definitions,
+				"The NativeAOT host must not retain the CoreCLR blob decompression path.");
+			StringAssert.DoesNotContain ("BinaryBlobLoader::load(", definitions);
+			StringAssert.DoesNotContain ("BinaryBlobLoader::load_optional(", definitions);
 		}
 
 		[Test]
@@ -100,16 +124,16 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				PackageName = "com.xamarin.bootstraprename",
 				MainActivity = """
-					[Activity (Name = "my.app.MainActivity", MainLauncher = true)]
+					[Activity (Name = "my.app.MainActivity", MainLauncher = true, Process = ":secondary")]
 					public class MainActivity : Activity
 					{
 						protected override void OnCreate (Bundle? bundle)
 						{
 							base.OnCreate (bundle);
 					#if BOOTSTRAP_FIRST
-							Android.Util.Log.Info ("BootstrapFlavor", "first");
+							Android.Util.Log.Info ("BootstrapFlavor", "first:" + System.Environment.GetEnvironmentVariable ("BOOTSTRAP_TEST"));
 					#else
-							Android.Util.Log.Info ("BootstrapFlavor", "second");
+							Android.Util.Log.Info ("BootstrapFlavor", "second:" + System.Environment.GetEnvironmentVariable ("BOOTSTRAP_TEST"));
 					#endif
 						}
 					}
@@ -142,13 +166,27 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			string [] firstParameters = ["AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=first", "DefineConstants=BOOTSTRAP_FIRST"];
 			string [] renamedParameters = ["AssemblyName=BootstrapRenamed", "_BootstrapEnvironmentFlavor=reverse", "DefineConstants=BOOTSTRAP_SECOND"];
-			Assert.IsTrue (builder.Build (proj, parameters: firstParameters));
-			builder.AutomaticNuGetRestore = false;
-
+			builder.Save (proj);
 			string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
 			string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath);
+			string legacySource = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "NativeAotEnvironmentVars.java");
+			Directory.CreateDirectory (Path.GetDirectoryName (legacySource));
+			File.WriteAllText (legacySource, """
+				package net.dot.jni.nativeaot;
+				public class NativeAotEnvironmentVars {
+					static String[] envNames = { "REMOVED_APP_SETTING" };
+					static String[] envValues = { "obsolete-value" };
+				}
+				""");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: firstParameters));
+			builder.AutomaticNuGetRestore = false;
+
 			string sourceFile = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "JavaInteropRuntime.java");
-			string environmentSource = Path.Combine (Path.GetDirectoryName (sourceFile), "NativeAotEnvironmentVars.java");
+			string environmentObject = Path.Combine (intermediate, "android-arm64", "native", "data", "nativeaot-bootstrap.o");
+			FileAssert.DoesNotExist (legacySource, "Upgrading an existing intermediate directory must remove obsolete Java environment data.");
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/nativeaot/NativeAotEnvironmentVars;",
+				Path.Combine (intermediate, "android", "bin", "classes.dex"), AndroidSdkPath),
+				"The obsolete environment class must not remain in the application's DEX.");
 			string [] inputs = [
 				Path.Combine (projectDirectory, proj.ProjectFilePath),
 				Path.Combine (projectDirectory, "BootstrapEnvironment.targets"),
@@ -162,7 +200,8 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
 			string nativeObject = Path.Combine (intermediate, "android-arm64", "native", "BootstrapOriginal.o");
 			DateTime nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
-			Assert.Less (File.GetLastWriteTimeUtc (inputs [3]), File.GetLastWriteTimeUtc (environmentSource),
+			DateTime bootstrapSourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
+			Assert.Less (File.GetLastWriteTimeUtc (inputs [3]), File.GetLastWriteTimeUtc (environmentObject),
 				"The alternate environment file must predate the bootstrap outputs.");
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
@@ -172,8 +211,11 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
 				"Selecting a pre-existing environment file must not change the other bootstrap inputs.");
 			Assert.AreEqual ("second", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
-			StringAssert.Contains ("\"debug.dotnet.max_grefc\",\n\t\t\"5678\"", File.ReadAllText (environmentSource));
-			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+			Assert.AreEqual ("5678", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate, systemProperties: true) ["debug.dotnet.max_grefc"]);
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapObject");
+			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources", defaultIfNotUsed: true);
+			Assert.AreEqual (bootstrapSourceTimestamp, File.GetLastWriteTimeUtc (sourceFile), "Unchanged library/provider selection must not rewrite Java.");
+			nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
 
 			foreach (var (flavor, expectedValue) in new [] { ("forward", "second"), ("reverse", "first") }) {
 				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
@@ -181,10 +223,14 @@ namespace Xamarin.Android.Build.Tests
 				]));
 				Assert.AreEqual (expectedValue, EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
 				string expectedProperty = expectedValue == "first" ? "1234" : "5678";
-				StringAssert.Contains ($"\"debug.dotnet.max_grefc\",\n\t\t\"{expectedProperty}\"", File.ReadAllText (environmentSource));
+				Assert.AreEqual (expectedProperty, EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate, systemProperties: true) ["debug.dotnet.max_grefc"]);
 				CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
 					"Reordering pre-existing files must update override precedence without changing their timestamps.");
-				builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+				builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapObject");
+				builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources", defaultIfNotUsed: true);
+				Assert.AreEqual (bootstrapSourceTimestamp, File.GetLastWriteTimeUtc (sourceFile), "Environment order must not regenerate Java.");
+				Assert.AreEqual (nativeObjectTimestamp, File.GetLastWriteTimeUtc (nativeObject), "Environment order must not recompile managed ILC output.");
+				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik", defaultIfNotUsed: true);
 			}
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
@@ -208,6 +254,29 @@ namespace Xamarin.Android.Build.Tests
 			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources");
 			Assert.AreEqual (fingerprintTimestamp, File.GetLastWriteTimeUtc (fingerprint));
 			Assert.AreEqual (sourceTimestamp, File.GetLastWriteTimeUtc (sourceFile));
+
+			string deviceTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+			if (!string.IsNullOrEmpty (deviceTarget)) {
+				string sourceManifest = Path.Combine (projectDirectory, "Properties", "AndroidManifest.xml");
+				string packageName = (string)XDocument.Load (sourceManifest).Root?.Attribute ("package");
+				Assert.AreEqual (proj.PackageName, packageName);
+				TestContext.Out.WriteLine ($"Installing fixture package '{packageName}' from '{sourceManifest}' to '{deviceTarget}'.");
+				string [] deviceParameters = [.. renamedParameters, "AdbTarget=" + deviceTarget];
+				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
+				try {
+					RunAdbCommand ("logcat -c");
+					Assert.IsTrue (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
+					string startupLog = "";
+					WaitFor (TimeSpan.FromSeconds (30), () => {
+						startupLog = RunAdbCommand ("logcat -d -s BootstrapFlavor:I");
+						return startupLog.Contains ("second:first", StringComparison.Ordinal);
+					}, intervalInMS: 250);
+					StringAssert.Contains ("second:first", startupLog,
+						"The renamed app and secondary-process provider must read the selected bootstrap environment.");
+				} finally {
+					Assert.IsTrue (builder.RunTarget (proj, "Uninstall", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
+				}
+			}
 
 			Assert.IsTrue (builder.RunTarget (proj, "Clean", doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
 			FileAssert.DoesNotExist (fingerprint);

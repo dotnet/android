@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using ELFSharp.ELF;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests
@@ -107,58 +108,39 @@ namespace Xamarin.Android.Build.Tests
 			return (config, preloads, environment);
 		}
 
-		public static Dictionary<string, string> ReadNativeAotEnvironmentVariables (string outputDirectoryRoot, bool required = true)
+		public static Dictionary<string, string> ReadNativeAotEnvironmentVariables (string outputDirectoryRoot, bool required = true, bool systemProperties = false)
 		{
 			var ret = new Dictionary<string, string> (StringComparer.Ordinal);
-			string javaSourcePath = Path.Combine (outputDirectoryRoot, "android", "src", "net", "dot", "jni", "nativeaot", "NativeAotEnvironmentVars.java");
-			bool exists = File.Exists (javaSourcePath);
+			string [] objects = Directory.GetFiles (outputDirectoryRoot, "nativeaot-bootstrap.o", SearchOption.AllDirectories);
 			if (required) {
-				Assert.IsTrue (exists, $"NativeAOT Java source with environment variables does not exist: {javaSourcePath}");
-			} else if (!exists) {
+				Assert.IsNotEmpty (objects, $"NativeAOT bootstrap data objects do not exist: {outputDirectoryRoot}");
+			} else if (objects.Length == 0) {
 				return ret;
 			}
-
-			var names = new List<string> ();
-			var values = new List<string> ();
-			bool collectingNames = false;
-			bool collectingValues = false;
-			int lineNum = 0;
-			foreach (string l in File.ReadAllLines (javaSourcePath)) {
-				lineNum++;
-				string line = l.Trim ();
-				switch (line) {
-					case "static String[] envNames = new String[] {":
-						collectingNames = true;
-						collectingValues = false;
-						continue;
-					case "static String[] envValues = new String[] {":
-						collectingValues = true;
-						collectingNames = false;
-						continue;
-					case "};":
-						collectingValues = false;
-						collectingNames = false;
-						continue;
-					case "":
-						continue;
-				}
-				if (!collectingValues && !collectingNames) {
-					continue;
-				}
-				Assert.IsTrue (line [0] == '"', $"Line {lineNum} in '{javaSourcePath}' doesn't start with a double quote: '{line}'");
-				Assert.IsTrue (line [line.Length - 1] == ',', $"Line {lineNum} in '{javaSourcePath}' doesn't end with a comma: '{line}'");
-				Assert.IsTrue (line [line.Length - 2] == '"', $"Line {lineNum} in '{javaSourcePath}' doesn't close the quoted string properly: '{line}'");
-
-				string data = line.Substring (1, line.Length - 3);
-				if (collectingNames) {
-					names.Add (data);
-				} else if (collectingValues) {
-					values.Add (data);
-				}
+			using IELF elf = ELFReader.Load (objects [0]);
+			Assert.AreEqual (FileType.Relocatable, elf.Type);
+			byte [] section = elf.GetSection (".rodata").GetContents ();
+			Assert.AreEqual (0x42424c42u, BinaryPrimitives.ReadUInt32LittleEndian (section));
+			Assert.AreEqual (0, BinaryPrimitives.ReadUInt16LittleEndian (section.AsSpan (6, 2)),
+				"This helper reads the default uncompressed bootstrap.");
+			uint length = BinaryPrimitives.ReadUInt32LittleEndian (section.AsSpan (12, 4));
+			byte [] body = section.AsSpan (16, checked ((int)length)).ToArray ();
+			uint Read (int offset) => BinaryPrimitives.ReadUInt32LittleEndian (body.AsSpan (offset, 4));
+			Assert.AreEqual (0x4746434eu, Read (0));
+			Assert.AreEqual (body.Length, Read (8));
+			uint count = Read (systemProperties ? 16 : 12);
+			uint table = systemProperties ? Read (20) : 32;
+			string ReadString (uint offset)
+			{
+				Assert.GreaterOrEqual (offset, Read (24));
+				Assert.Less (offset, length);
+				int end = Array.IndexOf (body, (byte)0, checked ((int)offset));
+				Assert.GreaterOrEqual (end, (int)offset);
+				return Encoding.UTF8.GetString (body, checked ((int)offset), end - checked ((int)offset));
 			}
-			Assert.AreEqual (names.Count, values.Count, $"Environment variable name and value arrays aren't of the same size in '{javaSourcePath}'");
-			for (int i = 0; i < names.Count; i++) {
-				ret.Add (names [i], values [i]);
+			for (uint i = 0; i < count; i++) {
+				int offset = checked ((int)(table + i * 8));
+				ret.Add (ReadString (Read (offset)), ReadString (Read (offset + 4)));
 			}
 			return ret;
 		}

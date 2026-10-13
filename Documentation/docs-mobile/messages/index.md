@@ -182,7 +182,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 ## XA4xxx: Code generation
 
 + XA4209: Failed to generate Java type for class: {managedType} due to {exception}
-+ XA4210: Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.
 + XA4211: AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{targetSdk}' is less than $(TargetFrameworkVersion) '{targetFramework}'. Using API-{targetFrameworkApi} for ACW compilation.
 + XA4213: The type '{type}' must provide a public default constructor
 + [XA4214](xa4214.md): The managed type \`Library1.Class1\` exists in multiple assemblies: Library1, Library2. Please refactor the managed type names in these assemblies so that they are not identical.

@@ -105,7 +105,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			RemovedDirectories = temporaryRemovedDirectories.ToArray ();
-			Log.LogDebugTaskItems ("  RemovedDirectories: ", RemovedDirectories);
 
 			return !Log.HasLoggedErrors;
 		}
