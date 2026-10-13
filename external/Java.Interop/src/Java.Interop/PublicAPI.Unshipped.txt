@@ -3,14 +3,14 @@
 *REMOVED*Java.Interop.JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent.set -> void
 *REMOVED*Java.Interop.JniRuntime.CreationOptions.MarshalMemberBuilder.set -> void
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
-unsafe virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(nint jniSimpleReferenceUtf8, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
-virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeInfoCore(string! jniSimpleReference, out string? replacement, out nint replacementUtf8) -> void
-Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.get -> nint
-Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.set -> void
-Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8.get -> nint
-Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8.set -> void
-Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8.get -> nint
-Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8.set -> void
+unsafe virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(byte* jniSimpleReferenceUtf8, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
+unsafe virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeInfoCore(string! jniSimpleReference, out string? replacement, out byte* replacementUtf8) -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.get -> byte*
+unsafe Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8.get -> byte*
+unsafe Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8.get -> byte*
+unsafe Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8.set -> void
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementFieldInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniFieldName, System.ReadOnlySpan<char> jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
 static Java.Interop.JniEnvironment.BeginMarshalMethod(nint jnienv, out Java.Interop.JniTransition transition, out Java.Interop.JniRuntime? runtime) -> bool
 static Java.Interop.JniEnvironment.EndMarshalMethod(ref Java.Interop.JniTransition transition) -> void
@@ -34,7 +34,7 @@ Java.Interop.JniTypeSignatureAttribute.InvokerType.set -> void
 Java.Interop.IJavaPeerable.JniObjectReferenceControlBlock.get -> nint
 Java.Interop.JniNativeMethod
 Java.Interop.JniNativeMethod.JniNativeMethod() -> void
-Java.Interop.JniNativeMethod.JniNativeMethod(byte* name, byte* signature, nint functionPointer) -> void
+unsafe Java.Interop.JniNativeMethod.JniNativeMethod(byte* name, byte* signature, nint functionPointer) -> void
 static unsafe Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, System.ReadOnlySpan<Java.Interop.JniNativeMethod> methods) -> void
 unsafe Java.Interop.JniType.JniType(System.ReadOnlySpan<byte> classname) -> void
 unsafe Java.Interop.JniType.GetConstructor(System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!

@@ -60,7 +60,7 @@ namespace Java.Interop
 
 	struct JavaVMThreadAttachArgs {
 		public  JniVersion 	        version;    /*		 must be >= JNI_VERSION_1_2 */
-		public  IntPtr              name;       /*		 NULL or name of thread as modified UTF-8 str */
+		public  byte*               name;       /*		 NULL or name of thread as modified UTF-8 str */
 		public  IntPtr              group;      /*		 global ref of a ThreadGroup object, or NULL */
 	}
 
@@ -352,7 +352,7 @@ namespace Java.Interop
 			};
 			try {
 				if (name != null)
-					threadArgs.name = Marshal.StringToHGlobalAnsi (name);
+					threadArgs.name = (byte*) Marshal.StringToHGlobalAnsi (name);
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
 				IntPtr jnienv;
@@ -361,7 +361,7 @@ namespace Java.Interop
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;
 			} finally {
-				Marshal.FreeHGlobal (threadArgs.name);
+				Marshal.FreeHGlobal ((IntPtr) threadArgs.name);
 			}
 		}
 

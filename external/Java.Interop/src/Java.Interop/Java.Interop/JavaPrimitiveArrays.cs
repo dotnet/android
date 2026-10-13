@@ -32,13 +32,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Boolean))
+			: base (elements, elementCount, sizeof (Boolean))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new Boolean* Elements {
-			get {return (Boolean*) base.Elements;}
+			get {return (Boolean*) ElementsPointer;}
 		}
 
 		/// <safety>
@@ -244,13 +244,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (SByte))
+			: base (elements, elementCount, sizeof (SByte))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new SByte* Elements {
-			get {return (SByte*) base.Elements;}
+			get {return (SByte*) ElementsPointer;}
 		}
 
 		/// <safety>
@@ -456,13 +456,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Char))
+			: base (elements, elementCount, sizeof (Char))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new Char* Elements {
-			get {return (Char*) base.Elements;}
+			get {return (Char*) ElementsPointer;}
 		}
 
 		/// <safety>
@@ -668,13 +668,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int16))
+			: base (elements, elementCount, sizeof (Int16))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new Int16* Elements {
-			get {return (Int16*) base.Elements;}
+			get {return (Int16*) ElementsPointer;}
 		}
 
 		/// <safety>
@@ -880,13 +880,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int32))
+			: base (elements, elementCount, sizeof (Int32))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new Int32* Elements {
-			get {return (Int32*) base.Elements;}
+			get {return (Int32*) ElementsPointer;}
 		}
 
 		/// <safety>
@@ -1092,13 +1092,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int64))
+			: base (elements, elementCount, sizeof (Int64))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new Int64* Elements {
-			get {return (Int64*) base.Elements;}
+			get {return (Int64*) ElementsPointer;}
 		}
 
 		/// <safety>
@@ -1304,13 +1304,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Single))
+			: base (elements, elementCount, sizeof (Single))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new Single* Elements {
-			get {return (Single*) base.Elements;}
+			get {return (Single*) ElementsPointer;}
 		}
 
 		/// <safety>
@@ -1516,13 +1516,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Double))
+			: base (elements, elementCount, sizeof (Double))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new Double* Elements {
-			get {return (Double*) base.Elements;}
+			get {return (Double*) ElementsPointer;}
 		}
 
 		/// <safety>

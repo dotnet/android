@@ -52,13 +52,13 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (<#= info.ManagedType #>))
+			: base (elements, elementCount, sizeof (<#= info.ManagedType #>))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new <#= info.ManagedType #>* Elements {
-			get {return (<#= info.ManagedType #>*) base.Elements;}
+			get {return (<#= info.ManagedType #>*) ElementsPointer;}
 		}
 
 		/// <safety>
