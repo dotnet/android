@@ -159,6 +159,7 @@
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />
     <Compile Include="Java.Net\InetAddressTest.cs" />
+    <Compile Include="Java.Util\SpliteratorTests.cs" />
     <Compile Include="Localization\LocalizationTests.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />
@@ -205,6 +206,7 @@
     <AndroidJavaSource Update="java/net/dot/android/remap/*.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/JniSpliteratorFixture.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>

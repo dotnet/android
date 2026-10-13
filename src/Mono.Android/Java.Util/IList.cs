@@ -19,17 +19,20 @@ public partial interface IList
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android35.0")]
 	private static IntPtr n_Reversed (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
+		unsafe {
+			// SAFETY: the VM supplies a live current-thread environment and List receiver for the registered parameterless callback.
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
 
-		try {
-			var __this = global::Java.Lang.Object.GetObject<Java.Util.IList> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-			return JNIEnv.ToLocalJniHandle (__this.Reversed ());
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			try {
+				var __this = global::Java.Lang.Object.GetObject<Java.Util.IList> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+				return JNIEnv.ToLocalJniHandle (__this.Reversed ());
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 	}
 #pragma warning restore 0169
@@ -42,13 +45,16 @@ public partial interface IList
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.util']/interface[@name='List']/method[@name='reversed' and count(parameter)=0]"
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android35.0")]
 	[Register ("reversed", "()Ljava/util/List;", "GetReversedHandler:Java.Util.IList, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", ApiSince = 35)]
-	unsafe Java.Util.ISequencedCollection Java.Util.ISequencedCollection.Reversed ()
+	Java.Util.ISequencedCollection Java.Util.ISequencedCollection.Reversed ()
 	{
-		const string __id = "reversed.()Ljava/util/List;";
-		try {
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-			return global::Java.Lang.Object.GetObject<Java.Util.ISequencedCollection> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-		} finally {
+		unsafe {
+			// SAFETY: the parameterless List.reversed call returns a List implementing SequencedCollection; its local reference transfers to the managed peer.
+			const string __id = "reversed.()Ljava/util/List;";
+			try {
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Lang.Object.GetObject<Java.Util.ISequencedCollection> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
+			} finally {
+			}
 		}
 	}
 }

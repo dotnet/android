@@ -14,12 +14,15 @@ namespace Java.Lang {
 					JNIEnv.StartCreateInstance ("mono/java/lang/Runnable", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
-			if (handler == null) {
-				base.Dispose ();
-				throw new ArgumentNullException ("handler");
+			unsafe {
+				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+				if (handler == null) {
+					base.Dispose ();
+					throw new ArgumentNullException ("handler");
+				}
+				this.handler = handler;
 			}
-			this.handler = handler;
 		}
 
 		public void Run ()

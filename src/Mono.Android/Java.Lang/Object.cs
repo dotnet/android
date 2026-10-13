@@ -42,13 +42,16 @@ namespace Java.Lang {
 		[OnDeserialized]
 		internal void SetHandleOnDeserialized (StreamingContext context)
 		{
-			if (Handle != IntPtr.Zero)
-				return;
+			unsafe {
+				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				if (Handle != IntPtr.Zero)
+					return;
 
-			SetHandle (
-					JNIEnv.StartCreateInstance (GetType (), "()V"),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+				SetHandle (
+						JNIEnv.StartCreateInstance (GetType (), "()V"),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -137,11 +140,19 @@ namespace Java.Lang {
 			return (T?)PeekObject (handle, typeof (T));
 		}
 
-		public static T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread and runtime.
+		/// <paramref name="handle"/> must be null or a live object reference usable by that environment
+		/// for the call; <paramref name="transfer"/> must match reference ownership the caller holds.
+		/// </safety>
+		public static unsafe T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
 			IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
-			JNIEnv.CheckHandle (jnienv);
+			unsafe {
+				// SAFETY: the caller retains the current-thread JNI environment and borrowed object reference for this transition.
+				JNIEnv.CheckHandle (jnienv);
+			}
 			return GetObject<T> (handle, transfer);
 		}
 
@@ -180,7 +191,14 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public T[]? ToArray<T>()
 		{
-			return JNIEnv.GetArray<T>(Handle);
+			try {
+				unsafe {
+					// SAFETY: this peer owns the JNI object reference; GetArray checks its compatible array kind before native access.
+					return JNIEnv.GetArray<T> (Handle);
+				}
+			} finally {
+				GC.KeepAlive (this);
+			}
 		}
 
 		public static Java.Lang.Object? FromArray<T>(T[] value)

@@ -18,17 +18,20 @@ namespace Android.Widget {
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the VM supplies this callback's live current-thread environment and borrowed receiver/argument references until the JNI transition ends.
+				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-				return JNIEnv.ToLocalJniHandle (__this.Adapter);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+					return JNIEnv.ToLocalJniHandle (__this.Adapter);
+				} catch (global::System.Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
@@ -41,17 +44,20 @@ namespace Android.Widget {
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_SetAdapter_Landroid_widget_ListAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the VM supplies this callback's live current-thread environment and borrowed receiver/argument references until the JNI transition ends.
+				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this  = Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-				__this.Adapter      = Java.Interop.JavaConvert.FromJniHandle<IListAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this  = Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+					__this.Adapter      = Java.Interop.JavaConvert.FromJniHandle<IListAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
+				} catch (global::System.Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
@@ -67,16 +73,19 @@ namespace Android.Widget {
 #if ANDROID_12
 		[Obsolete ("Please use the Adapter property setter")]
 		[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
-		public virtual unsafe void SetAdapter (Android.Widget.IListAdapter adapter)
+		public virtual void SetAdapter (Android.Widget.IListAdapter adapter)
 		{
-			const string id = "setAdapter.(Landroid/widget/ListAdapter;)V";
-			try {
-				JniArgumentValue* args = stackalloc JniArgumentValue [1];
-				args [0] = new JniArgumentValue (adapter);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
-			} finally {
-				GC.KeepAlive (adapter);
-				GC.KeepAlive (this);
+			unsafe {
+				// SAFETY: the adapter member signature matches the receiver and argument buffer; adapter references survive until the existing finally cleanup.
+				const string id = "setAdapter.(Landroid/widget/ListAdapter;)V";
+				try {
+					JniArgumentValue* args = stackalloc JniArgumentValue [1];
+					args [0] = new JniArgumentValue (adapter);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+				} finally {
+					GC.KeepAlive (adapter);
+					GC.KeepAlive (this);
+				}
 			}
 		}
 #endif
@@ -84,22 +93,28 @@ namespace Android.Widget {
 
 	internal partial class AbsListViewInvoker {
 
-		public unsafe override IListAdapter? Adapter {
+		public override IListAdapter? Adapter {
 			get {
-				IntPtr value;
-				const string __id = "getAdapter.()Landroid/widget/Adapter;";
-				value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
-				return Java.Lang.Object.GetObject<IListAdapter> (value, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: the adapter member signature matches the receiver and argument buffer; adapter references survive until the existing finally cleanup.
+					IntPtr value;
+					const string __id = "getAdapter.()Landroid/widget/Adapter;";
+					value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
+					return Java.Lang.Object.GetObject<IListAdapter> (value, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				const string __id = "setAdapter.(Landroid/widget/Adapter;)V";
-				IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (native_value);
-					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-				} finally {
-					JNIEnv.DeleteLocalRef (native_value);
+				unsafe {
+					// SAFETY: the adapter member signature matches the receiver and argument buffer; adapter references survive until the existing finally cleanup.
+					const string __id = "setAdapter.(Landroid/widget/Adapter;)V";
+					IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
+					try {
+						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+						__args [0] = new JniArgumentValue (native_value);
+						_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+					} finally {
+						JNIEnv.DeleteLocalRef (native_value);
+					}
 				}
 			}
 		}

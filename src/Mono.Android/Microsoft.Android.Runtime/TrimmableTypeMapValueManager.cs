@@ -191,7 +191,12 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 					// Match the legacy cast diagnostic when assembly logging is enabled.
 					if (Logger.LogAssembly) {
 						var targetSig = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (targetType);
-						var message = $"Handle 0x{reference.Handle:x} is of type '{JNIEnv.GetClassNameFromInstance (reference.Handle)}' which is not assignable to '{targetSig.SimpleReference}'";
+						string? instanceName;
+						unsafe {
+							// SAFETY: the value manager borrows this live reference throughout the cast check and retains both class references until finally.
+							instanceName = JNIEnv.GetClassNameFromInstance (reference.Handle);
+						}
+						var message = $"Handle 0x{reference.Handle:x} is of type '{instanceName}' which is not assignable to '{targetSig.SimpleReference}'";
 						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
 					}
 

@@ -31,9 +31,16 @@ namespace Java.Interop {
 			JniVersion  = JniVersion.v1_2;
 		}
 
-		public JreRuntime CreateJreVM ()
+		/// <safety>
+		/// This options instance must contain a live VM and/or current-thread environment with the JNI ABI.
+		/// The VM must outlive the runtime, and any class-loader reference must remain live during initialization.
+		/// </safety>
+		public unsafe JreRuntime CreateJreVM ()
 		{
-			return new JreRuntime (this);
+			unsafe {
+				// SAFETY: the caller retains the supplied VM, thread environment and loader through runtime initialization.
+				return new JreRuntime (this);
+			}
 		}
 	}
 
@@ -63,7 +70,11 @@ namespace Java.Interop {
 			throw new NotImplementedException ();
 		}
 
-		internal protected JreRuntime (NativeAotRuntimeOptions builder)
+		/// <safety>
+		/// <paramref name="builder"/> must supply a live VM and/or current-thread JNI environment with the JNI ABI,
+		/// retaining the VM for the runtime lifetime and the class-loader reference through initialization.
+		/// </safety>
+		internal protected unsafe JreRuntime (NativeAotRuntimeOptions builder)
 			: base (CreateJreVM (builder))
 		{
 		}

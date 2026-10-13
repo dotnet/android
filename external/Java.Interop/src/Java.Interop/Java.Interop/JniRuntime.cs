@@ -180,7 +180,14 @@ namespace Java.Interop
 
 		internal    bool                                TrackIDs            {get; private set;}
 
-		protected JniRuntime (CreationOptions options)
+		/// <safety>
+		/// The VM in <paramref name="options"/> must have the JNI invocation-table ABI and remain live
+		/// for the runtime lifetime. A supplied environment must belong to that VM and the current thread,
+		/// with readable JNI table storage. When only the VM is supplied, initialization obtains an environment
+		/// through GetEnv or attaches the current thread. Any supplied class-loader reference must remain live
+		/// until initialization duplicates it; local references must belong to the current thread.
+		/// </safety>
+		protected unsafe JniRuntime (CreationOptions options)
 		{
 			if (options == null)
 				throw new ArgumentNullException (nameof (options));
@@ -198,6 +205,7 @@ namespace Java.Interop
 				InvocationPointer   = options.InvocationPointer;
 			}
 			unsafe {
+				// SAFETY: the caller supplies a live JavaVM with the JNI invocation-table layout for this runtime.
 				Invoker = *(JavaVMInterface*) Marshal.ReadIntPtr (InvocationPointer);
 			}
 

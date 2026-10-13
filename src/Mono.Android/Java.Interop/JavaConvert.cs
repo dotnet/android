@@ -59,70 +59,73 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
-			if (target == null)
+			unsafe {
+				// SAFETY: peer/array marshaling supplies typed borrowed references; locally created JNI references are released exactly once after conversion and existing KeepAlive.
+				if (target == null)
+					return null;
+
+				if (JniHandleConverters.TryGetValue (target, out var converter))
+					return converter;
+
+				// For Nullable<T>, look up the converter for the underlying element type and
+				// wrap it so that a null Java reference maps to a null value.
+				var underlyingType = Nullable.GetUnderlyingType (target);
+				if (underlyingType != null && JniHandleConverters.TryGetValue (underlyingType, out var underlyingConverter))
+					return (h, t) => h == IntPtr.Zero ? null : underlyingConverter (h, t);
+
+				if (target.IsArray)
+					return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
+
+				if (target.IsGenericType && !target.IsGenericTypeDefinition) {
+					if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups ||
+							!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+						if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
+							return collectionConverter;
+					} else {
+						var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
+						if (factoryConverter != null)
+							return factoryConverter;
+					}
+				}
+
+				if (typeof (IDictionary).IsAssignableFrom (target))
+					return (h, t) => JavaDictionary.FromJniHandle (h, t);
+				if (typeof (IList).IsAssignableFrom (target))
+					return (h, t) => JavaList.FromJniHandle (h, t);
+				if (typeof (ICollection).IsAssignableFrom (target))
+					return (h, t) => JavaCollection.FromJniHandle (h, t);
+
 				return null;
 
-			if (JniHandleConverters.TryGetValue (target, out var converter))
-				return converter;
+				[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
+					Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
+				[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
+					Justification = "This method is used only when dynamic code is supported. The target closed generic collection type is preserved by the marshaling call site, including its public FromJniHandle method.")]
+				[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
+				static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
+				{
+					var genericDefinition = target.GetGenericTypeDefinition ();
+					if (genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>)) {
+						Type t = genericDefinition == typeof (JavaDictionary<,>)
+							? target
+							: typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+					if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
+						Type t = genericDefinition == typeof (JavaList<>)
+							? target
+							: typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+					if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
+						Type t = genericDefinition == typeof (JavaCollection<>)
+							? target
+							: typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
 
-			// For Nullable<T>, look up the converter for the underlying element type and
-			// wrap it so that a null Java reference maps to a null value.
-			var underlyingType = Nullable.GetUnderlyingType (target);
-			if (underlyingType != null && JniHandleConverters.TryGetValue (underlyingType, out var underlyingConverter))
-				return (h, t) => h == IntPtr.Zero ? null : underlyingConverter (h, t);
-
-			if (target.IsArray)
-				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
-
-			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups ||
-						!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
-						return collectionConverter;
-				} else {
-					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
-					if (factoryConverter != null)
-						return factoryConverter;
+					return null;
 				}
-			}
-
-			if (typeof (IDictionary).IsAssignableFrom (target))
-				return (h, t) => JavaDictionary.FromJniHandle (h, t);
-			if (typeof (IList).IsAssignableFrom (target))
-				return (h, t) => JavaList.FromJniHandle (h, t);
-			if (typeof (ICollection).IsAssignableFrom (target))
-				return (h, t) => JavaCollection.FromJniHandle (h, t);
-
-			return null;
-
-			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
-				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
-				Justification = "This method is used only when dynamic code is supported. The target closed generic collection type is preserved by the marshaling call site, including its public FromJniHandle method.")]
-			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
-			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
-			{
-				var genericDefinition = target.GetGenericTypeDefinition ();
-				if (genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>)) {
-					Type t = genericDefinition == typeof (JavaDictionary<,>)
-						? target
-						: typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-				if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
-					Type t = genericDefinition == typeof (JavaList<>)
-						? target
-						: typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-				if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
-					Type t = genericDefinition == typeof (JavaCollection<>)
-						? target
-						: typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-
-				return null;
 			}
 		}
 
@@ -148,34 +151,37 @@ namespace Java.Interop {
 
 			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 			{
-				if (handle == IntPtr.Zero)
-					return null;
+				unsafe {
+					// SAFETY: peer/array marshaling supplies typed borrowed references; locally created JNI references are released exactly once after conversion and existing KeepAlive.
+					if (handle == IntPtr.Zero)
+						return null;
 
-				if (useRuntimeTypeMapping)
-					return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+					if (useRuntimeTypeMapping)
+						return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 
-				if (elementType != null) {
-					var peeked = Java.Lang.Object.PeekObject (handle, elementType);
-					if (peeked != null) {
-						JNIEnv.DeleteRef (handle, transfer);
-						return peeked;
+					if (elementType != null) {
+						var peeked = Java.Lang.Object.PeekObject (handle, elementType);
+						if (peeked != null) {
+							JNIEnv.DeleteRef (handle, transfer);
+							return peeked;
+						}
 					}
+
+					if (converter != null)
+						return converter (handle, transfer);
+
+					if (elementType != null && elementType.IsArray)
+						return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
+
+					if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
+						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
+					}
+
+					var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+					if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
+						return value;
+					return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
 				}
-
-				if (converter != null)
-					return converter (handle, transfer);
-
-				if (elementType != null && elementType.IsArray)
-					return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
-
-				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
-					return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
-				}
-
-				var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
-				if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
-					return value;
-				return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
 			}
 		}
 
@@ -382,35 +388,38 @@ namespace Java.Interop {
 				T
 		>(IJavaObject? value, out bool set)
 		{
-			if (value == null) {
-				set = false;
-				return default (T);
-			}
-			if (typeof (IJavaObject).IsAssignableFrom (typeof (T))) {
+			unsafe {
+				// SAFETY: peer/array marshaling supplies typed borrowed references; locally created JNI references are released exactly once after conversion and existing KeepAlive.
+				if (value == null) {
+					set = false;
+					return default (T);
+				}
+				if (typeof (IJavaObject).IsAssignableFrom (typeof (T))) {
+					set = true;
+					return value._JavaCast<T>();
+				}
+				if (value is Android.Runtime.JavaObject o) {
+					set = true;
+					if (o.Instance is T)
+						return (T) o.Instance;
+					return (T) Convert.ChangeType (o.Instance, typeof (T), CultureInfo.InvariantCulture);
+				}
+				if (value is T) {
+					set = true;
+					return (T) value;
+				}
+				IntPtr lrefValue  = JNIEnv.ToLocalJniHandle (value);
+				if (lrefValue == IntPtr.Zero) {
+					set = false;
+					return default (T);
+				}
 				set = true;
-				return value._JavaCast<T>();
+				var converter = GetJniHandleConverter (typeof (T));
+				if (converter != null)
+					return (T?) converter (lrefValue, JniHandleOwnership.TransferLocalRef);
+				JNIEnv.DeleteLocalRef (lrefValue);
+				return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 			}
-			if (value is Android.Runtime.JavaObject o) {
-				set = true;
-				if (o.Instance is T)
-					return (T) o.Instance;
-				return (T) Convert.ChangeType (o.Instance, typeof (T), CultureInfo.InvariantCulture);
-			}
-			if (value is T) {
-				set = true;
-				return (T) value;
-			}
-			IntPtr lrefValue  = JNIEnv.ToLocalJniHandle (value);
-			if (lrefValue == IntPtr.Zero) {
-				set = false;
-				return default (T);
-			}
-			set = true;
-			var converter = GetJniHandleConverter (typeof (T));
-			if (converter != null)
-				return (T?) converter (lrefValue, JniHandleOwnership.TransferLocalRef);
-			JNIEnv.DeleteLocalRef (lrefValue);
-			return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 		}
 
 		public static object? FromJavaObject (
@@ -418,31 +427,34 @@ namespace Java.Interop {
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 		{
-			if (value == null)
-				return null;
+			unsafe {
+				// SAFETY: peer/array marshaling supplies typed borrowed references; locally created JNI references are released exactly once after conversion and existing KeepAlive.
+				if (value == null)
+					return null;
 
-			if (targetType != null && typeof (IJavaObject).IsAssignableFrom (targetType)) {
-				return JavaObjectExtensions.JavaCast (value, targetType);
+				if (targetType != null && typeof (IJavaObject).IsAssignableFrom (targetType)) {
+					return JavaObjectExtensions.JavaCast (value, targetType);
+				}
+
+				if (value is Android.Runtime.JavaObject o) {
+					if (targetType == null)
+						return o.Instance;
+					return Convert.ChangeType (o.Instance, targetType, CultureInfo.InvariantCulture);
+				}
+
+				if (targetType == null || targetType.IsAssignableFrom (value.GetType ()))
+					return value;
+
+				IntPtr lrefValue  = JNIEnv.ToLocalJniHandle (value);
+				if (lrefValue == IntPtr.Zero) {
+					return null;
+				}
+				var converter = GetJniHandleConverter (targetType);
+				if (converter != null)
+					return converter (lrefValue, JniHandleOwnership.TransferLocalRef);
+				JNIEnv.DeleteLocalRef (lrefValue);
+				return Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 			}
-
-			if (value is Android.Runtime.JavaObject o) {
-				if (targetType == null)
-					return o.Instance;
-				return Convert.ChangeType (o.Instance, targetType, CultureInfo.InvariantCulture);
-			}
-
-			if (targetType == null || targetType.IsAssignableFrom (value.GetType ()))
-				return value;
-
-			IntPtr lrefValue  = JNIEnv.ToLocalJniHandle (value);
-			if (lrefValue == IntPtr.Zero) {
-				return null;
-			}
-			var converter = GetJniHandleConverter (targetType);
-			if (converter != null)
-				return converter (lrefValue, JniHandleOwnership.TransferLocalRef);
-			JNIEnv.DeleteLocalRef (lrefValue);
-			return Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
@@ -592,25 +604,31 @@ namespace Java.Interop {
 
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = ToLocalJniHandle (value);
-			try {
-				return action (lref);
-			}
-			finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: peer/array marshaling supplies typed borrowed references; locally created JNI references are released exactly once after conversion and existing KeepAlive.
+				IntPtr lref = ToLocalJniHandle (value);
+				try {
+					return action (lref);
+				}
+				finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 
 		public static TReturn WithLocalJniHandle<TReturn>(object? value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = ToLocalJniHandle (value);
-			try {
-				return action (lref);
-			}
-			finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: peer/array marshaling supplies typed borrowed references; locally created JNI references are released exactly once after conversion and existing KeepAlive.
+				IntPtr lref = ToLocalJniHandle (value);
+				try {
+					return action (lref);
+				}
+				finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 	}

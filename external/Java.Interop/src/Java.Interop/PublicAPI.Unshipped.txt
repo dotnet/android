@@ -1,4 +1,6 @@
 #nullable enable
+*REMOVED*Java.Interop.JniRuntime.JniRuntime(Java.Interop.JniRuntime.CreationOptions! options) -> void
+unsafe Java.Interop.JniRuntime.JniRuntime(Java.Interop.JniRuntime.CreationOptions! options) -> void
 *REMOVED*Java.Interop.JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent.get -> bool
 *REMOVED*Java.Interop.JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent.set -> void
 *REMOVED*Java.Interop.JniRuntime.CreationOptions.MarshalMemberBuilder.set -> void
