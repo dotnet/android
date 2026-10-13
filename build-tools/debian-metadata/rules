@@ -36,7 +36,6 @@ override_dh_clideps:
 		--exclude-moduleref=fusion \
 		--exclude-moduleref=fusion.dll \
 		--exclude-moduleref=iphlpapi.dll \
-		--exclude-moduleref=java-interop \
 		--exclude-moduleref=libfam.so.0 \
 		--exclude-moduleref=libgamin-1.so.0 \
 		--exclude-moduleref=libmono-btls-shared \

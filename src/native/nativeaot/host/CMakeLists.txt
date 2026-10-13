@@ -122,7 +122,6 @@ macro(lib_target_options TARGET_NAME)
 
   target_link_libraries(
     ${TARGET_NAME}
-    xa::java-interop
     -llog
   )
 endmacro ()

@@ -33,7 +33,6 @@ public class NativeAotSystemPropertiesTests : BaseTest
 			OperatingSystem.IsMacOS () ? "-Wl,-dead_strip" : "-Wl,--gc-sections",
 			"-I" + Path.Combine (root, "src", "native", "nativeaot", "include"),
 			"-I" + Path.Combine (root, "src", "native", "common", "include"),
-			"-I" + Path.Combine (root, "external", "Java.Interop", "src", "java-interop"),
 			Path.Combine (root, "src", "native", "nativeaot", "runtime-base", "app-system-properties.cc"),
 			Path.Combine (root, "src", "native", "clr", "runtime-base", "binary-blob-loader.cc"),
 			Path.Combine (ResourcesDirectory, "bootstrap-probe.cc"),

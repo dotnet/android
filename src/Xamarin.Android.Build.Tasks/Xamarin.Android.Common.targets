@@ -165,11 +165,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<AndroidErrorOnCustomJavaObject Condition=" '$(AndroidErrorOnCustomJavaObject)' == '' ">True</AndroidErrorOnCustomJavaObject>
 
-	<AndroidUseDebugRuntime
-			Condition="'$(AndroidUseDebugRuntime)' == '' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(Optimize)' == 'True' "
-	>False</AndroidUseDebugRuntime>
-	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
-
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
 
 	<!-- Obsolete build property: should be removed in the future releases -->
