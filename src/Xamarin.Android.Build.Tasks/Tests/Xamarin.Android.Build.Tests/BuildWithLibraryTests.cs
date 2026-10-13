@@ -290,15 +290,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNotNull(doc.Element ("manifest")?.Element ("queries")?.Element ("package"), $"There should be 1 package in the queries in {androidManifest}.");
 			// Check environment variable
 			if (isRelease) {
-				string envFilesDir;
-				if (runtime == AndroidRuntime.NativeAOT) {
-					envFilesDir = Path.Combine (intermediate, "android-x64");
+				Dictionary<string, string> environmentVariables;
+				if (runtime == AndroidRuntime.CoreCLR) {
+					environmentVariables = EnvironmentHelper.ReadCoreClrBootstrap (intermediate).EnvironmentVariables;
 				} else {
-					envFilesDir = intermediate;
+					environmentVariables = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate);
 				}
-
-				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
-				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
 				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
 			}

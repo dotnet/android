@@ -12,7 +12,6 @@
     <Project Path="build-tools/jnienv-gen/jnienv-gen.csproj" />
   </Folder>
   <Folder Name="/Core/">
-    <Project Path="external/Java.Interop/src/java-interop/java-interop.csproj" />
     <Project Path="external/Java.Interop/src/Java.Interop.Tools.Generator/Java.Interop.Tools.Generator.csproj" />
     <Project Path="external/Java.Interop/src/Java.Interop/Java.Interop.csproj" />
     <Project Path="external/Java.Interop/src/Xamarin.Android.Tools.Bytecode/Xamarin.Android.Tools.Bytecode.csproj" />
@@ -21,7 +20,6 @@
     <Project Path="src/aapt2/aapt2.csproj" />
     <Project Path="src/AndroidBuildConfig/AndroidBuildConfig.csproj" />
     <Project Path="src/androidsdk/androidsdk.csproj" />
-    <Project Path="src/binutils/binutils.csproj" />
     <Project Path="src/bundletool/bundletool.csproj" />
     <Project Path="src/java-runtime/java-runtime.csproj" />
     <Project Path="src/manifestmerger/manifestmerger.csproj" />
@@ -72,7 +70,6 @@
     <Project Path="external/Java.Interop/src/Xamarin.Android.Tools.ApiXmlAdjuster/Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
     <Project Path="external/Java.Interop/tools/class-parse/class-parse.csproj" />
     <Project Path="external/Java.Interop/tools/java-source-utils/java-source-utils.csproj" />
-    <Project Path="external/Java.Interop/tools/jcw-gen/jcw-gen.csproj" />
     <Project Path="tools/relnote-gen/relnote-gen.csproj" />
     <Project Path="tools/tmt/tmt.csproj">
       <Platform Solution="*|Any CPU" Project="anycpu" />

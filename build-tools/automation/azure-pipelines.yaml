@@ -85,7 +85,7 @@ extends:
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
     settings:
-      networkIsolationPolicy: Permissive,CFSClean
+      networkIsolationPolicy: DefaultDeny,CFSClean
       skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
@@ -126,6 +126,8 @@ extends:
       # Check - "Xamarin.Android (MAUI Tests MAUI Integration)"
       - job: maui_tests_integration
         displayName: MAUI Integration
+        # Re-enable when dotnet/maui's net12.0 branch exists: https://github.com/dotnet/android/issues/13088
+        condition: 'false'
         pool:
           name: MAUI-1ESPT
           image: $(WindowsPoolImage1ESPT)
@@ -378,11 +380,6 @@ extends:
             quality: $(DotNetSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\symbols
-
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: nuget-unsigned-symbols

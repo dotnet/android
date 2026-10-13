@@ -77,9 +77,6 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string? MonoAndroidLibPath { get; set; }
 
-		[Output]
-		public string? AndroidBinUtilsPath { get; set; }
-
 		public override bool RunTask ()
 		{
 			// OS X:    $prefix/lib/xamarin.android/xbuild/Xamarin/Android
@@ -89,7 +86,6 @@ namespace Xamarin.Android.Tasks
 			}
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 			MonoAndroidLibPath  = MonoAndroidHelper.GetOSLibPath () + Path.DirectorySeparatorChar;
-			AndroidBinUtilsPath = MonoAndroidBinPath + "binutils" + Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar;
 
 			var minVersion      = Version.Parse (MinimumSupportedJavaVersion);
 			var maxVersion      = Version.Parse (LatestSupportedJavaVersion);
@@ -134,7 +130,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
 			Log.LogDebugMessage ($"  {nameof (MonoAndroidBinPath)}: {MonoAndroidBinPath}");
 			Log.LogDebugMessage ($"  {nameof (MonoAndroidToolsPath)}: {MonoAndroidToolsPath}");
-			Log.LogDebugMessage ($"  {nameof (AndroidBinUtilsPath)}: {AndroidBinUtilsPath}");
 
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;

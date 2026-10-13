@@ -29,6 +29,12 @@ public class TransferFailureThrowable extends RuntimeException {
 	@Override
 	public void printStackTrace(java.io.PrintWriter writer) {
 		stackCalls++;
+		if (stackCalls == 2) {
+			if (stage == 5)
+				throw this;
+			if (stage == 6)
+				throw new IllegalStateException("transfer-extraction-cause", this);
+		}
 		if (stage == 3 || (stage == 4 && stackCalls == 2))
 			throw new IllegalStateException("transfer-extraction-" + stage);
 		writer.print("transfer test stack");

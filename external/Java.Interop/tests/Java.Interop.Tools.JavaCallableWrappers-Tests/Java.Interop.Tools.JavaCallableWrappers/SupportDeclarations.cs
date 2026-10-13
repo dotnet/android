@@ -95,42 +95,6 @@ namespace Xamarin.Android.ToolsTests {
 
 	static class SupportDeclarations
 	{
-		static readonly Type [] Types = new []{
-			typeof (AbstractClassInvoker),
-			typeof (AbstractClass),
-			typeof (ActivityName),
-			typeof (ApplicationName),
-			typeof (ApplicationName.ActivityLifecycleCallbacks),
-			typeof (DefaultName),
-			typeof (DefaultName.A),
-			typeof (DefaultName.A.B),
-			typeof (DefaultName.C.D),
-			typeof (ExampleActivity),
-			typeof (ExampleInstrumentation),
-			typeof (ExampleOuterClass),
-			typeof (ExampleOuterClass.ExampleInnerClass),
-			typeof (GlobalClass),
-			typeof (InstrumentationName),
-			typeof (NonStaticOuterClass),
-			typeof (NonStaticOuterClass.NonStaticInnerClass),
-			typeof (ProviderName),
-			typeof (ReceiverName),
-			typeof (RegisterName),
-			typeof (RegisterName.DefaultNestedName),
-			typeof (RegisterName.OverrideNestedName),
-			typeof (ServiceName),
-		};
-
-		public static List<TypeDefinition> GetTestTypeDefinitions ()
-		{
-			var a = AssemblyDefinition.ReadAssembly (typeof (DefaultName).Assembly.Location);
-			var r = new List<TypeDefinition> ();
-			foreach (var t in Types) {
-				r.Add (GetTypeDefinition (t, a));
-			}
-			return r;
-		}
-
 		public static TypeDefinition GetTypeDefinition (Type type, AssemblyDefinition assemblyDef = null)
 		{
 			assemblyDef = assemblyDef ?? AssemblyDefinition.ReadAssembly (type.Assembly.Location);
