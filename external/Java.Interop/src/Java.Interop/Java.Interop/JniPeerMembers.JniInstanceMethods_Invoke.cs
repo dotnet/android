@@ -13,9 +13,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeVoidStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -32,7 +29,6 @@ namespace Java.Interop {
 					JniEnvironment.StaticMethods.CallStaticVoidMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -110,9 +106,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeBooleanStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out bool r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -129,7 +122,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticBooleanMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -207,9 +199,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeSByteStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out sbyte r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -226,7 +215,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticByteMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -304,9 +292,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeCharStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out char r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -323,7 +308,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticCharMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -401,9 +385,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeInt16StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out short r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -420,7 +401,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticShortMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -498,9 +478,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeInt32StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out int r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -517,7 +494,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticIntMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -595,9 +571,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeInt64StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out long r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -614,7 +587,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticLongMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -692,9 +664,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeSingleStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out float r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -711,7 +680,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticFloatMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -789,9 +757,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeDoubleStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out double r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -808,7 +773,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticDoubleMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
@@ -886,9 +850,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvokeObjectStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out JniObjectReference r)
 			{
 				r = default;
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -905,7 +866,6 @@ namespace Java.Interop {
 					r = JniEnvironment.StaticMethods.CallStaticObjectMethod (method.StaticRedirect.PeerReference, method, p);
 					return true;
 				}
-#endif   // NET
 			}
 #pragma warning restore CA1801
 

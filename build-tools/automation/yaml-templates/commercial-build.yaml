@@ -4,7 +4,6 @@ parameters:
   makeMSBuildArgs: ''
   nugetArtifactName: $(NuGetArtifactName)
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
-  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
   use1ESTemplate: true
 
 steps:
@@ -58,13 +57,6 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
-- script: >
-    mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
-    cd ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
-    zip -r ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: zip Windows toolchain pdb files
-
 - task: CopyFiles@2
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
@@ -96,12 +88,6 @@ steps:
     inputs:
       artifactName: ${{ parameters.testAssembliesArtifactName }}
       targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
-
-  - task: PublishPipelineArtifact@1
-    displayName: upload Windows toolchain pdb files
-    inputs:
-      artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
-      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
 
   - task: PublishPipelineArtifact@1
     displayName: upload build tools inventory

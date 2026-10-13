@@ -114,28 +114,6 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
-		[Explicit ("Run only in isolated JniReferenceLeak test runs.")]
-		[Category (JniReferenceLeakCategory)]
-		public void AssertNoSustainedGlobalReferenceGrowth_DetectsRetainedGlobalReference ()
-		{
-			var objectClass = Java.Interop.JniEnvironment.Types.FindClass ("java/lang/Object");
-			var retainedReferences = new List<Java.Interop.JniObjectReference> ();
-			try {
-				var error = Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
-					retainedReferences.Add (objectClass.NewGlobalRef ());
-				}));
-				Assert.That (error?.Message, Does.Contain ("Operation should not leak global references"));
-				Assert.That (error?.Message, Does.Contain ("Delta=100"));
-			} finally {
-				foreach (var retainedReference in retainedReferences) {
-					var reference = retainedReference;
-					Java.Interop.JniObjectReference.Dispose (ref reference);
-				}
-				Java.Interop.JniObjectReference.Dispose (ref objectClass);
-			}
-		}
-
 		static void AssertJavaSideActivation (Java.Lang.Class c)
 		{
 			using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {

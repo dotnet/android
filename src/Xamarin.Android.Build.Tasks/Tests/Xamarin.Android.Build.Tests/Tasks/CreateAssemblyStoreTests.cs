@@ -32,7 +32,6 @@ public class CreateAssemblyStoreTests : BaseTest
 			ResolvedFrameworkAssemblies = [],
 			ResolvedUserAssemblies = [new TaskItem (assemblyPath, metadata)],
 			SupportedAbis = ["arm64-v8a"],
-			UseAssemblyStore = true,
 		};
 
 		Assert.IsTrue (task.Execute (), "CreateAssemblyStore should succeed.");

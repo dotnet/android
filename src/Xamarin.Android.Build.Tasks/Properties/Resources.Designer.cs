@@ -304,15 +304,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown mode: {0}.
-        /// </summary>
-        public static string XA0037 {
-            get {
-                return ResourceManager.GetString("XA0037", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         public static string XA0100 {
@@ -874,15 +865,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues.
-        /// </summary>
-        public static string XA1040 {
-            get {
-                return ResourceManager.GetString("XA1040", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; has an invalid value of &apos;{1}&apos;. The value is expected to be a directory path representing the relative location of your Assets or Resources..
         /// </summary>
         public static string XA1041 {
@@ -927,33 +909,6 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
 
-        /// <summary>
-        ///   Looks up a localized string similar to Input file `{0}` does not start with `&lt;replacements/&gt;`..
-        /// </summary>
-        public static string XA1045 {
-            get {
-                return ResourceManager.GetString("XA1045", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Attribute &apos;{0}&apos; in element &apos;{1}&apos; has value &apos;{2}&apos; that cannot be parsed as boolean; {3} line {4}..
-        /// </summary>
-        public static string XA1046 {
-            get {
-                return ResourceManager.GetString("XA1046", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Required attribute &apos;{0}&apos; missing from element &apos;{1}&apos;; {2} line {3}..
-        /// </summary>
-        public static string XA1047 {
-            get {
-                return ResourceManager.GetString("XA1047", resourceCulture);
-            }
-        }
-        
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; does not contain an &lt;instrumentation&gt; element. Add an Android.App.Instrumentation subclass to the application, or set the $(AndroidInstrumentation) MSBuild property to the name of one..
         /// </summary>
@@ -1068,15 +1023,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2008 {
             get {
                 return ResourceManager.GetString("XA2008", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not compile native assembly file: {0}{1}.
-        /// </summary>
-        public static string XA3006 {
-            get {
-                return ResourceManager.GetString("XA3006", resourceCulture);
             }
         }
         
@@ -2043,6 +1989,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Failed to process bundle config file &apos;{0}&apos;, split config files will be ignored at run time..
+        /// </summary>
+        public static string XA4331 {
+            get {
+                return ResourceManager.GetString("XA4331", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {
@@ -2050,22 +2005,13 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA5101", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to C compiler for target {0} was not found. Tried paths: &quot;{1}&quot;.
+        ///   Looks up a localized string similar to Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK..
         /// </summary>
-        public static string XA5101_C_Compiler {
+        public static string XA5101_ClangRuntime {
             get {
-                return ResourceManager.GetString("XA5101_C_Compiler", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Toolchain directory for target {0} was not found..
-        /// </summary>
-        public static string XA5101_Toolchain {
-            get {
-                return ResourceManager.GetString("XA5101_Toolchain", resourceCulture);
+                return ResourceManager.GetString("XA5101_ClangRuntime", resourceCulture);
             }
         }
         

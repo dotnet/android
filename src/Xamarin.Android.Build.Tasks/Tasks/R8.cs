@@ -280,8 +280,9 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
 				writer.WriteLine ("-keepclassmembernames interface * { *; }");
 				writer.WriteLine ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }");
-				// JavaInterop1 binding field accessors use constant JNI identifiers without
-				// field-specific metadata, including when consumed by an XA-generated app.
+				// Inherited field lookups try the original name before base remaps. A renamed
+				// subclass field can reuse the base field's original name and resolve to the
+				// wrong field, even when the declaring base's remap is retained.
 				writer.WriteLine ("-keepclassmembernames class * { <fields>; }");
 				writer.WriteLine ("-keepnames public class *");
 				writer.WriteLine ("-keepnames class **$*");

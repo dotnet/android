@@ -634,24 +634,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return "";
 		}
 
-		// FIXME: should this be used?
-		string GetCreatorName (TypeName type)
-		{
-			string csname = name_cache.ToCSharp (type);
-			switch (csname) {
-			case "String":
-			case "Java.Lang.ICharSequence":
-				return "Android.OS.Parcel.StringCreator";
-			case "List":
-			case "Android.Runtime.JavaList":
-				return "Android.OS.Parcel.ArrayListCreator";
-			default:
-				if (name_cache.IsParcelable (type))
-					return csname + ".Creator";
-				return String.Empty;
-			}
-		}
-
 		string [] cs_units;
 
 		string ToOutputTypeName (string name)
