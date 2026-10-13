@@ -95,13 +95,19 @@ namespace Java.InteropTests {
 				? new [] { registration, new JniNativeMethodRegistration ("__missing_native_method__", "(II)I", callback) }
 				: new [] { registration };
 			if (fail) {
-				var error = Assert.Throws<Java.Lang.NoSuchMethodError> (() => type.RegisterNativeMethods (methods));
+				var error = Assert.Throws<Java.Lang.NoSuchMethodError> (() => {
+					unsafe {
+						type.RegisterNativeMethods (methods);
+					}
+				});
 				Assert.IsNotNull (error);
 				if (error == null)
 					throw new InvalidOperationException ("JNI did not report the missing native method.");
 				error.Dispose ();
 			} else {
-				type.RegisterNativeMethods (methods);
+				unsafe {
+					type.RegisterNativeMethods (methods);
+				}
 			}
 			Array.Clear (methods, 0, methods.Length);
 			return new WeakReference (callback);

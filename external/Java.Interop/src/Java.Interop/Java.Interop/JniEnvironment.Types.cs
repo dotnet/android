@@ -236,6 +236,9 @@ namespace Java.Interop
 			/// or partially completed registration. Returning from this call does not end that lifetime.
 			/// Release those roots only after successful unregistration and completion of all
 			/// in-flight callbacks.
+			/// Each delegate's parameter and return types, calling convention, and marshaling
+			/// attributes must match its JNI descriptor, including the leading JNIEnv and
+			/// receiver/class pointers. JNI scalar values must not be interpreted as managed references.
 			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
@@ -251,6 +254,9 @@ namespace Java.Interop
 			/// their callbacks, including after a failed or partially completed registration.
 			/// Returning from this call does not end that lifetime. Release those roots only after
 			/// successful unregistration and completion of all in-flight callbacks.
+			/// Each registered delegate's parameter and return types, calling convention, and
+			/// marshaling attributes must match its JNI descriptor, including the leading JNIEnv
+			/// and receiver/class pointers. JNI scalar values must not be interpreted as managed references.
 			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)

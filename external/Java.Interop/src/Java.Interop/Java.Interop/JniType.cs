@@ -197,8 +197,15 @@ namespace Java.Interop {
 		/// unregistration, and disposal with native invocations so no callbacks are in flight
 		/// when unregistering.
 		/// </remarks>
+		/// <safety>
+		/// The caller must ensure each Marshaler delegate in <paramref name="methods"/> has
+		/// parameter and return types, calling convention, and marshaling attributes compatible
+		/// with its JNI method descriptor, including the leading JNIEnv and receiver/class pointers.
+		/// Managed by-ref parameters must not be used to receive JNI scalar values.
+		/// This method retains delegates but does not validate their ABI compatibility.
+		/// </safety>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
+		public unsafe void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
 			AssertValid ();
 
