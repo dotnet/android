@@ -20,12 +20,16 @@ namespace Java.Interop
 
 #if DEBUG
 		string? name, signature;
-		IntPtr nameUtf8, signatureUtf8;
+		byte* nameUtf8, signatureUtf8;
 #endif  // !DEBUG
 
 		public      string  Name {
 #if DEBUG
-			get => name ??= GetUtf8String (nameUtf8);
+			get {
+				unsafe {
+					return name ??= GetUtf8String (nameUtf8);
+				}
+			}
 #else   // !DEBUG
 			get => throw new NotSupportedException ();
 #endif  // !DEBUG
@@ -33,7 +37,11 @@ namespace Java.Interop
 
 		public      string  Signature {
 #if DEBUG
-			get => signature ??= GetUtf8String (signatureUtf8);
+			get {
+				unsafe {
+					return signature ??= GetUtf8String (signatureUtf8);
+				}
+			}
 #else   // !DEBUG
 			get => throw new NotSupportedException ();
 #endif  // !DEBUG
@@ -57,7 +65,11 @@ namespace Java.Interop
 #endif  // DEBUG
 		}
 
-		internal JniMethodInfo (IntPtr nameUtf8, string signature, IntPtr methodID, bool isStatic)
+		/// <safety>
+		/// <paramref name="nameUtf8"/> must address readable NUL-terminated UTF-8 memory that
+		/// remains alive and unchanged through every subsequent read of this metadata.
+		/// </safety>
+		internal unsafe JniMethodInfo (byte* nameUtf8, string signature, IntPtr methodID, bool isStatic)
 		{
 			ID              = methodID;
 			IsStatic        = isStatic;
@@ -68,7 +80,12 @@ namespace Java.Interop
 #endif  // DEBUG
 		}
 
-		internal JniMethodInfo (IntPtr nameUtf8, IntPtr signatureUtf8, IntPtr methodID, bool isStatic)
+		/// <safety>
+		/// <paramref name="nameUtf8"/> and <paramref name="signatureUtf8"/> must address readable
+		/// NUL-terminated UTF-8 memory that remains alive and unchanged through every subsequent
+		/// read of this metadata.
+		/// </safety>
+		internal unsafe JniMethodInfo (byte* nameUtf8, byte* signatureUtf8, IntPtr methodID, bool isStatic)
 		{
 			ID                  = methodID;
 			IsStatic            = isStatic;
@@ -79,7 +96,11 @@ namespace Java.Interop
 #endif  // DEBUG
 		}
 
-		internal JniMethodInfo (string name, IntPtr signatureUtf8, IntPtr methodID, bool isStatic)
+		/// <safety>
+		/// <paramref name="signatureUtf8"/> must address readable NUL-terminated UTF-8 memory
+		/// that remains alive and unchanged through every subsequent read of this metadata.
+		/// </safety>
+		internal unsafe JniMethodInfo (string name, byte* signatureUtf8, IntPtr methodID, bool isStatic)
 		{
 			ID                  = methodID;
 			IsStatic            = isStatic;
@@ -91,13 +112,16 @@ namespace Java.Interop
 		}
 
 #if DEBUG
-		static string GetUtf8String (IntPtr value)
+		/// <safety>
+		/// <paramref name="value"/> must address readable NUL-terminated UTF-8 memory for the call.
+		/// </safety>
+		static unsafe string GetUtf8String (byte* value)
 		{
-			if (value == IntPtr.Zero)
+			if (value == null)
 				throw new NotSupportedException ();
 
 			unsafe {
-				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
 			}
 		}
 #endif  // DEBUG
@@ -105,8 +129,8 @@ namespace Java.Interop
 		public override string ToString ()
 		{
 #if DEBUG
-			bool haveName   = !string.IsNullOrEmpty (name) || nameUtf8 != IntPtr.Zero;
-			bool haveSig    = !string.IsNullOrEmpty (signature) || signatureUtf8 != IntPtr.Zero;
+			bool haveName   = !string.IsNullOrEmpty (name) || nameUtf8 != null;
+			bool haveSig    = !string.IsNullOrEmpty (signature) || signatureUtf8 != null;
 #else   // DEBUG
 			bool haveName   = false;
 			bool haveSig    = false;
