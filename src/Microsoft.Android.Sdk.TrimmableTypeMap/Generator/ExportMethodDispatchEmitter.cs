@@ -44,8 +44,7 @@ sealed class ExportMethodDispatchEmitter
 
 		// Wrap the dispatch in the standard BeginMarshalMethod/try/catch/finally pattern so
 		// managed exceptions thrown from the method body are routed through
-		// JniRuntime.OnUserUnhandledException — matching the legacy LLVM-IR contract
-		// (Mono.Android.Export/CallbackCode.cs) and the trimmable UCO ctor wrapper.
+		// JniRuntime.OnUserUnhandledException, matching the trimmable UCO ctor wrapper.
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
@@ -384,7 +383,6 @@ sealed class ExportMethodDispatchEmitter
 		}
 
 		// Reference-type returns that need dedicated marshalling. Mirrors the
-		// SymbolKind dispatch in legacy Mono.Android.Export/CallbackCode.cs:
 		//   - CharSequence.ToLocalJniHandle handles 'string'-as-ICharSequence,
 		//     not just IJavaObject-derived peers.
 		//   - JavaList/JavaDictionary/JavaCollection.ToLocalJniHandle wrap raw

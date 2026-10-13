@@ -120,7 +120,7 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				ResolvedAssemblies = [
 					new TaskItem ("linked/HelloAndroid.dll", metadata),
-					new TaskItem ("linked/Mono.Android.Export.dll", skipped),
+					new TaskItem ("linked/Excluded.dll", skipped),
 				],
 				CoreClrBootstrapOutputFile = bootstrapPath,
 				SupportedAbis = ["arm64-v8a"],
@@ -133,7 +133,7 @@ namespace Xamarin.Android.Build.Tests
 
 			string bootstrap = Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath));
 			StringAssert.Contains ("ZZZZ", bootstrap, "CoreCLR bootstrap should contain the custom environment value.");
-			StringAssert.DoesNotContain ("Mono.Android.Export.dll", bootstrap, "CoreCLR bootstrap should not list assemblies excluded from packaging.");
+			StringAssert.DoesNotContain ("Excluded.dll", bootstrap, "CoreCLR bootstrap should not list assemblies excluded from packaging.");
 		}
 	}
 }

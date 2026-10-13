@@ -114,7 +114,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **localization** | `--filter "cat=Localization"` | Locale/culture device tests |
 | **timezone** | `--filter "cat=TimeZoneInfo"` | Time zone handling on device |
 | **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
-| **export** | `--filter "FullyQualifiedName~MonoAndroidExportTest"` | `[Export]` attribute tests |
+| **export** | `--filter "FullyQualifiedName~ExportAttributeBuildTest"` | `[Export]` attribute tests |
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
