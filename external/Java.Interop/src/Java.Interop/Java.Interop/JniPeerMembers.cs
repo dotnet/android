@@ -211,6 +211,11 @@ namespace Java.Interop {
 			return isInterface ? this : value.JniPeerMembers;
 		}
 
+		/// <safety>
+		/// A nonzero cached <see cref="jniPeerTypeNameUtf8"/> must address readable NUL-terminated
+		/// UTF-8 storage. The runtime's type manager supplies this borrowed storage and must keep
+		/// it alive and unchanged for the runtime's lifetime, including throughout this lookup.
+		/// </safety>
 		JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			if (jniPeerTypeNameUtf8 == IntPtr.Zero)
