@@ -161,7 +161,7 @@
       Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.dll"
       Outputs="../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; &quot;../../bin/Build$(Configuration)/jnienv-gen.dll&quot; -o ../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs --use-java-interop"
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;../../bin/Build$(Configuration)/jnienv-gen.dll&quot; -o ../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs"
     />
     <Touch Files="../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs" />
   </Target>
