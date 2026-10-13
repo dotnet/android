@@ -54,11 +54,12 @@ public class JniEnvMemorySafetyTests : BaseTest
 		var generated = Path.Combine (directory, "JNIEnv.g.cs");
 		var dotnet = Path.Combine (TestEnvironment.DotNetPreviewDirectory, IsWindows ? "dotnet.exe" : "dotnet");
 		var generator = Path.Combine (XABuildPaths.TopDirectory, "bin", $"Build{XABuildPaths.Configuration}", "jnienv-gen.dll");
-		var generation = RunProcessWithExitCode (dotnet, $"\"{generator}\" --use-java-interop -o=\"{generated}\"");
+		var generation = RunProcessWithExitCode (dotnet, $"\"{generator}\" -o=\"{generated}\"");
 		Assert.AreEqual (0, generation.code, generation.stdOutput + generation.stdError);
 		FileAssert.Exists (generated);
 		StringAssert.Contains ("<safety>", File.ReadAllText (generated));
 		StringAssert.Contains ("Pointer storage must remain readable", File.ReadAllText (generated));
+		StringAssert.DoesNotContain ("JniNativeInterface", File.ReadAllText (generated));
 
 		var contracts = new XamarinAndroidLibraryProject {
 			ProjectName = "RawJniContracts",

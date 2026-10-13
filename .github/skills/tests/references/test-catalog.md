@@ -27,7 +27,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
 | **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
 | **api xml adjuster** | `external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
-| **java callable wrappers** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
+| **Java peer naming/scanning** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
 | **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
 | **expressions** | `external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **generator tools** | `external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
@@ -94,7 +94,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Package manager Java generation |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
-| **ndk** | `--filter "FullyQualifiedName~NdkUtilTests"` | NDK utility tasks |
+| **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools, Clang runtime discovery, and checked-build wrapper diagnostics |
 
 ---
 
@@ -198,7 +198,7 @@ cause, or stack-trace extraction fails, while borrowed references remain valid.
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | Binding generator tests |
-| **java callable wrappers** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | JCW generation |
+| **Java peer naming/scanning** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | Naming, scanning, and type-name mapping; current JCW generation is covered by the trimmable type map suites |
 | **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |
 | **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | Java source generation |
 | **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | Maven integration |

@@ -74,30 +74,6 @@ namespace Android.Runtime {
 			exit (-1);
 		}
 
-#if !JAVA_INTEROP
-		internal static Exception GetExceptionForLastThrowable ()
-		{
-			IntPtr e = JNIEnv.ExceptionOccurred ();
-			if (e == IntPtr.Zero)
-				return null;
-			JNIEnv.ExceptionClear ();
-			return HandleToException (e);
-		}
-
-		static System.Exception HandleToException (IntPtr handle)
-		{
-			try {
-				System.Exception result = (System.Exception) Java.Lang.Object.GetObject (handle, JniHandleOwnership.DoNotTransfer, typeof (Java.Lang.Throwable));
-				var p = result as JavaProxyThrowable;
-				if (p != null)
-					return p.InnerException;
-				return result;
-			} finally {
-				JNIEnv.DeleteLocalRef (handle);
-			}
-		}
-#endif  // !JAVA_INTEROP
-
 		public static event EventHandler<RaiseThrowableEventArgs>? UnhandledExceptionRaiser;
 
 		public static void RaiseThrowable (Java.Lang.Throwable throwable)

@@ -40,7 +40,7 @@ class ManifestGenerator
 
 	/// <summary>
 	/// Generates the application manifest from an optional pre-loaded template.
-	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
+	/// Returns the list of additional runtime provider class names to generate.
 	/// </summary>
 	public (XDocument Document, IList<string> ProviderNames) Generate (
 		XDocument? manifestTemplate,

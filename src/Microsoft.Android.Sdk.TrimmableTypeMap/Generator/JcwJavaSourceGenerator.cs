@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -143,6 +144,9 @@ public sealed class JcwJavaSourceGenerator
 		// emit a lazy one-time __md_registerNatives() helper and call it at the top of
 		// each generated native-method wrapper.
 		if (type.CannotRegisterInStaticConstructor) {
+			if (!type.MarshalMethods.Any (method => !method.IsConstructor)) {
+				return;
+			}
 			writer.Write ($$"""
 	private static boolean __md_natives_registered;
 	private static synchronized void __md_registerNatives ()
@@ -186,7 +190,7 @@ public sealed class JcwJavaSourceGenerator
 
 """);
 
-			if (!type.CannotRegisterInStaticConstructor) {
+			if (!type.IsAbstract && !type.CannotRegisterInStaticConstructor) {
 				writer.Write ($$"""
 		if (getClass () == {{simpleClassName}}.class) nctor_{{ctor.ConstructorIndex}} ({{args}});
 
@@ -201,14 +205,16 @@ public sealed class JcwJavaSourceGenerator
 		}
 
 		// Write native constructor declarations
-		foreach (var ctor in type.JavaConstructors) {
-			var nativeCtorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
-			string parameters = FormatParameterList (nativeCtorParams);
-			writer.WriteLine ($"\tprivate native void nctor_{ctor.ConstructorIndex} ({parameters});");
-		}
+		if (!type.IsAbstract && !type.CannotRegisterInStaticConstructor) {
+			foreach (var ctor in type.JavaConstructors) {
+				var nativeCtorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
+				string parameters = FormatParameterList (nativeCtorParams);
+				writer.WriteLine ($"\tprivate native void nctor_{ctor.ConstructorIndex} ({parameters});");
+			}
 
-		if (type.JavaConstructors.Count > 0) {
-			writer.WriteLine ();
+			if (type.JavaConstructors.Count > 0) {
+				writer.WriteLine ();
+			}
 		}
 	}
 

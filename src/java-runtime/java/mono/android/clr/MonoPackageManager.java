@@ -16,8 +16,6 @@ import android.content.res.AssetManager;
 import android.os.Build;
 import android.util.Log;
 import mono.android.Runtime;
-import mono.android.DebugRuntime;
-import mono.android.BuildConfig;
 import net.dot.android.ApplicationRegistration;
 
 public class MonoPackageManager {
@@ -100,11 +98,6 @@ public class MonoPackageManager {
 		return false;
 	}
 
-	public static void setContext (Context context)
-	{
-		// Ignore; vestigial
-	}
-
 	static String getNativeLibraryPath (Context context)
 	{
 		return getNativeLibraryPath (context.getApplicationInfo ());
@@ -120,8 +113,4 @@ public class MonoPackageManager {
 		return MonoPackageManager_Resources.Assemblies;
 	}
 
-	public static String[] getDependencies ()
-	{
-		return MonoPackageManager_Resources.Dependencies;
-	}
 }

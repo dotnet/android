@@ -220,10 +220,6 @@ Hinweis: Die Android Designer ist nicht mit Java SDK 11.0 kompatibel: https://ak
     <value>Die MSBuild-Eigenschaft "AndroidSupportedAbis" wird nicht mehr unterstützt. Bearbeiten Sie die Projektdatei in einem Text-Editor, entfernen Sie alle Vorkommen von "AndroidSupportedAbis", und verwenden Sie stattdessen die MSBuild-Eigenschaft "RuntimeIdentifiers".</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
-  <data name="XA0037" xml:space="preserve">
-    <value>Unbekannter Modus: {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary "{0}" ist in Android-Anwendungsprojekten ungültig. Verwenden Sie stattdessen AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -532,10 +528,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Dies kann daran liegen, dass der Dateiname oder der Pfad des Projekts Nicht-ASCII-Zeichen enthält. Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
-  <data name="XA3006" xml:space="preserve">
-    <value>Die native Assemblydatei konnte nicht kompiliert werden: {0}{1}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
-  </data>
   <data name="XA3007" xml:space="preserve">
     <value>Die native freigegebene Bibliothek konnte nicht verknüpft werden: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
@@ -690,8 +682,8 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>Das Android-Codegenerierungsziel „{0}“ ist veraltet und wird in einer zukünftigen Version von .NET für Android entfernt. Aktualisieren Sie die Projekteigenschaften, um „XAJavaInterop1“ zu verwenden.</value>
-    <comment>The following are literal names and should not be translated: XAJavaInterop1
+    <value>The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.</value>
+    <comment>The following are literal names and should not be translated: AndroidCodegenTarget, XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
@@ -822,36 +814,36 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the R8 JNI remapping data. {0}</value>
-    <comment>The following are literal names and should not be translated: R8, JNI.
+    <value>Failed to generate the JNI remapping data. {0}</value>
+    <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
   <data name="XA4325_MappingNotFound" xml:space="preserve">
-    <value>The R8 mapping file '{0}' was not found.</value>
+    <value>Die R8-Zuordnungsdatei „{0}“ wurde nicht gefunden.</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the missing mapping file.</comment>
   </data>
   <data name="XA4325_MappingDataFailure" xml:space="preserve">
-    <value>The R8 mapping file '{0}' could not be read: {1}</value>
+    <value>Die R8-Zuordnungsdatei '{0}' konnte nicht gelesen werden: {1}</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the mapping file.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyReadFailure" xml:space="preserve">
-    <value>The linked managed assembly '{0}' could not be read: {1}</value>
+    <value>Die verknüpfte verwaltete Assembly '{0}' konnte nicht gelesen werden: {1}</value>
     <comment>{0} - The path of the managed assembly.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyNotFound" xml:space="preserve">
-    <value>The linked managed assembly '{0}' was not found.</value>
+    <value>Die verknüpfte verwaltete Assembly „{0}“ wurde nicht gefunden.</value>
     <comment>{0} - The path of the missing managed assembly.</comment>
   </data>
   <data name="XA4325_AssemblyHasNoMetadata" xml:space="preserve">
-    <value>The linked managed assembly '{0}' does not contain managed metadata.</value>
+    <value>Die verknüpfte verwaltete Assembly „{0}“ enthält keine verwalteten Metadaten.</value>
     <comment>{0} - The path of the input file.</comment>
   </data>
   <data name="XA4325_AmbiguousEntry" xml:space="preserve">
-    <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
+    <value>Die generierten '{0}' Einträge für '{1}' haben widersprüchliche Laufzeitziele '{2}' und '{3}', die nicht durch die JNI-Neuzuordnungstabellen dargestellt werden können.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The runtime lookup key.
@@ -859,47 +851,47 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
 {3} - The conflicting target.</comment>
   </data>
   <data name="XA4325_NativeAotObjectRequired" xml:space="preserve">
-    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <value>Die NativeAOT JNI-Aufbewahrung erfordert eine vorhandene NativeAotObjectFile nach dem ILC. „{0}“ wurde nicht gefunden.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
 {0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
   </data>
   <data name="XA4325_NativeAotObjectReadFailure" xml:space="preserve">
-    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <value>Das NativeAOT-Aufbewahrungsobjekt '{0}' konnte nicht gelesen werden: {1}</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.
 {0} - The path of the ILC native object.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_NativeAotModeRequired" xml:space="preserve">
-    <value>NativeAotObjectFile requires NativeAot=true.</value>
+    <value>NativeAotObjectFile erfordert NativeAot=true.</value>
     <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
   </data>
   <data name="XA4325_NativeAotObjectFormat" xml:space="preserve">
-    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <value>Es wurde ein 32-Bit- oder 64-Bit-Little-Endian-Relocatable NativeAOT ELF-Objekt erwartet.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <value>Das NativeAOT ELF-Objekt enthält eine ungültige Abschnittserweiterung.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotTruncatedSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <value>Das NativeAOT ELF-Objekt enthält abgeschnittene Abschnittsdaten.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotMissingSections" xml:space="preserve">
-    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <value>Das NativeAOT-Objekt muss zugeordnete __managedcode und initialisierte Datenabschnitte enthalten.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidDehydration" xml:space="preserve">
-    <value>The NativeAOT object contains an invalid data dehydration stream.</value>
+    <value>Das NativeAOT-Objekt enthält einen ungültigen Datentrennungsdatenstrom.</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <value>Die R8 JNI-Neuzuordnungsdaten sind unvollständig. {0}</value>
     <comment>The following are literal names and should not be translated: R8, JNI.
 {0} - A sentence describing the specific omission.</comment>
   </data>
   <data name="XA4326_ConflictingEntry" xml:space="preserve">
-    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <value>Der '{0}' Eintrag für '{1}' wurde nicht ausgegeben: Eine andere JNI-Neuzuordnungseingabe ordnet ihn bereits '{2}' zu, was mit '{3}' in Konflikt steht.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The source lookup key.
@@ -907,7 +899,7 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
 {3} - The generated target.</comment>
   </data>
   <data name="XA4326_UnsupportedSignature" xml:space="preserve">
-    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <value>Der Eintrag für „{0}“ wurde nicht ausgegeben: Die Signatur „{1}“ konnte nicht in einen JNI-Deskriptor konvertiert werden.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The member the entry describes.
 {1} - The Java signature which could not be converted.</comment>
@@ -930,19 +922,35 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
     <comment>{0} - The one-based line number.
 {1} - The invalid input record.</comment>
   </data>
+  <data name="XA4329_RequiredProperty" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping.
+{0} - The required MSBuild property name.
+{1} - The required literal value.
+{2} - The actual value, including quotes.</comment>
+  </data>
+  <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
+{0} - The runtime name.</comment>
+  </data>
+  <data name="XA4330" xml:space="preserve">
+    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
+{0} - The source native library path.
+{1} - The conflicting archive path.</comment>
+  </data>
+  <data name="XA4331" xml:space="preserve">
+    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <comment>{0} - The bundle config file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Das Android NDK-Toolkettenverzeichnis "{0}" fehlt. Installieren Sie das Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
   </data>
-  <data name="XA5101_C_Compiler" xml:space="preserve">
-    <value>Der C-Compiler für das Ziel "{0}" wurde nicht gefunden. Durchsuchte Pfade: {1}</value>
-    <comment>The following are literal names and should not be translated: C
-{0} - The target architecture, such as Arm, Arm64, or X86_64
-{1} - Semicolon-separated list of the paths searched</comment>
-  </data>
-  <data name="XA5101_Toolchain" xml:space="preserve">
-    <value>Das Toolkettenverzeichnis für das Ziel "{0}" wurde nicht gefunden.</value>
-    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
+  <data name="XA5101_ClangRuntime" xml:space="preserve">
+    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
     <value>Das Android NDK wurde nicht gefunden. Stellen Sie sicher, dass das Android NDK im Android SDK Manager installiert ist, oder stellen Sie bei Verwendung eines benutzerdefinierten NDK-Pfads sicher, dass die MSBuild-Eigenschaft "$(AndroidNdkDirectory)" auf den benutzerdefinierten Pfad festgelegt ist.</value>
@@ -1125,11 +1133,6 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <value>Die Android-Unterstützungsbibliotheken werden in .NET 9 und höher nicht unterstützt. Migrieren Sie zu AndroidX. Weitere Informationen finden Sie unter https://aka.ms/net-android/androidx.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
-  <data name="XA1040" xml:space="preserve">
-    <value>Die Runtime „{0}“ unter Android ist ein experimentelles Feature und noch nicht für die Verwendung in der Produktion geeignet. Bitte melden Sie Probleme unter: https://github.com/dotnet/android/issues</value>
-    <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as NativeAOT.</comment>
-  </data>
   <data name="XA1041" xml:space="preserve">
     <value>Die MSBuild-Eigenschaft „{0}“ weist den ungültigen Wert „{1}“ auf. Der Wert muss ein Verzeichnispfad sein, der den relativen Speicherort Ihrer Ressourcen angibt.</value>
     <comment>The following are literal names and should not be translated: .NET.
@@ -1160,18 +1163,6 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <value>Die MSBuild-Eigenschaft „RunAOTCompilation“ ist nicht mit der CoreCLR-Runtime kompatibel. Der Build kann nicht fortgesetzt werden, solange diese Eigenschaft auf „false“ gesetzt ist. Entfernen Sie die Eigenschaft. Legen Sie ab .NET 11 „PublishReadyToRun“ auf „false“ fest, um die ReadyToRun (R2R)-AOT-Kompilierung zu deaktivieren.</value>
     <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
   </data>
-  <data name="XA1045" xml:space="preserve">
-    <value>Die Eingabedatei `{0}` beginnt nicht mit `&lt;replacements/&gt;`.</value>
-    <comment>{0} - file path</comment>
-  </data>
-  <data name="XA1046" xml:space="preserve">
-    <value>Das Attribut „{0}“ im Element „{1}“ hat den Wert „{2}“, der nicht als Boolescher Wert ausgewertet werden kann; {3} Zeile {4}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
-  </data>
-  <data name="XA1047" xml:space="preserve">
-    <value>Das erforderliche Attribut „{0}“ fehlt im Element „{1}“; {2} Zeile {3}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
-  </data>
   <data name="XA1048" xml:space="preserve">
     <value>„{0}“ enthält kein &lt;instrumentation&gt;-Element. Fügen Sie der Anwendung eine Unterklasse von Android.App.Instrumentation hinzu, oder legen Sie die MSBuild-Eigenschaft $(AndroidInstrumentation) auf den Namen einer solchen Unterklasse fest.</value>
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
@@ -1183,8 +1174,8 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>Die MSBuild-Eigenschaft „AndroidR8ObfuscationMode“ hat den ungültigen Wert „{0}“. Zulässige Werte sind „disabled“ und „private-members“.</value>
-    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
@@ -1255,11 +1246,6 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <value>Der Typ „{0}“ mit Manifestverweis wurde in keinem gescannten Assembly gefunden. Es handelt sich möglicherweise um einen Frameworktyp.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
-  </data>
-  <data name="XA4251" xml:space="preserve">
-    <value>Der Typ '{0}' verwendet [JniAddNativeMethodRegistrationAttribute], was von der trimmbaren Typzuordnung nicht unterstützt wird. Melden Sie dieses Szenario unter https://github.com/dotnet/android/issues, damit das Team beurteilen kann, ob es unterstützt werden soll.</value>
-    <comment>The following is a literal name and should not be translated: JniAddNativeMethodRegistrationAttribute.
-{0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
     <value>Die unsichere HTTP-Maven-Repository-URL „{0}“ ist nicht zulässig. Verwenden Sie eine HTTPS-URL oder legen Sie die Metadaten „AllowInsecureHttp=„WAHR““ für das Element fest, um diese Überprüfung zu umgehen.</value>
@@ -1338,12 +1324,12 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <value>Die Assembly „{0}“ verwendet ein nicht unterstütztes Format für Java-Peer-Callbacks.</value>
     <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <value>Die Assembly „{0}“ enthält in den laufzeitspezifischen Implementierungen „{1}“ und „{2}“ unterschiedliche Java-Peer-Callback-Metadaten. Alle RuntimeIdentifiers müssen gleichwertige Callback-Metadaten bereitstellen.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path

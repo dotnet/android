@@ -210,7 +210,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
@@ -279,7 +278,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
