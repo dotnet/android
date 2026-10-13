@@ -40,7 +40,7 @@ public record GeneratedJavaSource (string RelativePath, string Content);
 
 /// <summary>
 /// The in-memory result of manifest generation: the application document and
-/// any additional content provider class names for ApplicationRegistration.java.
+/// any additional runtime provider class names to generate.
 /// </summary>
 public record GeneratedManifest (XDocument Document, string[] AdditionalProviderSources);
 

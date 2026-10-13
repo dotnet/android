@@ -1352,6 +1352,7 @@ In .NET 11 and later, setting this property to `true` requires an installed
 Android NDK and uses its `llvm-strip` tool for APK and AAB packaging, including
 Debug and Fast Deployment builds. Libraries are stripped into intermediate
 copies; the original project files and installed runtime packs are not modified.
+Wrapper scripts such as `wrap.sh` are packaged unchanged, not passed to `llvm-strip`.
 Missing NDK tools or a failed strip operation fail the build instead of
 packaging an unstripped fallback.
 
