@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace Android.Runtime
 {
@@ -455,89 +454,89 @@ namespace Android.Runtime
 			}
 		}
 
-		private static Delegate CreateBuiltInDelegate (Delegate dlg, Type delegateType)
+		private static Delegate CreateBuiltInDelegate (Delegate dlg)
 		{
-			switch (delegateType.Name) {
-				case nameof (_JniMarshal_PP_V):
-					return new _JniMarshal_PP_V (Unsafe.As<_JniMarshal_PP_V> (dlg).Wrap_JniMarshal_PP_V);
-				case nameof (_JniMarshal_PP_I):
-					return new _JniMarshal_PP_I (Unsafe.As<_JniMarshal_PP_I> (dlg).Wrap_JniMarshal_PP_I);
-				case nameof (_JniMarshal_PP_Z):
-					return new _JniMarshal_PP_Z (Unsafe.As<_JniMarshal_PP_Z> (dlg).Wrap_JniMarshal_PP_Z);
-				case nameof (_JniMarshal_PPI_V):
-					return new _JniMarshal_PPI_V (Unsafe.As<_JniMarshal_PPI_V> (dlg).Wrap_JniMarshal_PPI_V);
-				case nameof (_JniMarshal_PPI_L):
-					return new _JniMarshal_PPI_L (Unsafe.As<_JniMarshal_PPI_L> (dlg).Wrap_JniMarshal_PPI_L);
-				case nameof (_JniMarshal_PPI_I):
-					return new _JniMarshal_PPI_I (Unsafe.As<_JniMarshal_PPI_I> (dlg).Wrap_JniMarshal_PPI_I);
-				case nameof (_JniMarshal_PPI_J):
-					return new _JniMarshal_PPI_J (Unsafe.As<_JniMarshal_PPI_J> (dlg).Wrap_JniMarshal_PPI_J);
-				case nameof (_JniMarshal_PPL_I):
-					return new _JniMarshal_PPL_I (Unsafe.As<_JniMarshal_PPL_I> (dlg).Wrap_JniMarshal_PPL_I);
-				case nameof (_JniMarshal_PPL_L):
-					return new _JniMarshal_PPL_L (Unsafe.As<_JniMarshal_PPL_L> (dlg).Wrap_JniMarshal_PPL_L);
-				case nameof (_JniMarshal_PPL_V):
-					return new _JniMarshal_PPL_V (Unsafe.As<_JniMarshal_PPL_V> (dlg).Wrap_JniMarshal_PPL_V);
-				case nameof (_JniMarshal_PPL_Z):
-					return new _JniMarshal_PPL_Z (Unsafe.As<_JniMarshal_PPL_Z> (dlg).Wrap_JniMarshal_PPL_Z);
-				case nameof (_JniMarshal_PPJ_Z):
-					return new _JniMarshal_PPJ_Z (Unsafe.As<_JniMarshal_PPJ_Z> (dlg).Wrap_JniMarshal_PPJ_Z);
-				case nameof (_JniMarshal_PPII_V):
-					return new _JniMarshal_PPII_V (Unsafe.As<_JniMarshal_PPII_V> (dlg).Wrap_JniMarshal_PPII_V);
-				case nameof (_JniMarshal_PPII_L):
-					return new _JniMarshal_PPII_L (Unsafe.As<_JniMarshal_PPII_L> (dlg).Wrap_JniMarshal_PPII_L);
-				case nameof (_JniMarshal_PPLI_V):
-					return new _JniMarshal_PPLI_V (Unsafe.As<_JniMarshal_PPLI_V> (dlg).Wrap_JniMarshal_PPLI_V);
-				case nameof (_JniMarshal_PPLZ_V):
-					return new _JniMarshal_PPLZ_V (Unsafe.As<_JniMarshal_PPLZ_V> (dlg).Wrap_JniMarshal_PPLZ_V);
-				case nameof (_JniMarshal_PPLL_V):
-					return new _JniMarshal_PPLL_V (Unsafe.As<_JniMarshal_PPLL_V> (dlg).Wrap_JniMarshal_PPLL_V);
-				case nameof (_JniMarshal_PPLF_V):
-					return new _JniMarshal_PPLF_V (Unsafe.As<_JniMarshal_PPLF_V> (dlg).Wrap_JniMarshal_PPLF_V);
-				case nameof (_JniMarshal_PPLI_L):
-					return new _JniMarshal_PPLI_L (Unsafe.As<_JniMarshal_PPLI_L> (dlg).Wrap_JniMarshal_PPLI_L);
-				case nameof (_JniMarshal_PPLL_L):
-					return new _JniMarshal_PPLL_L (Unsafe.As<_JniMarshal_PPLL_L> (dlg).Wrap_JniMarshal_PPLL_L);
-				case nameof (_JniMarshal_PPLL_Z):
-					return new _JniMarshal_PPLL_Z (Unsafe.As<_JniMarshal_PPLL_Z> (dlg).Wrap_JniMarshal_PPLL_Z);
-				case nameof (_JniMarshal_PPIL_Z):
-					return new _JniMarshal_PPIL_Z (Unsafe.As<_JniMarshal_PPIL_Z> (dlg).Wrap_JniMarshal_PPIL_Z);
-				case nameof (_JniMarshal_PPIIL_V):
-					return new _JniMarshal_PPIIL_V (Unsafe.As<_JniMarshal_PPIIL_V> (dlg).Wrap_JniMarshal_PPIIL_V);
-				case nameof (_JniMarshal_PPLII_I):
-					return new _JniMarshal_PPLII_I (Unsafe.As<_JniMarshal_PPLII_I> (dlg).Wrap_JniMarshal_PPLII_I);
-				case nameof (_JniMarshal_PPLII_Z):
-					return new _JniMarshal_PPLII_Z (Unsafe.As<_JniMarshal_PPLII_Z> (dlg).Wrap_JniMarshal_PPLII_Z);
-				case nameof (_JniMarshal_PPLII_V):
-					return new _JniMarshal_PPLII_V (Unsafe.As<_JniMarshal_PPLII_V> (dlg).Wrap_JniMarshal_PPLII_V);
-				case nameof (_JniMarshal_PPIII_V):
-					return new _JniMarshal_PPIII_V (Unsafe.As<_JniMarshal_PPIII_V> (dlg).Wrap_JniMarshal_PPIII_V);
-				case nameof (_JniMarshal_PPLLJ_Z):
-					return new _JniMarshal_PPLLJ_Z (Unsafe.As<_JniMarshal_PPLLJ_Z> (dlg).Wrap_JniMarshal_PPLLJ_Z);
-				case nameof (_JniMarshal_PPILL_V):
-					return new _JniMarshal_PPILL_V (Unsafe.As<_JniMarshal_PPILL_V> (dlg).Wrap_JniMarshal_PPILL_V);
-				case nameof (_JniMarshal_PPLIL_Z):
-					return new _JniMarshal_PPLIL_Z (Unsafe.As<_JniMarshal_PPLIL_Z> (dlg).Wrap_JniMarshal_PPLIL_Z);
-				case nameof (_JniMarshal_PPLLL_V):
-					return new _JniMarshal_PPLLL_V (Unsafe.As<_JniMarshal_PPLLL_V> (dlg).Wrap_JniMarshal_PPLLL_V);
-				case nameof (_JniMarshal_PPLLL_L):
-					return new _JniMarshal_PPLLL_L (Unsafe.As<_JniMarshal_PPLLL_L> (dlg).Wrap_JniMarshal_PPLLL_L);
-				case nameof (_JniMarshal_PPLLL_Z):
-					return new _JniMarshal_PPLLL_Z (Unsafe.As<_JniMarshal_PPLLL_Z> (dlg).Wrap_JniMarshal_PPLLL_Z);
-				case nameof (_JniMarshal_PPIZI_L):
-					return new _JniMarshal_PPIZI_L (Unsafe.As<_JniMarshal_PPIZI_L> (dlg).Wrap_JniMarshal_PPIZI_L);
-				case nameof (_JniMarshal_PPIIII_V):
-					return new _JniMarshal_PPIIII_V (Unsafe.As<_JniMarshal_PPIIII_V> (dlg).Wrap_JniMarshal_PPIIII_V);
-				case nameof (_JniMarshal_PPLLLL_V):
-					return new _JniMarshal_PPLLLL_V (Unsafe.As<_JniMarshal_PPLLLL_V> (dlg).Wrap_JniMarshal_PPLLLL_V);
-				case nameof (_JniMarshal_PPLZZL_Z):
-					return new _JniMarshal_PPLZZL_Z (Unsafe.As<_JniMarshal_PPLZZL_Z> (dlg).Wrap_JniMarshal_PPLZZL_Z);
-				case nameof (_JniMarshal_PPLIIII_V):
-					return new _JniMarshal_PPLIIII_V (Unsafe.As<_JniMarshal_PPLIIII_V> (dlg).Wrap_JniMarshal_PPLIIII_V);
-				case nameof (_JniMarshal_PPZIIII_V):
-					return new _JniMarshal_PPZIIII_V (Unsafe.As<_JniMarshal_PPZIIII_V> (dlg).Wrap_JniMarshal_PPZIIII_V);
-				case nameof (_JniMarshal_PPLIIIIIIII_V):
-					return new _JniMarshal_PPLIIIIIIII_V (Unsafe.As<_JniMarshal_PPLIIIIIIII_V> (dlg).Wrap_JniMarshal_PPLIIIIIIII_V);
+			switch (dlg) {
+				case _JniMarshal_PP_V callback:
+					return new _JniMarshal_PP_V (callback.Wrap_JniMarshal_PP_V);
+				case _JniMarshal_PP_I callback:
+					return new _JniMarshal_PP_I (callback.Wrap_JniMarshal_PP_I);
+				case _JniMarshal_PP_Z callback:
+					return new _JniMarshal_PP_Z (callback.Wrap_JniMarshal_PP_Z);
+				case _JniMarshal_PPI_V callback:
+					return new _JniMarshal_PPI_V (callback.Wrap_JniMarshal_PPI_V);
+				case _JniMarshal_PPI_L callback:
+					return new _JniMarshal_PPI_L (callback.Wrap_JniMarshal_PPI_L);
+				case _JniMarshal_PPI_I callback:
+					return new _JniMarshal_PPI_I (callback.Wrap_JniMarshal_PPI_I);
+				case _JniMarshal_PPI_J callback:
+					return new _JniMarshal_PPI_J (callback.Wrap_JniMarshal_PPI_J);
+				case _JniMarshal_PPL_I callback:
+					return new _JniMarshal_PPL_I (callback.Wrap_JniMarshal_PPL_I);
+				case _JniMarshal_PPL_L callback:
+					return new _JniMarshal_PPL_L (callback.Wrap_JniMarshal_PPL_L);
+				case _JniMarshal_PPL_V callback:
+					return new _JniMarshal_PPL_V (callback.Wrap_JniMarshal_PPL_V);
+				case _JniMarshal_PPL_Z callback:
+					return new _JniMarshal_PPL_Z (callback.Wrap_JniMarshal_PPL_Z);
+				case _JniMarshal_PPJ_Z callback:
+					return new _JniMarshal_PPJ_Z (callback.Wrap_JniMarshal_PPJ_Z);
+				case _JniMarshal_PPII_V callback:
+					return new _JniMarshal_PPII_V (callback.Wrap_JniMarshal_PPII_V);
+				case _JniMarshal_PPII_L callback:
+					return new _JniMarshal_PPII_L (callback.Wrap_JniMarshal_PPII_L);
+				case _JniMarshal_PPLI_V callback:
+					return new _JniMarshal_PPLI_V (callback.Wrap_JniMarshal_PPLI_V);
+				case _JniMarshal_PPLZ_V callback:
+					return new _JniMarshal_PPLZ_V (callback.Wrap_JniMarshal_PPLZ_V);
+				case _JniMarshal_PPLL_V callback:
+					return new _JniMarshal_PPLL_V (callback.Wrap_JniMarshal_PPLL_V);
+				case _JniMarshal_PPLF_V callback:
+					return new _JniMarshal_PPLF_V (callback.Wrap_JniMarshal_PPLF_V);
+				case _JniMarshal_PPLI_L callback:
+					return new _JniMarshal_PPLI_L (callback.Wrap_JniMarshal_PPLI_L);
+				case _JniMarshal_PPLL_L callback:
+					return new _JniMarshal_PPLL_L (callback.Wrap_JniMarshal_PPLL_L);
+				case _JniMarshal_PPLL_Z callback:
+					return new _JniMarshal_PPLL_Z (callback.Wrap_JniMarshal_PPLL_Z);
+				case _JniMarshal_PPIL_Z callback:
+					return new _JniMarshal_PPIL_Z (callback.Wrap_JniMarshal_PPIL_Z);
+				case _JniMarshal_PPIIL_V callback:
+					return new _JniMarshal_PPIIL_V (callback.Wrap_JniMarshal_PPIIL_V);
+				case _JniMarshal_PPLII_I callback:
+					return new _JniMarshal_PPLII_I (callback.Wrap_JniMarshal_PPLII_I);
+				case _JniMarshal_PPLII_Z callback:
+					return new _JniMarshal_PPLII_Z (callback.Wrap_JniMarshal_PPLII_Z);
+				case _JniMarshal_PPLII_V callback:
+					return new _JniMarshal_PPLII_V (callback.Wrap_JniMarshal_PPLII_V);
+				case _JniMarshal_PPIII_V callback:
+					return new _JniMarshal_PPIII_V (callback.Wrap_JniMarshal_PPIII_V);
+				case _JniMarshal_PPLLJ_Z callback:
+					return new _JniMarshal_PPLLJ_Z (callback.Wrap_JniMarshal_PPLLJ_Z);
+				case _JniMarshal_PPILL_V callback:
+					return new _JniMarshal_PPILL_V (callback.Wrap_JniMarshal_PPILL_V);
+				case _JniMarshal_PPLIL_Z callback:
+					return new _JniMarshal_PPLIL_Z (callback.Wrap_JniMarshal_PPLIL_Z);
+				case _JniMarshal_PPLLL_V callback:
+					return new _JniMarshal_PPLLL_V (callback.Wrap_JniMarshal_PPLLL_V);
+				case _JniMarshal_PPLLL_L callback:
+					return new _JniMarshal_PPLLL_L (callback.Wrap_JniMarshal_PPLLL_L);
+				case _JniMarshal_PPLLL_Z callback:
+					return new _JniMarshal_PPLLL_Z (callback.Wrap_JniMarshal_PPLLL_Z);
+				case _JniMarshal_PPIZI_L callback:
+					return new _JniMarshal_PPIZI_L (callback.Wrap_JniMarshal_PPIZI_L);
+				case _JniMarshal_PPIIII_V callback:
+					return new _JniMarshal_PPIIII_V (callback.Wrap_JniMarshal_PPIIII_V);
+				case _JniMarshal_PPLLLL_V callback:
+					return new _JniMarshal_PPLLLL_V (callback.Wrap_JniMarshal_PPLLLL_V);
+				case _JniMarshal_PPLZZL_Z callback:
+					return new _JniMarshal_PPLZZL_Z (callback.Wrap_JniMarshal_PPLZZL_Z);
+				case _JniMarshal_PPLIIII_V callback:
+					return new _JniMarshal_PPLIIII_V (callback.Wrap_JniMarshal_PPLIIII_V);
+				case _JniMarshal_PPZIIII_V callback:
+					return new _JniMarshal_PPZIIII_V (callback.Wrap_JniMarshal_PPZIIII_V);
+				case _JniMarshal_PPLIIIIIIII_V callback:
+					return new _JniMarshal_PPLIIIIIIII_V (callback.Wrap_JniMarshal_PPLIIIIIIII_V);
 				default:
 					return null;
 			}

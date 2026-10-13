@@ -17,12 +17,15 @@ Consult `references/test-catalog.md` for the full mapping of test areas → asse
 - **Standalone** — `dotnet test <project>.csproj`. No local SDK needed.
 - **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows).
 
-Check for the local SDK:
+Check for the local SDK in the configuration needed by the tests:
 ```bash
-ls bin/Debug/dotnet/dotnet 2>/dev/null || ls bin/Release/dotnet/dotnet 2>/dev/null
+CONFIGURATION=Debug # Set to Release for Release tests.
+test -x "bin/${CONFIGURATION}/dotnet/dotnet"
 ```
 
-**If the local SDK is missing and full-build tests are requested, use `ask_user` before building.** Never silently skip tests. Present the choice: build with `make prepare && make all` (slow) or skip full-build tests.
+**If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make all`; on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make all CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK.
+
+**Validate code changes locally before pushing.** Full SDK builds and relevant host/device tests are expected development work. Do not label them prohibitively slow, ask whether to skip them solely because of presumed duration, or rely on CI as the first validation. Start with focused tests while iterating and expand coverage as needed for the affected components. Never silently skip tests: if the user explicitly limits validation or an actual environment constraint blocks it, report the exact command, failure or missing prerequisite, and remaining unvalidated coverage. Include commands and outcomes in the handoff.
 
 ## Workflow
 
@@ -44,8 +47,9 @@ Classify the user's request:
 | `src/Microsoft.Android.Build.Tasks/Tasks/` | Standalone: `Microsoft.Android.Build.Tasks.Tests.csproj` |
 | `src/Xamarin.Android.Build.Tasks/Utilities/` | Host: `Xamarin.Android.Build.Tests.dll` — grep for test classes referencing the utility |
 | `src/Xamarin.Android.Build.Tasks/**/*.targets` | Host: `Xamarin.Android.Build.Tests.dll`. Device: `MSBuildDeviceIntegration.dll` |
-| `src/Microsoft.Android.Sdk.TrimmableTypeMap/` | On-device: `Mono.Android.NET-Tests.csproj` with `AndroidTypeMapImplementation=trimmable`. Host: `GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, `ExtractTypeMapKeysFromNativeAotObjectTests`, `TrimmableTypeMapBuildTests` |
-| `external/Java.Interop/src/` | Tests under `external/Java.Interop/tests/` |
+| `src/Microsoft.Android.Sdk.TrimmableTypeMap/` | On-device: `Mono.Android.NET-Tests.csproj`. Host: `GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, `ExtractTypeMapKeysFromNativeAotObjectTests`, `TrimmableTypeMapBuildTests` |
+| `external/Java.Interop/src/Java.Interop/` | On-device: core JNI tests in `tests/Mono.Android-Tests/Java.Interop-Tests/`, run with `Mono.Android.NET-Tests.csproj` |
+| `external/Java.Interop/` tooling | Standalone tooling tests under `external/Java.Interop/tests/` |
 | `src/native/` | On-device runtime tests in `Mono.Android.NET-Tests.csproj` |
 
 Present results as: **Must run** → **Should run** → **Consider running**, with exact commands.
@@ -86,8 +90,11 @@ Build and install the APK first, then run `dotnet test` from the test project di
 Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands.
 
 ### Java.Interop tests
-Tooling tests are standalone (`dotnet test` on `.csproj`). JVM tests require the local SDK:
+Tooling tests are standalone (`dotnet test` on `.csproj`). Core JNI interop tests
+live in `tests/Mono.Android-Tests/Java.Interop-Tests/` and run on Android as part
+of `Mono.Android.NET-Tests.csproj`, using the on-device commands above.
+
+To build the Java.Interop tooling solution:
 ```bash
 ./dotnet-local.sh build external/Java.Interop/Java.Interop.slnx -c Debug
-./dotnet-local.sh test external/Java.Interop/tests/Java.Interop-Tests/bin/Debug/${TFM}/Java.Interop-Tests.dll
 ```

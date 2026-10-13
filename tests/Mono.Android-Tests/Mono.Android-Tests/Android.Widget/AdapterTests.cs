@@ -163,6 +163,7 @@ namespace Android.WidgetTests {
 			base.SetAdapter (adapter);
 		}
 
+		[Obsolete ("Please use the Adapter property setter")]
 		public override void SetAdapter (IListAdapter adapter)
 		{
 			SetAdapterInvoked = true;

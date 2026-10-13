@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Microsoft.Android.Tasks;
 
 internal static class TypeMapClassName
@@ -22,10 +24,42 @@ internal static class TypeMapClassName
 			}
 			name = name.Substring (dimensions + 1, name.Length - dimensions - 2);
 		}
-		if (!GenerateTypeMapProguardConfiguration.IsClassName (name)) {
+		if (!IsClassName (name)) {
 			return false;
 		}
 		className = name;
 		return true;
+	}
+
+	internal static bool IsClassName (string name)
+	{
+		bool first = true;
+		for (int i = 0; i < name.Length; i++) {
+			if (name [i] == '/') {
+				if (first) {
+					return false;
+				}
+				first = true;
+				continue;
+			}
+			var category = CharUnicodeInfo.GetUnicodeCategory (name, i);
+			bool start = category == UnicodeCategory.UppercaseLetter ||
+				category == UnicodeCategory.LowercaseLetter ||
+				category == UnicodeCategory.TitlecaseLetter ||
+				category == UnicodeCategory.ModifierLetter ||
+				category == UnicodeCategory.OtherLetter ||
+				category == UnicodeCategory.LetterNumber ||
+				category == UnicodeCategory.CurrencySymbol ||
+				category == UnicodeCategory.ConnectorPunctuation;
+			if (!start && (first || (category != UnicodeCategory.DecimalDigitNumber &&
+				category != UnicodeCategory.NonSpacingMark && category != UnicodeCategory.SpacingCombiningMark))) {
+				return false;
+			}
+			if (char.IsHighSurrogate (name [i])) {
+				i++;
+			}
+			first = false;
+		}
+		return !first;
 	}
 }

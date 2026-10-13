@@ -13,13 +13,26 @@ static partial class JavaInteropRuntime
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
+	[LibraryImport ("System.Security.Cryptography.Native.Android", EntryPoint = "AndroidCryptoNative_InitLibraryOnLoad")]
+	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+	private static partial int AndroidCryptoNative_InitLibraryOnLoad (IntPtr vm, IntPtr reserved);
+
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
-			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs);
+			int hostVersion = XA_Host_NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs);
+			if (hostVersion < 0) {
+				return hostVersion;
+			}
+			// The crypto initializer caches Java classes using JNI_OnLoad's application class loader.
+			int cryptoVersion = AndroidCryptoNative_InitLibraryOnLoad (vm, reserved);
+			if (cryptoVersion < 0) {
+				AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", "Cryptography JNI initialization failed");
+				return cryptoVersion;
+			}
 			JNIEnvInit.InitializeMaxGrefCounts (initArgs);
 			LogcatTextWriter.Init ();
 			return (int) JniVersion.v1_6;
@@ -56,13 +69,13 @@ static partial class JavaInteropRuntime
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer = jnienv,
 				ClassLoader        = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager        = JNIEnvInit.CreateTypeManager (initArgs),
-				ValueManager       = JNIEnvInit.CreateValueManager (),
+				TypeManager                 = new TrimmableTypeMapTypeManager (),
+				ValueManager                = new TrimmableTypeMapValueManager (),
 			};
 			runtime = options.CreateJreVM ();
 
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
-			JNIEnvInit.InitializeNativeAotRuntime (runtime, initArgs);
+			JNIEnvInit.InitializeNativeAotRuntime (runtime);
 
 			SetAppContextBaseDirectory (filesDir);
 

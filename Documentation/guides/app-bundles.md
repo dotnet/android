@@ -200,14 +200,14 @@ See the [.aab format spec][aab_format] for further detail.
 
 ## BundleConfig.json
 
-Since .NET assemblies and typemap files must remain uncompressed in
+Since .NET assemblies must remain uncompressed in
 .NET for Android apps, we will also need to specify a
 `BundleConfig.json` file:
 
 ```json
 {
   "compression": {
-    "uncompressedGlob": ["typemap.mj", "typemap.jm", "assemblies/*"]
+    "uncompressedGlob": ["assemblies/**"]
   }
 }
 ```

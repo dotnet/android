@@ -1,4 +1,0 @@
-const string __id = "bar.Ljava/lang/String;";
-
-var __v = _members.InstanceFields.GetObjectValue (__id, this);
-return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);

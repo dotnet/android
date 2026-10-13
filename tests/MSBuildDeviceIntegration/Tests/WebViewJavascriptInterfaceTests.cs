@@ -15,16 +15,16 @@ namespace Xamarin.Android.Build.Tests
 		const string SuccessMarker = "# JAVASCRIPT_INTERFACE_RESULT ";
 		const string FailureMarker = "# JAVASCRIPT_INTERFACE_FAILURE ";
 
-		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
-		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
-		public void LocalJavascriptInvokesManagedBridge (string typemapImplementation, AndroidRuntime runtime)
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void LocalJavascriptInvokesManagedBridge (AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			var packageSuffix = $"javascriptinterface{typemapImplementation.Replace ("-", "")}";
+			const string packageSuffix = "javascriptinterface";
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, packageSuffix)) {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
@@ -50,7 +50,6 @@ public abstract class WebViewJavascriptBridgeBase {
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("WebViewJavascriptBridge.cs") {
 				TextContent = () => """

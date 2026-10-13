@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class BoundAbstractProperty : PropertyWriter
@@ -34,10 +32,9 @@ namespace generator.SourceWriters
 			} else {
 				IsShadow = gen.RequiresNew (property);
 
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
-					getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
+				getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
 
-				if (property.Setter != null && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+				if (property.Setter != null)
 					setter_callback = new MethodCallback (gen, property.Setter, opt, property.AdjustedName, false);
 			}
 
@@ -48,9 +45,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
 
-			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Getter, opt), additionalProperties: property.Getter.AdditionalAttributeString ()) {
-				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
-			});
+			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Getter, opt), additionalProperties: property.Getter.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddMethodCustomAttributes (GetterAttributes, property.Getter);
 
@@ -63,9 +58,7 @@ namespace generator.SourceWriters
 				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
 				SourceWriterExtensions.AddMethodCustomAttributes (SetterAttributes, property.Setter);
-				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Setter, opt), additionalProperties: property.Setter.AdditionalAttributeString ()) {
-					MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
-				});
+				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Setter, opt), additionalProperties: property.Setter.AdditionalAttributeString ()));
 			}
 		}
 

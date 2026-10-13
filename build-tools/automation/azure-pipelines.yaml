@@ -85,7 +85,7 @@ extends:
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
     settings:
-      networkIsolationPolicy: Permissive,CFSClean
+      networkIsolationPolicy: DefaultDeny,CFSClean
       skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
@@ -105,17 +105,6 @@ extends:
     - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
       parameters:
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
-
-    - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
-      parameters:
-        # The internal Xamarin.Android pipeline uses 1ES Pipeline Templates, which
-        # require Windows jobs to run on a 1ES-hosted pool. macOS is fine on the
-        # hosted Azure Pipelines pool as long as `os: macOS` is set (which is now
-        # the template default).
-        windowsPool:
-          name: MAUI-1ESPT
-          image: $(WindowsPoolImage1ESPT)
-          os: windows
 
     - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
       parameters:
@@ -137,6 +126,8 @@ extends:
       # Check - "Xamarin.Android (MAUI Tests MAUI Integration)"
       - job: maui_tests_integration
         displayName: MAUI Integration
+        # Re-enable when dotnet/maui's net12.0 branch exists: https://github.com/dotnet/android/issues/13088
+        condition: 'false'
         pool:
           name: MAUI-1ESPT
           image: $(WindowsPoolImage1ESPT)
@@ -389,11 +380,6 @@ extends:
             quality: preview
 
         # Download symbols to be published to the symbols artifact drop declared above
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\symbols
-
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: nuget-unsigned-symbols

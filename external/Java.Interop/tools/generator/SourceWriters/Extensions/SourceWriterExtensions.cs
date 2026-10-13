@@ -364,7 +364,7 @@ namespace generator.SourceWriters
 
 			if (!method.IsVoid) {
 				var r = "__rm";
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 && invokeType == "Object") {
+				if (invokeType == "Object") {
 					r += ".Handle";
 				}
 				body.Add ($"{indentation}{(deferReturn ? "var __result = " : "return ")}{method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + opt.GetNullForgiveness (method.RetVal)};");
@@ -396,14 +396,14 @@ namespace generator.SourceWriters
 		{
 			// There's no sense in writing say 'android15' because we do not support older APIs,
 			// so those APIs will be available in all of our versions.
-			if (since > opt.MinimumApiLevel && opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1)
+			if (since > opt.MinimumApiLevel)
 				attributes.Add (new SupportedOSPlatformAttr (since));
 		}
 
 		public static void AddUnsupportedOSPlatform (List<AttributeWriter> attributes, AndroidSdkVersion since, CodeGenerationOptions opt)
 		{
 			// Here it makes sense to still write 'android15' because it will be missing in later versions like `android35`.
-			if (since > 0 && opt.CodeGenerationTarget == CodeGenerationTarget.XAJavaInterop1)
+			if (since > 0)
 				attributes.Add (new UnsupportedOSPlatformAttr (since));
 		}
 

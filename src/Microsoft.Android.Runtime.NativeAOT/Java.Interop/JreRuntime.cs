@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -27,9 +25,6 @@ namespace Java.Interop {
 	class NativeAotRuntimeOptions : JniRuntime.CreationOptions {
 
 		public  bool        IgnoreUnrecognizedOptions   {get; set;}
-
-		public  TextWriter? JniGlobalReferenceLogWriter {get; set;}
-		public  TextWriter? JniLocalReferenceLogWriter  {get; set;}
 
 		public NativeAotRuntimeOptions ()
 		{
@@ -57,9 +52,7 @@ namespace Java.Interop {
 					string.IsNullOrEmpty (builder.JvmLibraryPath))
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
-#if NET
 			builder.TypeManager     ??= CreateDefaultTypeManager ();
-#endif  // NET
 
 			builder.ValueManager            ??= CreateDefaultValueManager ();
 			builder.ObjectReferenceManager  ??= new Android.Runtime.ManagedObjectReferenceManager ();
@@ -80,11 +73,19 @@ namespace Java.Interop {
 			return new TrimmableTypeMapTypeManager ();
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 		static JniRuntime.JniValueManager CreateDefaultValueManager ()
 		{
-			return new JavaMarshalValueManager ();
+			return new TrimmableTypeMapValueManager ();
+		}
+
+		public override Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
+		{
+			return Android.Runtime.AndroidExceptionManager.GetExceptionForThrowable (ref reference, options);
+		}
+
+		public override void RaisePendingException (Exception pendingException)
+		{
+			Android.Runtime.AndroidExceptionManager.RaisePendingException (pendingException);
 		}
 
 		public override string? GetCurrentManagedThreadName ()

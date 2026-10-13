@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -24,21 +25,6 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
-		static object [] MarshalMethodsDefaultStatusSource = new object [] {
-			new object[] {
-				/* isRelease */              true,
-				/* marshalMethodsEnabled */  false,
-			},
-			new object[] {
-				/* isRelease */              true,
-				/* marshalMethodsEnabled */  true,
-			},
-			new object[] {
-				/* isRelease */              false,
-				/* marshalMethodsEnabled */  true,
-			},
-		};
-
 		[Test]
 		public void BuildBasicApplication ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
 		{
@@ -90,32 +76,24 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 
-			var compressedAssembliesSource = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android", $"compressed_assemblies.{abi}.ll");
-			FileAssert.Exists (compressedAssembliesSource);
-			var compressedAssembliesSourceText = File.ReadAllText (compressedAssembliesSource);
-			StringAssert.Contains ("@compressed_assembly_count = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@compressed_assembly_descriptors = dso_local local_unnamed_addr global [0 x %struct.CompressedAssemblyDescriptor] zeroinitializer, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@uncompressed_assemblies_data_size = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
 		[Test]
-		public void AndroidEnableMarshalMethodsWithReadyToRunFailsBuild ()
+		public void AndroidEnableMarshalMethodsFailsBuild ([Values (false, true)] bool publishReadyToRun)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				EnableMarshalMethods = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("PublishReadyToRun", "true");
+			proj.SetProperty ("PublishReadyToRun", publishReadyToRun.ToString ());
 
 			using var b = CreateApkBuilder ();
 			b.ThrowOnBuildFailure = false;
 			Assert.IsFalse (b.Build (proj), "Build should have failed.");
 			StringAssertEx.Contains ("error XA1049", b.LastBuildOutput);
 			StringAssertEx.Contains ("AndroidEnableMarshalMethods", b.LastBuildOutput);
-			StringAssertEx.Contains ("PublishReadyToRun", b.LastBuildOutput);
-			StringAssertEx.DoesNotContain ("XARMM7015", b.LastBuildOutput, "Build should fail before rewriting ReadyToRun assemblies.");
+			StringAssertEx.Contains ("no longer supported", b.LastBuildOutput);
 		}
 
 		[Test]
@@ -187,11 +165,16 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			// This test relocates build inputs; no compiler/build server may retain them.
+			proj.SetProperty ("UseSharedCompilation", "false");
+			var environmentVariables = new Dictionary<string, string> {
+				["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0",
+			};
 			using (var b = CreateApkBuilder (path)) {
 				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: environmentVariables), "Build should have succeeded.");
 				b.Target = "SignAndroidPackage";
-				Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: environmentVariables), "SignAndroidPackage should have succeeded.");
 
 
 				string path2 = Path.Combine (Root, "temp", TestName, "App2");
@@ -202,11 +185,11 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var r in proj.AndroidResources)
 					r.Timestamp = DateTime.UtcNow;
 				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, environmentVariables: environmentVariables), "Build should have succeeded.");
 				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "_CleanIntermediateIfNeeded should be built.");
 				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CompileResources"), "_CompileResources Should have built.");
 				b.Target = "SignAndroidPackage";
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "SignAndroidPackage should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, environmentVariables: environmentVariables), "SignAndroidPackage should have succeeded.");
 
 			}
 		}
@@ -254,7 +237,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
-			proj.SetProperty ("_AndroidEnableObjectReferenceLogging", "false");
 			if (r8) {
 				proj.SetProperty ("AndroidLinkTool", "r8");
 			}
@@ -275,32 +257,9 @@ namespace Xamarin.Android.Build.Tests
 				if (runtime == AndroidRuntime.CoreCLR) {
 					var monoAndroidPath = GetLinkedPath (b, true, "Mono.Android.dll");
 					using var monoAndroid = AssemblyDefinition.ReadAssembly (monoAndroidPath);
-					var referenceManager = monoAndroid.MainModule.GetType ("Android.Runtime.ManagedObjectReferenceManager");
-					if (referenceManager == null) {
-						Assert.Fail ($"{monoAndroidPath} should contain the managed reference manager.");
-						return;
-					}
-					string [] loggingMethods = [
-						"CreateLogWriter",
-						"TryCreateLogWriter",
-						"LogLocalReference",
-						"LogReference",
-						"FormatReferenceMessage",
-						"FormatHandle",
-						"GetObjectRefType",
-						"GetThreadName",
-						"WriteReference",
-						"LogReferenceFromNative",
-						"LogMessageFromNative",
-					];
-					foreach (string methodName in loggingMethods) {
-						Assert.IsNull (
-							referenceManager.Methods.FirstOrDefault (method => method.Name == methodName),
-							$"Disabled reference logging should trim {methodName} from Mono.Android.dll.");
-					}
 					Assert.IsNull (
-						referenceManager.Fields.FirstOrDefault (field => field.Name == "gcBridgeReferenceStackTrace"),
-						"Disabled reference logging should trim gcBridgeReferenceStackTrace from Mono.Android.dll.");
+						monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource"),
+						"Disabled EventSource support should remove reference events.");
 
 					var bridge = monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalGCBridge");
 					Assert.IsNotNull (bridge, "The managed GC bridge should survive linking.");
@@ -547,8 +506,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				b.AssertHasNoWarnings ();
-				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
-					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
 				FileAssert.DoesNotExist (lockFile);
 			}
@@ -755,8 +712,8 @@ namespace Xamarin.Android.Build.Tests
 
 				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-				using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
-				Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+				using var zip = ZipFile.OpenRead (aarPath);
+				Assert.IsFalse (zip.Entries.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
 					$"{aarPath} should not contain a .jar file!");
 			}
 		}
@@ -1589,15 +1546,16 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				IEnumerable<string> proguardProjectConfigurations = [Path.Combine (intermediate, "proguard",
-					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg")];
-				if (runtime == AndroidRuntime.NativeAOT && string.IsNullOrEmpty (rid)) {
-					proguardProjectConfigurations = Directory.GetFiles (intermediate, "proguard_project_references.cfg", SearchOption.AllDirectories);
-				}
+				var proguardProjectConfigurations = Directory.GetFiles (
+					Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath),
+					runtime == AndroidRuntime.NativeAOT ? "proguard_project_primary.cfg" : "proguard_project_references.cfg",
+					SearchOption.AllDirectories);
+				Assert.IsNotEmpty (proguardProjectConfigurations);
 				foreach (var proguardProjectConfiguration in proguardProjectConfigurations) {
-					FileAssert.Exists (proguardProjectConfiguration);
-					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectConfiguration), $"-keep class {proj.JavaPackageName}.MainActivity"),
-						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`!");
+					Assert.IsTrue (StringAssertEx.ContainsText (
+						File.ReadAllLines (proguardProjectConfiguration),
+						$"-keep class {proj.JavaPackageName}.MainActivity"),
+						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`.");
 				}
 
 				// The user AndroidJavaSource keep is emitted into proguard_project_primary.cfg on every
@@ -1619,9 +1577,9 @@ namespace UnamedProject
 				FileAssert.Exists (dexFile);
 				var classes = new List<string> {
 					"Lmono/android/view/View_OnClickListenerImplementor;",
-					"Landroid/runtime/JavaProxyThrowable;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
+				classes.Add ("Landroid/runtime/JavaProxyThrowable;");
 				if (runtime == AndroidRuntime.NativeAOT) {
 					classes.Add ("Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;");
 				} else {
@@ -1653,8 +1611,7 @@ namespace UnamedProject
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
 
-				// Regression test: the trimmable NativeAOT path generates its ACW keep rules from the
-				// ILC DGML into proguard_project_references.cfg. If that file is not passed to R8, R8
+				// Regression test: NativeAOT must pass its generated ACW keep rules to R8. Otherwise R8
 				// tree-shakes the runtime ACW/JCW classes out of classes.dex and the app crashes at
 				// startup inside JavaInteropRuntime.init with a ClassNotFoundException for the
 				// UncaughtExceptionMarshaler Java Callable Wrapper. The JCW class name is CRC-hashed
@@ -1747,7 +1704,7 @@ namespace UnamedProject
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					var entries = zip.Select (e => e.FullName).ToList ();
+					var entries = zip.Entries.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
 				}
@@ -1763,7 +1720,7 @@ namespace UnamedProject
 				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes3.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					var entries = zip.Select (e => e.FullName).ToList ();
+					var entries = zip.Entries.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
 				}
@@ -1884,20 +1841,6 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			}
 		}
 
-
-		[Test]
-		public void BuildBasicApplicationCheckPdb ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetRuntime (runtime);
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
-					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
-				}
-			}
-		}
 
 		[Test]
 		public void BuildBasicApplicationCheckPdbRepeatBuild ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
@@ -2199,74 +2142,9 @@ namespace App1
 				$"The application DEX files should include `{className}`!");
 		}
 
-		[Test]
-		public void MarshalMethodsUnhandledExceptionRuntimeFixUpWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			switch (runtime) {
-				case AndroidRuntime.NativeAOT:
-					Assert.Ignore ("NativeAOT does not support marshal methods");
-					break;
-
-				case AndroidRuntime.CoreCLR:
-					Assert.Ignore ("CoreCLR currently doesn't work due to a bug in Mono.Cecil");
-					break;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				EnableMarshalMethods = true,
-			};
-			proj.SetRuntime (runtime);
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-
-			string monoAndroidRuntimePath = Path.Combine (
-				Root,
-				builder.ProjectDirectory,
-				proj.IntermediateOutputPath,
-				"android-arm64",
-				"linked",
-				"Mono.Android.Runtime.dll"
-			);
-			FileAssert.Exists (monoAndroidRuntimePath);
-
-			using var asm = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
-			const string TypeName = "Android.Runtime.AndroidEnvironmentInternal";
-			TypeDefinition? type = null;
-
-			foreach (ModuleDefinition module in asm.Modules) {
-				foreach (TypeDefinition t in module.Types) {
-					if (t.FullName.Equals (TypeName, StringComparison.Ordinal)) {
-						type = t;
-						break;
-					}
-				}
-			}
-
-			Assert.NotNull (type, $"Failed to find the '{TypeName}' type in '{monoAndroidRuntimePath}'");
-			Assert.IsTrue (type.IsPublic, $"Type '{TypeName}' should be public");
-
-			// Additionally verify that the UnhandledException method is also public
-			const string MethodName = "UnhandledException";
-			MethodDefinition? method = null;
-			foreach (MethodDefinition m in type.Methods) {
-				if (m.Name.Equals (MethodName, StringComparison.Ordinal)) {
-					method = m;
-					break;
-				}
-			}
-
-			Assert.NotNull (method, $"Failed to find the '{MethodName}' method in type '{TypeName}'");
-			Assert.IsTrue (method.IsPublic, $"Method '{MethodName}' should be public");
-		}
-
-		[Test]
-		public void InvalidCustomJniInitFunctionName ()
+		[TestCase ("valid_name", TestName = "NativeAotRejectsValidCustomJniInitFunction")]
+		[TestCase ("evil\ndefine void @injected()", TestName = "NativeAotRejectsInvalidCustomJniInitFunctionName")]
+		public void UnsupportedCustomJniInitFunction (string functionName)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
 				return;
@@ -2277,16 +2155,13 @@ namespace App1
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 
-			// A malicious NuGet package could inject LLVM IR via a function name containing
-			// newlines or non-identifier characters (VULN-341/342).  The build must reject
-			// names that are not valid C identifiers.
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "valid_name"));
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "evil\ndefine void @injected()"));
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", functionName));
 
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Build should have failed due to invalid CustomJniInitFunctions names.");
-				StringAssertEx.ContainsRegex (@"is not a valid C identifier", b.LastBuildOutput, "Expected an error about invalid C identifier");
+				Assert.IsFalse (b.Build (proj), "NativeAOT should reject custom JNI initializers, including valid C identifiers.");
+				StringAssertEx.Contains ("error XA1051", b.LastBuildOutput, "Expected the unsupported custom JNI initializer diagnostic.");
+				b.Output.AssertTargetIsSkipped ("IlcCompile", defaultIfNotUsed: true);
 			}
 		}
 	}

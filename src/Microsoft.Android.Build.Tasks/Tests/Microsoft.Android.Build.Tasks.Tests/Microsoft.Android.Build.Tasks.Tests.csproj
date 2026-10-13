@@ -15,6 +15,15 @@
 
   <ItemGroup>
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
+    <None Update="Resources\NativeAotBootstrap\**" CopyToOutputDirectory="PreserveNewest" />
+    <AssemblyMetadata Include="ILLinkPath" Value="$([MSBuild]::NormalizePath('$(PkgMicrosoft_NET_ILLink_Tasks)', 'tools', 'net', 'illink.dll'))" />
+    <AssemblyMetadata Include="NativeAotLlvmReadObjPath" Value="$(_NativeAotLlvmReadObjPath)" />
+    <AssemblyMetadata Include="AndroidNdkDirectory" Value="$(AndroidNdkDirectory)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="$(MicrosoftNETILLinkPackageVersion)" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>

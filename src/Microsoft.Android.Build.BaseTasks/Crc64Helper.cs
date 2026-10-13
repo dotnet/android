@@ -57,34 +57,37 @@ namespace Microsoft.Android.Build.Tasks
 			return BitConverter.GetBytes (crc ^ length);
 		}
 
-		internal static unsafe void HashCore (byte [] array, int ibStart, int cbSize, ref ulong crc, ref ulong length)
+		internal static void HashCore (byte [] array, int ibStart, int cbSize, ref ulong crc, ref ulong length)
 		{
+			if (array == null)
+				throw new ArgumentNullException (nameof (array));
+			if (ibStart < 0 || ibStart > array.Length)
+				throw new ArgumentOutOfRangeException (nameof (ibStart));
+			if (cbSize < 0 || cbSize > array.Length - ibStart)
+				throw new ArgumentOutOfRangeException (nameof (cbSize));
+
 			int len = cbSize;
 			int idx = ibStart;
 
-			fixed (ulong* tptr = table) {
-				fixed (byte* aptr = array) {
-					while (len >= 8) {
-						crc ^= *((ulong*) (aptr + idx));
-						crc =
-							tptr [7 * 256 + (crc & 0xff)] ^
-							tptr [6 * 256 + ((crc >> 8) & 0xff)] ^
-							tptr [5 * 256 + ((crc >> 16) & 0xff)] ^
-							tptr [4 * 256 + ((crc >> 24) & 0xff)] ^
-							tptr [3 * 256 + ((crc >> 32) & 0xff)] ^
-							tptr [2 * 256 + ((crc >> 40) & 0xff)] ^
-							tptr [1 * 256 + ((crc >> 48) & 0xff)] ^
-							tptr [0 * 256 + (crc >> 56)];
-						idx += 8;
-						len -= 8;
-					}
+			while (len >= 8) {
+				crc ^= BitConverter.ToUInt64 (array, idx);
+				crc =
+					table [7 * 256 + (crc & 0xff)] ^
+					table [6 * 256 + ((crc >> 8) & 0xff)] ^
+					table [5 * 256 + ((crc >> 16) & 0xff)] ^
+					table [4 * 256 + ((crc >> 24) & 0xff)] ^
+					table [3 * 256 + ((crc >> 32) & 0xff)] ^
+					table [2 * 256 + ((crc >> 40) & 0xff)] ^
+					table [1 * 256 + ((crc >> 48) & 0xff)] ^
+					table [0 * 256 + (crc >> 56)];
+				idx += 8;
+				len -= 8;
+			}
 
-					while (len > 0) {
-						crc = tptr [0 * 256 + ((crc ^ aptr [idx]) & 0xff)] ^ (crc >> 8);
-						idx++;
-						len--;
-					}
-				}
+			while (len > 0) {
+				crc = table [0 * 256 + ((crc ^ array [idx]) & 0xff)] ^ (crc >> 8);
+				idx++;
+				len--;
 			}
 
 			length += (ulong) cbSize;

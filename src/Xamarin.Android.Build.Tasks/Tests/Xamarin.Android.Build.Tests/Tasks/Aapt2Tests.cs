@@ -180,7 +180,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.LessOrEqual (0, warnings.Count, "There should be 0 warnings.");
 			Assert.True (File.Exists (outputFile), $"{outputFile} should have been created.");
 			using (var apk = ZipHelper.OpenZip (outputFile)) {
-				Assert.AreEqual (3, apk.EntryCount, $"{outputFile} should have 3 entries.");
+				Assert.AreEqual (3, apk.Entries.Count, $"{outputFile} should have 3 entries.");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
@@ -219,7 +219,7 @@ namespace Xamarin.Android.Build.Tests
 			var flatArchive = Path.Combine (archivePath, "compiled.flata");
 			Assert.True (File.Exists (flatArchive), $"{flatArchive} should have been created.");
 			using (var apk = ZipHelper.OpenZip (flatArchive)) {
-				Assert.AreEqual (2, apk.EntryCount, $"{flatArchive} should have 2 entries.");
+				Assert.AreEqual (2, apk.Entries.Count, $"{flatArchive} should have 2 entries.");
 			}
 			Assert.AreEqual (0, Directory.GetFiles (path, "*.zip", SearchOption.AllDirectories).Length, "Temporary resource archives should have been deleted.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);

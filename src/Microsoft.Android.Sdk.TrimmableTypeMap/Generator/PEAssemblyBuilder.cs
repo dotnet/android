@@ -523,7 +523,13 @@ sealed class PEAssemblyBuilder
 		// Capture the sig blob handle before emitIL, because emitIL callbacks
 		// may call AddMemberRef which clears and repopulates _sigBlob.
 		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
+		return EmitBody (name, attrs, sigBlobHandle, emitIL, encodeLocals);
+	}
 
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder, ControlFlowBuilder> emitIL,
+		Action<BlobBuilder>? encodeLocals)
+	{
 		StandaloneSignatureHandle localSigHandle = default;
 		if (encodeLocals != null) {
 			var localSigBlob = new BlobBuilder (32);
@@ -547,7 +553,7 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			sigBlobHandle,
+			signature,
 			bodyOffset, MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 	}
 

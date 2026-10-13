@@ -1,0 +1,46 @@
+import proguard.gradle.ProGuardTask
+
+buildscript {
+    apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: buildscript
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.10.0'
+    }
+}
+
+plugins {
+    id 'base'
+}
+
+def bundletoolJar = providers.gradleProperty('bundletoolJar')
+
+tasks.register('stripBundletool', Zip) {
+    from(bundletoolJar.map { zipTree(it) })
+    exclude 'linux/aapt2', 'macos/aapt2', 'windows/aapt2.exe', 'com/sun/jna/**'
+    archiveFileName.set('bundletool-unshrunk.jar')
+    destinationDirectory.set(layout.buildDirectory.dir('libs'))
+}
+
+tasks.register('proguard', ProGuardTask) {
+    configuration file('proguard.pro')
+    def inputJar = tasks.named('stripBundletool', Zip).flatMap { it.archiveFile }
+    // Leave the already-obfuscated R8 bytecode untouched: ProGuard can emit invalid stack maps.
+    injars(inputJar, filter: '!com/android/tools/r8/**')
+    libraryjars(inputJar, filter: 'com/android/tools/r8/**')
+    libraryjars fileTree("${System.getProperty('java.home')}/jmods") {
+        include '*.jmod'
+    }, jarfilter: '!**.jar', filter: '!module-info.class'
+    outjars(layout.buildDirectory.file('libs/bundletool-processed.jar'))
+}
+
+tasks.register('bundletool', Zip) {
+    from(tasks.named('proguard', ProGuardTask).map { zipTree(layout.buildDirectory.file('libs/bundletool-processed.jar')) })
+    from(tasks.named('stripBundletool', Zip).flatMap { it.archiveFile }.map { zipTree(it) }) {
+        include 'com/android/tools/r8/**'
+    }
+    archiveFileName.set('bundletool.jar')
+    destinationDirectory.set(layout.buildDirectory.dir('libs'))
+}
+
+tasks.named('assemble') {
+    dependsOn tasks.named('bundletool')
+}

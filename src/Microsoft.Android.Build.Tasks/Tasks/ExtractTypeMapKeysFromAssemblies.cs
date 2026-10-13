@@ -48,16 +48,26 @@ namespace Microsoft.Android.Tasks
 				if (!directory.IsNullOrEmpty ()) {
 					Directory.CreateDirectory (directory);
 				}
-				using var writer = new StreamWriter (OutputFile, append: false, new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
-				writer.NewLine = "\n";
-				foreach (string key in keys) {
-					writer.WriteLine (key);
+				string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+				try {
+					WriteOutputFile (temporaryOutputFile, keys);
+					File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+				} finally {
+					File.Delete (temporaryOutputFile);
 				}
 			} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException) {
 				Log.LogCodedError ("XA4327", Properties.Resources.XA4327, OutputFile, ex.Message);
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		protected virtual void WriteOutputFile (string outputFile, IReadOnlyCollection<string> keys)
+		{
+			using var writer = new StreamWriter (outputFile, append: false, new UTF8Encoding (encoderShouldEmitUTF8Identifier: false)) { NewLine = "\n" };
+			foreach (string key in keys) {
+				writer.WriteLine (key);
+			}
 		}
 
 		void ReadKeys (string assemblyPath, SortedSet<string> keys)

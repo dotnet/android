@@ -17,18 +17,21 @@
 #include <host/assembly-store.hh>
 #include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
+#include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
 #include <host/host-util.hh>
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/binary-blob-loader.hh>
+#include <runtime-base/coreclr-bootstrap.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
+#include <shared/log_functions.hh>
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
@@ -137,7 +140,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 
 void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
 {
-	if (!application_config.have_assembly_store) {
+	if (!CoreClrBootstrap::config.have_assembly_store) {
 		log_debugf (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery");
 		return;
 	}
@@ -228,25 +231,15 @@ auto Host::create_delegate (
 [[gnu::flatten, gnu::always_inline]]
 void Host::preload_jni_libraries () noexcept
 {
-	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
+	if (CoreClrBootstrap::config.number_of_shared_libraries == 0) [[unlikely]] {
 		return;
 	}
 
-	log_debugf (LOG_ASSEMBLY, "DSO jni preloads index stride == %u", dso_jni_preloads_idx_stride);
+	log_debugf (LOG_ASSEMBLY, "DSO jni preloads index stride == %u", CoreClrBootstrap::preload_stride);
 
-	if ((dso_jni_preloads_idx_count % dso_jni_preloads_idx_stride) != 0) [[unlikely]] {
-		Helpers::abort_applicationf (
-			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"DSO preload index is invalid, size (%u) is not a multiple of %u",
-			dso_jni_preloads_idx_count,
-			dso_jni_preloads_idx_stride
-		);
-	}
-
-	for (size_t i = 0; i < dso_jni_preloads_idx_count; i += dso_jni_preloads_idx_stride) {
-		const size_t entry_index = dso_jni_preloads_idx[i];
-		DSOCacheEntry &entry = dso_cache[entry_index];
+	for (size_t i = 0; i < CoreClrBootstrap::preload_count; i += CoreClrBootstrap::preload_stride) {
+		const size_t entry_index = CoreClrBootstrap::preload_index (i);
+		DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[entry_index];
 		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
 
 		log_debugf (
@@ -261,10 +254,10 @@ void Host::preload_jni_libraries () noexcept
 		void *handle = MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
 
 		// Set handle in all the alias entries
-		for (size_t j = 1; j < dso_jni_preloads_idx_stride; j++) {
-			const size_t entry_alias_index = dso_jni_preloads_idx[i + j];
-			DSOCacheEntry &entry_alias = dso_cache[entry_alias_index];
-			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry);
+		for (size_t j = 1; j < CoreClrBootstrap::preload_stride; j++) {
+			const size_t entry_alias_index = CoreClrBootstrap::preload_index (i + j);
+			DSOCacheEntry &entry_alias = CoreClrBootstrap::dso_cache[entry_alias_index];
+			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry_alias);
 
 			log_debugf (
 				LOG_ASSEMBLY,
@@ -294,7 +287,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	[[maybe_unused]] jobjectArray assembliesJava,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
-	Logger::init_logging_categories ();
+	HostCommon::init_logging_categories ();
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
@@ -307,14 +300,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 	);
 	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
-	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
-
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
-	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
@@ -332,13 +322,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
 
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
 
 	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
 	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
-	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
-	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
+	// come from here: the shared `*.runtimeconfig.json` does not know the ABI of the
+	// running process.
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
 
 	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
 	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
@@ -353,11 +343,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 	std::free (app_context_base_directory);
 	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
 	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
 
-	const char **prop_names = init_runtime_property_names;
-	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
-	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+	const char **prop_names = CoreClrBootstrap::property_names;
+	const char **prop_values = const_cast<const char**>(CoreClrBootstrap::property_values);
+	int prop_count = static_cast<int>(CoreClrBootstrap::config.number_of_runtime_properties);
 
 	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
 	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
@@ -388,7 +378,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 			fastdev_prop_names = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
 			fastdev_prop_values = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
 			if (fastdev_prop_names == nullptr || fastdev_prop_values == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the runtime properties; falling back to assembly probing");
+				log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the runtime properties; falling back to assembly probing");
 				std::free (fastdev_prop_names);
 				std::free (fastdev_prop_values);
 				FastDevAssemblies::discard_tpa_list (fastdev_tpa_list);
@@ -409,7 +399,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	}
 
 	int hr = coreclr_initialize (
-		application_config.android_package_name,
+		CoreClrBootstrap::config.android_package_name,
 		"Xamarin.Android",
 		prop_count,
 		prop_names,
@@ -448,34 +438,22 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.javaVm                                         = jvm;
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
-	init.version                                        = env->GetVersion ();
 	init.brokenExceptionTransitions                     = 0;
-	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
+	init.packageNamingPolicy                            = static_cast<int>(CoreClrBootstrap::config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
-	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
-	init.jniRemappingData                               = &jni_remapping_data;
-	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
-	init.grefLogPath                                    = Logger::gref_log_path ();
-	init.lrefLogPath                                    = Logger::lref_log_path ();
-	init.referenceLogDirectory                         = Logger::reference_log_directory ();
-	init.lightGref                                      = Logger::light_gref_enabled () ? 1 : 0;
-	init.lightLref                                      = Logger::light_lref_enabled () ? 1 : 0;
-	init.grefToLogcat                                   = Logger::gref_to_logcat () ? 1 : 0;
-	init.lrefToLogcat                                   = Logger::lref_to_logcat () ? 1 : 0;
+	static BinaryBlobPayload remapping = {};
+	remapping                                           = BinaryBlobLoader::load_optional ("remapping_data");
+	init.jniRemappingData                               = remapping.data == nullptr ? nullptr : &remapping;
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	init.maxGrefCount                                   = static_cast<int>(AndroidSystem::get_max_gref_count ());
-	init.grefClass                                      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, true);
-	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
-
-	jclass lrefLoaderClass                              = env->GetObjectClass (loader);
-	init.Loader_loadClass                               = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-	env->DeleteLocalRef (lrefLoaderClass);
+	jclass lrefClass                                    = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, false);
+	Class_getName                                       = env->GetMethodID (lrefClass, "getName", "()Ljava/lang/String;");
+	env->DeleteLocalRef (lrefClass);
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);
-	init.grefGCUserPeerable                             = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable"sv, true);
 
 	log_infof (LOG_GC, "GREF GC Threshold: %d", init.grefGcThreshold);
 
@@ -496,45 +474,15 @@ void Host::Java_mono_android_Runtime_initInternal (
 	log_debugf (LOG_DEFAULT, "Calling into managed runtime init");
 	initialize (&init);
 
-	// RegisterJniNatives and PropagateUncaughtException are returned from Initialize
-	// to avoid extra create_delegate calls. RegisterJniNatives is null when using the
-	// trimmable typemap path (the method is trimmed; registration is handled in managed code).
-	jnienv_register_jni_natives = init.registerJniNativesFn;
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
 
 	MonodroidState::mark_startup_done ();
 }
 
-void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
-{
-	jsize managedType_len = env->GetStringLength (managedType);
-	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
-	int methods_len = env->GetStringLength (methods);
-	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
-
-	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-	log_debugf (LOG_ASSEMBLY, "Registering type: '%s'", optional_string (mt_ptr));
-	env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-	// TODO: must attach thread to the runtime here
-	if (jnienv_register_jni_natives != nullptr) {
-		jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
-	}
-
-	env->ReleaseStringChars (methods, methods_ptr);
-	env->ReleaseStringChars (managedType, managedType_ptr);
-}
-
-void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
-{
-	// In the trimmable typemap path, registerNatives is handled entirely in managed code
-	// via a dynamically registered JNI native method. This C++ stub exists only as a
-	// fallback for the legacy code path (which doesn't use registerNatives).
-}
-
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
+	CoreClrBootstrap::initialize ();
 	jvm = vm;
 
 	OSBridge::initialize_on_onload (vm);

@@ -14,6 +14,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.AdjustJavacVersionArguments" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.CreateJavaArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_AndroidIntermediateBindingJavaClassDirectory>$(IntermediateOutputPath)binding\bin\classes\</_AndroidIntermediateBindingJavaClassDirectory>
@@ -38,9 +39,11 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     </AdjustJavacVersionArguments>
   </Target>
 
-  <Target Name="_DetermineBindingJavaLibrariesToCompile" Condition=" '@(_JavaBindingSource->Count())' != '0' ">
+  <Target Name="_DetermineBindingJavaLibrariesToCompile"
+      Condition=" '@(_JavaBindingSource->Count())' != '0' "
+      DependsOnTargets="_CollectRuntimeJarFilenames">
     <DetermineJavaLibrariesToCompile
-        MonoPlatformJarPaths="$(MonoPlatformJarPath);$(_RuntimeJar)"
+        MonoPlatformJarPaths="$(_RuntimeJar)"
         JavaSourceFiles="@(_JavaBindingSource)"
         JavaLibraries="@(AndroidJavaLibrary);@(EmbeddedJar)"
         ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
@@ -52,10 +55,10 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
   </Target>
 
   <Target Name="_DetermineJavaLibrariesToCompile"
-      DependsOnTargets="_CategorizeAndroidLibraries;_CollectJavaSourceForBinding;_CompileBindingJava">
+      DependsOnTargets="_CollectRuntimeJarFilenames;_CategorizeAndroidLibraries;_CollectJavaSourceForBinding;_CompileBindingJava">
 
     <DetermineJavaLibrariesToCompile
-        MonoPlatformJarPaths="$(MonoPlatformJarPath);$(_RuntimeJar)"
+        MonoPlatformJarPaths="$(_RuntimeJar)"
         JavaSourceFiles="@(AndroidJavaSource)"
         JavaLibraries="@(AndroidJavaLibrary)"
         ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
@@ -102,8 +105,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
 
   <Target Name="_CompileBindingJava"
       Condition=" '@(_JavaBindingSource->Count())' != '0' "
-      DependsOnTargets="$(_CompileBindingJavaDependsOnTargets)"
-      Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileBindingJavaFileList);$(MonoPlatformJarPath);@(_JavaBindingSource)"
+      DependsOnTargets="_CollectRuntimeJarFilenames;$(_CompileBindingJavaDependsOnTargets)"
+      Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileBindingJavaFileList);$(_RuntimeJar);@(_JavaBindingSource)"
       Outputs="$(_AndroidCompileBindingJavaStampFile)">
 
     <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
@@ -114,7 +117,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
         ClassesOutputDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
-        ClassesZip="$(_AndroidIntermediateBindingClassesZip)"
         StubSourceDirectory="$(_AndroidIntermediateBindingJavaSourceDirectory)"
         JavaSourceFiles="@(_JavaBindingSource)"
         ToolPath="$(JavacToolPath)"
@@ -125,6 +127,12 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JdkVersion="$(_JdkVersion)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+    />
+    <CreateJavaArchive
+        MSBuildRuntime="NET"
+        Condition=" '@(_JavaBindingSource->Count())' != '0' "
+        SourceDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
+        OutputFile="$(_AndroidIntermediateBindingClassesZip)"
     />
     <JavaSourceUtils
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
@@ -150,8 +158,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
   </Target>
 
   <Target Name="_CompileJava"
-    DependsOnTargets="$(_CompileJavaDependsOnTargets);_CollectJavaSource"
-    Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileJavaFileList);$(MonoPlatformJarPath);@(_JavaStubFiles);@(_JavaSource)"
+    DependsOnTargets="_CollectRuntimeJarFilenames;$(_CompileJavaDependsOnTargets);_CollectJavaSource"
+    Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileJavaFileList);$(_RuntimeJar);@(_JavaStubFiles);@(_JavaSource)"
     Outputs="$(_AndroidCompileJavaStampFile)">
 
     <!-- remove existing <Javac /> outputs, since *.class files could contain old files -->
