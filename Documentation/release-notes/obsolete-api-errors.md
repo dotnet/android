@@ -1,10 +1,10 @@
-### Breaking change: obsolete types removed
+### Breaking change: obsolete APIs now produce errors
 
-The following public types, which had been marked obsolete by .NET 9 or earlier,
-are removed. This is a source and binary compatibility break; libraries that
-reference these types must be updated and recompiled. Bindings for deprecated
-Java and Android APIs remain available while those APIs are present in the
-platform libraries.
+The following public APIs remain in the reference and runtime assemblies so
+previously compiled libraries can still resolve their references. They are
+marked obsolete with `error: true`, so newly compiled C# code cannot use them.
+Bindings for deprecated Java and Android platform APIs remain available while
+those APIs are present in the platform libraries.
 
 - `Android.Runtime.PreserveAttribute` is replaced by
   `System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute`.
@@ -22,12 +22,13 @@ platform libraries.
   `Java.Interop.JavaLibraryReferenceAttribute` have no direct replacement.
   Their functionality has been unsupported since .NET for Android 10.2;
   update affected libraries to supported NuGet packages and remove these
-  attributes.
+  attributes. Existing binaries can still resolve the attribute types.
 - `Android.Media.AudioRecord.RoutingChangedEventArgs` and
   `Android.Media.AudioTrack.RoutingChangedEventArgs` were incorrectly generated
   and unused; the underlying platform API bindings are unchanged. Use
   `Android.Media.AudioRoutingOnRoutingChangedEventArgs` for the corresponding
   `RoutingChanged` events.
 
-Previously compiled libraries that reference these types may also need to be
-updated before they can be used with this version of .NET for Android.
+This change prevents new source from using these obsolete APIs without
+breaking type resolution for existing compiled libraries. It does not restore
+functionality that was already unsupported.

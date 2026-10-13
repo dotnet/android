@@ -144,6 +144,18 @@
     <Compile Include="..\Mono.Android\\Android.App\SupportsGLTextureAttribute.cs">
       <Link>Mono.Android\SupportsGLTextureAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\Mono.Android\\Java.Interop\JavaLibraryReferenceAttribute.cs">
+      <Link>Mono.Android\JavaLibraryReferenceAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android\IncludeAndroidResourcesFromAttribute.cs">
+      <Link>Mono.Android\IncludeAndroidResourcesFromAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android\ReferenceFilesAttribute.cs">
+      <Link>Mono.Android\ReferenceFilesAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android\NativeLibraryReferenceAttribute.cs">
+      <Link>Mono.Android\NativeLibraryReferenceAttribute.cs</Link>
+    </Compile>
     <Compile Include="..\..\build-tools\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks\Sleep.cs">
       <Link>Xamarin.Android.BuildTools.PrepTasks\Sleep.cs</Link>
     </Compile>

@@ -119,6 +119,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JNINativeWrapper.g.cs</LastGenOutput>
     </None>
+    <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
+    <Compile Include="Android\LinkerSafeAttribute.cs" />
+    <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />
+    <Compile Include="Android\ReferenceFilesAttribute.cs" />
     <Compile Include="Android.Accounts\AccountManager.cs" />
     <Compile Include="Android.Animation\Animator.cs" />
     <Compile Include="Android.Animation\AnimatorSet.cs" />
@@ -190,6 +194,7 @@
     <Compile Include="Android.InputMethodServices\KeyboardView.cs" />
     <Compile Include="Android.Locations\LocationManager.cs" />
     <Compile Include="Android.Media\AudioManager.cs" />
+    <Compile Include="Android.Media\AudioRecord.cs" />
     <Compile Include="Android.Media\AudioTrack.cs" />
     <Compile Include="Android.Media\MediaMetadataRetriever.cs" />
     <Compile Include="Android.Media\MediaPlayer.cs" />
@@ -249,6 +254,7 @@
     <Compile Include="Android.Runtime\NamespaceMappingAttribute.cs" />
     <Compile Include="Android.Runtime\OutputStreamAdapter.cs" />
     <Compile Include="Android.Runtime\OutputStreamInvoker.cs" />
+    <Compile Include="Android.Runtime\PreserveAttribute.cs" />
     <Compile Include="Android.Runtime\RaiseThrowableEventArgs.cs" />
     <Compile Include="Android.Runtime\RequiresPermissionAttribute.cs" />
     <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
@@ -258,6 +264,7 @@
     <Compile Include="Android.Runtime\StartupNoGCRegion.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
     <Compile Include="Android.Runtime\TimingLogger.cs" />
+    <Compile Include="Android.Runtime\TypeManager.cs" />
     <Compile Include="Android.Runtime\XAPeerMembers.cs" />
     <Compile Include="Android.Runtime\XmlPullParserReader.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParser.cs" />
@@ -296,11 +303,14 @@
     <Compile Include="Android.Widget\MediaController.cs" />
     <Compile Include="Android.Widget\TextView.cs" />
     <Compile Include="Java.IO\ObjectStreamField.cs" />
+    <Compile Include="Java.Interop\AndroidEventHelper.cs" />
+    <Compile Include="Java.Interop\DoNotPackageAttribute.cs" />
     <Compile Include="Java.Interop\EventHelper.cs" />
     <Compile Include="Java.Interop\IAndroidCallableWrapper.cs" />
     <Compile Include="Java.Interop\IJavaObjectEx.cs" />
     <Compile Include="Java.Interop\JavaConvert.cs" />
     <Compile Include="Java.Interop\JavaInterfaceDefaultMethodAttribute.cs" />
+    <Compile Include="Java.Interop\JavaLibraryReferenceAttribute.cs" />
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
     <Compile Include="Java.Interop\JavaPeerCallbackFormatAttribute.cs" />

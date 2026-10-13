@@ -1232,7 +1232,7 @@ public abstract class MyRunner {
 		}
 
 		[Test]
-		public void WarnWithReferenceToRemovedPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void WarnWithReferenceToLegacyPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			var path = Path.Combine (Root, "temp", TestName);
@@ -1249,10 +1249,12 @@ public abstract class MyRunner {
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease, ProjectName = "App1" };
 			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
-			proj.References.Add (new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
-			proj.MainActivity = proj.DefaultMainActivity.Replace (
+			var legacyAttributeReference = new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1");
+			legacyAttributeReference.Metadata.Add ("Aliases", "global,LegacyPreserve");
+			proj.References.Add (legacyAttributeReference);
+			proj.MainActivity = "extern alias LegacyPreserve;\n" + proj.DefaultMainActivity.Replace (
 				"protected override void OnCreate",
-				"[Android.Runtime.PreserveAttribute]\n\t\tprotected override void OnCreate"
+				"[LegacyPreserve::Android.Runtime.PreserveAttribute]\n\t\tprotected override void OnCreate"
 			);
 
 			using (var lb = CreateDllBuilder (Path.Combine (path, "Lib1")))

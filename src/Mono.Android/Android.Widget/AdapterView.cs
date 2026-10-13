@@ -9,6 +9,20 @@ using Android.Runtime;
 using Java.Interop;
 
 namespace Android.Widget {
+	[Obsolete ("Use AdapterView.ItemClickEventArgs instead", error: true)]
+	public class ItemEventArgs : AdapterView.ItemClickEventArgs {
+
+		public ItemEventArgs (Android.Views.View view, int position, long id)
+			: base (null, view, position, id)
+		{
+		}
+
+		public ItemEventArgs (Android.Widget.AdapterView parent, Android.Views.View view, int position, long id)
+			: base (parent, view, position, id)
+		{
+		}
+	}
+
 	public abstract partial class AdapterView {	
 		
 		List<EventHandler>? selection_cleared;

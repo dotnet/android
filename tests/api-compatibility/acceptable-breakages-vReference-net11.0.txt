@@ -5598,15 +5598,9 @@ CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatform
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.ExceptionUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.LangUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.VersionInfo' in the contract but not the implementation.
-TypesMustExist : Type 'Android.IncludeAndroidResourcesFromAttribute' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.LinkerSafeAttribute' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.NativeLibraryReferenceAttribute' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.ReferenceFilesAttribute' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Media.AudioRecord.RoutingChangedEventArgs' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Media.AudioTrack.RoutingChangedEventArgs' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Runtime.PreserveAttribute' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Runtime.TypeManager' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Widget.ItemEventArgs' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Java.Interop.AndroidEventHelper' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Java.Interop.DoNotPackageAttribute' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Java.Interop.JavaLibraryReferenceAttribute' does not exist in the implementation but it does exist in the contract.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.LinkerSafeAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Runtime.PreserveAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Runtime.TypeManager' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ItemEventArgs' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Interop.AndroidEventHelper' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Interop.DoNotPackageAttribute' in the contract but not the implementation.
