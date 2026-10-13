@@ -28,8 +28,6 @@ namespace Xamarin.Android.Tasks
 			FilesThatExist = Files.Where (p => File.Exists (p.ItemSpec) &&
 					(!IgnoreFiles?.Contains (p, TaskItemComparer.DefaultComparer) ?? true)).ToArray ();
 
-			Log.LogDebugTaskItems ("  [Output] FilesThatExist", FilesThatExist);
-
 			return true;
 		}
 	}

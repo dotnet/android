@@ -54,7 +54,6 @@ namespace Xamarin.Android.Tasks
 				LogDebugMessage ($"Using $(AdbTargetArchitecture): {AdbTargetArchitecture}");
 				ResultingAbi = AdbTargetArchitecture;
 				SelectRuntimeIdentifier ();
-				LogOutputs ();
 				return true;
 			}
 
@@ -83,7 +82,6 @@ namespace Xamarin.Android.Tasks
 					ResultingAbi = cachedAbi;
 					SdkVersion = cachedSdkVersion;
 					SelectRuntimeIdentifier (cachedSupportedAbis);
-					LogOutputs ();
 					return;
 				}
 				LogDebugMessage ($"Cache miss or stale for device {device.Serial}. Refreshing.");
@@ -153,17 +151,10 @@ namespace Xamarin.Android.Tasks
 			doc = DeviceCache.Update (doc, device.Serial, ResultingAbi, sdkver, device.LongOutput, supportedAbis);
 			SelectRuntimeIdentifier (supportedAbis);
 			SdkVersion = sdkver;
-			LogOutputs ();
 
 			if (doc.SaveIfChanged (DevicePropertyCache)) {
 				LogDebugMessage ($"Saving: {DevicePropertyCache}");
 			}
-		}
-		void LogOutputs ()
-		{
-			LogDebugMessage ($"  {nameof (ResultingAbi)}: {ResultingAbi}");
-			LogDebugMessage ($"  {nameof (RuntimeIdentifier)}: {RuntimeIdentifier}");
-			LogDebugMessage ($"  {nameof (SdkVersion)}: {SdkVersion}");
 		}
 
 		async System.Threading.Tasks.Task<string> GetAbiFromPmDump (AdbRunner adb, string serial)
