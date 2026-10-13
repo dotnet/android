@@ -150,7 +150,7 @@ However, it might not download the new platform into your local Android SDK.
 ### Build Xamarin.Android
 
 Build `Microsoft.Android.slnx` using your usual mechanism. This will not use the new platform yet,
-but will build the tools like `param-name-importer` and `class-parse` that will be needed
+but will build the tools like `java-source-utils` and `class-parse` that will be needed
 in the next steps.
 
 

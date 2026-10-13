@@ -81,7 +81,6 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
 | NuGet.Versioning | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
 | Mono.Cecil | mono/cecil | https://github.com/mono/cecil/ (MIT) |
-| Microsoft.Xml.SgmlReader | lovettchris/SgmlReader | https://github.com/lovettchris/SgmlReader/ (Apache 2.0) |
 
 Note: Microsoft-owned NuGet packages (Microsoft.*, System.*) do not need TPN entries.
 
