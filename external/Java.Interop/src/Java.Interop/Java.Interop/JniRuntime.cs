@@ -14,7 +14,7 @@ namespace Java.Interop
 	[SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Fields preserve the unmanaged JavaVM vtable layout.")]
 	// These fields are populated from native memory and some are only present to preserve the JavaVM vtable layout.
 #pragma warning disable CS0169, CS0649
-	unsafe struct JavaVMInterface {
+	struct JavaVMInterface {
 		IntPtr reserved0;
 		IntPtr reserved1;
 		IntPtr reserved2;
@@ -27,20 +27,26 @@ namespace Java.Interop
 
 		public int DestroyJavaVM (IntPtr javavm)
 		{
-			return destroyJavaVM (javavm);
+			unsafe {
+				return destroyJavaVM (javavm);
+			}
 		}
 
 		public int AttachCurrentThread (IntPtr javavm, out IntPtr env, ref JavaVMThreadAttachArgs args)
 		{
-			fixed (IntPtr* envp = &env)
-			fixed (JavaVMThreadAttachArgs* argsp = &args)
-				return attachCurrentThread (javavm, envp, argsp);
+			unsafe {
+				fixed (IntPtr* envp = &env)
+				fixed (JavaVMThreadAttachArgs* argsp = &args)
+					return attachCurrentThread (javavm, envp, argsp);
+			}
 		}
 
 		public int GetEnv (IntPtr javavm, out IntPtr envptr, int version)
 		{
-			fixed (IntPtr* envp = &envptr)
-				return getEnv (javavm, envp, version);
+			unsafe {
+				fixed (IntPtr* envp = &envptr)
+					return getEnv (javavm, envp, version);
+			}
 		}
 	}
 #pragma warning restore CS0169, CS0649
@@ -161,7 +167,7 @@ namespace Java.Interop
 			current = newCurrent;
 		}
 
-		Dictionary<IntPtr, IDisposable>                 TrackedInstances    = new Dictionary<IntPtr, IDisposable> ();
+		HashSet<JniType>                                TrackedInstances    = new HashSet<JniType> ();
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyRuntimeOnDispose;
@@ -231,11 +237,17 @@ namespace Java.Interop
 			}
 		}
 
-		static unsafe IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
+		static IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
 		{
+			if (envp == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (envp));
+
 			IntPtr vm   = IntPtr.Zero;
-			if (JniNativeMethods.GetJavaVM (envp, &vm) is int r &&
-					r != JNI_OK) {
+			int r;
+			unsafe {
+				r = JniNativeMethods.GetJavaVM (envp, &vm);
+			}
+			if (r != JNI_OK) {
 				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
 			}
 			return vm;
@@ -384,16 +396,14 @@ namespace Java.Interop
 		internal void Track (JniType value)
 		{
 			lock (TrackedInstances) {
-				if (!TrackedInstances.ContainsKey (value.PeerReference.Handle))
-					TrackedInstances [value.PeerReference.Handle] = value;
+				TrackedInstances.Add (value);
 			}
 		}
 
-		internal void UnTrack (IntPtr key)
+		internal void UnTrack (JniType value)
 		{
 			lock (TrackedInstances) {
-				if (TrackedInstances.ContainsKey (key))
-					TrackedInstances.Remove (key);
+				TrackedInstances.Remove (value);
 			}
 		}
 
@@ -401,8 +411,7 @@ namespace Java.Interop
 		{
 			List<IDisposable> values;
 			lock (TrackedInstances) {
-				values = new List<IDisposable> (TrackedInstances.Values);
-				TrackedInstances.Clear ();
+				values = new List<IDisposable> (TrackedInstances);
 			}
 
 			foreach (var d in values)

@@ -16,12 +16,18 @@ namespace Java.Interop {
 
 	public partial class JniRuntime {
 
+		/// <safety>
+		/// A nonzero <paramref name="value"/> must address readable NUL-terminated UTF-8 storage
+		/// that remains alive and unchanged for the duration of the call.
+		/// </safety>
 		static unsafe string GetUtf8String (IntPtr value)
 		{
 			if (value == IntPtr.Zero)
 				return "";
 
-			return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			unsafe {
+				return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			}
 		}
 
 		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",
@@ -115,9 +121,9 @@ namespace Java.Interop {
 					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
 					$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
 					$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
-					$", {nameof (TargetJniTypeUtf8)} = \"{GetUtf8String (TargetJniTypeUtf8)}\"" +
-					$", {nameof (TargetJniMethodNameUtf8)} = \"{GetUtf8String (TargetJniMethodNameUtf8)}\"" +
-					$", {nameof (TargetJniMethodSignatureUtf8)} = \"{GetUtf8String (TargetJniMethodSignatureUtf8)}\"" +
+					$", {nameof (TargetJniTypeUtf8)} = \"0x{TargetJniTypeUtf8:x}\"" +
+					$", {nameof (TargetJniMethodNameUtf8)} = \"0x{TargetJniMethodNameUtf8:x}\"" +
+					$", {nameof (TargetJniMethodSignatureUtf8)} = \"0x{TargetJniMethodSignatureUtf8:x}\"" +
 					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
 					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
 					$"}}";
@@ -328,7 +334,9 @@ namespace Java.Interop {
 			public string? GetReplacementType (string jniSimpleReference)
 			{
 				GetReplacementTypeInfo (jniSimpleReference, out var replacement, out var replacementUtf8);
-				return replacementUtf8 != IntPtr.Zero ? GetUtf8String (replacementUtf8) : replacement;
+				unsafe {
+					return replacementUtf8 != IntPtr.Zero ? GetUtf8String (replacementUtf8) : replacement;
+				}
 			}
 
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
@@ -410,7 +418,11 @@ namespace Java.Interop {
 				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
 			}
 
-			internal ReplacementMethodInfo? GetReplacementMethodInfo (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+			/// <safety>
+			/// <paramref name="jniSimpleReferenceUtf8"/> must address readable NUL-terminated UTF-8
+			/// storage that remains alive and unchanged for the duration of the call.
+			/// </safety>
+			internal unsafe ReplacementMethodInfo? GetReplacementMethodInfo (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
 				AssertValid ();
 				if (jniSimpleReferenceUtf8 == IntPtr.Zero)
@@ -423,7 +435,9 @@ namespace Java.Interop {
 				if (!RuntimeFeature.JniRemapping)
 					return null;
 
-				return GetReplacementMethodInfoCore (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
+				unsafe {
+					return GetReplacementMethodInfoCore (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
+				}
 			}
 
 			/// <summary>
@@ -436,8 +450,17 @@ namespace Java.Interop {
 			/// <summary>
 			/// Resolves member remapping with a source JNI type in stable NUL-terminated UTF-8 memory.
 			/// </summary>
-			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-				=> GetReplacementMethodInfoCore (GetUtf8String (jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
+			/// <safety>
+			/// A nonzero <paramref name="jniSimpleReferenceUtf8"/> must address readable
+			/// NUL-terminated UTF-8 storage that remains alive and unchanged for the duration
+			/// of the call. The returned remapping metadata does not take ownership of that storage.
+			/// </safety>
+			protected virtual unsafe ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+			{
+				unsafe {
+					return GetReplacementMethodInfoCore (GetUtf8String (jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
+				}
+			}
 
 			public ReplacementFieldInfo? GetReplacementFieldInfo (string jniSimpleReference, string jniFieldName, string jniFieldSignature)
 			{

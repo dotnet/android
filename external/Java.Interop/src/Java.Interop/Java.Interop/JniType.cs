@@ -17,16 +17,23 @@ using Java.Interop;
 
 namespace Java.Interop {
 
+	/// <remarks>
+	/// For overloads accepting UTF-8 spans, the caller must ensure each span has readable
+	/// NUL-terminated backing storage for the duration of the call. Complete C# UTF-8 literals
+	/// provide a terminator beyond their span length; copies and slices do not carry that guarantee.
+	/// </remarks>
 	public sealed class JniType : IDisposable {
 
 		[return: NotNullIfNotNull ("classFileData")]
-		public static unsafe JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
+		public static JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
 			if (classFileData == null)
 				return null;
-			fixed (byte* buf = classFileData) {
-				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
-				return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+			unsafe {
+				fixed (byte* buf = classFileData) {
+					var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
+					return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+				}
 			}
 		}
 
@@ -53,13 +60,20 @@ namespace Java.Interop {
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
+		/// <safety>
+		/// The caller must ensure <paramref name="classname"/> points to readable NUL-terminated
+		/// UTF-8 storage that remains alive for the duration of the call.
+		/// </safety>
 		internal unsafe JniType (IntPtr classname)
 		{
 			if (classname == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (classname));
 
-			var name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)classname);
-			var peer = JniEnvironment.Types.FindClass (name);
+			JniObjectReference peer;
+			unsafe {
+				var name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)classname);
+				peer = JniEnvironment.Types.FindClass (name);
+			}
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -125,7 +139,10 @@ namespace Java.Interop {
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
-			var t = new JniType (classname);
+			JniType t;
+			unsafe {
+				t = new JniType (classname);
+			}
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
@@ -136,10 +153,10 @@ namespace Java.Interop {
 		{
 			if (!PeerReference.IsValid)
 				return;
-			if (registered)
-				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
+			if (registered)
+				JniEnvironment.Runtime.UnTrack (this);
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
@@ -172,23 +189,36 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-#pragma warning disable 0414
-		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
-		JniNativeMethodRegistration[]? methods;
-#pragma warning restore 0414
+		List<JniNativeMethodRegistration[]>? methods;
 
+		/// <remarks>
+		/// Snapshots and retains delegates from every attempted registration, including failed
+		/// or partial registrations, until successful unregistration. Coordinate registration,
+		/// unregistration, and disposal with native invocations so no callbacks are in flight
+		/// when unregistering.
+		/// </remarks>
+		/// <safety>
+		/// The caller must ensure each Marshaler delegate in <paramref name="methods"/> has
+		/// parameter and return types, calling convention, and marshaling attributes compatible
+		/// with its JNI method descriptor, including the leading JNIEnv and receiver/class pointers.
+		/// Managed by-ref parameters must not be used to receive JNI scalar values.
+		/// This method retains delegates but does not validate their ABI compatibility.
+		/// </safety>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
+		public unsafe void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
 			AssertValid ();
 
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
 
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
-			// Prevents method delegates from being GC'd so long as this type remains
-			this.methods = methods;
+			var snapshot = (JniNativeMethodRegistration[]) methods.Clone ();
 			RegisterWithRuntime ();
+			this.methods ??= new List<JniNativeMethodRegistration[]> ();
+			this.methods.Add (snapshot);
+			unsafe {
+				JniEnvironment.Types.RegisterNatives (PeerReference, snapshot, snapshot.Length);
+			}
 		}
 
 		public void UnregisterNativeMethods ()
@@ -196,6 +226,7 @@ namespace Java.Interop {
 			AssertValid ();
 
 			JniEnvironment.Types.UnregisterNatives (PeerReference);
+			methods = null;
 		}
 
 		public JniMethodInfo GetConstructor (string signature)
@@ -223,7 +254,9 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			unsafe {
+				return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			}
 		}
 
 		public JniFieldInfo GetInstanceField (string name, string signature)
@@ -384,111 +417,190 @@ namespace Java.Interop {
 		/// Creates a <see cref="JniType"/> from a null-terminated UTF-8 class name span.
 		/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
 		/// </summary>
-		public JniType (ReadOnlySpan<byte> classname)
+		/// <safety>
+		/// The caller must ensure the backing storage remains readable and NUL-terminated
+		/// for the duration of the call. C# UTF-8 literals provide a
+		/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+		/// </safety>
+		public unsafe JniType (ReadOnlySpan<byte> classname)
 		{
-			var peer = JniEnvironment.Types.FindClass (classname);
+			JniObjectReference peer;
+			unsafe {
+				peer = JniEnvironment.Types.FindClass (classname);
+			}
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		public static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
+		/// <safety>
+		/// The caller must ensure <paramref name="classname"/> has readable NUL-terminated
+		/// backing storage for the duration of the call.
+		/// </safety>
+		public static unsafe JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
-			var t = new JniType (classname);
+			JniType t;
+			unsafe {
+				t = new JniType (classname);
+			}
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
 			return cachedType;
 		}
 
-		public JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
+		/// backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature);
+			unsafe {
+				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature);
+			}
 		}
 
-		public JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
+		/// backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature);
+			unsafe {
+				return GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature);
+			}
 		}
 
-		public JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
+			}
 		}
 
-		public JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
-			var m = GetInstanceField (name, signature);
+			JniFieldInfo m;
+			unsafe {
+				m = GetInstanceField (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
 			return cachedField;
 		}
 
-		public JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
+			}
 		}
 
-		public JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
-			var m = GetStaticField (name, signature);
+			JniFieldInfo m;
+			unsafe {
+				m = GetStaticField (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
 			return cachedField;
 		}
 
-		public JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
+			}
 		}
 
-		public JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
-			var m = GetInstanceMethod (name, signature);
+			JniMethodInfo m;
+			unsafe {
+				m = GetInstanceMethod (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
 			return cachedMethod;
 		}
 
-		public JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
-			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
+			unsafe {
+				return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
+			}
 		}
 
-		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		/// <safety>
+		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
+		/// readable NUL-terminated backing storage for the duration of the call.
+		/// </safety>
+		public unsafe JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
-			var m = GetStaticMethod (name, signature);
+			JniMethodInfo m;
+			unsafe {
+				m = GetStaticMethod (name, signature);
+			}
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -623,7 +735,7 @@ namespace Java.Interop {
 			StaticField,
 		}
 
-		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
 			// Match StringToCoTaskMemUTF8, including unpaired-surrogate replacement
 			// and embedded-NUL termination, rather than changing to JNI modified UTF-8.
@@ -639,22 +751,24 @@ namespace Java.Interop {
 				Encoding.UTF8.GetBytes (name, nameBuffer);
 				nameBuffer [nameLength - 1] = 0;
 
-				fixed (byte* nameStart = nameBuffer)
-					return GetMemberID ((IntPtr)nameStart, signature, kind, throwOnError);
+				unsafe {
+					fixed (byte* nameStart = nameBuffer)
+						return GetMemberID ((IntPtr)nameStart, signature, kind, throwOnError);
+				}
 			} finally {
 				if (rentedName != null)
 					ArrayPool<byte>.Shared.Return (rentedName);
 			}
 		}
 
-		unsafe IntPtr GetMemberID (IntPtr name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (IntPtr name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
 			if (name == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (name));
 			return GetMemberID (signature, name, false, kind, throwOnError);
 		}
 
-		unsafe IntPtr GetMemberID (IntPtr name, IntPtr signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (IntPtr name, IntPtr signature, MemberKind kind, bool throwOnError = true)
 		{
 			AssertValid ();
 			if (name == IntPtr.Zero)
@@ -663,14 +777,18 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (signature));
 
 			var env = JniEnvironment.EnvironmentPointer;
-			IntPtr id = kind switch {
-				MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, name, signature),
-				MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, name, signature),
-				MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, name, signature),
-				MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, name, signature),
-				_ => throw new ArgumentOutOfRangeException (nameof (kind)),
-			};
-			var thrown = JniNativeMethods.ExceptionOccurred (env);
+			IntPtr id;
+			IntPtr thrown;
+			unsafe {
+				id = kind switch {
+					MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, name, signature),
+					MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, name, signature),
+					MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, name, signature),
+					MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, name, signature),
+					_ => throw new ArgumentOutOfRangeException (nameof (kind)),
+				};
+				thrown = JniNativeMethods.ExceptionOccurred (env);
+			}
 			if (!throwOnError) {
 				if (thrown != IntPtr.Zero) {
 					JniEnvironment.Exceptions.ExceptionClear ();
@@ -689,14 +807,14 @@ namespace Java.Interop {
 			return id;
 		}
 
-		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, IntPtr signature, MemberKind kind, bool throwOnError = true)
+		IntPtr GetMemberID (ReadOnlySpan<char> name, IntPtr signature, MemberKind kind, bool throwOnError = true)
 		{
 			if (signature == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (signature));
 			return GetMemberID (name, signature, true, kind, throwOnError);
 		}
 
-		unsafe IntPtr GetMemberID (ReadOnlySpan<char> value, IntPtr otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
+		IntPtr GetMemberID (ReadOnlySpan<char> value, IntPtr otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
 		{
 			int valueLength = checked (Encoding.UTF8.GetByteCount (value) + 1);
 			byte[]? rentedValue = null;
@@ -710,11 +828,13 @@ namespace Java.Interop {
 				Encoding.UTF8.GetBytes (value, valueBuffer);
 				valueBuffer [valueLength - 1] = 0;
 
-				fixed (byte* valueStart = valueBuffer) {
-					var valuePointer = (IntPtr)valueStart;
-					return valueIsName
-						? GetMemberID (valuePointer, otherValue, kind, throwOnError)
-						: GetMemberID (otherValue, valuePointer, kind, throwOnError);
+				unsafe {
+					fixed (byte* valueStart = valueBuffer) {
+						var valuePointer = (IntPtr)valueStart;
+						return valueIsName
+							? GetMemberID (valuePointer, otherValue, kind, throwOnError)
+							: GetMemberID (otherValue, valuePointer, kind, throwOnError);
+					}
 				}
 			} finally {
 				if (rentedValue != null)

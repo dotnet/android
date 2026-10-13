@@ -27,7 +27,7 @@ namespace Java.Interop {
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe struct JniNativeMethod
+	public struct JniNativeMethod
 	{
 		byte* name;
 		byte* signature;
