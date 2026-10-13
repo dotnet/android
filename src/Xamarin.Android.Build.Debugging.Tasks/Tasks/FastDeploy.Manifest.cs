@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var file in files) {
 				if (changedFiles.Contains (file.RelativePath)) {
 					LogDebugMessage ($"NotifySync CopyFile {file.RelativePath}.");
-				} else {
+				} else if (DiagnosticLogging) {
 					LogDebugMessage ($"NotifySync SkipCopyFile {file.RelativePath} file is up to date.");
 				}
 			}
