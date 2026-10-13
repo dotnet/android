@@ -148,7 +148,8 @@ namespace Xamarin.Android.Build.Tests {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 				new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
 			});
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var messages = new List<BuildMessageEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, messages: messages);
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
@@ -211,6 +212,12 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
 			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
 			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8", "MinimumRequiredJdkVersion should be 1.8");
+			Assert.IsFalse (messages.Any (m => m.Message == "ResolveSdks Outputs:" ||
+				m.Message == "ResolveAndroidTooling Outputs:" ||
+				m.Message == "ValidateJavaVersion Outputs:" ||
+				m.Message.StartsWith ("  AndroidSdkPath:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  AndroidApiLevel:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  TargetFrameworkVersion:", StringComparison.Ordinal)));
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 

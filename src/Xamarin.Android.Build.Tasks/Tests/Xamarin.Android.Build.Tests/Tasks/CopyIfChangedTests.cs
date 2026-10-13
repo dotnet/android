@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
@@ -47,14 +49,17 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var src = NewFile ("foo");
 			var dest = NewFile ();
+			var messages = new List<BuildMessageEventArgs> ();
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+			Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
+			Assert.IsEmpty (messages, "ModifiedFiles should not be dumped to the log.");
 			FileAssert.AreEqual (src, dest);
 		}
 
@@ -66,14 +71,17 @@ namespace Xamarin.Android.Build.Tests
 			var now = DateTime.UtcNow;
 			File.SetLastWriteTimeUtc (src, now);
 			File.SetLastWriteTimeUtc (dest, now);
+			var messages = new List<BuildMessageEventArgs> ();
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
+			Assert.IsTrue (messages.Any (m => m.Message.Contains ("it was not changed.")));
+			Assert.IsFalse (messages.Any (m => m.Message == " ModifiedFiles:"));
 		}
 
 		[Test]

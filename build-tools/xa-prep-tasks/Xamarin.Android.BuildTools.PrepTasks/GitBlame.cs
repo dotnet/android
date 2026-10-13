@@ -35,11 +35,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			Commits     = commits.ToArray ();
 
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Commits)}:");
-			foreach (var c in Commits) {
-				Log.LogMessage (MessageImportance.Low, $"  [Output]   {c.GetMetadata ("CommitHash")} '{c.GetMetadata ("Line")}'");
-			}
-
 			return !Log.HasLoggedErrors;
 		}
 
