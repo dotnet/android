@@ -21,4 +21,6 @@ Imported from Microsoft.Android.Sdk.After.targets.
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="IlcCompile" />
 
+  <Import Project="Microsoft.Android.Sdk.NativeAOT.R8.targets" />
+
 </Project>

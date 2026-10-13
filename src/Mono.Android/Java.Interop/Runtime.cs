@@ -29,11 +29,7 @@ namespace Java.Interop {
 		}
 
 		public static int LocalReferenceCount {
-#if JAVA_INTEROP
 			get {return JniEnvironment.LocalReferenceCount;}
-#else   // !JAVA_INTEROP
-			get {return JNIEnv.lref_count;}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static bool IsGCUserPeer (IJavaObject value)

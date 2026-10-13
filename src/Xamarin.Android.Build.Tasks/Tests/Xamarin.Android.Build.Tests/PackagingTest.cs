@@ -115,7 +115,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckR8MetadataFilesExist (
 			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
-			[Values ("disabled", "private-members")] string obfuscationMode)
+			[Values ("disabled", "private-members", "runtime-remapping")] string obfuscationMode)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -128,6 +128,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
+			if (obfuscationMode == "runtime-remapping") {
+				proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			}
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
 			proj.SetProperty ("AndroidPackageFormat", "aab");
@@ -136,6 +139,25 @@ namespace Xamarin.Android.Build.Tests
 				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+				var runtimeConfigFiles = Directory.GetFiles (
+					Path.Combine (Root, b.ProjectDirectory, proj.OutputPath),
+					$"{proj.ProjectName}.runtimeconfig.json",
+					SearchOption.AllDirectories);
+				Assert.AreEqual (1, runtimeConfigFiles.Length, "The build should produce one runtimeconfig.json.");
+				using (var runtimeConfig = JsonDocument.Parse (File.ReadAllText (runtimeConfigFiles [0]))) {
+					var configProperties = runtimeConfig.RootElement
+						.GetProperty ("runtimeOptions")
+						.GetProperty ("configProperties");
+					bool expectedJniRemapping = obfuscationMode == "runtime-remapping";
+					Assert.AreEqual (
+						expectedJniRemapping,
+						configProperties.GetProperty ("Java.Interop.RuntimeFeature.JniRemapping").GetBoolean (),
+						"Java.Interop JNI remapping must be retained only for runtime-remapping builds.");
+					Assert.AreEqual (
+						expectedJniRemapping,
+						configProperties.GetProperty ("Microsoft.Android.Runtime.RuntimeFeature.JniRemapping").GetBoolean (),
+						"Microsoft.Android.Runtime JNI remapping must be retained only for runtime-remapping builds.");
+				}
 				var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
@@ -148,7 +170,7 @@ namespace Xamarin.Android.Build.Tests
 					using var document = JsonDocument.Parse (stream);
 					var options = document.RootElement.GetProperty ("options");
 					Assert.AreEqual (
-						runtime == AndroidRuntime.CoreCLR || obfuscationMode == "private-members",
+						runtime == AndroidRuntime.CoreCLR || obfuscationMode != "disabled",
 						options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 				}
 
@@ -302,7 +324,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"_Microsoft.Android.TypeMaps.dll",
 				"_UnnamedProject.TypeMap.dll",
 				"_Mono.Android.TypeMap.dll",
-				"_Java.Interop.TypeMap.dll",
 				"Humanizer.dll",
 				"es/Humanizer.resources.dll",
 				"System.Collections.dll",
@@ -320,6 +341,8 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles, supportedArches);
 
+				// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
+				CollectionAssert.DoesNotContain (existingFiles, "_Java.Interop.TypeMap.dll");
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));

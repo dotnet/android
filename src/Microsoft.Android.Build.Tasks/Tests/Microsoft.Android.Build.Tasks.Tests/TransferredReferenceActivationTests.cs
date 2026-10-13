@@ -43,7 +43,7 @@ public class TransferredReferenceActivationTests
 		var il = body.GetILBytes () ?? throw new InvalidOperationException ("Missing IL.");
 		if (inherited) {
 			// Inherited activation is intentionally unsupported, matching GetConstructor().
-			// Do not enable the dormant inherited-ctor emitter as part of a cleanup fix.
+			// Do not add inherited-ctor activation as part of a cleanup fix.
 			Assert.IsEmpty (body.ExceptionRegions);
 			CollectionAssert.AreEqual (new [] { (byte) ILOpCode.Ldnull, (byte) ILOpCode.Ret }, il);
 			return;

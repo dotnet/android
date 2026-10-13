@@ -11,6 +11,7 @@ using Microsoft.Build.Framework;
 
 using ArchiveFileList = System.Collections.Generic.List<(string filePath, string archivePath)>;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Tasks;
 
@@ -36,9 +37,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 	[Required]
 	public ITaskItem[] NativeLibraries { get; set; } = [];
 
-	[Required]
-	public ITaskItem[] ApplicationSharedLibraries { get; set; } = [];
-
 	public ITaskItem[] BundleNativeLibraries { get; set; } = [];
 
 	public bool StripNativeLibraries { get; set; }
@@ -55,22 +53,15 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 	[Required]
-	public string AndroidBinUtilsDirectory { get; set; } = "";
-
-	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
-
-	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
+
+	public string AndroidRuntime { get; set; } = "";
 
 	[Output]
 	public ITaskItem[] OutputFiles { get; set; } = [];
 
 	[Output]
 	public ITaskItem[] FilesToAddToArchive { get; set; } = [];
-
-	[Output]
-	public ITaskItem [] DSODirectoriesToDelete { get; set; } = [];
 
 	[Output]
 	public ITaskItem [] StrippedLibraries { get; set; } = [];
@@ -89,14 +80,11 @@ public class CollectNativeFilesForArchive : AndroidTask
 		bool success = false;
 		try {
 			var apk = new PackageFileListBuilder ();
-			var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
-
 			var outputFiles = new List<string> {
 				ApkOutputPath
 			};
 
 			var files = new ArchiveFileList ();
-			AddRuntimeLibraries (apk, SupportedAbis);
 			AddNativeLibraries (files, SupportedAbis);
 			AddAdditionalNativeLibraries (files, SupportedAbis);
 
@@ -109,9 +97,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 			// Task output parameters
 			FilesToAddToArchive = apk.ToArray ();
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
-			DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig)
-				.Select (d => new TaskItem (d))
-				.ToArray ();
 			StrippedLibraries = strippedLibraries.ToArray ();
 			success = !Log.HasLoggedErrors;
 			return success;
@@ -168,32 +153,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 		} finally {
 			if (!success) {
 				File.Delete (outputFilePath);
-			}
-		}
-	}
-
-	void AddNativeLibraryToArchive (PackageFileListBuilder apk, string abi, string filesystemPath, string inArchiveFileName, ITaskItem taskItem)
-	{
-		string archivePath = MakeArchiveLibPath (abi, inArchiveFileName);
-		Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
-		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, filesystemPath, taskItem);
-		string? path = StripNativeLibIfNecessary (filesystemPath, abi, inArchiveFileName);
-		if (path != null) {
-			apk.AddItem (path, archivePath);
-		}
-	}
-
-	void AddRuntimeLibraries (PackageFileListBuilder apk, string [] supportedAbis)
-	{
-		foreach (var abi in supportedAbis) {
-			foreach (ITaskItem item in ApplicationSharedLibraries) {
-				if (string.Compare (abi, item.GetMetadata ("abi"), StringComparison.Ordinal) != 0)
-					continue;
-				string? inArchiveFileName = item.GetMetadata ("ArchiveFileName");
-				if (String.IsNullOrEmpty (inArchiveFileName)) {
-					inArchiveFileName = Path.GetFileName (item.ItemSpec);
-				}
-				AddNativeLibraryToArchive (apk, abi, item.ItemSpec, inArchiveFileName, item);
 			}
 		}
 	}
@@ -289,12 +248,12 @@ public class CollectNativeFilesForArchive : AndroidTask
 			return;
 		}
 
-		NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: false, log: Log);
-		if (Log.HasLoggedErrors) {
-			return; // NdkTools.Create will log appropriate error
+		var ndk = AndroidNdkTools.Create (AndroidNdkDirectory, Log);
+		if (ndk == null) {
+			return;
 		}
 
-		string clangDir = ndk.GetClangDeviceLibraryPath ();
+		string? clangDir = ndk.GetClangDeviceLibraryPath ();
 		if (clangDir.IsNullOrEmpty ()) {
 			LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
 			return;
@@ -365,13 +324,21 @@ public class CollectNativeFilesForArchive : AndroidTask
 	void AddNativeLibrary (ArchiveFileList files, string path, string abi, string? archiveFileName, ITaskItem? taskItem = null)
 	{
 		string fileName = archiveFileName.IsNullOrEmpty () ? Path.GetFileName (path) : archiveFileName!;
+		bool needsSonameCheck = (AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") &&
+			!string.Equals (Path.GetFileName (fileName), "libbinary_blobs.so", StringComparison.Ordinal);
+		bool hasReservedSoname = ELFHelper.AssertValidLibraryAlignment (
+			Log, ZipAlignmentPages, path, taskItem, needsSonameCheck ? "libbinary_blobs.so" : null);
+		if (hasReservedSoname) {
+			Log.LogCodedError ("XA4330", Properties.Resources.XA4330, path,
+				MonoAndroidHelper.MakeZipArchivePath (ArchiveLibPath, abi, fileName));
+			return;
+		}
 		var item = (filePath: path, archivePath: MakeArchiveLibPath (abi, fileName));
 		if (files.Any (x => x.archivePath == item.archivePath)) {
 			Log.LogCodedWarning ("XA4301", path, 0, Properties.Resources.XA4301, item.archivePath);
 			return;
 		}
 
-		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, path, taskItem);
 		string? strippedPath = StripNativeLibIfNecessary (item.filePath, abi, fileName);
 		if (strippedPath != null) {
 			item.filePath = strippedPath;

@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <Content Include="$(OutputPath)hello-from-java.jar" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="$(OutputPath)java-interop.jar" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition=" $([MSBuild]::IsOSPlatform('linux')) Or $([MSBuild]::IsOSPlatform('FreeBSD')) Or $([MSBuild]::IsOSPlatform('Android')) ">

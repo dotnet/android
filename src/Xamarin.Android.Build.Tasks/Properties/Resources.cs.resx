@@ -220,10 +220,6 @@ Poznámka: Android Designer není kompatibilní se sadou Java SDK 11.0: https://
     <value>Vlastnost MSBuildu AndroidSupportedAbis se už nepodporuje. Upravte soubor projektu v textovém editoru, odeberte všechna použití vlastnosti AndroidSupportedAbis a místo ní použijte vlastnost MSBuildu RuntimeIdentifiers.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
-  <data name="XA0037" xml:space="preserve">
-    <value>Neznámý režim {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0100" xml:space="preserve">
     <value>Knihovna EmbeddedNativeLibrary {0} v projektech aplikací pro Android není platná. Použijte prosím místo ní AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -532,10 +528,6 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
     <value>Příčinou může být to, že projekt má v názvu souboru nebo cestě jiné znaky než ASCII. Podrobnosti najdete tady: https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
-  <data name="XA3006" xml:space="preserve">
-    <value>Nepovedlo se zkompilovat soubor nativního sestavení: {0}{1}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
-  </data>
   <data name="XA3007" xml:space="preserve">
     <value>Nepovedlo se připojit nativní sdílenou knihovnu: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
@@ -690,8 +682,8 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>Cíl generování kódu pro Androidu {0} je zastaralý a v budoucí verzi .NET pro Android se odebere. Aktualizujte vlastnosti projektu tak, aby používaly XAJavaInterop1.</value>
-    <comment>The following are literal names and should not be translated: XAJavaInterop1
+    <value>The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.</value>
+    <comment>The following are literal names and should not be translated: AndroidCodegenTarget, XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
@@ -822,36 +814,36 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the R8 JNI remapping data. {0}</value>
-    <comment>The following are literal names and should not be translated: R8, JNI.
+    <value>Failed to generate the JNI remapping data. {0}</value>
+    <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
   <data name="XA4325_MappingNotFound" xml:space="preserve">
-    <value>The R8 mapping file '{0}' was not found.</value>
+    <value>Soubor mapování R8 „{0}“ nebyl nalezen.</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the missing mapping file.</comment>
   </data>
   <data name="XA4325_MappingDataFailure" xml:space="preserve">
-    <value>The R8 mapping file '{0}' could not be read: {1}</value>
+    <value>Soubor mapování R8 '{0}' nelze přečíst: {1}</value>
     <comment>The following is a literal name and should not be translated: R8.
 {0} - The path of the mapping file.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyReadFailure" xml:space="preserve">
-    <value>The linked managed assembly '{0}' could not be read: {1}</value>
+    <value>Propojené spravované '{0}' sestavení nelze přečíst: {1}</value>
     <comment>{0} - The path of the managed assembly.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_AssemblyNotFound" xml:space="preserve">
-    <value>The linked managed assembly '{0}' was not found.</value>
+    <value>Propojené spravované sestavení „{0}“ nebylo nalezeno.</value>
     <comment>{0} - The path of the missing managed assembly.</comment>
   </data>
   <data name="XA4325_AssemblyHasNoMetadata" xml:space="preserve">
-    <value>The linked managed assembly '{0}' does not contain managed metadata.</value>
+    <value>Propojené spravované sestavení „{0}“ neobsahuje spravovaná metadata.</value>
     <comment>{0} - The path of the input file.</comment>
   </data>
   <data name="XA4325_AmbiguousEntry" xml:space="preserve">
-    <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
+    <value>Vygenerované položky „{0}“ pro „{1}“ mají konfliktní cíle běhu „{2}“ a „{3}“, které nelze reprezentovat v tabulkách přemapování JNI.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The runtime lookup key.
@@ -859,47 +851,47 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {3} - The conflicting target.</comment>
   </data>
   <data name="XA4325_NativeAotObjectRequired" xml:space="preserve">
-    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <value>Zachování NativeAOT JNI vyžaduje existující objekt NativeAotObjectFile po ILC; „{0}“ jsme nenašli.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
 {0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
   </data>
   <data name="XA4325_NativeAotObjectReadFailure" xml:space="preserve">
-    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <value>Objekt uchovávání informací NativeAOT '{0}' nelze přečíst: {1}</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.
 {0} - The path of the ILC native object.
 {1} - The exception message.</comment>
   </data>
   <data name="XA4325_NativeAotModeRequired" xml:space="preserve">
-    <value>NativeAotObjectFile requires NativeAot=true.</value>
+    <value>NativeAotObjectFile vyžaduje NativeAot=true.</value>
     <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
   </data>
   <data name="XA4325_NativeAotObjectFormat" xml:space="preserve">
-    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <value>Očekával se 32bitový nebo 64bitový přemístitelný objekt NativeAOT ELF s pořadím bajtů little-endian.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <value>Objekt NativeAOT ELF obsahuje neplatný rozsah oddílu.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotTruncatedSection" xml:space="preserve">
-    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <value>Objekt NativeAOT ELF obsahuje zkrácená data oddílu.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
   </data>
   <data name="XA4325_NativeAotMissingSections" xml:space="preserve">
-    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <value>Objekt NativeAOT musí obsahovat přidělenou sekci __managedcode a inicializované datové sekce.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
   </data>
   <data name="XA4325_NativeAotInvalidDehydration" xml:space="preserve">
-    <value>The NativeAOT object contains an invalid data dehydration stream.</value>
+    <value>Objekt NativeAOT obsahuje neplatný proud dehydratace dat.</value>
     <comment>The following is a literal name and should not be translated: NativeAOT.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <value>Data přemapování R8 JNI nejsou úplná. {0}</value>
     <comment>The following are literal names and should not be translated: R8, JNI.
 {0} - A sentence describing the specific omission.</comment>
   </data>
   <data name="XA4326_ConflictingEntry" xml:space="preserve">
-    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <value>Položka '{0}' pro '{1}' se nevygenerovala: na '{2}' už ji mapuje jiný vstup přemapování JNI, což je v konfliktu s '{3}'.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The XML element name.
 {1} - The source lookup key.
@@ -907,7 +899,7 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {3} - The generated target.</comment>
   </data>
   <data name="XA4326_UnsupportedSignature" xml:space="preserve">
-    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <value>Položka pro „{0}“ nebyla vygenerována: její podpis „{1}“ se nepodařilo převést na deskriptor JNI.</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - The member the entry describes.
 {1} - The Java signature which could not be converted.</comment>
@@ -930,19 +922,35 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <comment>{0} - The one-based line number.
 {1} - The invalid input record.</comment>
   </data>
+  <data name="XA4329_RequiredProperty" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping.
+{0} - The required MSBuild property name.
+{1} - The required literal value.
+{2} - The actual value, including quotes.</comment>
+  </data>
+  <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
+{0} - The runtime name.</comment>
+  </data>
+  <data name="XA4330" xml:space="preserve">
+    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
+{0} - The source native library path.
+{1} - The conflicting archive path.</comment>
+  </data>
+  <data name="XA4331" xml:space="preserve">
+    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <comment>{0} - The bundle config file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Chybí adresář sady nástrojů Android NDK {0}. Nainstalujte prosím sadu Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
   </data>
-  <data name="XA5101_C_Compiler" xml:space="preserve">
-    <value>Kompilátor jazyka C pro cíl {0} se nenašel. Vyzkoušely se tyto cesty: {1}</value>
-    <comment>The following are literal names and should not be translated: C
-{0} - The target architecture, such as Arm, Arm64, or X86_64
-{1} - Semicolon-separated list of the paths searched</comment>
-  </data>
-  <data name="XA5101_Toolchain" xml:space="preserve">
-    <value>Adresář sady nástrojů pro cíl {0} se nenašel.</value>
-    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
+  <data name="XA5101_ClangRuntime" xml:space="preserve">
+    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
     <value>Nepovedlo se najít sadu Android NDK. Ujistěte se prosím, že v Android SDK Manageru je nainstalovaná sada Android NDK, nebo pokud používáte vlastní cestu k sadě NDK, ujistěte se prosím, že vlastnost MSBuildu $(AndroidNdkDirectory) je nastavená na danou vlastní cestu.</value>
@@ -1125,11 +1133,6 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Knihovny podpory pro Android se v .NET 9 a novějších verzích nepodporují. Migrujte prosím na AndroidX. Další podrobnosti najdete tady: https://aka.ms/net-android/androidx.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
-  <data name="XA1040" xml:space="preserve">
-    <value>Modul runtime {0} na Androidu je experimentální funkce, která ještě není vhodná pro použití v produkčním prostředí. Případné problémy můžete nahlásit tady: https://github.com/dotnet/android/issues</value>
-    <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as NativeAOT.</comment>
-  </data>
   <data name="XA1041" xml:space="preserve">
     <value>Vlastnost MSBuild {0} má neplatnou hodnotu {1}. Očekává se, že hodnota bude cesta k adresáři představující relativní umístění vašich prostředků.</value>
     <comment>The following are literal names and should not be translated: .NET.
@@ -1160,18 +1163,6 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Vlastnost MSBuild RunAOTCompilation není kompatibilní s modulem runtime CoreCLR. Sestavení nemůže pokračovat, pokud je tato vlastnost nastavena na hodnotu false. Odeberte vlastnost. Počínaje rozhraním .NET 11 nastavte PublishReadyToRun na false, aby se zakázala kompilace AOT ReadyToRun (R2R).</value>
     <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
   </data>
-  <data name="XA1045" xml:space="preserve">
-    <value>Vstupní soubor `{0}` nezačíná na `&lt;replacements/&gt;`.</value>
-    <comment>{0} - file path</comment>
-  </data>
-  <data name="XA1046" xml:space="preserve">
-    <value>Atribut {0} v elementu {1} má hodnotu {2}, kterou nelze analyzovat jako logickou hodnotu; {3} – řádek {4}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
-  </data>
-  <data name="XA1047" xml:space="preserve">
-    <value>Požadovaný atribut {0} chybí v elementu {1}; {3} – řádek {2}.</value>
-    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
-  </data>
   <data name="XA1048" xml:space="preserve">
     <value>{0} neobsahuje prvek &lt;instrumentation&gt;. Přidejte do aplikace podtřídu Android.App.Instrumentation nebo nastavte vlastnost MSBuild $(AndroidInstrumentation) na její název.</value>
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
@@ -1179,16 +1170,16 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <value>Vlastnost MSBuildu AndroidEnableMarshalMethods se už nepodporuje. Odeberte ho nebo ho nastavte na false.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>Vlastnost MSBuildu AndroidR8ObfuscationMode má neplatnou hodnotu '{0}'. Platné hodnoty jsou disabled a private-members.</value>
-    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
   <data name="XA1051" xml:space="preserve">
-    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <value>Položka AndroidStaticJniInitFunction MSBuild není u NativeAOT podporována. Odeberte ji z projektu nebo použijte verzi knihovny kompatibilní s NativeAOT, která ji přidá.</value>
     <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
@@ -1255,11 +1246,6 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Typ {0}, na který se odkazuje v manifestu, nebyl nalezen v žádném prohledaném sestavení. Může se jednat o typ architektury.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
-  </data>
-  <data name="XA4251" xml:space="preserve">
-    <value>Typ {0} používá atribut [JniAddNativeMethodRegistrationAttribute], což mapování ořezávatelných typů nepodporuje. Nahlaste prosím tento scénář na https://github.com/dotnet/android/issues, aby tým mohl vyhodnotit, jestli ho má podporovat.</value>
-    <comment>The following is a literal name and should not be translated: JniAddNativeMethodRegistrationAttribute.
-{0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
     <value>Adresa URL nezabezpečeného úložiště Maven {0} není povolena. Pokud chcete tuto kontrolu přepsat, použijte adresu URL HTTPS nebo nastavte u položky metadata AllowInsecureHttp="true".</value>
@@ -1338,20 +1324,16 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Sestavení {0} používá formát zpětných volání protějšků v jazyce Java, který vyžaduje AndroidTypeMapImplementation=trimmable.</value>
-    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+    <value>Sestavení „{0}“ používá nepodporovaný formát zpětného volání Java.</value>
+    <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Sestavení {0} má v implementacích {1} a {2} pro jednotlivé moduly runtime odlišná metadata zpětných volání protějšků v jazyce Java. Všechny identifikátory RuntimeIdentifiers musí při AndroidTypeMapImplementation=trimmable poskytovat ekvivalentní metadata zpětných volání.</value>
-    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+    <value>Sestavení {0} má v implementacích {1} a {2} pro jednotlivé moduly runtime odlišná metadata zpětných volání protějšků v jazyce Java. Všechny identifikátory RuntimeIdentifiers musí poskytovat ekvivalentní metadata zpětných volání.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
 {2} - Second runtime-specific assembly path</comment>
-  </data>
-  <data name="XA4267" xml:space="preserve">
-    <value>Implementace mapy typu llvm-ir už není podporovaná. Odeberte vlastnost AndroidTypeMapImplementation nebo ji nastavte na trimmable.</value>
-    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>

@@ -414,6 +414,13 @@ namespace Xamarin.Android.Tasks
 							[NuGetPackageId] = nuGetPackageId,
 							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
+					if (AndroidApplication && File.Exists (proguardFile)) {
+						proguardConfigFiles.Add (new TaskItem (Path.GetFullPath (proguardFile), new Dictionary<string, string> {
+							[OriginalFile] = aarFullPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
+						}));
+					}
 					continue;
 				}
 

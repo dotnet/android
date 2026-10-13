@@ -1,4 +1,3 @@
-#if !JAVA_INTEROP1
 
 using System;
 
@@ -192,5 +191,3 @@ namespace Android.Graphics
 		}
 	}
 }
-
-#endif  // !JAVA_INTEROP1

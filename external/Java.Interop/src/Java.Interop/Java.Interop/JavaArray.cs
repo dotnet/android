@@ -310,18 +310,24 @@ namespace Java.Interop
 	public abstract class JniArrayElements : IDisposable {
 
 		IntPtr elements;
-		int size;
+		int elementCount;
+		int sizeOfElement;
 
-		internal JniArrayElements (IntPtr elements, int size)
+		internal JniArrayElements (IntPtr elements, int elementCount, int sizeOfElement)
 		{
 			if (elements == IntPtr.Zero)
 				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", nameof (elements));
 			this.elements = elements;
-			this.size = size;
+			this.elementCount = elementCount;
+			this.sizeOfElement = sizeOfElement;
 		}
 
 		internal bool IsDisposed {
 			get {return elements == IntPtr.Zero;}
+		}
+
+		internal int ElementCount {
+			get {return elementCount;}
 		}
 
 		public  IntPtr  Elements {
@@ -336,7 +342,7 @@ namespace Java.Interop
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				return size;
+				return checked (elementCount * sizeOfElement);
 			}
 		}
 

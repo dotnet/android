@@ -9,9 +9,9 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "InterfaceMethodsConflict",
-					apiDescriptionFile:     "expected.ji/InterfaceMethodsConflict/InterfaceMethodsConflict.xml",
+					apiDescriptionFile:     "TestInputs/InterfaceMethodsConflict/InterfaceMethodsConflict.xml",
 					expectedRelativePath:   "InterfaceMethodsConflict");
 		}
 	}

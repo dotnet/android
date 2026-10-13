@@ -90,7 +90,7 @@
       BeforeTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' != '' ">
     <PropertyGroup>
-      <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_project_references.cfg'))</_ProguardProjectConfiguration>
     </PropertyGroup>
   </Target>
 
@@ -159,16 +159,30 @@
     </ItemGroup>
   </Target>
 
+  <!-- Generate the R8 rules in the inner RID build before the outer R8 invocation.
+       The outer build scans the final assemblies only for remapping metadata. -->
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and ('$(AndroidLinkTool)' != 'r8' or '$(_AndroidEnableTypemapR8Trimming)' == 'false' or '$(RunILLink)' == 'false') "
+      DependsOnTargets="_AndroidInvalidateProguardConfigurationStamp"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and ('$(AndroidLinkTool)' != 'r8' or '$(_AndroidEnableTypemapR8Trimming)' == 'false' or '$(RunILLink)' == 'false') "
       Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
-      Outputs="$(_ProguardProjectConfiguration)">
+      Outputs="$(_ProguardProjectConfiguration).stamp">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
         OutputFile="$(_ProguardProjectConfiguration)" />
+    <Touch Files="$(_ProguardProjectConfiguration).stamp" AlwaysCreate="true" />
     <ItemGroup>
-      <FileWrites Include="$(_ProguardProjectConfiguration)" />
+      <FileWrites Include="$(_ProguardProjectConfiguration);$(_ProguardProjectConfiguration).stamp" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidPrepareR8JniRemappingAssemblies"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      DependsOnTargets="_PrepareLinkedAssembliesForProguard">
+    <ItemGroup>
+      <_AndroidR8JniRemappingAssembly Remove="@(_AndroidR8JniRemappingAssembly)" />
+      <_AndroidR8JniRemappingAssembly Include="@(_LinkedAssemblyForProguard)" />
     </ItemGroup>
   </Target>
 

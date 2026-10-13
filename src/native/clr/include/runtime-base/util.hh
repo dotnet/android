@@ -1,6 +1,5 @@
 #pragma once
 
-#include <elf.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -19,10 +18,6 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <shared/log_functions.hh>
 #include <shared/log_types.hh>
-
-#if !defined(XA_HOST_NATIVEAOT)
-#include "archive-dso-stub-config.hh"
-#endif
 
 namespace xamarin::android {
 	namespace detail {
@@ -269,44 +264,6 @@ namespace xamarin::android {
 
 			return file_info;
 		}
-
-#if !defined(XA_HOST_NATIVEAOT)
-		[[gnu::always_inline]]
-		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (detail::mmap_info const& map_info, std::string_view const& file_name) noexcept
-		{
-			using Elf_Header = std::conditional_t<Constants::is_64_bit_target, Elf64_Ehdr, Elf32_Ehdr>;
-			using Elf_SHeader = std::conditional_t<Constants::is_64_bit_target, Elf64_Shdr, Elf32_Shdr>;
-
-			const void* const mapped_elf = map_info.area;
-			auto elf_bytes = static_cast<const uint8_t* const>(mapped_elf);
-			auto elf_header = reinterpret_cast<const Elf_Header*const>(mapped_elf);
-
-			if constexpr (Constants::is_debug_build) {
-				// In debug mode we might be dealing with plain data, without DSO wrapper
-				if (elf_header->e_ident[EI_MAG0] != ELFMAG0 ||
-					elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
-					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
-					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-						log_debugf (
-							LOG_ASSEMBLY,
-							"Not an ELF image: %.*s",
-							static_cast<int>(file_name.length ()),
-							file_name.data ()
-						);
-						// Not an ELF image, just return what we mmapped before
-						return { map_info.area, map_info.size };
-				}
-			}
-
-			auto section_header = reinterpret_cast<const Elf_SHeader*const>(elf_bytes + elf_header->e_shoff);
-			Elf_SHeader const& payload_hdr = section_header[ArchiveDSOStubConfig::PayloadSectionIndex];
-
-			return {
-				const_cast<void*>(reinterpret_cast<const void*const> (elf_bytes + ArchiveDSOStubConfig::PayloadSectionOffset)),
-				payload_hdr.sh_size
-			};
-		}
-#endif // ndef XA_HOST_NATIVEAOT
 
 		static auto is_path_rooted (const char *path) noexcept -> bool
 		{

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
 
 namespace MonoDroid.Generation {
 
@@ -60,9 +59,6 @@ namespace MonoDroid.Generation {
 
 		public string GetObjectHandleProperty (CodeGenerationOptions opt, string variable)
 		{
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				return $"{variable}.PeerReference";
-			}
 			return $"((global::Java.Lang.Object) {variable}).Handle";
 		}
 

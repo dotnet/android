@@ -2,7 +2,7 @@
 
 #include <cstdarg>
 
-#include "java-interop-logger.h"
+#include <shared/log_categories.hh>
 #include <shared/log_level.hh>
 
 namespace xamarin::android {

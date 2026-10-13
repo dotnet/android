@@ -13,14 +13,13 @@ namespace generatortests
 			AllowWarnings   = true;
 		}
 
-		protected override bool TryJavaInterop1 => true;
 
 		[Test]
 		public void Generated_OK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "TestInterface",
-					apiDescriptionFile:     "expected.ji/TestInterface/TestInterface.xml",
+					apiDescriptionFile:     "TestInputs/TestInterface/TestInterface.xml",
 					expectedRelativePath:   "TestInterface");
 		}
 	}

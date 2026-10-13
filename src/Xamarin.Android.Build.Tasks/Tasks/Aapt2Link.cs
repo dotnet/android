@@ -396,7 +396,7 @@ namespace Xamarin.Android.Tasks {
 
 		string GetManifestRulesFile (string manifestDir)
 		{
-			string rulesFile = Path.Combine (manifestDir, "aapt_rules.txt");
+			string rulesFile = GetFullPath (Path.Combine (manifestDir, "aapt_rules.txt"));
 			lock (rulesFiles)
 				rulesFiles.Add (rulesFile);
 			return rulesFile;

@@ -27,7 +27,6 @@ namespace Android.Runtime
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
 			public IntPtr          jniRemappingData;
-			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public int             maxGrefCount;
 		}
@@ -38,7 +37,6 @@ namespace Android.Runtime
 		internal static int gref_gc_threshold;
 		internal static int max_gref_count;
 		internal static IntPtr grefIGCUserPeer_class;
-		internal static IntPtr grefGCUserPeerable_class;
 
 		internal static JniRuntime? androidRuntime;
 
@@ -126,7 +124,6 @@ namespace Android.Runtime
 			}
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
-			grefGCUserPeerable_class = args.grefGCUserPeerable;
 			PropagateExceptions = args.brokenExceptionTransitions == 0;
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
 		}

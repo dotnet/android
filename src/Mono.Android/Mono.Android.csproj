@@ -13,7 +13,6 @@
     <NoWarn>0618;0809;0108;0114;0465;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -94,7 +93,6 @@
     <Compile Include="Android.Net.Wifi.P2p\WifiP2pManager.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\ExtraDelegates.cs" />
-    <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
     <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
@@ -211,6 +209,7 @@
     <Compile Include="Android.Opengl\GLSurfaceView.cs" />
     <Compile Include="Android.Preferences\CheckBoxPreference.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironment.cs" />
+    <Compile Include="Android.Runtime\AndroidExceptionManager.cs" />
     <Compile Include="Android.Runtime\ManagedObjectReferenceManager.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
     <Compile Include="Android.Runtime\AndroidRuntimeInternal.cs" />

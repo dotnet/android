@@ -506,8 +506,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				b.AssertHasNoWarnings ();
-				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
-					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
 				FileAssert.DoesNotExist (lockFile);
 			}
@@ -1581,12 +1579,10 @@ namespace UnamedProject
 					"Lmono/android/view/View_OnClickListenerImplementor;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
-				// NativeAOT uses Java.Interop's exception proxy; CoreCLR uses Android.Runtime's.
+				classes.Add ("Landroid/runtime/JavaProxyThrowable;");
 				if (runtime == AndroidRuntime.NativeAOT) {
-					classes.Add ("Lnet/dot/jni/internal/JavaProxyThrowable;");
 					classes.Add ("Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;");
 				} else {
-					classes.Add ("Landroid/runtime/JavaProxyThrowable;");
 					classes.Add ("Lmono/MonoRuntimeProvider;");
 				}
 

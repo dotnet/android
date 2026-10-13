@@ -1,4 +1,3 @@
-#if !JAVA_INTEROP1
 
 using System;
 
@@ -15,5 +14,3 @@ namespace Android.Runtime
 		public string Managed { get; set; }
 	}
 }
-
-#endif  // !JAVA_INTEROP1

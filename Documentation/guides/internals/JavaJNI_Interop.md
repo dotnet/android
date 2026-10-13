@@ -82,6 +82,27 @@ The main outputs are:
 
 The app build also generates needed **platform JCWs** from framework inputs alongside user JCWs: for example, the [build tests](../../../src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/TrimmableTypeMapBuildTests.cs) check for `typemap/java/android/app/ActivityTracker.java` and its `Runtime.registerNatives` call. The [reference pack](../../../build-tools/create-packs/Microsoft.Android.Ref.proj) no longer ships prebuilt `mono.android.jar` or `mono.android.dex`. The handwritten Java runtime support instead comes from `java_runtime_trimmable.jar`, selected by [`_CollectRuntimeJarFilenames`](../../../src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets); this is not a jar of pre-generated platform JCWs. `ApplicationRegistration.java` is generated separately during the app build.
 
+The .NET 12 cleanup retires the standalone `jcw-gen` tool and the legacy public
+JCW emitter in `Java.Interop.Tools.JavaCallableWrappers`: its `CallableWrapper*`
+model/writers, reader/writer options, `JavaPeerStyle`, method classifier, and
+Cecil/XML import/export adapters. That emitter produced `__md_methods`,
+`Runtime.register`, and `TypeManager.Activate` references whose runtime
+implementations had already been removed. The assembly's shared naming,
+scanning, hashing, and type-name mapping utilities remain available, as does
+the supported XAJavaInterop1 **C# binding** generator. Application JCWs are
+generated exclusively by the trimmable pipeline.
+
+The SDK likewise ships only `java_runtime_trimmable.jar` and its DEX companion.
+The unused `java_runtime`, `java_runtime_fastdev`, `java_runtime_clr`, and
+`java_runtime_fastdev_clr` artifact pairs, Java `DebugRuntime`/`BuildConfig`
+classes, and old environment placeholder are retired. `Runtime.init`,
+`createNewContext`, `createNewContextWithData`, `switchToContext`,
+`destroyContexts`, `MonoPackageManager.setContext`, and `getDependencies`
+are no longer supplied. These are intentional tooling/bootstrap compatibility
+removals; custom build tools and Java sources must use the retained runtime
+artifact and current startup path. `Runtime.initInternal`, `registerNatives`,
+GC peers, and `ApplicationRegistration.Context` remain live.
+
 Each per-assembly TypeMap contains assembly-level mapping attributes: a key such as `my/app/MainActivity`, a proxy type, and, for a trimmable mapping, the managed target type. The root references the per-assembly maps via `TypeMapAssemblyTargetAttribute<T>`. The emitter writes **IL and metadata**, not `.cs` files; the C# in the sections below is an explanatory translation of emitted code, not a file that a developer should edit. See [`TypeMapAssemblyGenerator`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyGenerator.cs), [`TypeMapAssemblyEmitter.EmitTypeMapAttribute`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs), and the [build-pipeline guide](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/README.md).
 
 For the example Activity, think of a mapping like this **conceptual C#**:
@@ -96,6 +117,8 @@ For the example Activity, think of a mapping like this **conceptual C#**:
 ```
 
 There is no source-level `TypeMap` attribute for application code to write. The real emitted `TypeMapAttribute` takes the Java key and proxy reference; its trimmable three-argument form also takes the target reference. An unconditional mapping has just the key and proxy reference, whereas the target reference on a conditional mapping lets the trimming pipeline discard entries for unused managed types. ACW proxies implement `IAndroidCallableWrapper` to register callbacks; other proxies need not. [`JavaPeerProxy`](../../../src/Mono.Android/Java.Interop/JavaPeerProxy.cs) provides peer creation without `Activator.CreateInstance`.
+
+When [`GenerateR8JniRemapping`](../../../src/Xamarin.Android.Build.Tasks/Tasks/GenerateR8JniRemapping.cs) scans linked managed assemblies, a surviving Java `TypeMapAttribute` retains only the class identity needed for forward and reverse type remapping. It does not retain every method and field in that class's R8 mapping. Member remapping instead depends on surviving JNI metadata, such as registered binding methods and fields; a proxy or target without that metadata must not restore unused member mappings.
 
 The [shared TypeMap targets](../../../src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable.targets) run `_GenerateTrimmableTypeMap` after `CoreCompile`, compile the generated Java, and feed TypeMap DLLs to later steps. They track generated files and remove stale JCWs when the managed model changes. The target's stamp and output lists matter on incremental builds: a stale compiled Java class can otherwise outlive its managed callback.
 
@@ -119,6 +142,15 @@ When JNI returns an object or Java passes one into managed code, [`TrimmableType
 ### JCW declarations and per-class registration
 
 The generated Java `onCreate` calls its native `n_OnCreate_Landroid_os_Bundle_`; constructors similarly declare generated `nctor_*` native callbacks, and instantiate/activate the managed peer when appropriate. The class's static block calls `mono.android.Runtime.registerNatives (MainActivity.class)` when the class is first initialized. This is **per Java class**. Application and instrumentation JCWs instead use a guarded `__md_registerNatives()` helper called from their generated wrappers: registration in their static initializer can be too early in startup. The declaration of `registerNatives(Class)` in [`mono.android.Runtime`](../../../src/java-runtime/java/mono/android/Runtime.java) is handwritten Java; individual JCWs and their registration calls are generated.
+
+Abstract JCWs retain their Java constructors and `super(...)` calls for
+subclasses, but do not declare or call native constructor bridges. Deferred
+Application/Instrumentation hierarchies also omit those bridges and their
+unused managed UCO constructor registrations; managed `CreateInstance`
+activation remains available. A deferred class with no non-constructor
+callbacks needs no lazy registration helper or flag. Callback-bearing
+deferred classes still use the helper, and nonempty native registration,
+concrete constructor guards, GC hooks, and startup registration remain intact.
 
 There is no concatenated `__md_methods` string and no `Runtime.register("managed.Type, Assembly", ...)` registration in this path. The old JNI native-symbol mangling rules (`Java_package_Class_method...`) matter for symbol-lookup-based JNI code, but generated app JCW callbacks here are associated with their Java declarations through [`RegisterNatives`](https://docs.oracle.com/en/java/javase/17/docs/specs/jni/functions.html#registernatives): the Java method **name** and **signature** must match; no `Java_...` export is required for each method.
 

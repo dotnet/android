@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
@@ -235,54 +236,6 @@ namespace Xamarin.Android.Build.Tests {
 				"RuntimeIdentifiers should take precedence over RuntimeIdentifier, matching the packaging RID set.");
 			FileAssert.Exists (frameworkImplementations);
 			FileAssert.Exists (referenceImplementations);
-		}
-
-		[TestCase (false)]
-		[TestCase (true)]
-		public void TrimmedNativeLinkingScansCombinedTypeMapInputs (bool readyToRun)
-		{
-			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("PublishTrimmed", "true");
-			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
-			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", "true");
-			proj.SetProperty (KnownProperties.RuntimeIdentifiers, "android-arm64;android-x64");
-			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
-			directoryBuildTargets.TextContent = () => """
-				<Project>
-				  <Target Name="_AndroidAssertCombinedNativeLinkingTypeMaps"
-				      BeforeTargets="_GeneratePackageManagerJava"
-				      DependsOnTargets="_PrepareTrimmableTypeMapAssemblies">
-				    <ItemGroup>
-				      <_AndroidPreTrimRoot Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
-				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
-				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' == 'true' " />
-				      <_AndroidFinalArm64Root Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
-				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
-				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' != 'true' " />
-				      <_AndroidFinalX64Root Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
-				              and '%(_ResolvedAssemblies.Abi)' == 'x86_64' " />
-				    </ItemGroup>
-				    <Error Condition=" '@(_AndroidPreTrimRoot->Count())' == '0' or '@(_AndroidFinalArm64Root->Count())' == '0' or '@(_AndroidFinalX64Root->Count())' == '0' "
-				        Text="The native linking regression requires both pre-trim and final per-ABI root typemaps." />
-				  </Target>
-				</Project>
-				""";
-
-			using var builder = CreateApkBuilder ();
-			builder.Target = "Compile;_GeneratePackageManagerJava";
-			// Compile defaults to design-time mode, but native-source generation requires a normal build.
-			Assert.IsTrue (builder.Build (proj, parameters: ["DesignTimeBuild=false"]),
-				"Trimmed multi-RID native sources should be generated with combined typemap inputs.");
-			builder.Output.AssertTargetIsNotSkipped ("_AndroidAssertCombinedNativeLinkingTypeMaps");
-			foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
-				var nativeSource = builder.Output.GetIntermediaryPath (Path.Combine ("android", $"pinvoke_preserve.{abi}.ll"));
-				FileAssert.Exists (nativeSource);
-				StringAssert.Contains ("@find_pinvoke", File.ReadAllText (nativeSource));
-			}
 		}
 
 		[Test]
@@ -2070,16 +2023,10 @@ namespace Xamarin.Android.Build.Tests {
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
-			var environmentFiles = Directory.GetFiles (builder.Output.GetIntermediaryPath ("android"), "environment.*.ll");
-			Assert.IsNotEmpty (environmentFiles, "Expected generated environment.<abi>.ll files.");
-
-			foreach (var environmentFile in environmentFiles) {
-				var abi = Path.GetFileNameWithoutExtension (environmentFile).Substring ("environment.".Length);
+			EnvironmentHelper.ReadCoreClrBootstrap (builder.Output.GetIntermediaryPath (""));
+			foreach (var abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 				var manifestFile = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so.manifest"));
-
-				if (!File.Exists (manifestFile)) {
-					continue;
-				}
+				FileAssert.Exists (manifestFile);
 
 				using var storeReader = new BinaryReader (File.OpenRead (Path.ChangeExtension (manifestFile, null)));
 				Assert.AreEqual (0x41424158u, storeReader.ReadUInt32 ());
@@ -2190,7 +2137,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotEmpty (rspFiles, $"{ridIntermediateDir} should contain an ILC response file.");
 
 			var rspText = File.ReadAllText (rspFiles [0]);
-			StringAssert.Contains ("_Java.Interop.TypeMap.dll", rspText);
+			// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
+			StringAssert.DoesNotContain ("_Java.Interop.TypeMap.dll", rspText);
 			StringAssert.Contains ("_Mono.Android.TypeMap.dll", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Java.Interop.TypeMap", rspText);
 			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Mono.Android.TypeMap", rspText);
@@ -2198,16 +2146,17 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable ()
+		public void TrimmableTypeMap_PackagesAndroidJavaProxyThrowable (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -2217,6 +2166,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				DexUtils.ContainsClassWithMethod ("Landroid/runtime/JavaProxyThrowable;", "<init>", "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should include `android.runtime.JavaProxyThrowable`.");
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/internal/JavaProxyThrowable;", dexFile, AndroidSdkPath));
+			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/internal/JavaProxyObject;", dexFile, AndroidSdkPath));
 		}
 
 		[Test]
@@ -2662,18 +2613,44 @@ namespace Xamarin.Android.Build.Tests {
 			var toolsDir = TestEnvironment.AndroidMSBuildDirectory;
 
 			foreach (var file in new [] {
+				"java_runtime_trimmable.jar",
+				"java_runtime_trimmable.dex",
+			}) {
+				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
+			}
+
+			foreach (var file in new [] {
 				"java_runtime.jar",
 				"java_runtime.dex",
 				"java_runtime_fastdev.jar",
 				"java_runtime_fastdev.dex",
-				"java_runtime_trimmable.jar",
-				"java_runtime_trimmable.dex",
 				"java_runtime_clr.jar",
 				"java_runtime_clr.dex",
 				"java_runtime_fastdev_clr.jar",
 				"java_runtime_fastdev_clr.dex",
 			}) {
-				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
+				FileAssert.DoesNotExist (Path.Combine (toolsDir, file), $"{file} should not exist in the SDK pack.");
+			}
+
+			using var runtimeJar = ZipFile.OpenRead (Path.Combine (toolsDir, "java_runtime_trimmable.jar"));
+			foreach (var entry in new [] {
+				"mono/android/Runtime.class",
+				"mono/android/IGCUserPeer.class",
+				"mono/android/GCUserPeer.class",
+				"mono/MonoPackageManager.class",
+				"mono/NativeLibraryHelper.class",
+			}) {
+				Assert.IsNotNull (runtimeJar.GetEntry (entry), $"{entry} must remain in the runtime JAR.");
+			}
+			foreach (var entry in new [] {
+				"mono/android/DebugRuntime.class",
+				"mono/android/BuildConfig.class",
+				"mono/android/app/XamarinAndroidEnvironmentVariables.class",
+				"mono/MonoPackageManager_Resources.class",
+				"net/dot/android/ApplicationRegistration.class",
+				"classes.dex",
+			}) {
+				Assert.IsNull (runtimeJar.GetEntry (entry), $"{entry} must not be packaged in the runtime JAR.");
 			}
 		}
 

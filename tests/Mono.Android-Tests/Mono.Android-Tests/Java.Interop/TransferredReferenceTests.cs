@@ -182,6 +182,19 @@ namespace Java.InteropTests
 		[TestCase (4, JniHandleOwnership.DoNotTransfer)]
 		public void ThrowableExtractionFailureReleasesInput (int stage, JniHandleOwnership ownership)
 		{
+			AssertThrowableExtractionFailureReleasesInput (stage, ownership, throughRuntime: false);
+		}
+
+		[Test]
+		public void RuntimeExceptionLookupFailureReleasesInput (
+			[Values (1, 2, 3, 4)] int stage,
+			[Values (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef, JniHandleOwnership.TransferGlobalRef)] JniHandleOwnership ownership)
+		{
+			AssertThrowableExtractionFailureReleasesInput (stage, ownership, throughRuntime: true);
+		}
+
+		static void AssertThrowableExtractionFailureReleasesInput (int stage, JniHandleOwnership ownership, bool throughRuntime)
+		{
 			var source = JNIEnv.CreateInstance ("net/dot/android/test/TransferFailureThrowable", "(I)V", new JValue (stage));
 			try {
 				WithInput (source, ownership, (handle, transfer) => {
@@ -194,13 +207,25 @@ namespace Java.InteropTests
 					}
 					Java.Lang.IllegalStateException failure = null;
 					try {
-						failure = Assert.Throws<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
+						if (throughRuntime) {
+							var reference = new JniObjectReference (handle, transfer == JniHandleOwnership.TransferGlobalRef
+								? JniObjectReferenceType.Global : JniObjectReferenceType.Local);
+							var options = transfer == JniHandleOwnership.DoNotTransfer
+								? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.CopyAndDispose;
+							failure = Assert.Throws<Java.Lang.IllegalStateException> (() =>
+								JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, options));
+							Assert.AreEqual (transfer == JniHandleOwnership.DoNotTransfer, reference.IsValid,
+								"Only the borrowed throwable reference should remain valid after extraction fails.");
+						} else {
+							failure = Assert.Throws<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
+						}
 						StringAssert.Contains ("transfer-extraction-" + stage, failure.Message);
+						if (stage == 4) {
+							Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (source)),
+								"Failed stack-trace extraction must release the partially constructed wrapper.");
+						}
 					} finally {
 						failure?.Dispose ();
-						// Stage 4 throws after SetHandle has registered the wrapper. Dispose that
-						// copied GREF independently so this assertion measures only the input.
-						JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (source))?.Dispose ();
 					}
 				});
 			} finally {
@@ -217,6 +242,125 @@ namespace Java.InteropTests
 				using var peer = new Java.Lang.Throwable (handle, transfer);
 				Assert.IsTrue (peer.PeerReference.IsValid);
 				StringAssert.Contains ("java.lang.Throwable", peer.StackTrace);
+			});
+		}
+
+		[Test]
+		public void ThrowableExtractionPreservesEscapingPeer (
+			[Values (5, 6)] int stage,
+			[Values (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef,
+				JniHandleOwnership.TransferGlobalRef, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister)] JniHandleOwnership ownership)
+		{
+			var source = JNIEnv.CreateInstance ("net/dot/android/test/TransferFailureThrowable", "(I)V", new JValue (stage));
+			try {
+				WithInput (source, ownership, (handle, transfer) => {
+					var sourceClass = JNIEnv.GetObjectClass (source);
+					try {
+						JNIEnv.CallVoidMethod (source, JNIEnv.GetMethodID (sourceClass, "reset", "()V"));
+					} finally {
+						JNIEnv.DeleteLocalRef (sourceClass);
+					}
+					var failure = Assert.Catch<System.Exception> (() => new Java.Lang.Throwable (handle, transfer));
+					var escaped = (stage == 5 ? failure : failure?.InnerException) as Java.Lang.Throwable;
+					try {
+						Assert.IsNotNull (escaped, "The Java failure must surface the source throwable directly or as its cause.");
+						if (escaped == null)
+							throw new AssertionException ("The escaping Throwable peer is missing.");
+						Assert.IsTrue (escaped.PeerReference.IsValid, "Constructor cleanup must not dispose an escaping peer.");
+						Assert.IsTrue (JNIEnv.IsSameObject (source, escaped.Handle));
+						Assert.AreSame (escaped, JniEnvironment.Runtime.ValueManager.PeekPeer (escaped.PeerReference));
+						if (JniEnvironment.Runtime.ObjectReferenceManager is ReferenceObserver observer) {
+							Assert.AreEqual (1, observer.OwnedCopies.Count,
+								"Only the escaping peer may retain a source GREF; an unpublished alias must be released.");
+						}
+						using var peerClass = escaped.Class;
+						Assert.IsNotNull (peerClass, "The escaping peer must still support JNI calls.");
+
+						JniObjectReference pending = default;
+						try {
+							JniEnvironment.Runtime.RaisePendingException (escaped);
+							pending = JniEnvironment.Exceptions.ExceptionOccurred ();
+							JniEnvironment.Exceptions.ExceptionClear ();
+							JniEnvironment.References.CreatedReference (pending);
+							Assert.IsTrue (pending.IsValid);
+							Assert.AreSame (escaped, JniEnvironment.Runtime.GetExceptionForThrowable (
+								ref pending, JniObjectReferenceOptions.CopyAndDispose));
+						} finally {
+							JniEnvironment.Exceptions.ExceptionClear ();
+							JniObjectReference.Dispose (ref pending);
+						}
+					} finally {
+						(failure as IDisposable)?.Dispose ();
+						if (!ReferenceEquals (failure, escaped))
+							escaped?.Dispose ();
+					}
+				});
+			} finally {
+				JNIEnv.DeleteLocalRef (source);
+			}
+		}
+
+		[TestCase (JniHandleOwnership.DoNotTransfer)]
+		[TestCase (JniHandleOwnership.TransferLocalRef)]
+		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestCase (JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister)]
+		[TestCase (JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister)]
+		[TestCase (JniHandleOwnership.TransferGlobalRef | JniHandleOwnership.DoNotRegister)]
+		public void ThrowableConstructionHonorsDoNotRegister (JniHandleOwnership ownership)
+		{
+			WithInput ("java/lang/Throwable", ownership, (handle, transfer) => {
+				using var peer = new Java.Lang.Throwable (handle, transfer);
+				Assert.IsTrue (peer.PeerReference.IsValid);
+				var registered = JniEnvironment.Runtime.ValueManager.PeekPeer (peer.PeerReference);
+				if ((transfer & JniHandleOwnership.DoNotRegister) != 0) {
+					Assert.IsNull (registered, "DoNotRegister must suppress registration for a newly constructed Throwable wrapper.");
+				} else {
+					Assert.AreSame (peer, registered, "Normal Throwable construction must register its wrapper.");
+				}
+			});
+		}
+
+		[Test]
+		public void ThrowableActivationPreservesExistingReplaceablePeer ()
+		{
+			WithInput ("java/lang/Throwable", JniHandleOwnership.DoNotTransfer, (handle, _) => {
+				using var existing = new Java.Lang.Throwable (handle, JniHandleOwnership.DoNotTransfer);
+				((IJavaPeerable) existing).SetJniManagedPeerState (JniManagedPeerStates.Replaceable);
+
+				Assert.AreSame (existing, JniEnvironment.Runtime.ValueManager.PeekPeer (existing.PeerReference));
+
+				var activated = TrimmableTypeMap.Instance.CreateInstance (handle, typeof (Java.Lang.Throwable));
+				Assert.IsNotNull (activated, "The Throwable activation proxy must create a peer.");
+				try {
+					Assert.AreSame (existing, JniEnvironment.Runtime.ValueManager.PeekPeer (existing.PeerReference),
+						"Activation must mark the new peer Replaceable before registering it, preserving the existing winner.");
+				} finally {
+					activated?.Dispose ();
+				}
+			});
+		}
+
+		[TestCase (JniHandleOwnership.DoNotTransfer)]
+		[TestCase (JniHandleOwnership.TransferLocalRef)]
+		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		public void ThrowableDoNotRegisterPreservesReentrantAlias (JniHandleOwnership ownership)
+		{
+			WithInput ("java/lang/Throwable", ownership, (handle, transfer) => {
+				Java.Lang.Throwable nested = null;
+				ReentrantThrowable.BeforeConstruct = value => {
+					nested = Java.Lang.Object.GetObject<Java.Lang.Throwable> (value, JniHandleOwnership.DoNotTransfer);
+				};
+				ReentrantThrowable outer = null;
+				try {
+					outer = new ReentrantThrowable (handle, transfer | JniHandleOwnership.DoNotRegister);
+					Assert.IsNotNull (nested);
+					Assert.AreSame (nested, JniEnvironment.Runtime.ValueManager.PeekPeer (outer.PeerReference),
+						"DoNotRegister must preserve the peer created by a reentrant lookup.");
+				} finally {
+					ReentrantThrowable.BeforeConstruct = null;
+					outer?.Dispose ();
+					nested?.Dispose ();
+				}
 			});
 		}
 
@@ -243,10 +387,12 @@ namespace Java.InteropTests
 			// Warm class, method, proxy and exception caches without transferring the source.
 			exercise (source, JniHandleOwnership.DoNotTransfer);
 			var locals = Java.Interop.Runtime.LocalReferenceCount;
-			var input = ownership == JniHandleOwnership.TransferGlobalRef
+			var transferType = ownership & (JniHandleOwnership.TransferLocalRef | JniHandleOwnership.TransferGlobalRef);
+			var transfersInput = transferType != JniHandleOwnership.DoNotTransfer;
+			var input = transferType == JniHandleOwnership.TransferGlobalRef
 				? JNIEnv.NewGlobalRef (source)
 				: JNIEnv.NewLocalRef (source);
-			var type = ownership == JniHandleOwnership.TransferGlobalRef ? JniObjectReferenceType.Global : JniObjectReferenceType.Local;
+			var type = transferType == JniHandleOwnership.TransferGlobalRef ? JniObjectReferenceType.Global : JniObjectReferenceType.Local;
 			var runtime = JniEnvironment.Runtime;
 			var originalManager = runtime.ObjectReferenceManager;
 			var observer = new ReferenceObserver (originalManager, source, input, type);
@@ -254,15 +400,15 @@ namespace Java.InteropTests
 			try {
 				SetReferenceManager (runtime, observer);
 				exercise (input, ownership);
-				Assert.AreEqual (ownership == JniHandleOwnership.DoNotTransfer ? 0 : 1, observer.InputDeletions,
+				Assert.AreEqual (transfersInput ? 1 : 0, observer.InputDeletions,
 					"Only the original transferred input must be released, exactly once.");
 				Assert.IsEmpty (observer.OwnedCopies, "The partially constructed wrapper's own copies must be disposed separately.");
 				foreach (var reference in observer.OutstandingGlobals) {
 					TestContext.WriteLine ($"Other outstanding GREF {reference.Key:x}: {reference.Value}");
 				}
-				Assert.AreEqual (locals + (ownership == JniHandleOwnership.DoNotTransfer ? 1 : 0),
+				Assert.AreEqual (locals + (transfersInput ? 0 : 1),
 					Java.Interop.Runtime.LocalReferenceCount, "Only transferred local references may be deleted.");
-				if (ownership == JniHandleOwnership.DoNotTransfer) {
+				if (!transfersInput) {
 					Assert.IsTrue (JNIEnv.IsSameObject (source, input), "Borrowed input must remain valid.");
 				}
 			} finally {
@@ -351,6 +497,22 @@ namespace Java.InteropTests
 					Interlocked.Increment (ref inputDeletions);
 				}
 			}
+		}
+	}
+
+	sealed class ReentrantThrowable : Java.Lang.Throwable
+	{
+		public static Action<IntPtr> BeforeConstruct;
+
+		public ReentrantThrowable (IntPtr handle, JniHandleOwnership transfer)
+			: base (BeforeConstructHandle (handle), transfer)
+		{
+		}
+
+		static IntPtr BeforeConstructHandle (IntPtr handle)
+		{
+			BeforeConstruct?.Invoke (handle);
+			return handle;
 		}
 	}
 
