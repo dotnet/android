@@ -30,7 +30,7 @@ namespace Java.Interop {
 			{
 				SourceName = sourceName;
 				TargetName = targetName;
-				TargetNameUtf8 = IntPtr.Zero;
+				TargetNameUtf8 = null;
 			}
 
 			/// <safety>
@@ -42,12 +42,12 @@ namespace Java.Interop {
 			{
 				SourceName = sourceName;
 				TargetName = null;
-				TargetNameUtf8 = (IntPtr) targetNameUtf8;
+				TargetNameUtf8 = targetNameUtf8;
 			}
 
 			public string SourceName { get; }
 			public string? TargetName { get; }
-			public IntPtr TargetNameUtf8 { get; }
+			public unsafe byte* TargetNameUtf8 { get; }
 		}
 
 		static JniPeerTypeNameInfo GetReplacementType (string jniPeerTypeName)
@@ -90,7 +90,9 @@ namespace Java.Interop {
 
 			sourceJniPeerTypeName = jniPeerTypeName.SourceName;
 			this.jniPeerTypeName = jniPeerTypeName.TargetName;
-			jniPeerTypeNameUtf8 = jniPeerTypeName.TargetNameUtf8;
+			unsafe {
+				jniPeerTypeNameUtf8 = (IntPtr) jniPeerTypeName.TargetNameUtf8;
+			}
 			ManagedPeerType = managedPeerType;
 
 			this.isInterface = isInterface;
