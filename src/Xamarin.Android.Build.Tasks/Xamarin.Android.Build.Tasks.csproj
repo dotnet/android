@@ -196,6 +196,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Microsoft.Android.Sdk\PreserveLists\*.xml">
+      <Link>..\PreserveLists\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
