@@ -582,7 +582,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
   <AndroidMessage ResourceName="XA1040"
       FormatArguments="$(_AndroidRuntime)"
-      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(EnablePreviewFeatures)' != 'true' "
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
   />
 </Target>
 

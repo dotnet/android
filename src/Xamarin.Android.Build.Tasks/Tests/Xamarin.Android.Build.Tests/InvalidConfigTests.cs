@@ -135,9 +135,9 @@ namespace Xamarin.Android.Build.Tests
 			builder.AssertHasNoWarnings ();
 			var message = "The NativeAOT runtime on Android is a preview feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues";
 			Assert.AreEqual (
-				runtime == AndroidRuntime.NativeAOT && enablePreviewFeatures != "true",
+				runtime == AndroidRuntime.NativeAOT,
 				StringAssertEx.ContainsText (builder.LastBuildOutput, message),
-				"Only NativeAOT without EnablePreviewFeatures should emit the preview message.");
+				"NativeAOT should always emit the preview message regardless of EnablePreviewFeatures.");
 		}
 
 		[Test]
