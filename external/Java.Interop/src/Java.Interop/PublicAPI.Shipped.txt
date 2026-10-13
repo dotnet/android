@@ -496,7 +496,7 @@ Java.Interop.JniType.JniType(string! classname) -> void
 Java.Interop.JniType.Name.get -> string!
 unsafe Java.Interop.JniType.NewObject(Java.Interop.JniMethodInfo! constructor, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
 Java.Interop.JniType.PeerReference.get -> Java.Interop.JniObjectReference
-Java.Interop.JniType.RegisterNativeMethods(params Java.Interop.JniNativeMethodRegistration[]! methods) -> void
+unsafe Java.Interop.JniType.RegisterNativeMethods(params Java.Interop.JniNativeMethodRegistration[]! methods) -> void
 Java.Interop.JniType.RegisterWithRuntime() -> void
 Java.Interop.JniType.UnregisterNativeMethods() -> void
 Java.Interop.JniTypeSignature

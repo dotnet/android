@@ -424,10 +424,14 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
 			: null;
 
-	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> RuntimeFeature.JniRemapping
-			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
-			: null;
+	protected override unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+	{
+		unsafe {
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
+				: null;
+		}
+	}
 
 	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
 		=> RuntimeFeature.JniRemapping

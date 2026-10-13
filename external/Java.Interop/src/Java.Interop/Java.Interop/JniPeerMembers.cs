@@ -213,9 +213,11 @@ namespace Java.Interop {
 
 		JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
-			return jniPeerTypeNameUtf8 == IntPtr.Zero
-				? JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeName ?? sourceJniPeerTypeName, method, signature)
-				: JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature);
+			if (jniPeerTypeNameUtf8 == IntPtr.Zero)
+				return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeName ?? sourceJniPeerTypeName, method, signature);
+			unsafe {
+				return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature);
+			}
 		}
 
 		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
