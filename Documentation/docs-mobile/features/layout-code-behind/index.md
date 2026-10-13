@@ -124,11 +124,6 @@ then following type will be generated:
 namespace Binding {
   sealed class Main : global::Xamarin.Android.Design.LayoutBinding {
 
-    [global::System.Diagnostics.CodeAnalysis.DynamicDependency (
-      global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors,
-      typeof (Main))]
-    static Main () {}
-
     public Main (
       global::Android.App.Activity client,
       global::Xamarin.Android.Design.OnLayoutItemNotFoundHandler itemNotFoundHandler = null)
