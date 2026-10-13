@@ -886,24 +886,6 @@ sealed class TypeMapAssemblyEmitter
 		});
 	}
 
-	void EmitCreateInstanceInheritedCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
-	{
-		var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
-		EmitCreateInstanceBody (encoder => {
-			encoder.LoadToken (targetTypeRef);
-			encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-			encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-			encoder.CastClass (targetTypeRef);
-
-			encoder.OpCode (ILOpCode.Dup);
-			encoder.OpCode (ILOpCode.Ldarg_1);
-			encoder.OpCode (ILOpCode.Ldarg_2);
-			encoder.Call (baseActivationCtorRef, parameterCount: 2, isInstance: true);
-
-			encoder.Return (returnsValue: true);
-		});
-	}
-
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
@@ -927,44 +909,6 @@ sealed class TypeMapAssemblyEmitter
 				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
 				encoder.StoreLocal (1); // save result
-			});
-	}
-
-	/// <summary>
-	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
-	///   try {
-	///     var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-	///     var jniRef = new JniObjectReference(handle);
-	///     var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
-	///     obj.BaseCtor(ref jniRef, options); return obj;
-	///   }
-	///   finally { JNIEnv.DeleteRef(handle, ownership); }
-	/// </summary>
-	void EmitCreateInstanceInheritedJavaInteropCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
-	{
-		var baseCtorRef = AddJavaInteropActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
-		EmitJavaInteropActivationWithCleanup (
-			encoder => {
-				// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-				encoder.LoadToken (targetTypeRef);
-				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-				encoder.CastClass (targetTypeRef);
-
-				encoder.StoreLocal (1);
-
-				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
-				encoder.LoadLocalAddress (0);
-				encoder.OpCode (ILOpCode.Ldarg_1); // handle
-				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
-				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
-
-				// obj.BaseCtor(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
-				encoder.LoadLocal (1);
-				encoder.CastClass (targetTypeRef);
-				encoder.LoadLocalAddress (0);
-				EmitJniObjectReferenceOptions (encoder);
-				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
 			});
 	}
 
@@ -1006,15 +950,6 @@ sealed class TypeMapAssemblyEmitter
 		encoder.Call (_jniEnvToJniObjectReferenceOptionsRef, parameterCount: 1, returnsValue: true);
 	}
 
-	void EncodeJniObjectReferenceLocal (BlobBuilder blob)
-	{
-		// LOCAL_SIG header (0x07), count = 1, ELEMENT_TYPE_VALUETYPE + compressed token
-		blob.WriteByte ((byte) SignatureKind.LocalVariables);
-		blob.WriteCompressedInteger (1); // 1 local variable
-		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
-		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
-	}
-
 	void EncodeJniObjectReferenceAndObjectLocals (BlobBuilder blob)
 	{
 		// LOCAL_SIG header (0x07), count = 2:
@@ -1046,15 +981,6 @@ sealed class TypeMapAssemblyEmitter
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
 			GetCreateInstanceSignature (),
 			emitIL);
-	}
-
-	void EmitCreateInstanceBodyWithLocals (Action<BlobBuilder> encodeLocals, Action<TrackedInstructionEncoder> emitIL)
-	{
-		_pe.EmitBody ("CreateInstance",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			GetCreateInstanceSignature (),
-			emitIL,
-			encodeLocals);
 	}
 
 	MemberReferenceHandle AddActivationCtorRef (EntityHandle declaringTypeRef)
@@ -1537,47 +1463,6 @@ sealed class TypeMapAssemblyEmitter
 	{
 		GetExportMethodDispatchEmitter ().LoadManagedArgument (encoder, managedType, exportKind, jniKind, argumentIndex);
 	}
-
-	EntityHandle ResolveRuntimeTypeSpec (RuntimeTypeSpec type)
-	{
-		if (type is NamedRuntimeTypeSpec namedType) {
-			return _pe.ResolveTypeRef (namedType.Type);
-		}
-
-		var blob = new BlobBuilder (64);
-		EncodeRuntimeTypeSpec (blob, type);
-		return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (blob));
-	}
-
-	void EncodeRuntimeTypeSpec (BlobBuilder blob, RuntimeTypeSpec type)
-	{
-		switch (type) {
-		case NamedRuntimeTypeSpec namedType:
-			_pe.WriteTypeSignature (blob, namedType.Type);
-			break;
-		case SzArrayRuntimeTypeSpec arrayType:
-			blob.WriteByte ((byte) SignatureTypeCode.SZArray);
-			EncodeRuntimeTypeSpec (blob, arrayType.ElementType);
-			break;
-		case GenericRuntimeTypeSpec genericType:
-			blob.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
-			blob.WriteByte ((byte) SignatureTypeKind.Class);
-			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (genericType.OpenType));
-			blob.WriteCompressedInteger (1); // generic arity = 1
-			EncodeRuntimeTypeSpec (blob, genericType.Argument);
-			break;
-		default:
-			throw new InvalidOperationException ($"Unsupported runtime type spec '{type.GetType ()}'.");
-		}
-	}
-
-	abstract record RuntimeTypeSpec;
-
-	sealed record NamedRuntimeTypeSpec (TypeRefData Type) : RuntimeTypeSpec;
-
-	sealed record SzArrayRuntimeTypeSpec (RuntimeTypeSpec ElementType) : RuntimeTypeSpec;
-
-	sealed record GenericRuntimeTypeSpec (EntityHandle OpenType, RuntimeTypeSpec Argument) : RuntimeTypeSpec;
 
 	EntityHandle ResolveManagedTypeHandle (string managedType, string defaultAssemblyName)
 	{

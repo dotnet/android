@@ -37,7 +37,7 @@
     <!--
       Microsoft.SourceLink.GitHub is a build-time only package (PrivateAssets="All"), but its
       dependency Microsoft.Build.Tasks.Git 10.0.300 pulls System.IO.Hashing 10.0.8 in as a *runtime*
-      asset. Projects that only reference System.IO.Hashing transitively (e.g. class-parse, jcw-gen,
+      asset. Projects that only reference System.IO.Hashing transitively (e.g. class-parse,
       generator) therefore ship a System.IO.Hashing 10.0.8 assembly, which collides in the shared
       .NET for Android SDK pack `tools/` directory with the $(SystemIOHashingPackageVersion) assembly the
       build tasks are compiled against (System.IO.Hashing bumps its AssemblyVersion every patch),

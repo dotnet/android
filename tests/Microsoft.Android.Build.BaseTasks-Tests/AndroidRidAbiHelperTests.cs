@@ -82,6 +82,34 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				/* input */    "android-arm64\\libfoo.so",
 				/* expected */ "arm64-v8a"
 			},
+			new[] {
+				/* input */    @"C:\libfoo.so",
+				/* expected */ default (string)
+			},
+			new[] {
+				/* input */    "/libfoo.so",
+				/* expected */ default (string)
+			},
+			new[] {
+				/* input */    @"C:\",
+				/* expected */ default (string)
+			},
+			new[] {
+				/* input */    "/",
+				/* expected */ default (string)
+			},
+			new[] {
+				/* input */    @"C:\arm64-v8a\libfoo.so",
+				/* expected */ "arm64-v8a"
+			},
+			new[] {
+				/* input */    @"C:\android-arm64\libfoo.so",
+				/* expected */ "arm64-v8a"
+			},
+			new[] {
+				/* input */    @"C:\android-x64\native\libfoo.so",
+				/* expected */ "x86_64"
+			},
 		};
 
 		[Test]
@@ -167,6 +195,32 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				}),
 				/* expected */
 				"arm64-v8a",
+			},
+			new object [] {
+				/* input */
+				new TaskItem(@"C:\libfoo.so"),
+				/* expected */
+				default (string)
+			},
+			new object [] {
+				/* input */
+				new TaskItem("/libfoo.so"),
+				/* expected */
+				default (string)
+			},
+			new object [] {
+				/* input */
+				new TaskItem(@"C:\arm64-v8a\libfoo.so"),
+				/* expected */
+				"arm64-v8a"
+			},
+			new object [] {
+				/* input */
+				new TaskItem("liblink.so", new Dictionary<string,string> {
+					{ "Link", @"C:\libfoo.so" }
+				}),
+				/* expected */
+				default (string)
 			},
 		};
 
