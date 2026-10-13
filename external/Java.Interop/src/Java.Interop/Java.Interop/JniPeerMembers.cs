@@ -98,9 +98,15 @@ namespace Java.Interop {
 		JniStaticFields     staticFields;
 
 		public      Type        ManagedPeerType {get; private set;}
-		public      string      JniPeerTypeName => jniPeerTypeNameUtf8 == IntPtr.Zero
-			? jniPeerTypeName ?? sourceJniPeerTypeName
-			: jniPeerTypeName ??= GetUtf8String (jniPeerTypeNameUtf8);
+		public      string      JniPeerTypeName {
+			get {
+				if (jniPeerTypeNameUtf8 == IntPtr.Zero)
+					return jniPeerTypeName ?? sourceJniPeerTypeName;
+				unsafe {
+					return jniPeerTypeName ??= GetUtf8String ((byte*) jniPeerTypeNameUtf8);
+				}
+			}
+		}
 		public      JniType     JniPeerType {
 			get {
 				var t = jniPeerTypeNameUtf8 == IntPtr.Zero
@@ -284,17 +290,24 @@ namespace Java.Interop {
 			return type.TryGetStaticMethod (name, fallback, out method);
 		}
 
-		static string GetUtf8String (IntPtr value)
+		/// <safety>
+		/// A non-null <paramref name="value"/> must address readable NUL-terminated UTF-8
+		/// storage that remains alive and unchanged for the duration of the call.
+		/// </safety>
+		static unsafe string GetUtf8String (byte* value)
 		{
 			unsafe {
-				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
 			}
 		}
 
 		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
 		{
-			if (info.TargetJniTypeUtf8 != IntPtr.Zero)
-				return GetUtf8String (info.TargetJniTypeUtf8);
+			if (info.TargetJniTypeUtf8 != IntPtr.Zero) {
+				unsafe {
+					return GetUtf8String ((byte*) info.TargetJniTypeUtf8);
+				}
+			}
 			if (info.TargetJniType != null)
 				return info.TargetJniType;
 			return fallback.JniPeerTypeName;
@@ -302,8 +315,11 @@ namespace Java.Interop {
 
 		static string GetTargetMethodNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
-			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero)
-				return GetUtf8String (info.TargetJniMethodNameUtf8);
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
+				unsafe {
+					return GetUtf8String ((byte*) info.TargetJniMethodNameUtf8);
+				}
+			}
 			if (info.TargetJniMethodName != null)
 				return info.TargetJniMethodName;
 			return fallback.ToString ();
@@ -311,8 +327,11 @@ namespace Java.Interop {
 
 		static string GetTargetMethodSignatureForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
-			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero)
-				return GetUtf8String (info.TargetJniMethodSignatureUtf8);
+			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
+				unsafe {
+					return GetUtf8String ((byte*) info.TargetJniMethodSignatureUtf8);
+				}
+			}
 			if (info.TargetJniMethodSignature != null)
 				return info.TargetJniMethodSignature;
 			return fallback.ToString ();
