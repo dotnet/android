@@ -78,7 +78,7 @@ namespace generatortests
 				var stdout = process.StandardOutput.ReadToEndAsync ();
 				var stderr = process.StandardError.ReadToEndAsync ();
 				if (!process.WaitForExit (120000)) {
-					process.Kill ();
+					process.Kill (entireProcessTree: true);
 					process.WaitForExit ();
 					Assert.Fail ("Build SDK compiler timed out: " + projectPath);
 				}
