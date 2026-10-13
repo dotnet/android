@@ -41,9 +41,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvoke<#= returnType.ManagedType #>StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters<#= byRefParamDecl #>)
 			{
 				<#= setByRefToDefault #>
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -58,7 +55,6 @@ namespace Java.Interop {
 
 				<#= setByRefParam #>JniEnvironment.StaticMethods.CallStatic<#= returnType.JniCallType #>Method (method.StaticRedirect.PeerReference, method, p);
 				return true;
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
