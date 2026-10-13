@@ -51,7 +51,7 @@ static class TypeMapHelper
 	/// </summary>
 	// The unsafe Encoding.GetBytes(char*, int, byte*, int) overload is used because the
 	// Span-based overload requires netstandard2.1+.
-	public static unsafe void GetBytes (string value, Encoding encoding, Span<byte> buffer)
+	public static void GetBytes (string value, Encoding encoding, Span<byte> buffer)
 	{
 		if (value.Length == 0) {
 			return;
@@ -59,7 +59,10 @@ static class TypeMapHelper
 
 		fixed (char* pChars = value)
 		fixed (byte* pBuffer = buffer) {
-			encoding.GetBytes (pChars, value.Length, pBuffer, buffer.Length);
+			// SAFETY: Both buffers stay pinned for the call, with their actual lengths.
+			unsafe {
+				encoding.GetBytes (pChars, value.Length, pBuffer, buffer.Length);
+			}
 		}
 	}
 
