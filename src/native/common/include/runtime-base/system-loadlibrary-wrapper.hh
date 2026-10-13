@@ -7,7 +7,7 @@
 #include <jni.h>
 
 #include <shared/helpers.hh>
-#include <runtime-base/logger.hh>
+#include <shared/log_functions.hh>
 
 namespace xamarin::android {
 	class SystemLoadLibraryWrapper

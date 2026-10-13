@@ -4,9 +4,11 @@
 #error The PINVOKE_OVERRIDE_INLINE macro must be defined before including this header file
 #endif
 
+#include <dlfcn.h>
+
 #include "pinvoke-override.hh"
-#include "../runtime-base/logger.hh"
 #include "../runtime-base/monodroid-dl.hh"
+#include <shared/log_functions.hh>
 
 namespace xamarin::android {
 	PINVOKE_OVERRIDE_INLINE
@@ -21,14 +23,14 @@ namespace xamarin::android {
 
 			std::string_view short_library_name_view { short_library_name };
 			log_debugf (LOG_ASSEMBLY, "Modified p/invoke library name to '%s'", short_library_name);
-			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name_view, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name_view, RTLD_NOW | RTLD_LOCAL);
 			if (short_library_name != stack_buffer) {
 				std::free (short_library_name);
 			}
 		}
 
 		if (lib_handle == nullptr) {
-			lib_handle = MonodroidDl::monodroid_dlopen (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			lib_handle = MonodroidDl::monodroid_dlopen (library_name, RTLD_NOW | RTLD_LOCAL);
 		}
 
 		if (lib_handle == nullptr) {
@@ -36,9 +38,19 @@ namespace xamarin::android {
 			return nullptr;
 		}
 
-		void *entry_handle = MonodroidDl::monodroid_dlsym (lib_handle, symbol_name);
+		dlerror ();
+		void *entry_handle = dlsym (lib_handle, symbol_name.data ());
 		if (entry_handle == nullptr) {
-			log_warnf (LOG_ASSEMBLY, "Symbol '%.*s' not found in shared library '%.*s', p/invoke may fail", static_cast<int>(symbol_name.length ()), symbol_name.data (), static_cast<int>(library_name.length ()), library_name.data ());
+			const char *error = dlerror ();
+			log_errorf (
+				LOG_ASSEMBLY,
+				"Could not find symbol '%.*s' in shared library '%.*s': %s",
+				static_cast<int>(symbol_name.length ()),
+				symbol_name.data (),
+				static_cast<int>(library_name.length ()),
+				library_name.data (),
+				optional_string (error, "Unknown error")
+			);
 			return nullptr;
 		}
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Android.Runtime;
 using Java.Interop;
@@ -54,11 +53,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
-	}
-
-	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
-	{
-		throw new PlatformNotSupportedException ("Activating Java peers through the value manager is not supported when TrimmableTypeMap is enabled.");
 	}
 
 	protected override void ConstructPeerCore (
@@ -176,7 +170,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 			throw new NotSupportedException (
 				$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
-				$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+				$"with targetType '{targetName}'. " +
 				$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
 		}
 
@@ -240,16 +234,18 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 				nameof (targetType));
 		}
 
-		var boxed = PeekBoxedObject (reference);
-		if (boxed != null) {
-			JniObjectReference.Dispose (ref reference, options);
-			return (T) Convert.ChangeType (boxed, targetType ?? typeof (T), CultureInfo.InvariantCulture);
-		}
-
 		targetType ??= typeof (T);
 
 		if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 			return (T?) CreatePeer (ref reference, options, targetType);
+		}
+
+		var boxed = PeekBoxedObject (reference);
+		if (boxed != null) {
+			JniObjectReference.Dispose (ref reference, options);
+			return (T) (targetType.IsInstanceOfType (boxed)
+				? boxed
+				: Convert.ChangeType (boxed, targetType, CultureInfo.InvariantCulture));
 		}
 
 		if (PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
@@ -281,7 +277,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		var boxed = PeekBoxedObject (reference);
 		if (boxed != null) {
 			JniObjectReference.Dispose (ref reference, options);
-			if (targetType != null) {
+			if (targetType != null && !targetType.IsInstanceOfType (boxed)) {
 				return Convert.ChangeType (boxed, targetType, CultureInfo.InvariantCulture);
 			}
 			return boxed;
@@ -314,7 +310,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		targetType ??= typeof (T);
 
-		var existing = PeekValue (reference);
+		var existing = typeof (IJavaPeerable).IsAssignableFrom (targetType)
+			? PeekPeer (reference)
+			: PeekValue (reference);
 		if (existing != null && targetType.IsAssignableFrom (existing.GetType ())) {
 			JniObjectReference.Dispose (ref reference, options);
 			return (T) existing;
@@ -338,7 +336,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return null;
 		}
 
-		var existing = PeekValue (reference);
+		var existing = targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)
+			? PeekPeer (reference)
+			: PeekValue (reference);
 		if (existing != null && (targetType == null || targetType.IsAssignableFrom (existing.GetType ()))) {
 			JniObjectReference.Dispose (ref reference, options);
 			return existing;
@@ -360,6 +360,10 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	{
 		if (value is TrimmableJavaProxyObject proxy) {
 			result = proxy.Value;
+			return true;
+		}
+		if (value is global::Android.Runtime.JavaProxyThrowable throwable) {
+			result = throwable.InnerException;
 			return true;
 		}
 
@@ -399,9 +403,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
 	// Trimmable proxies use Java identity semantics: equals/hashCode/toString are NOT overridden
-	// and therefore do not delegate to the wrapped .NET object. This matches the trimmable Java
-	// runtime copy of JavaProxyObject and avoids the reflection-based native method registration
-	// that is unsupported in the trimmable typemap path.
+	// and therefore do not delegate to the wrapped .NET object.
 	[Register ("net/dot/jni/internal/TrimmableJavaProxyObject")]
 	private sealed class TrimmableJavaProxyObject : Java.Lang.Object
 	{

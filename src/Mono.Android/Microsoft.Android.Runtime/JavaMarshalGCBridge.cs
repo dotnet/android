@@ -11,9 +11,6 @@ namespace Microsoft.Android.Runtime;
 
 static unsafe class JavaMarshalGCBridge
 {
-	const string WeakToGlobalStackTrace = "   at [[clr-gc:take_global_ref]]";
-	const string GlobalToWeakStackTrace = "   at [[clr-gc:take_weak_global_ref]]";
-
 	static readonly Lazy<JavaMarshalGCBridgeJni> jni = new (CreateJni);
 
 	static JavaMarshalGCBridgeJni BridgeJni
@@ -21,8 +18,7 @@ static unsafe class JavaMarshalGCBridge
 
 	static JavaMarshalGCBridgeJni CreateJni ()
 	{
-		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (
-			RuntimeFeature.ObjectReferenceLogging ? "   at [[gc-bridge:initialize]]" : null);
+		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (GCBridgeReferenceOperation.Initialize);
 		try {
 			return new JavaMarshalGCBridgeJni ();
 		} finally {
@@ -232,11 +228,7 @@ static unsafe class JavaMarshalGCBridge
 		if (global.Type != JniObjectReferenceType.Global)
 			throw new InvalidOperationException ("Expected a global reference before Java GC bridge processing.");
 
-		if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-			WriteReferenceDiagnostic ("take_weak_global_ref handle=0x{0:x}", unchecked((nuint)global.Handle));
-		}
-		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (
-			RuntimeFeature.ObjectReferenceLogging ? GlobalToWeakStackTrace : null);
+		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (GCBridgeReferenceOperation.GlobalToWeak);
 		JniObjectReference weak;
 		try {
 			weak = global.NewWeakGlobalRef ();
@@ -249,8 +241,7 @@ static unsafe class JavaMarshalGCBridge
 		}
 
 		context->SetPeerReference (weak);
-		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (
-			RuntimeFeature.ObjectReferenceLogging ? GlobalToWeakStackTrace : null);
+		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (GCBridgeReferenceOperation.GlobalToWeak);
 		try {
 			JniObjectReference.Dispose (ref global);
 		} finally {
@@ -264,8 +255,7 @@ static unsafe class JavaMarshalGCBridge
 		if (weak.Type != JniObjectReferenceType.WeakGlobal)
 			throw new InvalidOperationException ("Expected a weak global reference after Java GC bridge processing.");
 
-		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (
-			RuntimeFeature.ObjectReferenceLogging ? WeakToGlobalStackTrace : null);
+		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (GCBridgeReferenceOperation.WeakToGlobal);
 		JniObjectReference global;
 		try {
 			global = weak.NewGlobalRef ();
@@ -275,21 +265,13 @@ static unsafe class JavaMarshalGCBridge
 
 		if (!global.IsValid) {
 			FailFastOnPendingJavaException ("Failed to promote a weak global reference during GC bridge processing.");
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-				WriteReferenceDiagnostic ("handle 0x{0:x}/W; was collected by a Java GC", unchecked((nuint)weak.Handle));
+			if (RuntimeFeature.EventSourceSupport) {
+				RuntimeEventSource.WeakGlobalReferenceCollected (weak.Handle);
 			}
 		}
 
 		context->SetPeerReference (global);
-		if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-			WriteReferenceDiagnostic (
-				"take_global_ref wref=0x{0:x} -> handle=0x{1:x}",
-				unchecked((nuint)weak.Handle),
-				unchecked((nuint)global.Handle));
-		}
-
-		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (
-			RuntimeFeature.ObjectReferenceLogging ? WeakToGlobalStackTrace : null);
+		ManagedObjectReferenceManager.BeginGCBridgeReferenceOperation (GCBridgeReferenceOperation.WeakToGlobal);
 		try {
 			JniObjectReference.Dispose (ref weak);
 		} finally {
@@ -329,16 +311,6 @@ static unsafe class JavaMarshalGCBridge
 		JNIEnv.ExceptionClear ();
 		JNIEnv.DeleteLocalRef (exception);
 		Environment.FailFast (message);
-	}
-
-	static void WriteReferenceDiagnostic (string format, params object?[] args)
-	{
-		if (RuntimeFeature.ObjectReferenceLogging) {
-			var manager = JniEnvironment.Runtime.ObjectReferenceManager;
-			if (manager.LogGlobalReferenceMessages) {
-				manager.WriteGlobalReferenceLine (format, args);
-			}
-		}
 	}
 
 	static void LogArguments (MarkCrossReferencesArgs* args)

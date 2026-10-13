@@ -141,6 +141,15 @@ partial class ExampleBinding : IJavaPeerable {
         The <see cref="P:Java.Interop.IJavaPeerable.PeerReference" />
         property is NOT valid when <c>Finalized</c> is invoked.
       </para>
+      <para>
+        The value manager must detach any reference-tracking contexts before
+        clearing the peer reference and invoking this callback.
+        <see cref="T:Java.Interop.JavaObject" /> and
+        <see cref="T:Java.Interop.JavaException" /> release their cleared native
+        control blocks after <c>Dispose(false)</c>, including when that callback
+        throws. This allocation is separate from the JNI reference, whose
+        deletion is the value manager's responsibility.
+      </para>
       <block subset="none" type="usage">
         This method should only be invoked by the
         <see cref="T:Java.Interop.JniRuntime" /> instance which will

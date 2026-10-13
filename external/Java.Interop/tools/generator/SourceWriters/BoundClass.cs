@@ -54,7 +54,6 @@ namespace generator.SourceWriters
 					additionalProperties: klass.AdditionalAttributeString ()) {
 				UseGlobal       = true,
 				UseShortForm    = true,
-				MemberType      = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.TypeInfo,
 			});
 
 			if (klass.TypeParameters != null && klass.TypeParameters.Any ())

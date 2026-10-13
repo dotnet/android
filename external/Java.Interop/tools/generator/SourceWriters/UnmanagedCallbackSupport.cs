@@ -199,11 +199,6 @@ namespace generator.SourceWriters
 			if (opt == null || !opt.UseUnmanagedCallersOnlyCallbacks)
 				return false;
 
-			// The JavaInterop1 callback shape marshals through JniValueManager and has not been
-			// evaluated for this experiment.
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.XAJavaInterop1)
-				return false;
-
 			// [UnmanagedCallersOnly] cannot be applied to a method of a generic type, because the
 			// generated entry point would need a type argument that JNI cannot supply.  Generic
 			// declaring types therefore keep the legacy shape.

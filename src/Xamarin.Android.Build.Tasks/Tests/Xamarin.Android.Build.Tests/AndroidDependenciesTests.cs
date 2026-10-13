@@ -16,7 +16,7 @@ using Xamarin.Installer.AndroidSDK.Manager;
 using Xamarin.Installer.Common;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -63,6 +63,8 @@ namespace Xamarin.Android.Build.Tests
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
 					$"AndroidManifestType={manifestType}",
+					// This integration test downloads the SDK, JDK and (for NativeAOT) NDK from scratch.
+					"AndroidDependencyInstallationTimeout=30",
 				};
 				var manifestPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Installer.AndroidSDK", "Feeds", "AndroidManifestFeed_d18.0.xml");
 				Assert.IsTrue (File.Exists (manifestPath), $"Xamarin manifest does not exist at '{manifestPath}'.");
@@ -75,6 +77,18 @@ namespace Xamarin.Android.Build.Tests
 					string defaultTarget = b.Target;
 					b.Target = "InstallAndroidDependencies";
 					b.BuildLogFile = "install-deps.log";
+
+					if (runtime == AndroidRuntime.NativeAOT) {
+						Directory.CreateDirectory (sdkPath);
+						Directory.CreateDirectory (jdkPath);
+						var timeoutArgs = buildArgs
+							.Where (arg => !arg.StartsWith ("AndroidDependencyInstallationTimeout=", StringComparison.Ordinal))
+							.Concat (["AndroidDependencyInstallationTimeout=0"])
+							.ToArray ();
+						Assert.IsFalse (b.Build (proj, parameters: timeoutArgs), "A timed-out dependency installation must not report success.");
+						Assert.IsTrue (b.LastBuildOutput.ContainsText ("timed out or was cancelled"),
+							"Timeout must be diagnosed before callers try to use missing installed files.");
+					}
 
 					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a
@@ -413,9 +427,11 @@ namespace Xamarin.Android.Build.Tests
 			static byte [] CreateArchive (params (string path, string contents) [] entries)
 			{
 				using (var stream = new MemoryStream ()) {
-					using (var archive = ZipArchive.Create (stream)) {
-						foreach (var entry in entries)
-							archive.AddEntry (entry.path, entry.contents, Encoding.UTF8);
+					using (var archive = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+						foreach (var entry in entries) {
+							using var writer = new StreamWriter (archive.CreateEntry (entry.path).Open (), new UTF8Encoding (false));
+							writer.Write (entry.contents);
+						}
 					}
 					return stream.ToArray ();
 				}
@@ -426,14 +442,15 @@ namespace Xamarin.Android.Build.Tests
 				(string path, string contents) sdkManager)
 			{
 				using (var stream = new MemoryStream ()) {
-					using (var archive = ZipArchive.Create (stream)) {
-						archive.AddEntry (sourceProperties.path, sourceProperties.contents, Encoding.UTF8);
-						archive.AddEntry (
-							Encoding.UTF8.GetBytes (sdkManager.contents),
-							sdkManager.path,
-							EntryPermissions.OwnerRead | EntryPermissions.OwnerWrite | EntryPermissions.OwnerExecute |
-								EntryPermissions.GroupRead | EntryPermissions.GroupExecute |
-								EntryPermissions.WorldRead | EntryPermissions.WorldExecute);
+					using (var archive = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+						using (var writer = new StreamWriter (archive.CreateEntry (sourceProperties.path).Open (), new UTF8Encoding (false)))
+							writer.Write (sourceProperties.contents);
+						var entry = archive.CreateEntry (sdkManager.path);
+						entry.ExternalAttributes = ((int)(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+							UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+							UnixFileMode.OtherRead | UnixFileMode.OtherExecute) | 0x8000) << 16;
+						using var scriptWriter = new StreamWriter (entry.Open (), new UTF8Encoding (false));
+						scriptWriter.Write (sdkManager.contents);
 					}
 					return stream.ToArray ();
 				}
@@ -465,15 +482,23 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void CoreClrDoesNotRequireNdk ()
+		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, false, true, true)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false, true)]
+		[TestCase (AndroidRuntime.NativeAOT, false, false, false)]
+		[TestCase (AndroidRuntime.NativeAOT, false, true, true)]
+		public void NdkDependencyUsesEffectiveRuntime (AndroidRuntime runtime, bool isRelease, bool stripNativeLibraries, bool ndkRequired)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
+			// PublishAot remains true in Debug, but the effective runtime is CoreCLR.
+			proj.IsRelease = isRelease;
+			proj.SetProperty ("AndroidStripNativeLibraries", stripNativeLibraries.ToString ());
+			proj.SetProperty ("_SkipNdkResolution", "true");
 			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (builder.Build (proj), "Dependency discovery should succeed without an installed NDK.");
 				IEnumerable<string> taskOutput = builder.LastBuildOutput
 					.Select (x => x.Trim ())
 					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
@@ -481,52 +506,11 @@ namespace Xamarin.Android.Build.Tests
 					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
 					.ToArray ();
 				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
-				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for CoreCLR.");
-			}
-		}
-
-		[Test]
-		public void NativeAotDoesNotRequireNdk_WhenWorkloadLinkerEnabled ()
-		{
-			// Do not set _AndroidUseWorkloadNativeLinker: this test intentionally verifies its default.
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			using (var builder = CreateApkBuilder ()) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				IEnumerable<string> taskOutput = builder.LastBuildOutput
-					.Select (x => x.Trim ())
-					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
-					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
-					.ToArray ();
-				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
-				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for NativeAOT with the workload linker.");
-			}
-		}
-
-		[Test]
-		public void NativeAotRequiresNdk_WhenWorkloadLinkerDisabled ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidUseWorkloadNativeLinker", "false");
-			proj.SetProperty ("_SkipNdkResolution", "false");
-			using (var builder = CreateApkBuilder ()) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				IEnumerable<string> taskOutput = builder.LastBuildOutput
-					.Select (x => x.Trim ())
-					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
-					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
-				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT without workload linker.");
+				if (ndkRequired) {
+					StringAssertEx.Contains ("ndk-bundle", taskOutput, "NativeAOT and optional native library stripping require the NDK.");
+				} else {
+					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "Ordinary CoreCLR builds should not require the NDK.");
+				}
 			}
 		}
 

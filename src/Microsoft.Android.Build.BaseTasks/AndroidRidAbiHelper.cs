@@ -1,3 +1,5 @@
+#nullable enable
+
 // https://github.com/dotnet/android/blob/34acbbae6795854cc4e9f8eb7167ab011e0266b4/src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidHelper.cs#L251
 
 using System;
@@ -24,6 +26,9 @@ namespace Microsoft.Android.Build.Tasks
 
 			// The topmost directory the .so file is contained within
 			var dir = Directory.GetParent (lib);
+			if (dir == null)
+				return null;
+
 			var dirName = dir.Name.ToLowerInvariant ();
 			if (dirName.StartsWith ("interpreter-", StringComparison.Ordinal)) {
 				dirName = dirName.Substring ("interpreter-".Length);
@@ -40,9 +45,11 @@ namespace Microsoft.Android.Build.Tasks
 
 			// Try one directory higher, such as:
 			// packages/sqlitepclraw.lib.e_sqlite3.android/1.1.11/runtimes/android-arm64/native/libe_sqlite3.so
-			abi = RuntimeIdentifierToAbi (dir.Parent.Name.ToLowerInvariant ());
-			if (!string.IsNullOrEmpty (abi))
-				return abi;
+			if (dir.Parent is DirectoryInfo parent) {
+				abi = RuntimeIdentifierToAbi (parent.Name.ToLowerInvariant ());
+				if (!string.IsNullOrEmpty (abi))
+					return abi;
+			}
 
 			return null;
 		}

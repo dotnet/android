@@ -47,8 +47,6 @@ by projects that use the Microsoft.Android framework in .NET 6+.
       <FilesToPackage Include="@(_AndroidRefPackAnalyzers)" TargetPath="$(_AndroidRefPackAnalyzersPath)" />
       <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.xml" TargetPath="$(_AndroidRefPackAssemblyPath)" />
       <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml" TargetPath="$(_AndroidRefPackAssemblyPath)" />
-      <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)mono.android.jar" TargetPath="$(_AndroidRefPackAssemblyPath)" />
-      <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)mono.android.dex" TargetPath="$(_AndroidRefPackAssemblyPath)" />
     </ItemGroup>
   </Target>
 

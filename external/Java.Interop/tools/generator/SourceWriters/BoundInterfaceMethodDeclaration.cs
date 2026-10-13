@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace generator.SourceWriters
 {
 	public class BoundInterfaceMethodDeclaration : MethodWriter
@@ -44,9 +42,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (iface, method, opt) + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()) {
-				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
-			});
+			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (iface, method, opt) + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()));
 
 			method.JavadocInfo?.AddJavadocs (Comments);
 

@@ -24,21 +24,15 @@ namespace Xamarin.Android.Build.Tests
 		void Logger (TraceLevel level, string message) =>
 			TestContext.WriteLine ($"{level}: {message}");
 
-		[TestCase (false, null)]
-		[TestCase (false, "llvm-ir")]
-		[TestCase (false, "trimmable")]
-		[TestCase (false, "TRIMMABLE")]
-		[TestCase (true, null)]
-		[TestCase (true, "llvm-ir")]
-		[TestCase (true, "trimmable")]
-		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled, string? typeMapImplementation)
+		[TestCase (false)]
+		[TestCase (true)]
+		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled)
 		{
 			var task = new TestableLinkAssembliesNoShrink {
 				AddKeepAlives = true,
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				EnableLegacyCompatibilityAssemblyFixups = enabled,
 				UseDesignerAssembly = true,
-				AndroidTypeMapImplementation = typeMapImplementation,
 			};
 			var resolver = new DirectoryAssemblyResolver (Logger, false);
 			using var pipeline = new AssemblyPipeline (resolver);
@@ -52,17 +46,70 @@ namespace Xamarin.Android.Build.Tests
 				$"{nameof (FixLegacyResourceDesignerStep)} presence should match the compatibility fixup setting.");
 			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep),
 				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
-			Assert.AreEqual (!string.Equals (typeMapImplementation, "trimmable", StringComparison.OrdinalIgnoreCase), pipeline.Steps.Any (step => step is FindJavaObjectsStep),
-				$"{nameof (FindJavaObjectsStep)} should only run for the legacy typemap.");
+			Assert.AreEqual (enabled ? 4 : 1, pipeline.Steps.Count,
+				"Only requested compatibility fixups and the assembly-copy step should run; JCW generation is handled by the trimmable generator.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
-			Assert.AreEqual (!string.Equals (typeMapImplementation, "trimmable", StringComparison.OrdinalIgnoreCase), pipeline.Steps.Any (step => step is FindTypeMapObjectsStep),
-				$"{nameof (FindTypeMapObjectsStep)} should only run for the legacy typemap.");
 		}
 
 		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
 		{
 			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
 				BuildPipeline (pipeline, context);
+		}
+
+		[Test]
+		public void LinkAssembliesNoShrinkCopiesJavaPeersWithoutLegacyImport ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var assemblyPath = Path.Combine (path, "App.dll");
+				var destinationPath = Path.Combine (path, "linked", "App.dll");
+				using (var android = CreateFauxMonoAndroidAssembly ())
+				using (var assembly = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("App", new Version ()), "App", ModuleKind.Dll)) {
+					android.Write (androidPath);
+					var module = assembly.MainModule;
+					var peer = new TypeDefinition ("Example", "Peer", TypeAttributes.Public,
+						module.ImportReference (android.MainModule.GetType ("Java.Lang.Object")));
+					module.Types.Add (peer);
+					var method = new MethodDefinition ("Callback", MethodAttributes.Public | MethodAttributes.Virtual, module.TypeSystem.Void);
+					method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+					var registerType = new TypeReference ("Android.Runtime", "RegisterAttribute", module, peer.BaseType.Scope);
+					var registerConstructor = new MethodReference (".ctor", module.TypeSystem.Void, registerType) { HasThis = true };
+					registerConstructor.Parameters.Add (new ParameterDefinition (module.TypeSystem.String));
+					var register = new CustomAttribute (registerConstructor);
+					register.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, "callback"));
+					method.CustomAttributes.Add (register);
+					peer.Methods.Add (method);
+					assembly.Write (assemblyPath);
+				}
+
+				var source = new TaskItem (assemblyPath);
+				source.SetMetadata ("Abi", "arm64-v8a");
+				source.SetMetadata ("TargetFrameworkIdentifier", "MonoAndroid");
+				var destination = new TaskItem (destinationPath);
+				destination.SetMetadata ("Abi", "arm64-v8a");
+				var androidItem = new TaskItem (androidPath);
+				androidItem.SetMetadata ("Abi", "arm64-v8a");
+				var task = new LinkAssembliesNoShrink {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					CodeGenerationTarget = "XAJavaInterop1",
+					DestinationFiles = [destination],
+					EnableLegacyCompatibilityAssemblyFixups = false,
+					ResolvedAssemblies = [source, androidItem],
+					ResolvedUserAssemblies = [source],
+					SourceFiles = [source],
+					TargetName = "App",
+				};
+
+				Assert.IsTrue (task.Execute (), "Assembly copying must not reimport Java peers using legacy JNI signatures or connectors.");
+				CollectionAssert.AreEqual (File.ReadAllBytes (assemblyPath), File.ReadAllBytes (destinationPath));
+				Assert.IsFalse (File.Exists (Path.ChangeExtension (destinationPath, ".jlo.xml")),
+					"Legacy Java-object XML should not be generated.");
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
 		}
 
 		[Test]
@@ -163,7 +210,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.AddReference (lib);
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("AndroidPackageFormat", "apk");
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidUseAssemblyStore", "true");
 			proj.SetProperty ("PublishReadyToRun", "false");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "EventSourceCallPath.Instrumentation.Invoke ();");
@@ -205,11 +251,24 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNotNull (registeredPeersType);
 			Assert.IsNotNull (bridgeType);
 			var initializeIfNeeded = registeredPeersType.Methods.Single (method => method.Name == "InitializeIfNeeded");
+			var jniEnvInitType = assembly.MainModule.GetType ("Android.Runtime.JNIEnvInit");
+			Assert.IsNotNull (jniEnvInitType);
+			var initialize = jniEnvInitType.Methods.Single (method => method.Name == "Initialize");
+			Assert.IsTrue (
+				initialize.HasBody && initialize.Body.Instructions.Any (instruction =>
+					instruction.Operand is MethodReference reference &&
+					reference.DeclaringType.FullName == registeredPeersType.FullName &&
+					reference.Name == "InitializeIfNeeded"),
+				"runtime startup should initialize the GC bridge regardless of EventSourceSupport");
 			var processBridge = bridgeType.Methods.Single (method => method.Name == "ProcessBridge");
 			var trimmableTypeMapType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.TrimmableTypeMap");
 			Assert.IsNotNull (trimmableTypeMapType);
 			var createJniProxyCacheEntry = trimmableTypeMapType.Methods.Single (method => method.Name == "CreateJniProxyCacheEntry");
 			var createManagedProxyCacheEntry = trimmableTypeMapType.Methods.Single (method => method.Name == "CreateManagedProxyCacheEntry");
+			var referenceManagerType = assembly.MainModule.GetType ("Android.Runtime.ManagedObjectReferenceManager");
+			Assert.IsNotNull (referenceManagerType);
+			var createGlobalReference = referenceManagerType.Methods.Single (method => method.Name == "CreateGlobalReference");
+			var createLocalReference = referenceManagerType.Methods.Single (method => method.Name == "CreateLocalReference");
 			if (enabled) {
 				Assert.IsNotNull (eventSourceType, "the enabled synthetic call path should retain the runtime EventSource facade");
 				var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
@@ -219,6 +278,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the enabled build should retain the GC bridge Stop call site");
 				Assert.IsTrue (CallsRuntimeEventSource (createJniProxyCacheEntry), "the enabled build should retain the Java-to-managed type-map timing call sites");
 				Assert.IsTrue (CallsRuntimeEventSource (createManagedProxyCacheEntry), "the enabled build should retain the managed-to-Java type-map timing call sites");
+				Assert.IsTrue (CallsRuntimeEventSource (createGlobalReference), "the enabled build should retain global reference instrumentation");
+				Assert.IsTrue (CallsRuntimeEventSource (createLocalReference), "the enabled build should retain local reference instrumentation");
 			} else {
 				Assert.IsNull (eventSourceType, "the disabled synthetic call path and runtime EventSource should be removed from the linked assembly");
 				Assert.IsFalse (CallsRuntimeEventSource (initializeIfNeeded, "Initialize"), "the disabled build should remove runtime EventSource initialization");
@@ -226,6 +287,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the disabled build should remove the GC bridge Stop call site");
 				Assert.IsFalse (CallsRuntimeEventSource (createJniProxyCacheEntry), "the disabled build should remove the Java-to-managed type-map timing call sites");
 				Assert.IsFalse (CallsRuntimeEventSource (createManagedProxyCacheEntry), "the disabled build should remove the managed-to-Java type-map timing call sites");
+				Assert.IsFalse (CallsRuntimeEventSource (createGlobalReference), "the disabled build should remove global reference instrumentation");
+				Assert.IsFalse (CallsRuntimeEventSource (createLocalReference), "the disabled build should remove local reference instrumentation");
 			}
 
 			static bool CallsRuntimeEventSource (MethodDefinition method, string? methodName = null) =>
@@ -1013,26 +1076,10 @@ namespace UnnamedProject {
 			}
 		}
 
-		// TODO: fix for (true, AndroidRuntime.CoreCLR)
 		[Test]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates (
-			[Values(true, false)] bool enableMarshalMethods,
 			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (enableMarshalMethods == true && runtime == AndroidRuntime.CoreCLR) {
-				// This currently fails with the following exception:
-				//
-				// Xamarin.Android.Common.targets(1603,3): error XARMM7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
-				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Xamarin.Android.Tasks.MarshalMethodsAssemblyRewriter.Rewrite(Boolean brokenExceptionTransitions) in src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs:line 165
-				//  at Xamarin.Android.Tasks.RewriteMarshalMethods.RewriteMethods(NativeCodeGenState state, Boolean brokenExceptionTransitionsEnabled) in src/Xamarin.Android.Build.Tasks/Tasks/RewriteMarshalMethods.cs:line 160
-				Assert.Ignore ("Fails with Mono.Cecil exception on CoreCLR");
-				return;
-			}
-
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
 			lib.SetRuntime (runtime);
@@ -1066,7 +1113,6 @@ public abstract class MyRunner {
 				"base.OnCreate (bundle);",
 				"base.OnCreate (bundle);\n" +
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
-			proj.EnableMarshalMethods = enableMarshalMethods;
 
 
 			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));

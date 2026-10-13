@@ -9,7 +9,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
-using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
@@ -22,8 +21,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ClassesOutputDirectory { get; set; } = "";
 
-		public string? ClassesZip { get; set; }
-
 		public string? JavaPlatformJarPath { get; set; }
 
 		public string? JavacTargetVersion { get; set; }
@@ -35,28 +32,11 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
-			var result = base.RunTask ();
-			if (!result)
-				return result;
-			// compress all the class files
-			if (!ClassesZip.IsNullOrEmpty ()) {
-				using (var zip = new ZipArchiveEx (ClassesZip, FileMode.OpenOrCreate)) {
-					zip.AutoFlush = false;
-					zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
-				}
-			}
-			return result;
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			//   Running command: C:\Program Files (x86)\Java\jdk1.6.0_20\bin\javac.exe
-			//     "-J-Dfile.encoding=UTF8"
-			//     "-d" "bin\classes"
-			//     "-classpath" "C:\Users\Jonathan\Documents\Visual Studio 2010\Projects\AndroidMSBuildTest\AndroidMSBuildTest\obj\Debug\android\bin\mono.android.jar";"C:\Program Files (x86)\Android\android-sdk-windows\platforms\android-8\android.jar"
-			//     "-encoding" "UTF-8"
-			//     "@C:\Users\Jonathan\AppData\Local\Temp\tmp79c4ac38.tmp"
-
 			var cmd = new CommandLineBuilder ();
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");

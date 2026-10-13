@@ -1,7 +1,5 @@
 package mono;
 
-//NOTE: we can't use import, see Generator.GetMonoInitSource
-
 public class MonoRuntimeProvider
 	extends android.content.ContentProvider
 {

@@ -286,9 +286,11 @@ namespace Android.RuntimeTests {
 		public void GetArray_JavaLangByteArrayToSystemByteArray ()
 		{
 			var byteObjectArray = new Java.Lang.Byte[]{
+#pragma warning disable CA1422 // Byte(byte) constructor is obsolete since API 31.
 				new Java.Lang.Byte (1),
 				new Java.Lang.Byte (2),
 				new Java.Lang.Byte (3),
+#pragma warning restore CA1422
 			};
 			byte[] byteArray = JNIEnv.GetArray<byte>(byteObjectArray);
 			AssertArrays ("GetArray: Java.Lang.Byte[]->byte[]", byteArray, (byte) 1, (byte) 2, (byte) 3);
@@ -477,9 +479,6 @@ namespace Android.RuntimeTests {
 		[Category ("JNIObjectArray")]
 		public void GetObjectArray_AfterStalePeerLookup ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test exercises trimmable type map peer creation.");
-
 			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
 			IntPtr constructor = JNIEnv.GetMethodID (Java.Lang.Class.Object, "<init>", "()V");
 			IntPtr handle = JNIEnv.NewObject (Java.Lang.Class.Object, constructor);
@@ -518,9 +517,6 @@ namespace Android.RuntimeTests {
 		[Category ("JNIObjectArray")]
 		public async Task GetPeer_ConcurrentLookup_ReturnsRegisteredPeer ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test exercises trimmable type map peer creation.");
-
 			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
 			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
@@ -583,9 +579,6 @@ namespace Android.RuntimeTests {
 		[Category ("JNIObjectArray")]
 		public async Task GetObjectArray_DuringConcurrentPeerLookup ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test exercises trimmable type map peer creation.");
-
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
 			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
 			var arrayReference = CreateObjectArrayReference (reference);

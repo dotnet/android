@@ -8,7 +8,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/typemap-tool</OutputPath>
     <OutputType>Exe</OutputType>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <RollForward>Major</RollForward>
@@ -24,9 +23,7 @@
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
-    <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
   </ItemGroup>
-  <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
 </Project>

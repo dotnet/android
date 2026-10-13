@@ -6,14 +6,13 @@ namespace generatortests
 	[TestFixture]
 	public class ParameterXPath : BaseGeneratorTest
 	{
-		protected override bool TryJavaInterop1 => true;
 
 		[Test]
 		public void GeneratedOK ()
 		{
-			RunAllTargets (
+			RunTarget (
 					outputRelativePath:     "ParameterXPath",
-					apiDescriptionFile:     "expected.ji/ParameterXPath/ParameterXPath.xml",
+					apiDescriptionFile:     "TestInputs/ParameterXPath/ParameterXPath.xml",
 					expectedRelativePath:   "ParameterXPath");
 		}
 	}

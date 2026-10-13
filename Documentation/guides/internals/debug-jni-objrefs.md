@@ -1,370 +1,167 @@
 # Debugging JNI Object Reference Crashes
 
-How to debug and diagnose app crashes due to invalid JNI Object References.
+.NET for Android uses [JNI](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
+local, global, and weak-global references to connect managed objects to Java
+peers. Invalid references can cause either an unhandled managed exception or an
+Android Runtime (ART) abort.
 
-## Overview
+Reference diagnostics on CoreCLR and NativeAOT use the
+`Microsoft.Android.Runtime` EventSource. The runtime no longer writes
+`grefs.txt`/`lrefs.txt` or reference messages to logcat, and the former
+`debug.dotnet.log` `gref`/`lref` options no longer enable reference diagnostics.
 
-.NET for Android apps apps make heavy use of the
-[Java Native Interface (JNI)](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
-to create Java instances, invoke methods on those Java instances, and allow Java interfaces to be implemented
-and Java methods to be overridden. When dealing with Java instances,
-[JNI Global and Local Object References](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#global_and_local_references)
-are used.
+## Identify the crash
 
-When an app crashes due to use of an invalid JNI Object Reference, there are two typical "forms" of the crash:
+### Unhandled exception
 
-  * [Via an unhandled exception](#crash-via-unhandled-exception), or
-  * [Via an Android Runtime abort](#crash-dalvik-abort).
+A failure to activate a Java peer can look like:
 
-In order to diagnose and eventually fix the crash, you will next need to:
+```text
+System.NotSupportedException: Unable to activate instance of type Java.Lang.Runnable
+from native handle 0x7ff1f3b468 (key_handle 0x466b26f).
+ ---> System.MissingMethodException: No constructor found for Java.Lang.Runnable::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)
+```
 
- 1. [Collect JNI Object Reference logs](#collect-logs), then
- 2. [Understand the collected logs](#understand-logs).
- 2. [Interpreting the collected logs](#read-logs).
+Record both the JNI handle and `key_handle` (the Java identity hash). A
+`MissingMethodException` for this constructor can result from a disposed or
+collected managed peer being used again from Java. Other inner exceptions can
+have unrelated causes and should be investigated separately.
 
-<a name="crash-unhandled-exception"></a>
-
-### Crash via Unhandled Exception
-
-When debugging an app crashing via an Unhandled Exception, the debugger
-will show that a `NotSupportedException` was thrown containing an
-inner exception which is a `MissingMethodException`:
-
-![Unhandled Exception dialog with MissingMethodException](debug-jni-objrefs-images/debugger-missingmethodexception.png)
-
-`adb logcat` output will contain:
-
-	F mono-rt : [ERROR] FATAL UNHANDLED EXCEPTION: System.NotSupportedException: Unable to activate instance of type Java.Lang.Runnable from native handle 0x7ff1f3b468 (key_handle 0x466b26f).
-	F mono-rt :  ---> System.MissingMethodException: No constructor found for Java.Lang.Runnable::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)
-	F mono-rt :  ---> Java.Interop.JavaLocationException: Exception of type 'Java.Interop.JavaLocationException' was thrown.
-	F mono-rt : Java.Lang.Error: Exception of type 'Java.Lang.Error' was thrown.
-	F mono-rt : 
-	F mono-rt :   --- End of managed Java.Lang.Error stack trace ---
-	F mono-rt : java.lang.Error: Java callstack:
-	F mono-rt :      …
-	F mono-rt :    --- End of inner exception stack trace ---
-	F mono-rt :    at Java.Interop.TypeManager.CreateProxy(Type type, IntPtr handle, JniHandleOwnership transfer) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Interop/TypeManager.cs:line 348
-	F mono-rt :    at Java.Interop.TypeManager.CreateInstance(IntPtr handle, JniHandleOwnership transfer, Type targetType) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Interop/TypeManager.cs:line 312
-	F mono-rt :    --- End of inner exception stack trace ---
-	F mono-rt :    at Java.Interop.TypeManager.CreateInstance(IntPtr handle, JniHandleOwnership transfer, Type targetType) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Interop/TypeManager.cs:line 319
-	F mono-rt :    at Java.Lang.Object.GetObject(IntPtr handle, JniHandleOwnership transfer, Type type) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:line 304
-	F mono-rt :    …
-
-In particular, `adb logcat` has a `MissingMethodException` mentioning that a constructor
-with the signature `(IntPtr, JniHandleOwnership)` could not be found.
-
-If you see a `NotSupportedException` with
-[*anything else* as the inner exception](https://github.com/dotnet/android/issues/7324),
-then this is *not* due to JNI object references, and the rest of this guide will not help you.
-You will need to examine the inner exception to determine the original cause of the exception.
-
-You will need the `key_handle` value from the exception message when
-[investigating the log files](#read-logs).
-
-When a `Java.Lang.Object` subclass is instantiated, a "Java peer" is created, and a mapping between
-the managed instance and the Java peer instance is created. This mapping can be destroyed when
-`Java.Lang.Object.Dispose()` is invoked, or when a Garbage Collection occurs and determines that *both* instances are
-eligible for collection.
-
-This crash is more common for Garbage Collector bugs, but can be caused by deliberately misusing things:
+For example, deliberately disposing a peer while keeping another global
+reference to its Java object destroys the managed association:
 
 ```csharp
-partial class MainActivity : Activity {
-	unsafe void CrashViaUnhandledException()
-	{
-		var r = new Java.Lang.Runnable(() => { });
-		// Create managed subclass of `Java.Lang.Object`
-
-		var h = r.PeerReference.NewGlobalRef();
-		// `h` is a JNI Global Object Reference to the Java peer of `r`
-
-		r.Dispose();
-		// Destroy the mapping between the JNI object reference `h` and the instance `r`
-
-
-		// Invoke `Activity.runOnUiThread(Runnable)`, using the now unassociated object reference `h`
-		JniArgumentValue* args = stackalloc JniArgumentValue[1];
-		args[0] = new JniArgumentValue(h);
-		this.JniPeerMembers.InstanceMethods.InvokeVirtualVoidMethod("runOnUiThread.(Ljava/lang/Runnable;)V", this, args);
-	}
-}
+var runnable = new Java.Lang.Runnable (() => { });
+var reference = runnable.PeerReference.NewGlobalRef ();
+runnable.Dispose ();
+// Invoking Java code through reference may attempt to reactivate the disposed peer.
 ```
 
+### Android Runtime abort
 
-<a name="crash-dalvik-abort"></a>
+An ART abort terminates the application without a managed exception:
 
-### Crash via Android Runtime vik Abort
-
-[Android Runtime (ART), previously known as Dalvik](https://source.android.com/docs/core/dalvik), is the Java runtime environment on Android devices.
-
-When debugging an app crashing via Android Runtime Abort, the app immediately stops debugging. There is no unhandled exception dialog; there is no exception.
-
-The Application Output window will contain `adb logcat` output similar to:
-
-```
-java_vm_ext.cc:579] JNI DETECTED ERROR IN APPLICATION: JNI ERROR (app bug): jobject is an invalid local reference: 0x75 (deleted reference at index 7 in a table of size 7)
+```text
+JNI DETECTED ERROR IN APPLICATION: JNI ERROR (app bug): jobject is an invalid local reference: 0x75 (deleted reference at index 7 in a table of size 7)
 ```
 
-This happens when an invalid JNI object reference is used. This should *never happen* in normal use, but
-can be caused by deliberately misusing things:
-
-```csharp
-static unsafe void UseInvalidJniHandle()
-{
-	var a = new Java.Lang.String("a");
-	var b = JniEnvironment.Strings.NewString("b");
-	var h = b.Handle;
-	JniObjectReference.Dispose(ref b);
-	b = new JniObjectReference(h);
-	JniArgumentValue* args = stackalloc JniArgumentValue[1];
-	args[0] = new JniArgumentValue(b);
-	a.JniPeerMembers.InstanceMethods.InvokeNonvirtualBooleanMethod("endsWith.(Ljava/lang/String;)Z", a, args);
-}
-```
-
-The JNI Object reference `h` is invalidated when `JniObjectReference.Dispose(ref b)` is invoked; `h` is now invalid.
-Attempting to subsequently use that value results in the `JNI DETECTED ERROR IN APPLICATION` message and subsequent crash.
-
+Record the handle and its reference kind. An invalid *local* reference usually
+requires local-reference events, not just global-reference events.
 
 <a name="collect-logs"></a>
 
-## Collect JNI Object Reference Logs
+## Collect reference events
 
-In order to diagnose and fix JNI Object Reference usage bugs, JNI Object Reference logs must first be collected.
-There are two sets of logs: JNI *Local* Reference logs, and JNI *Global* Reference logs. JNI Local Reference logs
-are *incredibly* voluminous; they should be collected only as a last resort.
+Build the application with diagnostics and EventSource support enabled:
 
-There are two ways to obtain JNI Object Reference logs:
-
- 1. [Collect the *complete* JNI Object Reference log output](#collect-complete-logs), or
- 2. [Collect "best effort" JNI Object Reference log output](#collect-best-effort-logs).
-
-
-<a name="collect-complete-logs"></a>
-
-### Collect Complete JNI Object Reference Logs
-
-To collect *complete* JNI object reference logs, your app must be "debuggable": the
-[`//application/@android:debuggable`](https://developer.android.com/guide/topics/manifest/application-element#debug) attribute
-within `AndroidManifest.xml` must have the value `true`. This is typically the case for Debug configuration builds, and
-*not* for Release configuration builds. (The Google Play Store requires that submitted apps *not* be debuggable.)
-
-Enable JNI Global Reference log collection by setting the `debug.dotnet.log` system property to a value which contains `gref`:
-
-	adb shell setprop debug.dotnet.log gref
-
-Then run your app again and trigger the crash. Once tha app has exited, run:
-
-	adb shell run-as @PACKAGE-NAME@ cat files/.__override__/grefs.txt > grefs.txt
-
-where `@PACKAGE-NAME@` is the value of the [`/manifest/@package` attribute](https://developer.android.com/guide/topics/manifest/manifest-element#package)
-within `AndroidManifest.xml`. This is generally the filename before `-Signed.apk` in your `bin` directory.
-
-To collect JNI Local Reference logs, the `debug.dotnet.log` system property should contain `lref`, and the required file is `lrefs.txt`.
-
-Both Local and Global JNI Object References can be collected at the same time:
-
-	adb shell setprop debug.dotnet.log lref,gref
-
-	# run the app, then
-
-	adb shell run-as @PACKAGE-NAME@ cat files/.__override__/grefs.txt > grefs.txt
-	adb shell run-as @PACKAGE-NAME@ cat files/.__override__/lrefs.txt > lrefs.txt
-
-<a name="collect-best-effort-logs"></a>
-
-### Collect Best Effort JNI Object Reference Logs
-
-Complete JNI Object Reference log collection can only be done for debuggable apps. If your app isn't debuggable,
-or the crash doesn't reproduce in a debuggable app, then you will need to try for "Best Effort" collection by
-setting the `debug.dotnet.log` system property to contain either/both `gref+` for Global References and
-`lref+` for Local References:
-
-	adb shell setprop debug.dotnet.log lref+,gref+
-
-Then, begin collecting `adb logcat` *before* launching your app:
-
-	adb logcat -G 16M
-	adb logcat > log.txt
-
-Once your app crashes, `log.txt` will contain the JNI Object Reference logs.
-
-*However*, the output *may* be incomplete. It is not unusual for information to be missing, because *so much*
-data is written to `adb logcat`.
-
-The `lref+` and `gref+` values to the `debug.dotnet.log` system property *also* create `lrefs.txt` and `grefs.txt` files.
-However, those files will not be readable if the app is not debuggable.
-
-
-<a name="Understand-logs"></a>
-
-## Understand The Logs
-
-Once you've collected the JNI Object Reference logs, you read them.
-
-There are four messages of consequence:
-
-  * Global reference creation: these are the lines that start with *+g+*,
-    and will provide a stack trace for the creating code path.
-
-    ```
-    +g+ grefc 1 gwrefc 0 obj-handle 0x1bb6/G -> new-handle 0x1be6/G from thread '(null)'(1)
-    ```
-
-  * Global reference destruction: these are the lines that start with *-g-*,
-    and may provide a stack trace for the code path disposing of the global reference.
-
-    If the [Garbage Collector](https://docs.microsoft.com/xamarin/android/internals/garbage-collection)
-	is disposing of the gref, no stack trace will be provided.
-
-    ```
-    +l+ lrefc 1 handle 0xc1/L from thread '(null)'(1)
-    ```
-
-  * Weak global reference creation: these are the lines that start with *+w+*.
-
-    ```
-    +w+ grefc 27 gwrefc 3 obj-handle 0x1c46/G -> new-handle 0x28b/W from thread 'finalizer'(6931)
-    ```
-
-  * Weak global reference destruction: these are lines that start with *-w-*.
-
-    ```
-    -w- grefc 28 gwrefc 1 handle 0x297/W from thread 'finalizer'(6931)
-    ```
-
-In all messages, the *grefc* value is the count of global references that have been created,
-while the *grefwc* value is the count of weak global references that have been created.
-The *handle* or *obj-handle* value is the JNI handle value, and the character after the `/` is
-the type of handle value: `/L` for local reference, `/G` for global references, and `/W` for weak global references.
-
-Also frequently of consequence are the messages:
-
-  * Handle status: these are lines that start with *handle*, and list the mapping between
-    a JNI Global Reference -- logged in a preceding *+g+* message --
-    the `key_handle` value -- used for object identity -- the Java type, and the Managed type.
-
-    ```
-    handle 0x1c86; key_handle 0x466b26f: Java Type: `java/lang/String`; MCW type: `Java.Lang.String`
-    ```
-
-<a name="read-logs"></a>
-
-## Interpreting the Logs
-
-When diagnosing a crash, you start with the JNI Object Reference mentioned in the crash.
-Then you search backwards from the end of the collected log files, looking for any and all mentions of the
-invalid JNI Object Reference, and -- if available -- the `key_handle` in the error message.
-
-
-### Unhandled Exception Crash Logs
-
-Consider the [crash via Unhandled Exception](#crash-unhandled-exception):
-
-```
-F mono-rt : [ERROR] FATAL UNHANDLED EXCEPTION: System.NotSupportedException: Unable to activate instance of type Java.Lang.Runnable from native handle 0x7ff1f3b468 (key_handle 0x466b26f).
+```xml
+<PropertyGroup>
+  <EnableDiagnostics>true</EnableDiagnostics>
+  <EventSourceSupport>true</EventSourceSupport>
+  <DiagnosticSuspend>true</DiagnosticSuspend>
+</PropertyGroup>
 ```
 
-After collecting the JNI Global Reference logs, we search backward, from the end, for the values
-`0x7ff1f3b468` and `0x466b26f`. (If using `less`, search backwards `?` for the value `0x7ff1f3b468|0x466b26f`.)
-This lands us on:
+Optimized applications disable EventSource support by default. Enabling it is a
+build-time decision; setting an Android system property cannot restore code
+that was trimmed away. `DiagnosticSuspend=true` lets collection start before
+the application creates the references being investigated.
 
-```
-handle 0x1cda; key_handle 0x466b26f: Java Type: `mono/java/lang/Runnable`; MCW type: `Java.Lang.Runnable`
-```
-
-which is unfortunately the only match. This match gives us a handle `0x1cda`; we can search forwards and
-backwards to see what happened with it. In context:
-
-```
- 1.  +g+ grefc 12 gwrefc 0 obj-handle 0x79/I -> new-handle 0x1cda/G from thread '(null)'(1)
- 2.     at Android.Runtime.AndroidObjectReferenceManager.CreateGlobalReference(JniObjectReference value) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/AndroidRuntime.cs:line 183
- 3.     at Java.Interop.JniObjectReference.NewGlobalRef() in /Users/runner/work/1/s/xamarin-android/external/Java.Interop/src/Java.Interop/Java.Interop/JniObjectReference.cs:line 139
- 4.     at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/JNIEnv.cs:line 656
- 5.     at Android.Runtime.AndroidValueManager.AddPeer(IJavaPeerable value, IntPtr handle, JniHandleOwnership transfer, IntPtr& handleField) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/AndroidRuntime.cs:line 566
- 6.     at Java.Lang.Object.SetHandle(IntPtr value, JniHandleOwnership transfer) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:line 251
- 7.     at Java.Lang.Object..ctor(IntPtr handle, JniHandleOwnership transfer) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:line 79
- 8.     at Java.Lang.Runnable..ctor(Action handler) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Lang/Runnable.cs:line 13
- 9.     at Scratch.GrefCrashNet6.MainActivity.JniActivationCrash() in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 39
-10.     at Scratch.GrefCrashNet6.MainActivity.OnCreate(Bundle savedInstanceState) in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 16
-11.     at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/obj/Release/net6.0/android-31/mcw/Android.App.Activity.cs:line 2781
-12.     at Android.Runtime.JNINativeWrapper.Wrap_JniMarshal_PPL_V(_JniMarshal_PPL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/JNINativeWrapper.g.cs:line 121
-13.
-14.  handle 0x1cda; key_handle 0x466b26f: Java Type: `mono/java/lang/Runnable`; MCW type: `Java.Lang.Runnable`
-15.
-16.  +g+ grefc 13 gwrefc 0 obj-handle 0x1cda/G -> new-handle 0x1cea/G from thread '(null)'(1)
-17.     at Android.Runtime.AndroidObjectReferenceManager.CreateGlobalReference(JniObjectReference value) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/AndroidRuntime.cs:line 183
-18.     at Java.Interop.JniObjectReference.NewGlobalRef() in /Users/runner/work/1/s/xamarin-android/external/Java.Interop/src/Java.Interop/Java.Interop/JniObjectReference.cs:line 139
-19.     at Scratch.GrefCrashNet6.MainActivity.JniActivationCrash() in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 34
-20.     at Scratch.GrefCrashNet6.MainActivity.OnCreate(Bundle savedInstanceState) in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 16
-21.     at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/obj/Release/net6.0/android-31/mcw/Android.App.Activity.cs:line 2781
-22.     at Android.Runtime.JNINativeWrapper.Wrap_JniMarshal_PPL_V(_JniMarshal_PPL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/JNINativeWrapper.g.cs:line 121
-23.  -g- grefc 12 gwrefc 0 handle 0x1cda/G from thread '(null)'(1)
-24.     at Android.Runtime.AndroidObjectReferenceManager.DeleteGlobalReference(JniObjectReference& value) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/AndroidRuntime.cs:line 210
-25.     at Java.Interop.JniObjectReference.Dispose(JniObjectReference& reference) in /Users/runner/work/1/s/xamarin-android/external/Java.Interop/src/Java.Interop/Java.Interop/JniObjectReference.cs:line 192
-26.     at Java.Interop.JniRuntime.JniValueManager.DisposePeer(JniObjectReference h, IJavaPeerable value) in /Users/runner/work/1/s/xamarin-android/external/Java.Interop/src/Java.Interop/Java.Interop/JniRuntime.JniValueManager.cs:line 184
-27.     at Java.Interop.JniRuntime.JniValueManager.DisposePeer(IJavaPeerable value) in /Users/runner/work/1/s/xamarin-android/external/Java.Interop/src/Java.Interop/Java.Interop/JniRuntime.JniValueManager.cs:line 158
-28.     at Java.Lang.Object.Dispose() in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:line 210
-29.     at Scratch.GrefCrashNet6.MainActivity.JniActivationCrash() in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 35
-30.     at Scratch.GrefCrashNet6.MainActivity.OnCreate(Bundle savedInstanceState) in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 16
-31.     at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/obj/Release/net6.0/android-31/mcw/Android.App.Activity.cs:line 2781
-32.     at Android.Runtime.JNINativeWrapper.Wrap_JniMarshal_PPL_V(_JniMarshal_PPL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/JNINativeWrapper.g.cs:line 121
-```
-
-Line 1: we're creating a JNI Global Reference for a `Java.Lang.Runnable` instance, with managed stack trace.
-
-Line 14 is how we know we're creating a `Java.Lang.Runnable` instance. The `handle 0x1cda` value matches the `new-handle 0x1cda/G` value on Line 1.
-
-Line 16: we create a new JNI Global Reference with value 0x1cea.
-
-Line 23: we destroy the JNI Global Reference 0x1cda.
-
-This is where we need to "know things" and read carefully: line 28 has `Java.Lang.Object.Dispose()` in the stack trace.
-From this we must *infer* that the instance associated with JNI Global Reference 0x1cda has been disposed, which removes
-the association between *key_handle 0x466b26f* and the `Java.Lang.Runnable` *instance*. This also tells us where
-`Java.Lang.Object.Dispose()` was called from: within `JniActivationCrash()`, in `MainActivity.cs:35`.
-
-Search the collected GREF logs for the `key_handle` value to find the peer and follow its
-lifecycle. In this example, the latest lifecycle entries show that the instance was disposed
-and then collected.
-
-### Android Runtime Abort Crash Logs
-
-Consider the [crash via Android Runtime Abort](#crash-dalvik-abort):
-
-```
-java_vm_ext.cc:579] JNI DETECTED ERROR IN APPLICATION: JNI ERROR (app bug): jobject is an invalid local reference: 0x75 (deleted reference at index 7 in a table of size 7)
-```
-
-Of note is that the abort message mentions *local*, in "an invalid local reference". This is a sign that we need to collect the JNI Local Reference logs:
+Start collection before launching the application. For an emulator:
 
 ```sh
-adb shell setprop debug.dotnet.log lref,gref
-
-# run the app…
-
-adb shell run-as @PACKAGE-NAME@ cat files/.__override__/grefs.txt > grefs.txt
-adb shell run-as @PACKAGE-NAME@ cat files/.__override__/lrefs.txt > lrefs.txt
+# Global and weak-global references
+dotnet-trace collect --dsrouter android-emu \
+    --providers Microsoft.Android.Runtime:0x10:5 -o references.nettrace
 ```
 
-where `@PACKAGE-NAME@` is the value of the [`/manifest/@package` attribute](https://developer.android.com/guide/topics/manifest/manifest-element#package)
-within `AndroidManifest.xml`. This is generally the filename before `-Signed.apk` in your `bin` directory.
+Use `0x30` instead of `0x10` to include local references. Local-reference events
+are very numerous, so enable them only when necessary. For a physical device,
+follow the transport setup in the [tracing guide](../tracing.md).
 
-After collecting the JNI Local Reference logs, we search backward, from the end, for the values
-`0x75`. (If using `less`, search backwards `?` for the value `0x75`.)
-This lands us on:
+NativeAOT EventPipe does not currently supply reference-event call stacks.
+Use `0x50` for global/weak-global operations with opt-in managed stack events,
+or `0x70` to include locals and stacks. This adds stack-string allocation cost;
+it is not enabled by ordinary reference collection. Keep `StackTraceSupport`
+enabled in the NativeAOT application.
 
+Launch the application, reproduce the problem, and stop collection. Preserve
+the `.nettrace` file; Speedscope and the `dotnet-trace` Chromium conversion omit
+the reference-event payloads.
+
+Inspect the `Microsoft.Android.Runtime` events, their payloads, and available
+stacks with [PerfView](https://github.com/microsoft/perfview) on Windows or a
+cross-platform analyzer using `Microsoft.Diagnostics.Tracing.TraceEvent`.
+A repository skill for interpreting these events is planned in
+[#13000](https://github.com/dotnet/android/issues/13000); it is not yet available.
+
+EventPipe can drop events when its buffers overflow. Increase `--buffersize` or
+reduce enabled keywords when necessary, and check the analyzer's event-loss
+diagnostics. References created before collection and
+events still buffered at an abrupt process exit may also be missing. Do not
+interpret the absence of an event as proof that the operation did not occur.
+
+## Understand the events
+
+| Event | Meaning |
+|---|---|
+| `GlobalReferenceCreated` | A new global `handle` was created from `sourceHandle`. |
+| `GlobalReferenceDeleted` | The global reference in `sourceHandle` was deleted. |
+| `WeakGlobalReferenceCreated` | A new weak-global `handle` was created from `sourceHandle`. |
+| `WeakGlobalReferenceDeleted` | The weak-global reference in `sourceHandle` was deleted. |
+| `WeakGlobalReferenceCollected` | Java GC collected a weak reference that could not be promoted to a global reference. |
+| `LocalReferenceCreated` | A local reference was created or adopted from JNI. |
+| `LocalReferenceDeleted` | JNI deleted the local `handle`. |
+| `LocalReferenceReleased` | Managed ownership of the local `handle` was transferred; JNI did not delete it. |
+| `GlobalReferenceDiagnostic` | Peer creation, disposal, finalization, identity, type, or activation diagnostics. |
+| `LocalReferenceDiagnostic` | Additional local-reference diagnostics from Java.Interop. |
+| `ReferenceStackTrace` | Opt-in NativeAOT managed stack for the preceding reference operation, correlated by event ID, handle, and managed thread ID. |
+
+Handles are unsigned 64-bit payloads and are printed in hexadecimal.
+`sourceType`/`referenceType` values are `0` (invalid), `1` (local), `2` (global),
+and `3` (weak-global). A global deletion has a zero destination `handle`.
+
+`globalCount` and `weakCount` are concurrent snapshots of managed global and
+weak-global reference accounting. `localCount` belongs to the supplied JNI
+environment's managed accounting; it is not a process-wide count of JNI locals.
+Event order and counts across threads must not be treated as one atomic history.
+
+`managedThreadId` identifies the managed thread; EventPipe's event-header thread
+ID is the native thread ID. `bridgeOperation` identifies
+ordinary operations (`0`), bridge initialization (`1`), global-to-weak
+transitions (`2`), and weak-to-global transitions (`3`).
+
+For the full event IDs, keywords, and payload contract, see
+[JNI reference events](../tracing.md#jni-reference-events).
+
+## Interpret the history
+
+Search backward for the handle from the crash. If you exported the events to
+searchable text, for example:
+
+```sh
+grep -n '0x75' references.txt
 ```
--l- lrefc 0 handle 0x75/L from thread '(null)'(1)
-   at Android.Runtime.AndroidObjectReferenceManager.DeleteLocalReference(JniObjectReference& value, Int32& localReferenceCount) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/AndroidRuntime.cs:line 140
-   at Java.Interop.JniRuntime.JniObjectReferenceManager.DeleteLocalReference(JniEnvironmentInfo environment, JniObjectReference& reference) in /Users/runner/work/1/s/xamarin-android/external/Java.Interop/src/Java.Interop/Java.Interop/JniRuntime.JniObjectReferenceManager.cs:line 70
-   at Java.Interop.JniObjectReference.Dispose(JniObjectReference& reference) in /Users/runner/work/1/s/xamarin-android/external/Java.Interop/src/Java.Interop/Java.Interop/JniObjectReference.cs:line 195
-   at Scratch.GrefCrashNet6.MainActivity.UseInvalidJniHandle() in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 24
-   at Scratch.GrefCrashNet6.MainActivity.OnCreate(Bundle savedInstanceState) in …/Scratch.GrefCrashNet6/Scratch.GrefCrashNet6/MainActivity.cs:line 15
-   at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/obj/Release/net6.0/android-31/mcw/Android.App.Activity.cs:line 2781
-   at Android.Runtime.JNINativeWrapper.Wrap_JniMarshal_PPL_V(_JniMarshal_PPL_V callback, IntPtr jnienv, IntPtr klazz, IntPtr p0) in /Users/runner/work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/JNINativeWrapper.g.cs:line 121
-```
 
-This tells us that the JNI Local Reference was in fact deleted, from `UseInvalidJniHandle()`,
-in `MainActivity.cs:15`. From there we can investigate our code and fix it so that an
-invalid JNI handle is no longer used.
+For an invalid local reference, find its latest `LocalReferenceCreated` and
+`LocalReferenceDeleted` events on the relevant thread. Inspect the deletion's
+stack to find the code that disposed the reference. A later use of that handle
+is invalid. In contrast, `LocalReferenceReleased` can be a legitimate transfer
+back to Java at a JNI boundary.
+
+For an activation failure, search for both the JNI handle and the Java identity
+hash in `GlobalReferenceDiagnostic` messages. Peer creation messages connect
+the handle to its managed object and Java/managed types. Disposal and
+finalization messages show when the managed association was removed. Follow
+`GlobalReferenceCreated` events to any copied handles, and use their call stacks
+to locate the code retaining the Java object after managed disposal.
+
+During bridge processing, follow global-to-weak and weak-to-global events.
+`WeakGlobalReferenceCollected` marks a peer that Java GC did not retain;
+successful promotion produces a new `GlobalReferenceCreated` event instead.
+The explicit bridge-operation payload replaces the former synthetic
+`[[clr-gc:...]]` stack-trace markers.
+
+JNI can reuse handle values. Correlate the handle with its thread, peer identity,
+creation/deletion sequence, and bridge context rather than assuming the same
+numeric handle always identifies the same lifetime.

@@ -75,18 +75,14 @@ namespace Java.Interop {
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups) {
-					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
-						return collectionConverter;
-				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
-					if (factoryConverter != null)
-						return factoryConverter;
-				} else if (RuntimeFeature.TrimmableTypeMap) {
+				if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups ||
+						!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
 						return collectionConverter;
 				} else {
-					throw new NotSupportedException ($"Cannot convert Java collection elements to closed generic array element type '{target}' because the runtime does not support dynamic code generation.");
+					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
+					if (factoryConverter != null)
+						return factoryConverter;
 				}
 			}
 
@@ -173,22 +169,13 @@ namespace Java.Interop {
 					return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
 
 				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
-					if (RuntimeFeature.TrimmableTypeMap)
-						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
-					return GetObjectWithSuppression (handle, transfer, elementType);
+					return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
 				}
 
 				var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 				if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
 					return value;
 				return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
-			}
-
-			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2067:RequiresUnreferencedCode",
-				Justification = "Custom trimmer steps marks the activation constructors on IJavaPeerable types.")]
-			static object? GetObjectWithSuppression (IntPtr handle, JniHandleOwnership transfer, Type? elementType)
-			{
-				return Java.Lang.Object.GetObject (handle, transfer, elementType);
 			}
 		}
 
