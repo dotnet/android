@@ -17,16 +17,9 @@ add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 set_static_library_suffix(${LIB_NAME})
 
 macro(lib_target_options TARGET_NAME)
-  target_include_directories(
-    ${TARGET_NAME}
-    PUBLIC
-    "$<BUILD_INTERFACE:${JAVA_INTEROP_INCLUDE_DIR}>"
-  )
-
   target_link_libraries(
     ${TARGET_NAME}
     PUBLIC
-    xa::java-interop
     -llog
   )
 

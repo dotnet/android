@@ -2,9 +2,6 @@
 #include <limits>
 #include <string_view>
 
-#include <java-interop-dlfcn.h>
-#include <java-interop.h>
-
 #include <constants.hh>
 #include <xamarin-app.hh>
 #include <host/host-environment-clr.hh>
@@ -14,7 +11,6 @@
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/util.hh>
 
-using namespace microsoft::java_interop;
 using namespace xamarin::android;
 
 using std::operator""sv;
