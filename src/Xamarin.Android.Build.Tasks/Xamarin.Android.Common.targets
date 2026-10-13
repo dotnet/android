@@ -1201,7 +1201,6 @@ because xbuild doesn't support framework reference assemblies.
 		@(_AndroidMSBuildAllProjects);
 		@(_AndroidResourceDest);
 		$(_AndroidBuildPropertiesCache);
-		$(MSBuildThisFileDirectory)Xamarin.Android.Build.Tasks.dll;
 		$(ProjectAssetsFile);
 		$(_AndroidLibraryProjectImportsCache);
 		$(_AndroidLibraryImportsCache);
