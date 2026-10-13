@@ -26,16 +26,23 @@ namespace Java.Interop {
 
 		readonly struct JniPeerTypeNameInfo
 		{
-			/// <safety>
-			/// A nonzero <paramref name="targetNameUtf8"/> must address readable NUL-terminated
-			/// UTF-8 storage. The caller must keep it alive and unchanged for the associated
-			/// runtime's lifetime, including every lookup through peer members that cache this value.
-			/// </safety>
-			public unsafe JniPeerTypeNameInfo (string sourceName, string? targetName, IntPtr targetNameUtf8)
+			public JniPeerTypeNameInfo (string sourceName, string? targetName)
 			{
 				SourceName = sourceName;
 				TargetName = targetName;
-				TargetNameUtf8 = targetNameUtf8;
+				TargetNameUtf8 = IntPtr.Zero;
+			}
+
+			/// <safety>
+			/// A non-null <paramref name="targetNameUtf8"/> must address readable NUL-terminated
+			/// UTF-8 storage. The caller must keep it alive and unchanged for the associated
+			/// runtime's lifetime, including every lookup through peer members that cache this value.
+			/// </safety>
+			public unsafe JniPeerTypeNameInfo (string sourceName, byte* targetNameUtf8)
+			{
+				SourceName = sourceName;
+				TargetName = null;
+				TargetNameUtf8 = (IntPtr) targetNameUtf8;
 			}
 
 			public string SourceName { get; }
@@ -49,8 +56,10 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			typeManager.GetReplacementTypeInfo (jniPeerTypeName, out var replacement, out var replacementUtf8);
+			if (replacementUtf8 == IntPtr.Zero)
+				return new JniPeerTypeNameInfo (jniPeerTypeName, replacement);
 			unsafe {
-				return new JniPeerTypeNameInfo (jniPeerTypeName, replacement, replacementUtf8);
+				return new JniPeerTypeNameInfo (jniPeerTypeName, (byte*) replacementUtf8);
 			}
 		}
 
