@@ -202,6 +202,13 @@ namespace Xamarin.Android.Tasks
 				var il = c.Value.Body.GetILProcessor ();
 				il.Emit(OpCodes.Ret);
 			}
+			// Roslyn requires the historical identity when compiling against existing binary libraries.
+			// Retain only the public key; no private key or strong-name signature is needed.
+			assembly.Name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;
+			assembly.Name.PublicKey = Convert.FromBase64String (
+				"ACQAAASAAACUAAAABgIAAAAkAABSU0ExAAQAAAEAAQCpBnmFbvXLb4WykP2Upfaz2x5Yp4wR" +
+				"B3j8zFFUd3nIPfBpQgNCAos1sZdCqLAB0qY+nvEd5kxNJSE3mtDYmwsdkekNhTRivIWVcr96" +
+				"mkIdYP69chuGkQVAJ5a2foQP7+VITegrY4lZn8PNtRlSnXSSOJcwJwSBDVJ8XD3dYBLGgw==");
 			var wp = new WriterParameters () {
 				DeterministicMvid = Deterministic,
 			};
