@@ -5,7 +5,6 @@
 #include <dlfcn.h>
 #include <android/dlext.h>
 
-#include <java-interop-dlfcn.h>
 #include <runtime-base/mutex.hh>
 
 #include "../xamarin-app.hh"
@@ -193,28 +192,6 @@ namespace xamarin::android
 
 			DSOCacheEntry *dso = find_dso_cache_entry (name, name_hash);
 			return monodroid_dlopen (dso, name, flags);
-		}
-
-		[[gnu::flatten]]
-		static auto monodroid_dlsym (void *handle, const char *name) -> void*
-		{
-			char *e = nullptr;
-			void *s = microsoft::java_interop::java_interop_lib_symbol (handle, name, &e);
-
-			if (s == nullptr) {
-				log_errorf (
-					LOG_ASSEMBLY,
-					"Could not find symbol '%s': %s",
-					name,
-					optional_string (e)
-				);
-			}
-
-			if (e != nullptr) {
-				java_interop_free (e);
-			}
-
-			return s;
 		}
 	};
 }

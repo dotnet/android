@@ -379,7 +379,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 			fastdev_prop_names = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
 			fastdev_prop_values = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
 			if (fastdev_prop_names == nullptr || fastdev_prop_values == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the runtime properties; falling back to assembly probing");
+				log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the runtime properties; falling back to assembly probing");
 				std::free (fastdev_prop_names);
 				std::free (fastdev_prop_values);
 				FastDevAssemblies::discard_tpa_list (fastdev_tpa_list);

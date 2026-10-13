@@ -412,8 +412,6 @@ namespace Xamarin.Android.ApiMerge {
 			return GetParameterType (type, mappings);
 		}
 		
-		const string wildConstraints = "? extends ";
-		const string superConstraints = "? super ";
 		static readonly char [] type_sep = new char [] {'<', ',', '?'};
 		
 		static string GetParameterType (string type, Dictionary<string, string> mappings)

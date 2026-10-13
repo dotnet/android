@@ -119,7 +119,6 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     ${SHARED_LIB_NAME}
     xa::runtime-base
-    xa::java-interop
     xa::pinvoke-override-precompiled
     -lSystem.IO.Compression.Native
     -landroid

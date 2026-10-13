@@ -1,5 +1,7 @@
 #pragma once
 
+#include <dlfcn.h>
+
 #include "pinvoke-override.hh"
 #include "../runtime-base/monodroid-dl.hh"
 #include <shared/log_functions.hh>
@@ -20,14 +22,14 @@ namespace xamarin::android {
 			char *short_library_name = Util::format_dso_name (stack_buffer, sizeof (stack_buffer), library_name, true);
 
 			log_debugf (LOG_ASSEMBLY, "Modified p/invoke library name to '%s'", short_library_name);
-			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name, RTLD_NOW | RTLD_LOCAL);
 			if (short_library_name != stack_buffer) {
 				std::free (short_library_name);
 			}
 		}
 
 		if (lib_handle == nullptr) {
-			lib_handle = MonodroidDl::monodroid_dlopen (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			lib_handle = MonodroidDl::monodroid_dlopen (library_name, RTLD_NOW | RTLD_LOCAL);
 		}
 
 		if (lib_handle == nullptr) {
@@ -36,9 +38,17 @@ namespace xamarin::android {
 			return nullptr;
 		}
 
-		void *entry_handle = MonodroidDl::monodroid_dlsym (lib_handle, symbol_name);
+		dlerror ();
+		void *entry_handle = dlsym (lib_handle, symbol_name);
 		if (entry_handle == nullptr) {
-			log_warnf (LOG_ASSEMBLY, "Symbol '%s' not found in shared library '%s', p/invoke may fail", symbol_name, library_name);
+			const char *error = dlerror ();
+			log_errorf (
+				LOG_ASSEMBLY,
+				"Could not find symbol '%s' in shared library '%s': %s",
+				symbol_name,
+				library_name,
+				optional_string (error, "Unknown error")
+			);
 			log_debugf (LOG_DEFAULT, "p/invoke not found");
 			return nullptr;
 		}
