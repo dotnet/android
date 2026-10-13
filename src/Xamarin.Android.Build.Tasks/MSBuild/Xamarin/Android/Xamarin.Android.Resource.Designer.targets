@@ -158,7 +158,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Target Name="_GenerateResourceDesignerAssembly"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
     DependsOnTargets="_GenerateResourceCaseMap"
-    Inputs="$(_DesignerIntermediateOutputPath)R.txt;$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath);$(MSBuildThisFileDirectory)Xamarin.Android.Build.Tasks.dll"
+    Inputs="$(_DesignerIntermediateOutputPath)R.txt"
     Outputs="$(_GenerateResourceDesignerAssemblyOutput)">
   <GenerateResourceDesignerAssembly
       ContinueOnError="$(DesignTimeBuild)"
