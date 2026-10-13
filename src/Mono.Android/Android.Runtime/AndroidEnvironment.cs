@@ -219,18 +219,6 @@ namespace Android.Runtime {
 				.JavaCast<Java.Security.Cert.X509Certificate>()!;
 		}
 
-		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)
-		{
-			ushort built_for_cpu = 0;
-			ushort running_on_cpu = 0;
-			byte _is64bit = 0;
-
-			RuntimeNativeMethods._monodroid_detect_cpu_and_architecture (ref built_for_cpu, ref running_on_cpu, ref _is64bit);
-			builtForCPU = built_for_cpu;
-			runningOnCPU = running_on_cpu;
-			is64bit = _is64bit != 0;
-		}
-
 		// This is invoked by
 		// System.Net.Http.dll!System.Net.Http.HttpClient.cctor
 		// DO NOT REMOVE

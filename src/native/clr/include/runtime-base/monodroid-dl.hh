@@ -196,17 +196,16 @@ namespace xamarin::android
 		}
 
 		[[gnu::flatten]]
-		static auto monodroid_dlsym (void *handle, std::string_view const& name) -> void*
+		static auto monodroid_dlsym (void *handle, const char *name) -> void*
 		{
 			char *e = nullptr;
-			void *s = microsoft::java_interop::java_interop_lib_symbol (handle, name.data (), &e);
+			void *s = microsoft::java_interop::java_interop_lib_symbol (handle, name, &e);
 
 			if (s == nullptr) {
 				log_errorf (
 					LOG_ASSEMBLY,
-					"Could not find symbol '%.*s': %s",
-					static_cast<int>(name.length ()),
-					name.data (),
+					"Could not find symbol '%s': %s",
+					name,
 					optional_string (e)
 				);
 			}

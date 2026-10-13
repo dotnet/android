@@ -1,4 +1,5 @@
 #include <host/host-common.hh>
+#include <host/gc-bridge.hh>
 #include <host/host-environment-naot.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
@@ -41,6 +42,18 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.
+	initArgs->logCategories = log_categories;
+	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
+	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
+	initArgs->initializeGCBridge = &GCBridge::initialize_callback;
+	initArgs->grefIGCUserPeer = create_igc_user_peer_global_ref (env);
+	static BinaryBlobPayload remapping = {};
+	remapping = BinaryBlobLoader::load_optional ("remapping_data");
+	initArgs->jniRemappingData = remapping.data == nullptr ? nullptr : &remapping;
+}
+
+auto Host::create_igc_user_peer_global_ref (JNIEnv *env) noexcept -> jobject
+{
 	// NativeAOT initializes Mono.Android's common JNI state before creating the JniRuntime,
 	// so the Java peer marker class must be provided by the host instead of being looked
 	// up later from mono.android.Runtime static fields like MonoVM/CoreCLR.
@@ -51,20 +64,14 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		abort_unless (false, "Failed to load mono/android/IGCUserPeer class");
 	}
 
-	initArgs->logCategories = log_categories;
-	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
-	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
-	initArgs->grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
-	if (initArgs->grefIGCUserPeer == nullptr) [[unlikely]] {
+	jobject grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
+	if (grefIGCUserPeer == nullptr) [[unlikely]] {
 		if (env->ExceptionCheck ()) {
 			env->ExceptionDescribe ();
 			env->ExceptionClear ();
 		}
 		abort_unless (false, "Failed to create a global reference for mono/android/IGCUserPeer");
 	}
-	static BinaryBlobPayload remapping = {};
-	remapping = BinaryBlobLoader::load_optional ("remapping_data");
-	initArgs->jniRemappingData = remapping.data == nullptr ? nullptr : &remapping;
-
 	env->DeleteLocalRef (lrefIGCUserPeer);
+	return grefIGCUserPeer;
 }

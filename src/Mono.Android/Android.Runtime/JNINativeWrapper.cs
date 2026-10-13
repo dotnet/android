@@ -41,7 +41,7 @@ namespace Android.Runtime {
 				return result;
 
 			if (Logger.LogAssembly) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{dlg.GetType ()}': {dlg.Method}");
+				Logger.Log (LogLevel.Debug, "monodroid-assembly", $"Falling back to System.Reflection.Emit for delegate type '{dlg.GetType ()}': {dlg.Method}");
 			}
 
 			get_runtime_types ();
