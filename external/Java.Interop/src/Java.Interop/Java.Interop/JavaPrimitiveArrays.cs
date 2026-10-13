@@ -96,12 +96,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniBooleanArrayElements GetElements ()
+		public new JniBooleanArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
@@ -307,12 +302,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniSByteArrayElements GetElements ()
+		public new JniSByteArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
@@ -518,12 +508,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniCharArrayElements GetElements ()
+		public new JniCharArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
@@ -729,12 +714,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniInt16ArrayElements GetElements ()
+		public new JniInt16ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
@@ -940,12 +920,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniInt32ArrayElements GetElements ()
+		public new JniInt32ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
@@ -1151,12 +1126,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniInt64ArrayElements GetElements ()
+		public new JniInt64ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
@@ -1362,12 +1332,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniSingleArrayElements GetElements ()
+		public new JniSingleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
@@ -1573,12 +1538,7 @@ namespace Java.Interop {
 			}
 		}
 
-		/// <safety>
-		/// The caller must keep this array alive and undisposed until the returned elements are released.
-		/// Borrowed pointers and references must not be used after the elements are released or disposed.
-		/// The caller must prevent concurrent release or disposal while accessing the elements.
-		/// </safety>
-		public new unsafe JniDoubleArrayElements GetElements ()
+		public new JniDoubleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
