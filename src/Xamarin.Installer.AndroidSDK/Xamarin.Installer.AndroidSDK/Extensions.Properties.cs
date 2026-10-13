@@ -4,18 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Kajabity.Tools.Java;
-
 namespace Xamarin.Installer.AndroidSDK
 {
 	static partial class Extensions
 	{
-		public static bool GetProperty<T> (this JavaProperties props, string name, out T result)
+		public static bool GetProperty<T> (this IDictionary<string, string> props, string name, out T result)
 		{
 			result = default (T);
 			if (props == null)
 				return false;
-			string value = props.GetProperty (name);
+			if (!props.TryGetValue (name, out string value))
+				return false;
 			if (value != null)
 				value = value.Trim ();
 			if (String.IsNullOrEmpty (value))

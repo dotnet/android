@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-using Kajabity.Tools.Java;
-
 using Xamarin.Installer.Common;
 using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.AndroidSDK.Manager;
@@ -48,7 +46,7 @@ namespace Xamarin.Installer.AndroidSDK
 				version = new AndroidRevision (0);
 				return false;
 			}
-			JavaProperties props = AndroidUtilities.ReadAndroidProperties (Path.Combine (JdkPath, "release"));
+			var props = AndroidUtilities.ReadAndroidProperties (Path.Combine (JdkPath, "release"));
 			bool foundUnparsedVersion = props.GetProperty ("JAVA_VERSION", out string javaVersion);
 			javaVersion = javaVersion?.Replace ("\"", string.Empty).Replace ("'", string.Empty);
 			version = new AndroidRevision (javaVersion);

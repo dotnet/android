@@ -56,7 +56,6 @@
     <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
     <PollyVersion>7.2.4</PollyVersion>
     <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
-    <SystemTextEncodingCodePagesVersion>7.0.0</SystemTextEncodingCodePagesVersion>
   </PropertyGroup>
   
   <PropertyGroup>
