@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace System.LinqTests
 {
@@ -10,9 +11,14 @@ namespace System.LinqTests
 	{
 		delegate object Bug14863Delegate ();
 
-		// We want the tests to be available because we use the linker.
-		[Test]
+		// Preserve the fixture and its tests because the test runner discovers them through reflection.
+		[ModuleInitializer]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (LinqExpressionTest))]
+		internal static void PreserveLinqExpressionTest ()
+		{
+		}
+
+		[Test]
 		public void Expression_T_Ctor ()
 		{
 			var ctor = typeof (LinqExpressionTest).GetConstructor (Type.EmptyTypes);
