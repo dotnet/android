@@ -1,4 +1,4 @@
-using Android.Runtime;
+using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using System.Linq.Expressions;
 
@@ -6,13 +6,13 @@ namespace System.LinqTests
 {
 	// https://github.com/dotnet/macios/blob/6b5870d668fe98b61b707101a0b9491480a535fa/tests/linker/ios/link%20all/LinqExpressionTest.cs
 	[TestFixture]
-	// we want the tests to be available because we use the linker
-	[Preserve (AllMembers = true)]
 	public class LinqExpressionTest
 	{
 		delegate object Bug14863Delegate ();
 
+		// We want the tests to be available because we use the linker.
 		[Test]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (LinqExpressionTest))]
 		public void Expression_T_Ctor ()
 		{
 			var ctor = typeof (LinqExpressionTest).GetConstructor (Type.EmptyTypes);
