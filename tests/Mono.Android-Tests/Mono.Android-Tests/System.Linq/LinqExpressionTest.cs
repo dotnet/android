@@ -1,7 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 
 namespace System.LinqTests
 {
@@ -10,13 +8,6 @@ namespace System.LinqTests
 	public class LinqExpressionTest
 	{
 		delegate object Bug14863Delegate ();
-
-		// Preserve the fixture and its tests because the test runner discovers them through reflection.
-		[ModuleInitializer]
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (LinqExpressionTest))]
-		internal static void PreserveLinqExpressionTest ()
-		{
-		}
 
 		[Test]
 		public void Expression_T_Ctor ()
