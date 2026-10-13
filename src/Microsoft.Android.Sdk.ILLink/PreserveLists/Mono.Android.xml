@@ -19,10 +19,8 @@
 		<type fullname="Android.Runtime.NamespaceMappingAttribute" />
 		<type fullname="Android.Runtime.OutputStreamAdapter" preserve="methods" />
 		<type fullname="Android.Runtime.OutputStreamInvoker" preserve="methods" />
-		<type fullname="Android.Runtime.PreserveAttribute" />
 		<type fullname="Android.Runtime.RaiseThrowableEventArgs" />
 		<type fullname="Android.Runtime.RegisterAttribute" />
-		<type fullname="Android.Runtime.TypeManager" />
 		<!--
 		<type fullname="Android.Runtime.XmlResourceParserReader" />
 		<type fullname="Android.Runtime.XmlPullParserReader" />

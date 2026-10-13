@@ -18388,9 +18388,6 @@ Android.Icu.Util.WalltimeOptions
 Android.Icu.Util.WalltimeOptions.First = 1 -> Android.Icu.Util.WalltimeOptions
 Android.Icu.Util.WalltimeOptions.Last = 0 -> Android.Icu.Util.WalltimeOptions
 Android.Icu.Util.WalltimeOptions.NextValid = 2 -> Android.Icu.Util.WalltimeOptions
-Android.IncludeAndroidResourcesFromAttribute
-Android.IncludeAndroidResourcesFromAttribute.IncludeAndroidResourcesFromAttribute(string! path) -> void
-Android.IncludeAndroidResourcesFromAttribute.ResourceDirectory.get -> string!
 Android.InputMethodServices.AbstractInputMethodService
 Android.InputMethodServices.AbstractInputMethodService.AbstractInputMethodImpl
 Android.InputMethodServices.AbstractInputMethodService.AbstractInputMethodImpl.AbstractInputMethodImpl(Android.InputMethodServices.AbstractInputMethodService? __self) -> void
@@ -18560,8 +18557,6 @@ Android.InputMethodServices.TouchableInsets.Content = 1 -> Android.InputMethodSe
 Android.InputMethodServices.TouchableInsets.Frame = 0 -> Android.InputMethodServices.TouchableInsets
 Android.InputMethodServices.TouchableInsets.Region = 3 -> Android.InputMethodServices.TouchableInsets
 Android.InputMethodServices.TouchableInsets.Visible = 2 -> Android.InputMethodServices.TouchableInsets
-Android.LinkerSafeAttribute
-Android.LinkerSafeAttribute.LinkerSafeAttribute() -> void
 Android.Locations.AccumulatedDeltaRangeState
 Android.Locations.AccumulatedDeltaRangeState.CycleSlip = 4 -> Android.Locations.AccumulatedDeltaRangeState
 Android.Locations.AccumulatedDeltaRangeState.HalfCycleReported = 16 -> Android.Locations.AccumulatedDeltaRangeState
@@ -19806,9 +19801,6 @@ Android.Media.AudioRecord.ReadAsync(Java.Nio.ByteBuffer! audioBuffer, int sizeIn
 Android.Media.AudioRecord.ReadAsync(short[]! audioData, int offsetInShorts, int sizeInShorts, int readMode) -> System.Threading.Tasks.Task<int>!
 Android.Media.AudioRecord.ReadAsync(short[]! audioData, int offsetInShorts, int sizeInShorts) -> System.Threading.Tasks.Task<int>!
 Android.Media.AudioRecord.RoutingChanged -> System.EventHandler<Android.Media.AudioRoutingOnRoutingChangedEventArgs!>!
-Android.Media.AudioRecord.RoutingChangedEventArgs
-Android.Media.AudioRecord.RoutingChangedEventArgs.AudioRecord.get -> Android.Media.AudioRecord!
-Android.Media.AudioRecord.RoutingChangedEventArgs.RoutingChangedEventArgs(Android.Media.AudioRecord! audioRecord) -> void
 Android.Media.AudioRecordingConfiguration
 Android.Media.AudioRecordingConfiguration.AudioDevice.get -> Android.Media.AudioDeviceInfo?
 Android.Media.AudioRecordingConfiguration.AudioSource.get -> int
@@ -19891,9 +19883,6 @@ Android.Media.AudioTrack.PeriodicNotificationEventArgs
 Android.Media.AudioTrack.PeriodicNotificationEventArgs.PeriodicNotificationEventArgs(Android.Media.AudioTrack? track) -> void
 Android.Media.AudioTrack.PeriodicNotificationEventArgs.Track.get -> Android.Media.AudioTrack?
 Android.Media.AudioTrack.RoutingChanged -> System.EventHandler<Android.Media.AudioRoutingOnRoutingChangedEventArgs!>!
-Android.Media.AudioTrack.RoutingChangedEventArgs
-Android.Media.AudioTrack.RoutingChangedEventArgs.AudioTrack.get -> Android.Media.AudioTrack!
-Android.Media.AudioTrack.RoutingChangedEventArgs.RoutingChangedEventArgs(Android.Media.AudioTrack! audioTrack) -> void
 Android.Media.AudioTrack.StreamEventCallback
 Android.Media.AudioTrack.StreamEventCallback.StreamEventCallback() -> void
 Android.Media.AudioTrack.StreamEventCallback.StreamEventCallback(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
@@ -24405,9 +24394,6 @@ Android.Mtp.ProtectionStatus.None = 0 -> Android.Mtp.ProtectionStatus
 Android.Mtp.ProtectionStatus.NonTransferableData = 32771 -> Android.Mtp.ProtectionStatus
 Android.Mtp.ProtectionStatus.ReadOnly = 32769 -> Android.Mtp.ProtectionStatus
 Android.Mtp.ProtectionStatus.ReadOnlyData = 32770 -> Android.Mtp.ProtectionStatus
-Android.NativeLibraryReferenceAttribute
-Android.NativeLibraryReferenceAttribute.LibraryFileName.get -> string!
-Android.NativeLibraryReferenceAttribute.NativeLibraryReferenceAttribute(string! filename) -> void
 Android.Net.CaptivePortal
 Android.Net.CaptivePortal.CaptivePortal(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
 Android.Net.CaptivePortal.InterfaceConsts
@@ -31002,19 +30988,6 @@ Android.Ranging.Wifi.Rtt.RttRangingParams.IsPeriodicRangingHwFeatureEnabled.get 
 Android.Ranging.Wifi.Rtt.RttRangingParams.RangingUpdateRate.get -> Android.Ranging.Raw.RangingDeviceUpdateRate
 Android.Ranging.Wifi.Rtt.RttRangingParams.ServiceName.get -> string!
 Android.Ranging.Wifi.Rtt.RttRangingParams.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.ReferenceFilesAttribute
-Android.ReferenceFilesAttribute.EmbeddedArchive.get -> string?
-Android.ReferenceFilesAttribute.EmbeddedArchive.set -> void
-Android.ReferenceFilesAttribute.InstallInstructions.get -> string?
-Android.ReferenceFilesAttribute.InstallInstructions.set -> void
-Android.ReferenceFilesAttribute.PackageName.get -> string?
-Android.ReferenceFilesAttribute.PackageName.set -> void
-Android.ReferenceFilesAttribute.Sha1sum.get -> string?
-Android.ReferenceFilesAttribute.Sha1sum.set -> void
-Android.ReferenceFilesAttribute.SourceUrl.get -> string?
-Android.ReferenceFilesAttribute.SourceUrl.set -> void
-Android.ReferenceFilesAttribute.Version.get -> string?
-Android.ReferenceFilesAttribute.Version.set -> void
 Android.Renderscripts.Allocation
 Android.Renderscripts.Allocation.Allocation(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
 Android.Renderscripts.Allocation.BufferAvailable -> System.EventHandler<Android.Renderscripts.Allocation.BufferAvailableEventArgs!>!
@@ -31825,10 +31798,6 @@ Android.Runtime.OutputStreamAdapter.OutputStreamAdapter(System.IO.Stream! stream
 Android.Runtime.OutputStreamInvoker
 Android.Runtime.OutputStreamInvoker.BaseOutputStream.get -> Java.IO.OutputStream!
 Android.Runtime.OutputStreamInvoker.OutputStreamInvoker(Java.IO.OutputStream! stream) -> void
-Android.Runtime.PreserveAttribute
-Android.Runtime.PreserveAttribute.AllMembers -> bool
-Android.Runtime.PreserveAttribute.Conditional -> bool
-Android.Runtime.PreserveAttribute.PreserveAttribute() -> void
 Android.Runtime.RaiseThrowableEventArgs
 Android.Runtime.RaiseThrowableEventArgs.Exception.get -> System.Exception!
 Android.Runtime.RaiseThrowableEventArgs.Handled.get -> bool
@@ -31870,7 +31839,6 @@ Android.Runtime.TimingLogger.Dispose() -> void
 Android.Runtime.TimingLogger.Start(string? startMessage = null) -> void
 Android.Runtime.TimingLogger.Stop(string! stopMessage) -> void
 Android.Runtime.TimingLogger.TimingLogger(string? startMessage = null, bool startImmediately = true) -> void
-Android.Runtime.TypeManager
 Android.Runtime.XAPeerMembers
 Android.Runtime.XAPeerMembers.XAPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
 Android.Runtime.XAPeerMembers.XAPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType) -> void
@@ -44864,9 +44832,6 @@ Android.Widget.ISectionIndexer.GetSectionForPosition(int position) -> int
 Android.Widget.ISectionIndexer.GetSections() -> Java.Lang.Object![]?
 Android.Widget.ISpinnerAdapter
 Android.Widget.ISpinnerAdapter.GetDropDownView(int position, Android.Views.View? convertView, Android.Views.ViewGroup? parent) -> Android.Views.View?
-Android.Widget.ItemEventArgs
-Android.Widget.ItemEventArgs.ItemEventArgs(Android.Views.View! view, int position, long id) -> void
-Android.Widget.ItemEventArgs.ItemEventArgs(Android.Widget.AdapterView! parent, Android.Views.View! view, int position, long id) -> void
 Android.Widget.ItemViewType
 Android.Widget.ItemViewType.HeaderOrFooter = -2 -> Android.Widget.ItemViewType
 Android.Widget.ItemViewType.Ignore = -1 -> Android.Widget.ItemViewType
@@ -45918,11 +45883,6 @@ Java.Beans.PropertyChangeListenerProxy.PropertyChangeListenerProxy(string? prope
 Java.Beans.PropertyChangeSupport
 Java.Beans.PropertyChangeSupport.PropertyChangeSupport(Java.Lang.Object? sourceBean) -> void
 Java.Beans.PropertyChangeSupport.PropertyChangeSupport(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
-Java.Interop.AndroidEventHelper
-Java.Interop.DoNotPackageAttribute
-Java.Interop.DoNotPackageAttribute.DoNotPackageAttribute(string! jarFile) -> void
-Java.Interop.DoNotPackageAttribute.JarFile.get -> string!
-Java.Interop.DoNotPackageAttribute.JarFile.set -> void
 Java.Interop.EventHelper
 Java.Interop.ExportAttribute
 Java.Interop.ExportAttribute.ExportAttribute() -> void
@@ -45949,9 +45909,6 @@ Java.Interop.IJniNameProviderAttribute
 Java.Interop.IJniNameProviderAttribute.Name.get -> string!
 Java.Interop.JavaInterfaceDefaultMethodAttribute
 Java.Interop.JavaInterfaceDefaultMethodAttribute.JavaInterfaceDefaultMethodAttribute() -> void
-Java.Interop.JavaLibraryReferenceAttribute
-Java.Interop.JavaLibraryReferenceAttribute.JavaLibraryReferenceAttribute(string! filename) -> void
-Java.Interop.JavaLibraryReferenceAttribute.LibraryFileName.get -> string!
 Java.Interop.JavaObjectExtensions
 Java.Interop.Runtime
 Java.Interop.Tools.JavaCallableWrappers.Crc64
@@ -109152,10 +109109,6 @@ static Android.Runtime.JValue.Zero -> Android.Runtime.JValue
 static Android.Runtime.OutputStreamAdapter.ToLocalJniHandle(System.IO.Stream? value) -> nint
 static Android.Runtime.OutputStreamInvoker.FromJniHandle(nint handle, Android.Runtime.JniHandleOwnership transfer) -> System.IO.Stream?
 static Android.Runtime.ResourceIdManager.UpdateIdValues() -> void
-static Android.Runtime.TypeManager.LookupTypeMapping(string![]! mappings, string! javaType) -> string?
-static Android.Runtime.TypeManager.RegisterPackage(string! package, System.Converter<string!, System.Type!>! lookup) -> void
-static Android.Runtime.TypeManager.RegisterPackages(string![]! packages, System.Converter<string!, System.Type!>![]! lookups) -> void
-static Android.Runtime.TypeManager.RegisterType(string! java_class, System.Type! t) -> void
 static Android.Runtime.XmlPullParserReader.FromJniHandle(nint handle, Android.Runtime.JniHandleOwnership transfer) -> System.Xml.XmlReader?
 static Android.Runtime.XmlReaderPullParser.ToLocalJniHandle(System.Xml.XmlReader? value) -> nint
 static Android.Runtime.XmlReaderResourceParser.ToLocalJniHandle(System.Xml.XmlReader? value) -> nint
@@ -111377,8 +111330,6 @@ static Java.Awt.Font.TextAttribute.WidthExtended.get -> Java.Lang.Float?
 static Java.Awt.Font.TextAttribute.WidthRegular.get -> Java.Lang.Float?
 static Java.Awt.Font.TextAttribute.WidthSemiCondensed.get -> Java.Lang.Float?
 static Java.Awt.Font.TextAttribute.WidthSemiExtended.get -> Java.Lang.Float?
-static Java.Interop.AndroidEventHelper.AddEventHandler<TInterface, TImplementor>(ref System.WeakReference? implementor, System.Func<TImplementor!>! creator, System.Action<TInterface!>! setListener, System.Action<TImplementor!>! add) -> void
-static Java.Interop.AndroidEventHelper.RemoveEventHandler<TInterface, TImplementor>(ref System.WeakReference? implementor, System.Func<TImplementor!, bool>! empty, System.Action<TInterface?>! setListener, System.Action<TImplementor!>! remove) -> void
 static Java.Interop.EventHelper.AddEventHandler<TInterface, TImplementor>(ref System.WeakReference? implementor, System.Func<TImplementor!>! creator, System.Action<TInterface>! setListener, System.Action<TImplementor!>! add) -> void
 static Java.Interop.EventHelper.RemoveEventHandler<TInterface, TImplementor>(ref System.WeakReference? implementor, System.Func<TImplementor!, bool>! empty, System.Action<TInterface>! unsetListener, System.Action<TImplementor!>! remove) -> void
 static Java.Interop.JavaObjectExtensions.JavaCast<TResult>(this Android.Runtime.IJavaObject? instance) -> TResult?

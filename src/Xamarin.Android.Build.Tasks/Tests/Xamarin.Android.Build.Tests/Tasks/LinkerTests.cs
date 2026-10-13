@@ -1232,18 +1232,32 @@ public abstract class MyRunner {
 		}
 
 		[Test]
-		public void WarnWithReferenceToPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void WarnWithReferenceToRemovedPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject { IsRelease = isRelease, ProjectName = "Lib1" };
+			lib.SetRuntime (runtime);
+			lib.Sources.Add (new BuildItem.Source ("PreserveAttribute.cs") {
+				TextContent = () => """
+					using System;
+					namespace Android.Runtime;
+					[AttributeUsage (AttributeTargets.Method)]
+					public sealed class PreserveAttribute : Attribute {}
+					""",
+			});
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease, ProjectName = "App1" };
 			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
+			proj.References.Add (new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"protected override void OnCreate",
 				"[Android.Runtime.PreserveAttribute]\n\t\tprotected override void OnCreate"
 			);
 
-			using (var b = CreateApkBuilder ()) {
+			using (var lb = CreateDllBuilder (Path.Combine (path, "Lib1")))
+			using (var b = CreateApkBuilder (Path.Combine (path, "App1"))) {
+				Assert.IsTrue (lb.Build (lib), "Library build should have succeeded.");
 				var bo = proj.CreateBuildOutput (b);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
