@@ -164,15 +164,7 @@ namespace Xamarin.Android.Tasks
 				module.Types.Add (constDesigner);
 			}
 
-			DateTime lastWriteTimeUtc = DateTime.MinValue;
-			if (File.Exists (OutputFile.ItemSpec))
-				lastWriteTimeUtc = File.GetLastWriteTimeUtc (OutputFile.ItemSpec);
-
 			if (File.Exists (RTxtFile.ItemSpec)) {
-				if (File.GetLastWriteTimeUtc (RTxtFile.ItemSpec) < lastWriteTimeUtc) {
-					Log.LogDebugMessage ($"{RTxtFile.ItemSpec} has not changed since {OutputFile.ItemSpec} was generated.");
-					return !Log.HasLoggedErrors;
-				}
 				var parser = new RtxtParser ();
 				var resources = parser.Parse (RTxtFile.ItemSpec, Log, resource_fixup);
 				foreach (var r in resources) {

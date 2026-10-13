@@ -1884,6 +1884,49 @@ namespace Lib2
 		}
 
 		[Test]
+		public void RegenerateSignedResourceDesignerAssemblyAfterSdkUpgrade ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidUseDesignerAssembly", "true");
+			using var builder = CreateApkBuilder ();
+			var parameters = new [] { "BuildingInsideVisualStudio=true" };
+			Assert.IsTrue (builder.RunTarget (proj, "Compile", parameters: parameters), $"{proj.ProjectName} should succeed");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerAssembly");
+
+			string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			string designerAssembly = Directory.GetFiles (projectDirectory, "_Microsoft.Android.Resource.Designer.dll", SearchOption.AllDirectories).Single ();
+			string propertiesCache = Directory.GetFiles (projectDirectory, "build.props", SearchOption.AllDirectories).Single ();
+
+			string signedAssembly = designerAssembly + ".signed";
+			using (var assembly = AssemblyDefinition.ReadAssembly (designerAssembly)) {
+				assembly.Name.HasPublicKey = true;
+				assembly.Write (signedAssembly, new WriterParameters {
+					StrongNameKeyBlob = File.ReadAllBytes (Path.Combine (Root, "product.snk")),
+				});
+			}
+			File.Copy (signedAssembly, designerAssembly, overwrite: true);
+			File.Delete (signedAssembly);
+			using (var assembly = AssemblyDefinition.ReadAssembly (designerAssembly))
+				Assert.IsTrue (assembly.Name.HasPublicKey, "The test output should simulate a signed designer assembly from the previous SDK.");
+
+			var rTxtFile = Directory.GetFiles (projectDirectory, "R.txt", SearchOption.AllDirectories).Single ();
+			DateTime rTxtLastWriteTimeUtc = File.GetLastWriteTimeUtc (rTxtFile);
+			// Keep the cache and R.txt older than the signed output; changing the SDK version must invalidate it.
+			File.SetLastWriteTimeUtc (propertiesCache, rTxtLastWriteTimeUtc.AddSeconds (-1));
+			File.SetLastWriteTimeUtc (designerAssembly, rTxtLastWriteTimeUtc.AddMilliseconds (1));
+
+			parameters = ["BuildingInsideVisualStudio=true", "AndroidNETSdkVersion=99.0.0"];
+			Assert.IsTrue (builder.RunTarget (proj, "Compile", doNotCleanupOnUpdate: true, parameters: parameters), $"{proj.ProjectName} should succeed after the SDK upgrade");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerAssembly");
+			Assert.IsTrue (File.ReadAllText (propertiesCache).Contains ("androidnetsdkversion=99.0.0"), "The SDK version change should update the properties cache.");
+			using (var assembly = AssemblyDefinition.ReadAssembly (designerAssembly))
+				Assert.IsFalse (assembly.Name.HasPublicKey, "The regenerated designer assembly should be unsigned.");
+		}
+
+		[Test]
 		public void ChangePackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;

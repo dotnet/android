@@ -70,7 +70,7 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | `bionic/` | google/bionic | https://android.googlesource.com/platform/bionic/ (Apache 2.0) |
 | `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
 
-Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
+Note: `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
 
 #### NuGet Packages
 Search `.csproj` files for `<PackageReference>` elements. Current third-party NuGet packages needing TPNs:
