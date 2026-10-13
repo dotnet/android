@@ -1076,6 +1076,9 @@ namespace Xamarin.Android.Net
 				// is disconnected which surfaces as a transport exception (e.g. "Socket closed"). Map it
 				// to an OperationCanceledException so callers observe cancellation instead of a WebException.
 				throw new System.OperationCanceledException ("Request body upload was canceled.", ex, cancellationToken);
+			} catch (global::System.IO.IOException ex) {
+				// OutputStreamInvoker translates Java transport errors into managed IOException.
+				throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.UnknownError);
 			} finally {
 				//
 				// Rewind the stream to beginning in case the HttpContent implementation
