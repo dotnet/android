@@ -26,7 +26,12 @@ namespace Java.Interop {
 
 		readonly struct JniPeerTypeNameInfo
 		{
-			public JniPeerTypeNameInfo (string sourceName, string? targetName, IntPtr targetNameUtf8)
+			/// <safety>
+			/// A nonzero <paramref name="targetNameUtf8"/> must address readable NUL-terminated
+			/// UTF-8 storage. The caller must keep it alive and unchanged for the associated
+			/// runtime's lifetime, including every lookup through peer members that cache this value.
+			/// </safety>
+			public unsafe JniPeerTypeNameInfo (string sourceName, string? targetName, IntPtr targetNameUtf8)
 			{
 				SourceName = sourceName;
 				TargetName = targetName;
@@ -44,7 +49,9 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			typeManager.GetReplacementTypeInfo (jniPeerTypeName, out var replacement, out var replacementUtf8);
-			return new JniPeerTypeNameInfo (jniPeerTypeName, replacement, replacementUtf8);
+			unsafe {
+				return new JniPeerTypeNameInfo (jniPeerTypeName, replacement, replacementUtf8);
+			}
 		}
 
 		JniPeerMembers (JniPeerTypeNameInfo jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)
@@ -217,11 +224,6 @@ namespace Java.Interop {
 			return isInterface ? this : value.JniPeerMembers;
 		}
 
-		/// <safety>
-		/// A nonzero cached <see cref="jniPeerTypeNameUtf8"/> must address readable NUL-terminated
-		/// UTF-8 storage. The runtime's type manager supplies this borrowed storage and must keep
-		/// it alive and unchanged for the runtime's lifetime, including throughout this lookup.
-		/// </safety>
 		JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			if (jniPeerTypeNameUtf8 == IntPtr.Zero)
