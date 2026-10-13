@@ -12,7 +12,6 @@
     <Project Path="build-tools/jnienv-gen/jnienv-gen.csproj" />
   </Folder>
   <Folder Name="/Core/">
-    <Project Path="external/Java.Interop/src/java-interop/java-interop.csproj" />
     <Project Path="external/Java.Interop/src/Java.Interop.Tools.Generator/Java.Interop.Tools.Generator.csproj" />
     <Project Path="external/Java.Interop/src/Java.Interop/Java.Interop.csproj" />
     <Project Path="external/Java.Interop/src/Xamarin.Android.Tools.Bytecode/Xamarin.Android.Tools.Bytecode.csproj" />
