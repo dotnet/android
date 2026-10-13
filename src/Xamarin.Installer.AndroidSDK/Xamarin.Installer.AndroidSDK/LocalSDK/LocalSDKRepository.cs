@@ -14,7 +14,6 @@ using System.Linq;
 
 using IniParser;
 using IniParser.Model;
-using Kajabity.Tools.Java;
 using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.AndroidSDK.GoogleV2;
 using Xamarin.Installer.AndroidSDK.GoogleV2.Parsing;
@@ -112,7 +111,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 
 		bool Parse_Source_Properties (string filePath, string sdkRoot)
 		{
-			JavaProperties props = AndroidUtilities.ReadAndroidProperties (filePath);
+			var props = AndroidUtilities.ReadAndroidProperties (filePath);
 
 			string sv;
 			AndroidRevision installedRevision;
@@ -201,7 +200,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			return Path.GetDirectoryName (filePath).Substring (sdkRoot.Length + 1);
 		}
 
-		AndroidComponentInfoMaven CreateMavenInfo (JavaProperties props)
+		AndroidComponentInfoMaven CreateMavenInfo (IDictionary<string, string> props)
 		{
 			return new AndroidComponentInfoMaven (
 				"addon:mavenType",
@@ -209,7 +208,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			);
 		}
 
-		AndroidComponentInfoExtra CreateExtraInfo (JavaProperties props)
+		AndroidComponentInfoExtra CreateExtraInfo (IDictionary<string, string> props)
 		{
 			return new AndroidComponentInfoExtra (
 				"addon:extraDetailsType", 
@@ -217,7 +216,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			);
 		}
 
-		AndroidComponentInfoAddon CreateAddonInfo (JavaProperties props, string propsFilePath)
+		AndroidComponentInfoAddon CreateAddonInfo (IDictionary<string, string> props, string propsFilePath)
 		{
 			string apiLevel;
 			if (!props.GetProperty ("AndroidVersion.ApiLevel", out apiLevel))
@@ -278,7 +277,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			});
 		}
 
-		AndroidComponentInfoSystemImage CreateSystemImageInfo (JavaProperties props, string abiName)
+		AndroidComponentInfoSystemImage CreateSystemImageInfo (IDictionary<string, string> props, string abiName)
 		{
 			string apiLevel;
 			if (!props.GetProperty ("AndroidVersion.ApiLevel", out apiLevel))
@@ -300,7 +299,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			return new AndroidComponentInfoSystemImage ("sys-img:sysImgDetailsType", abi, abiName, apiLevel, codename, tag, vendor);
 		}
 
-		AndroidComponentInfoSource CreateSourceInfo (JavaProperties props)
+		AndroidComponentInfoSource CreateSourceInfo (IDictionary<string, string> props)
 		{
 			string apiLevel;
 			if (!props.GetProperty ("AndroidVersion.ApiLevel", out apiLevel))
@@ -312,7 +311,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			return new AndroidComponentInfoSource ("sdk:sourceDetailsType", apiLevel, codename);
 		}
 
-		AndroidComponentInfoPlatform CreatePlatformInfo (JavaProperties props)
+		AndroidComponentInfoPlatform CreatePlatformInfo (IDictionary<string, string> props)
 		{
 			string apiLevel;
 			if (!props.GetProperty ("AndroidVersion.ApiLevel", out apiLevel))
@@ -331,17 +330,17 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			return new AndroidComponentInfoPlatform ("sdk:platformDetailsType", apiLevel, codename, layoutLibApi);
 		}
 
-		PackageVendor CreateVendor (JavaProperties props, string idKeyName, string displayKeyName)
+		PackageVendor CreateVendor (IDictionary<string, string> props, string idKeyName, string displayKeyName)
 		{
 			return GetIdProperties (props, idKeyName, displayKeyName, out string id, out string display) ? new PackageVendor (id, display) : null;
 		}
 		                            
-		PackageTag CreateTag (JavaProperties props, string idKeyName, string displayKeyName)
+		PackageTag CreateTag (IDictionary<string, string> props, string idKeyName, string displayKeyName)
 		{
 			return GetIdProperties (props, idKeyName, displayKeyName, out string id, out string display) ? new PackageTag (id, display) : null;
 		}
 
-		bool GetIdProperties (JavaProperties props, string idKeyName, string displayKeyName, out string id, out string display)
+		bool GetIdProperties (IDictionary<string, string> props, string idKeyName, string displayKeyName, out string id, out string display)
 		{
 			display = null;
 			id = null;

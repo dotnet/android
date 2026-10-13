@@ -12,19 +12,16 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("UsesDevice")]
-	public class MonoAndroidExportTest : DeviceTest
+	public class ExportAttributeBuildTest : DeviceTest
 	{
 		[Test]
-		public void MonoAndroidExportReferencedAppStarts (
+		public void ExportedPeerAppStarts (
 			[Values] bool embedAssemblies,
 			[Values] bool isRelease,
 			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
@@ -104,9 +101,6 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {

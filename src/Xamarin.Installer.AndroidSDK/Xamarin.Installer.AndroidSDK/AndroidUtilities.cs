@@ -4,7 +4,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
 
-using Kajabity.Tools.Java;
 using Xamarin.Installer.AndroidSDK.Properties;
 using Xamarin.Installer.Common;
 using Xamarin.Installer.AndroidSDK.Common;
@@ -49,27 +48,105 @@ namespace Xamarin.Installer.AndroidSDK
 		}
 
 		/// <summary>
-		/// Reads Java properties from the sepcified file
+		/// Reads Java properties from the specified file
 		/// </summary>
 		/// <param name="sourcePropertiesPath">path to the properties file</param>
-		/// <returns>collection of properties, an instance of the <see cref="JavaProperties"/> class.</returns>
-		public static JavaProperties ReadAndroidProperties (string sourcePropertiesPath)
+		/// <returns>collection of property names and values.</returns>
+		public static Dictionary<string, string> ReadAndroidProperties (string sourcePropertiesPath)
 		{
 			if (String.IsNullOrEmpty (sourcePropertiesPath) || !File.Exists (sourcePropertiesPath))
-				return new JavaProperties ();
+				return new Dictionary<string, string> (StringComparer.Ordinal);
 			
-			Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
-			var ret = new JavaProperties ();
 			try {
-				using (var fs = File.Open (sourcePropertiesPath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-					ret.Load (fs);
+				using (var fs = File.Open (sourcePropertiesPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+				using (var reader = new StreamReader (fs, Encoding.GetEncoding (28591), detectEncodingFromByteOrderMarks: false)) {
+					return ReadProperties (reader);
 				}
 			} catch (Exception ex) {
 				Logger.Exception ("Failed to read Android properties from {0}", ex, sourcePropertiesPath);
 				throw new InvalidOperationException (Resources.FailedToLoadSourceProperties, ex);
 			}
+		}
 
-			return ret;
+		static Dictionary<string, string> ReadProperties (TextReader reader)
+		{
+			var properties = new Dictionary<string, string> (StringComparer.Ordinal);
+			int ch = reader.Read ();
+			while (ch != -1) {
+				if (IsWhitespace (ch) || ch is '\r' or '\n') {
+					ch = reader.Read ();
+					continue;
+				}
+				if (ch is '#' or '!') {
+					while (ch != -1 && ch is not ('\r' or '\n'))
+						ch = reader.Read ();
+					continue;
+				}
+
+				string key = ReadPart (isKey: true);
+				SkipWhitespace ();
+				if (ch is '=' or ':') {
+					ch = reader.Read ();
+					SkipWhitespace ();
+				}
+				properties [key] = ReadPart (isKey: false);
+			}
+			return properties;
+
+			string ReadPart (bool isKey)
+			{
+				var part = new StringBuilder ();
+				while (ch != -1 && ch is not ('\r' or '\n') && !(isKey && (IsWhitespace (ch) || ch is '=' or ':'))) {
+					if (ch != '\\') {
+						part.Append ((char)ch);
+						ch = reader.Read ();
+						continue;
+					}
+
+					ch = reader.Read ();
+					if (ch is '\r' or '\n') {
+						if (ch == '\r' && reader.Peek () == '\n')
+							reader.Read ();
+						ch = reader.Read ();
+						SkipWhitespace ();
+						continue;
+					}
+					if (ch == 'u') {
+						int value = 0;
+						for (int i = 0; i < 4; i++) {
+							int digit = reader.Read ();
+							// Preserve the legacy reader's acceptance of letters beyond hexadecimal digits.
+							int digitValue = digit switch {
+								>= '0' and <= '9' => digit - '0',
+								>= 'a' and <= 'z' => digit - 'a' + 10,
+								>= 'A' and <= 'Z' => digit - 'A' + 10,
+								_ => throw new FormatException ("Invalid Unicode character."),
+							};
+							value = (value << 4) + digitValue;
+						}
+						part.Append ((char)value);
+					} else {
+						// A trailing escape historically decodes end of input as U+FFFF.
+						part.Append (ch switch {
+							't' => '\t',
+							'r' => '\r',
+							'n' => '\n',
+							'f' => '\f',
+							_ => (char)ch,
+						});
+					}
+					ch = reader.Read ();
+				}
+				return part.ToString ();
+			}
+
+			void SkipWhitespace ()
+			{
+				while (IsWhitespace (ch))
+					ch = reader.Read ();
+			}
+
+			static bool IsWhitespace (int character) => character is ' ' or '\t' or '\f';
 		}
 
 		/// <summary>
