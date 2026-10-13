@@ -66,6 +66,26 @@ public class AndroidPropertiesTests
 		Assert.AreEqual (value, properties [key]);
 	}
 
+	[TestCase (1019, "\\u00e9", "\u00e9")]
+	[TestCase (1020, "\\u00e9", "\u00e9")]
+	[TestCase (1021, "\\u00e9", "\u00e9")]
+	[TestCase (1022, "\\u00e9", "\u00e9")]
+	[TestCase (1023, "\\u00e9", "\u00e9")]
+	[TestCase (1024, "\\u00e9", "\u00e9")]
+	[TestCase (1022, "\\\r\n \t\f", "")]
+	[TestCase (1023, "\\\r\n \t\f", "")]
+	[TestCase (1024, "\\\r\n \t\f", "")]
+	public void ReadPropertyAcrossReaderBufferBoundary (int escapeOffset, string escape, string decodedEscape)
+	{
+		// Latin-1 uses one byte per character; StreamReader's default byte buffer is 1024 bytes.
+		const string key = "key=";
+		string prefix = new string ('x', escapeOffset - key.Length);
+		var properties = ReadProperties (key + prefix + escape + "tail\nother=value");
+		Assert.AreEqual (2, properties.Count);
+		Assert.AreEqual (prefix + decodedEscape + "tail", properties ["key"]);
+		Assert.AreEqual ("value", properties ["other"]);
+	}
+
 	[TestCase ("\n")]
 	[TestCase ("\r")]
 	[TestCase ("\r\n")]
