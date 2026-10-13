@@ -2564,6 +2564,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void TrimmableTypeMap_PreserveLists_ArePackagedInSdk ()
 		{
 			foreach (var file in new [] {
