@@ -2,6 +2,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -55,7 +56,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime) != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
-				throw new InvalidOperationException ("GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration.");
+				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Properties.Resources.XAGCA7009_UnsupportedRuntime, AndroidRuntime));
 			}
 			string? bootstrapPath = CoreClrBootstrapOutputFile;
 			if (bootstrapPath.IsNullOrWhiteSpace ()) {

@@ -15,8 +15,10 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 [TestFixture]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
-	[TestCase ("NativeAOT", "only supports CoreCLR bootstrap configuration")]
-	public void RejectsUnsupportedRuntimesWithoutWritingBootstrap (string runtime, string message)
+	[TestCase ("NativeAOT")]
+	[TestCase ("nativeaot")]
+	[SetUICulture ("en-US")]
+	public void RejectsUnsupportedRuntimesWithoutWritingBootstrap (string runtime)
 	{
 		string bootstrapPath = Path.Combine (Root, "temp", TestName, "coreclr-bootstrap.bin");
 		var errors = new List<BuildErrorEventArgs> ();
@@ -27,7 +29,10 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		};
 		Assert.IsFalse (task.Execute ());
 		Assert.That (errors, Has.Count.EqualTo (1));
-		StringAssert.Contains (message, errors [0].Message);
+		Assert.AreEqual ("XAGCA7009", errors [0].Code);
+		StringAssert.Contains (
+			$"GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{runtime}'.",
+			errors [0].Message);
 		FileAssert.DoesNotExist (bootstrapPath);
 	}
 
