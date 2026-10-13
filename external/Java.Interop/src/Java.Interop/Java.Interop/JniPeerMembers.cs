@@ -110,7 +110,7 @@ namespace Java.Interop {
 				if (jniPeerTypeNameUtf8 == IntPtr.Zero)
 					return jniPeerTypeName ?? sourceJniPeerTypeName;
 				unsafe {
-					return jniPeerTypeName ??= GetUtf8String ((byte*) jniPeerTypeNameUtf8);
+					return jniPeerTypeName ??= GetStringFromNullTerminated ((byte*) jniPeerTypeNameUtf8);
 				}
 			}
 		}
@@ -296,7 +296,7 @@ namespace Java.Interop {
 		/// A non-null <paramref name="value"/> must address readable NUL-terminated UTF-8
 		/// storage that remains alive and unchanged for the duration of the call.
 		/// </safety>
-		static unsafe string GetUtf8String (byte* value)
+		static unsafe string GetStringFromNullTerminated (byte* value)
 		{
 			unsafe {
 				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
@@ -307,7 +307,7 @@ namespace Java.Interop {
 		{
 			if (info.TargetJniTypeUtf8 != IntPtr.Zero) {
 				unsafe {
-					return GetUtf8String ((byte*) info.TargetJniTypeUtf8);
+					return GetStringFromNullTerminated ((byte*) info.TargetJniTypeUtf8);
 				}
 			}
 			if (info.TargetJniType != null)
@@ -319,7 +319,7 @@ namespace Java.Interop {
 		{
 			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
 				unsafe {
-					return GetUtf8String ((byte*) info.TargetJniMethodNameUtf8);
+					return GetStringFromNullTerminated ((byte*) info.TargetJniMethodNameUtf8);
 				}
 			}
 			if (info.TargetJniMethodName != null)
@@ -331,7 +331,7 @@ namespace Java.Interop {
 		{
 			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
 				unsafe {
-					return GetUtf8String ((byte*) info.TargetJniMethodSignatureUtf8);
+					return GetStringFromNullTerminated ((byte*) info.TargetJniMethodSignatureUtf8);
 				}
 			}
 			if (info.TargetJniMethodSignature != null)
