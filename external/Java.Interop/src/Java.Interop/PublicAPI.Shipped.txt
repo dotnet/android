@@ -162,15 +162,15 @@ Java.Interop.JniArrayElements.Release(Java.Interop.JniReleaseArrayElementsMode r
 Java.Interop.JniArrayElements.Size.get -> int
 Java.Interop.JniBooleanArrayElements
 Java.Interop.JniBooleanArrayElements.Elements.get -> bool*
-Java.Interop.JniBooleanArrayElements.this[int index].get -> bool
+unsafe Java.Interop.JniBooleanArrayElements.this[int index].get -> bool
 Java.Interop.JniCharArrayElements
 Java.Interop.JniCharArrayElements.Elements.get -> char*
-Java.Interop.JniCharArrayElements.this[int index].get -> char
+unsafe Java.Interop.JniCharArrayElements.this[int index].get -> char
 Java.Interop.JniConstructorSignatureAttribute
 Java.Interop.JniConstructorSignatureAttribute.JniConstructorSignatureAttribute(string! memberSignature) -> void
 Java.Interop.JniDoubleArrayElements
 Java.Interop.JniDoubleArrayElements.Elements.get -> double*
-Java.Interop.JniDoubleArrayElements.this[int index].get -> double
+unsafe Java.Interop.JniDoubleArrayElements.this[int index].get -> double
 Java.Interop.JniEnvironment
 Java.Interop.JniEnvironment.Arrays
 Java.Interop.JniEnvironment.Exceptions
@@ -193,13 +193,13 @@ Java.Interop.JniFieldInfo.Name.get -> string!
 Java.Interop.JniFieldInfo.Signature.get -> string!
 Java.Interop.JniInt16ArrayElements
 Java.Interop.JniInt16ArrayElements.Elements.get -> short*
-Java.Interop.JniInt16ArrayElements.this[int index].get -> short
+unsafe Java.Interop.JniInt16ArrayElements.this[int index].get -> short
 Java.Interop.JniInt32ArrayElements
 Java.Interop.JniInt32ArrayElements.Elements.get -> int*
-Java.Interop.JniInt32ArrayElements.this[int index].get -> int
+unsafe Java.Interop.JniInt32ArrayElements.this[int index].get -> int
 Java.Interop.JniInt64ArrayElements
 Java.Interop.JniInt64ArrayElements.Elements.get -> long*
-Java.Interop.JniInt64ArrayElements.this[int index].get -> long
+unsafe Java.Interop.JniInt64ArrayElements.this[int index].get -> long
 Java.Interop.JniManagedPeerStates
 Java.Interop.JniManagedPeerStates.Activatable = 1 -> Java.Interop.JniManagedPeerStates
 Java.Interop.JniManagedPeerStates.None = 0 -> Java.Interop.JniManagedPeerStates
@@ -279,40 +279,40 @@ Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Ja
 Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, sbyte value) -> void
 Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, short value) -> void
 Java.Interop.JniPeerMembers.JniInstanceMethods
-Java.Interop.JniPeerMembers.JniInstanceMethods.FinishCreateInstance(string! constructorSignature, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.FinishCreateInstance(string! constructorSignature, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
 Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructor(string! signature) -> Java.Interop.JniMethodInfo!
 Java.Interop.JniPeerMembers.JniInstanceMethods.GetMethodInfo(string! encodedMember) -> Java.Interop.JniMethodInfo!
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
-Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(string! constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(string! constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
 Java.Interop.JniPeerMembers.JniPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType) -> void
 Java.Interop.JniPeerMembers.JniPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
 Java.Interop.JniPeerMembers.JniPeerType.get -> Java.Interop.JniType!
@@ -339,16 +339,16 @@ Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, sbyt
 Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, short value) -> void
 Java.Interop.JniPeerMembers.JniStaticMethods
 Java.Interop.JniPeerMembers.JniStaticMethods.GetMethodInfo(string! encodedMember) -> Java.Interop.JniMethodInfo!
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeBooleanMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeCharMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeDoubleMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt16Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt32Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt64Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeObjectMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSByteMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSingleMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeVoidMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> void
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeBooleanMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> bool
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeCharMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> char
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeDoubleMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> double
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt16Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> short
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt32Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> int
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt64Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> long
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeObjectMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSByteMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> sbyte
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSingleMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> float
+unsafe Java.Interop.JniPeerMembers.JniStaticMethods.InvokeVoidMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> void
 Java.Interop.JniPeerMembers.ManagedPeerType.get -> System.Type!
 Java.Interop.JniPeerMembers.StaticFields.get -> Java.Interop.JniPeerMembers.JniStaticFields!
 Java.Interop.JniPeerMembers.StaticMethods.get -> Java.Interop.JniPeerMembers.JniStaticMethods!
@@ -462,10 +462,10 @@ Java.Interop.JniRuntime.WeakGlobalReferenceCount.get -> int
 Java.Interop.JniRuntime.~JniRuntime() -> void
 Java.Interop.JniSByteArrayElements
 Java.Interop.JniSByteArrayElements.Elements.get -> sbyte*
-Java.Interop.JniSByteArrayElements.this[int index].get -> sbyte
+unsafe Java.Interop.JniSByteArrayElements.this[int index].get -> sbyte
 Java.Interop.JniSingleArrayElements
 Java.Interop.JniSingleArrayElements.Elements.get -> float*
-Java.Interop.JniSingleArrayElements.this[int index].get -> float
+unsafe Java.Interop.JniSingleArrayElements.this[int index].get -> float
 Java.Interop.JniSurfacedPeerInfo
 Java.Interop.JniSurfacedPeerInfo.JniIdentityHashCode.get -> int
 Java.Interop.JniSurfacedPeerInfo.JniSurfacedPeerInfo(int jniIdentityHashCode, System.WeakReference<Java.Interop.IJavaPeerable!>! surfacedPeer) -> void
@@ -494,7 +494,7 @@ Java.Interop.JniType.IsInstanceOfType(Java.Interop.JniObjectReference value) -> 
 Java.Interop.JniType.JniType(ref Java.Interop.JniObjectReference peerReference, Java.Interop.JniObjectReferenceOptions transfer) -> void
 Java.Interop.JniType.JniType(string! classname) -> void
 Java.Interop.JniType.Name.get -> string!
-Java.Interop.JniType.NewObject(Java.Interop.JniMethodInfo! constructor, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+unsafe Java.Interop.JniType.NewObject(Java.Interop.JniMethodInfo! constructor, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
 Java.Interop.JniType.PeerReference.get -> Java.Interop.JniObjectReference
 Java.Interop.JniType.RegisterNativeMethods(params Java.Interop.JniNativeMethodRegistration[]! methods) -> void
 Java.Interop.JniType.RegisterWithRuntime() -> void
@@ -639,24 +639,24 @@ static Java.Interop.JniEnvironment.Arrays.CreateMarshalObjectArray<T>(System.Col
 static Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray(System.Collections.Generic.IEnumerable<sbyte>? value) -> Java.Interop.JavaSByteArray?
 static Java.Interop.JniEnvironment.Arrays.CreateMarshalSingleArray(System.Collections.Generic.IEnumerable<float>? value) -> Java.Interop.JavaSingleArray?
 static Java.Interop.JniEnvironment.Arrays.GetArrayLength(Java.Interop.JniObjectReference array) -> int
-static Java.Interop.JniEnvironment.Arrays.GetBooleanArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> bool*
-static Java.Interop.JniEnvironment.Arrays.GetBooleanArrayRegion(Java.Interop.JniObjectReference array, int start, int length, bool* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.GetByteArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> sbyte*
-static Java.Interop.JniEnvironment.Arrays.GetByteArrayRegion(Java.Interop.JniObjectReference array, int start, int length, sbyte* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.GetCharArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> char*
-static Java.Interop.JniEnvironment.Arrays.GetCharArrayRegion(Java.Interop.JniObjectReference array, int start, int length, char* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.GetDoubleArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> double*
-static Java.Interop.JniEnvironment.Arrays.GetDoubleArrayRegion(Java.Interop.JniObjectReference array, int start, int length, double* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.GetFloatArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> float*
-static Java.Interop.JniEnvironment.Arrays.GetFloatArrayRegion(Java.Interop.JniObjectReference array, int start, int length, float* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.GetIntArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> int*
-static Java.Interop.JniEnvironment.Arrays.GetIntArrayRegion(Java.Interop.JniObjectReference array, int start, int length, int* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.GetLongArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> long*
-static Java.Interop.JniEnvironment.Arrays.GetLongArrayRegion(Java.Interop.JniObjectReference array, int start, int length, long* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetBooleanArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> bool*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetBooleanArrayRegion(Java.Interop.JniObjectReference array, int start, int length, bool* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetByteArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> sbyte*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetByteArrayRegion(Java.Interop.JniObjectReference array, int start, int length, sbyte* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetCharArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> char*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetCharArrayRegion(Java.Interop.JniObjectReference array, int start, int length, char* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetDoubleArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> double*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetDoubleArrayRegion(Java.Interop.JniObjectReference array, int start, int length, double* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetFloatArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> float*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetFloatArrayRegion(Java.Interop.JniObjectReference array, int start, int length, float* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetIntArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> int*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetIntArrayRegion(Java.Interop.JniObjectReference array, int start, int length, int* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetLongArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> long*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetLongArrayRegion(Java.Interop.JniObjectReference array, int start, int length, long* buffer) -> void
 static Java.Interop.JniEnvironment.Arrays.GetObjectArrayElement(Java.Interop.JniObjectReference array, int index) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.Arrays.GetPrimitiveArrayCritical(Java.Interop.JniObjectReference array, bool* isCopy) -> nint
-static Java.Interop.JniEnvironment.Arrays.GetShortArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> short*
-static Java.Interop.JniEnvironment.Arrays.GetShortArrayRegion(Java.Interop.JniObjectReference array, int start, int length, short* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.GetPrimitiveArrayCritical(Java.Interop.JniObjectReference array, bool* isCopy) -> nint
+static unsafe Java.Interop.JniEnvironment.Arrays.GetShortArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> short*
+static unsafe Java.Interop.JniEnvironment.Arrays.GetShortArrayRegion(Java.Interop.JniObjectReference array, int start, int length, short* buffer) -> void
 static Java.Interop.JniEnvironment.Arrays.NewBooleanArray(int length) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Arrays.NewByteArray(int length) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Arrays.NewCharArray(int length) -> Java.Interop.JniObjectReference
@@ -666,24 +666,24 @@ static Java.Interop.JniEnvironment.Arrays.NewIntArray(int length) -> Java.Intero
 static Java.Interop.JniEnvironment.Arrays.NewLongArray(int length) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Arrays.NewObjectArray(int length, Java.Interop.JniObjectReference elementClass, Java.Interop.JniObjectReference initialElement) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Arrays.NewShortArray(int length) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.Arrays.ReleaseBooleanArrayElements(Java.Interop.JniObjectReference array, bool* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleaseByteArrayElements(Java.Interop.JniObjectReference array, sbyte* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleaseCharArrayElements(Java.Interop.JniObjectReference array, char* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleaseDoubleArrayElements(Java.Interop.JniObjectReference array, double* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleaseFloatArrayElements(Java.Interop.JniObjectReference array, float* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleaseIntArrayElements(Java.Interop.JniObjectReference array, int* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleaseLongArrayElements(Java.Interop.JniObjectReference array, long* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleasePrimitiveArrayCritical(Java.Interop.JniObjectReference array, nint carray, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.ReleaseShortArrayElements(Java.Interop.JniObjectReference array, short* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
-static Java.Interop.JniEnvironment.Arrays.SetBooleanArrayRegion(Java.Interop.JniObjectReference array, int start, int length, bool* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.SetByteArrayRegion(Java.Interop.JniObjectReference array, int start, int length, sbyte* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.SetCharArrayRegion(Java.Interop.JniObjectReference array, int start, int length, char* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.SetDoubleArrayRegion(Java.Interop.JniObjectReference array, int start, int length, double* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.SetFloatArrayRegion(Java.Interop.JniObjectReference array, int start, int length, float* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.SetIntArrayRegion(Java.Interop.JniObjectReference array, int start, int length, int* buffer) -> void
-static Java.Interop.JniEnvironment.Arrays.SetLongArrayRegion(Java.Interop.JniObjectReference array, int start, int length, long* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseBooleanArrayElements(Java.Interop.JniObjectReference array, bool* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseByteArrayElements(Java.Interop.JniObjectReference array, sbyte* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseCharArrayElements(Java.Interop.JniObjectReference array, char* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseDoubleArrayElements(Java.Interop.JniObjectReference array, double* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseFloatArrayElements(Java.Interop.JniObjectReference array, float* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseIntArrayElements(Java.Interop.JniObjectReference array, int* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseLongArrayElements(Java.Interop.JniObjectReference array, long* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleasePrimitiveArrayCritical(Java.Interop.JniObjectReference array, nint carray, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.ReleaseShortArrayElements(Java.Interop.JniObjectReference array, short* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetBooleanArrayRegion(Java.Interop.JniObjectReference array, int start, int length, bool* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetByteArrayRegion(Java.Interop.JniObjectReference array, int start, int length, sbyte* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetCharArrayRegion(Java.Interop.JniObjectReference array, int start, int length, char* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetDoubleArrayRegion(Java.Interop.JniObjectReference array, int start, int length, double* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetFloatArrayRegion(Java.Interop.JniObjectReference array, int start, int length, float* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetIntArrayRegion(Java.Interop.JniObjectReference array, int start, int length, int* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetLongArrayRegion(Java.Interop.JniObjectReference array, int start, int length, long* buffer) -> void
 static Java.Interop.JniEnvironment.Arrays.SetObjectArrayElement(Java.Interop.JniObjectReference array, int index, Java.Interop.JniObjectReference value) -> void
-static Java.Interop.JniEnvironment.Arrays.SetShortArrayRegion(Java.Interop.JniObjectReference array, int start, int length, short* buffer) -> void
+static unsafe Java.Interop.JniEnvironment.Arrays.SetShortArrayRegion(Java.Interop.JniObjectReference array, int start, int length, short* buffer) -> void
 static Java.Interop.JniEnvironment.EnvironmentPointer.get -> nint
 static Java.Interop.JniEnvironment.Exceptions.ExceptionCheck() -> bool
 static Java.Interop.JniEnvironment.Exceptions.ExceptionClear() -> void
@@ -713,56 +713,56 @@ static Java.Interop.JniEnvironment.InstanceFields.SetLongField(Java.Interop.JniO
 static Java.Interop.JniEnvironment.InstanceFields.SetObjectField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, Java.Interop.JniObjectReference value) -> void
 static Java.Interop.JniEnvironment.InstanceFields.SetShortField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, short value) -> void
 static Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> bool
-static Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
 static Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> sbyte
-static Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
 static Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> char
-static Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
 static Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> double
-static Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
 static Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> float
-static Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
 static Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> int
-static Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
 static Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> long
-static Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
 static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
 static Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> short
-static Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
 static Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> void
-static Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
 static Java.Interop.JniEnvironment.InstanceMethods.GetMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
 static Java.Interop.JniEnvironment.IO.GetDirectBufferAddress(Java.Interop.JniObjectReference buffer) -> nint
 static Java.Interop.JniEnvironment.IO.GetDirectBufferCapacity(Java.Interop.JniObjectReference buffer) -> long
-static Java.Interop.JniEnvironment.IO.NewDirectByteBuffer(nint address, long capacity) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.IO.NewDirectByteBuffer(nint address, long capacity) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.JniVersion.get -> Java.Interop.JniVersion
 static Java.Interop.JniEnvironment.LocalReferenceCount.get -> int
 static Java.Interop.JniEnvironment.Monitors.MonitorEnter(Java.Interop.JniObjectReference instance) -> void
 static Java.Interop.JniEnvironment.Monitors.MonitorExit(Java.Interop.JniObjectReference instance) -> void
 static Java.Interop.JniEnvironment.Object.AllocObject(Java.Interop.JniObjectReference type) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Object.ToString(Java.Interop.JniObjectReference value) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.References.CreatedReference(Java.Interop.JniObjectReference value) -> void
 static Java.Interop.JniEnvironment.References.EnsureLocalCapacity(int capacity) -> void
@@ -793,35 +793,35 @@ static Java.Interop.JniEnvironment.StaticFields.SetStaticLongField(Java.Interop.
 static Java.Interop.JniEnvironment.StaticFields.SetStaticObjectField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, Java.Interop.JniObjectReference value) -> void
 static Java.Interop.JniEnvironment.StaticFields.SetStaticShortField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, short value) -> void
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
 static Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
 static Java.Interop.JniEnvironment.StaticMethods.GetStaticMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
-static Java.Interop.JniEnvironment.Strings.GetStringChars(Java.Interop.JniObjectReference stringInstance, bool* isCopy) -> char*
+static unsafe Java.Interop.JniEnvironment.Strings.GetStringChars(Java.Interop.JniObjectReference stringInstance, bool* isCopy) -> char*
 static Java.Interop.JniEnvironment.Strings.GetStringLength(Java.Interop.JniObjectReference stringInstance) -> int
-static Java.Interop.JniEnvironment.Strings.NewString(char* unicodeChars, int length) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.Strings.NewString(char* unicodeChars, int length) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Strings.NewString(string? value) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.Strings.ReleaseStringChars(Java.Interop.JniObjectReference stringInstance, char* chars) -> void
+static unsafe Java.Interop.JniEnvironment.Strings.ReleaseStringChars(Java.Interop.JniObjectReference stringInstance, char* chars) -> void
 static Java.Interop.JniEnvironment.Strings.ToString(Java.Interop.JniObjectReference value) -> string?
 static Java.Interop.JniEnvironment.Strings.ToString(nint reference) -> string?
 static Java.Interop.JniEnvironment.Strings.ToString(ref Java.Interop.JniObjectReference value, Java.Interop.JniObjectReferenceOptions transfer) -> string?
-static Java.Interop.JniEnvironment.Types.DefineClass(string! name, Java.Interop.JniObjectReference loader, nint buffer, int bufferLength) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.Types.DefineClass(string! name, Java.Interop.JniObjectReference loader, nint buffer, int bufferLength) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Types.FindClass(string! classname) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Types.GetJniTypeNameFromClass(Java.Interop.JniObjectReference type) -> string?
 static Java.Interop.JniEnvironment.Types.GetJniTypeNameFromInstance(Java.Interop.JniObjectReference instance) -> string?
@@ -831,8 +831,8 @@ static Java.Interop.JniEnvironment.Types.GetTypeFromInstance(Java.Interop.JniObj
 static Java.Interop.JniEnvironment.Types.IsAssignableFrom(Java.Interop.JniObjectReference class1, Java.Interop.JniObjectReference class2) -> bool
 static Java.Interop.JniEnvironment.Types.IsInstanceOf(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type) -> bool
 static Java.Interop.JniEnvironment.Types.IsSameObject(Java.Interop.JniObjectReference object1, Java.Interop.JniObjectReference object2) -> bool
-static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods) -> void
-static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods, int numMethods) -> void
+static unsafe Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods) -> void
+static unsafe Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods, int numMethods) -> void
 static Java.Interop.JniEnvironment.Types.TryFindClass(string! classname, out Java.Interop.JniObjectReference instance) -> bool
 static Java.Interop.JniEnvironment.Types.UnregisterNatives(Java.Interop.JniObjectReference type) -> void
 static Java.Interop.JniEnvironment.WithinNewObjectScope.get -> bool

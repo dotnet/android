@@ -91,12 +91,14 @@ namespace Java.Interop
 		}
 
 #if DEBUG
-		static unsafe string GetUtf8String (IntPtr value)
+		static string GetUtf8String (IntPtr value)
 		{
 			if (value == IntPtr.Zero)
 				throw new NotSupportedException ();
 
-			return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			unsafe {
+				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			}
 		}
 #endif  // DEBUG
 

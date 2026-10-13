@@ -16,12 +16,14 @@ namespace Java.Interop {
 
 	public partial class JniRuntime {
 
-		static unsafe string GetUtf8String (IntPtr value)
+		static string GetUtf8String (IntPtr value)
 		{
 			if (value == IntPtr.Zero)
 				return "";
 
-			return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			unsafe {
+				return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			}
 		}
 
 		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",

@@ -225,8 +225,11 @@ namespace Java.Interop {
 
 		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, string fallbackTypeName)
 		{
-			if (info.TargetJniTypeUtf8 != IntPtr.Zero)
-				return new JniType (info.TargetJniTypeUtf8);
+			if (info.TargetJniTypeUtf8 != IntPtr.Zero) {
+				unsafe {
+					return new JniType (info.TargetJniTypeUtf8);
+				}
+			}
 			if (info.TargetJniType != null)
 				return new JniType (info.TargetJniType);
 			return new JniType (fallbackTypeName);
@@ -274,9 +277,11 @@ namespace Java.Interop {
 			return type.TryGetStaticMethod (name, fallback, out method);
 		}
 
-		static unsafe string GetUtf8String (IntPtr value)
+		static string GetUtf8String (IntPtr value)
 		{
-			return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			unsafe {
+				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+			}
 		}
 
 		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
