@@ -244,7 +244,7 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
 
 - **When the build gets into a weird state, delete `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors. See **Troubleshooting → Build** below.
 
-- **Verify code paths with logging, not reasoning.** Add `log_warn (LOG_DEFAULT, "..."sv, ...)` in C++ or `Android.Util.Log` in C#, rebuild, re-run, and check `adb logcat -d`. If your log never fires, your call-graph assumption is wrong.
+- **Verify code paths with logging, not reasoning.** Add `log_warnf (LOG_DEFAULT, "...", ...)` in C++ or `Android.Util.Log` in C#, rebuild, re-run, and check `adb logcat -d`. If your log never fires, your call-graph assumption is wrong.
 
 - **Decompile the produced `.dll` before blaming runtime.** Use `ilspycmd` or `ildasm` to inspect the actual generated IL/metadata. A missing attribute or misnamed type in generator output cascades into opaque runtime failures.
 

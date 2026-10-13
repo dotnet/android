@@ -4,7 +4,6 @@ using System.Threading;
 
 using Java.Interop;
 
-#if JAVA_INTEROP
 namespace Android.Runtime {
 
 	class AndroidRuntime : JniRuntime {
@@ -83,4 +82,3 @@ namespace Android.Runtime {
 		}
 	}
 }
-#endif // JAVA_INTEROP
