@@ -1,3 +1,4 @@
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -22,10 +23,13 @@ void AppSystemProperties::initialize (BinaryBlobPayload payload) noexcept
 		uint32_t strings_offset;
 		uint32_t strings_size;
 	};
+	static_assert (std::endian::native == std::endian::little);
 	static_assert (sizeof (Header) == 32);
-	static_assert (sizeof (OffsetPair) == 8);
 	if (payload.data == nullptr || payload.size < sizeof (Header)) {
 		Helpers::abort_application ("Missing NativeAOT bootstrap data");
+	}
+	if (reinterpret_cast<uintptr_t>(payload.data) % alignof (OffsetPair) != 0) {
+		Helpers::abort_application ("Misaligned NativeAOT bootstrap data");
 	}
 	Header header;
 	std::memcpy (&header, payload.data, sizeof (header));
@@ -45,6 +49,7 @@ void AppSystemProperties::initialize (BinaryBlobPayload payload) noexcept
 			Helpers::abort_application ("Invalid NativeAOT bootstrap string");
 		}
 	};
+	// The linked NCFG table uses the POD layout above; native builds disable strict aliasing.
 	auto all_pairs = std::span<const OffsetPair> (
 		reinterpret_cast<const OffsetPair*>(payload.data + sizeof (Header)),
 		static_cast<size_t>(header.environment_count) + header.property_count);

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
@@ -256,6 +257,10 @@ namespace Xamarin.Android.Build.Tests
 
 			string deviceTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
 			if (!string.IsNullOrEmpty (deviceTarget)) {
+				string sourceManifest = Path.Combine (projectDirectory, "Properties", "AndroidManifest.xml");
+				string packageName = (string)XDocument.Load (sourceManifest).Root?.Attribute ("package");
+				Assert.AreEqual (proj.PackageName, packageName);
+				TestContext.Out.WriteLine ($"Installing fixture package '{packageName}' from '{sourceManifest}' to '{deviceTarget}'.");
 				string [] deviceParameters = [.. renamedParameters, "AdbTarget=" + deviceTarget];
 				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
 				try {

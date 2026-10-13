@@ -29,7 +29,8 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Directory.CreateDirectory (probeDirectory);
 		nativeProbe = Path.Combine (probeDirectory, "bootstrap-probe");
 		var compile = NativeAotBootstrapTestTools.Run (Environment.GetEnvironmentVariable ("CXX") ?? "clang++",
-			"-std=c++23", "-O2", "-DXA_HOST_NATIVEAOT", "-ffunction-sections", "-fdata-sections",
+			"-std=c++23", "-O2", "-fno-strict-aliasing", "-fsanitize=undefined", "-fno-sanitize-recover=undefined",
+			"-DXA_HOST_NATIVEAOT", "-ffunction-sections", "-fdata-sections",
 			OperatingSystem.IsMacOS () ? "-Wl,-dead_strip" : "-Wl,--gc-sections",
 			"-I" + Path.Combine (root, "src", "native", "nativeaot", "include"),
 			"-I" + Path.Combine (root, "src", "native", "common", "include"),
@@ -56,7 +57,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		string value = "\"C:\\quoted\"\t\u00e9\u4e2d\ud83d\ude80";
 		string key = "debug.bootstrap.\ud83d\ude80";
 		string contents = string.Join ("\n", Enumerable.Range (0, 1000).Select (i => $"debug.property.{i}=value-{i}"));
-		var result = RunProbe ($"{key}=old\n{contents}\n{key}={value}\n", key, abi: abi);
+		var result = RunProbe ($"DOTNET_BOOTSTRAP_TEST={value}\nDOTNET_BOOTSTRAP_EMPTY=\n{key}=old\n{contents}\n{key}={value}\n", key, abi: abi);
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 		Assert.AreEqual (value, result.Output);
 	}
@@ -80,6 +81,32 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		StringAssert.Contains ("Invalid NativeAOT bootstrap header", result.Error);
 	}
 
+	[TestCase (true, 0)]
+	[TestCase (true, 4)]
+	[TestCase (false, 0)]
+	[TestCase (false, 4)]
+	public void RejectsMalformedPairOffsets (bool environment, int fieldOffset)
+	{
+		var result = RunProbe ("DOTNET_BOOTSTRAP_TEST=environment\ndebug.value=test\n", "debug.value",
+			body => {
+				int tableOffset = environment ? NativeAotBootstrapBlob.HeaderSize
+					: checked ((int)BinaryPrimitives.ReadUInt32LittleEndian (body.AsSpan (20)));
+				BinaryPrimitives.WriteUInt32LittleEndian (body.AsSpan (tableOffset + fieldOffset), uint.MaxValue);
+			});
+		Assert.AreNotEqual (0, result.ExitCode);
+		StringAssert.Contains ("Invalid NativeAOT bootstrap string", result.Error);
+	}
+
+	[TestCase ("armeabi-v7a")]
+	[TestCase ("arm64-v8a")]
+	[TestCase ("x86_64")]
+	public void RejectsMisalignedBootstrapDataBeforeReadingPairs (string abi)
+	{
+		var result = RunProbe ("debug.value=test\n", "debug.value", abi: abi, misalignEnvelope: true);
+		Assert.AreNotEqual (0, result.ExitCode);
+		StringAssert.Contains ("Misaligned NativeAOT bootstrap data", result.Error);
+	}
+
 	[Test]
 	public void RejectsCompressedNativeAotData ()
 	{
@@ -98,7 +125,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 
 	(int ExitCode, string Output, string Error) RunProbe (
 		string contents, string key, Action<byte []>? corrupt = null, string abi = "arm64-v8a",
-		bool markCompressed = false, uint? envelopeLengthOverride = null)
+		bool markCompressed = false, uint? envelopeLengthOverride = null, bool misalignEnvelope = false)
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
@@ -137,7 +164,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual (bodyLength, BinaryPrimitives.ReadUInt32LittleEndian (envelope.Slice (8, 4)));
 		Assert.AreEqual ((ulong)bodyLength + EnvelopeSize, envelopeLength);
 		ulong bodyOffset = checked (envelopeOffset + EnvelopeSize);
-		if (corrupt != null || markCompressed) {
+		if (corrupt != null || markCompressed || misalignEnvelope) {
 			if (corrupt != null) {
 				byte [] body = image.AsSpan (checked ((int)bodyOffset), checked ((int)bodyLength)).ToArray ();
 				corrupt (body);
@@ -145,6 +172,11 @@ public class NativeAotSystemPropertiesTests : BaseTest
 			}
 			if (markCompressed) {
 				image [checked ((int)envelopeOffset) + 6] = 1;
+			}
+			if (misalignEnvelope) {
+				image.AsSpan (checked ((int)envelopeOffset), checked ((int)envelopeLength))
+					.CopyTo (image.AsSpan (checked ((int)envelopeOffset + 1)));
+				envelopeOffset++;
 			}
 			File.WriteAllBytes (objectFile, image);
 		}

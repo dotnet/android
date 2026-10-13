@@ -29,6 +29,9 @@ source from existing intermediate directories.
 NativeAOT configuration and remapping objects are always uncompressed. Startup
 reads their mapped bytes directly, without allocating decoded buffers; CoreCLR's
 private binary-blob compression opt-in does not apply to NativeAOT.
+The bootstrap offset table is read in place as a trivial, standard-layout native
+struct on little-endian targets. Its size and field offsets are compile-time
+checked, the reader rejects misaligned data, and native builds disable strict aliasing.
 Each payload in CoreCLR's data library starts at a 4-byte-aligned offset, including
 compressed payloads, without changing the individual payload bytes or envelope version.
 

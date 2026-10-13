@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#include <type_traits>
 
 #include <runtime-base/binary-blob-loader.hh>
 
@@ -21,6 +22,9 @@ namespace xamarin::android {
 			uint32_t name;
 			uint32_t value;
 		};
+		static_assert (std::is_standard_layout_v<OffsetPair> && std::is_trivial_v<OffsetPair>);
+		static_assert (sizeof (OffsetPair) == 8 && alignof (OffsetPair) == 4);
+		static_assert (offsetof (OffsetPair, name) == 0 && offsetof (OffsetPair, value) == 4);
 
 		class Entries
 		{

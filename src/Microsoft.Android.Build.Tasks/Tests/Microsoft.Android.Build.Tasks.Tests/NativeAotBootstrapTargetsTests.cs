@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 
 using ELFSharp.ELF;
 using Microsoft.Android.Tasks;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests;
@@ -83,10 +85,57 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("false", File.ReadAllText (stamp));
 		FileAssert.DoesNotExist (output, "Semantic empty data must not define optional symbols.");
+		File.WriteAllText (output, "stale object");
 		File.WriteAllText (xml, "<broken>");
 		Assert.IsFalse (task.Execute ());
 		FileAssert.DoesNotExist (stamp, "Malformed data cannot leave an up-to-date absence stamp.");
 		FileAssert.DoesNotExist (output);
+	}
+
+	[Test]
+	[Platform ("MacOsX,Linux")]
+	public void FailedDataObjectCleanupUsesCodedErrors ()
+	{
+		if (OperatingSystem.IsWindows ()) {
+			Assert.Ignore ("This regression requires Unix file permissions.");
+			return;
+		}
+		string path = Path.Combine (Root, "temp", TestName);
+		string outputDirectory = Path.Combine (path, "readonly");
+		Directory.CreateDirectory (outputDirectory);
+		string output = Path.Combine (outputDirectory, "bootstrap.o");
+		string stamp = Path.Combine (path, "bootstrap.stamp");
+		File.WriteAllText (output, "stale object");
+		File.WriteAllText (stamp, "true");
+		var errors = new List<BuildErrorEventArgs> ();
+		GenerateNativeAotDataObject CreateTask () => new () {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			Abi = "arm64-v8a",
+			OutputFile = output,
+			CompletionStamp = stamp,
+		};
+		var directoryPermissions = File.GetUnixFileMode (outputDirectory);
+		var filePermissions = File.GetUnixFileMode (output);
+		const UnixFileMode WritePermissions = UnixFileMode.UserWrite | UnixFileMode.GroupWrite | UnixFileMode.OtherWrite;
+		try {
+			File.SetUnixFileMode (output, filePermissions & ~WritePermissions);
+			File.SetUnixFileMode (outputDirectory, directoryPermissions & ~WritePermissions);
+			Assert.IsFalse (CreateTask ().Execute ());
+			Assert.AreEqual (2, errors.Count, "Both the write failure and cleanup failure must be reported.");
+			Assert.That (errors.Select (error => error.Code), Is.All.EqualTo ("XA4325"),
+				"Cleanup must not escape as a generic task exception.");
+			FileAssert.DoesNotExist (stamp, "A failed write must invalidate the completion stamp even when output cleanup fails.");
+			Assert.AreEqual ("stale object", File.ReadAllText (output));
+		} finally {
+			File.SetUnixFileMode (outputDirectory, directoryPermissions);
+			File.SetUnixFileMode (output, filePermissions);
+		}
+		errors.Clear ();
+		Assert.IsTrue (CreateTask ().Execute (), "Restoring permissions must allow regeneration.");
+		Assert.IsEmpty (errors);
+		Assert.AreEqual ("true", File.ReadAllText (stamp));
+		using IELF elf = ELFReader.Load (output);
+		Assert.AreEqual (FileType.Relocatable, elf.Type);
 	}
 
 	[Test]

@@ -44,8 +44,7 @@ int main (int argc, char **argv)
 	auto parsed_offset = std::from_chars (argv[2], argv[2] + std::strlen (argv[2]), offset);
 	auto parsed_size = std::from_chars (argv[3], argv[3] + std::strlen (argv[3]), size);
 	if (parsed_offset.ec != std::errc {} || *parsed_offset.ptr != '\0' ||
-		parsed_size.ec != std::errc {} || *parsed_size.ptr != '\0' || size == 0 ||
-		offset % alignof (AppSystemProperties::OffsetPair) != 0) {
+		parsed_size.ec != std::errc {} || *parsed_size.ptr != '\0' || size == 0) {
 		Helpers::abort_application ("Invalid bootstrap body range");
 	}
 
@@ -74,6 +73,21 @@ int main (int argc, char **argv)
 	auto body = payload.data;
 	size = payload.size;
 	AppSystemProperties::initialize (payload);
+
+	auto check_entries = [&] (AppSystemProperties::Entries entries) {
+		for (const auto &entry : entries) {
+			for (const char *text : { entry.name, entry.value }) {
+				auto address = reinterpret_cast<uintptr_t>(text);
+				auto start = reinterpret_cast<uintptr_t>(body);
+				if (address < start || address - start >= size ||
+					std::memchr (text, 0, size - (address - start)) == nullptr) {
+					Helpers::abort_application ("Entry strings must point directly into the mapped object body");
+				}
+			}
+		}
+	};
+	check_entries (AppSystemProperties::environment ());
+	check_entries (AppSystemProperties::entries ());
 
 	size_t value_length = 0;
 	const char *value = AppSystemProperties::lookup (argv[4], value_length);

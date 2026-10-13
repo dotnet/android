@@ -69,10 +69,23 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 			NotSupportedException or OverflowException or XmlException) {
 			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);
 		} finally {
-			if (!success && File.Exists (OutputFile)) {
-				File.Delete (OutputFile);
+			if (!success) {
+				DeleteFailedOutput (CompletionStamp);
+				DeleteFailedOutput (OutputFile);
 			}
 		}
 		return !Log.HasLoggedErrors;
+	}
+
+	void DeleteFailedOutput (string? path)
+	{
+		if (string.IsNullOrEmpty (path)) {
+			return;
+		}
+		try {
+			File.Delete (path);
+		} catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException) {
+			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);
+		}
 	}
 }
