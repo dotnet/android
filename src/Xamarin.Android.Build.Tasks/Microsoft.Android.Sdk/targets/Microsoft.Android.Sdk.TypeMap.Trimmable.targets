@@ -511,10 +511,12 @@
     post-trim stamp for trimmed CoreCLR builds). Both remain stable on no-op builds.
     We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
+    NativeAOT environment configuration is generated separately as linked data objects;
+    only CoreCLR configuration depends on the environment inputs below.
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis"
-      Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
+      Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_AndroidCoreClrEnvironmentInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <!-- The generated Java Callable Wrappers are compiled in place from

@@ -324,7 +324,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 	void AddNativeLibrary (ArchiveFileList files, string path, string abi, string? archiveFileName, ITaskItem? taskItem = null)
 	{
 		string fileName = archiveFileName.IsNullOrEmpty () ? Path.GetFileName (path) : archiveFileName!;
-		bool needsSonameCheck = (AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") &&
+		bool needsSonameCheck = AndroidRuntime == "CoreCLR" &&
 			!string.Equals (Path.GetFileName (fileName), "libbinary_blobs.so", StringComparison.Ordinal);
 		bool hasReservedSoname = ELFHelper.AssertValidLibraryAlignment (
 			Log, ZipAlignmentPages, path, taskItem, needsSonameCheck ? "libbinary_blobs.so" : null);
