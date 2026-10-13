@@ -77,7 +77,6 @@
     </Project>
   </Folder>
   <Project Path="src/Microsoft.Android.Run/Microsoft.Android.Run.csproj" />
-  <Project Path="src/Microsoft.Android.Sdk.ILLink/Microsoft.Android.Sdk.ILLink.csproj" />
   <Project Path="src/Microsoft.Android.Sdk.TrimmableTypeMap/Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
   <Properties Name="MonoDevelopProperties">
     <Property Name="$0.DotNetNamingPolicy" Value="$1" />
