@@ -15,16 +15,15 @@ implication, estoppel or otherwise.
 4.  dotnet/java-interop (https://github.com/dotnet/java-interop/)
 5.  force-net/crc32.net (https://github.com/force-net/Crc32.NET)
 6.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
-7.  google/bionic (https://android.googlesource.com/platform/bionic/)
-8.  google/bundletool (https://github.com/google/bundletool)
-9.  google/r8 (https://r8.googlesource.com/r8/)
-10.  IronyProject/Irony (https://github.com/IronyProject/Irony)
-11.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
-12.  lovettchris/SgmlReader (https://github.com/lovettchris/SgmlReader/)
-13.  MiloszKrajewski/K4os.Compression.LZ4 (https://github.com/MiloszKrajewski/K4os.Compression.LZ4/)
-14.  mono/cecil (https://github.com/mono/cecil/)
-15.  mono/linker (https://github.com/mono/linker/)
-16.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
+7.  google/bundletool (https://github.com/google/bundletool)
+8.  google/r8 (https://r8.googlesource.com/r8/)
+9.  IronyProject/Irony (https://github.com/IronyProject/Irony)
+10.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
+11.  lovettchris/SgmlReader (https://github.com/lovettchris/SgmlReader/)
+12.  MiloszKrajewski/K4os.Compression.LZ4 (https://github.com/MiloszKrajewski/K4os.Compression.LZ4/)
+13.  mono/cecil (https://github.com/mono/cecil/)
+14.  mono/linker (https://github.com/mono/linker/)
+15.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
 
 %% Android API documentation NOTICES AND INFORMATION BEGIN HERE
 ================================================================
@@ -915,27 +914,6 @@ END OF force-net/crc32.net NOTICES AND INFORMATION
 
 ==================================================
 END OF google/aapt2 NOTICES AND INFORMATION
-
-
-%% google/bionic NOTICES AND INFORMATION BEGIN HERE
-===================================================
-Copyright (C) 2006 The Android Open Source Project
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-
-===================================================
-END OF google/bionic NOTICES AND INFORMATION
 
 
 %% google/bundletool NOTICES AND INFORMATION BEGIN HERE
