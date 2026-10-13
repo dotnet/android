@@ -61,7 +61,13 @@ namespace Java.Interop {
 			get {return (<#= info.ManagedType #>*) base.Elements;}
 		}
 
-		public ref <#= info.ManagedType #> this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref <#= info.ManagedType #> this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);

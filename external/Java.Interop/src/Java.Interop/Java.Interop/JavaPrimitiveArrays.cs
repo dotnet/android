@@ -41,7 +41,13 @@ namespace Java.Interop {
 			get {return (Boolean*) base.Elements;}
 		}
 
-		public ref Boolean this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Boolean this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -247,7 +253,13 @@ namespace Java.Interop {
 			get {return (SByte*) base.Elements;}
 		}
 
-		public ref SByte this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref SByte this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -453,7 +465,13 @@ namespace Java.Interop {
 			get {return (Char*) base.Elements;}
 		}
 
-		public ref Char this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Char this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -659,7 +677,13 @@ namespace Java.Interop {
 			get {return (Int16*) base.Elements;}
 		}
 
-		public ref Int16 this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Int16 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -865,7 +889,13 @@ namespace Java.Interop {
 			get {return (Int32*) base.Elements;}
 		}
 
-		public ref Int32 this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Int32 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -1071,7 +1101,13 @@ namespace Java.Interop {
 			get {return (Int64*) base.Elements;}
 		}
 
-		public ref Int64 this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Int64 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -1277,7 +1313,13 @@ namespace Java.Interop {
 			get {return (Single*) base.Elements;}
 		}
 
-		public ref Single this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Single this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -1483,7 +1525,13 @@ namespace Java.Interop {
 			get {return (Double*) base.Elements;}
 		}
 
-		public ref Double this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Double this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
