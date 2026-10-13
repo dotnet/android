@@ -54,10 +54,7 @@ namespace Java.InteropTests
 				var _ = a [2];
 			});
 			JniArrayElements e;
-			unsafe {
-				e = a.GetElements ();
-			}
-			using (e) {
+			using (e = a.GetElements ()) {
 				if (e == null) // OOM?
 					return;
 				Assert.Greater (e.Size, 0);
@@ -97,10 +94,7 @@ namespace Java.InteropTests
 				var _ = a [1];
 			});
 			JniArrayElements e;
-			unsafe {
-				e = a.GetElements ();
-			}
-			using (e) {
+			using (e = a.GetElements ()) {
 				if (e == null)
 					return;
 				Assert.AreEqual (0, e.Size);
