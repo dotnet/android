@@ -38,7 +38,6 @@ is used within many of the output directories which are created.
     `bin/$(Configuration)`.
       * `Mono.Android`: Builds `Mono.Android.dll` for a specific
         [`$(AndroidApiLevel)` and `$(AndroidFrameworkVersion)`](../building/configuration.md).
-      * `Mono.Android.Export`: Builds `Mono.Android.Export.dll`.
       * `Xamarin.Android.Build.Tasks`: MSBuild tasks for Xamarin.Android projects.
       * `Xamarin.Android.Build.Utilities`: MSBuild tasks support sources.
       * `Xamarin.Android.Tools.Aidl`: AIDL processor, used in MSBuild tasks.
