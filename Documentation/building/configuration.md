@@ -2,6 +2,7 @@
 - [Build Configuration](#build-configuration)
   - [Options suitable to use in builds for public use](#options-suitable-to-use-in-builds-for-public-use)
   - [Options suitable for local development](#options-suitable-for-local-development)
+    - [R8 and D8 (`src/r8`)](#r8-and-d8-srcr8)
     - [Native runtime (`src/native`)](#native-runtime-srcnative)
       - [Disable function inlining](#disable-function-inlining)
       - [Don't strip the runtime shared libraries](#dont-strip-the-runtime-shared-libraries)
@@ -113,6 +114,41 @@ Overridable MSBuild properties include:
      builds are not affected.
 
 ## Options suitable for local development
+
+### R8 and D8 (`src/r8`)
+
+The Gradle `build` task uses ProGuard to process the bundled R8 tool's dependencies,
+without obfuscation. All dependency classes and members are kept for unchanged
+R8 callers, reflection, and service providers; optimization remains enabled.
+R8's own implementation is already optimized and obfuscated upstream, and
+processing it again produces invalid JVM stackmaps. All other archive entries,
+including the R8 and D8 CLI entry points, are copied unchanged.
+
+The build produces `build/libs/r8.jar`, which is copied into the SDK, and
+`build/libs/r8-unshrunk.jar` for comparison. Keep rules are in `src/r8/proguard.pro`.
+
+From the repository root, run
+`build-tools/gradle/gradlew -p src/r8 build -PjavaSourceVer=17 -PjavaTargetVer=17`
+(use `gradlew.bat` on Windows). Set `JAVA_HOME` to the JDK used for the SDK build.
+Compare the two JAR sizes to measure the savings for the current R8 version.
+The existing Android project integration tests in `Xamarin.Android.Build.Tests`
+cover dex compilation, desugaring, multidex, shrinking, and R8 metadata output.
+
+The build automatically generates `build/proguard/r8-dependencies.txt` from the
+upstream obfuscation mapping, including libraries whose names are mixed into
+`com.android.tools.r8.internal`. Nothing is generated into the source tree.
+Updating the Maven R8 version automatically downloads the corresponding
+`r8lib.jar.map` from `https://storage.googleapis.com/r8-releases/raw/<version>/`
+and regenerates the list. The mapping is cached under `build/mappings`; a cold
+build downloads approximately 60 MB in addition to the Maven dependencies.
+CI must allow access to this Google Cloud Storage endpoint.
+
+The generator checks that the mapping matches the JAR, classifies every class,
+and rejects classes merging R8 implementation code with dependency code.
+Changed dependency relocation namespaces may require updating the classifier
+in `build.gradle`. R8 updates still require the integration tests above.
+For an offline build, cache the mapping with an online build first, or supply
+`-Pr8Mapping=<local-map-path>` to use a previously downloaded mapping.
 
 ### Native runtime (`src/native`)
 

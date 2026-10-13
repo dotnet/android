@@ -4,12 +4,19 @@
     <_Destination>$(MicrosoftAndroidSdkOutDir)r8.jar</_Destination>
   </PropertyGroup>
 
+  <Target Name="_BuildR8Inputs">
+    <ItemGroup>
+      <_AndroidR8Source Include="$(MSBuildThisFileDirectory)src\**\*.java" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_BuildR8"
       BeforeTargets="Build"
-      Inputs="$(MSBuildThisFile);build.gradle"
+      DependsOnTargets="_BuildR8Inputs"
+      Inputs="$(MSBuildThisFile);build.gradle;settings.gradle;proguard.pro;@(_AndroidR8Source)"
       Outputs="$(_Destination)">
     <Exec
-        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
+        Command="&quot;$(GradleWPath)&quot; build $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
@@ -18,6 +25,9 @@
         DestinationFiles="$(_Destination)"
     />
     <Touch Files="$(_Destination)" />
+    <ItemGroup>
+      <FileWrites Include="$(_Destination)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_CleanR8" BeforeTargets="Clean">

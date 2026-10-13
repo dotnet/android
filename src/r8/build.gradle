@@ -1,3 +1,16 @@
+import proguard.gradle.ProGuardTask
+import java.security.MessageDigest
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.zip.ZipFile
+
+buildscript {
+    apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: buildscript
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.10.0'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'idea'
 
@@ -13,6 +26,119 @@ dependencies {
     implementation 'com.android.tools:r8:9.5.23'
 }
 
+def dependencyList = layout.buildDirectory.file('proguard/r8-dependencies.txt')
+def dependencyConfiguration = layout.buildDirectory.file('proguard/r8-dependencies.pro')
+def dependencyLines = providers.fileContents(dependencyList).asText.map { it.readLines() }
+def dependencyPaths = dependencyLines.map { lines ->
+    lines.findAll { !it.startsWith('#') && !it.isEmpty() }.collect { it.replace('.', '/') + '.class' }
+}
+def r8DependencyJar = providers.provider { configurations.runtimeClasspath.singleFile }
+def r8Version = providers.provider {
+    def artifacts = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+    if (artifacts.size() != 1) {
+        throw new GradleException('Expected a single bundled R8 runtime artifact.')
+    }
+    artifacts.iterator().next().moduleVersion.id.version
+}
+def downloadedMapping = layout.buildDirectory.file('mappings/r8lib.jar.map')
+def mappingFile = providers.gradleProperty('r8Mapping').map { file(it) }.orElse(downloadedMapping.map { it.asFile })
+def sha256 = { File input ->
+    MessageDigest.getInstance('SHA-256').digest(input.bytes).encodeHex().toString()
+}
+
+tasks.register('downloadR8Mapping') {
+    inputs.property('r8Version', r8Version)
+    outputs.file(downloadedMapping)
+    onlyIf { !providers.gradleProperty('r8Mapping').isPresent() }
+    doLast {
+        if (gradle.startParameter.offline) {
+            throw new GradleException('The R8 mapping is not cached. Build online once or supply -Pr8Mapping=<local-map-path>.')
+        }
+        def destination = downloadedMapping.get().asFile
+        Files.createDirectories(destination.parentFile.toPath())
+        def temporary = new File(destination.parentFile, destination.name + '.tmp')
+        def connection = new URI("https://storage.googleapis.com/r8-releases/raw/${r8Version.get()}/r8lib.jar.map").toURL().openConnection()
+        connection.connectTimeout = 30000
+        connection.readTimeout = 60000
+        try {
+            connection.inputStream.withCloseable { input ->
+                temporary.withOutputStream { output -> input.transferTo(output) }
+            }
+            Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            Files.deleteIfExists(temporary.toPath())
+        }
+    }
+}
+
+tasks.register('generateDependencyList') {
+    dependsOn tasks.named('downloadR8Mapping'), tasks.named('jar')
+    inputs.file(mappingFile)
+    inputs.file(r8DependencyJar)
+    inputs.file('build.gradle')
+    outputs.file(dependencyList)
+    outputs.file(dependencyConfiguration)
+    doLast {
+        def mapping = mappingFile.get().text
+        def hashMatcher = mapping =~ /(?m)^# pg_map_hash: SHA-256 ([0-9a-f]{64})$/
+        if (!hashMatcher.find()) {
+            throw new GradleException('The R8 mapping is missing its pg_map_hash.')
+        }
+        def mappingHash = hashMatcher.group(1)
+        def dependencyPrefixes = [
+            'android.aapt.', 'androidx.', 'com.android.', 'com.google.', 'com.squareup.',
+            'it.unimi.', 'jetbrains.', 'okio.', 'org.', 'perfetto.', '_COROUTINE.'
+        ]
+        def isDependency = { String name ->
+            def prefix = 'com.android.tools.r8.'
+            !name.startsWith(prefix) || dependencyPrefixes.any { name.substring(prefix.length()).startsWith(it) }
+        }
+        def origins = [:].withDefault { [] }
+        mapping.eachLine { line ->
+            def match = line =~ /^([^\s#].*?) -> (\S+):$/
+            if (match.matches()) {
+                origins[match.group(2)].add(match.group(1))
+            }
+        }
+        def classes = []
+        new ZipFile(r8DependencyJar.get()).withCloseable { archive ->
+            def entry = archive.getEntry('com/android/tools/r8/R8.class')
+            if (entry == null || !archive.getInputStream(entry).withCloseable {
+                new String(it.bytes, 'ISO-8859-1').contains(mappingHash)
+            }) {
+                throw new GradleException('The mapping does not match the R8 JAR.')
+            }
+            archive.entries().each { classEntry ->
+                if (classEntry.name.endsWith('.class')) {
+                    def name = classEntry.name.substring(0, classEntry.name.length() - 6).replace('/', '.')
+                    def originalNames = origins[name]
+                    if (originalNames.isEmpty()) {
+                        throw new GradleException("The mapping does not classify ${name}.")
+                    }
+                    def kinds = originalNames.collect(isDependency).unique()
+                    if (kinds.size() != 1) {
+                        throw new GradleException("R8 and dependency classes were merged into ${name}.")
+                    }
+                    if (kinds[0]) {
+                        classes.add(name)
+                    }
+                }
+            }
+        }
+        Files.createDirectories(dependencyList.get().asFile.parentFile.toPath())
+        dependencyList.get().asFile.text =
+            "# Generated by generateDependencyList from upstream r8lib.jar.map.\n" +
+            "# R8 mapping hash: ${mappingHash}\n" +
+            "# R8 JAR SHA-256: ${sha256(r8DependencyJar.get())}\n" +
+            classes.sort().join('\n') + '\n'
+        def paths = classes.collect { it.replace('.', '/') + '.class' }
+        dependencyConfiguration.get().asFile.text =
+            "-injars '../libs/r8-unshrunk.jar'(${paths.join(',')})\n" +
+            "-libraryjars '../libs/r8-unshrunk.jar'(${paths.collect { '!' + it }.join(',')})\n" +
+            "-outjars '../libs/r8-dependencies-processed.jar'\n"
+    }
+}
+
 jar {
     duplicatesStrategy = 'exclude'
     manifest {
@@ -21,5 +147,45 @@ jar {
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    archiveFileName.set('r8-unshrunk.jar')
+}
+
+tasks.register('proguard', ProGuardTask) {
+    dependsOn tasks.named('generateDependencyList')
+    configuration file('proguard.pro')
+    configuration dependencyConfiguration
+    def inputJar = tasks.named('jar', Jar).flatMap { it.archiveFile }
+    inputs.file(inputJar)
+    inputs.file(dependencyList)
+    libraryjars fileTree("${System.getProperty('java.home')}/jmods") {
+        include '*.jmod'
+    }, jarfilter: '!**.jar', filter: '!module-info.class'
+    outputs.file(layout.buildDirectory.file('libs/r8-dependencies-processed.jar'))
+    doFirst {
+        def expected = dependencyLines.get().find { it.startsWith('# R8 JAR SHA-256: ') }
+        if (expected != "# R8 JAR SHA-256: ${sha256(r8DependencyJar.get())}") {
+            throw new GradleException('The generated dependency list does not match the R8 JAR.')
+        }
+    }
+}
+
+tasks.register('packageR8', Zip) {
+    dependsOn tasks.named('proguard')
+    def paths
+    doFirst { paths = dependencyPaths.get().toSet() }
+    from(layout.buildDirectory.file('libs/r8-dependencies-processed.jar').map { zipTree(it) })
+    from(tasks.named('jar', Jar).flatMap { it.archiveFile }.map { zipTree(it) }) {
+        eachFile {
+            if (paths.contains(it.path)) {
+                it.exclude()
+            }
+        }
+        includeEmptyDirs = false
+    }
     archiveFileName.set('r8.jar')
+    destinationDirectory.set(layout.buildDirectory.dir('libs'))
+}
+
+tasks.named('assemble') {
+    dependsOn tasks.named('packageR8')
 }
