@@ -14,7 +14,6 @@ using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Java.Interop.Tools.Cecil;
-using Brutal.Dev.StrongNameSigner;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
@@ -203,7 +202,6 @@ namespace Xamarin.Android.Tasks
 				var il = c.Value.Body.GetILProcessor ();
 				il.Emit(OpCodes.Ret);
 			}
-			StrongNameAssembly (assembly.Name);
 			var wp = new WriterParameters () {
 				DeterministicMvid = Deterministic,
 			};
@@ -370,16 +368,5 @@ namespace Xamarin.Android.Tasks
 			return p;
 		}
 
-		void StrongNameAssembly (AssemblyNameDefinition name)
-		{
-			using (Stream stream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk")) {
-				byte[] publicKey = new byte[stream.Length];
-				_ = stream.Read (publicKey, 0, publicKey.Length);
-				name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;
-				name.PublicKey = SigningHelper.GetPublicKey (publicKey);
-				name.HasPublicKey = true;
-				name.Attributes |= AssemblyAttributes.PublicKey;
-			}
-		}
 	}
 }
