@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests;
 public class DesignTimeResourceTargetsTests : BaseTest
 {
 	[Test]
-	public void ResourcePipelineDependsOnDesignerAssemblyNotHostOrIde (
+	public void ResourcePipelineAndJavaValidationSkipDesignTimeBuilds (
 		[Values ("Windows_NT", "Unix")] string os,
 		[Values ("true", "False")] string designTimeBuild,
 		[Values] bool useDesignerAssembly,
@@ -67,11 +67,10 @@ public class DesignTimeResourceTargetsTests : BaseTest
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 		string [] pipeline = File.ReadAllLines (output);
 		bool isDesignTimeBuild = string.Equals (designTimeBuild, "true", StringComparison.OrdinalIgnoreCase);
-		bool useAapt = !isDesignTimeBuild || !useDesignerAssembly;
-		CollectionAssert.Contains (pipeline, "ResourceBuild=" + (useAapt ? "true" : ""));
+		CollectionAssert.Contains (pipeline, "ResourceBuild=" + (isDesignTimeBuild ? "" : "true"));
 		CollectionAssert.Contains (pipeline, "JavaValidation=" + (isDesignTimeBuild ? "" : "true"));
-		Assert.AreEqual (useAapt, pipeline.Any (line => line.Trim () == "_CompileResources"),
-			"Only full builds and legacy designer builds should compile resources with aapt2.");
+		Assert.AreEqual (!isDesignTimeBuild, pipeline.Any (line => line.Trim () == "_CompileResources"),
+			"Only normal builds should compile resources with aapt2.");
 		CollectionAssert.Contains (pipeline, "LibraryImports=true");
 	}
 

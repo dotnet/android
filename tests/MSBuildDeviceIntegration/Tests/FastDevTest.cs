@@ -193,12 +193,12 @@ namespace Xamarin.Android.Build.Tests
 			b.Target = "Compile";
 			var designTimeParams = new string [] { "BuildingInsideVisualStudio=true", "BuildProject=false" };
 			Assert.IsTrue (b.Build (proj, true, designTimeParams, false), "5 update resources should have succeeded.");
-			// _UpdateAndroidResgen should be built.
-			Assert.IsTrue (!b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 first _UpdateAndroidResgen was skipped");
+			// Design-time builds do not regenerate the legacy source designer.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen", defaultIfNotUsed: true), "5 first _UpdateAndroidResgen was not skipped");
 			b.Target = "Build";
 			Assert.IsTrue (b.Build (proj, true, null, false), "5 build should have succeeded.");
-			// _UpdateAndroidResgen should not be built.
-			Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was not skipped");
+			// The normal build processes the resource changes skipped by the design-time build.
+			Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was skipped");
 			// CoreCompile should not be built.
 			Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
 

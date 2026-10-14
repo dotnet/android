@@ -139,13 +139,18 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
 					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
 					b.ThrowOnBuildFailure = false;
-					b.Target = "Compile";
-					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }),
+					Assert.IsTrue (b.DesignTimeBuild (proj, doNotCleanupOnUpdate: true),
 						"first build failed");
 					var designTimeDesigner = useDesignerAssembly
 						? Path.Combine (intermediateOutputPath, "designtime", "_Microsoft.Android.Resource.Designer.dll")
 						: Path.Combine (intermediateOutputPath, "Resource.designer.cs");
-					FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
+					if (useDesignerAssembly) {
+						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
+					} else {
+						FileAssert.DoesNotExist (designTimeDesigner, "Design-time builds should not generate the legacy source designer.");
+					}
+					var resgenFlag = Path.Combine (intermediateOutputPath, "R.cs.flag");
+					FileAssert.DoesNotExist (resgenFlag, "Design-time builds should not create the normal resource-generation flag.");
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }), "second build failed");
@@ -162,6 +167,21 @@ namespace Xamarin.Android.Build.Tests
 						}
 						var first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
+
+						var designerContents = File.ReadAllText (designTimeDesigner);
+						var flagTimestamp = File.GetLastWriteTimeUtc (resgenFlag);
+						proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\updated.xml") {
+							TextContent = () => "<resources><string name=\"updated_resource\">Updated</string></resources>",
+						});
+						Assert.IsTrue (b.DesignTimeBuild (proj, doNotCleanupOnUpdate: true), "Design-time build after a resource edit should succeed.");
+						Assert.AreEqual (designerContents, File.ReadAllText (designTimeDesigner),
+							"Design-time builds should retain the source designer from the last normal build.");
+						Assert.AreEqual (flagTimestamp, File.GetLastWriteTimeUtc (resgenFlag),
+							"Design-time builds must not mark normal resource generation up to date.");
+						FileAssert.DoesNotExist (Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs"));
+						Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Normal build after a design-time build should succeed.");
+						StringAssert.Contains ("updated_resource", File.ReadAllText (designTimeDesigner),
+							"The next normal build should refresh the source designer.");
 					}
 				}
 			}

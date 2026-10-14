@@ -966,7 +966,7 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Resource Build -->
 
 <Target Name="_UpdateAndroidResources"
-    Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseDesignerAssembly)' != 'True' "
+    Condition=" '$(DesignTimeBuild)' != 'True' "
     DependsOnTargets="$(_UpdateAndroidResourcesDependsOn)"
 />
 
