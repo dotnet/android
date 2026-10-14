@@ -95,7 +95,6 @@ namespace Xamarin.Android.Tasks {
 				var stamp = resdir?.GetMetadata ("StampFile");
 				var filename = !hash.IsNullOrEmpty () ? hash : "compiled";
 				var stampFile = !stamp.IsNullOrEmpty () ? stamp : $"{filename}.stamp";
-				Log.LogDebugMessage ($"{filename} {stampFile}");
 				output.Add (file, new TaskItem (Path.GetFullPath (file), new Dictionary<string, string> {
 					{ "StampFile" , stampFile },
 					{ "Hash" , filename },

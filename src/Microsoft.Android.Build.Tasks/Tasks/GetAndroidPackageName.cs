@@ -76,8 +76,6 @@ namespace Microsoft.Android.Tasks
 				Log.LogCodedError ("XA4258", Properties.Resources.XA4258, PackageName, invalidIdentifier.ToString ());
 			}
 
-			Log.LogDebugMessage ($"  PackageName: {PackageName}");
-
 			return !Log.HasLoggedErrors;
 		}
 	}
