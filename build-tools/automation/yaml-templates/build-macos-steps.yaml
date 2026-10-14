@@ -11,8 +11,6 @@ parameters:
   use1ESTemplate: true
 
 steps:
-- template: /build-tools/automation/yaml-templates/initialize-nuget-migrations.yaml
-
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - ${{ if ne(parameters.use1ESTemplate, true) }}:

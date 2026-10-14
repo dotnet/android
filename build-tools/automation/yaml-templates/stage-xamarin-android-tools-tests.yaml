@@ -122,10 +122,6 @@ stages:
     - checkout: self
       clean: true
 
-    # Temporary workaround for NuGet's first-run migration mutex failures on
-    # shared macOS agents. The migration marker avoids creating NuGet-Migrations.
-    - template: /build-tools/automation/yaml-templates/initialize-nuget-migrations.yaml
-
     - task: UseDotNet@2
       displayName: Use .NET Core $(DotNetCoreVersion)
       inputs:

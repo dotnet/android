@@ -1,8 +1,0 @@
-steps:
-- bash: |
-    set -euo pipefail
-    xdg_data_home="$(Agent.TempDirectory)/nuget-xdg"
-    mkdir -p "$xdg_data_home/NuGet/Migrations"
-    touch "$xdg_data_home/NuGet/Migrations/1"
-    echo "##vso[task.setvariable variable=XDG_DATA_HOME]$xdg_data_home"
-  displayName: Initialize isolated NuGet migration state
