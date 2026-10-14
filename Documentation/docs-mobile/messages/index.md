@@ -51,8 +51,8 @@ ms.date: 04/11/2024
 + [XA0003](xa0003.md): Invalid \`android:versionCode\` value \`{code}\` in \`AndroidManifest.xml\`. It must be an integer value.
 + [XA0004](xa0004.md): Invalid \`android:versionCode\` value \`{code}\` in \`AndroidManifest.xml\`. The value must be in the range of 0 to {maxVersionCode}.
 + [XA0030](xa0030.md): Building with JDK version `{versionNumber}` is not supported.
-+ [XA0031](xa0031.md): Java SDK {requiredJavaForFrameworkVersion} or above is required when when using $(TargetFrameworkVersion) {targetFrameworkVersion}.
-+ [XA0032](xa0032.md): Java SDK {requiredJavaForBuildTools} or above is required when using Android SDK Build-Tools {buildToolsVersion}.
++ [XA0031](xa0031.md): Java SDK {minimumSupportedJavaVersion} or above is required by the .NET for Android SDK.
++ [XA0032](xa0032.md): Legacy Android Build-Tools Java requirement; no longer emitted by current SDKs.
 + [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
