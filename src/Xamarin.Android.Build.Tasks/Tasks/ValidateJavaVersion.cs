@@ -10,7 +10,7 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// ValidateJavaVersion's job is to shell out to java and javac to detect their version
+	/// Validates the detected JDK against the SDK's configured supported version range.
 	/// </summary>
 	public class ValidateJavaVersion : AndroidTask
 	{
@@ -21,8 +21,6 @@ namespace Xamarin.Android.Tasks
 		public string? JavaToolExe { get; set; }
 
 		public string? JavacToolExe { get; set; }
-
-		public string? TargetPlatformVersion { get; set; }
 
 		[Required]
 		public string LatestSupportedJavaVersion { get; set; } = "";
@@ -72,9 +70,6 @@ namespace Xamarin.Android.Tasks
 		protected virtual bool ValidateJava (string javaExe, Regex versionRegex)
 		{
 			var required = Version.Parse (MinimumSupportedJavaVersion);
-			if (Version.TryParse (TargetPlatformVersion, out var targetPlatformVersion) && targetPlatformVersion.Major >= 31) {
-				required = new Version (11, 0);
-			}
 			MinimumRequiredJdkVersion = required.ToString ();
 
 			try {
