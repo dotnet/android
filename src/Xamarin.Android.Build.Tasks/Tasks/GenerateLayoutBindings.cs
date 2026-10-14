@@ -188,7 +188,6 @@ namespace Xamarin.Android.Tasks
 			GeneratedFiles = generatedFilePaths.Where (gfp => !gfp.IsNullOrEmpty ()).Select (gfp => new TaskItem (gfp)).ToArray ();
 			if (GeneratedFiles.Length == 0)
 				LogCodedWarning ("XA4221", Properties.Resources.XA4221);
-			LogDebugTaskItems ("  GeneratedFiles:", GeneratedFiles);
 		}
 
 		void GenerateSourceForLayoutGroup (BindingGenerator generator, LayoutGroup group, Action <string> pathAdder)

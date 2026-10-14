@@ -69,60 +69,6 @@ namespace {
 
 unsigned int log_categories = LOG_NONE;
 
-#undef DO_LOG
-#define DO_LOG(_level_,_category_,_format_,_args_)						                        \
-	va_start ((_args_), (_format_));									                        \
-	__android_log_vprint ((_level_), category_name((_category_)), (_format_), (_args_)); \
-	va_end ((_args_));
-
-void
-log_error (LogCategories category, const char *format, ...)
-{
-	va_list args;
-
-	DO_LOG (ANDROID_LOG_ERROR, category, format, args);
-}
-
-void
-log_fatal (LogCategories category, const char *format, ...)
-{
-	va_list args;
-
-	DO_LOG (ANDROID_LOG_FATAL, category, format, args);
-}
-
-void
-log_info_nocheck (LogCategories category, const char *format, ...)
-{
-	va_list args;
-
-	if ((log_categories & category) != category) {
-		return;
-	}
-
-	DO_LOG (ANDROID_LOG_INFO, category, format, args);
-}
-
-void
-log_warn (LogCategories category, const char *format, ...)
-{
-	va_list args;
-
-	DO_LOG (ANDROID_LOG_WARN, category, format, args);
-}
-
-void
-log_debug_nocheck (LogCategories category, const char *format, ...)
-{
-	va_list args;
-
-	if ((log_categories & category) != category) {
-		return;
-	}
-
-	DO_LOG (ANDROID_LOG_DEBUG, category, format, args);
-}
-
 namespace xamarin::android {
 	void
 	log_write (LogCategories category, LogLevel level, const char *message) noexcept

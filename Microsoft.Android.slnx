@@ -12,7 +12,6 @@
     <Project Path="build-tools/jnienv-gen/jnienv-gen.csproj" />
   </Folder>
   <Folder Name="/Core/">
-    <Project Path="external/Java.Interop/src/java-interop/java-interop.csproj" />
     <Project Path="external/Java.Interop/src/Java.Interop.Tools.Generator/Java.Interop.Tools.Generator.csproj" />
     <Project Path="external/Java.Interop/src/Java.Interop/Java.Interop.csproj" />
     <Project Path="external/Java.Interop/src/Xamarin.Android.Tools.Bytecode/Xamarin.Android.Tools.Bytecode.csproj" />
@@ -27,7 +26,6 @@
     <Project Path="src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj" />
     <Project Path="src/Microsoft.Android.Runtime.NativeAOT/Microsoft.Android.Runtime.NativeAOT.csproj" />
     <Project Path="src/Microsoft.Android.TypeMaps.Ref/Microsoft.Android.TypeMaps.Ref.csproj" />
-    <Project Path="src/Mono.Android.Export/Mono.Android.Export.csproj" />
     <Project Path="src/Mono.Android.Runtime/Mono.Android.Runtime.csproj" />
     <Project Path="src/Mono.Android/Mono.Android.csproj" />
     <Project Path="src/native/cmake-config/cmake-config.csproj" />
@@ -77,7 +75,6 @@
     </Project>
   </Folder>
   <Project Path="src/Microsoft.Android.Run/Microsoft.Android.Run.csproj" />
-  <Project Path="src/Microsoft.Android.Sdk.ILLink/Microsoft.Android.Sdk.ILLink.csproj" />
   <Project Path="src/Microsoft.Android.Sdk.TrimmableTypeMap/Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
   <Properties Name="MonoDevelopProperties">
     <Property Name="$0.DotNetNamingPolicy" Value="$1" />

@@ -1054,15 +1054,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute..
-        /// </summary>
-        public static string XA4210 {
-            get {
-                return ResourceManager.GetString("XA4210", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:targetSdkVersion &apos;{0}&apos; is less than $(TargetPlatformVersion) &apos;{1}&apos;. Using API-{2} for ACW compilation..
         /// </summary>
         public static string XA4211 {

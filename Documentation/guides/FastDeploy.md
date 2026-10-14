@@ -26,6 +26,7 @@ details:
 
 | Property | Default | Description |
 | --- | --- | --- |
+| `$(_FastDeploymentDiagnosticLogging)` | `False` | Set to `true` to enable extra fast-deployment diagnostics, including `NotifySync SkipCopyFile` messages for unchanged files. Changed-file `NotifySync CopyFile` messages are logged regardless of this setting. |
 | `$(_AndroidFastDeployStaleFileRemovalBatchSize)` | `100` | Number of stale override files deleted per `rm` invocation. |
 | `$(_AndroidFastDeployCopyBatchSize)` | `25` | Number of files copied per batch when staging fast-deployment files. |
 | `$(_AndroidFastDeployMaxShellCommandLength)` | `900` | Maximum length of a single `adb shell` command line before it is split. |

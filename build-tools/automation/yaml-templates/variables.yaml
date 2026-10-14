@@ -72,6 +72,8 @@ variables:
   value: true
 - name: DOTNET_NOLOGO
   value: true
+- name: TMPDIR
+  value: $(Agent.TempDirectory)
 - name: DOTNET_GENERATE_ASPNET_CERTIFICATE
   value: false
 # XBD Google Maven mirror support: https://github.com/dotnet/android-libraries/commit/4fe06d57f3ef7905fab0257d7246c97464d29e74

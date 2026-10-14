@@ -152,14 +152,6 @@ namespace Xamarin.Android.Tasks
 
 			assemblyMap.Save (AssemblyIdentityMapFile);
 
-			Log.LogDebugTaskItems ("  Jars: ", Jars);
-			Log.LogDebugTaskItems ("  ResolvedResourceDirectories: ", ResolvedResourceDirectories);
-			Log.LogDebugTaskItems ("  ResolvedAssetDirectories: ", ResolvedAssetDirectories);
-			Log.LogDebugTaskItems ("  ResolvedEnvironmentFiles: ", ResolvedEnvironmentFiles);
-			Log.LogDebugTaskItems ("  ResolvedResourceDirectoryStamps: ", ResolvedResourceDirectoryStamps);
-			Log.LogDebugTaskItems ("  ProguardConfigFiles:", ProguardConfigFiles);
-			Log.LogDebugTaskItems ("  ExtractedDirectories:", ExtractedDirectories);
-
 			return !Log.HasLoggedErrors;
 		}
 

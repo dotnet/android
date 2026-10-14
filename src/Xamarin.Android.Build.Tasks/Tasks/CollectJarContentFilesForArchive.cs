@@ -106,7 +106,7 @@ public class CollectJarContentFilesForArchive : AndroidTask
 					if (exclude)
 						continue;
 
-					if ((AndroidRuntime == "CoreCLR" || AndroidRuntime == "NativeAOT") && IsNativeLibrary (name)) {
+					if (AndroidRuntime == "CoreCLR" && IsNativeLibrary (name)) {
 						string normalizedName = name.Replace ('\\', '/');
 						bool reservedName = string.Equals (Path.GetFileName (normalizedName), "libbinary_blobs.so", StringComparison.Ordinal);
 						bool reservedSoname = false;

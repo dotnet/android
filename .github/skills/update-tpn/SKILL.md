@@ -67,8 +67,6 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | Directory | Name | License Source |
 |-----------|------|---------------|
 | `android-platform-tools-base/` | android/platform/tools/base | https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE (Apache 2.0) |
-| `bionic/` | google/bionic | https://android.googlesource.com/platform/bionic/ (Apache 2.0) |
-| `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
 | `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
 
 Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
@@ -83,7 +81,6 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
 | NuGet.Versioning | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
 | Mono.Cecil | mono/cecil | https://github.com/mono/cecil/ (MIT) |
-| Microsoft.Xml.SgmlReader | lovettchris/SgmlReader | https://github.com/lovettchris/SgmlReader/ (Apache 2.0) |
 
 Note: Microsoft-owned NuGet packages (Microsoft.*, System.*) do not need TPN entries.
 

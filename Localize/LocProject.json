@@ -5,11 +5,6 @@
       "LocItems": [
         {
           "CopyOption": "LangIDOnName",
-          "SourceFile": ".\\src\\Microsoft.Android.Sdk.ILLink\\Properties\\Resources.resx",
-          "OutputPath": ".\\src\\Microsoft.Android.Sdk.ILLink\\Properties\\"
-        },
-        {
-          "CopyOption": "LangIDOnName",
           "SourceFile": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\Resources.resx",
           "OutputPath": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\"
         },

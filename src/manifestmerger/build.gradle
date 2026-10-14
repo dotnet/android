@@ -1,3 +1,12 @@
+import proguard.gradle.ProGuardTask
+
+buildscript {
+    apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: buildscript
+    dependencies {
+        classpath 'com.guardsquare:proguard-gradle:7.10.0'
+    }
+}
+
 plugins {
     id 'java-library'
 }
@@ -37,5 +46,18 @@ jar {
         // Exclude native jnidispatch content to simplify installer signing and notarization
         exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA', 'com/sun/jna/**/*jnidispatch*'
     }
-    archiveFileName.set('manifestmerger.jar')
+    archiveFileName.set('manifestmerger-unshrunk.jar')
+}
+
+tasks.register('proguard', ProGuardTask) {
+    configuration file('proguard.pro')
+    injars(tasks.named('jar', Jar).flatMap { it.archiveFile })
+    libraryjars fileTree("${System.getProperty('java.home')}/jmods") {
+        include '*.jmod'
+    }, jarfilter: '!**.jar', filter: '!module-info.class'
+    outjars(layout.buildDirectory.file('libs/manifestmerger.jar'))
+}
+
+tasks.named('assemble') {
+    dependsOn tasks.named('proguard')
 }

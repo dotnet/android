@@ -1,30 +1,12 @@
 // Originally from: https://github.com/dotnet/java-interop/blob/dd3c1d0514addfe379f050627b3e97493e985da6/src/Java.Runtime.Environment/Java.Interop/JreRuntime.cs
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
 
-	struct JavaVMInitArgs {
-		#pragma warning disable CS0649 // Field is never assigned to;
-		public  JniVersion                      version;    /*				 use JNI_VERSION_1_2 or later */
-
-		public  int                             nOptions;
-		public  IntPtr /* JavaVMOption[] */     options;
-		public  byte                            ignoreUnrecognized;
-		#pragma warning restore CS0649
-	}
-
 	class NativeAotRuntimeOptions : JniRuntime.CreationOptions {
-
-		public  bool        IgnoreUnrecognizedOptions   {get; set;}
 
 		public NativeAotRuntimeOptions ()
 		{
@@ -39,45 +21,9 @@ namespace Java.Interop {
 
 	class JreRuntime : JniRuntime
 	{
-		static JreRuntime ()
-		{
-		}
-
-		static NativeAotRuntimeOptions CreateJreVM (NativeAotRuntimeOptions builder)
-		{
-			if (builder == null)
-				throw new ArgumentNullException ("builder");
-			if (builder.InvocationPointer == IntPtr.Zero &&
-					builder.EnvironmentPointer == IntPtr.Zero &&
-					string.IsNullOrEmpty (builder.JvmLibraryPath))
-				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
-
-#if NET
-			builder.TypeManager     ??= CreateDefaultTypeManager ();
-#endif  // NET
-
-			builder.ValueManager            ??= CreateDefaultValueManager ();
-			builder.ObjectReferenceManager  ??= new Android.Runtime.ManagedObjectReferenceManager ();
-
-			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)
-				return builder;
-
-			throw new NotImplementedException ();
-		}
-
 		internal protected JreRuntime (NativeAotRuntimeOptions builder)
-			: base (CreateJreVM (builder))
+			: base (builder)
 		{
-		}
-
-		static JniRuntime.JniTypeManager CreateDefaultTypeManager ()
-		{
-			return new TrimmableTypeMapTypeManager ();
-		}
-
-		static JniRuntime.JniValueManager CreateDefaultValueManager ()
-		{
-			return new TrimmableTypeMapValueManager ();
 		}
 
 		public override Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)

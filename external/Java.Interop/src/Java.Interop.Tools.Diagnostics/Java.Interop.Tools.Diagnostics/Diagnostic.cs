@@ -96,7 +96,6 @@ namespace Java.Interop.Tools.Diagnostics {
 	//					XA4207	[ExportField] cannot be used on a generic type.
 	//					XA4208	[Java.Interop.ExportFieldAttribute] cannot be used on a method returning void.
 	//					XA4209 Failed to create JavaTypeInfo for class: {0} due to {1}
-	//					XA4210 "You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute."
 	//					XA4211  AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{1} for ACW compilation.
 	//					XA4212  Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.
 	// XA5xxx	GCC and toolchain

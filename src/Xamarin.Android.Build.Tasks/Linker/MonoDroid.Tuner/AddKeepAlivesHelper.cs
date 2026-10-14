@@ -110,7 +110,6 @@ namespace MonoDroid.Tuner
 			return Extensions.GetMethod (gcType, "KeepAlive", new string [] { "System.Object" });
 		}
 
-		// Adapted from src/Mono.Android.Export/Mono.CodeGeneration/CodeArgumentReference.cs
 		static Instruction GetLoadArgumentInstruction (int argNum, ParameterDefinition parameter)
 		{
 			switch (argNum) {

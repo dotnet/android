@@ -27,6 +27,10 @@ is used within many of the output directories which are created.
         `$(AndroidToolchainDirectory)`.
       * `api-merge`: Merges API descriptions; used by `src/Mono.Android`
       * `jnienv-gen`: Generator for `Android.Runtime.JNIEnv`; used by `src/Mono.Android`
+        to generate Java.Interop forwarders. Use `-o <path>` to write a file or
+        `-o=-` for stdout.
+        `JNIEnvEntries.cs` is the generator's JNI function metadata input, not
+        generated output.
       * `mono-runtimes`: Builds mono
   * `Documentation`: Project documentation
   * `external`: git submodules
@@ -38,7 +42,6 @@ is used within many of the output directories which are created.
     `bin/$(Configuration)`.
       * `Mono.Android`: Builds `Mono.Android.dll` for a specific
         [`$(AndroidApiLevel)` and `$(AndroidFrameworkVersion)`](../building/configuration.md).
-      * `Mono.Android.Export`: Builds `Mono.Android.Export.dll`.
       * `Xamarin.Android.Build.Tasks`: MSBuild tasks for Xamarin.Android projects.
       * `Xamarin.Android.Build.Utilities`: MSBuild tasks support sources.
       * `Xamarin.Android.Tools.Aidl`: AIDL processor, used in MSBuild tasks.
