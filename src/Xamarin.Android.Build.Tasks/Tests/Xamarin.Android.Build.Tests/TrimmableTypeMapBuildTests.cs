@@ -156,53 +156,106 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true)]
-		[TestCase (AndroidRuntime.NativeAOT, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true)]
-		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies)
+		static IEnumerable<TestCaseData> ComponentNameSignatureCases ()
+		{
+			var components = new (string Attribute, string Source) [] {
+				("Activity", """
+					[Activity (Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : Activity { }
+					"""),
+				("Service", """
+					[Service (Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : Service
+					{
+						public override IBinder? OnBind (Intent? intent) => null;
+					}
+					"""),
+				("BroadcastReceiver", """
+					[BroadcastReceiver (Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : BroadcastReceiver
+					{
+						public override void OnReceive (Context? context, Intent? intent) { }
+					}
+					"""),
+				("ContentProvider", """
+					[ContentProvider (["example.components.provider"], Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : ContentProvider
+					{
+						public override bool OnCreate () => true;
+						public override ICursor? Query (Android.Net.Uri uri, string[]? projection, string? selection, string[]? selectionArgs, string? sortOrder) => null;
+						public override string? GetType (Android.Net.Uri uri) => null;
+						public override Android.Net.Uri? Insert (Android.Net.Uri uri, ContentValues? values) => null;
+						public override int Delete (Android.Net.Uri uri, string? selection, string[]? selectionArgs) => 0;
+						public override int Update (Android.Net.Uri uri, ContentValues? values, string? selection, string[]? selectionArgs) => 0;
+					}
+					"""),
+				("Application", """
+					[Application (Name = "example.components.NamedComponent")]
+					public class NamedComponent : Application
+					{
+						public NamedComponent (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+					}
+					"""),
+				("Instrumentation", """
+					[Instrumentation (Name = "example.components.NamedComponent", TargetPackage = "${applicationId}")]
+					public class NamedComponent : Instrumentation
+					{
+						public NamedComponent (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+					}
+					"""),
+			};
+			foreach (var component in components) {
+				foreach (var runtime in new [] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+					foreach (bool separateAssemblies in new [] { false, true }) {
+						yield return new TestCaseData (runtime, separateAssemblies, component.Source)
+							.SetName ($"Build_ComponentNameIsUsedInSignatures({component.Attribute},{runtime},{separateAssemblies})");
+					}
+				}
+			}
+		}
+
+		[TestCaseSource (nameof (ComponentNameSignatureCases))]
+		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies, string componentSource)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
-			var service = new BuildItem.Source ("MediaControlsService.cs") {
+			var component = new BuildItem.Source ("NamedComponent.cs") {
 				TextContent = () => """
+					using System;
 					using Android.App;
 					using Android.Content;
+					using Android.Database;
 					using Android.OS;
+					using Android.Runtime;
 
-					namespace Example.Media;
+					namespace Example.Components;
 
-					[Service (Name = "example.media.ControlsService", Exported = false)]
-					public class MediaControlsService : Service
-					{
-						public override IBinder? OnBind (Intent? intent) => null;
-					}
-					""",
+					""" + Environment.NewLine + componentSource,
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				Sources = {
-					new BuildItem.Source ("BoundServiceBinder.cs") {
+					new BuildItem.Source ("ComponentBinder.cs") {
 						TextContent = () => """
 							using Android.OS;
 							using Android.Runtime;
-							using Example.Media;
+							using Example.Components;
 							using Java.Interop;
 
 							namespace Example.Services;
 
-							[Register ("example/media/BoundServiceBinder")]
-							public class BoundServiceBinder : Binder
+							[Register ("example/components/ComponentBinder")]
+							public class ComponentBinder : Binder
 							{
-								public BoundServiceBinder (MediaControlsService service) { }
-								public BoundServiceBinder (MediaControlsService[] services) { }
+								public ComponentBinder (NamedComponent? component) { }
+								public ComponentBinder (NamedComponent[] components) { }
 
 								[Export ("echo")]
-								public MediaControlsService Echo (MediaControlsService service) => service;
+								public NamedComponent? Echo (NamedComponent? component) => component;
 
 								[Export ("echoArray")]
-								public MediaControlsService[] EchoArray (MediaControlsService[] services) => services;
+								public NamedComponent[] EchoArray (NamedComponent[] components) => components;
 							}
 							""",
 					},
@@ -211,18 +264,19 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-				using var service = new Example.Media.MediaControlsService ();
-				using var binder = new Example.Services.BoundServiceBinder (service);
-				using var arrayBinder = new Example.Services.BoundServiceBinder ([service]);
-				System.GC.KeepAlive (binder.Echo (service));
-				System.GC.KeepAlive (arrayBinder.EchoArray ([service]));
+				Example.Components.NamedComponent? component = null;
+				Example.Components.NamedComponent[] components = [];
+				using var binder = new Example.Services.ComponentBinder (component);
+				using var arrayBinder = new Example.Services.ComponentBinder (components);
+				System.GC.KeepAlive (binder.Echo (component));
+				System.GC.KeepAlive (arrayBinder.EchoArray (components));
 				""");
 			var testRoot = Path.Combine ("temp", TestName);
 			if (separateAssemblies) {
 				var library = new XamarinAndroidLibraryProject {
-					ProjectName = "MediaComponents",
+					ProjectName = "NamedComponents",
 					IsRelease = true,
-					Sources = { service },
+					Sources = { component },
 				};
 				library.SetRuntime (runtime);
 				using var libraryBuilder = CreateDllBuilder (Path.Combine (testRoot, library.ProjectName), cleanupAfterSuccessfulBuild: false);
@@ -230,21 +284,21 @@ namespace Xamarin.Android.Build.Tests {
 				proj.References.Add (new BuildItem.ProjectReference (
 					$"..\\{library.ProjectName}\\{library.ProjectName}.csproj", library.ProjectName, library.ProjectGuid));
 			} else {
-				proj.Sources.Add (service);
+				proj.Sources.Add (component);
 			}
 
 			using var builder = CreateApkBuilder (Path.Combine (testRoot, proj.ProjectName));
 			Assert.IsTrue (builder.Build (proj), "Explicit component names must compile in constructor and export signatures.");
 			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
 			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-			const string binderName = "Lexample/media/BoundServiceBinder;";
-			const string serviceName = "Lexample/media/ControlsService;";
-			Assert.IsTrue (DexUtils.ContainsClass (serviceName, dexFile, AndroidSdkPath), "The named service must be packaged.");
+			const string binderName = "Lexample/components/ComponentBinder;";
+			const string componentName = "Lexample/components/NamedComponent;";
+			Assert.IsTrue (DexUtils.ContainsClass (componentName, dexFile, AndroidSdkPath), "The named component must be packaged.");
 			foreach (var (method, signature) in new [] {
-				("<init>", $"({serviceName})V"),
-				("<init>", $"([{serviceName})V"),
-				("echo", $"({serviceName}){serviceName}"),
-				("echoArray", $"([{serviceName})[{serviceName}"),
+				("<init>", $"({componentName})V"),
+				("<init>", $"([{componentName})V"),
+				("echo", $"({componentName}){componentName}"),
+				("echoArray", $"([{componentName})[{componentName}"),
 			}) {
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod (binderName, method, signature, dexFile, AndroidSdkPath),
 					$"The packaged binder must contain {method}{signature}.");
