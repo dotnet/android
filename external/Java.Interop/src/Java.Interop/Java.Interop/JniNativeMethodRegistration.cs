@@ -26,7 +26,7 @@ namespace Java.Interop {
 	/// Blittable JNI native method registration for use with raw function pointers.
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
-	[StructLayout (LayoutKind.Sequential)]
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	public unsafe struct JniNativeMethod
 	{
 		byte* name;

@@ -6,18 +6,18 @@ using System.Runtime.InteropServices;
 namespace Java.Interop
 {
 
-	[StructLayout(LayoutKind.Explicit)]
+	[ExtendedLayout (ExtendedLayoutKind.CUnion)]
 	public struct JniArgumentValue : IEquatable<JniArgumentValue> {
 #pragma warning disable 0414
-		[FieldOffset(0)] bool z;
-		[FieldOffset(0)] sbyte b;
-		[FieldOffset(0)] char c;
-		[FieldOffset(0)] short s;
-		[FieldOffset(0)] int i;
-		[FieldOffset(0)] long j;
-		[FieldOffset(0)] float f;
-		[FieldOffset(0)] double d;
-		[FieldOffset(0)] IntPtr l;
+		bool z;
+		sbyte b;
+		char c;
+		short s;
+		int i;
+		long j;
+		float f;
+		double d;
+		IntPtr l;
 #pragma warning restore 0414
 
 		public JniArgumentValue (bool value)

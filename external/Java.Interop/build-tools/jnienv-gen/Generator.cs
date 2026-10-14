@@ -118,7 +118,7 @@ namespace Xamarin.Java.Interop
 
 			int maxName = JNIEnvEntries.Max (e => e.Name.Length);
 
-			o.WriteLine ("\t[StructLayout (LayoutKind.Sequential)]");
+			o.WriteLine ("\t[ExtendedLayout (ExtendedLayoutKind.CStruct)]");
 			o.WriteLine ("\tunsafe partial struct JNIEnv {");
 
 			for (int i = 0; i < 4; i++)

@@ -11,6 +11,7 @@ using System.Threading;
 
 namespace Java.Interop
 {
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	[SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Fields preserve the unmanaged JavaVM vtable layout.")]
 	// These fields are populated from native memory and some are only present to preserve the JavaVM vtable layout.
 #pragma warning disable CS0169, CS0649
@@ -52,6 +53,7 @@ namespace Java.Interop
 		v1_6	= 0x00010006,
 	}
 
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	struct JavaVMThreadAttachArgs {
 		public  JniVersion 	        version;    /*		 must be >= JNI_VERSION_1_2 */
 		public  IntPtr              name;       /*		 NULL or name of thread as modified UTF-8 str */

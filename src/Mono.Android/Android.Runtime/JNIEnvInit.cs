@@ -16,6 +16,7 @@ namespace Android.Runtime
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
+		[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 		internal struct JnienvInitializeArgs {
 			public IntPtr          javaVm;
 			public IntPtr          env;
