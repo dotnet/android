@@ -32,7 +32,6 @@ namespace Xamarin.Android.Tasks
 				output.Add (newItem);
 			}
 			Output = output.ToArray ();
-			Log.LogDebugTaskItems ("Output : ", Output);
 			return !Log.HasLoggedErrors;
 		}
 	}

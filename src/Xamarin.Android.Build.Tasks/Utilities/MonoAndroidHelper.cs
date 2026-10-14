@@ -398,15 +398,6 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static bool IsForceRetainedAssembly (string assembly)
-		{
-			switch (assembly) {
-			case "Mono.Android.Export.dll": // this is totally referenced by reflection.
-				return true;
-			}
-			return false;
-		}
-
 		public static bool CopyAssemblyAndSymbols (string source, string destination)
 		{
 			bool changed = Files.CopyIfChanged (source, destination);

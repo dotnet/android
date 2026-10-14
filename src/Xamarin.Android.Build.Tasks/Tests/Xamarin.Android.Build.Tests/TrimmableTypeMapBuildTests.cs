@@ -815,9 +815,6 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AllowUnsafeBlocks", "true");
@@ -877,9 +874,6 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("SpecialMappingLookalikes.cs") {
@@ -978,9 +972,6 @@ namespace Xamarin.Android.Build.Tests {
 			var typeParameters = genericType ? "<T>" : "";
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = runtime == AndroidRuntime.NativeAOT,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ExportFieldValidation.cs") {
@@ -1079,9 +1070,6 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("IndependentDiagnostics.cs") {
@@ -1123,9 +1111,6 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ExplicitExportConstructors.cs") {
@@ -1270,9 +1255,6 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("SuperArgumentsPeer.cs") {
@@ -1345,9 +1327,6 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("UnsupportedExportConstructors.cs") {
@@ -1451,9 +1430,6 @@ namespace Xamarin.Android.Build.Tests {
 				_ => throw new InvalidOperationException ($"Unknown nested constructor shape '{shape}'."),
 			};
 			var proj = new XamarinAndroidApplicationProject {
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			if (isUnsafe) {
@@ -2588,6 +2564,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void TrimmableTypeMap_PreserveLists_ArePackagedInSdk ()
 		{
 			foreach (var file in new [] {
@@ -2669,9 +2646,6 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = false,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ExportShapes.cs") {
@@ -2760,9 +2734,6 @@ namespace UnnamedProject {
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("TrimMode", "full");

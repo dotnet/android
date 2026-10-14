@@ -1979,7 +1979,7 @@ Set to `false` by default in `Release` mode, unless
 
 [dotnetmetrics]: /dotnet/core/diagnostics/metrics
 
-## MonoAndroidAssetPrefix
+## MonoAndroidAssetsPrefix
 
 Specifies a *path prefix*
 that is removed from the start of filenames with a Build action of

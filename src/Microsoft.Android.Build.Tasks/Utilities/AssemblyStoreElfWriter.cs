@@ -21,6 +21,7 @@ static class AssemblyStoreElfWriter
 	const uint DynamicEntryCount = 7;
 	const uint ReadOnly = 4; // PF_R
 	const uint Allocated = 2; // SHF_ALLOC
+	const uint PayloadAlignment = sizeof (uint); // Independently sized BLBB envelopes and their offset tables stay aligned.
 
 	static readonly byte [] SectionNames = Encoding.ASCII.GetBytes ("\0.dynsym\0.dynstr\0.hash\0.dynamic\0payload\0.shstrtab\0");
 	static readonly UTF8Encoding Utf8 = new (false, true);
@@ -72,7 +73,7 @@ static class AssemblyStoreElfWriter
 				var name = Utf8.GetBytes (payload.Name);
 				strings.Write (name);
 				strings.WriteByte (0);
-				PayloadSize = checked (PayloadSize + payload.Size);
+				PayloadSize = checked (Align (PayloadSize, PayloadAlignment) + payload.Size);
 			}
 			SonameIndex = checked ((uint)strings.Position);
 			var soname = Utf8.GetBytes (libraryName);
@@ -143,6 +144,7 @@ static class AssemblyStoreElfWriter
 		uint nameOffset = 1;
 		ulong payloadOffset = layout.PayloadOffset;
 		foreach (var (name, _, size) in entries) {
+			payloadOffset = Align (payloadOffset, PayloadAlignment);
 			WriteSymbol (writer, layout, nameOffset, 0x11, PayloadSectionIndex, payloadOffset, size); // STB_GLOBAL | STT_OBJECT
 			nameOffset = checked (nameOffset + (uint)Utf8.GetByteCount (name) + 1);
 			payloadOffset = checked (payloadOffset + size);
@@ -183,6 +185,7 @@ static class AssemblyStoreElfWriter
 		writer.Flush ();
 		output.Position = (long)layout.PayloadOffset;
 		foreach (var (_, data, size) in entries) {
+			output.Position = checked ((long)Align ((ulong)output.Position, PayloadAlignment));
 			ulong end = checked ((ulong)output.Position + size);
 			byte [] buffer = new byte [81920];
 			ulong remaining = size;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Kajabity.Tools.Java;
 
 using Xamarin.Android.Tools;
 using Xamarin.Installer.AndroidSDK.Common;
@@ -665,7 +664,7 @@ namespace Xamarin.Installer.AndroidSDK
 				path = Path.Combine (sdkInstance.Path, Constants.ComponentPaths.ToolsObsolete, sourcePropsFileName);
 			}
 
-			JavaProperties props = AndroidUtilities.ReadAndroidProperties (path);
+			var props = AndroidUtilities.ReadAndroidProperties (path);
 
 			if (!props.GetPkgRevision (out string origRev, out AndroidRevision instv)) {
 				sdkInstance.Version = new AndroidRevision (0, 0, 0, 0);

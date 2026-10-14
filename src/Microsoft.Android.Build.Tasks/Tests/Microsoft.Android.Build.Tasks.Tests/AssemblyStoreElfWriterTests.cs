@@ -20,6 +20,83 @@ public class AssemblyStoreElfWriterTests : BaseTest
 
 	[Test]
 	[Category ("RequiresAndroidNdk")]
+	public void WritesLinkableNativeAotDataObject (
+		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
+	{
+		byte [] data = [1, 2, 3, 4, 5, 6, 7];
+		using var output = new MemoryStream ();
+		NativeAotDataObjectWriter.Write (data, NativeAotBootstrapBlob.Symbol, output, arch);
+		byte [] image = output.ToArray ();
+		using var second = new MemoryStream ();
+		NativeAotDataObjectWriter.Write (data, NativeAotBootstrapBlob.Symbol, second, arch);
+		CollectionAssert.AreEqual (image, second.ToArray (), "Data objects must be deterministic.");
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		string objectFile = Path.Combine (directory, "bootstrap.o");
+		string library = Path.Combine (directory, "libapp.so");
+		File.WriteAllBytes (objectFile, image);
+		using var document = JsonDocument.Parse (NativeToolTestHelper.Run ("llvm-readobj",
+			"--elf-output-style=JSON", "--file-headers", "--sections", "--symbols", "--relocations", objectFile));
+		var elf = document.RootElement [0];
+		var header = elf.GetProperty ("ElfHeader");
+		Assert.AreEqual ("Relocatable (0x1)", header.GetProperty ("Type").GetString ());
+		Assert.AreEqual (0, header.GetProperty ("ProgramHeaderCount").GetInt32 ());
+		Assert.AreEqual (arch == AndroidTargetArch.Arm ? 0x05000000u : 0u, header.GetProperty ("Flags").GetProperty ("Value").GetUInt32 ());
+		Assert.AreEqual (arch switch {
+			AndroidTargetArch.Arm => 40,
+			AndroidTargetArch.Arm64 => 183,
+			AndroidTargetArch.X86_64 => 62,
+			_ => throw new ArgumentOutOfRangeException (nameof (arch)),
+		}, header.GetProperty ("Machine").GetProperty ("Value").GetInt32 ());
+		var sections = elf.GetProperty ("Sections").EnumerateArray ().Select (item => item.GetProperty ("Section")).ToArray ();
+		Assert.AreEqual (6, sections.Length);
+		var rodata = sections.Single (item => item.GetProperty ("Name").GetProperty ("Name").GetString () == ".rodata");
+		Assert.AreEqual (2u, rodata.GetProperty ("Flags").GetProperty ("Value").GetUInt32 ());
+		Assert.AreEqual (4u, rodata.GetProperty ("AddressAlignment").GetUInt32 ());
+		byte [] bytes = NativeToolTestHelper.ReadSection (objectFile, ".rodata");
+		CollectionAssert.AreEqual (data, bytes.Take (data.Length));
+		Assert.AreEqual (data.Length, BinaryPrimitives.ReadUInt32LittleEndian (bytes.AsSpan (8, 4)));
+		var symbols = elf.GetProperty ("Symbols").EnumerateArray ().Select (item => item.GetProperty ("Symbol")).ToArray ();
+		Assert.AreEqual (3, symbols.Length);
+		foreach (var symbol in symbols.Skip (1)) {
+			Assert.AreEqual (1, symbol.GetProperty ("Binding").GetProperty ("Value").GetInt32 ());
+			Assert.AreEqual (1, symbol.GetProperty ("Type").GetProperty ("Value").GetInt32 ());
+			Assert.AreEqual (2, symbol.GetProperty ("Other").GetProperty ("Value").GetInt32 ());
+		}
+		CollectionAssert.AreEqual (new [] { NativeAotBootstrapBlob.Symbol, NativeAotBootstrapBlob.Symbol + "_size" },
+			symbols.Skip (1).Select (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString ()));
+		NativeToolTestHelper.Run ("ld.lld", "--shared", "--gc-sections", "--no-undefined",
+			"--undefined=" + NativeAotBootstrapBlob.Symbol, objectFile, "-o", library);
+		CollectionAssert.AreEqual (bytes, NativeToolTestHelper.ReadSection (library, ".rodata"));
+		using var linked = NativeToolTestHelper.ReadElf (library);
+		Assert.IsFalse (linked.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
+			.Any (item => item.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString () == NativeAotBootstrapBlob.Symbol));
+
+		string [] names = [NativeAotBootstrapBlob.Symbol, GenerateNativeAotDataObject.RemappingSymbol, "nativeaot_bootstrap", "remapping_data"];
+		var arguments = new List<string> { "--shared", "--gc-sections", "--no-undefined" };
+		foreach (string name in names) {
+			string file = Path.Combine (directory, name + ".o");
+			using var contents = new MemoryStream ();
+			NativeAotDataObjectWriter.Write (data, name, contents, arch);
+			File.WriteAllBytes (file, contents.ToArray ());
+			arguments.Add ("--undefined=" + name);
+			arguments.Add (file);
+		}
+		string collisionLibrary = Path.Combine (directory, "libapp-with-generic-data.so");
+		arguments.AddRange (["-o", collisionLibrary]);
+		NativeToolTestHelper.Run ("ld.lld", arguments.ToArray ());
+		using var collision = JsonDocument.Parse (NativeToolTestHelper.Run ("llvm-readobj",
+			"--elf-output-style=JSON", "--symbols", collisionLibrary));
+		var linkedNames = collision.RootElement [0].GetProperty ("Symbols").EnumerateArray ()
+			.Select (item => item.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
+		foreach (string name in names) {
+			CollectionAssert.Contains (linkedNames, name, "SDK payloads must coexist with generic application/dependency data symbols.");
+			CollectionAssert.Contains (linkedNames, name + "_size");
+		}
+	}
+
+	[Test]
+	[Category ("RequiresAndroidNdk")]
 	public void WritesLoadableReadOnlyPayload (
 		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch,
 		[Values (1, 4, 4095, 4096, 4097, 16383, 16384, 16385)] int payloadSize)
@@ -149,11 +226,13 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
 	{
 		byte [] first = [1, 2, 3];
-		byte [] second = [4, 5, 6, 7];
+		byte [] second = JniRemappingBinaryBlob.Wrap ([4, 5, 6, 7, 8], compress: true);
+		byte [] third = [9, 10, 11, 12, 13];
 		using var a = new MemoryStream (first);
 		using var b = new MemoryStream (second);
+		using var c = new MemoryStream (third);
 		using var elf = new MemoryStream ();
-		AssemblyStoreElfWriter.Write (new [] { ("xa_first", (Stream)a), ("xa_second", (Stream)b) }, elf, arch, "libbinary_blobs.so");
+		AssemblyStoreElfWriter.Write (new [] { ("xa_first", (Stream)a), ("xa_second", (Stream)b), ("xa_third", (Stream)c) }, elf, arch, "libbinary_blobs.so");
 		byte [] image = elf.ToArray ();
 		bool is64Bit = arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
 		int wordSize = is64Bit ? 8 : 4;
@@ -161,13 +240,23 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		int programHeaderSize = is64Bit ? 56 : 32;
 		int symbolSize = is64Bit ? 24 : 16;
 		ulong symbolsOffset = checked ((ulong)((headerSize + 4 * programHeaderSize + wordSize - 1) & -wordSize));
-		ulong stringsOffset = symbolsOffset + (ulong)(3 * symbolSize);
+		ulong stringsOffset = symbolsOffset + (ulong)(4 * symbolSize);
 		ulong payloadOffset = is64Bit ? 16384u : 4096u;
+		ulong secondOffset = payloadOffset + 4;
+		ulong thirdOffset = checked (secondOffset + (ulong)second.Length + 3) & ~3UL;
 		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, payloadOffset, 1, 1, "xa_first", first);
-		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, payloadOffset + (ulong)first.Length,
+		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, secondOffset,
 			2, "xa_first".Length + 2, "xa_second", second);
+		AssertPayloadSymbol (image, is64Bit, symbolSize, symbolsOffset, stringsOffset, thirdOffset,
+			3, "xa_first".Length + "xa_second".Length + 3, "xa_third", third);
+		Assert.AreEqual (0, image [checked ((int)payloadOffset) + first.Length], "Padding must not change either symbol's payload bytes.");
+		foreach (byte padding in image.AsSpan (checked ((int)(secondOffset + (ulong)second.Length)),
+			checked ((int)(thirdOffset - secondOffset - (ulong)second.Length)))) {
+			Assert.AreEqual (0, padding);
+		}
 		Assert.AreEqual (a.Length, a.Position);
 		Assert.AreEqual (b.Length, b.Position);
+		Assert.AreEqual (c.Length, c.Position);
 	}
 
 	static void AssertPayloadSymbol (byte [] image, bool is64Bit, int symbolSize, ulong symbolsOffset, ulong stringsOffset,
@@ -186,6 +275,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 			? BinaryPrimitives.ReadUInt64LittleEndian (image.AsSpan (entryOffset + 16, 8))
 			: BinaryPrimitives.ReadUInt32LittleEndian (image.AsSpan (entryOffset + 8, 4));
 		Assert.AreEqual (payloadOffset, value);
+		Assert.AreEqual (0, value % 4, "Every independently sized payload must be uint32-aligned.");
 		Assert.AreEqual ((ulong)payload.Length, size);
 		CollectionAssert.AreEqual (Encoding.UTF8.GetBytes (name + "\0"),
 			image.AsSpan (checked ((int)(stringsOffset + (ulong)nameOffset)), name.Length + 1).ToArray ());
