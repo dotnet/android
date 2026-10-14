@@ -320,14 +320,6 @@
       ],
       "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
       "createdDate": "2026-06-02 00:00:00Z"
-    },
-    "50e11913ca432d4f277d772defe82135f9d6ec83c3f7559e9407ca85b41c1569": {
-      "signature": "50e11913ca432d4f277d772defe82135f9d6ec83c3f7559e9407ca85b41c1569",
-      "memberOf": [
-        "default"
-      ],
-      "justification": "Doc comment in third-party Kajabity.Tools.Java/JavaPropertyReader.cs example illustrating embedded-space keys ('Hong Kong' as sample data).",
-      "createdDate": "2026-06-02 00:00:00Z"
     }
   }
 }

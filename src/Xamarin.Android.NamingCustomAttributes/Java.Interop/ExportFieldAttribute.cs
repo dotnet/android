@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 
 namespace Java.Interop {
 
@@ -19,9 +18,5 @@ namespace Java.Interop {
 
 		public string                 Name                    {get; set;}
 
-		internal override Delegate CreateDynamicCallback (MethodInfo method)
-		{
-			return CreateDynamicCallbackCore (method);
-		}
 	}
 }

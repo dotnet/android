@@ -14,6 +14,35 @@ Clear a property with:
 adb shell setprop property_name "''"
 ```
 
+## Bundled NativeAOT startup data
+
+NativeAOT builds write environment variables and bundled system properties to a
+read-only ELF data object, linked into the application's existing native library.
+The fixed SDK native host reads the offset-based UTF-8 data directly, without
+generated Java configuration arrays or JNI string copies. Optional JNI remapping
+is linked as another data object; empty remapping does not produce an object or
+a separate `libbinary_blobs.so`. CoreCLR continues to use its binary data library.
+Static NativeAOT payload and size symbols use the `dotnet_android_nativeaot_`
+prefix to avoid collisions with application or dependency data objects.
+Bootstrap regeneration also removes the obsolete generated Java configuration
+source from existing intermediate directories.
+NativeAOT configuration and remapping objects are always uncompressed. Startup
+reads their mapped bytes directly, without allocating decoded buffers; CoreCLR's
+private binary-blob compression opt-in does not apply to NativeAOT.
+The bootstrap offset table is read in place as a trivial, standard-layout native
+struct on little-endian targets. Its size and field offsets are compile-time
+checked, the reader rejects misaligned data, and native builds disable strict aliasing.
+Each payload in CoreCLR's data library starts at a 4-byte-aligned offset, including
+compressed payloads, without changing the individual payload bytes or envelope version.
+
+The application linker selects the fixed native environment initializer as
+`DT_INIT`, before the application's initialization array and embedded NativeAOT
+runtime initialization. It does **not** run before constructors of `DT_NEEDED`
+dependencies: Android initializes those libraries first. A dependency constructor
+must not depend on an environment variable supplied only by this app's bundled
+configuration. Environment values use standard UTF-8, including supplementary
+characters, rather than the modified UTF-8 previously passed through Java.
+
 ## debug.dotnet.log
 
 Configures native .NET for Android runtime logging. The value is a

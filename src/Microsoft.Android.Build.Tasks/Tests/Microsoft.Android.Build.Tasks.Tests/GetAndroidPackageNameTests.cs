@@ -32,14 +32,17 @@ namespace Xamarin.Android.Build.Tests {
 		public void ContextualKeywordInPackage_Succeeds ()
 		{
 			var errors = new List<BuildErrorEventArgs> ();
+			var messages = new List<BuildMessageEventArgs> ();
 			var task = new GetAndroidPackageName {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, messages: messages),
 				AssemblyName = "Example",
 				PackageName = "com.example.record",
 			};
 
 			Assert.IsTrue (task.Execute ());
 			Assert.IsEmpty (errors);
+			Assert.AreEqual ("com.example.record", task.PackageName);
+			Assert.IsEmpty (messages, "PackageName should not be dumped to the log.");
 		}
 	}
 }

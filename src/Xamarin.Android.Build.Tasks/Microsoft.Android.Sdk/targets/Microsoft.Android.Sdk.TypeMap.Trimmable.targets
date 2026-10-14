@@ -89,11 +89,6 @@
         Value="$([MSBuild]::ValueOrDefault('$(PublishAot)', 'false'))" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
-    <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper
-         assembly must stay out of the packaged app on the trimmable path. -->
-    <AndroidCustomMetaDataForReferences Include="Mono.Android.Export">
-      <AndroidSkipAddToPackage>true</AndroidSkipAddToPackage>
-    </AndroidCustomMetaDataForReferences>
     <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -516,10 +511,12 @@
     post-trim stamp for trimmed CoreCLR builds). Both remain stable on no-op builds.
     We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
+    NativeAOT environment configuration is generated separately as linked data objects;
+    only CoreCLR configuration depends on the environment inputs below.
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis"
-      Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
+      Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_AndroidCoreClrEnvironmentInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <!-- The generated Java Callable Wrappers are compiled in place from

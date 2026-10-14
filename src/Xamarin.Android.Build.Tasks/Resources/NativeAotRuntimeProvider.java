@@ -1,8 +1,6 @@
 package net.dot.jni.nativeaot;
 
 import java.util.Locale;
-import android.system.ErrnoException;
-import android.system.Os;
 import android.util.Log;
 import net.dot.android.ApplicationRegistration;
 
@@ -13,7 +11,6 @@ public class NativeAotRuntimeProvider
 
     public NativeAotRuntimeProvider() {
         Log.d(TAG, "NativeAotRuntimeProvider()");
-        NativeAotEnvironmentVars.Initialize ();
     }
 
     @Override

@@ -124,13 +124,6 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			Log.LogDebugMessage ($"{nameof (ResolveSdks)} Outputs:");
-			Log.LogDebugMessage ($"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
-			Log.LogDebugMessage ($"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
-			Log.LogDebugMessage ($"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
-			Log.LogDebugMessage ($"  {nameof (MonoAndroidBinPath)}: {MonoAndroidBinPath}");
-			Log.LogDebugMessage ($"  {nameof (MonoAndroidToolsPath)}: {MonoAndroidToolsPath}");
-
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
 		}

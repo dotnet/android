@@ -150,7 +150,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1038](xa1038.md): The '{0}' MSBuild property has an invalid value. Valid values are {1}.
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + XA1040: Removed in .NET 12.
-+ [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
++ [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetsPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
 + [XA1042](xa1042.md): The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.
 + [XA1043](xa1043.md): Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element.
 + [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
@@ -182,7 +182,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 ## XA4xxx: Code generation
 
 + XA4209: Failed to generate Java type for class: {managedType} due to {exception}
-+ XA4210: Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.
 + XA4211: AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{targetSdk}' is less than $(TargetFrameworkVersion) '{targetFramework}'. Using API-{targetFrameworkApi} for ACW compilation.
 + XA4213: The type '{type}' must provide a public default constructor
 + [XA4214](xa4214.md): The managed type \`Library1.Class1\` exists in multiple assemblies: Library1, Library2. Please refactor the managed type names in these assemblies so that they are not identical.

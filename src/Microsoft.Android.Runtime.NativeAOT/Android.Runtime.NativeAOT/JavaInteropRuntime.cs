@@ -69,6 +69,7 @@ static partial class JavaInteropRuntime
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer = jnienv,
 				ClassLoader        = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+				ObjectReferenceManager = new ManagedObjectReferenceManager (),
 				TypeManager                 = new TrimmableTypeMapTypeManager (),
 				ValueManager                = new TrimmableTypeMapValueManager (),
 			};

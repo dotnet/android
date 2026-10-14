@@ -16,6 +16,23 @@
     { "path": "AndroidLib1.csproj" }
   ],
   "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "net11.0-android",
+          "description": "Target net11.0-android"
+        },
+        {
+          "choice": "net10.0-android",
+          "description": "Target net10.0-android"
+        }
+      ],
+      "replaces": "net11.0-android",
+      "defaultValue": "net11.0-android"
+    },
     "supportedOSVersion": {
       "type": "parameter",
       "description": "Overrides $(SupportedOSPlatformVersion) in the project",

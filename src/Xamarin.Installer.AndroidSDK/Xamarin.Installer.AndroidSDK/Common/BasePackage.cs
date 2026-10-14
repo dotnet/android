@@ -6,7 +6,6 @@
 //
 //  All rights reserved.
 //
-using Kajabity.Tools.Java;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -259,7 +258,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                 if (File.Exists(manifestFile))
                 {
                     Present = true;
-                    JavaProperties props = AndroidUtilities.ReadAndroidProperties(manifestFile);
+                    var props = AndroidUtilities.ReadAndroidProperties(manifestFile);
                     string rev;
                     props.GetPkgRevision(out rev, out instv, DisplayName);
                 }
