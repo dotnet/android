@@ -11,6 +11,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
+    <Features>$(Features);updated-memory-safety-rules</Features>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;XABT_MANIFEST_EXTENSIONS</DefineConstants>
