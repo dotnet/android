@@ -156,6 +156,101 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		[TestCase (AndroidRuntime.CoreCLR, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true)]
+		[TestCase (AndroidRuntime.NativeAOT, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true)]
+		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+			var service = new BuildItem.Source ("MediaControlsService.cs") {
+				TextContent = () => """
+					using Android.App;
+					using Android.Content;
+					using Android.OS;
+
+					namespace Example.Media;
+
+					[Service (Name = "example.media.ControlsService", Exported = false)]
+					public class MediaControlsService : Service
+					{
+						public override IBinder? OnBind (Intent? intent) => null;
+					}
+					""",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("BoundServiceBinder.cs") {
+						TextContent = () => """
+							using Android.OS;
+							using Android.Runtime;
+							using Example.Media;
+							using Java.Interop;
+
+							namespace Example.Services;
+
+							[Register ("example/media/BoundServiceBinder")]
+							public class BoundServiceBinder : Binder
+							{
+								public BoundServiceBinder (MediaControlsService service) { }
+								public BoundServiceBinder (MediaControlsService[] services) { }
+
+								[Export ("echo")]
+								public MediaControlsService Echo (MediaControlsService service) => service;
+
+								[Export ("echoArray")]
+								public MediaControlsService[] EchoArray (MediaControlsService[] services) => services;
+							}
+							""",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				using var service = new Example.Media.MediaControlsService ();
+				using var binder = new Example.Services.BoundServiceBinder (service);
+				using var arrayBinder = new Example.Services.BoundServiceBinder ([service]);
+				System.GC.KeepAlive (binder.Echo (service));
+				System.GC.KeepAlive (arrayBinder.EchoArray ([service]));
+				""");
+			var testRoot = Path.Combine ("temp", TestName);
+			if (separateAssemblies) {
+				var library = new XamarinAndroidLibraryProject {
+					ProjectName = "MediaComponents",
+					IsRelease = true,
+					Sources = { service },
+				};
+				library.SetRuntime (runtime);
+				using var libraryBuilder = CreateDllBuilder (Path.Combine (testRoot, library.ProjectName), cleanupAfterSuccessfulBuild: false);
+				Assert.IsTrue (libraryBuilder.Build (library), "The named component library must build.");
+				proj.References.Add (new BuildItem.ProjectReference (
+					$"..\\{library.ProjectName}\\{library.ProjectName}.csproj", library.ProjectName, library.ProjectGuid));
+			} else {
+				proj.Sources.Add (service);
+			}
+
+			using var builder = CreateApkBuilder (Path.Combine (testRoot, proj.ProjectName));
+			Assert.IsTrue (builder.Build (proj), "Explicit component names must compile in constructor and export signatures.");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			const string binderName = "Lexample/media/BoundServiceBinder;";
+			const string serviceName = "Lexample/media/ControlsService;";
+			Assert.IsTrue (DexUtils.ContainsClass (serviceName, dexFile, AndroidSdkPath), "The named service must be packaged.");
+			foreach (var (method, signature) in new [] {
+				("<init>", $"({serviceName})V"),
+				("<init>", $"([{serviceName})V"),
+				("echo", $"({serviceName}){serviceName}"),
+				("echoArray", $"([{serviceName})[{serviceName}"),
+			}) {
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (binderName, method, signature, dexFile, AndroidSdkPath),
+					$"The packaged binder must contain {method}{signature}.");
+			}
+		}
+
 		[Test]
 		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
 		{
