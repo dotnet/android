@@ -2,5 +2,9 @@
   "author": "Microsoft",
   "name": "Android-Klassenbibliothek",
   "description": "Ein Projekt zum Erstellen einer .NET für Android-Klassenbibliothek",
-  "symbols/supportedOSVersion/description": "Überschreibt $(SupportedOSPlatformVersion) im Projekt"
+  "symbols/Framework/description": "The target framework for the project.",
+  "symbols/Framework/choices/net11.0-android/description": "Target net11.0-android",
+  "symbols/Framework/choices/net10.0-android/description": "Target net10.0-android",
+  "symbols/supportedOSVersion/description": "Überschreibt $(SupportedOSPlatformVersion) im Projekt",
+  "symbols/skipRestore/description": "If specified, skips the automatic restore of the project on create."
 }
