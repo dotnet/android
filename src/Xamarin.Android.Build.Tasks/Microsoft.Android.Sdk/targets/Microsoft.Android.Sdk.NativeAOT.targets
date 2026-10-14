@@ -8,6 +8,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 <Project>
 
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotDataObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 
@@ -73,20 +74,20 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <_AndroidNativeAotBootstrapDirectory>$(IntermediateOutputPath)android</_AndroidNativeAotBootstrapDirectory>
       <_AndroidNativeAotBootstrapInputsFile>$(IntermediateOutputPath)nativeaot-bootstrap.inputs</_AndroidNativeAotBootstrapInputsFile>
+      <_AndroidNativeAotTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidNativeAotTaskAssembly>
     </PropertyGroup>
-    <!-- Command-line library names and environment selection/order can change without newer file inputs. -->
-    <WriteLinesToFile
-        File="$(_AndroidNativeAotBootstrapInputsFile)"
-        Lines="TargetName=$(TargetName);@(_EnvironmentFiles->'EnvironmentFile=%(FullPath)')"
-        Overwrite="true"
-        WriteOnlyWhenDifferent="true" />
     <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->
     <GetNativeAotRuntimeProviders MSBuildRuntime="NET" ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AndroidNativeAotRuntimeProvider" />
     </GetNativeAotRuntimeProviders>
+    <!-- Only the library name and selected provider names affect these Java sources. -->
+    <WriteLinesToFile
+        File="$(_AndroidNativeAotBootstrapInputsFile)"
+        Lines="TargetName=$(TargetName);@(_AndroidNativeAotRuntimeProvider->'Provider=%(Identity)')"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
     <ItemGroup>
       <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/JavaInteropRuntime.java" />
-      <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/NativeAotEnvironmentVars.java" />
       <_AndroidNativeAotBootstrapSource Include="@(_AndroidNativeAotRuntimeProvider->'$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/%(Identity).java')" />
     </ItemGroup>
   </Target>
@@ -94,17 +95,47 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <Target Name="_AndroidGenerateNativeAotBootstrapSources"
       BeforeTargets="_FindJavaStubFiles"
       DependsOnTargets="_AndroidGenerateNativeAotBootstrapSourcesInputs"
-      Inputs="$(_AndroidNativeAotBootstrapInputsFile);@(_EnvironmentFiles);$(IntermediateOutputPath)AndroidManifest.xml;$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Inputs="$(_AndroidNativeAotBootstrapInputsFile);$(_AndroidNativeAotTaskAssembly);@(_AndroidMSBuildAllProjects)"
       Outputs="@(_AndroidNativeAotBootstrapSource)">
     <GenerateNativeAotBootstrapSources
         MSBuildRuntime="NET"
         OutputDirectory="$(_AndroidNativeAotBootstrapDirectory)"
         TargetName="$(TargetName)"
-        Environments="@(_EnvironmentFiles)"
         AdditionalProviderSources="@(_AndroidNativeAotRuntimeProvider)" />
     <ItemGroup>
       <FileWrites Include="@(_AndroidNativeAotBootstrapSource)" />
       <FileWrites Include="$(_AndroidNativeAotBootstrapInputsFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotBootstrapObjectInputs"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_GetGenerateJavaStubsInputs">
+    <PropertyGroup>
+      <_AndroidNativeAotDataDirectory>$(NativeIntermediateOutputPath)data/</_AndroidNativeAotDataDirectory>
+      <_AndroidNativeAotBootstrapObject>$(_AndroidNativeAotDataDirectory)nativeaot-bootstrap.o</_AndroidNativeAotBootstrapObject>
+      <_AndroidNativeAotBootstrapObjectInputs>$(_AndroidNativeAotDataDirectory)bootstrap.inputs</_AndroidNativeAotBootstrapObjectInputs>
+      <_AndroidNativeAotAbi>@(_PrivateBuildTargetAbi)</_AndroidNativeAotAbi>
+      <_AndroidNativeAotTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidNativeAotTaskAssembly>
+    </PropertyGroup>
+    <MakeDir Directories="$(_AndroidNativeAotDataDirectory)" />
+    <WriteLinesToFile File="$(_AndroidNativeAotBootstrapObjectInputs)"
+        Lines="Abi=$(_AndroidNativeAotAbi);@(_EnvironmentFiles->'EnvironmentFile=%(FullPath)')"
+        Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidNativeAotBootstrapObjectInputs)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotBootstrapObject"
+      DependsOnTargets="_AndroidGenerateNativeAotBootstrapObjectInputs"
+      Inputs="$(_AndroidNativeAotBootstrapObjectInputs);@(_EnvironmentFiles);$(_AndroidNativeAotTaskAssembly);$(MSBuildThisFileFullPath)"
+      Outputs="$(_AndroidNativeAotBootstrapObject)">
+    <GenerateNativeAotDataObject MSBuildRuntime="NET"
+        OutputFile="$(_AndroidNativeAotBootstrapObject)" Abi="@(_PrivateBuildTargetAbi)"
+        Environments="@(_EnvironmentFiles)" />
+    <ItemGroup>
+      <_NativeAotAdditionalObjects Include="$(_AndroidNativeAotBootstrapObject)" />
+      <FileWrites Include="$(_AndroidNativeAotBootstrapObject)" />
     </ItemGroup>
   </Target>
 
@@ -210,7 +241,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     (which is imported after the ILC NuGet targets).
   -->
   <Target Name="_AndroidLinkNativeAotSharedLibraryInputs"
-      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidResolveNdk;_AndroidGenerateNativeAotR8BinaryBlobs">
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidResolveNdk;_AndroidGenerateNativeAotBootstrapObject;_AndroidGenerateNativeAotR8BinaryBlobs">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
       <_AndroidNativeAotAbi>@(_PrivateBuildTargetAbi)</_AndroidNativeAotAbi>
@@ -248,7 +279,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       AfterTargets="LinkNative"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' or '$(_AndroidNativeAotLinkAfterR8)' == 'true' "
       DependsOnTargets="_AndroidLinkNativeAotSharedLibraryInputs"
-      Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotAdditionalObjects);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
+      Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotAdditionalObjects);$(_AndroidNativeAotRemappingStamp);$(_AndroidNativeAotRemappingInputs);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidNativeAotTaskAssembly);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
       Outputs="@(_AndroidNativeAotLinkOutputs)">
     <LinkNativeAotSharedLibrary
         MSBuildRuntime="NET"
@@ -294,11 +325,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="$(_AndroidRunNativeCompileDependsOn)" />
 
-  <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
+  <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibraryName>lib$(TargetName).so</_AndroidNativeAotSharedLibraryName>
       <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' != '' ">$(NativeOutputPath)$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
       <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' == '' ">$(OutputPath)$(RuntimeIdentifier)/native/$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
+      <_AndroidNativeAotAbi>@(_PrivateBuildTargetAbi)</_AndroidNativeAotAbi>
+      <_AndroidNativeAotFileWriteDirectory>$(NativeIntermediateOutputPath)data/</_AndroidNativeAotFileWriteDirectory>
     </PropertyGroup>
     <ItemGroup>
       <!-- The linker target is not always scheduled during incremental deployment builds. -->
@@ -307,9 +341,22 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
           Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') or '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
         <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <AndroidNativeAotFileWrites>$(_AndroidNativeAotFileWriteDirectory)nativeaot-bootstrap.o;$(_AndroidNativeAotFileWriteDirectory)bootstrap.inputs;$(_AndroidNativeAotFileWriteDirectory)remapping-data.o;$(_AndroidNativeAotFileWriteDirectory)remapping-data.stamp;$(_AndroidNativeAotFileWriteDirectory)remapping.inputs;$(_AndroidNativeAotSharedLibrary);$([System.IO.Path]::ChangeExtension('$(_AndroidNativeAotSharedLibrary)', '.dbg.so'));$(NativeIntermediateOutputPath)ld.lib$(TargetName).$(_AndroidNativeAotAbi).rsp;$(NativeIntermediateOutputPath)sections.ld</AndroidNativeAotFileWrites>
+        <AndroidNativeAotFileWrites Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">%(ResolvedFileToPublish.AndroidNativeAotFileWrites);$(NativeIntermediateOutputPath)jni-remap/r8-jni-generated-remap.xml;$(NativeIntermediateOutputPath)jni-remap/r8-jni-remap.xml;$(NativeIntermediateOutputPath)jni-remap/remap.inputs</AndroidNativeAotFileWrites>
       </ResolvedFileToPublish>
       <!-- Fix paths to contain lib-prefix -->
       <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).so' " />
+    </ItemGroup>
+  </Target>
+
+  <!-- Inner outputs remain owned by the outer build when runtime remapping is disabled. -->
+  <Target Name="_AndroidTrackNativeAotFileWrites"
+      AfterTargets="_ResolveAssemblies"
+      BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' ">
+    <ItemGroup>
+      <FileWrites Include="%(ResolvedFileToPublish.AndroidNativeAotFileWrites)"
+          Condition=" '%(ResolvedFileToPublish.AndroidNativeAotFileWrites)' != '' " />
     </ItemGroup>
   </Target>
 

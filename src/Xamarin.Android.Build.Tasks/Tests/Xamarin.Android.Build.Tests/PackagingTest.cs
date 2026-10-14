@@ -640,16 +640,13 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 		[Test]
 		[NonParallelizable]
-		public void MonoAndroidExportIsNotPackagedWithTrimmableTypeMap ()
+		public void ExportAttributeBuildDoesNotPackageLegacyHelper ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			const bool isRelease = false;
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				References = {
-					new BuildItem.Reference ("Mono.Android.Export"),
-				},
 			};
 			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {

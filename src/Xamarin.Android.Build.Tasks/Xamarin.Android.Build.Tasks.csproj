@@ -55,7 +55,6 @@
     <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibrariesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PostTrimmingAddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\RemoveResourceDesignerStep.cs" />
-    <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PostTrimmingFixAbstractMethodsStep.cs" />
@@ -197,6 +196,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Microsoft.Android.Sdk\PreserveLists\*.xml">
+      <Link>..\PreserveLists\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

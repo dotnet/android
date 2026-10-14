@@ -221,11 +221,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SkipFastDevAlreadyInstalledFile ()
+		public void SkipFastDevAlreadyInstalledFile ([Values (false, true)] bool diagnosticLogging)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 			};
 			proj.SetDefaultTargetDevice ();
+			if (diagnosticLogging) {
+				proj.SetProperty ("_FastDeploymentDiagnosticLogging", "true");
+			} else {
+				proj.RemoveProperty ("_FastDeploymentDiagnosticLogging");
+			}
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			var b = CreateApkBuilder ();
@@ -247,8 +252,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var logLines = b.LastBuildOutput;
 			Assert.IsFalse (logLines.Any (l => l.Contains ("Remove redundant file")), "No redundant files should be deleted");
+			Assert.AreEqual (diagnosticLogging, logLines.Any (l => l.Contains ("NotifySync SkipCopyFile")),
+				"Unchanged-file messages should only be logged when diagnostic logging is enabled.");
 			foreach (var assembly in assemblies) {
-				Assert.IsTrue (logLines.Any (l => l.Contains (assembly) && l.Contains ("NotifySync SkipCopyFile")), $"{assembly} should be skipped, but no relevant log line");
+				Assert.IsFalse (logLines.Any (l => l.Contains (assembly) && l.Contains ("NotifySync CopyFile")), $"{assembly} should not have been uploaded");
+				Assert.AreEqual (diagnosticLogging, logLines.Any (l => l.Contains (assembly) && l.Contains ("NotifySync SkipCopyFile")),
+					$"{assembly} skip logging should match diagnostic logging.");
 			}
 
 			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");

@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using Kajabity.Tools.Java;
 using Xamarin.Installer.Common;
 
 namespace Xamarin.Installer.AndroidSDK
 {
 	static class AndroidExtensions
 	{
-		public static bool GetPkgRevision (this JavaProperties props, out string original, out AndroidRevision parsed, string packageName = null)
+		public static bool GetPkgRevision (this IDictionary<string, string> props, out string original, out AndroidRevision parsed, string packageName = null)
 		{
 			original = null;
 			parsed = null;

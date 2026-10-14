@@ -27,7 +27,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
 | **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
 | **api xml adjuster** | `external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
-| **Java peer naming/scanning** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
+| **Java peer naming** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
 | **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
 | **expressions** | `external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **generator tools** | `external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
@@ -37,8 +37,10 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 
 The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
-NativeAOT JNI property reader and loads it into a host JVM. On macOS/Linux, these tests require
-`JAVA_HOME` or `TEST_ANDROID_JDK_PATH` and a C++23 compiler (`clang++`, or `CXX`); they do not
+NativeAOT offset-based property reader. Its native probe memory-maps the generated
+ELF `.o` and reads the raw bootstrap body without Java/JNI transport or payload copies.
+It uses the production raw-only envelope reader and checks compressed/truncated rejection.
+On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 
 ---
@@ -114,7 +116,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **localization** | `--filter "cat=Localization"` | Locale/culture device tests |
 | **timezone** | `--filter "cat=TimeZoneInfo"` | Time zone handling on device |
 | **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
-| **export** | `--filter "FullyQualifiedName~MonoAndroidExportTest"` | `[Export]` attribute tests |
+| **export** | `--filter "FullyQualifiedName~ExportAttributeBuildTest"` | `[Export]` attribute tests |
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
@@ -198,7 +200,7 @@ cause, or stack-trace extraction fails, while borrowed references remain valid.
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | Binding generator tests |
-| **Java peer naming/scanning** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | Naming, scanning, and type-name mapping; current JCW generation is covered by the trimmable type map suites |
+| **Java peer naming** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | CRC64 hashing, identifier validation, native type naming, and assembly resolution; current scanning and JCW generation are covered by the trimmable type map suites |
 | **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |
 | **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | Java source generation |
 | **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | Maven integration |

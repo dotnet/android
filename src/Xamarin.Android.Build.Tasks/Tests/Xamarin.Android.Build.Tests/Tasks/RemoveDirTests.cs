@@ -59,6 +59,8 @@ namespace Xamarin.Android.Build.Tests
 			var task = CreateTask ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+			Assert.AreEqual (tempDirectory, task.RemovedDirectories [0].ItemSpec);
+			Assert.IsEmpty (messages, "RemovedDirectories should not be dumped to the log.");
 			DirectoryAssert.DoesNotExist (tempDirectory);
 		}
 

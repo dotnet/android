@@ -49,7 +49,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 
 done:
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Branch)}: {Branch}");
 			return !Log.HasLoggedErrors;
 		}
 

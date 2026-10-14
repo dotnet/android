@@ -46,7 +46,6 @@
       assembly out of their output. Source linking is unaffected (it runs via SourceLink's build assets).
     -->
     <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="10.0.300" ExcludeAssets="runtime" />
-    <PackageReference Update="Microsoft.Xml.SgmlReader"                     Version="1.8.30" />
     <PackageReference Update="Mono.Linq.Expressions"                        Version="2.0.0" />
     <PackageReference Update="Mono.Options"                                 Version="6.12.0.148" />
     <PackageReference Update="nunit"                                        Version="3.14.0" />

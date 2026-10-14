@@ -130,8 +130,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void GetPrimaryCpuAbiHonorsAdbTargetArchitecture ()
 		{
+			var messages = new List<BuildMessageEventArgs> ();
 			var task = new GetPrimaryCpuAbi {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
 				AdbTargetArchitecture = "armeabi-v7a",
 				RuntimeIdentifiers = ["android-arm64", "android-arm"],
 			};
@@ -139,6 +140,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (task.Execute ());
 			Assert.AreEqual ("armeabi-v7a", task.ResultingAbi);
 			Assert.AreEqual ("android-arm", task.RuntimeIdentifier);
+			Assert.IsTrue (messages.Any (m => m.Message == "Using $(AdbTargetArchitecture): armeabi-v7a"));
+			Assert.IsFalse (messages.Any (m => m.Message.StartsWith ("  ResultingAbi:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  RuntimeIdentifier:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  SdkVersion:", StringComparison.Ordinal)));
 		}
 
 		[TestCase (null, "physical")]
