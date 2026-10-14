@@ -12,6 +12,14 @@ namespace Java.InteropTests
 	public class JniEnvironmentTests
 	{
 		[Test]
+		public void Transition_RejectsNullEnvironmentPointer ()
+		{
+			var environmentPointer = JniEnvironment.EnvironmentPointer;
+			Assert.Throws<ArgumentNullException> (() => new JniTransition (IntPtr.Zero));
+			Assert.AreEqual (environmentPointer, JniEnvironment.EnvironmentPointer);
+		}
+
+		[Test]
 		public unsafe void Types_IsSameObject ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {

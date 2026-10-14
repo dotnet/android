@@ -174,7 +174,9 @@ namespace Java.InteropTests
 		{
 			using (var TestType_class = new JniType ("net/dot/jni/test/CallNonvirtualBase")) {
 				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
-				TestType_class.RegisterNativeMethods ();
+				unsafe {
+					TestType_class.RegisterNativeMethods ();
+				}
 				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
 			}
 		}
