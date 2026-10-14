@@ -51,17 +51,17 @@ namespace Android.Runtime {
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
 		{
 			if (t == null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn,
-				               LogCategories.Default,
+				Logger.Log (LogLevel.Warn,
+				               "monodroid",
 				               $"ShouldWrapJavaException was not passed a valid `Java.Lang.Throwable` instance. Called from method `{caller}`");
 				return false;
 			}
 
 			bool wrap = JNIEnvInit.BoundExceptionType == BoundExceptionType.System;
 			if (!wrap) {
-				RuntimeNativeMethods.monodroid_log (
+				Logger.Log (
 					LogLevel.Warn,
-					LogCategories.Default,
+					"monodroid",
 					$"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release."
 				);
 			}
@@ -263,7 +263,7 @@ namespace Android.Runtime {
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
+				Logger.Log (LogLevel.Warn, "monodroid", $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
 				var jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();

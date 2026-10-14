@@ -7,6 +7,7 @@
 #include <host_runtime_contract.h>
 
 #include "host-common.hh"
+#include "pinvoke-override.hh"
 #include <runtime-base/jni-wrappers.hh>
 #include "../shared/log_types.hh"
 #include "managed-interface.hh"
@@ -29,7 +30,6 @@ namespace xamarin::android {
 		static void scan_filesystem_for_assemblies_and_libraries () noexcept;
 
 		static bool clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept;
-		static const void* clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept;
 		static void clr_error_writer (const char *message) noexcept;
 
 		static auto create_delegate (
@@ -49,7 +49,7 @@ namespace xamarin::android {
 			.context = nullptr,
 			.get_runtime_property = nullptr,
 			.bundle_probe = nullptr,
-			.pinvoke_override = clr_pinvoke_override,
+			.pinvoke_override = PinvokeOverride::load_symbol,
 			.external_assembly_probe = clr_external_assembly_probe,
 		};
 

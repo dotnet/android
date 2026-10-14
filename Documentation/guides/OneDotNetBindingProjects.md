@@ -20,7 +20,7 @@ For example, a binding library would be identical to a class library:
 **Note:** It is still recommended that you create separate project(s) for binding your
 libraries, just that the project file will look the same as an application.
 
-[binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
+[binding]: https://learn.microsoft.com/dotnet/android/binding-libs/binding-java-libs/binding-java-library
 
 ## Unsupported Legacy Options
 
