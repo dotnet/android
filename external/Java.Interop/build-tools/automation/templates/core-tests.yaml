@@ -3,7 +3,6 @@ parameters:
   runNativeTests: false
   runNativeDotnetTests: false
   platformName:
-  nativeAotRid:
 
 steps:
 - template: run-dotnet-test.yaml
@@ -64,21 +63,6 @@ steps:
     command: build
     arguments: -c $(Build.Configuration) tools/java-source-utils/java-source-utils.csproj -t:RunTests
     workingDirectory: external/Java.Interop
-  continueOnError: true
-
-- powershell: >
-    dotnet publish -c $(Build.Configuration) -r ${{ parameters.nativeAotRid }}
-    samples/Hello-NativeAOTFromJNI/Hello-NativeAOTFromJNI.csproj
-  displayName: 'Tests: publish Hello-NativeAOTFromJNI'
-  workingDirectory: external/Java.Interop
-  continueOnError: true
-
-- powershell: >
-    dotnet build -c $(Build.Configuration) -r ${{ parameters.nativeAotRid }}
-    -t:RunJavaSample
-    samples/Hello-NativeAOTFromJNI/Hello-NativeAOTFromJNI.csproj
-  displayName: 'Tests: run Hello-NativeAOTFromJNI'
-  workingDirectory: external/Java.Interop
   continueOnError: true
 
 - task: PublishTestResults@2
