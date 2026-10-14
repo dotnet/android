@@ -1,4 +1,7 @@
 #nullable enable
+static Xamarin.Android.Tools.AndroidSdkInfo.GetBuildToolsPaths(string! androidSdkPath, string! preferredBuildToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
+static Xamarin.Android.Tools.AndroidSdkInfo.GetCommandLineToolsPaths(string! androidSdkPath, string! preferredCommandLineToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
+static Xamarin.Android.Tools.AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel(string! androidSdkPath, string! idOrApiLevel, Xamarin.Android.Tools.AndroidVersions! versions) -> string?
 static Xamarin.Android.Tools.AndroidSdkInfo.DiscoverInstallationPaths(out string? androidSdkPath, out string![]! allAndroidSdkPaths, out string? javaSdkPath, string? preferredAndroidSdkPath = null, string? preferredJavaSdkPath = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
 Xamarin.Android.Tools.AdbDeviceInfo
 Xamarin.Android.Tools.AdbDeviceInfo.AdbDeviceInfo() -> void

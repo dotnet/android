@@ -80,7 +80,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				var libraries = new List<ITaskItem> ();
-				var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions);
+				var platformPath = AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (AndroidSdkDirectory, AndroidApiLevel, MonoAndroidHelper.SupportedVersions);
 				if (platformPath == null) {
 					Log.LogDebugMessage ($"Could not find platform directory for API level '{AndroidApiLevel}'");
 				}
