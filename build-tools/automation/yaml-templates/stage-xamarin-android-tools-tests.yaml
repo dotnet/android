@@ -122,25 +122,17 @@ stages:
     - checkout: self
       clean: true
 
+    # Temporary workaround for NuGet's first-run migration mutex failures on
+    # shared macOS agents. The migration marker avoids creating NuGet-Migrations.
+    - template: /build-tools/automation/yaml-templates/initialize-nuget-migrations.yaml
+
     - task: UseDotNet@2
       displayName: Use .NET Core $(DotNetCoreVersion)
       inputs:
         version: $(DotNetCoreVersion)
 
-    # Temporary workaround for NuGet's first-run migration mutex failures on
-    # shared macOS agents. The migration marker avoids creating NuGet-Migrations.
-    - bash: |
-        set -euo pipefail
-        mkdir -p "$XDG_DATA_HOME/NuGet/Migrations"
-        touch "$XDG_DATA_HOME/NuGet/Migrations/1"
-      displayName: Initialize isolated NuGet migration state
-      env:
-        XDG_DATA_HOME: $(Agent.TempDirectory)/nuget-xdg
-
     - task: DotNetCoreCLI@2
       displayName: Build Android tools projects
-      env:
-        XDG_DATA_HOME: $(Agent.TempDirectory)/nuget-xdg
       inputs:
         command: build
         projects: |
@@ -151,8 +143,6 @@ stages:
 
     - task: DotNetCoreCLI@2
       displayName: Run Tests
-      env:
-        XDG_DATA_HOME: $(Agent.TempDirectory)/nuget-xdg
       inputs:
         command: test
         projects: |
