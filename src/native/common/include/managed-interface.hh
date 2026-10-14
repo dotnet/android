@@ -1,15 +1,17 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include <jni.h>
 #include <runtime-base/binary-blob-loader.hh>
 
+struct MarkCrossReferencesArgs;
+
 namespace xamarin::android {
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
-
-	extern "C" {
-	}
+	using jnienv_gc_bridge_fn = void (*)(MarkCrossReferencesArgs*);
+	using jnienv_initialize_gc_bridge_fn = jnienv_gc_bridge_fn (*)(jnienv_gc_bridge_fn);
 
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 	struct JnienvInitializeArgs {
@@ -25,7 +27,11 @@ namespace xamarin::android {
 		const BinaryBlobPayload *jniRemappingData;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 		int              maxGrefCount;
+		jnienv_initialize_gc_bridge_fn initializeGCBridge;
 	};
+
+	static_assert (offsetof (JnienvInitializeArgs, initializeGCBridge) == (sizeof (void*) == 8 ? 80 : 48));
+	static_assert (sizeof (JnienvInitializeArgs) == (sizeof (void*) == 8 ? 88 : 52));
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
 	enum class BoundExceptionType : uint8_t

@@ -16,53 +16,11 @@ namespace Microsoft.Android.Runtime;
 /// <summary>
 /// Tracks the JavaMarshal registered peers and integrates them with the CLR's GC bridge.
 /// </summary>
-/// <remarks>
-/// <para>
-/// This is a process-wide, static type. <see cref="InitializeIfNeeded"/> performs a
-/// process-global, one-shot GC-bridge initialization (<c>clr_initialize_gc_bridge</c>),
-/// which starts a native bridge-processing thread and aborts the process if it runs more
-/// than once. <see cref="InitializeIfNeeded"/> is idempotent: the first call performs the
-/// initialization and any subsequent call returns immediately. The call must occur after the
-/// <c>JniRuntime</c> has been created and published, because bridge processing uses its JNI
-/// reference manager.
-/// </para>
-/// <para>
-/// The GC-bridge registration lives for the entire lifetime of the process and is never torn
-/// down: stopping the detached bridge-processing thread is not supported by the runtime.
-/// </para>
-/// </remarks>
 static class JavaMarshalRegisteredPeers
 {
 	static readonly Dictionary<int, RegisteredPeerBucket> RegisteredInstances = new ();
 	static readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
 	static readonly Lock s_instancesLock = new ();
-
-	static readonly object initializeLock = new ();
-	static bool initialized;
-
-	/// <summary>
-	/// Performs the one-shot, process-global GC-bridge initialization the first time it is
-	/// called; subsequent calls return immediately. See <see cref="JavaMarshalRegisteredPeers"/>
-	/// for details on the process-lifetime semantics.
-	/// </summary>
-	internal static void InitializeIfNeeded ()
-	{
-		lock (initializeLock) {
-			if (initialized)
-				return;
-
-			if (RuntimeFeature.EventSourceSupport) {
-				RuntimeEventSource.Initialize ();
-			}
-
-			unsafe {
-				var mark_cross_references_ftn = JavaMarshalGCBridge.Initialize ();
-				JavaMarshal.Initialize (mark_cross_references_ftn);
-			}
-
-			initialized = true;
-		}
-	}
 
 	internal static void QueueCollectedContext (IntPtr context)
 	{
