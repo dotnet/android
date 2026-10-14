@@ -184,6 +184,7 @@
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.Rewind.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerUploadTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerIntegrationTests.cs" />
     <Compile Include="Xamarin.Android.Net\LocalTestServers.cs" />
