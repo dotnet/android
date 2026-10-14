@@ -7,7 +7,6 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using ResolveAndroidTooling = Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling;
-using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
 
 namespace Xamarin.Android.Build.Tests {
 
@@ -110,13 +109,11 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			var validateJavaVersion = new ValidateJavaVersion {
 				BuildEngine = engine,
-				TargetFrameworkVersion = targetFrameworkVersion,
-				AndroidSdkBuildToolsVersion = buildtools,
 				JavaSdkPath = javaPath,
 				JavaToolExe = javaExe,
 				JavacToolExe = javacExe,
 				LatestSupportedJavaVersion = LatestSupportedJavaVersion,
-				MinimumSupportedJavaVersion = "1.7.0",
+				MinimumSupportedJavaVersion = "1.8.0",
 			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
@@ -163,13 +160,11 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			var validateJavaVersion = new ValidateJavaVersion {
 				BuildEngine = engine,
-				TargetFrameworkVersion = "v8.0",
-				AndroidSdkBuildToolsVersion = "26.0.3",
 				JavaSdkPath = javaPath,
 				JavaToolExe = javaExe,
 				JavacToolExe = javacExe,
 				LatestSupportedJavaVersion = "1.8.0",
-				MinimumSupportedJavaVersion = "1.7.0",
+				MinimumSupportedJavaVersion = "1.8.0",
 			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
@@ -211,7 +206,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
 			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
-			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8", "MinimumRequiredJdkVersion should be 1.8");
+			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8.0", "MinimumRequiredJdkVersion should be 1.8.0");
 			Assert.IsFalse (messages.Any (m => m.Message == "ResolveSdks Outputs:" ||
 				m.Message == "ResolveAndroidTooling Outputs:" ||
 				m.Message == "ValidateJavaVersion Outputs:" ||

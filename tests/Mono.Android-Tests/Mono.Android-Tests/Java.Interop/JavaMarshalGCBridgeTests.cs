@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Xamarin.Android.RuntimeTests;
 
 [TestFixture]
+[Category ("RuntimeInitialization")]
 public class JavaMarshalGCBridgeTests
 {
 	// A static class cannot be used as the first parameter's type.
