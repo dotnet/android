@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Android.Runtime {
 
-	[Obsolete ("Use Java.Interop.TypeManager")]
+	[Obsolete ("Use Java.Interop.TypeManager", error: true)]
 	public static partial class TypeManager {
 
 		public static string? LookupTypeMapping (string[] mappings, string javaType)

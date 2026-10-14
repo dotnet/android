@@ -517,7 +517,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindingDoNotPackage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BindingEmbeddedJar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -530,10 +530,6 @@ namespace Xamarin.Android.Build.Tests
 						TestResourceFileName = "javaBindingIssue.jar"
 					}
 				},
-				AssemblyInfo = @"
-using Java.Interop;
-[assembly:DoNotPackage(""svg-android.jar"")]
-			"
 			};
 			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
