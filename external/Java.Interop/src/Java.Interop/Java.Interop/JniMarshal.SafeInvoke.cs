@@ -19,7 +19,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self);
+				unsafe {
+					action (jnienv, self);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -35,7 +37,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self);
+				unsafe {
+					return action (jnienv, self);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -51,7 +55,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0);
+				unsafe {
+					action (jnienv, self, p0);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -67,7 +73,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0);
+				unsafe {
+					return action (jnienv, self, p0);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -83,7 +91,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1);
+				unsafe {
+					action (jnienv, self, p0, p1);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -99,7 +109,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1);
+				unsafe {
+					return action (jnienv, self, p0, p1);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -115,7 +127,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2);
+				unsafe {
+					action (jnienv, self, p0, p1, p2);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -131,7 +145,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -147,7 +163,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -163,7 +181,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -179,7 +199,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -195,7 +217,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -211,7 +235,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -227,7 +253,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -243,7 +271,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -259,7 +289,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -275,7 +307,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -291,7 +325,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -307,7 +343,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -323,7 +361,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -339,7 +379,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -355,7 +397,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -371,7 +415,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -387,7 +433,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -403,7 +451,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -419,7 +469,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -435,7 +487,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -451,7 +505,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -467,7 +523,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -483,7 +541,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -499,7 +559,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -515,7 +577,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -531,7 +595,9 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15);
+				unsafe {
+					action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -547,7 +613,9 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15);
+				unsafe {
+					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;

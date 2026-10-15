@@ -16,13 +16,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (Boolean value)
+		internal static JniObjectReference CreateLocalRef (Boolean value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(Z)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(Z)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? booleanValue;
@@ -31,7 +33,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Boolean), "Expected targetType==typeof(Boolean); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref booleanValue, "booleanValue", "()Z");
 			try {
-				return JniEnvironment.InstanceMethods.CallBooleanMethod (self, booleanValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallBooleanMethod (self, booleanValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -137,13 +141,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (SByte value)
+		internal static JniObjectReference CreateLocalRef (SByte value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(B)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(B)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? byteValue;
@@ -152,7 +158,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (SByte), "Expected targetType==typeof(SByte); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref byteValue, "byteValue", "()B");
 			try {
-				return JniEnvironment.InstanceMethods.CallByteMethod (self, byteValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallByteMethod (self, byteValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -289,13 +297,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (Char value)
+		internal static JniObjectReference CreateLocalRef (Char value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(C)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(C)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? charValue;
@@ -304,7 +314,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Char), "Expected targetType==typeof(Char); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref charValue, "charValue", "()C");
 			try {
-				return JniEnvironment.InstanceMethods.CallCharMethod (self, charValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallCharMethod (self, charValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -410,13 +422,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (Int16 value)
+		internal static JniObjectReference CreateLocalRef (Int16 value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(S)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(S)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? shortValue;
@@ -425,7 +439,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int16), "Expected targetType==typeof(Int16); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref shortValue, "shortValue", "()S");
 			try {
-				return JniEnvironment.InstanceMethods.CallShortMethod (self, shortValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallShortMethod (self, shortValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -531,13 +547,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (Int32 value)
+		internal static JniObjectReference CreateLocalRef (Int32 value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(I)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(I)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? intValue;
@@ -546,7 +564,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int32), "Expected targetType==typeof(Int32); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
 			try {
-				return JniEnvironment.InstanceMethods.CallIntMethod (self, intValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallIntMethod (self, intValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -652,13 +672,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (Int64 value)
+		internal static JniObjectReference CreateLocalRef (Int64 value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(J)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(J)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? longValue;
@@ -667,7 +689,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int64), "Expected targetType==typeof(Int64); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref longValue, "longValue", "()J");
 			try {
-				return JniEnvironment.InstanceMethods.CallLongMethod (self, longValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallLongMethod (self, longValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -773,13 +797,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (Single value)
+		internal static JniObjectReference CreateLocalRef (Single value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(F)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(F)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? floatValue;
@@ -788,7 +814,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Single), "Expected targetType==typeof(Single); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref floatValue, "floatValue", "()F");
 			try {
-				return JniEnvironment.InstanceMethods.CallFloatMethod (self, floatValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallFloatMethod (self, floatValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -894,13 +922,15 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (Double value)
+		internal static JniObjectReference CreateLocalRef (Double value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			unsafe {
+				var args    = stackalloc JniArgumentValue [1];
+				args [0]    = new JniArgumentValue (value);
 
-			TypeRef.GetCachedConstructor (ref init, "(D)V");
-			return TypeRef.NewObject (init, args);
+				TypeRef.GetCachedConstructor (ref init, "(D)V");
+				return TypeRef.NewObject (init, args);
+			}
 		}
 
 		static JniMethodInfo? doubleValue;
@@ -909,7 +939,9 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Double), "Expected targetType==typeof(Double); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref doubleValue, "doubleValue", "()D");
 			try {
-				return JniEnvironment.InstanceMethods.CallDoubleMethod (self, doubleValue);
+				unsafe {
+					return JniEnvironment.InstanceMethods.CallDoubleMethod (self, doubleValue);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}

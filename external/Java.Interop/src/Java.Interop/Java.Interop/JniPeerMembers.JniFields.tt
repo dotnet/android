@@ -36,7 +36,10 @@ namespace Java.Interop {
 			JniPeerMembers.AssertSelf (self);
 
 			var f   = GetFieldInfo (encodedMember);
-			var r   = JniEnvironment.InstanceFields.Get<#= info.JniCallType #>Field (self.PeerReference, f);
+			<#= info.ReturnType #> r;
+			unsafe {
+				r = JniEnvironment.InstanceFields.Get<#= info.JniCallType #>Field (self.PeerReference, f);
+			}
 			GC.KeepAlive (self);
 			return r;
 		}
@@ -46,7 +49,9 @@ namespace Java.Interop {
 			JniPeerMembers.AssertSelf (self);
 
 			var f  = GetFieldInfo (encodedMember);
-			JniEnvironment.InstanceFields.Set<#= info.JniCallType #>Field (self.PeerReference, f, value);
+			unsafe {
+				JniEnvironment.InstanceFields.Set<#= info.JniCallType #>Field (self.PeerReference, f, value);
+			}
 			GC.KeepAlive (self);
 		}
 <#
@@ -62,13 +67,17 @@ namespace Java.Interop {
 		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f);
+			unsafe {
+				return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f);
+			}
 		}
 
 		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f, value);
+			unsafe {
+				JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f, value);
+			}
 		}
 <#
 	}
