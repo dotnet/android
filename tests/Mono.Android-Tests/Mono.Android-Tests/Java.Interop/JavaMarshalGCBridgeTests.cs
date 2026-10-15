@@ -79,6 +79,7 @@ public class JavaMarshalGCBridgeTests
 	}
 
 	[Test]
+	[Category ("JniSafetyPreparation")]
 	public void NativeAndManagedBridgeLayoutsMatch ()
 	{
 		Assert.AreEqual (IntPtr.Size * 4, Marshal.SizeOf<MarkCrossReferencesArgs> ());
@@ -106,6 +107,7 @@ public class JavaMarshalGCBridgeTests
 	}
 
 	[Test]
+	[Category ("JniSafetyPreparation")]
 	public unsafe void EmptyComponentsCanAddCrossReferenceWithoutLeakingLocalRefs ()
 	{
 		StronglyConnectedComponent* components = stackalloc StronglyConnectedComponent [2];
@@ -134,6 +136,7 @@ public class JavaMarshalGCBridgeTests
 	[Test]
 	[Category ("GCBridge")]
 	[Category ("ReferenceTracing")]
+	[Category ("JniSafetyPreparation")]
 	public void ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease ()
 	{
 		if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && !Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime)

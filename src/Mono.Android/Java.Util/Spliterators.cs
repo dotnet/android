@@ -16,20 +16,25 @@ namespace Java.Util
 
 		internal partial class AbstractSpliteratorInvoker
 		{
-			public override unsafe bool TryAdvance (IConsumer? action)
+			public override bool TryAdvance (IConsumer? action)
 			{
-				const string __id = "tryAdvance.(Ljava/util/function/Consumer;)V";
-				IntPtr native_action = JNIEnv.ToLocalJniHandle (action);
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (native_action);
-					var __rm = _members.StaticMethods.InvokeBooleanMethod (__id, __args);
-					return __rm;
-				} finally {
+				unsafe {
+					// SAFETY: tryAdvance is an instance Boolean-returning call with one Consumer; the local reference and argument buffer survive until finally.
+					const string __id = "tryAdvance.(Ljava/util/function/Consumer;)Z";
+					IntPtr native_action = JNIEnv.ToLocalJniHandle (action);
+					try {
+						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+						__args [0] = new JniArgumentValue (native_action);
+						var __rm = _members.InstanceMethods.InvokeVirtualBooleanMethod (__id, this, __args);
+						return __rm;
+					} finally {
+						JNIEnv.DeleteLocalRef (native_action);
+						GC.KeepAlive (action);
+						GC.KeepAlive (this);
+					}
 				}
 			}
 		}
 	}
 }
 #endif
-

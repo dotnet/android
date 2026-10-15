@@ -47,220 +47,329 @@ namespace Java.Interop {
 
 		const string PeerLookupFailed = "Unable to marshal the JNI `this` reference to its managed peer.";
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_X<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, void> body)
 			where TPeer : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_S<[DynamicallyAccessedMembers (Constructors)] TPeer, TResult> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, TResult> body)
 			where TPeer : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_O<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, TResult> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, TResult> body)
 			where TPeer : class, IJavaObject
@@ -268,67 +377,99 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, TResult> body)
 			where TPeer : class, IJavaObject
@@ -336,69 +477,102 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, TResult> body)
 			where TPeer : class, IJavaObject
@@ -406,70 +580,105 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, TResult> body)
 			where TPeer : class, IJavaObject
@@ -477,48 +686,70 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, void> body)
 			where TPeer : class, IJavaObject
@@ -526,22 +757,32 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, TResult> body)
 			where TPeer : class, IJavaObject
@@ -550,22 +791,32 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -573,22 +824,33 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, void> body)
 			where TPeer : class, IJavaObject
@@ -596,23 +858,34 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, TResult> body)
 			where TPeer : class, IJavaObject
@@ -621,23 +894,34 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -645,23 +929,34 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, void> body)
 			where TPeer : class, IJavaObject
@@ -669,23 +964,34 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, TResult> body)
 			where TPeer : class, IJavaObject
@@ -694,23 +1000,34 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -718,23 +1035,35 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, void> body)
 			where TPeer : class, IJavaObject
@@ -742,24 +1071,36 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, TResult> body)
 			where TPeer : class, IJavaObject
@@ -768,24 +1109,36 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -793,24 +1146,35 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, void> body)
 			where TPeer : class, IJavaObject
@@ -818,23 +1182,34 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, TResult> body)
 			where TPeer : class, IJavaObject
@@ -843,23 +1218,34 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -867,23 +1253,35 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, void> body)
 			where TPeer : class, IJavaObject
@@ -891,24 +1289,36 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, TResult> body)
 			where TPeer : class, IJavaObject
@@ -917,24 +1327,36 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -942,24 +1364,36 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, void> body)
 			where TPeer : class, IJavaObject
@@ -967,24 +1401,36 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, TResult> body)
 			where TPeer : class, IJavaObject
@@ -993,24 +1439,36 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -1018,24 +1476,37 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, void> body)
 			where TPeer : class, IJavaObject
@@ -1043,25 +1514,38 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, TResult> body)
 			where TPeer : class, IJavaObject
@@ -1070,25 +1554,38 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return body (__this, p0, p1, p2);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return body (__this, p0, p1, p2);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
+		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
+		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -1096,25 +1593,35 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
-				var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
-				var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					var p0 = global::Java.Lang.Object.GetObject<T0> (native_p0, JniHandleOwnership.DoNotTransfer);
+					var p1 = global::Java.Lang.Object.GetObject<T1> (native_p1, JniHandleOwnership.DoNotTransfer);
+					var p2 = global::Java.Lang.Object.GetObject<T2> (native_p2, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, void> body)
 			where TPeer : class, IJavaObject
@@ -1123,22 +1630,32 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where T3 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0, p1, p2, p3);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0, p1, p2, p3);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, TResult> body)
 			where TPeer : class, IJavaObject
@@ -1148,22 +1665,32 @@ namespace Java.Interop {
 			where T3 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0, p1, p2, p3);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0, p1, p2, p3);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -1172,22 +1699,32 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where T3 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, void> body)
 			where TPeer : class, IJavaObject
@@ -1197,22 +1734,32 @@ namespace Java.Interop {
 			where T3 : unmanaged
 			where T4 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0, p1, p2, p3, p4);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0, p1, p2, p3, p4);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, TResult> body)
 			where TPeer : class, IJavaObject
@@ -1223,22 +1770,32 @@ namespace Java.Interop {
 			where T4 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0, p1, p2, p3, p4);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0, p1, p2, p3, p4);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -1248,22 +1805,32 @@ namespace Java.Interop {
 			where T3 : unmanaged
 			where T4 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, void> body)
 			where TPeer : class, IJavaObject
@@ -1274,22 +1841,32 @@ namespace Java.Interop {
 			where T4 : unmanaged
 			where T5 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0, p1, p2, p3, p4, p5);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0, p1, p2, p3, p4, p5);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, TResult> body)
 			where TPeer : class, IJavaObject
@@ -1301,22 +1878,32 @@ namespace Java.Interop {
 			where T5 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0, p1, p2, p3, p4, p5);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0, p1, p2, p3, p4, p5);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -1327,22 +1914,32 @@ namespace Java.Interop {
 			where T4 : unmanaged
 			where T5 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4, p5));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4, p5));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, void> body)
 			where TPeer : class, IJavaObject
@@ -1354,22 +1951,32 @@ namespace Java.Interop {
 			where T5 : unmanaged
 			where T6 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0, p1, p2, p3, p4, p5, p6);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0, p1, p2, p3, p4, p5, p6);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> body)
 			where TPeer : class, IJavaObject
@@ -1382,22 +1989,32 @@ namespace Java.Interop {
 			where T6 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0, p1, p2, p3, p4, p5, p6);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0, p1, p2, p3, p4, p5, p6);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -1409,22 +2026,32 @@ namespace Java.Interop {
 			where T5 : unmanaged
 			where T6 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4, p5, p6));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4, p5, p6));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, void> body)
 			where TPeer : class, IJavaObject
@@ -1437,22 +2064,32 @@ namespace Java.Interop {
 			where T6 : unmanaged
 			where T7 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				body (__this, p0, p1, p2, p3, p4, p5, p6, p7);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					body (__this, p0, p1, p2, p3, p4, p5, p6, p7);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> body)
 			where TPeer : class, IJavaObject
@@ -1466,22 +2103,32 @@ namespace Java.Interop {
 			where T7 : unmanaged
 			where TResult : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return body (__this, p0, p1, p2, p3, p4, p5, p6, p7);
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return body (__this, p0, p1, p2, p3, p4, p5, p6, p7);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, IJavaObject?> body)
 			where TPeer : class, IJavaObject
@@ -1494,19 +2141,23 @@ namespace Java.Interop {
 			where T6 : unmanaged
 			where T7 : unmanaged
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return default;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
-				return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4, p5, p6, p7));
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
+					return JNIEnv.ToLocalJniHandle (body (__this, p0, p1, p2, p3, p4, p5, p6, p7));
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return default;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 	}

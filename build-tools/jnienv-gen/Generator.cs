@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -54,7 +55,7 @@ namespace Xamarin.Android.JniEnv
 		{
 			o.WriteLine ("// Generated file; DO NOT EDIT!");
 			o.WriteLine ("//");
-			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen and rerun");
+			o.WriteLine ("// To make changes, edit build-tools/jnienv-gen and rerun with -o=src/Mono.Android/Android.Runtime/JNIEnv.g.cs");
 			o.WriteLine ();
 			o.WriteLine ("using System;");
 			o.WriteLine ("using System.Runtime.ExceptionServices;");
@@ -91,13 +92,22 @@ namespace Xamarin.Android.JniEnv
 					o.WriteLine ("\t\t{");
 					o.WriteLine ("\t\t\tif (array == null)");
 					o.WriteLine ("\t\t\t\treturn IntPtr.Zero;");
-					o.WriteLine ("\t\t\tJniObjectReference result;");
-					o.WriteLine ("\t\t\tresult = JniEnvironment.{0}.{1} (array.Length);", entry.DeclaringType, entry.Name);
-					o.WriteLine ("\t\t\tCopyArray (array, result.Handle);");
-					o.WriteLine ("\t\t\treturn result.Handle;");
+					o.WriteLine ("\t\t\tunsafe {");
+					o.WriteLine ("\t\t\t\t// SAFETY: result is a newly allocated array of the matching primitive type and array.Length elements.");
+					o.WriteLine ("\t\t\t\tJniObjectReference result;");
+					o.WriteLine ("\t\t\t\tresult = JniEnvironment.{0}.{1} (array.Length);", entry.DeclaringType, entry.Name);
+					o.WriteLine ("\t\t\t\tCopyArray (array, result.Handle);");
+					o.WriteLine ("\t\t\t\treturn result.Handle;");
+					o.WriteLine ("\t\t\t}");
 					o.WriteLine ("\t\t}");
 					break;
 				case "CopyArray":
+					o.WriteLine ("\t\t/// <safety>");
+					o.WriteLine ("\t\t/// The JNI array handle in <paramref name=\"{0}\"/> must remain live on the current thread,",
+						entry.Name.StartsWith ("G", StringComparison.Ordinal) ? "src" : "dest");
+					o.WriteLine ("\t\t/// have the matching primitive element type, and contain at least as many elements as <paramref name=\"{0}\"/>.",
+						entry.Name.StartsWith ("G", StringComparison.Ordinal) ? "dest" : "src");
+					o.WriteLine ("\t\t/// </safety>");
 					o.Write ("\t\t{2} static unsafe {0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility);
 					if (entry.Name.StartsWith ("G", StringComparison.Ordinal)) {
 						o.WriteLine ("IntPtr src, {0} dest)", entry.Parameters [3].Type.ManagedType);
@@ -105,22 +115,28 @@ namespace Xamarin.Android.JniEnv
 						o.WriteLine ("\t\t\tif (src == IntPtr.Zero)");
 						o.WriteLine ("\t\t\t\treturn;");
 						var t = entry.Parameters [3].Type.ManagedType.Replace ("[]", "*");
-						o.WriteLine ("\t\t\tfixed ({0} __p = dest)", t);
-						o.WriteLine ("\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (src), 0, dest.Length, {2}__p);",
+						o.WriteLine ("\t\t\tunsafe {");
+						o.WriteLine ("\t\t\t\t// SAFETY: dest is pinned for its full length; the caller supplies a live, matching JNI array.");
+						o.WriteLine ("\t\t\t\tfixed ({0} __p = dest)", t);
+						o.WriteLine ("\t\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (src), 0, dest.Length, {2}__p);",
 								entry.DeclaringType,
 								entry.Name,
 								t == "byte*" ? "(sbyte*) " : "");
+						o.WriteLine ("\t\t\t}");
 					} else {
 						o.WriteLine ("{0} src, IntPtr dest)", entry.Parameters [3].Type.ManagedType);
 						o.WriteLine ("\t\t{");
 						o.WriteLine ("\t\t\tif (src == null)");
 						o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"src\");");
 						var t = entry.Parameters [3].Type.ManagedType.Replace ("[]", "*");
-						o.WriteLine ("\t\t\tfixed ({0} __p = src)", t);
-						o.WriteLine ("\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (dest), 0, src.Length, {2}__p);",
+						o.WriteLine ("\t\t\tunsafe {");
+						o.WriteLine ("\t\t\t\t// SAFETY: src is pinned for its full length; the caller supplies a live, matching JNI array.");
+						o.WriteLine ("\t\t\t\tfixed ({0} __p = src)", t);
+						o.WriteLine ("\t\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (dest), 0, src.Length, {2}__p);",
 								entry.DeclaringType,
 								entry.Name,
 								t == "byte*" ? "(sbyte*) " : "");
+						o.WriteLine ("\t\t\t}");
 					}
 					o.WriteLine ("\t\t}");
 					break;
@@ -167,14 +183,22 @@ namespace Xamarin.Android.JniEnv
 					return;
 			}
 
-			o.Write ("\t\t{0} static unsafe {1} {2} ",
+			var safetyRequirements = GetCallerSafetyRequirements (entry, pointerArguments: generateParamsOverload);
+			WriteSafetyRequirements (o, safetyRequirements);
+			o.Write ("\t\t{0} static {3}{1} {2} ",
 						entry.Visibility,
 						entry.ReturnType.ManagedType,
-						entry.ApiName);
+						entry.ApiName,
+						safetyRequirements.Count == 0 ? "" : "unsafe ");
 			bool is_void = entry.ReturnType.ManagedType == "void";
 			WriteJniFunctionParameters (o, entry, generateParamsOverload);
 			o.WriteLine ("\t\t{");
-			o.Write ("\t\t\t");
+			bool needsUnsafeBody = generateParamsOverload || entry.Name == "NewDirectByteBuffer";
+			if (needsUnsafeBody) {
+				o.WriteLine ("\t\t\tunsafe {");
+				o.WriteLine ("\t\t\t\t// SAFETY: the caller supplies the documented member ABI, argument storage and native-memory lifetimes.");
+			}
+			o.Write (needsUnsafeBody ? "\t\t\t\t" : "\t\t\t");
 			if (!is_void)
 				o.Write ("return ");
 			var n = entry.Name;
@@ -211,22 +235,38 @@ namespace Xamarin.Android.JniEnv
 			if (IsMemberID (entry.ReturnType))
 				o.Write (".ID");
 			o.WriteLine (";");
+			if (needsUnsafeBody)
+				o.WriteLine ("\t\t\t}");
 			o.WriteLine ("\t\t}");
 
 			if (!generateParamsOverload)
 				return;
 			o.WriteLine ();
+			WriteSafetyRequirements (o, GetCallerSafetyRequirements (entry, pointerArguments: false));
 			o.Write ("\t\t{0} static {1}{2} {3} ",
 					entry.Visibility, "unsafe ", entry.ReturnType.ManagedType, entry.ApiName);
 			WriteJniFunctionParameters (o, entry, false);
 			o.WriteLine ("\t\t{");
-			o.WriteLine ("\t\t\tfixed (JValue* __p = {0}) {{", Escape (entry.Parameters [entry.Parameters.Length-1].Name));
-			o.WriteLine ("\t\t\t\t{0}{1} ({2}, __p);",
+			o.WriteLine ("\t\t\tunsafe {");
+			o.WriteLine ("\t\t\t\t// SAFETY: the argument array remains pinned for the call; method ABI and referenced-handle lifetimes remain the caller's responsibility.");
+			o.WriteLine ("\t\t\t\tfixed (JValue* __p = {0}) {{", Escape (entry.Parameters [entry.Parameters.Length-1].Name));
+			o.WriteLine ("\t\t\t\t\t{0}{1} ({2}, __p);",
 					is_void ? "" : "return ",
 					entry.ApiName,
 					string.Join (", ", entry.Parameters.Take (entry.Parameters.Length-1).Select (p => Escape (p.Name))));
+			o.WriteLine ("\t\t\t\t}");
 			o.WriteLine ("\t\t\t}");
 			o.WriteLine ("\t\t}");
+		}
+
+		static void WriteSafetyRequirements (TextWriter o, IReadOnlyList<string> requirements)
+		{
+			if (requirements.Count == 0)
+				return;
+			o.WriteLine ("\t\t/// <safety>");
+			foreach (var requirement in requirements)
+				o.WriteLine ("\t\t/// " + requirement);
+			o.WriteLine ("\t\t/// </safety>");
 		}
 
 		static bool IsObjectReferenceType (TypeInfo type)
