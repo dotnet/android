@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -55,6 +56,40 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		IsApplication = isApplication,
 		AssemblyName = "TestApp",
 	};
+
+	[TestCase ("ar-SA")]
+	[TestCase ("tr-TR")]
+	public void ResourceFormattingUsesInvariantCulture (string cultureName)
+	{
+		var originalCulture = CultureInfo.CurrentCulture;
+		var culture = (CultureInfo) CultureInfo.GetCultureInfo (cultureName).Clone ();
+		culture.NumberFormat.NegativeSign = "minus";
+		try {
+			CultureInfo.CurrentCulture = culture;
+			var resource = new Xamarin.Android.Tasks.R {
+				Type = Xamarin.Android.Tasks.RType.Integer,
+				ResourceTypeName = "id",
+				Identifier = "negative",
+				Id = -1,
+			};
+			Assert.AreEqual ("int id negative 0xffffffff", resource.ToString ());
+			resource.Type = Xamarin.Android.Tasks.RType.Integer_Styleable;
+			resource.ResourceTypeName = "styleable";
+			resource.Identifier = "index";
+			Assert.AreEqual ("int styleable index -1", resource.ToString ());
+			resource.Type = Xamarin.Android.Tasks.RType.Array;
+			resource.Identifier = "View";
+			resource.Ids = [0, 0x7f010001, -1];
+			Assert.AreEqual ("int[] styleable View { 0x00000000, 0x7f010001, 0xffffffff }", resource.ToString ());
+
+			var parser = new Xamarin.Android.Tasks.ResourceParser (
+				new TaskLoggingHelper (new MockBuildEngine (TextWriter.Null), TestName));
+			var exception = Assert.Throws<NotSupportedException> (() => parser.ToInt32 ("invalid", -10));
+			Assert.AreEqual ("Could not convert value 'invalid' (base '-10') into an Int32.", exception?.Message);
+		} finally {
+			CultureInfo.CurrentCulture = originalCulture;
+		}
+	}
 
 	[TestCase (true, true)]
 	[TestCase (true, false)]
