@@ -27,11 +27,11 @@ namespace Java.Interop {
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe struct JniNativeMethod
+	public struct JniNativeMethod
 	{
 		byte* name;
 		byte* signature;
-		IntPtr functionPointer;
+		void* functionPointer;
 
 		/// <remarks>
 		/// This constructor stores addresses without reading their memory or invoking the callback.
@@ -43,11 +43,11 @@ namespace Java.Interop {
 		/// native methods before unregistration. Release callback storage only after
 		/// unregistration succeeds and all callbacks already running have finished.
 		/// </remarks>
-		public JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
+		public unsafe JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
 		{
 			this.name = name;
 			this.signature = signature;
-			this.functionPointer = functionPointer;
+			this.functionPointer = (void*) functionPointer;
 		}
 	}
 }

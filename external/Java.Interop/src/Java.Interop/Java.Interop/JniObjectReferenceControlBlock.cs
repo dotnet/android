@@ -13,27 +13,33 @@ internal struct JniObjectReferenceControlBlock {
 
 	public static unsafe JniObjectReferenceControlBlock* Alloc (JniObjectReference reference)
 	{
-		var value = (JniObjectReferenceControlBlock*) NativeMemory.AllocZeroed (1, (uint) Size);
-		value->handle       = reference.Handle;
-		value->handle_type  = (int) reference.Type;
-		return value;
+		unsafe {
+			var value = (JniObjectReferenceControlBlock*) NativeMemory.AllocZeroed (1, (uint) Size);
+			value->handle       = reference.Handle;
+			value->handle_type  = (int) reference.Type;
+			return value;
+		}
 	}
 
 	public static unsafe void Free (ref JniObjectReferenceControlBlock* value)
 	{
-		if (value == null) {
-			return;
+		unsafe {
+			if (value == null) {
+				return;
+			}
+			NativeMemory.Free (value);
+			value   = null;
 		}
-		NativeMemory.Free (value);
-		value   = null;
 	}
 
 	public static unsafe void FreeIfInvalid (ref JniObjectReferenceControlBlock* value)
 	{
-		// Reference-tracking contexts must already be detached. Preserve a
-		// valid reference reconstructed by the finalization callback.
-		if (value != null && value->handle == IntPtr.Zero) {
-			Free (ref value);
+		unsafe {
+			// Reference-tracking contexts must already be detached. Preserve a
+			// valid reference reconstructed by the finalization callback.
+			if (value != null && value->handle == IntPtr.Zero) {
+				Free (ref value);
+			}
 		}
 	}
 }

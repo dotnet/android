@@ -32,7 +32,9 @@ namespace Java.Interop {
 			{
 				JniEnvironment.WithinNewObjectScope = true;
 				try {
-					return _NewObject (type, method, args);
+					unsafe {
+						return _NewObject (type, method, args);
+					}
 				}
 				finally {
 					JniEnvironment.WithinNewObjectScope = false;
@@ -46,4 +48,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

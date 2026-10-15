@@ -14,7 +14,7 @@ namespace Java.Interop
 	[SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Fields preserve the unmanaged JavaVM vtable layout.")]
 	// These fields are populated from native memory and some are only present to preserve the JavaVM vtable layout.
 #pragma warning disable CS0169, CS0649
-	unsafe struct JavaVMInterface {
+	struct JavaVMInterface {
 		IntPtr reserved0;
 		IntPtr reserved1;
 		IntPtr reserved2;
@@ -27,20 +27,26 @@ namespace Java.Interop
 
 		public int DestroyJavaVM (IntPtr javavm)
 		{
-			return destroyJavaVM (javavm);
+			unsafe {
+				return destroyJavaVM (javavm);
+			}
 		}
 
 		public int AttachCurrentThread (IntPtr javavm, out IntPtr env, ref JavaVMThreadAttachArgs args)
 		{
-			fixed (IntPtr* envp = &env)
-			fixed (JavaVMThreadAttachArgs* argsp = &args)
-				return attachCurrentThread (javavm, envp, argsp);
+			unsafe {
+				fixed (IntPtr* envp = &env)
+				fixed (JavaVMThreadAttachArgs* argsp = &args)
+					return attachCurrentThread (javavm, envp, argsp);
+			}
 		}
 
 		public int GetEnv (IntPtr javavm, out IntPtr envptr, int version)
 		{
-			fixed (IntPtr* envp = &envptr)
-				return getEnv (javavm, envp, version);
+			unsafe {
+				fixed (IntPtr* envp = &envptr)
+					return getEnv (javavm, envp, version);
+			}
 		}
 	}
 #pragma warning restore CS0169, CS0649
@@ -54,7 +60,7 @@ namespace Java.Interop
 
 	struct JavaVMThreadAttachArgs {
 		public  JniVersion 	        version;    /*		 must be >= JNI_VERSION_1_2 */
-		public  IntPtr              name;       /*		 NULL or name of thread as modified UTF-8 str */
+		public  byte*               name;       /*		 NULL or name of thread as modified UTF-8 str */
 		public  IntPtr              group;      /*		 global ref of a ThreadGroup object, or NULL */
 	}
 
@@ -243,10 +249,13 @@ namespace Java.Interop
 				throw new ArgumentNullException (nameof (envp));
 
 			IntPtr vm   = IntPtr.Zero;
-			// SAFETY: The caller owns the current-thread JNI environment's validity.
-			// JNI writes only the synchronous pointer-sized output slot; &vm does not escape.
-			if (JniNativeMethods.GetJavaVM (envp, &vm) is int r &&
-					r != JNI_OK) {
+			int r;
+			unsafe {
+				// SAFETY: The caller owns the current-thread JNI environment's validity.
+				// JNI writes only the synchronous pointer-sized output slot; &vm does not escape.
+				r = JniNativeMethods.GetJavaVM (envp, &vm);
+			}
+			if (r != JNI_OK) {
 				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
 			}
 			return vm;
@@ -350,8 +359,10 @@ namespace Java.Interop
 				version = JniVersion,
 			};
 			try {
-				if (name != null)
-					threadArgs.name = Marshal.StringToHGlobalAnsi (name);
+				unsafe {
+					if (name != null)
+						threadArgs.name = (byte*) Marshal.StringToHGlobalAnsi (name);
+				}
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
 				IntPtr jnienv;
@@ -360,7 +371,9 @@ namespace Java.Interop
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;
 			} finally {
-				Marshal.FreeHGlobal (threadArgs.name);
+				unsafe {
+					Marshal.FreeHGlobal ((IntPtr) threadArgs.name);
+				}
 			}
 		}
 

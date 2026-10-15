@@ -172,16 +172,21 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (jnienv));
 
 				IntPtr _vm;
-				// SAFETY: The caller supplies the live current-thread JNI environment.
-				// GetJavaVM writes one pointer-sized stack slot synchronously; &_vm is not retained.
-				int r       = JniNativeMethods.GetJavaVM (jnienv, &_vm);
+				int r;
+				unsafe {
+					// SAFETY: The caller supplies the live current-thread JNI environment.
+					// GetJavaVM writes one pointer-sized stack slot synchronously; &_vm is not retained.
+					r = JniNativeMethods.GetJavaVM (jnienv, &_vm);
+				}
 				vm          = _vm;
 				return r;
 			}
 
 			internal static void RawDeleteLocalRef (IntPtr env, IntPtr localRef)
 			{
-				JniNativeMethods.DeleteLocalRef (env, localRef);
+				unsafe {
+					JniNativeMethods.DeleteLocalRef (env, localRef);
+				}
 			}
 		}
 
@@ -246,7 +251,7 @@ namespace Java.Interop {
 			Runtime             = runtime;
 		}
 
-		internal unsafe JniObjectReference ToJavaName (string jniTypeName)
+		internal JniObjectReference ToJavaName (string jniTypeName)
 		{
 			int index = jniTypeName.IndexOf ("/", StringComparison.Ordinal);
 
@@ -260,16 +265,13 @@ namespace Java.Interop {
 			if (nameBuffer == null)
 				nameBuffer = new char [NameBufferLength];
 
-			fixed (char* src = jniTypeName, dst = nameBuffer) {
-				char* src_ptr = src;
-				char* dst_ptr = dst;
-				char* end_ptr = src + length;
-				while (src_ptr < end_ptr) {
-					*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
-					src_ptr++;
-					dst_ptr++;
+			var javaName = nameBuffer.AsSpan (0, length);
+			jniTypeName.AsSpan ().Replace (javaName, '/', '.');
+
+			unsafe {
+				fixed (char* dst = javaName) {
+					return JniEnvironment.Strings.NewString (dst, length);
 				}
-				return JniEnvironment.Strings.NewString (dst, length);
 			}
 		}
 
