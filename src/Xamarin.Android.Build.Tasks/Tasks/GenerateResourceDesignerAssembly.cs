@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Security.Cryptography;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -203,12 +204,8 @@ namespace Xamarin.Android.Tasks
 				il.Emit(OpCodes.Ret);
 			}
 			// Roslyn requires the historical identity when compiling against existing binary libraries.
-			// Retain only the public key; no private key or strong-name signature is needed.
 			assembly.Name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;
-			assembly.Name.PublicKey = Convert.FromBase64String (
-				"ACQAAASAAACUAAAABgIAAAAkAABSU0ExAAQAAAEAAQCpBnmFbvXLb4WykP2Upfaz2x5Yp4wR" +
-				"B3j8zFFUd3nIPfBpQgNCAos1sZdCqLAB0qY+nvEd5kxNJSE3mtDYmwsdkekNhTRivIWVcr96" +
-				"mkIdYP69chuGkQVAJ5a2foQP7+VITegrY4lZn8PNtRlSnXSSOJcwJwSBDVJ8XD3dYBLGgw==");
+			assembly.Name.PublicKey = GetPublicKey ();
 			var wp = new WriterParameters () {
 				DeterministicMvid = Deterministic,
 			};
@@ -225,6 +222,29 @@ namespace Xamarin.Android.Tasks
 				MemoryStreamPool.Shared.Return (s);
 			}
 			return !Log.HasLoggedErrors;
+		}
+
+		static byte[] GetPublicKey ()
+		{
+			using var keyStream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk")
+				?? throw new InvalidOperationException ("Could not find embedded Resource.Designer.snk.");
+			using var keyBlob = new MemoryStream ();
+			keyStream.CopyTo (keyBlob);
+			using var rsa = new RSACryptoServiceProvider { PersistKeyInCsp = false };
+			rsa.ImportCspBlob (keyBlob.ToArray ());
+			var cspBlob = rsa.ExportCspBlob (includePrivateParameters: false);
+
+			const uint RsaSignAlgorithm = 0x2400; // CALG_RSA_SIGN
+			using var publicKey = new MemoryStream ();
+			using var writer = new BinaryWriter (publicKey);
+			writer.Write (RsaSignAlgorithm);
+			writer.Write ((uint) AssemblyHashAlgorithm.SHA1);
+			writer.Write (cspBlob.Length);
+			// ExportCspBlob uses CALG_RSA_KEYX on Unix; preserve the historical CALG_RSA_SIGN identity.
+			writer.Write (cspBlob, 0, 4);
+			writer.Write (RsaSignAlgorithm);
+			writer.Write (cspBlob, 8, cspBlob.Length - 8);
+			return publicKey.ToArray ();
 		}
 
 		MethodReference ImportCustomAttributeConstructor (TypeDefinitionCache cache, string type, ModuleDefinition module, ModuleDefinition? sourceModule = null, int argCount = 0)
