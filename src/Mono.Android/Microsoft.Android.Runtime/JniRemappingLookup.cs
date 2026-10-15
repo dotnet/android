@@ -326,13 +326,13 @@ static class JniRemappingLookup
 		info.SourceJniMethodName = jniMethodName;
 		info.SourceJniMethodSignature = jniMethodSignature;
 		unsafe {
-			info.TargetJniType = Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniTypeUtf8)
+			info.TargetJniType = Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniTypeUtf8Pointer)
 				?? throw new InvalidOperationException ("JNI remapping target type is not valid UTF-8.");
-			info.TargetJniMethodName = Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniMethodNameUtf8)
+			info.TargetJniMethodName = Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniMethodNameUtf8Pointer)
 				?? throw new InvalidOperationException ("JNI remapping target method name is not valid UTF-8.");
-			info.TargetJniMethodSignature ??= info.TargetJniMethodSignatureUtf8 == null
+			info.TargetJniMethodSignature ??= info.TargetJniMethodSignatureUtf8Pointer == null
 				? jniMethodSignature
-				: Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniMethodSignatureUtf8)
+				: Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniMethodSignatureUtf8Pointer)
 					?? throw new InvalidOperationException ("JNI remapping target method signature is not valid UTF-8.");
 		}
 		return info;
@@ -385,10 +385,10 @@ static class JniRemappingLookup
 		}
 
 		var ret = new JniRuntime.ReplacementMethodInfo {
-			TargetJniTypeUtf8               = method.target_type,
-			TargetJniMethodNameUtf8         = method.target_name,
+			TargetJniTypeUtf8Pointer        = method.target_type,
+			TargetJniMethodNameUtf8Pointer  = method.target_name,
 			TargetJniMethodSignature        = targetSignature,
-			TargetJniMethodSignatureUtf8    = isStatic
+			TargetJniMethodSignatureUtf8Pointer = isStatic
 				? null
 				: method.target_signature == null ? matchedSignature : method.target_signature,
 			TargetJniMethodParameterCount   = paramCount,

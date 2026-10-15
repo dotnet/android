@@ -41,6 +41,57 @@ namespace Java.Interop {
 			public  string? TargetJniMethodName             {get; set;}
 			public  string? TargetJniMethodSignature        {get; set;}
 			/// <summary>
+			/// Gets or sets the legacy native-int address of a NUL-terminated UTF-8 JNI type name.
+			/// </summary>
+			/// <safety>
+			/// A nonzero address has the same backing-storage and lifetime requirements as
+			/// <see cref="TargetJniTypeUtf8Pointer"/>. This compatibility setter does not enforce unsafe.
+			/// </safety>
+			[Obsolete ("Use TargetJniTypeUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
+			public IntPtr TargetJniTypeUtf8 {
+				get => (IntPtr) TargetJniTypeUtf8Pointer;
+				set {
+					unsafe {
+						TargetJniTypeUtf8Pointer = (byte*) value;
+					}
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets the legacy native-int address of a NUL-terminated UTF-8 JNI method name.
+			/// </summary>
+			/// <safety>
+			/// A nonzero address has the same backing-storage and lifetime requirements as
+			/// <see cref="TargetJniMethodNameUtf8Pointer"/>. This compatibility setter does not enforce unsafe.
+			/// </safety>
+			[Obsolete ("Use TargetJniMethodNameUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
+			public IntPtr TargetJniMethodNameUtf8 {
+				get => (IntPtr) TargetJniMethodNameUtf8Pointer;
+				set {
+					unsafe {
+						TargetJniMethodNameUtf8Pointer = (byte*) value;
+					}
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets the legacy native-int address of a NUL-terminated UTF-8 JNI method signature.
+			/// </summary>
+			/// <safety>
+			/// A nonzero address has the same backing-storage and lifetime requirements as
+			/// <see cref="TargetJniMethodSignatureUtf8Pointer"/>. This compatibility setter does not enforce unsafe.
+			/// </safety>
+			[Obsolete ("Use TargetJniMethodSignatureUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
+			public IntPtr TargetJniMethodSignatureUtf8 {
+				get => (IntPtr) TargetJniMethodSignatureUtf8Pointer;
+				set {
+					unsafe {
+						TargetJniMethodSignatureUtf8Pointer = (byte*) value;
+					}
+				}
+			}
+
+			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI type name.
 			/// </summary>
 			/// <safety>
@@ -48,7 +99,7 @@ namespace Java.Interop {
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
 			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
 			/// </safety>
-			public  byte*   TargetJniTypeUtf8               {get; unsafe set;}
+			public  byte*   TargetJniTypeUtf8Pointer        {get; unsafe set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method name.
 			/// </summary>
@@ -57,7 +108,7 @@ namespace Java.Interop {
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
 			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
 			/// </safety>
-			public  byte*   TargetJniMethodNameUtf8         {get; unsafe set;}
+			public  byte*   TargetJniMethodNameUtf8Pointer  {get; unsafe set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method signature.
 			/// </summary>
@@ -66,7 +117,7 @@ namespace Java.Interop {
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
 			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
 			/// </safety>
-			public  byte*   TargetJniMethodSignatureUtf8    {get; unsafe set;}
+			public  byte*   TargetJniMethodSignatureUtf8Pointer {get; unsafe set;}
 			public  int?    TargetJniMethodParameterCount   {get; set;}
 			public  bool    TargetJniMethodInstanceToStatic {get; set;}
 
@@ -86,9 +137,9 @@ namespace Java.Interop {
 					string.Equals (TargetJniType, other.TargetJniType) &&
 					string.Equals (TargetJniMethodName, other.TargetJniMethodName) &&
 					string.Equals (TargetJniMethodSignature, other.TargetJniMethodSignature) &&
-					TargetJniTypeUtf8 == other.TargetJniTypeUtf8 &&
-					TargetJniMethodNameUtf8 == other.TargetJniMethodNameUtf8 &&
-					TargetJniMethodSignatureUtf8 == other.TargetJniMethodSignatureUtf8 &&
+					TargetJniTypeUtf8Pointer == other.TargetJniTypeUtf8Pointer &&
+					TargetJniMethodNameUtf8Pointer == other.TargetJniMethodNameUtf8Pointer &&
+					TargetJniMethodSignatureUtf8Pointer == other.TargetJniMethodSignatureUtf8Pointer &&
 					TargetJniMethodParameterCount == other.TargetJniMethodParameterCount &&
 					TargetJniMethodInstanceToStatic == other.TargetJniMethodInstanceToStatic;
 			}
@@ -103,9 +154,9 @@ namespace Java.Interop {
 					TargetJniMethodName,
 					TargetJniMethodSignature,
 					HashCode.Combine (
-						(IntPtr) TargetJniTypeUtf8,
-						(IntPtr) TargetJniMethodNameUtf8,
-						(IntPtr) TargetJniMethodSignatureUtf8,
+						(IntPtr) TargetJniTypeUtf8Pointer,
+						(IntPtr) TargetJniMethodNameUtf8Pointer,
+						(IntPtr) TargetJniMethodSignatureUtf8Pointer,
 						TargetJniMethodParameterCount,
 						TargetJniMethodInstanceToStatic
 					)
@@ -121,9 +172,9 @@ namespace Java.Interop {
 					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
 					$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
 					$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
-					$", {nameof (TargetJniTypeUtf8)} = \"0x{(IntPtr) TargetJniTypeUtf8:x}\"" +
-					$", {nameof (TargetJniMethodNameUtf8)} = \"0x{(IntPtr) TargetJniMethodNameUtf8:x}\"" +
-					$", {nameof (TargetJniMethodSignatureUtf8)} = \"0x{(IntPtr) TargetJniMethodSignatureUtf8:x}\"" +
+					$", TargetJniTypeUtf8 = \"0x{(IntPtr) TargetJniTypeUtf8Pointer:x}\"" +
+					$", TargetJniMethodNameUtf8 = \"0x{(IntPtr) TargetJniMethodNameUtf8Pointer:x}\"" +
+					$", TargetJniMethodSignatureUtf8 = \"0x{(IntPtr) TargetJniMethodSignatureUtf8Pointer:x}\"" +
 					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
 					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
 					$"}}";
@@ -357,7 +408,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
-					GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out replacementUtf8);
+					GetReplacementTypeInfoPointerCore (jniSimpleReference, out replacement, out replacementUtf8);
 				}
 				if (replacementUtf8 != null)
 					replacement = null;
@@ -367,9 +418,8 @@ namespace Java.Interop {
 			/// Resolves a replacement JNI type as either a managed string or stable NUL-terminated UTF-8 memory.
 			/// </summary>
 			/// <remarks>
-			/// The default implementation preserves compatibility with string-based type managers by
-			/// calling <see cref="GetReplacementTypeCore(string)"/> once and setting
-			/// <paramref name="replacementUtf8"/> to null. Overrides are authoritative and must return
+			/// The default implementation dispatches to the legacy native-int hook to preserve existing
+			/// custom overrides. Overrides are authoritative and must return
 			/// results equivalent to <see cref="GetReplacementTypeCore(string)"/> for every reference.
 			/// A non-null <paramref name="replacementUtf8"/> takes precedence over
 			/// <paramref name="replacement"/>.
@@ -379,10 +429,27 @@ namespace Java.Interop {
 			/// NUL-terminated UTF-8 memory and keep it alive and unchanged for the associated runtime's
 			/// lifetime and every subsequent cached metadata read. Java.Interop does not own or free it.
 			/// </safety>
-			protected virtual unsafe void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
+			protected virtual unsafe void GetReplacementTypeInfoPointerCore (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
+			{
+#pragma warning disable CS0618 // Preserve dispatch to existing native-int overrides.
+				GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out var legacyUtf8);
+#pragma warning restore CS0618
+				replacementUtf8 = (byte*) legacyUtf8;
+			}
+
+			/// <summary>
+			/// Resolves a replacement JNI type using the legacy native-int output contract.
+			/// </summary>
+			/// <safety>
+			/// A nonzero <paramref name="replacementUtf8"/> must meet the backing-storage and lifetime
+			/// requirements of <see cref="GetReplacementTypeInfoPointerCore"/>. This compatibility
+			/// hook does not enforce unsafe on existing callers or overrides.
+			/// </safety>
+			[Obsolete ("Override GetReplacementTypeInfoPointerCore and explicitly audit the borrowed storage lifetime.")]
+			protected virtual void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
 			{
 				replacement = GetReplacementTypeCore (jniSimpleReference);
-				replacementUtf8 = null;
+				replacementUtf8 = IntPtr.Zero;
 			}
 
 			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
@@ -466,8 +533,23 @@ namespace Java.Interop {
 			/// </safety>
 			protected virtual unsafe ReplacementMethodInfo? GetReplacementMethodInfoCore (byte* jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
+#pragma warning disable CS0618 // Preserve dispatch to existing native-int overrides.
+				return GetReplacementMethodInfoCore ((IntPtr) jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
+#pragma warning restore CS0618
+			}
+
+			/// <summary>
+			/// Resolves member remapping using the legacy native-int source type contract.
+			/// </summary>
+			/// <safety>
+			/// A nonzero <paramref name="jniSimpleReferenceUtf8"/> must address readable NUL-terminated
+			/// UTF-8 storage for the call. This compatibility hook does not enforce unsafe.
+			/// </safety>
+			[Obsolete ("Use the byte* overload and explicitly audit the borrowed storage lifetime.")]
+			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+			{
 				unsafe {
-					return GetReplacementMethodInfoCore (GetUtf8String (jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
+					return GetReplacementMethodInfoCore (GetUtf8String ((byte*) jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
 				}
 			}
 

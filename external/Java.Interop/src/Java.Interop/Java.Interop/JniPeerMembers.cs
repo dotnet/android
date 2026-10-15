@@ -266,9 +266,9 @@ namespace Java.Interop {
 
 		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, string fallbackTypeName)
 		{
-			if (info.TargetJniTypeUtf8 != null) {
+			if (info.TargetJniTypeUtf8Pointer != null) {
 				unsafe {
-					return new JniType (info.TargetJniTypeUtf8);
+					return new JniType (info.TargetJniTypeUtf8Pointer);
 				}
 			}
 
@@ -284,19 +284,19 @@ namespace Java.Interop {
 			ReadOnlySpan<char> fallbackSignature,
 			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			if (info.TargetJniMethodNameUtf8 != null) {
+			if (info.TargetJniMethodNameUtf8Pointer != null) {
 				unsafe {
-					if (info.TargetJniMethodSignatureUtf8 != null)
-						return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+					if (info.TargetJniMethodSignatureUtf8Pointer != null)
+						return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8Pointer, info.TargetJniMethodSignatureUtf8Pointer, out method);
 					var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
-					return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, signature, out method);
+					return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8Pointer, signature, out method);
 				}
 			}
 
 			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
-			if (info.TargetJniMethodSignatureUtf8 != null) {
+			if (info.TargetJniMethodSignatureUtf8Pointer != null) {
 				unsafe {
-					return type.TryGetInstanceMethod (name, info.TargetJniMethodSignatureUtf8, out method);
+					return type.TryGetInstanceMethod (name, info.TargetJniMethodSignatureUtf8Pointer, out method);
 				}
 			}
 			var fallback = info.TargetJniMethodSignature is string targetSignatureValue ? targetSignatureValue.AsSpan () : fallbackSignature;
@@ -310,19 +310,19 @@ namespace Java.Interop {
 			ReadOnlySpan<char> fallbackSignature,
 			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			if (info.TargetJniMethodNameUtf8 != null) {
+			if (info.TargetJniMethodNameUtf8Pointer != null) {
 				unsafe {
-					if (info.TargetJniMethodSignatureUtf8 != null)
-						return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+					if (info.TargetJniMethodSignatureUtf8Pointer != null)
+						return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8Pointer, info.TargetJniMethodSignatureUtf8Pointer, out method);
 					var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
-					return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, signature, out method);
+					return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8Pointer, signature, out method);
 				}
 			}
 
 			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
-			if (info.TargetJniMethodSignatureUtf8 != null) {
+			if (info.TargetJniMethodSignatureUtf8Pointer != null) {
 				unsafe {
-					return type.TryGetStaticMethod (name, info.TargetJniMethodSignatureUtf8, out method);
+					return type.TryGetStaticMethod (name, info.TargetJniMethodSignatureUtf8Pointer, out method);
 				}
 			}
 			var fallback = info.TargetJniMethodSignature is string targetSignatureValue ? targetSignatureValue.AsSpan () : fallbackSignature;
@@ -342,9 +342,9 @@ namespace Java.Interop {
 
 		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
 		{
-			if (info.TargetJniTypeUtf8 != null) {
+			if (info.TargetJniTypeUtf8Pointer != null) {
 				unsafe {
-					return GetStringFromNullTerminated (info.TargetJniTypeUtf8);
+					return GetStringFromNullTerminated (info.TargetJniTypeUtf8Pointer);
 				}
 			}
 
@@ -355,9 +355,9 @@ namespace Java.Interop {
 
 		static string GetTargetMethodNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
-			if (info.TargetJniMethodNameUtf8 != null) {
+			if (info.TargetJniMethodNameUtf8Pointer != null) {
 				unsafe {
-					return GetStringFromNullTerminated (info.TargetJniMethodNameUtf8);
+					return GetStringFromNullTerminated (info.TargetJniMethodNameUtf8Pointer);
 				}
 			}
 
@@ -368,9 +368,9 @@ namespace Java.Interop {
 
 		static string GetTargetMethodSignatureForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
-			if (info.TargetJniMethodSignatureUtf8 != null) {
+			if (info.TargetJniMethodSignatureUtf8Pointer != null) {
 				unsafe {
-					return GetStringFromNullTerminated (info.TargetJniMethodSignatureUtf8);
+					return GetStringFromNullTerminated (info.TargetJniMethodSignatureUtf8Pointer);
 				}
 			}
 

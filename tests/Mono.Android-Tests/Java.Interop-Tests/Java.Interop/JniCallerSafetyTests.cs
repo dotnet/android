@@ -25,9 +25,9 @@ public class JniCallerSafetyTests {
 			info = new JniRuntime.ReplacementMethodInfo {
 				SourceJniType = "example/Source",
 				TargetJniType = "example/Target",
-				TargetJniTypeUtf8 = (byte*) pointer,
-				TargetJniMethodNameUtf8 = (byte*) pointer,
-				TargetJniMethodSignatureUtf8 = (byte*) pointer,
+				TargetJniTypeUtf8Pointer = (byte*) pointer,
+				TargetJniMethodNameUtf8Pointer = (byte*) pointer,
+				TargetJniMethodSignatureUtf8Pointer = (byte*) pointer,
 			};
 		}
 
@@ -75,9 +75,9 @@ public class JniCallerSafetyTests {
 		Assert.AreEqual ("()V", result.GetValueOrDefault ().SourceJniMethodSignature);
 	}
 
-	[TestCase (nameof (JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8))]
-	[TestCase (nameof (JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8))]
-	[TestCase (nameof (JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8))]
+	[TestCase (nameof (JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8Pointer))]
+	[TestCase (nameof (JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8Pointer))]
+	[TestCase (nameof (JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8Pointer))]
 	public void BorrowedRemappingSettersRequireUnsafe (string name)
 	{
 		var property = typeof (JniRuntime.ReplacementMethodInfo).GetProperty (name)
@@ -93,7 +93,7 @@ public class JniCallerSafetyTests {
 	public void BorrowedTypeNameProducerRequiresUnsafe ()
 	{
 		var method = typeof (JniRuntime.JniTypeManager).GetMethod (
-			"GetReplacementTypeInfoCore", BindingFlags.Instance | BindingFlags.NonPublic)
+			"GetReplacementTypeInfoPointerCore", BindingFlags.Instance | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException ("Missing borrowed type-name producer.");
 		Assert.IsTrue (RequiresUnsafe (method));
 		Assert.AreEqual (typeof (byte*).MakeByRefType (), method.GetParameters () [2].ParameterType);
@@ -105,6 +105,84 @@ public class JniCallerSafetyTests {
 	{
 		using JniRuntime.JniTypeManager manager = useNative ? new NativeTypeNameManager () : new ManagedTypeNameManager ();
 		Assert.AreEqual (useNative ? "example/Native" : "example/Managed", manager.GetReplacementType ("example/Source"));
+	}
+
+	[TestCase ("TargetJniTypeUtf8")]
+	[TestCase ("TargetJniMethodNameUtf8")]
+	[TestCase ("TargetJniMethodSignatureUtf8")]
+	public void LegacyRemappingAccessorsRemainSafeAndWarningObsolete (string name)
+	{
+		var property = typeof (JniRuntime.ReplacementMethodInfo).GetProperty (name)
+			?? throw new InvalidOperationException ($"Missing legacy pointer property {name}.");
+		Assert.AreEqual (typeof (IntPtr), property.PropertyType);
+		var obsolete = property.GetCustomAttribute<ObsoleteAttribute> ()
+			?? throw new InvalidOperationException ("Legacy pointer property must be obsolete.");
+		Assert.IsFalse (obsolete.IsError);
+		var getter = property.GetMethod ?? throw new InvalidOperationException ("Missing legacy getter.");
+		var setter = property.SetMethod ?? throw new InvalidOperationException ("Missing legacy setter.");
+		Assert.IsFalse (RequiresUnsafe (getter));
+		Assert.IsFalse (RequiresUnsafe (setter));
+	}
+
+	[TestCase ("GetReplacementTypeInfoCore")]
+	[TestCase ("GetReplacementMethodInfoCore")]
+	public void LegacyRemappingHooksRemainSafeAndWarningObsolete (string name)
+	{
+		var method = typeof (JniRuntime.JniTypeManager).GetMethods (BindingFlags.Instance | BindingFlags.NonPublic)
+			.Single (m => m.Name == name && m.GetParameters ().Any (p =>
+				p.ParameterType == typeof (IntPtr) || p.ParameterType == typeof (IntPtr).MakeByRefType ()));
+		var obsolete = method.GetCustomAttribute<ObsoleteAttribute> ()
+			?? throw new InvalidOperationException ("Legacy pointer hook must be obsolete.");
+		Assert.IsFalse (obsolete.IsError);
+		Assert.IsTrue (method.IsVirtual);
+		Assert.IsFalse (RequiresUnsafe (method));
+	}
+
+	[Test]
+	public void LegacyRemappingPropertiesShareTypedStorage ()
+	{
+		var address = new IntPtr (1);
+#pragma warning disable CS0618 // Exercise the preserved native-int accessors without dereferencing them.
+		var legacy = new JniRuntime.ReplacementMethodInfo {
+			TargetJniTypeUtf8 = address,
+			TargetJniMethodNameUtf8 = address,
+			TargetJniMethodSignatureUtf8 = address,
+		};
+		var typed = new JniRuntime.ReplacementMethodInfo ();
+		unsafe {
+			typed.TargetJniTypeUtf8Pointer = (byte*) address;
+			typed.TargetJniMethodNameUtf8Pointer = (byte*) address;
+			typed.TargetJniMethodSignatureUtf8Pointer = (byte*) address;
+			Assert.IsTrue (legacy.TargetJniTypeUtf8Pointer == typed.TargetJniTypeUtf8Pointer);
+			Assert.IsTrue (legacy.TargetJniMethodNameUtf8Pointer == typed.TargetJniMethodNameUtf8Pointer);
+			Assert.IsTrue (legacy.TargetJniMethodSignatureUtf8Pointer == typed.TargetJniMethodSignatureUtf8Pointer);
+		}
+		Assert.AreEqual (address, typed.TargetJniTypeUtf8);
+		Assert.AreEqual (address, typed.TargetJniMethodNameUtf8);
+		Assert.AreEqual (address, typed.TargetJniMethodSignatureUtf8);
+#pragma warning restore CS0618
+		Assert.IsTrue (legacy.Equals (typed));
+		Assert.AreEqual (legacy.GetHashCode (), typed.GetHashCode ());
+		Assert.AreEqual (legacy.ToString (), typed.ToString ());
+	}
+
+	[Test]
+	public void TypedTypeLookupPreservesLegacyOverrideDispatch ()
+	{
+		using var manager = new LegacyTypeNameManager ();
+		Assert.AreEqual ("example/Legacy", manager.GetReplacementType ("example/Source"));
+		Assert.AreEqual (1, manager.LegacyCalls);
+	}
+
+	[Test]
+	public void TypedMethodLookupPreservesLegacyOverrideAndBaseDispatch ()
+	{
+		using var manager = new LegacyMethodManager ();
+		var result = manager.LookupLiteral ().GetValueOrDefault ();
+		Assert.AreEqual (1, manager.LegacyCalls);
+		Assert.AreEqual ("example/Source", result.SourceJniType);
+		Assert.AreEqual ("method", result.SourceJniMethodName);
+		Assert.AreEqual ("()V", result.SourceJniMethodSignature);
 	}
 
 	[Test]
@@ -164,13 +242,15 @@ public class JniCallerSafetyTests {
 		}
 	}
 
-#if DEBUG
 	[TestCase (0)]
 	[TestCase (1)]
 	[TestCase (2)]
 	[Category ("NativeAOTIgnore")]
 	public void BorrowedMethodMetadataReadsLiveBuffersLazily (int variant)
 	{
+		if (typeof (JniMethodInfo).GetField ("name", BindingFlags.Instance | BindingFlags.NonPublic) == null)
+			Assert.Ignore ("The loaded Java.Interop library was built without diagnostic method metadata.");
+
 		const string name = "m\u00E9thod";
 		const string signature = "()V";
 		var parameterTypes = variant switch {
@@ -195,7 +275,6 @@ public class JniCallerSafetyTests {
 			}
 		}
 	}
-#endif
 
 	[Test]
 	[Category ("NativeAOTIgnore")]
@@ -218,7 +297,7 @@ public class JniCallerSafetyTests {
 	[UnmanagedCallersOnly]
 	static void NoOpCallback (IntPtr environment, IntPtr receiver) { }
 
-	sealed class DiagnosticTypeManager : JniRuntime.JniTypeManager {
+	class DiagnosticTypeManager : JniRuntime.JniTypeManager {
 
 		public JniRuntime.ReplacementMethodInfo? LookupLiteral ()
 		{
@@ -245,15 +324,44 @@ public class JniCallerSafetyTests {
 	}
 
 	sealed class NativeTypeNameManager : ManagedTypeNameManager {
-		protected override unsafe void GetReplacementTypeInfoCore (
+		protected override unsafe void GetReplacementTypeInfoPointerCore (
 			string jniSimpleReference, [MaybeNull] out string replacement, out byte* replacementUtf8)
 		{
 			unsafe {
-				base.GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out replacementUtf8);
+				base.GetReplacementTypeInfoPointerCore (jniSimpleReference, out replacement, out replacementUtf8);
 			}
 			fixed (byte* name = "example/Native"u8) {
 				replacementUtf8 = name;
 			}
+		}
+	}
+
+	sealed class LegacyTypeNameManager : ManagedTypeNameManager {
+		public int LegacyCalls { get; private set; }
+
+		[Obsolete ("Tests legacy override dispatch.")]
+		protected override void GetReplacementTypeInfoCore (
+			string jniSimpleReference, [MaybeNull] out string replacement, out IntPtr replacementUtf8)
+		{
+			base.GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out replacementUtf8);
+			LegacyCalls++;
+			unsafe {
+				fixed (byte* name = "example/Legacy"u8) {
+					replacementUtf8 = (IntPtr) name;
+				}
+			}
+		}
+	}
+
+	sealed class LegacyMethodManager : DiagnosticTypeManager {
+		public int LegacyCalls { get; private set; }
+
+		[Obsolete ("Tests legacy override dispatch.")]
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (
+			IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+		{
+			LegacyCalls++;
+			return base.GetReplacementMethodInfoCore (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
 		}
 	}
 }
