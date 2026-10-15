@@ -20,13 +20,15 @@ namespace Java.Interop {
 	public sealed class JniType : IDisposable {
 
 		[return: NotNullIfNotNull ("classFileData")]
-		public static unsafe JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
+		public static JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
 			if (classFileData == null)
 				return null;
-			fixed (byte* buf = classFileData) {
-				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
-				return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+			unsafe {
+				fixed (byte* buf = classFileData) {
+					var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
+					return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+				}
 			}
 		}
 
@@ -249,7 +251,9 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			unsafe {
+				return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			}
 		}
 
 		public JniFieldInfo GetInstanceField (string name, string signature)

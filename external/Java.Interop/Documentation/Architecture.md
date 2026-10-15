@@ -81,6 +81,25 @@ an unsafe context; the API baseline records those intermediate compilation
 semantics without `RequiresUnsafe` metadata. Global caller enforcement and
 address-only safe getters are a separate activation change.
 
+## Owned JNI implementation memory
+
+Managed alternatives such as `JniType.DefineClass` with a `byte[]` and
+`JniEnvironment.Strings.NewString` with a `string` own their pinning. Unsafe
+operations remain inside their implementations; local scopes do not transfer
+buffer ownership to callers or change JNI reference cleanup.
+
+`JniNativeMethod` preserves the sequential layout of JNI's `JNINativeMethod`.
+Its callback is stored as `void*`, since JNI callbacks have heterogeneous
+signatures. Name and signature storage must survive registration. The callback
+must match its JNI descriptor and remain callable and rooted until successful
+unregistration **and completion of all in-flight callbacks**.
+
+The project uses preview syntax for pointer declarations outside unsafe type
+contexts and safe explicit-layout scalar fields. It does **not** opt into the
+updated C# memory-safety rules. Object-reference control blocks and JavaVM
+arguments retain their allocation, encoding, and release behavior. JNI object
+handles and method/field IDs remain opaque `IntPtr` values.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java
