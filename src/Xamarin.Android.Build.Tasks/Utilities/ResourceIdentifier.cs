@@ -1,8 +1,7 @@
 #nullable enable
 using System;
-using System.CodeDom;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -48,7 +47,7 @@ namespace Xamarin.Android.Tasks
 		internal static string GetResourceName (string type, string name, Dictionary<string, string> map, TaskLoggingHelper log)
 		{
 			string? mappedValue;
-			string key = string.Format ("{0}{1}{2}", type, Path.DirectorySeparatorChar, name).ToLowerInvariant ();
+			string key = string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}", type, Path.DirectorySeparatorChar, name).ToLowerInvariant ();
 
 			if (map.TryGetValue (key, out mappedValue)) {
 				log.LogDebugMessage ("  - Remapping resource: {0}.{1} -> {2}", type, name, mappedValue);

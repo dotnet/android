@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -35,9 +36,9 @@ namespace Xamarin.Android.Tasks
 		public override string ToString ()
 		{
 			if (Type != RType.Array) {
-				return $"int {ResourceTypeName ?? ""} {Identifier ?? ""} { (Type == RType.Integer ? $"0x{Id.ToString ("x8")}" : $"{Id}")}";
+				return $"int {ResourceTypeName ?? ""} {Identifier ?? ""} { (Type == RType.Integer ? $"0x{Id.ToString ("x8", CultureInfo.CurrentCulture)}" : $"{Id}")}";
 			}
-			return $"int[] {ResourceTypeName ?? ""} {Identifier ?? ""} {{ {String.Join (", ", (Ids ?? []).Select (x => $"0x{x.ToString ("x8")}"))} }}";
+			return $"int[] {ResourceTypeName ?? ""} {Identifier ?? ""} {{ {String.Join (", ", (Ids ?? []).Select (x => $"0x{x.ToString ("x8", CultureInfo.CurrentCulture)}"))} }}";
 		}
 
 		public string ToSortedString ()
