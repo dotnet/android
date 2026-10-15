@@ -69,6 +69,7 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
+		[DebuggerDisableUserUnhandledExceptions]
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -76,7 +77,8 @@ namespace Android.Runtime {
 
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
-			// TODO: Restore debugger exception notification once the replacement integration is ready.
+			Debugger.BreakForUserUnhandledException (javaException);
+
 			try {
 				var jltp = javaException as JavaProxyThrowable;
 				Exception? innerException = jltp?.InnerException;
