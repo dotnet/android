@@ -91,6 +91,15 @@ namespace Xamarin.Android.Build.Tests {
 			var emittedProxy = assembly.MainModule.Types.Single (type => type.Name == proxy.TypeName);
 			Assert.AreEqual (hasNativeConstructor, emittedProxy.Methods.Any (method => method.Name == "nctor_0_uco"));
 			Assert.IsTrue (emittedProxy.Methods.Any (method => method.Name == "CreateInstance"));
+			foreach (var uco in proxy.UcoMethods) {
+				var wrapper = emittedProxy.Methods.Single (method => method.Name == uco.WrapperName);
+				var handler = wrapper.Body.ExceptionHandlers.Single ();
+				Assert.AreEqual (wrapper.Body.Instructions [0], handler.TryStart, "No bridge wait is needed before the callback.");
+				var unhandledException = wrapper.Body.Instructions.Select (instruction => instruction.Operand)
+					.OfType<Mono.Cecil.MethodReference> ().Single (method => method.Name == "UnhandledException");
+				Assert.AreEqual ("Android.Runtime.AndroidEnvironment", unhandledException.DeclaringType.FullName);
+				Assert.AreEqual ("Mono.Android", unhandledException.DeclaringType.Scope.Name);
+			}
 			TestContext.Out.WriteLine ($"abstract={isAbstract}, deferred={deferred}, callback={hasCallback}: Java nctor={hasNativeConstructor}, native registrations=[{string.Join (", ", proxy.NativeRegistrations.Select (registration => registration.JniMethodName))}]");
 		}
 

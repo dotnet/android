@@ -321,7 +321,6 @@
           └── net-android-34.0
               ├── Java.Interop.dll
               ├── Java.Interop.xml
-              ├── Mono.Android.Runtime.dll
               ├── Mono.Android.dll
               └── Mono.Android.xml
     -->

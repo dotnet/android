@@ -210,7 +210,6 @@
     <Compile Include="Android.Runtime\AndroidExceptionManager.cs" />
     <Compile Include="Android.Runtime\ManagedObjectReferenceManager.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
-    <Compile Include="Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
@@ -247,7 +246,6 @@
     <Compile Include="Android.Runtime\RaiseThrowableEventArgs.cs" />
     <Compile Include="Android.Runtime\RequiresPermissionAttribute.cs" />
     <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
-    <Compile Include="Android.Runtime\RuntimeConstants.cs" />
     <Compile Include="Android.Runtime\ResourceIdManager.cs" />
     <Compile Include="Android.Runtime\StartupNoGCRegion.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
@@ -354,6 +352,7 @@
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
     <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeEventSource.cs" />
+    <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapTypeManager.cs" />
@@ -393,10 +392,6 @@
     <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == '$(DotNetTargetFramework)' ">
-    <ProjectReference Include="..\Mono.Android.Runtime\Mono.Android.Runtime.csproj" />
   </ItemGroup>
 
   <!--NOTE: a workaround for the test runner in VS Windows-->
