@@ -6,7 +6,7 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Assembly,
 			AllowMultiple=true,
 			Inherited=false)]
-	[Obsolete ("This attribute is deprecated and will be removed in a future release. Use the @(AndroidExternalJavaLibrary) MSBuild item group instead.")]
+	[Obsolete ("This attribute is deprecated and will be removed in a future release. Use the @(AndroidExternalJavaLibrary) MSBuild item group instead.", error: true)]
 	public class DoNotPackageAttribute : Attribute
 	{
 		public DoNotPackageAttribute (string jarFile)
@@ -17,4 +17,3 @@ namespace Java.Interop
 		public string JarFile { get; set; }
 	}
 }
-
