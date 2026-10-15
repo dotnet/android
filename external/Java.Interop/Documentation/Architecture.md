@@ -55,6 +55,41 @@ all callbacks already running have finished.
 through registration. Its raw callback must match the JNI descriptor's ABI,
 including the environment and receiver/class arguments.
 
+## Borrowed UTF-8 metadata
+
+Raw UTF-8 names and signatures are stored as `byte*`, not opaque `IntPtr`
+values. The `ReplacementMethodInfo.TargetJni*Utf8Pointer` properties and the
+`JniTypeManager.GetReplacementTypeInfoUnsafe` and
+`GetReplacementMethodInfoUnsafe` hooks expose these borrowed buffers explicitly.
+Their `<safety>` documentation specifies readable NUL-terminated storage and its
+lifetime. Retained names must remain alive and unchanged for the runtime's
+lifetime and every subsequent cached metadata read. Java.Interop does not own
+or free them. Managed-string alternatives remain safe to construct and use;
+non-null pointers take precedence over managed replacement names.
+
+Peer members cache the borrowed type name and lazily cache its managed
+conversion. In Debug, `JniMethodInfo` also reads borrowed names and signatures
+lazily. Its raw constructors require an unsafe context, while its public
+diagnostic getters use the lifetime established at construction. Remapping
+equality, hashing, and `ToString` compare or format addresses without reading
+their contents. JNI object handles and method/field IDs remain opaque handles.
+
+The native-int `TargetJni*Utf8` properties and
+`GetReplacementTypeInfoCore`/`GetReplacementMethodInfoCore` virtual hooks shipped
+in .NET 11 RC2. They retain all six accessors and both virtual slots with their
+original signatures and safe-call behavior as warning-obsolete compatibility
+APIs. These are explicit exceptions to caller-unsafe enforcement, not proof
+that an address is valid; their backing-memory obligations are unchanged.
+Typed base hooks dispatch through the old virtual slots so existing custom
+overrides and their base calls continue to run. The typed type-name producer
+has a distinct name to avoid ambiguity in existing `out var` calls.
+
+This compatibility preparation does not enable the updated C# memory-safety
+rules. Under the existing rules, even reading a typed pointer address requires
+an unsafe context; the API baseline records those intermediate compilation
+semantics without `RequiresUnsafe` metadata. Global caller enforcement and
+address-only safe getters are a separate activation change.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java
