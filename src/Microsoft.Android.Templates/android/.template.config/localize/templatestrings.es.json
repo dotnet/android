@@ -2,6 +2,10 @@
   "author": "Microsoft",
   "name": "Aplicación de Android",
   "description": "Proyecto para crear una aplicación .NET para Android",
+  "symbols/Framework/description": "The target framework for the project.",
+  "symbols/Framework/choices/net11.0-android/description": "Target net11.0-android",
+  "symbols/Framework/choices/net10.0-android/description": "Target net10.0-android",
   "symbols/packageName/description": "Invalida el nombre del paquete en AndroidManifest.xml",
-  "symbols/supportedOSVersion/description": "Invalida $(SupportedOSPlatformVersion) en el proyecto"
+  "symbols/supportedOSVersion/description": "Invalida $(SupportedOSPlatformVersion) en el proyecto",
+  "symbols/skipRestore/description": "If specified, skips the automatic restore of the project on create."
 }

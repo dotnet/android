@@ -17,7 +17,6 @@ This file is used by all project types, including binding projects.
     <_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
     <_AndroidLibraryImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
     <_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
-    <_AndroidManagedResourceDesignerFile>$(_AndroidIntermediateDesignTimeBuildDirectory)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
   </PropertyGroup>
 
   <Target Name="_SetupMSBuildAllProjects">
@@ -39,9 +38,6 @@ This file is used by all project types, including binding projects.
   <Target Name="_SetupDesignTimeBuildForCompile">
     <PropertyGroup>
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
-      <ManagedDesignTimeBuild Condition=" '$(AndroidGenerateResourceDesigner)' == 'True' And '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'true' And '$(DesignTimeBuild)' == 'true' And '$(BuildingInsideVisualStudio)' == 'true' ">true</ManagedDesignTimeBuild>
-      <ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' And '$(DesignTimeBuild)' == 'True' And '$(AndroidUseDesignerAssembly)' == 'True' " >True</ManagedDesignTimeBuild>
-      <ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
       <_AndroidStampDirectory Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidIntermediateDesignTimeStampDirectory)</_AndroidStampDirectory>
       <_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
       <_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>

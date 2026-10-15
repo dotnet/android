@@ -1402,10 +1402,17 @@ Mono. It does not select MIBC profiles or dynamic PGO for CoreCLR.
 ## AndroidUseDesignerAssembly
 
 A bool property which controls if the build system will generate an
-`_Microsoft.Android.Resource.Designer.dll` as apposed to a `Resource.Designer.cs` file. The benefits of this are smaller applications and
+`_Microsoft.Android.Resource.Designer.dll` as apposed to a `Resource.designer.cs` file. The benefits of this are smaller applications and
 faster startup time.
 
 The default value is `true` in .NET 8.
+
+When this property is `true`, design-time builds use the managed resource
+parser to generate the designer assembly on all platforms.
+
+Starting in .NET 12, the separate managed design-time source generator has been
+removed. When this property is `false`, run a normal build to generate or
+refresh `Resource.designer.cs`; design-time builds do not regenerate it.
 
 As a Nuget Author it is recommended that you ship three versions of
 the assembly if you want to maintain backward compatibility.
@@ -1468,9 +1475,14 @@ property is used.
 
 ## AndroidUseManagedDesignTimeResourceGenerator
 
-A boolean property that
-will switch over the design time builds to use the managed resource parser rather
-than `aapt`.
+A boolean property that switched design-time builds to use the managed resource
+parser rather than `aapt`.
+
+Removed in .NET 12. Use
+[`$(AndroidUseDesignerAssembly)`](#androidusedesignerassembly) instead.
+When `true` (the default), design-time builds use managed designer assembly
+generation on all platforms. When `false`, run a normal build to generate or
+refresh `Resource.designer.cs`; design-time builds do not regenerate it.
 
 ## AndroidUseNegotiateAuthentication
 

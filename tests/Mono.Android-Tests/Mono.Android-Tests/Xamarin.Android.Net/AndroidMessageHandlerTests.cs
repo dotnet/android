@@ -355,6 +355,7 @@ namespace Xamarin.Android.NetTests
 
 
 		[Test]
+		[Category ("AndroidMessageHandlerExceptions")]
 		public void ConnectionFailureThrowsHttpRequestException ()
 		{
 			// https://github.com/dotnet/android/issues/5761
@@ -371,6 +372,7 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
+		[Category ("AndroidMessageHandlerExceptions")]
 		public void ExceedingMaxAutomaticRedirectionsThrowsHttpRequestException ()
 		{
 			// https://github.com/dotnet/android/issues/5761
