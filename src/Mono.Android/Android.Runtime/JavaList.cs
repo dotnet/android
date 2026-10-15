@@ -35,16 +35,19 @@ namespace Android.Runtime {
 					targetType);
 		}
 
-		internal unsafe JniObjectReference InternalGetReference (int location)
+		internal JniObjectReference InternalGetReference (int location)
 		{
-			const string id = "get.(I)Ljava/lang/Object;";
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (location),
-				};
-				return list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "get.(I)Ljava/lang/Object;";
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (location),
+					};
+					return list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				}
 			}
 		}
 
@@ -57,13 +60,16 @@ namespace Android.Runtime {
 		//  Rationale
 		//    `java.util.List.iterator()` is not documented to throw any exceptions.
 		//
-		public virtual unsafe Java.Util.IIterator Iterator ()
+		public virtual Java.Util.IIterator Iterator ()
 		{
-			const string id = "iterator.()Ljava/util/Iterator;";
-			JniObjectReference obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, null);
-			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
-					obj.Handle,
-					JniHandleOwnership.TransferLocalRef)!;
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "iterator.()Ljava/util/Iterator;";
+				JniObjectReference obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, null);
+				return Java.Lang.Object.GetObject<Java.Util.IIterator> (
+						obj.Handle,
+						JniHandleOwnership.TransferLocalRef)!;
+			}
 		}
 
 		//
@@ -77,30 +83,33 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#set(int,%20E)
 		//
-		internal unsafe void InternalSet (int location, object? value)
+		internal void InternalSet (int location, object? value)
 		{
-			const string id = "set.(ILjava/lang/Object;)Ljava/lang/Object;";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (value);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
-					new JniArgumentValue (location),
-					new JniArgumentValue (lref),
-				};
-				var r = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-				JniObjectReference.Dispose (ref r);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "set.(ILjava/lang/Object;)Ljava/lang/Object;";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
+						new JniArgumentValue (location),
+						new JniArgumentValue (lref),
+					};
+					var r = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+					JniObjectReference.Dispose (ref r);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 
@@ -117,17 +126,20 @@ namespace Android.Runtime {
 		//    it may throw.
 		//
 		[Register (".ctor", "()V", "")]
-		public unsafe JavaList ()
+		public JavaList ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
-				return;
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				if (Handle != IntPtr.Zero)
+					return;
 
-			const string id = "()V";
-			var methods = JniPeerMembers.InstanceMethods;
-			var obj = methods.StartCreateInstance (id, GetType (), null);
-			SetHandle (obj.Handle, JniHandleOwnership.TransferLocalRef);
-			methods.FinishCreateInstance (id, this, null);
+				const string id = "()V";
+				var methods = JniPeerMembers.InstanceMethods;
+				var obj = methods.StartCreateInstance (id, GetType (), null);
+				SetHandle (obj.Handle, JniHandleOwnership.TransferLocalRef);
+				methods.FinishCreateInstance (id, this, null);
+			}
 		}
 
 		public JavaList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
@@ -152,10 +164,13 @@ namespace Android.Runtime {
 		//  Rationale
 		//    `java.util.List.size()` is not documented to throw any exceptions.
 		//
-		public unsafe int Count {
+		public int Count {
 			get {
-				const string id = "size.()I";
-				return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, null);
+				unsafe {
+					// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+					const string id = "size.()I";
+					return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, null);
+				}
 			}
 		}
 
@@ -197,28 +212,31 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#add(E)
 		//
-		public unsafe int Add (object? item)
+		public int Add (object? item)
 		{
-			const string id = "add.(Ljava/lang/Object;)Z";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (lref),
-				};
-				list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "add.(Ljava/lang/Object;)Z";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (lref),
+					};
+					list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
+				return Count - 1;
 			}
-			return Count - 1;
 		}
 
 		//
@@ -232,13 +250,16 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#clear()
 		//
-		public unsafe void Clear ()
+		public void Clear ()
 		{
-			const string id = "clear.()V";
-			try {
-				list_members.InstanceMethods.InvokeAbstractVoidMethod (id, this, null);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "clear.()V";
+				try {
+					list_members.InstanceMethods.InvokeAbstractVoidMethod (id, this, null);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				}
 			}
 		}
 
@@ -253,39 +274,45 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#contains(java.lang.Object)
 		//
-		public unsafe bool Contains (object? item)
+		public bool Contains (object? item)
 		{
-			const string id = "contains.(Ljava/lang/Object;)Z";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (lref),
-				};
-				return list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "contains.(Ljava/lang/Object;)Z";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (lref),
+					};
+					return list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 
-		public unsafe void CopyTo (Array array, int array_index)
+		public void CopyTo (Array array, int array_index)
 		{
-			if (array == null)
-				throw new ArgumentNullException ("array");
-			if (array_index < 0)
-				throw new ArgumentOutOfRangeException ("array_index");
-			if (array.Length < array_index + Count)
-				throw new ArgumentException ("array");
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				if (array == null)
+					throw new ArgumentNullException ("array");
+				if (array_index < 0)
+					throw new ArgumentOutOfRangeException ("array_index");
+				if (array.Length < array_index + Count)
+					throw new ArgumentException ("array");
 
-			var converter = new JavaConvert.ArrayElementConverter (array);
-			int c = Count;
-			for (int i = 0; i < c; i++) {
-				var obj = InternalGetReference (i);
-				array.SetValue (converter.FromJniHandle (obj.Handle, JniHandleOwnership.TransferLocalRef), array_index + i);
+				var converter = new JavaConvert.ArrayElementConverter (array);
+				int c = Count;
+				for (int i = 0; i < c; i++) {
+					var obj = InternalGetReference (i);
+					array.SetValue (converter.FromJniHandle (obj.Handle, JniHandleOwnership.TransferLocalRef), array_index + i);
+				}
 			}
 		}
 
@@ -305,22 +332,25 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#indexOf(java.lang.Object)
 		//
-		public virtual unsafe int IndexOf (object? item)
+		public virtual int IndexOf (object? item)
 		{
-			const string id = "indexOf.(Ljava/lang/Object;)I";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (lref),
-				};
-				return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, parameters);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "indexOf.(Ljava/lang/Object;)I";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (lref),
+					};
+					return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, parameters);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 
@@ -335,22 +365,25 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#lastIndexOf(java.lang.Object)
 		//
-		public virtual unsafe int LastIndexOf (object item)
+		public virtual int LastIndexOf (object item)
 		{
-			const string id = "lastIndexOf.(Ljava/lang/Object;)I";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (lref),
-				};
-				return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, parameters);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "lastIndexOf.(Ljava/lang/Object;)I";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (lref),
+					};
+					return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, parameters);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 
@@ -365,29 +398,32 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#add(int,%20E)
 		//
-		public unsafe void Insert (int index, object? item)
+		public void Insert (int index, object? item)
 		{
-			const string id = "add.(ILjava/lang/Object;)V";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
-					new JniArgumentValue (index),
-					new JniArgumentValue (lref),
-				};
-				list_members.InstanceMethods.InvokeAbstractVoidMethod (id, this, parameters);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "add.(ILjava/lang/Object;)V";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
+						new JniArgumentValue (index),
+						new JniArgumentValue (lref),
+					};
+					list_members.InstanceMethods.InvokeAbstractVoidMethod (id, this, parameters);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 
@@ -410,19 +446,22 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#remove(int)
 		//
-		public unsafe void RemoveAt (int index)
+		public void RemoveAt (int index)
 		{
-			const string id = "remove.(I)Ljava/lang/Object;";
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (index),
-				};
-				JniObjectReference r = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-				JniObjectReference.Dispose (ref r);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "remove.(I)Ljava/lang/Object;";
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (index),
+					};
+					JniObjectReference r = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+					JniObjectReference.Dispose (ref r);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				}
 			}
 		}
 		
@@ -437,30 +476,33 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#set(int,%20E)
 		//
-		public virtual unsafe Java.Lang.Object? Set (int location, Java.Lang.Object item)
+		public virtual Java.Lang.Object? Set (int location, Java.Lang.Object item)
 		{
-			const string id = "set.(ILjava/lang/Object;)Ljava/lang/Object;";
-			JniObjectReference obj;
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
-					new JniArgumentValue (location),
-					new JniArgumentValue (item),
-				};
-				obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "set.(ILjava/lang/Object;)Ljava/lang/Object;";
+				JniObjectReference obj;
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
+						new JniArgumentValue (location),
+						new JniArgumentValue (item),
+					};
+					obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				}
+				return Java.Lang.Object.GetObject<Java.Lang.Object> (
+						obj.Handle,
+						JniHandleOwnership.TransferLocalRef);
 			}
-			return Java.Lang.Object.GetObject<Java.Lang.Object> (
-					obj.Handle,
-					JniHandleOwnership.TransferLocalRef);
 		}
 
 		//
@@ -475,24 +517,27 @@ namespace Android.Runtime {
 		//     https://developer.android.com/reference/java/util/List?hl=en#subList(int,%20int)
 		//     https://developer.android.com/reference/java/util/ArrayList?hl=en#subList(int,%20int)
 		//
-		public virtual unsafe JavaList SubList (int start, int end)
+		public virtual JavaList SubList (int start, int end)
 		{
-			const string id = "subList.(II)Ljava/util/List;";
-			JniObjectReference obj;
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
-					new JniArgumentValue (start),
-					new JniArgumentValue (end),
-				};
-				obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "subList.(II)Ljava/util/List;";
+				JniObjectReference obj;
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
+						new JniArgumentValue (start),
+						new JniArgumentValue (end),
+					};
+					obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				}
+				return new JavaList (
+						obj.Handle,
+						JniHandleOwnership.TransferLocalRef);
 			}
-			return new JavaList (
-					obj.Handle,
-					JniHandleOwnership.TransferLocalRef);
 		}
 		
 		public static IList? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
@@ -699,17 +744,20 @@ namespace Android.Runtime {
 		//    it may throw.
 		//
 		[Register (".ctor", "()V", "")]
-		public unsafe JavaList ()
+		public JavaList ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
-				return;
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				if (Handle != IntPtr.Zero)
+					return;
 
-			const string id = "()V";
-			var methods = JniPeerMembers.InstanceMethods;
-			var obj = methods.StartCreateInstance (id, GetType (), null);
-			SetHandle (obj.Handle, JniHandleOwnership.TransferLocalRef);
-			methods.FinishCreateInstance (id, this, null);
+				const string id = "()V";
+				var methods = JniPeerMembers.InstanceMethods;
+				var obj = methods.StartCreateInstance (id, GetType (), null);
+				SetHandle (obj.Handle, JniHandleOwnership.TransferLocalRef);
+				methods.FinishCreateInstance (id, this, null);
+			}
 		}
 
 		public JavaList (IntPtr handle, JniHandleOwnership transfer)
@@ -758,30 +806,33 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#set(int,%20E)
 		//
-		internal unsafe void InternalSet (int location, T value)
+		internal void InternalSet (int location, T value)
 		{
-			const string id = "set.(ILjava/lang/Object;)Ljava/lang/Object;";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (value);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
-					new JniArgumentValue (location),
-					new JniArgumentValue (lref),
-				};
-				var r = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-				JniObjectReference.Dispose (ref r);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "set.(ILjava/lang/Object;)Ljava/lang/Object;";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
+						new JniArgumentValue (location),
+						new JniArgumentValue (lref),
+					};
+					var r = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+					JniObjectReference.Dispose (ref r);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 
@@ -810,26 +861,29 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#add(E)
 		//
-		public unsafe void Add (T item)
+		public void Add (T item)
 		{
-			const string id = "add.(Ljava/lang/Object;)Z";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (lref),
-				};
-				list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "add.(Ljava/lang/Object;)Z";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (lref),
+					};
+					list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 
@@ -844,22 +898,25 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#contains(java.lang.Object)
 		//
-		public unsafe bool Contains (T item)
+		public bool Contains (T item)
 		{
-			const string id = "contains.(Ljava/lang/Object;)Z";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (lref),
-				};
-				return list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "contains.(Ljava/lang/Object;)Z";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (lref),
+					};
+					return list_members.InstanceMethods.InvokeAbstractBooleanMethod (id, this, parameters);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 
@@ -899,22 +956,25 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#indexOf(java.lang.Object)
 		//
-		public unsafe int IndexOf (T item)
+		public int IndexOf (T item)
 		{
-			const string id = "indexOf.(Ljava/lang/Object;)I";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (lref),
-				};
-				return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, parameters);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "indexOf.(Ljava/lang/Object;)I";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (lref),
+					};
+					return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, parameters);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 
@@ -929,29 +989,32 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#add(int,%20E)
 		//
-		public unsafe void Insert (int index, T item)
+		public void Insert (int index, T item)
 		{
-			const string id = "add.(ILjava/lang/Object;)V";
-			IntPtr lref = JavaConvert.ToLocalJniHandle (item);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
-					new JniArgumentValue (index),
-					new JniArgumentValue (lref),
-				};
-				list_members.InstanceMethods.InvokeAbstractVoidMethod (id, this, parameters);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
-			} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new InvalidCastException (ex.Message, ex);
-			} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NullReferenceException (ex.Message, ex);
-			} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentException (ex.Message, ex);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
-			} finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (item);
+			unsafe {
+				// SAFETY: the declared List member signature matches the arguments; local references and stack argument storage remain live through the JNI call and existing cleanup.
+				const string id = "add.(ILjava/lang/Object;)V";
+				IntPtr lref = JavaConvert.ToLocalJniHandle (item);
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [2] {
+						new JniArgumentValue (index),
+						new JniArgumentValue (lref),
+					};
+					list_members.InstanceMethods.InvokeAbstractVoidMethod (id, this, parameters);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				} finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (item);
+				}
 			}
 		}
 

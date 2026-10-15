@@ -22,13 +22,16 @@ namespace Java.Lang {
 						JNIEnv.StartCreateInstance ("mono/java/lang/RunnableImplementor", "()V"),
 						JniHandleOwnership.TransferLocalRef)
 			{
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				unsafe {
+					// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+					JNIEnv.FinishCreateInstance (Handle, "()V");
 
-				Handler = handler;
-				this.removable = removable;
-				if (removable)
-					lock (instances)
-						instances.AddOrUpdate (handler, this);
+					Handler = handler;
+					this.removable = removable;
+					if (removable)
+						lock (instances)
+							instances.AddOrUpdate (handler, this);
+				}
 			}
 
 			public void Run ()

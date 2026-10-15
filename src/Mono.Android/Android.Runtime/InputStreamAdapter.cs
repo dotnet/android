@@ -13,9 +13,12 @@ namespace Android.Runtime {
 					JNIEnv.StartCreateInstance ("mono/android/runtime/InputStreamAdapter", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
 
-			this.BaseStream = stream;
+				this.BaseStream = stream;
+			}
 		}
 
 		public override void Close ()

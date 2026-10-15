@@ -75,30 +75,46 @@ namespace Android.Widget {
 		*/
 
 		protected override Java.Lang.Object? RawAdapter {
-			get { return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (Adapter)); }
-			set { Adapter = JavaConvert.FromJavaObject<Android.Widget.IAdapter>(value); }
-		}
-
-		public unsafe Android.Widget.IAdapter? Adapter {
-			[Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
 			get {
-				const string id = "getAdapter.()Landroid/widget/Adapter;";
-				try {
-					var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
-					return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (reference.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-					GC.KeepAlive (this);
+				unsafe {
+					// SAFETY: the Adapter-returning getter and one-Adapter void setter match their literal signatures; stack storage and existing KeepAlive retain receiver/value.
+					return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (Adapter));
 				}
 			}
 			set {
-				const string id = "setAdapter.(Landroid/widget/Adapter;)V";
-				try {
-					JniArgumentValue* args = stackalloc JniArgumentValue [1];
-					args [0] = new JniArgumentValue (value);
-					_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
-				} finally {
-					GC.KeepAlive (value);
-					GC.KeepAlive (this);
+				unsafe {
+					// SAFETY: the Adapter-returning getter and one-Adapter void setter match their literal signatures; stack storage and existing KeepAlive retain receiver/value.
+					Adapter = JavaConvert.FromJavaObject<Android.Widget.IAdapter>(value);
+				}
+			}
+		}
+
+		public Android.Widget.IAdapter? Adapter {
+			[Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
+			get {
+				unsafe {
+					// SAFETY: the Adapter-returning getter and one-Adapter void setter match their literal signatures; stack storage and existing KeepAlive retain receiver/value.
+					const string id = "getAdapter.()Landroid/widget/Adapter;";
+					try {
+						var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+						return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (reference.Handle, JniHandleOwnership.TransferLocalRef);
+					} finally {
+						GC.KeepAlive (this);
+					}
+				}
+			}
+			set {
+				unsafe {
+					// SAFETY: the Adapter-returning getter and one-Adapter void setter match their literal signatures; stack storage and existing KeepAlive retain receiver/value.
+					const string id = "setAdapter.(Landroid/widget/Adapter;)V";
+					try {
+						JniArgumentValue* args = stackalloc JniArgumentValue [1];
+						args [0] = new JniArgumentValue (value);
+						_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+					} finally {
+						GC.KeepAlive (value);
+						GC.KeepAlive (this);
+					}
 				}
 			}
 		}

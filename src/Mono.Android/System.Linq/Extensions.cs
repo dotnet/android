@@ -20,8 +20,11 @@ namespace System.Linq {
 		static Extensions ()
 		{
 			IntPtr grefIterable = JNIEnv.FindClass ("java/util/Iterator");
-			id_next = JNIEnv.GetMethodID (grefIterable, "next", "()Ljava/lang/Object;");
-			JNIEnv.DeleteGlobalRef (grefIterable);
+			unsafe {
+				// SAFETY: the class reference is owned here; next is the parameterless Iterator method returning Object.
+				id_next = JNIEnv.GetMethodID (grefIterable, "next", "()Ljava/lang/Object;");
+				JNIEnv.DeleteGlobalRef (grefIterable);
+			}
 		}
 
 		/// <summary>
@@ -39,8 +42,13 @@ namespace System.Linq {
 				throw new ArgumentNullException ("source");
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
+					IntPtr element;
+					unsafe {
+						// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.
+						element = JNIEnv.CallObjectMethod (iterator.Handle, id_next);
+					}
 					yield return JavaConvert.FromJniHandle (
-							JNIEnv.CallObjectMethod (iterator.Handle, id_next),
+							element,
 							JniHandleOwnership.TransferLocalRef);
 				}
 		}
@@ -49,8 +57,13 @@ namespace System.Linq {
 		{
 			using (source)
 				while (source.HasNext) {
+					IntPtr element;
+					unsafe {
+						// SAFETY: source is retained by using and id_next is the matching zero-argument Object-returning member.
+						element = JNIEnv.CallObjectMethod (source.Handle, id_next);
+					}
 					yield return JavaConvert.FromJniHandle (
-							JNIEnv.CallObjectMethod (source.Handle, id_next),
+							element,
 							JniHandleOwnership.TransferLocalRef);
 				}
 		}
@@ -73,8 +86,13 @@ namespace System.Linq {
 				throw new ArgumentNullException ("source");
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
+					IntPtr element;
+					unsafe {
+						// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.
+						element = JNIEnv.CallObjectMethod (iterator.Handle, id_next);
+					}
 					yield return JavaConvert.FromJniHandle<T>(
-							JNIEnv.CallObjectMethod (iterator.Handle, id_next),
+							element,
 							JniHandleOwnership.TransferLocalRef)!;
 				}
 		}
@@ -86,11 +104,15 @@ namespace System.Linq {
 		{
 			using (source)
 				while (source.HasNext) {
+					IntPtr element;
+					unsafe {
+						// SAFETY: source is retained by using and id_next is the matching zero-argument Object-returning member.
+						element = JNIEnv.CallObjectMethod (source.Handle, id_next);
+					}
 					yield return JavaConvert.FromJniHandle<T>(
-							JNIEnv.CallObjectMethod (source.Handle, id_next),
+							element,
 							JniHandleOwnership.TransferLocalRef)!;
 				}
 		}
 	}
 }
-

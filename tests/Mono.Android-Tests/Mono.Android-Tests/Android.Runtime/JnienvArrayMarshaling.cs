@@ -17,6 +17,7 @@ using Java.LangTests;
 namespace Android.RuntimeTests {
 
 	[TestFixture]
+	[Category ("JniSafetyPreparation")]
 	public class JnienvArrayMarshaling {
 
 		[Test]

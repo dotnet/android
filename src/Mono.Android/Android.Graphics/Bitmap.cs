@@ -37,10 +37,13 @@ namespace Android.Graphics {
 		/// <remarks>See the <see href="https://developer.android.com/ndk/reference/group/bitmap">Android NDK Bitmap documentation</see>.</remarks>
 		public AndroidBitmapInfo GetBitmapInfo ()
 		{
-			AndroidBitmapInfo info;
-			int r = JNIEnv.AndroidBitmap_getInfo (Handle, out info);
-			CheckNdkError ("AndroidBitmap_getInfo", r);
-			return info;
+			unsafe {
+				// SAFETY: this Bitmap owns the live JNI reference for the native call; pixel access is bounded by the existing lock/unlock lifecycle.
+				AndroidBitmapInfo info;
+				int r = JNIEnv.AndroidBitmap_getInfo (Handle, out info);
+				CheckNdkError ("AndroidBitmap_getInfo", r);
+				return info;
+			}
 		}
 
 		/// <summary>Locks the bitmap's native pixel buffer for direct access.</summary>
@@ -53,10 +56,13 @@ namespace Android.Graphics {
 		/// </remarks>
 		public IntPtr LockPixels ()
 		{
-			IntPtr p;
-			int r = JNIEnv.AndroidBitmap_lockPixels (Handle, out p);
-			CheckNdkError ("AndroidBitmap_lockPixels", r);
-			return p;
+			unsafe {
+				// SAFETY: this Bitmap owns the live JNI reference for the native call; pixel access is bounded by the existing lock/unlock lifecycle.
+				IntPtr p;
+				int r = JNIEnv.AndroidBitmap_lockPixels (Handle, out p);
+				CheckNdkError ("AndroidBitmap_lockPixels", r);
+				return p;
+			}
 		}
 
 		/// <summary>Unlocks the bitmap's native pixel buffer after direct access.</summary>
@@ -65,8 +71,11 @@ namespace Android.Graphics {
 		/// <remarks>See the <see href="https://developer.android.com/ndk/reference/group/bitmap">Android NDK Bitmap documentation</see>.</remarks>
 		public void UnlockPixels ()
 		{
-			int r = JNIEnv.AndroidBitmap_unlockPixels (Handle);
-			CheckNdkError ("AndroidBitmap_unlockPixels", r);
+			unsafe {
+				// SAFETY: this Bitmap owns the live JNI reference for the native call; pixel access is bounded by the existing lock/unlock lifecycle.
+				int r = JNIEnv.AndroidBitmap_unlockPixels (Handle);
+				CheckNdkError ("AndroidBitmap_unlockPixels", r);
+			}
 		}
 #endif  // ANDROID_8
 #if ANDROID_19

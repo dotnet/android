@@ -133,6 +133,21 @@ namespace Java.Interop {
 			var invocation   = $"body ({string.Join (", ", callArgs)})";
 #>
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
+		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
+<#
+			for (int i = 0; i < pattern.Length; ++i) {
+				if (pattern [i] != 'O')
+					continue;
+#>
+		/// <paramref name="native_p<#= i #>"/> must be null or a live JNI reference compatible with <typeparamref name="T<#= i #>"/>.
+<#
+			}
+#>
+		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
+		/// managed function pointer with exactly the declared signature and calling convention.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe <#= returnType #> <#= name #><<#= string.Join (", ", typeParams) #>> (<#= parameters #>)
 <#
@@ -143,38 +158,42 @@ namespace Java.Interop {
 			}
 #>
 		{
-			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return<#= ret == 'X' ? "" : " default" #>;
+			unsafe {
+				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
+				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return<#= ret == 'X' ? "" : " default" #>;
 
-			try {
-				var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
-				if (__this is null)
-					throw new NullReferenceException (PeerLookupFailed);
+				try {
+					var __this = global::Java.Lang.Object.GetObject<TPeer> (self, JniHandleOwnership.DoNotTransfer);
+					if (__this is null)
+						throw new NullReferenceException (PeerLookupFailed);
 <#
 			foreach (var conversion in conversions) {
 #>
-				<#= conversion #>
+					<#= conversion #>
 <#
 			}
 			if (ret == 'X') {
 #>
-				<#= invocation #>;
+					<#= invocation #>;
 <#
 			} else if (ret == 'S') {
 #>
-				return <#= invocation #>;
+					return <#= invocation #>;
 <#
 			} else {
 #>
-				return JNIEnv.ToLocalJniHandle (<#= invocation #>);
+					return JNIEnv.ToLocalJniHandle (<#= invocation #>);
 <#
 			}
 #>
-			} catch (Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return<#= ret == 'X' ? "" : " default" #>;
-			} finally {
-				JniEnvironment.EndMarshalMethod (ref __envp);
+				} catch (Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return<#= ret == 'X' ? "" : " default" #>;
+				} finally {
+					JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 <#

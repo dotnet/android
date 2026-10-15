@@ -55,12 +55,21 @@ internal sealed class LogcatTextWriter : TextWriter {
 
 static partial class AndroidLog {
 
+	/// <safety>
+	/// <paramref name="format"/> must consume exactly the marshaled UTF-8 <paramref name="args"/>
+	/// string, without further variadic reads or writes. <paramref name="ptr"/> is an unused extra argument.
+	/// </safety>
 	[LibraryImport ("log", EntryPoint = "__android_log_print", StringMarshalling = StringMarshalling.Utf8)]
 	[UnmanagedCallConv (CallConvs = new[] { typeof (System.Runtime.CompilerServices.CallConvCdecl) })]
-	private static partial void __android_log_print (AndroidLogLevel level, string? tag, string format, string args, IntPtr ptr);
+	private static unsafe partial void __android_log_print (AndroidLogLevel level, string? tag, string format, string args, IntPtr ptr);
 
-	internal static void Print (AndroidLogLevel level, string? tag, string message) =>
-		__android_log_print (level, tag, "%s", message, IntPtr.Zero);
+	internal static void Print (AndroidLogLevel level, string? tag, string message)
+	{
+		unsafe {
+			// SAFETY: the fixed "%s" format consumes exactly the one string marshaled by the stub.
+			__android_log_print (level, tag, "%s", message, IntPtr.Zero);
+		}
+	}
 
 }
 

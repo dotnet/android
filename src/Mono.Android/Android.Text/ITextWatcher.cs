@@ -102,12 +102,15 @@ namespace Android.Text {
 					JNIEnv.StartCreateInstance ("mono/android/text/TextWatcherImplementor", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
 
-			this.inst = inst;
-			AfterTextChanged = after_handler;
-			BeforeTextChanged = before_handler;
-			TextChanged = changed_handler;
+				this.inst = inst;
+				AfterTextChanged = after_handler;
+				BeforeTextChanged = before_handler;
+				TextChanged = changed_handler;
+			}
 		}
 
 		void ITextWatcher.AfterTextChanged (Android.Text.IEditable? s)

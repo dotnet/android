@@ -7,7 +7,7 @@ using Java.Interop;
 namespace Microsoft.Android.Runtime;
 
 [StructLayout (LayoutKind.Sequential)]
-internal unsafe struct HandleContext
+internal struct HandleContext
 {
 	static readonly nuint Size = (nuint)Marshal.SizeOf<HandleContext> ();
 	static readonly Dictionary<IntPtr, GCHandle> referenceTrackingHandles = new ();
@@ -20,10 +20,13 @@ internal unsafe struct HandleContext
 	{
 		get
 		{
-			if (controlBlock == IntPtr.Zero)
-				throw new InvalidOperationException ("HandleContext control block is not initialized.");
+			unsafe {
+				// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+				if (controlBlock == IntPtr.Zero)
+					throw new InvalidOperationException ("HandleContext control block is not initialized.");
 
-			return ((JniObjectReferenceControlBlock*) controlBlock)->handle == IntPtr.Zero;
+				return ((JniObjectReferenceControlBlock*) controlBlock)->handle == IntPtr.Zero;
+			}
 		}
 	}
 
@@ -31,11 +34,14 @@ internal unsafe struct HandleContext
 	{
 		get
 		{
-			if (controlBlock == IntPtr.Zero)
-				throw new InvalidOperationException ("HandleContext control block is not initialized.");
+			unsafe {
+				// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+				if (controlBlock == IntPtr.Zero)
+					throw new InvalidOperationException ("HandleContext control block is not initialized.");
 
-			var block = (JniObjectReferenceControlBlock*) controlBlock;
-			return new JniObjectReference (block->handle, (JniObjectReferenceType) block->handle_type);
+				var block = (JniObjectReferenceControlBlock*) controlBlock;
+				return new JniObjectReference (block->handle, (JniObjectReferenceType) block->handle_type);
+			}
 		}
 	}
 
@@ -43,26 +49,35 @@ internal unsafe struct HandleContext
 	{
 		get
 		{
-			if (controlBlock == IntPtr.Zero)
-				throw new InvalidOperationException ("HandleContext control block is not initialized.");
-			return ((JniObjectReferenceControlBlock*) controlBlock)->refs_added;
+			unsafe {
+				// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+				if (controlBlock == IntPtr.Zero)
+					throw new InvalidOperationException ("HandleContext control block is not initialized.");
+				return ((JniObjectReferenceControlBlock*) controlBlock)->refs_added;
+			}
 		}
 		set
 		{
-			if (controlBlock == IntPtr.Zero)
-				throw new InvalidOperationException ("HandleContext control block is not initialized.");
-			((JniObjectReferenceControlBlock*) controlBlock)->refs_added = value;
+			unsafe {
+				// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+				if (controlBlock == IntPtr.Zero)
+					throw new InvalidOperationException ("HandleContext control block is not initialized.");
+				((JniObjectReferenceControlBlock*) controlBlock)->refs_added = value;
+			}
 		}
 	}
 
 	public void SetPeerReference (JniObjectReference reference)
 	{
-		if (controlBlock == IntPtr.Zero)
-			throw new InvalidOperationException ("HandleContext control block is not initialized.");
+		unsafe {
+			// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+			if (controlBlock == IntPtr.Zero)
+				throw new InvalidOperationException ("HandleContext control block is not initialized.");
 
-		var block = (JniObjectReferenceControlBlock*) controlBlock;
-		block->handle = reference.Handle;
-		block->handle_type = (int) reference.Type;
+			var block = (JniObjectReferenceControlBlock*) controlBlock;
+			block->handle = reference.Handle;
+			block->handle_type = (int) reference.Type;
+		}
 	}
 
 	// This is an internal mirror of the Java.Interop.JniObjectReferenceControlBlock
@@ -85,59 +100,76 @@ internal unsafe struct HandleContext
 		}
 	}
 
-	public static void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
+	/// <safety>
+	/// <paramref name="mcr"/> must address the CLR bridge's live descriptor and correctly bounded
+	/// component/context arrays for the entire callback. Checking registry membership does not validate native memory.
+	/// </safety>
+	public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
 	{
-		lock (referenceTrackingHandles) {
-			for (nuint i = 0; i < mcr->ComponentCount; i++) {
-				StronglyConnectedComponent component = mcr->Components [i];
-				EnsureAllContextsInComponentAreOurs (component);
+		unsafe {
+			// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+			lock (referenceTrackingHandles) {
+				for (nuint i = 0; i < mcr->ComponentCount; i++) {
+					StronglyConnectedComponent component = mcr->Components [i];
+					EnsureAllContextsInComponentAreOurs (component);
+				}
 			}
-		}
 
-		static void EnsureAllContextsInComponentAreOurs (StronglyConnectedComponent component)
-		{
-			for (nuint i = 0; i < component.Count; i++) {
-				EnsureContextIsOurs ((IntPtr)component.Contexts [i]);
+			static void EnsureAllContextsInComponentAreOurs (StronglyConnectedComponent component)
+			{
+				for (nuint i = 0; i < component.Count; i++) {
+					EnsureContextIsOurs ((IntPtr)component.Contexts [i]);
+				}
 			}
-		}
 
-		static void EnsureContextIsOurs (IntPtr context)
-		{
-			if (!referenceTrackingHandles.ContainsKey (context)) {
-				throw new InvalidOperationException ("Unknown reference tracking handle.");
+			static void EnsureContextIsOurs (IntPtr context)
+			{
+				if (!referenceTrackingHandles.ContainsKey (context)) {
+					throw new InvalidOperationException ("Unknown reference tracking handle.");
+				}
 			}
 		}
 	}
 
 	public static HandleContext* Alloc (IJavaPeerable peer)
 	{
-		var context = (HandleContext*) NativeMemory.AllocZeroed (1, Size);
-		if (context == null) {
-			throw new OutOfMemoryException ("Failed to allocate memory for HandleContext.");
+		unsafe {
+			// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+			var context = (HandleContext*) NativeMemory.AllocZeroed (1, Size);
+			if (context == null) {
+				throw new OutOfMemoryException ("Failed to allocate memory for HandleContext.");
+			}
+
+			context->identityHashCode = peer.JniIdentityHashCode;
+			context->controlBlock = peer.JniObjectReferenceControlBlock;
+
+			GCHandle handle = JavaMarshal.CreateReferenceTrackingHandle (peer, context);
+			lock (referenceTrackingHandles) {
+				referenceTrackingHandles [(IntPtr) context] = handle;
+			}
+
+			return context;
 		}
-
-		context->identityHashCode = peer.JniIdentityHashCode;
-		context->controlBlock = peer.JniObjectReferenceControlBlock;
-
-		GCHandle handle = JavaMarshal.CreateReferenceTrackingHandle (peer, context);
-		lock (referenceTrackingHandles) {
-			referenceTrackingHandles [(IntPtr) context] = handle;
-		}
-
-		return context;
 	}
 
-	public static void Free (ref HandleContext* context)
+	/// <safety>
+	/// <paramref name="context"/> must be null or an unreleased context allocated by <see cref="Alloc"/>.
+	/// The caller must own its release and prevent access through aliases after this call.
+	/// </safety>
+	public static unsafe void Free (ref HandleContext* context)
 	{
-		if (context == null) {
-			return;
-		}
+		unsafe {
+			// SAFETY: the registered context/control block is retained by the reference-tracking handle; bridge argument graphs remain live for the native callback.
+			if (context == null) {
+				return;
+			}
 
-		lock (referenceTrackingHandles) {
-			referenceTrackingHandles.Remove ((IntPtr)context);
-		}
+			lock (referenceTrackingHandles) {
+				referenceTrackingHandles.Remove ((IntPtr)context);
+			}
 
-		NativeMemory.Free (context);
-		context = null;
+			NativeMemory.Free (context);
+			context = null;
+		}
 	}
 }

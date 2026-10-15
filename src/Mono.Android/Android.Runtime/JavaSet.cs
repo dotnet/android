@@ -21,11 +21,14 @@ namespace Android.Runtime {
 		static IntPtr id_iterator;
 		internal Java.Util.IIterator Iterator ()
 		{
-			if (id_iterator == IntPtr.Zero)
-				id_iterator = JNIEnv.GetMethodID (set_class, "iterator", "()Ljava/util/Iterator;");
-			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
-					JNIEnv.CallObjectMethod (Handle, id_iterator),
-					JniHandleOwnership.TransferLocalRef)!;
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_iterator == IntPtr.Zero)
+					id_iterator = JNIEnv.GetMethodID (set_class, "iterator", "()Ljava/util/Iterator;");
+				return Java.Lang.Object.GetObject<Java.Util.IIterator> (
+						JNIEnv.CallObjectMethod (Handle, id_iterator),
+						JniHandleOwnership.TransferLocalRef)!;
+			}
 		}
 
 		internal static IntPtr id_ctor;
@@ -45,19 +48,22 @@ namespace Android.Runtime {
 		public JavaSet ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			if (Handle != IntPtr.Zero)
-				return;
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (Handle != IntPtr.Zero)
+					return;
 
-			if (GetType () == typeof (JavaSet)) {
-				SetHandle (
-						JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
-						JniHandleOwnership.TransferLocalRef);
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "()V"),
-						JniHandleOwnership.TransferLocalRef);
+				if (GetType () == typeof (JavaSet)) {
+					SetHandle (
+							JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
+							JniHandleOwnership.TransferLocalRef);
+				} else {
+					SetHandle (
+							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JniHandleOwnership.TransferLocalRef);
+				}
+				JNIEnv.FinishCreateInstance (Handle, "()V");
 			}
-			JNIEnv.FinishCreateInstance (Handle, "()V");
 		}
 
 		public JavaSet (IntPtr handle, JniHandleOwnership transfer)
@@ -89,9 +95,12 @@ namespace Android.Runtime {
 		//
 		public int Count {
 			get {
-				if (id_size == IntPtr.Zero)
-					id_size = JNIEnv.GetMethodID (set_class, "size", "()I");
-				return JNIEnv.CallIntMethod (Handle, id_size);
+				unsafe {
+					// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+					if (id_size == IntPtr.Zero)
+						id_size = JNIEnv.GetMethodID (set_class, "size", "()I");
+					return JNIEnv.CallIntMethod (Handle, id_size);
+				}
 			}
 		}
 
@@ -126,21 +135,24 @@ namespace Android.Runtime {
 		//
 		public void Add (object? item)
 		{
-			if (id_add == IntPtr.Zero)
-				id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
-			JavaConvert.WithLocalJniHandle (item, lref => {
-				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
-				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NotSupportedException (ex.Message, ex);
-				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new InvalidCastException (ex.Message, ex);
-				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NullReferenceException (ex.Message, ex);
-				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new ArgumentException (ex.Message, ex);
-				}
-			});
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_add == IntPtr.Zero)
+					id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
+				JavaConvert.WithLocalJniHandle (item, lref => {
+					try {
+						return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+					} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NotSupportedException (ex.Message, ex);
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new ArgumentException (ex.Message, ex);
+					}
+				});
+			}
 		}
 
 		static IntPtr id_clear;
@@ -158,12 +170,15 @@ namespace Android.Runtime {
 		//
 		public void Clear ()
 		{
-			if (id_clear == IntPtr.Zero)
-				id_clear = JNIEnv.GetMethodID (set_class, "clear", "()V");
-			try {
-				JNIEnv.CallVoidMethod (Handle, id_clear);
-			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new NotSupportedException (ex.Message, ex);
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_clear == IntPtr.Zero)
+					id_clear = JNIEnv.GetMethodID (set_class, "clear", "()V");
+				try {
+					JNIEnv.CallVoidMethod (Handle, id_clear);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				}
 			}
 		}
 
@@ -180,17 +195,20 @@ namespace Android.Runtime {
 		//
 		public bool Contains (object? item)
 		{
-			if (id_contains == IntPtr.Zero)
-				id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (item, lref => {
-				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
-				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new InvalidCastException (ex.Message, ex);
-				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NullReferenceException (ex.Message, ex);
-				}
-			});
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_contains == IntPtr.Zero)
+					id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
+				return JavaConvert.WithLocalJniHandle (item, lref => {
+					try {
+						return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					}
+				});
+			}
 		}
 
 		public void CopyTo (Array array, int array_index)
@@ -225,19 +243,22 @@ namespace Android.Runtime {
 		//
 		public void Remove (object? item)
 		{
-			if (id_remove == IntPtr.Zero)
-				id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
-			JavaConvert.WithLocalJniHandle (item, lref => {
-				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
-				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NotSupportedException (ex.Message, ex);
-				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new InvalidCastException (ex.Message, ex);
-				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NullReferenceException (ex.Message, ex);
-				}
-			});
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_remove == IntPtr.Zero)
+					id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
+				JavaConvert.WithLocalJniHandle (item, lref => {
+					try {
+						return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
+					} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NotSupportedException (ex.Message, ex);
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					}
+				});
+			}
 		}
 
 		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
@@ -289,19 +310,22 @@ namespace Android.Runtime {
 		[Register (".ctor", "()V", "")]
 		public JavaSet () : base ()
 		{
-			if (Handle != IntPtr.Zero)
-				return;
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (Handle != IntPtr.Zero)
+					return;
 
-			if (GetType () == typeof (JavaSet<T>)) {
-				SetHandle (
-						JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
-						JniHandleOwnership.TransferLocalRef);
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "()V"),
-						JniHandleOwnership.TransferLocalRef);
+				if (GetType () == typeof (JavaSet<T>)) {
+					SetHandle (
+							JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
+							JniHandleOwnership.TransferLocalRef);
+				} else {
+					SetHandle (
+							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JniHandleOwnership.TransferLocalRef);
+				}
+				JNIEnv.FinishCreateInstance (Handle, "()V");
 			}
-			JNIEnv.FinishCreateInstance (Handle, "()V");
 		}
 
 		public JavaSet (IntPtr handle, JniHandleOwnership transfer)
@@ -333,21 +357,24 @@ namespace Android.Runtime {
 		//
 		public void Add (T item)
 		{
-			if (id_add == IntPtr.Zero)
-				id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
-			JavaConvert.WithLocalJniHandle (item, lref => {
-				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
-				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NotSupportedException (ex.Message, ex);
-				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new InvalidCastException (ex.Message, ex);
-				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NullReferenceException (ex.Message, ex);
-				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new ArgumentException (ex.Message, ex);
-				}
-			});
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_add == IntPtr.Zero)
+					id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
+				JavaConvert.WithLocalJniHandle (item, lref => {
+					try {
+						return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+					} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NotSupportedException (ex.Message, ex);
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new ArgumentException (ex.Message, ex);
+					}
+				});
+			}
 		}
 
 		//
@@ -363,17 +390,20 @@ namespace Android.Runtime {
 		//
 		public bool Contains (T item)
 		{
-			if (id_contains == IntPtr.Zero)
-				id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (item, lref => {
-				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
-				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new InvalidCastException (ex.Message, ex);
-				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NullReferenceException (ex.Message, ex);
-				}
-			});
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_contains == IntPtr.Zero)
+					id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
+				return JavaConvert.WithLocalJniHandle (item, lref => {
+					try {
+						return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					}
+				});
+			}
 		}
 
 		public void CopyTo (T[] array, int array_index)
@@ -413,19 +443,22 @@ namespace Android.Runtime {
 		//
 		public bool Remove (T item)
 		{
-			if (id_remove == IntPtr.Zero)
-				id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (item, lref => {
-				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
-				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NotSupportedException (ex.Message, ex);
-				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new InvalidCastException (ex.Message, ex);
-				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new NullReferenceException (ex.Message, ex);
-				}
-			});
+			unsafe {
+				// SAFETY: the Set signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
+				if (id_remove == IntPtr.Zero)
+					id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
+				return JavaConvert.WithLocalJniHandle (item, lref => {
+					try {
+						return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
+					} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NotSupportedException (ex.Message, ex);
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					}
+				});
+			}
 		}
 
 		public new static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)

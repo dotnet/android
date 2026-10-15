@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Xamarin.Android.JniEnv
 {
 	partial class Generator
@@ -18,6 +20,36 @@ namespace Xamarin.Android.JniEnv
 		const   string          NIOSupportCategory              = "IO";
 		const   string          ReflectionSupportCategory       = "Reflection";
 		const   string          JavaVMCategory                  = "References";
+
+		static IReadOnlyList<string> GetCallerSafetyRequirements (JniFunction entry, bool pointerArguments)
+		{
+			var requirements = new List<string> ();
+			switch (entry.Name) {
+			case "NewDirectByteBuffer":
+				requirements.Add ("<paramref name=\"capacity\"/> must be non-negative and within JNI's direct-buffer capacity limits.");
+				requirements.Add ("<paramref name=\"address\"/> must address at least <paramref name=\"capacity\"/> bytes of accessible memory.");
+				requirements.Add ("The backing memory must remain allocated and accessible for every use of the returned Java buffer.");
+				return requirements;
+			}
+
+			foreach (var parameter in entry.Parameters) {
+				if (IsObjectReferenceType (parameter.Type)) {
+					requirements.Add (string.Format (
+						"<paramref name=\"{0}\"/> must be a live JNI {1} reference usable on the current thread for the entire call, or null only where this JNI operation permits it.",
+						parameter.Name.TrimStart ('@'), parameter.Type.Type));
+				} else if (IsMemberID (parameter.Type)) {
+					requirements.Add (string.Format (
+						"<paramref name=\"{0}\"/> must be a live {1} for the supplied receiver or class, with the static/instance kind and value/return ABI required by this operation.",
+						parameter.Name, parameter.Type.Type));
+				} else if (parameter.Type.ManagedType == "JValue*") {
+					requirements.Add (string.Format (
+						"<paramref name=\"{0}\"/> must supply all arguments in the member's declared JNI order and types; referenced objects must remain live.{1}",
+						parameter.Name,
+						pointerArguments ? " Pointer storage must remain readable for that argument count throughout the call." : ""));
+				}
+			}
+			return requirements;
+		}
 
 		static readonly JniFunction[] JNIEnvEntries    = new JniFunction[]{
 			new JniFunction {
