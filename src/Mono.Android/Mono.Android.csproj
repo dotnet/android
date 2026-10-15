@@ -234,6 +234,7 @@
     <Compile Include="Android.Runtime\JNIEnvInit.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
     <Compile Include="Android.Runtime\JniPeerMembersExtensions.cs" />
+    <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
     <Compile Include="Android.Runtime\JObjectRefType.cs" />
     <Compile Include="Android.Runtime\JValue.cs" />
     <Compile Include="Android.Runtime\Logger.cs" />

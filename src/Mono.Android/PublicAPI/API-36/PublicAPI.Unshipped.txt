@@ -1,6 +1,4 @@
 #nullable enable
-*REMOVED*Android.Runtime.JNINativeWrapper
-*REMOVED*static Android.Runtime.JNINativeWrapper.CreateDelegate(System.Delegate! dlg) -> System.Delegate!
 *REMOVED*override Android.AccessibilityServices.AccessibilityButtonController.AccessibilityButtonCallback.ThresholdClass.get -> nint
 *REMOVED*override Android.AccessibilityServices.AccessibilityButtonController.AccessibilityButtonCallback.ThresholdType.get -> System.Type!
 *REMOVED*override Android.AccessibilityServices.AccessibilityService.GestureResultCallback.ThresholdClass.get -> nint
