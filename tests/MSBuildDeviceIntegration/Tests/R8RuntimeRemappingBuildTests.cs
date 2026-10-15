@@ -74,10 +74,21 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
 			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			string missingNdk = Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs");
+			string [] parameters = [];
 			if (runtime == AndroidRuntime.CoreCLR) {
-				proj.SetProperty ("AndroidNdkDirectory", Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs"));
+				DirectoryAssert.DoesNotExist (missingNdk);
+				parameters = [$"AndroidNdkDirectory=\"{missingNdk}\""];
 			}
 			using var builder = CreateApkBuilder ();
+			bool Build ()
+			{
+				bool success = builder.Build (proj, parameters: parameters);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AssertNdkDirectory (builder, missingNdk);
+				}
+				return success;
+			}
 			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			void AssertPackage (bool hasRemapping)
 			{
@@ -98,43 +109,46 @@ namespace Xamarin.Android.Build.Tests
 			string producer = runtime == AndroidRuntime.CoreCLR ? "_AndroidGenerateBinaryBlobs" : "_AndroidGenerateNativeAotR8BinaryBlobs";
 			string dataFileName = runtime == AndroidRuntime.CoreCLR ? "libbinary_blobs.so" : "remapping-data.o";
 			string stampName = runtime == AndroidRuntime.CoreCLR ? "binary-blobs.stamp" : "remapping-data.stamp";
-			Assert.IsTrue (builder.Build (proj));
+			Assert.IsTrue (Build ());
 			AssertPackage (false);
 			mapping = """{"ClassRewrites":[{"Class":{"From":"android.app.Activity","To":"com.microsoft.intune.mam.client.app.MAMActivity"}}]}""";
 			proj.Touch ("mam.json");
-			Assert.IsTrue (builder.Build (proj));
+			Assert.IsTrue (Build ());
 			AssertPackage (true);
-			Assert.IsTrue (builder.Build (proj), "MAM input must survive ordinary asset staging and support a no-op.");
+			Assert.IsTrue (Build (), "MAM input must survive ordinary asset staging and support a no-op.");
 			Assert.IsTrue (builder.Output.IsTargetSkipped (producer));
 			AssertPackage (true);
 			foreach (var blob in Directory.GetFiles (intermediate, dataFileName, SearchOption.AllDirectories))
 				File.Delete (blob);
-			Assert.IsTrue (builder.Build (proj), "A deleted data library must be regenerated.");
+			Assert.IsTrue (Build (), "A deleted data library must be regenerated.");
 			AssertPackage (true);
 			var binaryBlob = Directory.GetFiles (intermediate, dataFileName, SearchOption.AllDirectories).Single ();
 			var stamp = Directory.GetFiles (intermediate, stampName, SearchOption.AllDirectories).Single ();
 			File.Delete (binaryBlob);
 			Directory.CreateDirectory (binaryBlob);
 			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), "An unwritable library output must fail generation.");
+			Assert.IsFalse (Build (), "An unwritable library output must fail generation.");
 			StringAssertEx.Contains ("error XA4325", builder.LastBuildOutput);
 			FileAssert.DoesNotExist (stamp, "Failure must invalidate the previous completion stamp.");
 			Directory.Delete (binaryBlob);
 			File.WriteAllBytes (binaryBlob, [0, 1, 2]);
 			builder.ThrowOnBuildFailure = true;
-			Assert.IsTrue (builder.Build (proj), "A failed write must not make a partial library up to date.");
+			Assert.IsTrue (Build (), "A failed write must not make a partial library up to date.");
 			Assert.IsFalse (builder.Output.IsTargetSkipped (producer));
 			Assert.Greater (new FileInfo (binaryBlob).Length, 3);
 			AssertPackage (true);
 			mapping = """{"ClassRewrites":[]}""";
 			proj.Touch ("mam.json");
-			Assert.IsTrue (builder.Build (proj));
+			Assert.IsTrue (Build ());
 			Assert.AreEqual (runtime == AndroidRuntime.CoreCLR ? 1 : 0,
 				Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
 			AssertPackage (false);
-			Assert.IsTrue (builder.Build (proj));
+			Assert.IsTrue (Build ());
 			Assert.IsTrue (builder.Output.IsTargetSkipped (producer));
-			Assert.IsTrue (builder.Clean (proj));
+			Assert.IsTrue (builder.RunTarget (proj, "Clean", parameters: parameters));
+			if (runtime == AndroidRuntime.CoreCLR) {
+				AssertNdkDirectory (builder, missingNdk);
+			}
 			Assert.IsEmpty (Directory.GetFiles (intermediate, stampName, SearchOption.AllDirectories));
 		}
 
@@ -278,6 +292,17 @@ namespace Xamarin.Android.Build.Tests
 			ulong programDynamicMemorySize = BinaryPrimitives.ReadUInt64LittleEndian (result.AsSpan (dynamicProgramHeaderOffset + 40, 8));
 			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (dynamicProgramHeaderOffset + 40, 8), programDynamicMemorySize + 16);
 			return result;
+		}
+
+		void AssertNdkDirectory (ProjectBuilder builder, string expected)
+		{
+			var build = BinaryLog.ReadBuild (Path.Combine (Root, builder.ProjectDirectory,
+				$"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog"));
+			var directories = build.FindChildrenRecursive<Project> ()
+				.Where (project => project.GlobalProperties != null && project.GlobalProperties.ContainsKey ("AndroidNdkDirectory"))
+				.Select (project => project.GlobalProperties ["AndroidNdkDirectory"]).ToArray ();
+			Assert.IsNotEmpty (directories, "The binlog must record the effective global AndroidNdkDirectory.");
+			Assert.That (directories, Is.All.EqualTo (expected), "Every project must use the deliberately missing NDK, not the harness default.");
 		}
 
 		static byte [] CreateShadowDynstrLibrary (byte [] elf)
@@ -508,11 +533,22 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
 			proj.SetProperty ("AndroidPackageFormats", aab ? "aab" : "apk");
+			string missingNdk = Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs");
+			string [] parameters = [];
 			if (runtime == AndroidRuntime.CoreCLR) {
-				proj.SetProperty ("AndroidNdkDirectory", Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs"));
+				DirectoryAssert.DoesNotExist (missingNdk);
+				parameters = [$"AndroidNdkDirectory=\"{missingNdk}\""];
 			}
 
 			using var builder = CreateApkBuilder ();
+			bool Build ()
+			{
+				bool success = builder.Build (proj, parameters: parameters);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AssertNdkDirectory (builder, missingNdk);
+				}
+				return success;
+			}
 			(int R8, int NativeLinks) ReadInvocationCounts ()
 			{
 				var build = BinaryLog.ReadBuild (Path.Combine (Root, builder.ProjectDirectory,
@@ -521,7 +557,7 @@ namespace Xamarin.Android.Build.Tests
 				return (tasks.Count (t => t.Name == "R8"), tasks.Count (t => t.Name == "LinkNativeAotSharedLibrary"));
 			}
 
-			Assert.IsTrue (builder.Build (proj), "Both RIDs should build from the same final R8 mapping.");
+			Assert.IsTrue (Build (), "Both RIDs should build from the same final R8 mapping.");
 			var first = ReadInvocationCounts ();
 			Assert.AreEqual (1, first.R8);
 			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
@@ -565,7 +601,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var objects = Directory.GetFiles (intermediate, $"{proj.ProjectName}.o", SearchOption.AllDirectories)
 				.ToDictionary (path => path, File.GetLastWriteTimeUtc);
-			Assert.IsTrue (builder.Build (proj), "A multi-RID no-op build should succeed.");
+			Assert.IsTrue (Build (), "A multi-RID no-op build should succeed.");
 			Assert.AreEqual ((0, 0), ReadInvocationCounts (), "No-op builds must not run R8 or native linking.");
 			foreach (var entry in objects) {
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "No-op builds must not recompile ILC.");
@@ -576,7 +612,7 @@ namespace Xamarin.Android.Build.Tests
 			var missingBlob = binaryBlobs.Keys.Single (path => path.Contains (
 				runtime == AndroidRuntime.CoreCLR ? "arm64-v8a" : "android-arm64", StringComparison.Ordinal));
 			File.Delete (missingBlob);
-			Assert.IsTrue (builder.Build (proj), "A missing ABI blob should be regenerated.");
+			Assert.IsTrue (Build (), "A missing ABI blob should be regenerated.");
 			Assert.AreEqual ((0, runtime == AndroidRuntime.NativeAOT ? 1 : 0), ReadInvocationCounts (),
 				"Restoring static data relinks only the affected NativeAOT RID, without rerunning R8.");
 			FileAssert.Exists (missingBlob);
@@ -584,16 +620,19 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "Restoring data must not recompile ILC.");
 			remapping = "<replacements />";
 			proj.Touch ("explicit-remap.xml");
-			Assert.IsTrue (builder.Build (proj), "Empty R8 remapping must remove unneeded ABI libraries.");
+			Assert.IsTrue (Build (), "Empty R8 remapping must remove unneeded ABI libraries.");
 			Assert.AreEqual (runtime == AndroidRuntime.CoreCLR ? 2 : 0,
 				Directory.GetFiles (intermediate, "libbinary_blobs.so", SearchOption.AllDirectories).Length);
 			using (var archive = ZipFile.OpenRead (archivePath)) {
 				foreach (var abi in new [] { "arm64-v8a", "x86_64" })
 					Assert.AreEqual (runtime == AndroidRuntime.CoreCLR, archive.GetEntry ($"lib/{abi}/libbinary_blobs.so") != null);
 			}
-			Assert.IsTrue (builder.Build (proj), "Empty per-RID remapping must be a no-op.");
+			Assert.IsTrue (Build (), "Empty per-RID remapping must be a no-op.");
 			Assert.AreEqual ((0, 0), ReadInvocationCounts ());
-			Assert.IsTrue (builder.Clean (proj));
+			Assert.IsTrue (builder.RunTarget (proj, "Clean", parameters: parameters));
+			if (runtime == AndroidRuntime.CoreCLR) {
+				AssertNdkDirectory (builder, missingNdk);
+			}
 			foreach (var blob in binaryBlobs.Keys)
 				FileAssert.DoesNotExist (blob, "Clean must remove generated binary-blob libraries.");
 		}
