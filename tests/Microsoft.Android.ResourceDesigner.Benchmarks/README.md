@@ -5,6 +5,8 @@
 resolution. It replaces the original Cecil task in both normal and design-time
 builds, preserving resource parsing, identifier handling, case mapping,
 strong-name identity, and copy-if-changed behavior. No opt-in property is needed.
+Both task invocations select the .NET runtime, including when hosted by
+.NET Framework MSBuild.
 
 ## Task benchmarks
 
@@ -107,6 +109,10 @@ passed with no warnings or errors. All 15 modern task/resource cases and all
 11 parser, application/library, incremental, and design-time cases passed without
 an opt-in property. The Release benchmark build, `--verify`, and all six
 metadata-only benchmark combinations also completed successfully.
+
+Registration tests check the runtime selection in both shipped invocations and
+execute the task through `dotnet msbuild`. On Windows they also execute through
+Visual Studio's `MSBuild.exe`; those two cases are skipped on other platforms.
 
 The deterministic timestamp/MVID tests now live in the modern task test suite;
 the removed Cecil test cases are covered there for both application and library

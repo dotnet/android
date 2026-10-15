@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
+using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -169,10 +170,11 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.IsTrue (CreateTask ().Execute ());
 		CollectionAssert.AreEqual (original, File.ReadAllBytes (OutputPath));
 		Assert.AreEqual (lastWrite, File.GetLastWriteTimeUtc (OutputPath));
-		using var stream = File.OpenRead (OutputPath);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		Assert.IsTrue (reader.PropertyDefinitions.Any (handle => reader.GetString (reader.GetPropertyDefinition (handle).Name) == "AppName"));
+		using (var stream = File.OpenRead (OutputPath))
+		using (var pe = new PEReader (stream)) {
+			var reader = pe.GetMetadataReader ();
+			Assert.IsTrue (reader.PropertyDefinitions.Any (handle => reader.GetString (reader.GetPropertyDefinition (handle).Name) == "AppName"));
+		}
 		File.AppendAllText (RtxtPath, "\nint string added 0x7f010003\n");
 		File.SetLastWriteTimeUtc (RtxtPath, lastWrite.AddSeconds (1));
 		Assert.IsTrue (CreateTask ().Execute ());
@@ -245,10 +247,15 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		}
 	}
 
-	[TestCase ("Xamarin.Android.Common.targets")]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets")]
-	public void MetadataTaskRegistration (string relativePath)
+	[TestCase ("Xamarin.Android.Common.targets", false)]
+	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false)]
+	[TestCase ("Xamarin.Android.Common.targets", true)]
+	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true)]
+	public void MetadataTaskRegistration (string relativePath, bool frameworkMSBuild)
 	{
+		if (frameworkMSBuild && !OperatingSystem.IsWindows ())
+			Assert.Ignore ("MSBuild.exe requires Windows.");
+
 		var repository = new DirectoryInfo (AppContext.BaseDirectory);
 		while (repository != null && !File.Exists (Path.Combine (repository.FullName, "Configuration.props")))
 			repository = repository.Parent;
@@ -266,6 +273,10 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 			Assert.IsNull (registration.Attribute ("TaskFactory"));
 			Assert.IsNull (registration.Attribute ("Runtime"));
 		}
+		var invocation = source.Descendants ().Single (element => element.Name.LocalName == "GenerateResourceDesignerAssembly");
+		var runtime = invocation.Attribute ("MSBuildRuntime")
+			?? throw new InvalidOperationException ("The resource designer invocation must select a runtime.");
+		Assert.AreEqual ("NET", runtime.Value);
 		var projectPath = Path.Combine (DirectoryPath, "registration.proj");
 		new XDocument (new XElement ("Project",
 			new XElement ("PropertyGroup",
@@ -273,6 +284,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 			registrations,
 			new XElement ("Target", new XAttribute ("Name", "Build"),
 				new XElement ("GenerateResourceDesignerAssembly",
+					new XAttribute (runtime),
 					new XAttribute ("RTxtFile", RtxtPath),
 					new XAttribute ("OutputFile", OutputPath),
 					new XAttribute ("CaseMapFile", Path.Combine (DirectoryPath, "case_map.txt")),
@@ -285,14 +297,16 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 					new XAttribute ("DesignTimeBuild", "false"),
 					new XAttribute ("Deterministic", "true")))))
 			.Save (projectPath);
-		var start = new ProcessStartInfo ("dotnet") {
+		var start = new ProcessStartInfo (frameworkMSBuild ? MSBuildLocator.QueryLatest ().MSBuildPath : "dotnet") {
 			WorkingDirectory = DirectoryPath,
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
 		};
 		start.Environment ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
-		foreach (var argument in new [] { "msbuild", projectPath, "-t:Build", "-nologo", "-v:minimal", "-nr:false" })
+		if (!frameworkMSBuild)
+			start.ArgumentList.Add ("msbuild");
+		foreach (var argument in new [] { projectPath, "-t:Build", "-nologo", "-v:minimal", "-nr:false" })
 			start.ArgumentList.Add (argument);
 		using var process = Process.Start (start) ?? throw new InvalidOperationException ("Could not start MSBuild.");
 		var stdout = process.StandardOutput.ReadToEndAsync ();

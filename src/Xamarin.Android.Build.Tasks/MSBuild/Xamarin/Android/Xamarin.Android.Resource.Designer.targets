@@ -161,6 +161,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Inputs="$(_DesignerIntermediateOutputPath)R.txt"
     Outputs="$(_GenerateResourceDesignerAssemblyOutput)">
   <GenerateResourceDesignerAssembly
+      MSBuildRuntime="NET"
       ContinueOnError="$(DesignTimeBuild)"
       AdditionalResourceDirectories="@(LibraryResourceDirectories)"
       AssemblyName="$(AssemblyName)"

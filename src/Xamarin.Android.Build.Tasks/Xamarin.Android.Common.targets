@@ -1268,6 +1268,7 @@ because xbuild doesn't support framework reference assemblies.
 	<!-- Generate the final Resource Assembly if we need to. -->
 	<GenerateResourceDesignerAssembly
 			Condition="'$(AndroidUseDesignerAssembly)' == 'True' "
+			MSBuildRuntime="NET"
 			ContinueOnError="$(DesignTimeBuild)"
 			RTxtFile="$(IntermediateOutputPath)R.txt"
 			IsApplication="$(AndroidApplication)"
