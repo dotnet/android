@@ -123,6 +123,5 @@ namespace xamarin::android {
 		static constexpr std::string_view JNIENVINIT_FULL_TYPE_NAME { JNIENVINIT_FULL_TYPE_NAME_ARRAY.data () };
 
 		static constexpr std::string_view ANDROID_ENVIRONMENT_CLASS_NAME      { "AndroidEnvironment" };
-		static constexpr std::string_view ANDROID_RUNTIME_INTERNAL_CLASS_NAME { "AndroidRuntimeInternal" };
 	};
 }
