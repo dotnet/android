@@ -167,47 +167,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not determine API level for $(TargetFrameworkVersion) of &apos;{0}&apos;..
-        /// </summary>
-        public static string XA0000_API_for_TargetFrameworkVersion {
-            get {
-                return ResourceManager.GetString("XA0000_API_for_TargetFrameworkVersion", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached..
-        /// </summary>
-        public static string XA0000_API_or_TargetFrameworkVersion_Fail {
-            get {
-                return ResourceManager.GetString("XA0000_API_or_TargetFrameworkVersion_Fail", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unhandled exception: {0}.
         /// </summary>
         public static string XA0000_Exception {
             get {
                 return ResourceManager.GetString("XA0000_Exception", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not determine $(TargetFrameworkVersion) for API level &apos;{0}.&apos;.
-        /// </summary>
-        public static string XA0000_TargetFrameworkVersion_for_API {
-            get {
-                return ResourceManager.GetString("XA0000_TargetFrameworkVersion_for_API", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unsupported or invalid $(TargetFrameworkVersion) value of &apos;{0}&apos;. Please update your Project Options..
-        /// </summary>
-        public static string XA0001 {
-            get {
-                return ResourceManager.GetString("XA0001", resourceCulture);
             }
         }
         
@@ -347,29 +311,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Google Play requires that new applications and updates must use a TargetFrameworkVersion of {0} (API level {1}) or above. You are currently targeting {2} (API level {3})..
-        /// </summary>
-        public static string XA0113 {
-            get {
-                return ResourceManager.GetString("XA0113", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
         /// </summary>
         public static string XA0116 {
             get {
                 return ResourceManager.GetString("XA0116", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher..
-        /// </summary>
-        public static string XA0117 {
-            get {
-                return ResourceManager.GetString("XA0117", resourceCulture);
             }
         }
         

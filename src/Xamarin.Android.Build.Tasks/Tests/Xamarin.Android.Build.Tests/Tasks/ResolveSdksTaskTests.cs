@@ -8,94 +8,38 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using ResolveAndroidTooling = Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling;
 
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
 	[NonParallelizable] // NOTE: This test was hanging without this
 	public class ResolveSdksTaskTests : BaseTest {
-#pragma warning disable 414
-
 		static ApiInfo [] apiInfoSelection = new ApiInfo [] {
-			new ApiInfo () { Id = "25", Level = 25, Name = "Nougat", FrameworkVersion = "v7.1",  Stable = true },
-			new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-			new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-			new ApiInfo () { Id = "28", Level = 28, Name = "Pie",    FrameworkVersion = "v9.0", Stable = false },
-			new ApiInfo () { Id = "29", Level = 29, Name = "Android10", FrameworkVersion = "v10.0", Stable = false },
-			new ApiInfo () { Id = "30", Level = 30, Name = "Android11", FrameworkVersion = "v11.0", Stable = false },
-			new ApiInfo () { Id = "S",  Level = 31, Name = "S",         FrameworkVersion = "v11.0.99", Stable = false },
-			new ApiInfo () { Id = "Z",  Level = 127, Name = "Z",    FrameworkVersion = "v108.1.99", Stable = false },
+			new ApiInfo () { Id = "35", Level = 35, Name = "Android15", FrameworkVersion = "v15.0", Stable = true },
+			new ApiInfo () { Id = "36", Level = 36, Name = "Android16", FrameworkVersion = "v16.0", Stable = true },
+			new ApiInfo () { Id = "Preview", Level = 37, Name = "Preview", FrameworkVersion = "v16.0.99", Stable = false },
 		};
 
 		// via Xamarin.Android.Common.props
 		const   string  MinimumSupportedJavaVersion     = "1.6.0";
 		const   string  LatestSupportedJavaVersion      = "11.0.99";
 
-		static object [] ResolveAndroidToolingTestCases = new object [] {
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v9.0",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v9.0",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v8.1",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v8.1",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v8.0",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v8.0",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v6.0",
-				/* expectedTaskResult */ false,
-				/* expectedTargetFramework */ "v6.0",
-				/* expectedError */ "XA0001",
-				/* expectedErrorMessage */ "Unsupported or invalid $(TargetFrameworkVersion) value of 'v6.0'. Please update your Project Options.",
-			},
-			new object[] {
-				/* buildtools */   "30.0.0",
-				/* jdk */ "11.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v11.0.99",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v11.0.99",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-		};
-		#pragma warning restore 414
-		[Test]
-		[TestCaseSource(nameof(ResolveAndroidToolingTestCases))]
-		public void ResolveAndroidToolingTest (string buildtools, string jdk, ApiInfo[] apis, string targetFrameworkVersion, bool expectedTaskResult, string expectedTargetFramework, string expectedError = "", string expectedErrorMessage = "")
+		[TestCase ("36.0.0", "35.0", "35", "35")]
+		[TestCase ("36.0.0", "36.0", "36", "36")]
+		[TestCase ("36.0.0", "36.1", "36.1", "36.1")]
+		[TestCase ("37.0.0", "37.0", "37", "Preview")]
+		[TestCase ("36.0.0", null, "36", "36")]
+		[TestCase ("36.0.0", "", "36", "36")]
+		[TestCase ("36.0.0", "invalid", "36", "36")]
+		public void ResolveAndroidToolingTest (string buildtools, string targetPlatformVersion, string expectedApiLevel, string expectedApiLevelName)
 		{
 			var path = Path.Combine ("temp", "ResolveAndroidToolingTest_" + Guid.NewGuid ());
-			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apis);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apiInfoSelection);
 			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
 			string javacExe;
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe, out javacExe);
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apis);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out javaExe, out javacExe);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apiInfoSelection);
 			var errors = new List<BuildErrorEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 			var resolveSdks = new ResolveSdks {
@@ -103,8 +47,8 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
-				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
-				LatestSupportedJavaVersion  = LatestSupportedJavaVersion,
+				MinimumSupportedJavaVersion = "21.0",
+				LatestSupportedJavaVersion = "25.0.99",
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},
@@ -114,24 +58,28 @@ namespace Xamarin.Android.Build.Tests {
 				JavaSdkPath = javaPath,
 				JavaToolExe = javaExe,
 				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = LatestSupportedJavaVersion,
-				MinimumSupportedJavaVersion = "1.8.0",
+				LatestSupportedJavaVersion = "25.0.99",
+				MinimumSupportedJavaVersion = "21.0",
 			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				TargetFrameworkVersion = targetFrameworkVersion,
+				TargetPlatformVersion = targetPlatformVersion,
 				AndroidSdkBuildToolsVersion = buildtools,
-				AndroidApplication = true,
 			};
-			Assert.AreEqual (expectedTaskResult, resolveSdks.Execute () && validateJavaVersion.Execute () && androidTooling.Execute (), $"Tasks should have {(expectedTaskResult ? "succeeded" : "failed" )}.");
-			Assert.AreEqual (expectedTargetFramework, androidTooling.TargetFrameworkVersion, $"TargetFrameworkVersion should be {expectedTargetFramework} but was {androidTooling.TargetFrameworkVersion}");
-			if (!string.IsNullOrWhiteSpace (expectedError)) {
-				Assert.AreEqual (1, errors.Count (), "An error should have been raised.");
-				Assert.AreEqual (expectedError, errors [0].Code, $"Expected error code {expectedError} but found {errors [0].Code}");
-				Assert.AreEqual (expectedErrorMessage, errors [0].Message, $"Expected error code {expectedErrorMessage} but found {errors [0].Message}");
+			try {
+				Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed.");
+				Assert.IsTrue (validateJavaVersion.Execute (), "ValidateJavaVersion should succeed.");
+				Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed.");
+				Assert.AreEqual (targetPlatformVersion, androidTooling.TargetPlatformVersion, "TargetPlatformVersion should not be modified.");
+				Assert.AreEqual (expectedApiLevel, androidTooling.AndroidApiLevel);
+				Assert.AreEqual (expectedApiLevelName, androidTooling.AndroidApiLevelName);
+				Assert.AreEqual (Path.Combine (androidSdkPath, "build-tools", buildtools), androidTooling.AndroidSdkBuildToolsPath);
+				Assert.IsNotEmpty (androidTooling.Aapt2Version);
+				Assert.IsEmpty (errors);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
 		[Test, NonParallelizable]
@@ -171,9 +119,8 @@ namespace Xamarin.Android.Build.Tests {
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				TargetFrameworkVersion = "v8.0",
+				TargetPlatformVersion = "26.0",
 				AndroidSdkBuildToolsVersion = "26.0.3",
-				AndroidApplication = true,
 			};
 			var start = DateTime.UtcNow;
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
@@ -182,7 +129,7 @@ namespace Xamarin.Android.Build.Tests {
 			var executionTime = DateTime.UtcNow - start;
 			Assert.LessOrEqual (executionTime, TimeSpan.FromSeconds(2), "Task should not take more than 2 seconds to run.");
 			Assert.AreEqual (androidTooling.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
-			Assert.AreEqual (androidTooling.TargetFrameworkVersion, "v8.0", "TargetFrameworkVersion should be v8.0");
+			Assert.AreEqual ("26.0", androidTooling.TargetPlatformVersion, "TargetPlatformVersion should be unchanged");
 			Assert.AreEqual (androidTooling.AndroidApiLevelName, "26", "AndroidApiLevelName should be 26");
 			Assert.NotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths.Length, 1, "ReferenceAssemblyPaths should have 1 entry.");
@@ -214,8 +161,59 @@ namespace Xamarin.Android.Build.Tests {
 				m.Message == "ValidateJavaVersion Outputs:" ||
 				m.Message.StartsWith ("  AndroidSdkPath:", StringComparison.Ordinal) ||
 				m.Message.StartsWith ("  AndroidApiLevel:", StringComparison.Ordinal) ||
-				m.Message.StartsWith ("  TargetFrameworkVersion:", StringComparison.Ordinal)));
+				m.Message.StartsWith ("  TargetFrameworkVersion:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  TargetPlatformVersion:", StringComparison.Ordinal)));
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		[Test]
+		public void ResolveAndroidToolingCachesAapt2Version ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "36.0.0");
+			var messages = new List<BuildMessageEventArgs> ();
+			var engine = new MockBuildEngine (TestContext.Out, messages: messages);
+			try {
+				string version = "";
+				for (int i = 0; i < 2; i++) {
+					messages.Clear ();
+					var tooling = new ResolveAndroidTooling {
+						BuildEngine = engine,
+						AndroidSdkPath = sdkPath,
+						TargetPlatformVersion = "36.0",
+					};
+					Assert.IsTrue (tooling.Execute ());
+					Assert.IsNotEmpty (tooling.Aapt2Version);
+					if (i == 0)
+						version = tooling.Aapt2Version;
+					Assert.AreEqual (version, tooling.Aapt2Version);
+					Assert.AreEqual (i == 1, messages.Any (m => m.Message == $"Using cached value for Aapt2Version: {version}"));
+				}
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		public void ResolveAndroidToolingRejectsMissingAapt2Override ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "36.0.0");
+			var errors = new List<BuildErrorEventArgs> ();
+			var aapt2Path = Path.Combine (sdkPath, "missing-aapt2");
+			try {
+				var tooling = new ResolveAndroidTooling {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					AndroidSdkPath = sdkPath,
+					TargetPlatformVersion = "36.0",
+					Aapt2ToolPath = aapt2Path,
+				};
+				Assert.IsFalse (tooling.Execute ());
+				Assert.AreEqual ("XA0112", errors.Single ().Code);
+				StringAssert.Contains (aapt2Path, errors [0].Message);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
 		}
 
 		[TestCase (null, "XA5300")]
@@ -229,12 +227,11 @@ namespace Xamarin.Android.Build.Tests {
 			var errors = new List<BuildErrorEventArgs> ();
 			try {
 				IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
-				var androidTooling = new Xamarin.Android.Tasks.ResolveAndroidTooling {
+				var androidTooling = new ResolveAndroidTooling {
 					BuildEngine = engine,
 					AndroidSdkPath = sdkPath == "empty" ? path : sdkPath == "missing" ? Path.Combine (path, "missing") : sdkPath,
 					AndroidSdkBuildToolsVersion = "36.0.0",
 					TargetPlatformVersion = "37.0",
-					AndroidApplication = true,
 				};
 
 				Assert.IsFalse (androidTooling.Execute (), "ResolveAndroidTooling should fail when the explicit SDK has no tooling.");
@@ -293,7 +290,7 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			try {
 				Assert.IsTrue (resolveSdks.Execute ());
-				var tooling = new Xamarin.Android.Tasks.ResolveAndroidTooling {
+				var tooling = new ResolveAndroidTooling {
 					BuildEngine = engine,
 					AndroidSdkPath = secondSdk,
 					TargetPlatformVersion = "37.0",
