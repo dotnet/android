@@ -32,6 +32,48 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("ManagedConstruction")]
+		public void JavaSideExceptionConstructorCapturesStackFromPreinstalledPeer ()
+		{
+			ConstructorActivationJavaException.Reset ();
+
+			var handle = JNIEnv.StartCreateInstance (typeof (ConstructorActivationJavaException), "()V");
+			try {
+				JNIEnv.FinishCreateInstance (handle, "()V");
+				var reference = new JniObjectReference (handle);
+				using var instance = JniEnvironment.Runtime.ValueManager.PeekPeer (reference) as ConstructorActivationJavaException;
+				Assert.IsNotNull (instance, "Java construction must activate and register the managed constructor.");
+				if (instance == null)
+					throw new InvalidOperationException ("The Java constructor did not register its managed peer.");
+
+				Assert.AreEqual (1, ConstructorActivationJavaException.ConstructorInvocations);
+				Assert.AreEqual (0, ConstructorActivationJavaException.ActivationConstructorInvocations);
+				Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, instance.PeerReference));
+				Assert.AreEqual (JniObjectReferenceType.Global, instance.PeerReference.Type);
+				Assert.IsNotEmpty (instance.StackAtConstruction, "The base constructor must capture the preinstalled peer's stack.");
+				StringAssert.Contains (ConstructorActivationJavaException.JavaName.Replace ('/', '.'), instance.JavaStackTrace);
+				Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
+		[Category ("ManagedConstruction")]
+		public void ManagedExceptionConstructorCapturesStackFromNewPeer ()
+		{
+			ConstructorActivationJavaException.Reset ();
+
+			using var instance = new ConstructorActivationJavaException ();
+			Assert.AreEqual (1, ConstructorActivationJavaException.ConstructorInvocations);
+			Assert.AreEqual (0, ConstructorActivationJavaException.ActivationConstructorInvocations);
+			Assert.IsTrue (instance.PeerReference.IsValid);
+			Assert.IsNotEmpty (instance.StackAtConstruction);
+			Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
+			Assert.AreSame (instance, JniEnvironment.Runtime.ValueManager.PeekPeer (instance.PeerReference));
+		}
+
+		[Test]
 		[Category ("UnicodeJavaIdentifiers")]
 		public void JavaSideUnicodeIdentifierConstructorsRunAndRegisterPeers ()
 		{
@@ -596,6 +638,38 @@ namespace Java.InteropTests
 			Assert.IsTrue (
 				JniEnvironment.Types.IsSameObject (expected.PeerReference, actual.PeerReference),
 				$"Expected Java object identity to match. Expected handle: {expected.Handle}, actual handle: {actual.Handle}.");
+		}
+	}
+
+	[JniTypeSignature (ConstructorActivationJavaException.JavaName)]
+	public class ConstructorActivationJavaException : JavaException
+	{
+		public const string JavaName = "net/dot/android/test/ConstructorActivationJavaException";
+		static readonly JniPeerMembers members = new JniPeerMembers (JavaName, typeof (ConstructorActivationJavaException));
+
+		public static int ConstructorInvocations;
+		public static int ActivationConstructorInvocations;
+		public string? StackAtConstruction { get; }
+
+		public override JniPeerMembers JniPeerMembers => members;
+
+		[JniConstructorSignature ("()V")]
+		public ConstructorActivationJavaException ()
+		{
+			ConstructorInvocations++;
+			StackAtConstruction = JavaStackTrace;
+		}
+
+		public ConstructorActivationJavaException (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
+			ActivationConstructorInvocations++;
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+			ActivationConstructorInvocations = 0;
 		}
 	}
 

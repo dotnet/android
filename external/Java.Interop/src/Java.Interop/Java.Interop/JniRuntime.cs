@@ -233,6 +233,9 @@ namespace Java.Interop
 
 		static unsafe IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
 		{
+			if (envp == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (envp));
+
 			IntPtr vm   = IntPtr.Zero;
 			if (JniNativeMethods.GetJavaVM (envp, &vm) is int r &&
 					r != JNI_OK) {
