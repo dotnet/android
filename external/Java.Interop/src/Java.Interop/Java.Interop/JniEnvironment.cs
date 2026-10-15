@@ -161,6 +161,9 @@ namespace Java.Interop {
 
 			internal static unsafe int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
+				if (jnienv == IntPtr.Zero)
+					throw new ArgumentNullException (nameof (jnienv));
+
 				IntPtr _vm;
 				int r       = JniNativeMethods.GetJavaVM (jnienv, &_vm);
 				vm          = _vm;
@@ -196,6 +199,8 @@ namespace Java.Interop {
 			set {
 				if (disposed)
 					throw new ObjectDisposedException (nameof (JniEnvironmentInfo));
+				if (value == IntPtr.Zero)
+					throw new ArgumentNullException (nameof (value));
 				if (environmentPointer == value)
 					return;
 

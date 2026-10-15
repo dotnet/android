@@ -52,9 +52,15 @@ namespace Java.Interop
 			Construct (ref reference, options);
 		}
 
+		protected JavaObject (JniObjectReferenceOptions options)
+		{
+			JniObjectReference reference = default;
+			Construct (ref reference, options);
+		}
+
 		[global::Java.Interop.JniConstructorSignature ("()V")]
 		public unsafe JavaObject ()
-			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+			: this (JniObjectReferenceOptions.None)
 		{
 			if (PeerReference.IsValid)
 				return;
