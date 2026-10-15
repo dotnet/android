@@ -52,8 +52,8 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
+		// SAFETY: libc rename uses the platform C ABI and only borrows the marshalled strings during the call.
 		[DllImport ("libc", SetLastError=true)]
-		static extern int rename (string old, string @new);
+		static safe extern int rename (string old, string @new);
 	}
 }
-

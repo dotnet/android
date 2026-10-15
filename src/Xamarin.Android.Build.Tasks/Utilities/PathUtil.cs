@@ -143,7 +143,7 @@ namespace Xamarin.Android.Tools
 		}
 
 		// Adapted from CoreFX sources
-		static unsafe int EqualStartingCharacterCount(string first, string second, bool ignoreCase)
+		static int EqualStartingCharacterCount(string first, string second, bool ignoreCase)
 		{
 			if (String.IsNullOrEmpty(first) || string.IsNullOrEmpty(second))
 				return 0;
@@ -158,11 +158,14 @@ namespace Xamarin.Android.Tools
 					char* leftEnd = l + first.Length;
 					char* rightEnd = r + second.Length;
 
-					while (l != leftEnd && r != rightEnd && (*l == *r || (ignoreCase && char.ToUpperInvariant((*l)) == char.ToUpperInvariant((*r)))))
-					{
-						commonChars++;
-						l++;
-						r++;
+					// SAFETY: The strings stay pinned and both cursors stop at their string's end.
+					unsafe {
+						while (l != leftEnd && r != rightEnd && (*l == *r || (ignoreCase && char.ToUpperInvariant((*l)) == char.ToUpperInvariant((*r)))))
+						{
+							commonChars++;
+							l++;
+							r++;
+						}
 					}
 				}
 			}
