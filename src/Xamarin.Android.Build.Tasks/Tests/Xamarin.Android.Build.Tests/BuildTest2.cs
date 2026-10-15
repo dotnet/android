@@ -1140,10 +1140,6 @@ namespace UnamedProject
 
 				//NOTE: none of these targets should run, since we have not actually changed anything!
 				var targetsToBeSkipped = new [] {
-					//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
-					//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
-					//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
-					//"_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",

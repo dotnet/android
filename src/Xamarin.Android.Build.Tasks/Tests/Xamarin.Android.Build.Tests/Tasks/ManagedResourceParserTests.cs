@@ -440,7 +440,6 @@ int xml myxml 0x7f140000
 			task.Namespace = "Foo.Foo";
 			task.AssemblyName = "Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
-			task.DesignTimeOutputFile = Path.Combine (Root, path, "designtime", "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
 			task.Resources = new TaskItem [] {
@@ -466,11 +465,6 @@ int xml myxml 0x7f140000
 
 			FileAssert.Exists (task.NetResgenOutputFile);
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
-
-			if (!string.IsNullOrEmpty (task.DesignTimeOutputFile)) {
-				FileAssert.Exists (task.DesignTimeOutputFile);
-				CompareFilesIgnoreRuntimeInfoString (task.DesignTimeOutputFile, expected);
-			}
 		}
 
 		[Test]
