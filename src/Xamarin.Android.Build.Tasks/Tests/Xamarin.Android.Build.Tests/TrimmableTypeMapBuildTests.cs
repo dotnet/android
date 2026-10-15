@@ -207,19 +207,23 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var component in components) {
 				foreach (var runtime in new [] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 					foreach (bool separateAssemblies in new [] { false, true }) {
-						yield return new TestCaseData (runtime, separateAssemblies, component.Source)
-							.SetName ($"Build_ComponentNameIsUsedInSignatures({component.Attribute},{runtime},{separateAssemblies})");
+						foreach (bool dollarName in new [] { false, true }) {
+							yield return new TestCaseData (runtime, separateAssemblies, component.Source, dollarName)
+								.SetName ($"Build_ComponentNameIsUsedInSignatures({component.Attribute},{runtime},{separateAssemblies},{(dollarName ? "DollarName" : "SimpleName")})");
+						}
 					}
 				}
 			}
 		}
 
 		[TestCaseSource (nameof (ComponentNameSignatureCases))]
-		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies, string componentSource)
+		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies, string componentSource, bool dollarName)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
+			string componentSimpleName = dollarName ? "Outer$NamedComponent" : "NamedComponent";
+			string componentJavaName = $"example.components.{componentSimpleName}";
 			var component = new BuildItem.Source ("NamedComponent.cs") {
 				TextContent = () => """
 					using System;
@@ -231,7 +235,7 @@ namespace Xamarin.Android.Build.Tests {
 
 					namespace Example.Components;
 
-					""" + Environment.NewLine + componentSource,
+					""" + Environment.NewLine + componentSource.Replace ("example.components.NamedComponent", componentJavaName),
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -256,6 +260,12 @@ namespace Xamarin.Android.Build.Tests {
 
 								[Export ("echoArray")]
 								public NamedComponent[] EchoArray (NamedComponent[] components) => components;
+
+								[Export ("echoConfig")]
+								public Android.Graphics.Bitmap.Config? EchoConfig (Android.Graphics.Bitmap.Config? config) => config;
+
+								[ExportField ("component")]
+								public NamedComponent? CreateComponent () => null;
 							}
 							""",
 					},
@@ -270,6 +280,8 @@ namespace Xamarin.Android.Build.Tests {
 				using var arrayBinder = new Example.Services.ComponentBinder (components);
 				System.GC.KeepAlive (binder.Echo (component));
 				System.GC.KeepAlive (arrayBinder.EchoArray (components));
+				System.GC.KeepAlive (binder.EchoConfig (null));
+				System.GC.KeepAlive (binder.CreateComponent ());
 				""");
 			var testRoot = Path.Combine ("temp", TestName);
 			if (separateAssemblies) {
@@ -290,15 +302,27 @@ namespace Xamarin.Android.Build.Tests {
 			using var builder = CreateApkBuilder (Path.Combine (testRoot, proj.ProjectName));
 			Assert.IsTrue (builder.Build (proj), "Explicit component names must compile in constructor and export signatures.");
 			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
+			var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine (
+				"typemap", runtime == AndroidRuntime.CoreCLR ? "linked-java" : "java", "example", "components"));
+			string componentJava = File.ReadAllText (Path.Combine (javaDirectory, componentSimpleName + ".java"));
+			StringAssert.Contains ($"public class {componentSimpleName}", componentJava);
+			string binderJava = File.ReadAllText (Path.Combine (javaDirectory, "ComponentBinder.java"));
+			StringAssert.Contains ($"public ComponentBinder ({componentJavaName} p0)", binderJava);
+			StringAssert.Contains ($"public ComponentBinder ({componentJavaName}[] p0)", binderJava);
+			StringAssert.Contains ($"public {componentJavaName} echo ({componentJavaName} p0)", binderJava);
+			StringAssert.Contains ($"public {componentJavaName}[] echoArray ({componentJavaName}[] p0)", binderJava);
+			StringAssert.Contains ($"public {componentJavaName} component = CreateComponent ();", binderJava);
+			StringAssert.Contains ("public android.graphics.Bitmap.Config echoConfig (android.graphics.Bitmap.Config p0)", binderJava);
 			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 			const string binderName = "Lexample/components/ComponentBinder;";
-			const string componentName = "Lexample/components/NamedComponent;";
+			string componentName = $"Lexample/components/{componentSimpleName};";
 			Assert.IsTrue (DexUtils.ContainsClass (componentName, dexFile, AndroidSdkPath), "The named component must be packaged.");
 			foreach (var (method, signature) in new [] {
 				("<init>", $"({componentName})V"),
 				("<init>", $"([{componentName})V"),
 				("echo", $"({componentName}){componentName}"),
 				("echoArray", $"([{componentName})[{componentName}"),
+				("echoConfig", "(Landroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap$Config;"),
 			}) {
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod (binderName, method, signature, dexFile, AndroidSdkPath),
 					$"The packaged binder must contain {method}{signature}.");
