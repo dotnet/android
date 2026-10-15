@@ -24,6 +24,7 @@ public class CallbackBoundaryOwnershipTests
 	[TestCase ("fake-helper", false)]
 	[TestCase ("unsigned-helper", false)]
 	[TestCase ("wrong-helper-signature", false)]
+	[TestCase ("modified-helper", false)]
 	[TestCase ("wrong-arguments", false)]
 	[TestCase ("helper-before", false)]
 	[TestCase ("helper-after", false)]
@@ -400,6 +401,8 @@ public class CallbackBoundaryOwnershipTests
 				helper.Name = "SafeInvokeFunc";
 			helper.Parameters.Add (new ParameterDefinition (module.TypeSystem.IntPtr));
 			helper.Parameters.Add (new ParameterDefinition (module.TypeSystem.IntPtr));
+			if (shape == "modified-helper")
+				helper.Parameters [0].ParameterType = new RequiredModifierType (Type ("System.Runtime.CompilerServices.IsReadOnlyAttribute", runtime), module.TypeSystem.IntPtr);
 			var pointer = new FunctionPointerType { ReturnType = module.TypeSystem.Void };
 			if (typed) {
 				var generic = new GenericParameter (helper);
