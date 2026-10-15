@@ -149,6 +149,7 @@
     <Compile Include="Java.Interop\JavaMarshalGCBridgeTests.cs" />
     <Compile Include="Java.Interop\PeerIdentityTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
+    <Compile Include="Java.Interop\JniCallbackBoundaryOwnershipTests.cs" />
     <Compile Include="Java.Interop\RawInterfaceCollectionHolder.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapDirectCallbackTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapExportTests.cs" />
@@ -207,6 +208,7 @@
     <AndroidJavaSource Update="java/net/dot/android/remap/*.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/JniCallbackBoundaryOwnership.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/JniRuntimeExceptionPolicy.java" Bind="false" />
   </ItemGroup>
 

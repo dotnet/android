@@ -862,6 +862,8 @@ sealed class PEAssemblyBuilder
 				Pop (1);
 				break;
 			case ILOpCode.Conv_u1:
+			case ILOpCode.Conv_i1:
+			case ILOpCode.Conv_u2:
 				break;
 			case ILOpCode.Dup:
 				Push (1);
