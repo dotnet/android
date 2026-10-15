@@ -15,8 +15,48 @@ namespace Java.InteropTests
 	[TestFixture]
 	[Category ("Export")]
 	[Category ("TrimmableTypeMapRuntimeCoverage")]
+	[Category ("GeneratedJniDebuggerBoundary")]
 	public class TrimmableTypeMapExportTests
 	{
+		[Test]
+		[Category ("NativeAOTIgnore")] // NativeAOT application-event parity is a separate runtime change.
+		public void HandledExportExceptionsReturnAbiDefaultsAndDeliverPolicyOnce ()
+		{
+			using var peer = new GeneratedJniDebuggerBoundaryExportPeer ();
+			int notifications = 0;
+			int unexpectedExceptions = 0;
+			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+				if (!ReferenceEquals (peer.Exception, args.Exception)) {
+					unexpectedExceptions++;
+				}
+				notifications++;
+				args.Handled = true;
+			};
+			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			try {
+				var boolMethod = GetRequiredMethodID (peer.Class.Handle, "throwBoolean", "()Z");
+				var intMethod = GetRequiredMethodID (peer.Class.Handle, "throwInt", "()I");
+				var longMethod = GetRequiredMethodID (peer.Class.Handle, "throwLong", "()J");
+				var floatMethod = GetRequiredMethodID (peer.Class.Handle, "throwFloat", "()F");
+				var doubleMethod = GetRequiredMethodID (peer.Class.Handle, "throwDouble", "()D");
+				var objectMethod = GetRequiredMethodID (peer.Class.Handle, "throwString", "()Ljava/lang/String;");
+				Assert.IsFalse (JNIEnv.CallBooleanMethod (peer.Handle, boolMethod));
+				Assert.AreEqual (0, JNIEnv.CallIntMethod (peer.Handle, intMethod));
+				Assert.AreEqual (0L, JNIEnv.CallLongMethod (peer.Handle, longMethod));
+				Assert.AreEqual (0f, JNIEnv.CallFloatMethod (peer.Handle, floatMethod));
+				Assert.AreEqual (0d, JNIEnv.CallDoubleMethod (peer.Handle, doubleMethod));
+				Assert.AreEqual (IntPtr.Zero, JNIEnv.CallObjectMethod (peer.Handle, objectMethod));
+				Assert.AreEqual (6, notifications, "Each throwing generated export delivers policy once.");
+				Assert.AreEqual (0, unexpectedExceptions, "Policy must receive the original managed exception.");
+			} finally {
+				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
+			}
+
+			var success = GetRequiredMethodID (peer.Class.Handle, "succeed", "()I");
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, success),
+				"Handled exceptions must not leak JNI pending state into the next call.");
+		}
+
 		[Test]
 		public void OverloadedAndRenamedExports_DispatchByJniNameAndSignature ()
 		{
@@ -191,6 +231,32 @@ namespace Java.InteropTests
 
 		[Export ("javaSideName")]
 		public int ManagedName () => 99;
+	}
+
+	class GeneratedJniDebuggerBoundaryExportPeer : Java.Lang.Object
+	{
+		public readonly InvalidOperationException Exception = new InvalidOperationException ("generated export boundary");
+
+		[Export ("throwBoolean")]
+		public bool ThrowBoolean () => throw Exception;
+
+		[Export ("throwInt")]
+		public int ThrowInt () => throw Exception;
+
+		[Export ("throwLong")]
+		public long ThrowLong () => throw Exception;
+
+		[Export ("throwFloat")]
+		public float ThrowFloat () => throw Exception;
+
+		[Export ("throwDouble")]
+		public double ThrowDouble () => throw Exception;
+
+		[Export ("throwString")]
+		public string ThrowString () => throw Exception;
+
+		[Export ("succeed")]
+		public int Succeed () => 42;
 	}
 
 	class TrimmableExportBasePeer : Java.Lang.Object
