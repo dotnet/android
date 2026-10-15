@@ -135,7 +135,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		try {
 			var assembly = context.LoadFromAssemblyPath (OutputPath);
 			Assert.AreEqual (new Version (1, 0, 0, 0), assembly.GetName ().Version);
-			Assert.AreEqual (8, assembly.GetName ().GetPublicKeyToken ()?.Length);
+			CollectionAssert.AreEqual (Convert.FromHexString ("1e9360d6629057ee"), assembly.GetName ().GetPublicKeyToken ());
 			var propertyType = assembly.GetType ($"{DesignerNamespace}.Resource+String", throwOnError: true)
 				?? throw new InvalidOperationException ();
 			var constantType = assembly.GetType ($"{DesignerNamespace}.ResourceConstant+String", throwOnError: true)
