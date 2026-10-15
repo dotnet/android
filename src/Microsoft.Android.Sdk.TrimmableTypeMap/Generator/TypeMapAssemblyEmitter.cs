@@ -43,12 +43,9 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
 ///     {
-///         AndroidRuntimeInternal.WaitForBridgeProcessing();
-///         try {
-///             Activity.n_OnCreate(jnienv, self, p0);
-///         } catch (Exception e) {
-///             AndroidEnvironmentInternal.UnhandledException(e);
-///         }
+///         Activity.n_OnCreate(jnienv, self, p0); // callback already owns its boundary
+///         // For an unrecognized legacy callback instead:
+///         // JniMarshal.SafeInvokeAction(jnienv, self, p0, &amp;Activity.n_OnCreate);
 ///     }
 ///
 ///     [UnmanagedCallersOnly]
@@ -110,8 +107,6 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getActivationPeerRef;
 	MemberReferenceHandle _setActivationPeerReferenceRef;
 	MemberReferenceHandle _markActivationPeerReplaceableRef;
-	MemberReferenceHandle _waitForBridgeProcessingRef;
-	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -126,8 +121,6 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTransitionRef;
 	TypeReferenceHandle _jniRuntimeRef;
 	TypeReferenceHandle _exceptionRef;
-	TypeReferenceHandle _androidRuntimeInternalRef;
-	TypeReferenceHandle _androidEnvironmentInternalRef;
 
 	MemberReferenceHandle _beginMarshalMethodRef;
 	MemberReferenceHandle _endMarshalMethodRef;
@@ -377,11 +370,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniRuntime"));
 		_exceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Exception"));
-		var monoAndroidRuntimeRef = _pe.AddAssemblyRef ("Mono.Android.Runtime", new Version (0, 0, 0, 0));
-		_androidRuntimeInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidRuntimeInternal"));
-		_androidEnvironmentInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironmentInternal"));
 
 		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -507,14 +495,6 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().IntPtr ()));
-
-		_waitForBridgeProcessingRef = _pe.AddMemberRef (_androidRuntimeInternalRef, "WaitForBridgeProcessing",
-			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
-
-		_androidEnvironmentUnhandledExceptionRef = _pe.AddMemberRef (_androidEnvironmentInternalRef, "UnhandledException",
-			sig => sig.MethodSignature ().Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().Type (_exceptionRef, false)));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
 		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",
@@ -1119,60 +1099,188 @@ sealed class TypeMapAssemblyEmitter
 
 		var callbackRef = CreateCallbackMemberRef (uco);
 
-		var handle = _pe.EmitBody (uco.WrapperName,
-			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			encodeSig,
-			(encoder, cfb) => EmitUcoForwarderBody (encoder, cfb, returnKind, enc => {
-				for (int p = 0; p < paramCount; p++)
-					enc.LoadArgument (p);
-				enc.Call (callbackRef, paramCount, returnsValue: !isVoid);
-			}),
-			blob => EncodeUcoForwarderLegacyLocals (blob, returnKind));
+		var parameterTypes = GetCallbackParameterTypes (uco, jniParams);
+		string returnType = uco.CallbackReturnTypeName ?? GetCallbackTypeName (returnKind);
+		bool useHelper = !uco.CallbackOwnsBoundary && jniParams.Count <= 16 &&
+			!parameterTypes.Any (t => t.EndsWith ("*", StringComparison.Ordinal)) && !returnType.EndsWith ("*", StringComparison.Ordinal);
+		EntityHandle helper = useHelper ? CreateSafeInvokeRef (parameterTypes, returnType) : default;
+		void EmitCall (TrackedInstructionEncoder encoder)
+		{
+			for (int p = 0; p < paramCount; p++) {
+				encoder.LoadArgument (p);
+				if (p >= 2)
+					EmitAbiConversion (encoder, parameterTypes [p - 2]);
+			}
+			if (useHelper) {
+				encoder.LoadFunction (callbackRef);
+				encoder.Call (helper, paramCount + 1, returnsValue: !isVoid);
+			} else {
+				encoder.Call (callbackRef, paramCount, returnsValue: !isVoid);
+			}
+			if (!isVoid)
+				EmitAbiConversion (encoder, GetAbiTypeName (returnKind));
+		}
+		MethodDefinitionHandle handle;
+		if (uco.CallbackOwnsBoundary || useHelper) {
+			handle = _pe.EmitBody (uco.WrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				encodeSig, encoder => {
+					EmitCall (encoder);
+					encoder.Return (returnsValue: !isVoid);
+				});
+		} else {
+			// SafeInvoke's finite overload set cannot represent every valid JNI signature.
+			handle = _pe.EmitBody (uco.WrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				encodeSig,
+				(encoder, cfb) => EmitUcoForwarderBoundary (encoder, cfb, returnKind, EmitCall),
+				blob => EncodeUcoForwarderLocals (blob, returnKind));
+			AddForwarderDebuggerAttribute (handle);
+		}
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
 	}
 
-	void EmitUcoForwarderBody (TrackedInstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<TrackedInstructionEncoder> emitCallback)
+	static string GetCallbackTypeName (JniParamKind kind) => kind switch {
+		JniParamKind.Void => "System.Void", JniParamKind.Boolean or JniParamKind.Byte => "System.SByte",
+		JniParamKind.Char => "System.UInt16", JniParamKind.Short => "System.Int16", JniParamKind.Int => "System.Int32",
+		JniParamKind.Long => "System.Int64", JniParamKind.Float => "System.Single", JniParamKind.Double => "System.Double",
+		JniParamKind.Object => "System.IntPtr", _ => throw new ArgumentException ($"Unsupported JNI kind {kind}."),
+	};
+
+	static string GetAbiTypeName (JniParamKind kind) => kind == JniParamKind.Boolean ? "System.Byte" : GetCallbackTypeName (kind);
+
+	static IReadOnlyList<string> GetCallbackParameterTypes (UcoMethodData uco, IReadOnlyList<JniParamKind> parameters)
+		=> uco.CallbackParameterTypeNames ?? parameters.Select (GetCallbackTypeName).ToArray ();
+
+	static void EmitAbiConversion (TrackedInstructionEncoder encoder, string type)
+	{
+		switch (type) {
+		case "System.Boolean":
+			encoder.LoadConstantI4 (0);
+			encoder.OpCode (ILOpCode.Cgt_un);
+			break;
+		case "System.Byte": encoder.OpCode (ILOpCode.Conv_u1); break;
+		case "System.SByte": encoder.OpCode (ILOpCode.Conv_i1); break;
+		case "System.Char":
+		case "System.UInt16": encoder.OpCode (ILOpCode.Conv_u2); break;
+		}
+	}
+
+	EntityHandle CreateSafeInvokeRef (IReadOnlyList<string> parameterTypes, string returnType)
+	{
+		bool isVoid = returnType == "System.Void";
+		int genericCount = parameterTypes.Count + (isVoid ? 0 : 1);
+		var marshal = _pe.Metadata.AddTypeReference (_javaInteropRef,
+			_pe.Metadata.GetOrAddString ("Java.Interop"), _pe.Metadata.GetOrAddString ("JniMarshal"));
+		var signature = new BlobBuilder ();
+		signature.WriteByte (genericCount == 0 ? (byte) 0 : (byte) SignatureAttributes.Generic);
+		if (genericCount > 0)
+			signature.WriteCompressedInteger (genericCount);
+		signature.WriteCompressedInteger (parameterTypes.Count + 3);
+		void WriteReturn ()
+		{
+			if (isVoid)
+				signature.WriteByte ((byte) SignatureTypeCode.Void);
+			else
+				WriteGenericParameter (parameterTypes.Count);
+		}
+		void WriteGenericParameter (int index)
+		{
+			signature.WriteByte ((byte) SignatureTypeCode.GenericMethodParameter);
+			signature.WriteCompressedInteger (index);
+		}
+		void WriteParameters ()
+		{
+			signature.WriteByte ((byte) SignatureTypeCode.IntPtr);
+			signature.WriteByte ((byte) SignatureTypeCode.IntPtr);
+			for (int i = 0; i < parameterTypes.Count; i++)
+				WriteGenericParameter (i);
+		}
+		WriteReturn ();
+		WriteParameters ();
+		signature.WriteByte ((byte) SignatureTypeCode.FunctionPointer);
+		signature.WriteByte (0); // managed static calling convention
+		signature.WriteCompressedInteger (parameterTypes.Count + 2);
+		WriteReturn ();
+		WriteParameters ();
+		var member = _pe.Metadata.AddMemberReference (marshal,
+			_pe.Metadata.GetOrAddString (isVoid ? "SafeInvokeAction" : "SafeInvokeFunc"), _pe.Metadata.GetOrAddBlob (signature));
+		if (genericCount == 0)
+			return member;
+		var instantiation = new BlobBuilder ();
+		instantiation.WriteByte ((byte) SignatureKind.MethodSpecification);
+		instantiation.WriteCompressedInteger (genericCount);
+		foreach (var parameterType in parameterTypes)
+			JniSignatureHelper.EncodeClrTypeName (new SignatureTypeEncoder (instantiation), parameterType);
+		if (!isVoid)
+			JniSignatureHelper.EncodeClrTypeName (new SignatureTypeEncoder (instantiation), returnType);
+		return _pe.Metadata.AddMethodSpecification (member, _pe.Metadata.GetOrAddBlob (instantiation));
+	}
+
+	void AddForwarderDebuggerAttribute (MethodDefinitionHandle handle)
+	{
+		var attribute = _pe.Metadata.AddTypeReference (_pe.SystemRuntimeRef, _pe.Metadata.GetOrAddString ("System.Diagnostics"),
+			_pe.Metadata.GetOrAddString ("DebuggerDisableUserUnhandledExceptionsAttribute"));
+		var constructor = _pe.AddMemberRef (attribute, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), _ => { }));
+		_pe.Metadata.AddCustomAttribute (handle, constructor, _pe.BuildAttributeBlob (_ => { }));
+	}
+
+	void EmitUcoForwarderBoundary (TrackedInstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<TrackedInstructionEncoder> emitCallback)
 	{
 		bool isVoid = returnKind == JniParamKind.Void;
 		var tryStart = encoder.DefineLabel ();
 		var catchStart = encoder.DefineLabel ();
+		var finallyStart = encoder.DefineLabel ();
 		var afterAll = encoder.DefineLabel ();
 
-		encoder.Call (_waitForBridgeProcessingRef, parameterCount: 0);
+		encoder.LoadArgument (0);
+		encoder.LoadLocalAddress (0);
+		encoder.LoadLocalAddress (1);
+		encoder.Call (_beginMarshalMethodRef, parameterCount: 3, returnsValue: true);
+		encoder.Branch (ILOpCode.Brfalse, afterAll);
 		encoder.MarkLabel (tryStart);
 		emitCallback (encoder);
 		if (!isVoid) {
-			encoder.StoreLocal (0);
+			encoder.StoreLocal (3);
 		}
 		encoder.Branch (ILOpCode.Leave, afterAll);
 
 		encoder.MarkLabel (catchStart, stackDepth: 1);
-		encoder.StoreLocal (isVoid ? 0 : 1);
-		encoder.LoadLocal (isVoid ? 0 : 1);
-		encoder.Call (_androidEnvironmentUnhandledExceptionRef, parameterCount: 1);
+		encoder.StoreLocal (2);
+		encoder.LoadLocal (1);
+		encoder.LoadLocalAddress (0);
+		encoder.LoadLocal (2);
+		encoder.Callvirt (_onUserUnhandledExceptionRef, parameterCount: 2);
 		encoder.Branch (ILOpCode.Leave, afterAll);
 
+		encoder.MarkLabel (finallyStart);
+		encoder.LoadLocalAddress (0);
+		encoder.Call (_endMarshalMethodRef, parameterCount: 1);
+		encoder.OpCode (ILOpCode.Endfinally);
 		encoder.MarkLabel (afterAll);
 		if (!isVoid) {
-			encoder.LoadLocal (0);
+			encoder.LoadLocal (3);
 		}
 		encoder.Return (returnsValue: !isVoid);
 
-		cfb.AddCatchRegion (tryStart, catchStart, catchStart, afterAll, _exceptionRef);
+		cfb.AddCatchRegion (tryStart, catchStart, catchStart, finallyStart, _exceptionRef);
+		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
 	}
 
-	void EncodeUcoForwarderLegacyLocals (BlobBuilder blob, JniParamKind returnKind)
+	void EncodeUcoForwarderLocals (BlobBuilder blob, JniParamKind returnKind)
 	{
 		bool isVoid = returnKind == JniParamKind.Void;
 		blob.WriteByte ((byte) SignatureKind.LocalVariables);
-		blob.WriteCompressedInteger (isVoid ? 1 : 2);
-		if (!isVoid) {
-			JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (blob), returnKind);
-		}
-		blob.WriteByte ((byte) SignatureTypeKind.Class);
-		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
+		blob.WriteCompressedInteger (isVoid ? 3 : 4);
+		var locals = new SignatureTypeEncoder (blob);
+		locals.Type (_jniTransitionRef, true);
+		locals.Type (_jniRuntimeRef, false);
+		locals.Type (_exceptionRef, false);
+		if (!isVoid)
+			JniSignatureHelper.EncodeClrType (locals, returnKind);
 	}
 
 	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)

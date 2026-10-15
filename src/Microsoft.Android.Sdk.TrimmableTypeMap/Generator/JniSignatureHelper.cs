@@ -196,6 +196,14 @@ static class JniSignatureHelper
 	/// </summary>
 	public static void EncodeClrTypeName (SignatureTypeEncoder encoder, string clrTypeName)
 	{
+		if (clrTypeName.EndsWith ("*", StringComparison.Ordinal)) {
+			string element = clrTypeName.Substring (0, clrTypeName.Length - 1);
+			if (element == "System.Void")
+				encoder.VoidPointer ();
+			else
+				EncodeClrTypeName (encoder.Pointer (), element);
+			return;
+		}
 		switch (clrTypeName) {
 		case "System.Boolean": encoder.Boolean (); break;
 		case "System.SByte":   encoder.SByte (); break;
@@ -210,6 +218,7 @@ static class JniSignatureHelper
 		case "System.Single":  encoder.Single (); break;
 		case "System.Double":  encoder.Double (); break;
 		case "System.IntPtr":  encoder.IntPtr (); break;
+		case "System.UIntPtr": encoder.UIntPtr (); break;
 		default: throw new ArgumentException ($"Cannot encode CLR type '{clrTypeName}' in a native callback MemberRef");
 		}
 	}
