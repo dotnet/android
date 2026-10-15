@@ -61,7 +61,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1268,6 +1268,7 @@ because xbuild doesn't support framework reference assemblies.
 	<!-- Generate the final Resource Assembly if we need to. -->
 	<GenerateResourceDesignerAssembly
 			Condition="'$(AndroidUseDesignerAssembly)' == 'True' "
+			MSBuildRuntime="NET"
 			ContinueOnError="$(DesignTimeBuild)"
 			RTxtFile="$(IntermediateOutputPath)R.txt"
 			IsApplication="$(AndroidApplication)"
