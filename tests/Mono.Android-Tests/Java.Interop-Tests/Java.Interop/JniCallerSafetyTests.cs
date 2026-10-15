@@ -54,7 +54,7 @@ public class JniCallerSafetyTests {
 	public void RawRemappingLookupRequiresUnsafeButDiagnosticsRemainSafe ()
 	{
 		var method = typeof (JniRuntime.JniTypeManager).GetMethods (BindingFlags.Instance | BindingFlags.NonPublic)
-			.Single (m => m.Name == "GetReplacementMethodInfoCore" && m.GetParameters () [0].ParameterType.IsPointer);
+			.Single (m => m.Name == "GetReplacementMethodInfoUnsafe" && m.GetParameters () [0].ParameterType.IsPointer);
 		Assert.IsTrue (RequiresUnsafe (method));
 
 		var toString = typeof (JniRuntime.ReplacementMethodInfo).GetMethod (nameof (JniRuntime.ReplacementMethodInfo.ToString));
@@ -93,7 +93,7 @@ public class JniCallerSafetyTests {
 	public void BorrowedTypeNameProducerRequiresUnsafe ()
 	{
 		var method = typeof (JniRuntime.JniTypeManager).GetMethod (
-			"GetReplacementTypeInfoPointerCore", BindingFlags.Instance | BindingFlags.NonPublic)
+			"GetReplacementTypeInfoUnsafe", BindingFlags.Instance | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException ("Missing borrowed type-name producer.");
 		Assert.IsTrue (RequiresUnsafe (method));
 		Assert.AreEqual (typeof (byte*).MakeByRefType (), method.GetParameters () [2].ParameterType);
@@ -303,7 +303,7 @@ public class JniCallerSafetyTests {
 		{
 			unsafe {
 				fixed (byte* name = "example/Source"u8) {
-					return GetReplacementMethodInfoCore (name, "method".AsSpan (), "()V".AsSpan ());
+					return GetReplacementMethodInfoUnsafe (name, "method".AsSpan (), "()V".AsSpan ());
 				}
 			}
 		}
@@ -324,11 +324,11 @@ public class JniCallerSafetyTests {
 	}
 
 	sealed class NativeTypeNameManager : ManagedTypeNameManager {
-		protected override unsafe void GetReplacementTypeInfoPointerCore (
+		protected override unsafe void GetReplacementTypeInfoUnsafe (
 			string jniSimpleReference, [MaybeNull] out string replacement, out byte* replacementUtf8)
 		{
 			unsafe {
-				base.GetReplacementTypeInfoPointerCore (jniSimpleReference, out replacement, out replacementUtf8);
+				base.GetReplacementTypeInfoUnsafe (jniSimpleReference, out replacement, out replacementUtf8);
 			}
 			fixed (byte* name = "example/Native"u8) {
 				replacementUtf8 = name;

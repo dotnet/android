@@ -406,7 +406,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		=> RuntimeFeature.JniRemapping ? JniRemappingLookup.GetReplacementType (jniSimpleReference) : null;
 
-	protected override unsafe void GetReplacementTypeInfoPointerCore (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
+	protected override unsafe void GetReplacementTypeInfoUnsafe (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
 	{
 		replacement = null;
 		replacementUtf8 = RuntimeFeature.JniRemapping
@@ -424,7 +424,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
 			: null;
 
-	protected override unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+	protected override unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoUnsafe (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 	{
 		unsafe {
 			return RuntimeFeature.JniRemapping

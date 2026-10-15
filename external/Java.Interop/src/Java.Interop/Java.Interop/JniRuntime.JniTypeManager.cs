@@ -408,7 +408,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
-					GetReplacementTypeInfoPointerCore (jniSimpleReference, out replacement, out replacementUtf8);
+					GetReplacementTypeInfoUnsafe (jniSimpleReference, out replacement, out replacementUtf8);
 				}
 				if (replacementUtf8 != null)
 					replacement = null;
@@ -429,7 +429,7 @@ namespace Java.Interop {
 			/// NUL-terminated UTF-8 memory and keep it alive and unchanged for the associated runtime's
 			/// lifetime and every subsequent cached metadata read. Java.Interop does not own or free it.
 			/// </safety>
-			protected virtual unsafe void GetReplacementTypeInfoPointerCore (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
+			protected virtual unsafe void GetReplacementTypeInfoUnsafe (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
 			{
 #pragma warning disable CS0618 // Preserve dispatch to existing native-int overrides.
 				GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out var legacyUtf8);
@@ -442,10 +442,10 @@ namespace Java.Interop {
 			/// </summary>
 			/// <safety>
 			/// A nonzero <paramref name="replacementUtf8"/> must meet the backing-storage and lifetime
-			/// requirements of <see cref="GetReplacementTypeInfoPointerCore"/>. This compatibility
+			/// requirements of <see cref="GetReplacementTypeInfoUnsafe"/>. This compatibility
 			/// hook does not enforce unsafe on existing callers or overrides.
 			/// </safety>
-			[Obsolete ("Override GetReplacementTypeInfoPointerCore and explicitly audit the borrowed storage lifetime.")]
+			[Obsolete ("Override GetReplacementTypeInfoUnsafe and explicitly audit the borrowed storage lifetime.")]
 			protected virtual void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
 			{
 				replacement = GetReplacementTypeCore (jniSimpleReference);
@@ -512,7 +512,7 @@ namespace Java.Interop {
 					return null;
 
 				unsafe {
-					return GetReplacementMethodInfoCore (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
+					return GetReplacementMethodInfoUnsafe (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
 				}
 			}
 
@@ -531,7 +531,7 @@ namespace Java.Interop {
 			/// NUL-terminated UTF-8 storage that remains alive and unchanged for the duration
 			/// of the call. The returned remapping metadata does not take ownership of that storage.
 			/// </safety>
-			protected virtual unsafe ReplacementMethodInfo? GetReplacementMethodInfoCore (byte* jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+			protected virtual unsafe ReplacementMethodInfo? GetReplacementMethodInfoUnsafe (byte* jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
 #pragma warning disable CS0618 // Preserve dispatch to existing native-int overrides.
 				return GetReplacementMethodInfoCore ((IntPtr) jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
@@ -545,7 +545,7 @@ namespace Java.Interop {
 			/// A nonzero <paramref name="jniSimpleReferenceUtf8"/> must address readable NUL-terminated
 			/// UTF-8 storage for the call. This compatibility hook does not enforce unsafe.
 			/// </safety>
-			[Obsolete ("Use the byte* overload and explicitly audit the borrowed storage lifetime.")]
+			[Obsolete ("Use GetReplacementMethodInfoUnsafe and explicitly audit the borrowed storage lifetime.")]
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
 				unsafe {

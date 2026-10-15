@@ -37,7 +37,7 @@ Pointer declarations and address-only getters do not themselves dereference
 memory and can remain safe.
 
 The `ReplacementMethodInfo.TargetJni*Utf8Pointer` setters and the raw
-`JniTypeManager.GetReplacementTypeInfoPointerCore` producer require unsafe. Their
+`JniTypeManager.GetReplacementTypeInfoUnsafe` producer require unsafe. Their
 NUL-terminated backing storage must remain readable and unchanged for the
 runtime's lifetime and every subsequent cached metadata read. Managed-string
 metadata remains safe to construct and use. Equality, hashing, and remapping
@@ -52,7 +52,8 @@ warning-obsolete compatibility APIs. These legacy entry points are explicit
 exceptions to caller-unsafe enforcement, not proof that a supplied address is
 valid. Their backing-memory obligations are unchanged. New code should use the
 typed APIs; internal storage and production consumers use typed pointers.
-The typed base hooks dispatch through the legacy virtual slots so existing
+The typed `GetReplacementTypeInfoUnsafe` and `GetReplacementMethodInfoUnsafe`
+hooks dispatch through the legacy virtual slots so existing
 custom type-manager overrides continue to run. The type-name producer has a
 distinct name to avoid making existing `out var` calls ambiguous.
 
