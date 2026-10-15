@@ -2,6 +2,10 @@
   "author": "Microsoft",
   "name": "Aplikace pro Android",
   "description": "Projekt pro vytvoření aplikace .NET pro Android",
+  "symbols/Framework/description": "The target framework for the project.",
+  "symbols/Framework/choices/net11.0-android/description": "Target net11.0-android",
+  "symbols/Framework/choices/net10.0-android/description": "Target net10.0-android",
   "symbols/packageName/description": "Přepíše název balíčku v souboru AndroidManifest.xml.",
-  "symbols/supportedOSVersion/description": "Přepíše $(SupportedOSPlatformVersion) v projektu."
+  "symbols/supportedOSVersion/description": "Přepíše $(SupportedOSPlatformVersion) v projektu.",
+  "symbols/skipRestore/description": "If specified, skips the automatic restore of the project on create."
 }

@@ -541,10 +541,6 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
     <comment>{0} - The managed type name
 {1} - The exception message of the associated exception</comment>
   </data>
-  <data name="XA4210" xml:space="preserve">
-    <value>ExportAttribute veya ExportFieldAttribute kullanırken lütfen Mono.Android.Export.dll dosyasına bir başvuru ekleyin.</value>
-    <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
-  </data>
   <data name="XA4211" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}', $(TargetPlatformVersion) '{1}' değerinden küçük. ACW derlemesi için API-{2} kullanılıyor.</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
@@ -682,7 +678,7 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.</value>
+    <value>Android kod oluşturma hedefi '{0}' artık desteklenmiyor. 'AndroidCodegenTarget' özelliği yalnızca 'XAJavaInterop1' değerini destekler.</value>
     <comment>The following are literal names and should not be translated: AndroidCodegenTarget, XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -923,14 +919,14 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
 {1} - The invalid input record.</comment>
   </data>
   <data name="XA4329_RequiredProperty" xml:space="preserve">
-    <value>AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.</value>
+    <value>AndroidR8ObfuscationMode=runtime-remapping, $({0}) öğesinin '{1}' olmasını gerektirir, ancak {2}.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping.
 {0} - The required MSBuild property name.
 {1} - The required literal value.
 {2} - The actual value, including quotes.</comment>
   </data>
   <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
-    <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <value>AndroidR8ObfuscationMode=runtime-remapping, '{0}' çalışma zamanı için desteklenmiyor. Desteklenen çalışma zamanları CoreCLR ve NativeAOT'tur.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
 {0} - The runtime name.</comment>
   </data>
@@ -1174,7 +1170,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.</value>
+    <value>'AndroidR8ObfuscationMode' MSBuild özelliği geçersiz bir '{0}' değerine sahip. Geçerli değerler: 'disabled', 'private-members' ve 'runtime-remapping'.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
@@ -1324,12 +1320,12 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Assembly '{0}' uses an unsupported Java peer callback format.</value>
+    <value>'​{0}' derlemesi desteklenmeyen bir Java eş geri çağırma biçimi kullanıyor.</value>
     <comment>The following is a literal name and should not be translated: Java.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.</value>
+    <value>'{0}' derlemesinde çalışma zamanına özgü '{1}' ve '{2}' uygulamalarında farklı Java eş geri çağırma meta verileri var. Tüm RuntimeIdentifier değerleri eşdeğer geri çağırma meta verileri sağlamalıdır.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
 {0} - Assembly name
 {1} - First runtime-specific assembly path

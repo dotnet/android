@@ -541,10 +541,6 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <comment>{0} - The managed type name
 {1} - The exception message of the associated exception</comment>
   </data>
-  <data name="XA4210" xml:space="preserve">
-    <value>Dodaj odwołanie do pliku Mono.Android.Export.dll w przypadku używania atrybutu ExportAttribute lub ExportFieldAttribute.</value>
-    <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
-  </data>
   <data name="XA4211" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion „{0}” jest mniejsze niż $(TargetPlatformVersion) „{1}”. Używanie wersji API-{2} na potrzeby kompilacji ACW.</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
@@ -682,7 +678,7 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.</value>
+    <value>Docelowa '{0}' generowania kodu systemu Android nie jest już obsługiwana. Właściwość "AndroidCodegenTarget" obsługuje tylko element "XAJavaInterop1".</value>
     <comment>The following are literal names and should not be translated: AndroidCodegenTarget, XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -923,14 +919,14 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
 {1} - The invalid input record.</comment>
   </data>
   <data name="XA4329_RequiredProperty" xml:space="preserve">
-    <value>AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.</value>
+    <value>Właściwość AndroidR8ObfuscationMode=runtime-remapping wymaga elementu $({0}) o wartości „{1}”,ale jego wartość to {2}.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping.
 {0} - The required MSBuild property name.
 {1} - The required literal value.
 {2} - The actual value, including quotes.</comment>
   </data>
   <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
-    <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <value>AndroidR8ObfuscationMode=parametr runtime-remapping nie jest obsługiwany w przypadku '{0}' środowiska uruchomieniowego. Obsługiwane środowiska uruchomieniowe to CoreCLR i NativeAOT.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
 {0} - The runtime name.</comment>
   </data>
@@ -1174,7 +1170,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.</value>
+    <value>Właściwość programu MSBuild "AndroidR8ObfuscationMode" ma nieprawidłową wartość '{0}'. Prawidłowe wartości to "disabled", "private-members" i "runtime-remapping".</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
