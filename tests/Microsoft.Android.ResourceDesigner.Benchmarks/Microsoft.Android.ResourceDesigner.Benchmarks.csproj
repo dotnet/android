@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <ProjectReference Include="..\..\src\Microsoft.Android.Build.Tasks\Microsoft.Android.Build.Tasks.csproj" />
-    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Aliases="CecilTasks" />
     <None Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Resources\R.txt" Link="Resources\R.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

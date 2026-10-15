@@ -54,7 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\Resource.Designer.snk" LogicalName="Resource.Designer.snk" />
+    <EmbeddedResource Include="Resources\Resource.Designer.snk" LogicalName="Resource.Designer.snk" />
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
