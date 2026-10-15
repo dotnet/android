@@ -174,6 +174,7 @@ namespace Xamarin.Android.Build.Tests {
 			var messages = new List<BuildMessageEventArgs> ();
 			var engine = new MockBuildEngine (TestContext.Out, messages: messages);
 			try {
+				MonoAndroidHelper.RefreshSupportedVersions ([]);
 				string version = "";
 				for (int i = 0; i < 2; i++) {
 					messages.Clear ();
@@ -202,6 +203,7 @@ namespace Xamarin.Android.Build.Tests {
 			var errors = new List<BuildErrorEventArgs> ();
 			var aapt2Path = Path.Combine (sdkPath, "missing-aapt2");
 			try {
+				MonoAndroidHelper.RefreshSupportedVersions ([]);
 				var tooling = new ResolveAndroidTooling {
 					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
 					AndroidSdkPath = sdkPath,
