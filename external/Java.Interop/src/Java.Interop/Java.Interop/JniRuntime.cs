@@ -161,7 +161,7 @@ namespace Java.Interop
 			current = newCurrent;
 		}
 
-		Dictionary<IntPtr, IDisposable>                 TrackedInstances    = new Dictionary<IntPtr, IDisposable> ();
+		HashSet<JniType>                                TrackedInstances    = new HashSet<JniType> ();
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyRuntimeOnDispose;
@@ -384,25 +384,22 @@ namespace Java.Interop
 		internal void Track (JniType value)
 		{
 			lock (TrackedInstances) {
-				if (!TrackedInstances.ContainsKey (value.PeerReference.Handle))
-					TrackedInstances [value.PeerReference.Handle] = value;
+				TrackedInstances.Add (value);
 			}
 		}
 
-		internal void UnTrack (IntPtr key)
+		internal void UnTrack (JniType value)
 		{
 			lock (TrackedInstances) {
-				if (TrackedInstances.ContainsKey (key))
-					TrackedInstances.Remove (key);
+				TrackedInstances.Remove (value);
 			}
 		}
 
 		void ClearTrackedReferences ()
 		{
-			List<IDisposable> values;
+			List<JniType> values;
 			lock (TrackedInstances) {
-				values = new List<IDisposable> (TrackedInstances.Values);
-				TrackedInstances.Clear ();
+				values = new List<JniType> (TrackedInstances);
 			}
 
 			foreach (var d in values)
