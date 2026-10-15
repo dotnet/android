@@ -164,6 +164,7 @@ sealed class CallbackBoundaryClassifier
 		["Java.Interop.JniTransition&", "System.Exception"]);
 	static bool Matches (Api? api, string type, string name, bool instance, string returnType, string [] parameters)
 		=> api is { Trusted: true, Assembly: "Java.Interop" } && api.Type == type && api.Name == name &&
+			api.Signature.GenericParameterCount == 0 && api.Signature.Header.CallingConvention == SignatureCallingConvention.Default &&
 			api.Signature.Header.IsInstance == instance && api.Signature.ReturnType == returnType &&
 			api.Signature.ParameterTypes.SequenceEqual (parameters);
 
@@ -433,6 +434,6 @@ sealed class CallbackBoundaryClassifier
 		public string GetByReferenceType (string type) => type + "&";
 		public string GetPointerType (string type) => type + "*";
 		public string GetPinnedType (string type) => type;
-		public string GetModifiedType (string modifier, string type, bool required) => type;
+		public string GetModifiedType (string modifier, string type, bool required) => $"{type} mod{(required ? "req" : "opt")}({modifier})";
 	}
 }
