@@ -314,21 +314,30 @@ namespace Java.Interop
 
 	public abstract class JniArrayElements : IDisposable {
 
-		IntPtr elements;
+		unsafe void* elements;
 		int elementCount;
 		int sizeOfElement;
 
-		internal JniArrayElements (IntPtr elements, int elementCount, int sizeOfElement)
+		/// <safety>
+		/// <paramref name="elements"/> must address a live JNI acquisition of
+		/// <paramref name="elementCount"/> elements of <paramref name="sizeOfElement"/> bytes.
+		/// The acquisition and its Java array must remain valid until this owner releases them.
+		/// </safety>
+		internal unsafe JniArrayElements (void* elements, int elementCount, int sizeOfElement)
 		{
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", nameof (elements));
+			if (elements == null)
+				throw new ArgumentException ("'elements' must not be null.", nameof (elements));
 			this.elements = elements;
 			this.elementCount = elementCount;
 			this.sizeOfElement = sizeOfElement;
 		}
 
 		internal bool IsDisposed {
-			get {return elements == IntPtr.Zero;}
+			get {
+				unsafe {
+					return elements == null;
+				}
+			}
 		}
 
 		internal int ElementCount {
@@ -336,6 +345,14 @@ namespace Java.Interop
 		}
 
 		public  IntPtr  Elements {
+			get {
+				unsafe {
+					return (IntPtr) ElementsPointer;
+				}
+			}
+		}
+
+		internal unsafe void* ElementsPointer {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -363,7 +380,9 @@ namespace Java.Interop
 			if (IsDisposed)
 				throw new ObjectDisposedException (GetType ().FullName);
 			Synchronize (releaseMode);
-			elements = IntPtr.Zero;
+			unsafe {
+				elements = null;
+			}
 		}
 
 		public void Dispose ()
