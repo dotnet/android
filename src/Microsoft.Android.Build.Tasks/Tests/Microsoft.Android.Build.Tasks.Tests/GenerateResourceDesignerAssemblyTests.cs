@@ -258,16 +258,17 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		var registrations = source.Descendants ().Where (element => element.Name.LocalName == "UsingTask" &&
 			((string?) element.Attribute ("TaskName"))?.EndsWith (".GenerateResourceDesignerAssembly", StringComparison.Ordinal) == true)
 			.Select (element => new XElement (element)).ToArray ();
-		Assert.AreEqual (2, registrations.Length);
+		Assert.AreEqual (1, registrations.Length);
 		foreach (var registration in registrations) {
 			registration.Name = "UsingTask";
+			Assert.AreEqual (typeof (GenerateResourceDesignerAssembly).FullName, (string?) registration.Attribute ("TaskName"));
+			Assert.IsNull (registration.Attribute ("Condition"));
 			Assert.IsNull (registration.Attribute ("TaskFactory"));
 			Assert.IsNull (registration.Attribute ("Runtime"));
 		}
 		var projectPath = Path.Combine (DirectoryPath, "registration.proj");
 		new XDocument (new XElement ("Project",
 			new XElement ("PropertyGroup",
-				new XElement ("_AndroidUseMetadataResourceDesigner", "true"),
 				new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GenerateResourceDesignerAssembly).Assembly.Location)),
 			registrations,
 			new XElement ("Target", new XAttribute ("Name", "Build"),
