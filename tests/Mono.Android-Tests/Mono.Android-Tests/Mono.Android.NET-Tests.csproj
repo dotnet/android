@@ -144,6 +144,7 @@
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\JniRemappingLookupTests.cs" />
+    <Compile Include="Java.Interop\JniRuntimeExceptionPolicyTests.cs" />
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
     <Compile Include="Java.Interop\JavaMarshalGCBridgeTests.cs" />
     <Compile Include="Java.Interop\PeerIdentityTests.cs" />
@@ -206,6 +207,7 @@
     <AndroidJavaSource Update="java/net/dot/android/remap/*.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/JniRuntimeExceptionPolicy.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,6 +31,15 @@ namespace Java.Interop {
 			return Android.Runtime.AndroidExceptionManager.GetExceptionForThrowable (ref reference, options);
 		}
 
+		public override void OnUserUnhandledException (ref JniTransition transition, Exception e)
+		{
+			if (Android.Runtime.AndroidEnvironment.TryRaiseUnhandledException (e)) {
+				return;
+			}
+
+			base.OnUserUnhandledException (ref transition, e);
+		}
+
 		public override void RaisePendingException (Exception pendingException)
 		{
 			Android.Runtime.AndroidExceptionManager.RaisePendingException (pendingException);
