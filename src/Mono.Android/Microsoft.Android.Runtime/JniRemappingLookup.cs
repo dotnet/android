@@ -285,16 +285,16 @@ static class JniRemappingLookup
 
 	internal static unsafe string? GetReplacementType (string? jniSimpleReference)
 	{
-		IntPtr replacement = GetReplacementTypeUtf8 (jniSimpleReference);
-		return replacement == IntPtr.Zero ? null : Marshal.PtrToStringUTF8 (replacement);
+		byte* replacement = GetReplacementTypeUtf8 (jniSimpleReference);
+		return replacement == null ? null : Marshal.PtrToStringUTF8 ((IntPtr) replacement);
 	}
 
-	internal static unsafe IntPtr GetReplacementTypeUtf8 (string? jniSimpleReference)
+	internal static unsafe byte* GetReplacementTypeUtf8 (string? jniSimpleReference)
 	{
 		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || table == null || jniSimpleReference.Length == 0)
-			return IntPtr.Zero;
+			return null;
 
-		return (IntPtr)LookupType (0, jniSimpleReference);
+		return LookupType (0, jniSimpleReference);
 	}
 
 	internal static unsafe string? GetReverseType (string? jniSimpleReference)
@@ -323,30 +323,32 @@ static class JniRemappingLookup
 		info.SourceJniType = jniSourceType;
 		info.SourceJniMethodName = jniMethodName;
 		info.SourceJniMethodSignature = jniMethodSignature;
-		info.TargetJniType = Marshal.PtrToStringUTF8 (info.TargetJniTypeUtf8)
-			?? throw new InvalidOperationException ("JNI remapping target type is not valid UTF-8.");
-		info.TargetJniMethodName = Marshal.PtrToStringUTF8 (info.TargetJniMethodNameUtf8)
-			?? throw new InvalidOperationException ("JNI remapping target method name is not valid UTF-8.");
-		info.TargetJniMethodSignature ??= info.TargetJniMethodSignatureUtf8 == IntPtr.Zero
-			? jniMethodSignature
-			: Marshal.PtrToStringUTF8 (info.TargetJniMethodSignatureUtf8)
-				?? throw new InvalidOperationException ("JNI remapping target method signature is not valid UTF-8.");
+		unsafe {
+			info.TargetJniType = Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniTypeUtf8Pointer)
+				?? throw new InvalidOperationException ("JNI remapping target type is not valid UTF-8.");
+			info.TargetJniMethodName = Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniMethodNameUtf8Pointer)
+				?? throw new InvalidOperationException ("JNI remapping target method name is not valid UTF-8.");
+			info.TargetJniMethodSignature ??= info.TargetJniMethodSignatureUtf8Pointer == null
+				? jniMethodSignature
+				: Marshal.PtrToStringUTF8 ((IntPtr) info.TargetJniMethodSignatureUtf8Pointer)
+					?? throw new InvalidOperationException ("JNI remapping target method signature is not valid UTF-8.");
+		}
 		return info;
 	}
 
 	internal static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> GetReplacementMethodInfo (jniSourceType.AsSpan (), IntPtr.Zero, jniMethodName, jniMethodSignature);
+		=> GetReplacementMethodInfo (jniSourceType.AsSpan (), null, jniMethodName, jniMethodSignature);
 
-	internal static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+	internal static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 	{
-		if (jniSourceTypeUtf8 == IntPtr.Zero)
+		if (jniSourceTypeUtf8 == null)
 			throw new ArgumentNullException (nameof (jniSourceTypeUtf8));
 		return GetReplacementMethodInfo (default, jniSourceTypeUtf8, jniMethodName, jniMethodSignature);
 	}
 
 	static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (
 		ReadOnlySpan<char> jniSourceType,
-		IntPtr jniSourceTypeUtf8,
+		byte* jniSourceTypeUtf8,
 		ReadOnlySpan<char> jniMethodName,
 		ReadOnlySpan<char> jniMethodSignature)
 	{
@@ -355,9 +357,9 @@ static class JniRemappingLookup
 
 		byte* matchedSignature;
 		// SAFETY: the native JNI type-name caller supplies a live NUL-terminated UTF-8 string.
-		NativeJniRemappingReplacementMethod? result = jniSourceTypeUtf8 == IntPtr.Zero
+		NativeJniRemappingReplacementMethod? result = jniSourceTypeUtf8 == null
 			? LookupMethod (jniSourceType, jniMethodName, jniMethodSignature, out matchedSignature)
-			: LookupMethod (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)jniSourceTypeUtf8),
+			: LookupMethod (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (jniSourceTypeUtf8),
 				jniMethodName, jniMethodSignature, out matchedSignature);
 
 		if (result is not { } method)
@@ -381,12 +383,12 @@ static class JniRemappingLookup
 		}
 
 		var ret = new JniRuntime.ReplacementMethodInfo {
-			TargetJniTypeUtf8               = (IntPtr)method.target_type,
-			TargetJniMethodNameUtf8         = (IntPtr)method.target_name,
+			TargetJniTypeUtf8Pointer        = method.target_type,
+			TargetJniMethodNameUtf8Pointer  = method.target_name,
 			TargetJniMethodSignature        = targetSignature,
-			TargetJniMethodSignatureUtf8    = isStatic
-				? IntPtr.Zero
-				: (IntPtr)(method.target_signature == null ? matchedSignature : method.target_signature),
+			TargetJniMethodSignatureUtf8Pointer = isStatic
+				? null
+				: method.target_signature == null ? matchedSignature : method.target_signature,
 			TargetJniMethodParameterCount   = paramCount,
 			TargetJniMethodInstanceToStatic = isStatic,
 		};
@@ -450,11 +452,11 @@ static class JniRemappingLookup
 		};
 	}
 
-	static string GetSourceTypeForDiagnostics (ReadOnlySpan<char> jniSourceType, IntPtr jniSourceTypeUtf8)
+	static unsafe string GetSourceTypeForDiagnostics (ReadOnlySpan<char> jniSourceType, byte* jniSourceTypeUtf8)
 	{
-		if (jniSourceTypeUtf8 == IntPtr.Zero)
+		if (jniSourceTypeUtf8 == null)
 			return jniSourceType.ToString ();
-		return Marshal.PtrToStringUTF8 (jniSourceTypeUtf8) ?? "";
+		return Marshal.PtrToStringUTF8 ((IntPtr) jniSourceTypeUtf8) ?? "";
 	}
 
 	static unsafe bool Equal (NativeJniRemappingString value, ReadOnlySpan<byte> key)
