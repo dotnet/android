@@ -45,6 +45,45 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void ExplicitSdkPathsAreIndependentAndDoNotRequireJdkDiscovery ()
+		{
+			var root = CreateRoot ();
+			var sdkPaths = new [] { Path.Combine (root, "first"), Path.Combine (root, "second") };
+			var versions = new AndroidVersions (new [] { new AndroidVersion (37, "17.0") });
+			try {
+				foreach (var sdk in sdkPaths) {
+					Directory.CreateDirectory (Path.Combine (sdk, "platforms", "android-37"));
+					Directory.CreateDirectory (Path.Combine (sdk, "build-tools", "37.0.0"));
+					Directory.CreateDirectory (Path.Combine (sdk, "cmdline-tools", "21.0"));
+				}
+				System.Threading.Tasks.Parallel.For (0, 64, i => {
+					var sdk = sdkPaths [i % 2];
+					Assert.AreEqual (Path.Combine (sdk, "platforms", "android-37"),
+						AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (sdk, "37", versions));
+					Assert.AreEqual (Path.Combine (sdk, "build-tools", "37.0.0"), AndroidSdkInfo.GetBuildToolsPaths (sdk, "").Single ());
+					Assert.AreEqual (Path.Combine (sdk, "cmdline-tools", "21.0"), AndroidSdkInfo.GetCommandLineToolsPaths (sdk, "").Single ());
+				});
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
+		public void ExplicitSdkPathsValidateArguments ()
+		{
+			var versions = new AndroidVersions (frameworkDirectories: []);
+			Assert.AreEqual ("androidSdkPath", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.GetBuildToolsPaths (null, "")).ParamName);
+			Assert.AreEqual ("androidSdkPath", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.GetCommandLineToolsPaths (null, "")).ParamName);
+			Assert.AreEqual ("androidSdkPath", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (null, "37", versions)).ParamName);
+			Assert.AreEqual ("versions", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel ("sdk", "37", null)).ParamName);
+
+			var missingSdk = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Assert.IsEmpty (AndroidSdkInfo.GetBuildToolsPaths (missingSdk, ""));
+			Assert.IsEmpty (AndroidSdkInfo.GetCommandLineToolsPaths (missingSdk, ""));
+			Assert.IsNull (AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (missingSdk, "37", versions));
+		}
+
+		[Test]
 		public void Constructor_Paths ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
@@ -428,6 +467,11 @@ namespace Xamarin.Android.Tools.Tests
 					&& toolsPathsList [3].Equals (Path.Combine (sdk, "tools"), StringComparison.Ordinal);
 
 				Assert.IsTrue (isOrderCorrect, "Tools order is not descending");
+				CollectionAssert.AreEqual (toolsPathsList, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, ""));
+				CollectionAssert.AreEqual (toolsPathsList, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, "missing"));
+				var preferredPaths = new [] { toolsPathsList [2], toolsPathsList [0], toolsPathsList [1], toolsPathsList [3] };
+				CollectionAssert.AreEqual (preferredPaths, info.GetCommandLineToolsPaths (toolsVersion));
+				CollectionAssert.AreEqual (preferredPaths, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, toolsVersion));
 			} finally {
 				Directory.Delete (root, recursive: true);
 			}
@@ -665,7 +709,7 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
-		public void TryGetPlatformDirectoryFromApiLevel_MinorVersionDoesNotFallback ()
+		public void TryGetPlatformDirectoryFromApiLevel_MinorVersionDoesNotFallback ([Values (false, true)] bool explicitPath)
 		{
 			// Verifies that when requesting a minor API level (like 36.1), we don't fall back
 			// to the major version (36) if the minor version platform is not installed.
@@ -691,13 +735,16 @@ namespace Xamarin.Android.Tools.Tests
 				});
 
 				// Requesting "36" should find android-36
-				var dir36 = info.TryGetPlatformDirectoryFromApiLevel ("36", versions);
+				var dir36 = explicitPath ? AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (sdk, "36", versions) : info.TryGetPlatformDirectoryFromApiLevel ("36", versions);
 				Assert.IsNotNull (dir36, "Should find android-36");
 				Assert.AreEqual (platform36Path, dir36);
 
 				// Requesting "36.1" should NOT fall back to android-36
-				var dir361 = info.TryGetPlatformDirectoryFromApiLevel ("36.1", versions);
+				var dir361 = explicitPath ? AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (sdk, "36.1", versions) : info.TryGetPlatformDirectoryFromApiLevel ("36.1", versions);
 				Assert.IsNull (dir361, "Should NOT fall back to android-36 when android-36.1 is requested but not installed");
+				var platform361Path = Path.Combine (platformsPath, "android-36.1");
+				Directory.CreateDirectory (platform361Path);
+				Assert.AreEqual (platform361Path, explicitPath ? AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (sdk, "36.1", versions) : info.TryGetPlatformDirectoryFromApiLevel ("36.1", versions));
 			}
 			finally {
 				Directory.Delete (root, recursive: true);
@@ -705,7 +752,7 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
-		public void TryGetPlatformDirectoryFromApiLevel_MajorFallsBackToMajorDotZero ()
+		public void TryGetPlatformDirectoryFromApiLevel_MajorFallsBackToMajorDotZero ([Values (false, true)] bool explicitPath)
 		{
 			// Starting with API 37, Google installs platforms to "android-37.0"
 			// instead of "android-37". Verify the fallback works.
@@ -730,7 +777,7 @@ namespace Xamarin.Android.Tools.Tests
 				});
 
 				// Requesting "37" should fall back to android-37.0
-				var dir37 = info.TryGetPlatformDirectoryFromApiLevel ("37", versions);
+				var dir37 = explicitPath ? AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (sdk, "37", versions) : info.TryGetPlatformDirectoryFromApiLevel ("37", versions);
 				Assert.IsNotNull (dir37, "Should fall back from android-37 to android-37.0");
 				Assert.AreEqual (platform370Path, dir37);
 
@@ -743,9 +790,28 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void TryGetPlatformDirectoryFromApiLevel_PreviewFallback ([Values (false, true)] bool explicitPath)
+		{
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+			try {
+				var info = new AndroidSdkInfo (androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
+				var versions = new AndroidVersions (new [] { new AndroidVersion (37, "17.0", id: "Preview", stable: false) });
+				var platform = Path.Combine (sdk, "platforms", "android-37");
+				Directory.CreateDirectory (platform);
+				Assert.AreEqual (platform, explicitPath ? AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (sdk, "Preview", versions) : info.TryGetPlatformDirectoryFromApiLevel ("Preview", versions));
+				var previewPlatform = Path.Combine (sdk, "platforms", "android-Preview");
+				Directory.CreateDirectory (previewPlatform);
+				Assert.AreEqual (previewPlatform, explicitPath ? AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (sdk, "Preview", versions) : info.TryGetPlatformDirectoryFromApiLevel ("Preview", versions));
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void GetBuildToolsPaths_StableVersionsFirst ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+			CreateFauxAndroidSdkDirectory (sdk, "25.0.3");
 			CreateFauxAndroidSdkDirectory (sdk, "27.0.0-rc4");
 
 			var logs    = new StringWriter ();
@@ -757,10 +823,16 @@ namespace Xamarin.Android.Tools.Tests
 				var info    = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
 
 				var buildToolsPaths = info.GetBuildToolsPaths ().ToList ();
-				Assert.AreEqual (3, buildToolsPaths.Count);
+				Assert.AreEqual (4, buildToolsPaths.Count);
 				Assert.AreEqual (Path.Combine (sdk, "build-tools", "26.0.0"),       buildToolsPaths [0]);
-				Assert.AreEqual (Path.Combine (sdk, "build-tools", "27.0.0-rc4"),   buildToolsPaths [1]);
-				Assert.AreEqual (Path.Combine (sdk, "platform-tools"),              buildToolsPaths [2]);
+				Assert.AreEqual (Path.Combine (sdk, "build-tools", "25.0.3"),       buildToolsPaths [1]);
+				Assert.AreEqual (Path.Combine (sdk, "build-tools", "27.0.0-rc4"),   buildToolsPaths [2]);
+				Assert.AreEqual (Path.Combine (sdk, "platform-tools"),              buildToolsPaths [3]);
+				CollectionAssert.AreEqual (buildToolsPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, ""));
+				CollectionAssert.AreEqual (buildToolsPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, "missing"));
+				var preferredPaths = new [] { buildToolsPaths [2], buildToolsPaths [0], buildToolsPaths [1], buildToolsPaths [3] };
+				CollectionAssert.AreEqual (preferredPaths, info.GetBuildToolsPaths ("27.0.0-rc4"));
+				CollectionAssert.AreEqual (preferredPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, "27.0.0-rc4"));
 			}
 			finally {
 				Directory.Delete (root, recursive: true);

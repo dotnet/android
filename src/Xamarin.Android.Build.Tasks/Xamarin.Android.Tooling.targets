@@ -83,7 +83,7 @@ used by all .NET Android projects.
   <Target Name="_GetJavaPlatformJar">
     <GetJavaPlatformJar
         AndroidApiLevel="$(_AndroidApiLevel)"
-        AndroidSdkDirectory="$(AndroidSdkDirectory)"
+        AndroidSdkDirectory="$(_AndroidSdkDirectory)"
         AndroidManifest="$(_AndroidManifestAbs)"
         DesignTimeBuild="$(DesignTimeBuild)"
         BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"

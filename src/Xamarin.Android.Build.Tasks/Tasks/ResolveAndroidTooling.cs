@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -83,8 +84,7 @@ namespace Xamarin.Android.Tasks
 				AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
 			}
 
-			var androidSdk = MonoAndroidHelper.AndroidSdk;
-			if (androidSdk == null || AndroidSdkPath.IsNullOrEmpty ()) {
+			if (AndroidSdkPath.IsNullOrEmpty () || !Directory.Exists (AndroidSdkPath)) {
 				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
 				return false;
 			}
@@ -92,7 +92,7 @@ namespace Xamarin.Android.Tasks
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
-			var lintPaths = androidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
+			var lintPaths = AndroidSdkInfo.GetCommandLineToolsPaths (AndroidSdkPath, CommandLineToolsVersion ?? "")
 				.SelectMany (p => new [] {
 					p,
 					Path.Combine (p, "bin"),
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (var dir in androidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion ?? "")) {
+			foreach (var dir in AndroidSdkInfo.GetBuildToolsPaths (AndroidSdkPath, AndroidSdkBuildToolsVersion ?? "")) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
 				if (dir == null || !Directory.Exists (dir))
 					continue;
