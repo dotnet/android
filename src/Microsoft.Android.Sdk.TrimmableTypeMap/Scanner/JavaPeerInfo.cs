@@ -246,6 +246,8 @@ public sealed record MarshalMethodInfo
 	/// </summary>
 	internal string? NativeCallbackReturnTypeName { get; init; }
 
+	internal CallbackBoundary NativeCallbackBoundary { get; init; } = CallbackBoundary.Unavailable;
+
 	/// <summary>
 	/// True if this is a constructor registration.
 	/// </summary>

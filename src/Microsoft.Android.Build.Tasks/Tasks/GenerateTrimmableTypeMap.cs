@@ -81,6 +81,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedError ("XA4262", Properties.Resources.XA4262, managedTypeName, superArgumentsString);
 		public void LogRidSpecificCallbackMetadataMismatchError (string assemblyName, string firstPath, string secondPath) =>
 			log.LogCodedError ("XA4266", Properties.Resources.XA4266, assemblyName, firstPath, secondPath);
+		public void LogCallbackBoundaryInfo (string assemblyName, string typeName, string methodName, string classification, string reason) =>
+			log.LogMessage (MessageImportance.Low, $"JNI callback [{assemblyName}]{typeName}.{methodName}: {classification}: {reason}");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			log.LogError ("{0}", $"XA4212: {string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>

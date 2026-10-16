@@ -34,6 +34,7 @@ sealed class TrimmableTypeMapTestLogger : ITrimmableTypeMapLogger
 	public void LogMissingBaseConstructorError (string managedTypeName, string jniSignature) { }
 	public void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) { }
 	public void LogRidSpecificCallbackMetadataMismatchError (string assemblyName, string firstPath, string secondPath) { }
+	public void LogCallbackBoundaryInfo (string assemblyName, string typeName, string methodName, string classification, string reason) { }
 	public void LogCustomJavaObjectError (string managedTypeName) { }
 	public void LogCustomJavaObjectWarning (string managedTypeName) { }
 }
