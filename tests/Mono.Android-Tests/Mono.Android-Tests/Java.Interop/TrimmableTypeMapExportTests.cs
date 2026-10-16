@@ -19,7 +19,6 @@ namespace Java.InteropTests
 	public class TrimmableTypeMapExportTests
 	{
 		[Test]
-		[Category ("NativeAOTIgnore")] // NativeAOT application-event parity is a separate runtime change.
 		public void HandledExportExceptionsReturnAbiDefaultsAndDeliverPolicyOnce ()
 		{
 			using var peer = new GeneratedJniDebuggerBoundaryExportPeer ();

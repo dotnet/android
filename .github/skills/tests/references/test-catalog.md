@@ -231,8 +231,8 @@ lives in the library assembly, which is not rooted wholesale by the test app.
 inline exception regions for constructor and export/direct-dispatch UCOs.
 On device, `-p:IncludeCategories=GeneratedJniDebuggerBoundary` selects constructor
 activation and export coverage, including throwing calls, subsequent successful
-calls, and handled-exception ABI defaults. The application-event cases are
-excluded on baseline NativeAOT; they require separate runtime policy parity.
+calls, and handled-exception ABI defaults with exactly-once application-event
+delivery on both CoreCLR and NativeAOT.
 These are no-debugger transport tests, not proof of an attached debugger's
 user-unhandled stop, Continue, or Java evaluation behavior.
 

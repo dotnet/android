@@ -134,7 +134,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("NativeAOTIgnore")] // NativeAOT application-event parity is a separate runtime change.
 		public void JavaSideHandledConstructorExceptionDeliversPolicyOnce ()
 		{
 			ConstructorActivationThrowing.Reset ();
