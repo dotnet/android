@@ -215,6 +215,45 @@ namespace Xamarin.Android.Build.Tests
 
 		[TestCase (false)]
 		[TestCase (true)]
+		public void HttpTimeoutReportsVerificationError (bool keyRequest)
+		{
+			var handler = new BlockingVerificationHandler (keyRequest);
+			using (var client = new HttpClient (handler) { Timeout = TimeSpan.FromMilliseconds (100) }) {
+				var engine = CreateBuildEngine ();
+				var task = new VerificationTask {
+					BuildEngine = engine,
+					Client = client,
+					Archive = new Archive ("windows") { Url = new Uri ("https://example.test/jdk.zip") },
+				};
+				Assert.IsFalse (task.Execute ());
+				Assert.IsTrue (handler.Blocked);
+				Assert.IsFalse (task.CancellationToken.IsCancellationRequested, "The HTTP timeout must not cancel the caller's token.");
+				Assert.AreEqual (1, engine.Errors.Count);
+				Assert.AreEqual ("XA5305", engine.Errors [0].Code);
+				Assert.IsEmpty (engine.Warnings);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void CallerCancellationDuringVerificationPropagates (bool keyRequest)
+		{
+			using (var source = new CancellationTokenSource ()) {
+				var handler = new BlockingVerificationHandler (keyRequest, source.Cancel);
+				using (var client = new HttpClient (handler) { Timeout = Timeout.InfiniteTimeSpan }) {
+					var engine = CreateBuildEngine ();
+					var task = new InstallAndroidDependencies { BuildEngine = engine };
+					var archive = new Archive ("windows") { Url = new Uri ("https://example.test/jdk.zip") };
+					Assert.CatchAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, archive, source.Token));
+					Assert.IsTrue (handler.Blocked);
+					Assert.IsTrue (source.IsCancellationRequested);
+					Assert.IsEmpty (engine.Errors);
+				}
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
 		public void RentedArchiveBufferIsReturnedOnFailureOrCancellation (bool cancel)
 		{
 			var contents = (byte []) archiveBytes.Clone ();
@@ -596,6 +635,29 @@ namespace Xamarin.Android.Build.Tests
 				return Task.FromResult (new HttpResponseMessage (isKey ? KeyStatus : SignatureStatus) {
 					Content = ResponseStream == null ? new ByteArrayContent (isKey ? key : signature) : new StreamContent (ResponseStream),
 				});
+			}
+		}
+
+		sealed class BlockingVerificationHandler : HttpMessageHandler
+		{
+			readonly bool keyRequest;
+			readonly Action onBlocked;
+			public bool Blocked { get; private set; }
+
+			public BlockingVerificationHandler (bool keyRequest, Action onBlocked = null)
+			{
+				this.keyRequest = keyRequest;
+				this.onBlocked = onBlocked;
+			}
+
+			protected override async Task<HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+			{
+				if ((request.RequestUri.AbsoluteUri == OpenJdkSignatureVerifier.PublicKeyUrl) == keyRequest) {
+					Blocked = true;
+					onBlocked?.Invoke ();
+					await Task.Delay (Timeout.Infinite, cancellationToken);
+				}
+				return new HttpResponseMessage (HttpStatusCode.OK) { Content = new ByteArrayContent ([]) };
 			}
 		}
 

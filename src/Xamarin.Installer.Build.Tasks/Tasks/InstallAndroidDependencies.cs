@@ -370,10 +370,10 @@ namespace Xamarin.Installer.Build.Tasks
 				using (var file = File.OpenRead (archive.DownloadedFilePath))
 					OpenJdkSignatureVerifier.Verify (file, signature, publicKey, trustedKeySha256, cancellationToken);
 				return true;
-			} catch (OperationCanceledException) {
+			} catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
 				throw;
 			} catch (Exception ex) when (ex is HttpRequestException || ex is IOException || ex is InvalidDataException ||
-				ex is System.Security.Cryptography.CryptographicException || ex is FormatException) {
+				ex is System.Security.Cryptography.CryptographicException || ex is FormatException || ex is OperationCanceledException) {
 				LogCodedError ("XA5305", Resources.XA5305, archive.Url, ex.Message);
 				return false;
 			}
