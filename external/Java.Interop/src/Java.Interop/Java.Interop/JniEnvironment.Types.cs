@@ -330,9 +330,11 @@ namespace Java.Interop
 						RegisterNatives (type, natives);
 					}
 				} finally {
-					for (int i = 0; i < unmanagedStrings.Length; ++i) {
-						if (unmanagedStrings [i] != IntPtr.Zero)
-							Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
+					unsafe {
+						for (int i = 0; i < unmanagedStrings.Length; ++i) {
+							if (unmanagedStrings [i] != IntPtr.Zero)
+								Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
+						}
 					}
 					GC.KeepAlive (methods);
 				}

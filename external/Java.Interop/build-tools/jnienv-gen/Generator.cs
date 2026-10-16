@@ -791,7 +791,9 @@ namespace Xamarin.Java.Interop
 		public override string[] GetManagedToMarshalCleanupStatements (string variable)
 		{
 			return new[]{
-				$"Marshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
+				"unsafe {",
+				$"\tMarshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
+				"}",
 			};
 		}
 	}
