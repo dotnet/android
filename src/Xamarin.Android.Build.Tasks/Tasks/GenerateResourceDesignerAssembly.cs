@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Security.Cryptography;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,6 @@ using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Java.Interop.Tools.Cecil;
-using Brutal.Dev.StrongNameSigner;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
@@ -203,7 +203,9 @@ namespace Xamarin.Android.Tasks
 				var il = c.Value.Body.GetILProcessor ();
 				il.Emit(OpCodes.Ret);
 			}
-			StrongNameAssembly (assembly.Name);
+			// Roslyn requires the historical identity when compiling against existing binary libraries.
+			assembly.Name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;
+			assembly.Name.PublicKey = GetPublicKey ();
 			var wp = new WriterParameters () {
 				DeterministicMvid = Deterministic,
 				Timestamp = Deterministic ? 0u : null,
@@ -221,6 +223,29 @@ namespace Xamarin.Android.Tasks
 				MemoryStreamPool.Shared.Return (s);
 			}
 			return !Log.HasLoggedErrors;
+		}
+
+		static byte[] GetPublicKey ()
+		{
+			using var keyStream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk")
+				?? throw new InvalidOperationException ("Could not find embedded Resource.Designer.snk.");
+			using var keyBlob = new MemoryStream ();
+			keyStream.CopyTo (keyBlob);
+			using var rsa = new RSACryptoServiceProvider { PersistKeyInCsp = false };
+			rsa.ImportCspBlob (keyBlob.ToArray ());
+			var cspBlob = rsa.ExportCspBlob (includePrivateParameters: false);
+
+			const uint RsaSignAlgorithm = 0x2400; // CALG_RSA_SIGN
+			using var publicKey = new MemoryStream ();
+			using var writer = new BinaryWriter (publicKey);
+			writer.Write (RsaSignAlgorithm);
+			writer.Write ((uint) AssemblyHashAlgorithm.SHA1);
+			writer.Write (cspBlob.Length);
+			// ExportCspBlob uses CALG_RSA_KEYX on Unix; preserve the historical CALG_RSA_SIGN identity.
+			writer.Write (cspBlob, 0, 4);
+			writer.Write (RsaSignAlgorithm);
+			writer.Write (cspBlob, 8, cspBlob.Length - 8);
+			return publicKey.ToArray ();
 		}
 
 		MethodReference ImportCustomAttributeConstructor (TypeDefinitionCache cache, string type, ModuleDefinition module, ModuleDefinition? sourceModule = null, int argCount = 0)
@@ -371,16 +396,5 @@ namespace Xamarin.Android.Tasks
 			return p;
 		}
 
-		void StrongNameAssembly (AssemblyNameDefinition name)
-		{
-			using (Stream stream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk")) {
-				byte[] publicKey = new byte[stream.Length];
-				_ = stream.Read (publicKey, 0, publicKey.Length);
-				name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;
-				name.PublicKey = SigningHelper.GetPublicKey (publicKey);
-				name.HasPublicKey = true;
-				name.Attributes |= AssemblyAttributes.PublicKey;
-			}
-		}
 	}
 }

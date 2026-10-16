@@ -807,6 +807,78 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void ResourceDesignerBinaryLibraryCompatibility ([Values] bool designTimeBuild)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var library = new XamarinAndroidLibraryProject {
+				ProjectName = "OldLibrary",
+			};
+			using var libraryBuilder = CreateDllBuilder (Path.Combine (path, library.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			Assert.IsTrue (libraryBuilder.Build (library), "Library should build before being consumed as a binary.");
+
+			string libraryAssembly = Path.Combine (path, library.ProjectName, library.OutputPath, $"{library.ProjectName}.dll");
+			using (var assembly = AssemblyDefinition.ReadAssembly (libraryAssembly, new ReaderParameters { ReadWrite = true })) {
+				var reference = assembly.MainModule.AssemblyReferences.Single (r => r.Name == "_Microsoft.Android.Resource.Designer");
+				// Model a published binary's historical reference independently of the current generator.
+				reference.PublicKeyToken = Convert.FromHexString ("1e9360d6629057ee");
+				assembly.Write ();
+			}
+			var libraryBytes = File.ReadAllBytes (libraryAssembly);
+
+			var newLibrary = new XamarinAndroidLibraryProject {
+				ProjectName = "NewLibrary",
+			};
+			using var newLibraryBuilder = CreateDllBuilder (Path.Combine (path, newLibrary.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			Assert.IsTrue (newLibraryBuilder.Build (newLibrary), "A new library should build with the current generator.");
+
+			var project = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				References = {
+					new BuildItem.Reference (libraryAssembly),
+					new BuildItem.ProjectReference ($"..\\{newLibrary.ProjectName}\\{newLibrary.ProjectFilePath}", newLibrary.ProjectName, newLibrary.ProjectGuid),
+				},
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary (Path.Combine (path, library.ProjectName, library.OutputPath, $"{library.ProjectName}.aar")),
+				},
+			};
+			project.MainActivity = project.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				System.Console.WriteLine (global::OldLibrary.Resource.String.library_name);
+				System.Console.WriteLine (global::NewLibrary.Resource.String.library_name);
+				""");
+			using var builder = CreateApkBuilder (Path.Combine (path, project.ProjectName));
+			builder.Target = designTimeBuild ? "Compile" : "Build";
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsTrue (builder.Build (project), "Accessing a binary library's public Resource class should compile.");
+
+			string designerPath = Path.Combine (path, project.ProjectName, project.IntermediateOutputPath,
+				designTimeBuild ? "designtime" : "", "_Microsoft.Android.Resource.Designer.dll");
+			AssertDesignerIdentity ();
+			var designerTimestamp = File.GetLastWriteTimeUtc (designerPath);
+
+			builder.BuildLogFile = "build2.log";
+			Assert.IsTrue (builder.Build (project), "A no-op build should preserve binary-library compatibility.");
+			Assert.AreEqual (designerTimestamp, File.GetLastWriteTimeUtc (designerPath), "An unchanged designer should retain its timestamp.");
+
+			WaitFor (1000);
+			project.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Extra.xml") {
+				TextContent = () => """<resources><string name="extra_resource">Extra</string></resources>""",
+			});
+			builder.BuildLogFile = "build3.log";
+			Assert.IsTrue (builder.Build (project), "Regenerating the app designer should preserve binary-library compatibility.");
+			AssertDesignerIdentity ();
+			Assert.AreNotEqual (designerTimestamp, File.GetLastWriteTimeUtc (designerPath), "Adding a symbol should regenerate the designer.");
+			CollectionAssert.AreEqual (libraryBytes, File.ReadAllBytes (libraryAssembly), "The referenced binary library should not be rebuilt or retargeted.");
+
+			void AssertDesignerIdentity ()
+			{
+				using var designer = AssemblyDefinition.ReadAssembly (designerPath);
+				Assert.AreEqual (new Version (1, 0, 0, 0), designer.Name.Version, "The designer version should remain compatible.");
+				CollectionAssert.AreEqual (Convert.FromHexString ("1e9360d6629057ee"), designer.Name.PublicKeyToken, "The historical public-key token should be retained.");
+				Assert.IsFalse ((designer.MainModule.Attributes & ModuleAttributes.StrongNameSigned) != 0, "The designer should not have a strong-name signature.");
+			}
+		}
+
+		[Test]
 		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
