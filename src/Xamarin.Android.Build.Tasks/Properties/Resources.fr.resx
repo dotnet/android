@@ -182,24 +182,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>La génération avec la version '{0}' du kit JDK n'est pas prise en charge. Installez le kit JDK version '{1}'. Consultez https://aka.ms/xamarin/jdk9-errors</value>
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
-  <data name="XA0031" xml:space="preserve">
-    <value>Le Kit de développement logiciel (SDK) Java {0} ou une version ultérieure est requis lors de l’utilisation de {1}.
-Téléchargez le dernier JDK à l’adresse : https://aka.ms/msopenjdk
-Remarque : le Android Designer est incompatible avec le Kit de développement logiciel (SDK) Java 11.0 : https://aka.ms/vs2019-and-jdk-11</value>
-    <comment>
-{0} - The Java SDK version number
-{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
-  </data>
   <data name="XA0031_NET" xml:space="preserve">
     <value>Le Kit de développement logiciel (SDK) Java {0} ou une version ultérieure est requis lors de l’utilisation de .NET 6 ou d’une version ultérieure. Téléchargez le dernier JDK à l’adresse : https://aka.ms/msopenjdk.</value>
     <comment>
 {0} - The Java SDK version number</comment>
-  </data>
-  <data name="XA0032" xml:space="preserve">
-    <value>Le kit Java SDK {0} ou une version ultérieure est obligatoire pour l'utilisation de Android SDK Build-Tools {1}.</value>
-    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
-{0} - The Java SDK version number
-{1} - The Android SDK Build-Tools version number</comment>
   </data>
   <data name="XA0033" xml:space="preserve">
     <value>Échec de l'obtention de la version du Kit Java SDK, car la valeur retournée ne semble pas contenir de numéro de version valide. `{0} -version` a retourné : ```{1}```</value>
@@ -810,7 +796,7 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the JNI remapping data. {0}</value>
+    <value>Échec de la génération des données de remappage JNI. {0}</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
@@ -931,7 +917,7 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 {0} - The runtime name.</comment>
   </data>
   <data name="XA4330" xml:space="preserve">
-    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <value>La bibliothèque native '{0}' utilise le nom réservé « libbinary_blobs.so » (chemin d’accès d’archive '{1}' ou ELF SONAME). Ce nom est réservé aux données binaires .NET pour Android.</value>
     <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>

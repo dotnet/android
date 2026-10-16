@@ -182,24 +182,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>La compilazione con la versione JDK `{0}` non è supportata. Installare JDK versione `{1}`. Vedere https://aka.ms/xamarin/jdk9-errors</value>
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
-  <data name="XA0031" xml:space="preserve">
-    <value>Java SDK {0} o versioni successive è obbligatorio quando si usa {1}.
-Scaricare la versione più recente di JDK in: https://aka.ms/msopenjdk
-Nota: Android Designer non è compatibile con Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11</value>
-    <comment>
-{0} - The Java SDK version number
-{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
-  </data>
   <data name="XA0031_NET" xml:space="preserve">
     <value>Java SDK {0} o versione successiva è obbligatorio quando si usa .NET 6 o versione successiva. Scarica la versione più recente di JDK all'indirizzo: https://aka.ms/msopenjdk</value>
     <comment>
 {0} - The Java SDK version number</comment>
-  </data>
-  <data name="XA0032" xml:space="preserve">
-    <value>Quando si usa Android SDK Build-Tools {1}, è richiesto Java SDK {0} o versioni successive.</value>
-    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
-{0} - The Java SDK version number
-{1} - The Android SDK Build-Tools version number</comment>
   </data>
   <data name="XA0033" xml:space="preserve">
     <value>Non è stato possibile ottenere la versione di Java SDK perché il valore restituito non sembra contenere un numero di versione valido. `{0} -version` restituito: ```{1}```</value>
@@ -810,7 +796,7 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the JNI remapping data. {0}</value>
+    <value>Impossibile generare i dati di remapping JNI. {0}</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
@@ -931,7 +917,7 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
 {0} - The runtime name.</comment>
   </data>
   <data name="XA4330" xml:space="preserve">
-    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <value>La libreria nativa '{0}' utilizza il nome riservato 'libbinary_blobs.so' (percorso di archiviazione '{1}' o ELF SONAME). Questo nome è riservato per i dati binari .NET per Android.</value>
     <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>

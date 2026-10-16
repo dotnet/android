@@ -182,24 +182,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Сборка с использованием версии JDK "{0}" не поддерживается. Установите версию JDK "{1}". Дополнительные сведения см. на странице https://aka.ms/xamarin/jdk9-errors</value>
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
-  <data name="XA0031" xml:space="preserve">
-    <value>При использовании {1} требуется пакет SDK для Java {0} и более поздних версий.
-Скачать последнюю версию JDK по адресу: https://aka.ms/msopenjdk
-Примечание. Android Designer несовместим с пакетом SDK для Java 11.0: https://aka.ms/vs2019-and-jdk-11</value>
-    <comment>
-{0} - The Java SDK version number
-{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
-  </data>
   <data name="XA0031_NET" xml:space="preserve">
     <value>При использовании .NET 6 и более поздних версий требуется пакет SDK для Java {0} и более поздних версий. Скачать последнюю версию JDK по адресу: https://aka.ms/msopenjdk</value>
     <comment>
 {0} - The Java SDK version number</comment>
-  </data>
-  <data name="XA0032" xml:space="preserve">
-    <value>При использовании Android SDK Build-Tools {1} требуется пакет SDK для Java версии {0} или более поздней версии.</value>
-    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
-{0} - The Java SDK version number
-{1} - The Android SDK Build-Tools version number</comment>
   </data>
   <data name="XA0033" xml:space="preserve">
     <value>Не удалось получить версию пакета SDK для Java, поскольку возвращаемое значение не содержит допустимый номер версии. Команда "{0} -version" возвратила "{1}"</value>
@@ -810,7 +796,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the JNI remapping data. {0}</value>
+    <value>Не удалось создать данные повторного сопоставления JNI. {0}</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
@@ -931,13 +917,13 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The runtime name.</comment>
   </data>
   <data name="XA4330" xml:space="preserve">
-    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <value>Собственная библиотека '{0}' использует зарезервированное имя "libbinary_blobs.so" (путь к архиву '{1}' или ELF SONAME). Это имя зарезервировано для двоичных данных .NET для Android.</value>
     <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>
   <data name="XA4331" xml:space="preserve">
-    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <value>Не удалось обработать файл конфигурации пакета '{0}'. Разделенные файлы конфигурации будут пропущены во время выполнения.</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -945,7 +931,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The path of the missing directory</comment>
   </data>
   <data name="XA5101_ClangRuntime" xml:space="preserve">
-    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <value>Не удалось найти библиотеки среды выполнения Clang для Android NDK. Поиск: {0}. Установите полный пакет NDK для Android.</value>
     <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
