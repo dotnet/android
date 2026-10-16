@@ -46,11 +46,8 @@ namespace generator.SourceWriters
 				delegate_field = new MethodCallbackDelegateField (method, options);
 				delegate_getter = new GetDelegateHandlerMethod (method, options);
 			} else {
-				// The cb_* field and Get*Handler () connector are gone, but the _JniMarshal_*
-				// delegate *type* is still registered. Mono.Android's hand-written legacy
-				// JNINativeWrapper wraps a fixed set of these signatures, and dropping the type
-				// declarations breaks its compilation. Removing them is a further, separate
-				// saving that requires retiring the reflection-based registration path.
+				// Keep the shared _JniMarshal_* delegate declarations for hand-written
+				// and legacy generated callbacks even when this callback has no connector.
 				method.GetDelegateType (options);
 			}
 
@@ -201,7 +198,7 @@ namespace generator.SourceWriters
 		// static Delegate GetByteValueExactHandler ()
 		// {
 		// 	if (cb_byteValueExact == null)
-		// 		cb_byteValueExact = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_B) n_ByteValueExact);
+		// 		cb_byteValueExact = new _JniMarshal_PP_B (n_ByteValueExact);
 		// 	return cb_byteValueExact;
 		// }
 		public GetDelegateHandlerMethod (Method method, CodeGenerationOptions opt)
