@@ -43,16 +43,18 @@ namespace Xamarin.ProjectTools
 			// It can support additional arguments but we don't need compllicated one yet.
 			var javacPsi = new ProcessStartInfo () {
 				FileName = JavacFullPath,
-				Arguments = JavaSourceFileName,
 				WorkingDirectory = BaseDirectory,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				InheritedHandles = [],
 			};
-			var javacPs = Process.Start (javacPsi);
-			javacPs.WaitForExit ();
-			if (javacPs.ExitCode != 0)
-				throw new InvalidOperationException ("`Javac` command line tool did not successfully finish: " + javacPs.StandardError.ReadToEnd ());
+			javacPsi.ArgumentList.Add (JavaSourceFileName);
+			var javacResult = Process.RunAndCaptureText (javacPsi, TimeSpan.FromMinutes (5));
+			if (javacResult.ExitStatus.Canceled || javacResult.ExitStatus.ExitCode != 0)
+				throw new InvalidOperationException ("`Javac` command line tool did not successfully finish: " +
+					$"exit code {javacResult.ExitStatus.ExitCode}, canceled: {javacResult.ExitStatus.Canceled}{Environment.NewLine}" +
+					javacResult.StandardError + Environment.NewLine + javacResult.StandardOutput);
 			if (File.Exists (jarfile))
 				File.Delete (jarfile);
 			var args = new string [] { "cvf", JarFileName };
@@ -63,17 +65,19 @@ namespace Xamarin.ProjectTools
 			}
 			var jarPsi = new ProcessStartInfo () {
 				FileName = JarFullPath,
-				Arguments = string.Join (" ", args.Concat (classes.Select (c => c.Substring (BaseDirectory.Length + 1)).ToArray ())),
 				WorkingDirectory = BaseDirectory,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				InheritedHandles = [],
 			};
-			var jarPs = Process.Start (jarPsi);
-			jarPs.WaitForExit ();
-			if (jarPs.ExitCode != 0)
-				throw new InvalidOperationException ("`Jar` command line tool did not successfully finish: " + jarPs.StandardError.ReadToEnd ());
-			Process.Start (jarPsi).WaitForExit ();
+			foreach (var argument in args.Concat (classes.Select (c => Path.GetRelativePath (BaseDirectory, c))))
+				jarPsi.ArgumentList.Add (argument);
+			var jarResult = Process.RunAndCaptureText (jarPsi, TimeSpan.FromMinutes (5));
+			if (jarResult.ExitStatus.Canceled || jarResult.ExitStatus.ExitCode != 0)
+				throw new InvalidOperationException ("`Jar` command line tool did not successfully finish: " +
+					$"exit code {jarResult.ExitStatus.ExitCode}, canceled: {jarResult.ExitStatus.Canceled}{Environment.NewLine}" +
+					jarResult.StandardError + Environment.NewLine + jarResult.StandardOutput);
 			return File.ReadAllBytes (jarfile);
 		}
 	}
