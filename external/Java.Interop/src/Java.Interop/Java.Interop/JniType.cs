@@ -132,14 +132,18 @@ namespace Java.Interop {
 			return cachedType;
 		}
 
+		/// <remarks>
+		/// Quiesce native invocations and wait for all in-flight callbacks to complete before
+		/// disposing a type with registered native methods.
+		/// </remarks>
 		public void Dispose ()
 		{
 			if (!PeerReference.IsValid)
 				return;
-			if (registered)
-				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
+			if (registered)
+				JniEnvironment.Runtime.UnTrack (this);
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
@@ -172,11 +176,21 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-#pragma warning disable 0414
-		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
-		JniNativeMethodRegistration[]? methods;
-#pragma warning restore 0414
+		List<JniNativeMethodRegistration[]>? methods;
 
+		/// <remarks>
+		/// Snapshots and retains delegates from every attempted registration, including failed
+		/// or partial registrations, until successful unregistration. Coordinate registration,
+		/// unregistration, and disposal with native invocations so no callbacks are in flight
+		/// when unregistering.
+		/// </remarks>
+		/// <safety>
+		/// The caller must ensure each Marshaler delegate in <paramref name="methods"/> has
+		/// parameter and return types, calling convention, and marshaling attributes compatible
+		/// with its JNI method descriptor, including the leading JNIEnv and receiver/class pointers.
+		/// Managed by-ref parameters must not be used to receive JNI scalar values.
+		/// This method retains delegates but does not validate their ABI compatibility.
+		/// </safety>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
@@ -185,17 +199,23 @@ namespace Java.Interop {
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
 
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
-			// Prevents method delegates from being GC'd so long as this type remains
-			this.methods = methods;
+			var snapshot = (JniNativeMethodRegistration[]) methods.Clone ();
 			RegisterWithRuntime ();
+			this.methods ??= new List<JniNativeMethodRegistration[]> ();
+			this.methods.Add (snapshot);
+			JniEnvironment.Types.RegisterNatives (PeerReference, snapshot, snapshot.Length);
 		}
 
+		/// <remarks>
+		/// Quiesce native invocations and wait for all in-flight callbacks to complete before
+		/// calling this method. Delegate roots are released only after successful unregistration.
+		/// </remarks>
 		public void UnregisterNativeMethods ()
 		{
 			AssertValid ();
 
 			JniEnvironment.Types.UnregisterNatives (PeerReference);
+			methods = null;
 		}
 
 		public JniMethodInfo GetConstructor (string signature)

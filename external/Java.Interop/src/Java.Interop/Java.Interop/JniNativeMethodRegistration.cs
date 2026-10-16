@@ -33,6 +33,15 @@ namespace Java.Interop {
 		byte* signature;
 		IntPtr functionPointer;
 
+		/// <safety>
+		/// <paramref name="name"/> and <paramref name="signature"/> must address readable
+		/// NUL-terminated UTF-8 memory through registration. <paramref name="functionPointer"/>
+		/// must have the JNI-compatible ABI for the signature, including the environment and
+		/// receiver arguments, and remain callable and rooted for as long as JNI can invoke it,
+		/// including after failed or partial registration. Quiesce native invocations before
+		/// unregistration and release callback storage only after successful unregistration
+		/// and completion of all in-flight calls.
+		/// </safety>
 		public JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
 		{
 			this.name = name;
