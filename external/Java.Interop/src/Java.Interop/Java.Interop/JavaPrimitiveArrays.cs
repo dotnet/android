@@ -69,7 +69,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaBooleanArray (int length)
+		public JavaBooleanArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
@@ -261,7 +261,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaSByteArray (int length)
+		public JavaSByteArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
@@ -453,7 +453,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaCharArray (int length)
+		public JavaCharArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
@@ -645,7 +645,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaInt16Array (int length)
+		public JavaInt16Array (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
@@ -837,7 +837,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaInt32Array (int length)
+		public JavaInt32Array (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
@@ -1029,7 +1029,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaInt64Array (int length)
+		public JavaInt64Array (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
@@ -1221,7 +1221,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaSingleArray (int length)
+		public JavaSingleArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
@@ -1413,7 +1413,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaDoubleArray (int length)
+		public JavaDoubleArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
