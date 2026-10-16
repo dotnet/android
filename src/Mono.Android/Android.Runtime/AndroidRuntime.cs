@@ -8,7 +8,7 @@ namespace Android.Runtime {
 
 	class AndroidRuntime : JniRuntime {
 
-		public const string InternalDllName = RuntimeConstants.InternalDllName;
+		public const string InternalDllName = "xa-internal-api";
 
 		internal AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
@@ -21,9 +21,6 @@ namespace Android.Runtime {
 					typeManager,
 					valueManager))
 		{
-			// This is not ideal, but we need to set this while the runtime is initializing but we can't do it directly from the `JNIEnvInit.Initialize` method, since
-			// it lives in an assembly that does not reference Mono.Android.  So we do it here, because this class is instantiated by JNIEnvInit.Initialize.
-			AndroidEnvironmentInternal.UnhandledExceptionHandler = AndroidEnvironment.UnhandledException;
 		}
 
 		public override void FailFast (string? message)

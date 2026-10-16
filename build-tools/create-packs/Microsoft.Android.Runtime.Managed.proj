@@ -46,7 +46,6 @@ projects that use the Microsoft.Android framework in .NET 6+.
     <ItemGroup>
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.Runtime.dll" />
       <!-- Always include a stable version of System.IO.Hashing. -->
       <_AndroidRuntimePackAssemblies
           Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\System.IO.Hashing.dll"
