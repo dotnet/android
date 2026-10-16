@@ -182,24 +182,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>No se admite la compilación con la versión "{0}" de JDK. Instale la versión "{1}" de JDK. Consulte https://aka.ms/xamarin/jdk9-errors</value>
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
-  <data name="XA0031" xml:space="preserve">
-    <value>Se requiere el SDK de Java {0} o una versión superior al usar {1}.
-Descargue el último JDK en: https://aka.ms/msopenjdk
-Nota: Android Designer no es compatible con el SDK de Java 11.0: https://aka.ms/vs2019-and-jdk-11</value>
-    <comment>
-{0} - The Java SDK version number
-{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
-  </data>
   <data name="XA0031_NET" xml:space="preserve">
     <value>Se requiere el SDK de Java {0} o una versión superior cuando se usa .NET 6 o una versión posterior. Descargue el último JDK en: https://aka.ms/msopenjdk</value>
     <comment>
 {0} - The Java SDK version number</comment>
-  </data>
-  <data name="XA0032" xml:space="preserve">
-    <value>Se requiere el SDK de Java {0} o posterior cuando se use Android SDK Build-Tools {1}.</value>
-    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
-{0} - The Java SDK version number
-{1} - The Android SDK Build-Tools version number</comment>
   </data>
   <data name="XA0033" xml:space="preserve">
     <value>No se pudo obtener la versión del SDK de Java porque el valor devuelto no parece contener un número de versión válido. "`{0} -version`" devolvió ```{1}```</value>
@@ -810,7 +796,7 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the JNI remapping data. {0}</value>
+    <value>No se pudieron generar los datos de reasignación de JNI. {0}</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
@@ -931,13 +917,13 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
 {0} - The runtime name.</comment>
   </data>
   <data name="XA4330" xml:space="preserve">
-    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <value>La biblioteca nativa '{0}' usa el nombre reservado 'libbinary_blobs.so' (ruta de acceso de archivo '{1}' o ELF SONAME). Este nombre está reservado para datos binarios de .NET para Android.</value>
     <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>
   <data name="XA4331" xml:space="preserve">
-    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <value>No se pudo procesar el archivo de configuración del lote '{0}', los archivos de configuración divididos se omitirán en tiempo de ejecución.</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -945,7 +931,7 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
     <comment>{0} - The path of the missing directory</comment>
   </data>
   <data name="XA5101_ClangRuntime" xml:space="preserve">
-    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <value>No se pudieron encontrar las bibliotecas en tiempo de ejecución de Clang de NDK de Android. Se ha buscado en: {0}. Instale un NDK de Android completo.</value>
     <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">

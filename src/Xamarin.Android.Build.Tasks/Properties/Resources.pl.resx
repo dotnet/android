@@ -182,24 +182,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Kompilowanie przy użyciu wersji zestawu JDK „{0}” nie jest obsługiwane. Zainstaluj zestaw JDK w wersji „{1}”. Zobacz https://aka.ms/xamarin/jdk9-errors</value>
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
-  <data name="XA0031" xml:space="preserve">
-    <value>W przypadku korzystania z {1} wymagany jest zestaw Java SDK {0} lub nowszy.
-Pobierz najnowszy zestaw JDK w witrynie: https://aka.ms/msopenjdk
-Uwaga: Android Designer jest niezgodny z zestawem Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11</value>
-    <comment>
-{0} - The Java SDK version number
-{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
-  </data>
   <data name="XA0031_NET" xml:space="preserve">
     <value>W przypadku korzystania z platformy .NET 6 lub nowszej wymagany jest zestaw Java SDK {0} lub nowszy. Pobierz najnowszy zestaw JDK w witrynie: https://aka.ms/msopenjdk</value>
     <comment>
 {0} - The Java SDK version number</comment>
-  </data>
-  <data name="XA0032" xml:space="preserve">
-    <value>W przypadku używania narzędzi Android SDK Build-Tools {1} jest wymagany zestaw Java SDK {0} lub nowszy.</value>
-    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
-{0} - The Java SDK version number
-{1} - The Android SDK Build-Tools version number</comment>
   </data>
   <data name="XA0033" xml:space="preserve">
     <value>Nie udało się pobrać wersji zestawu Java SDK, ponieważ wygląda na to, że zwrócona wartość nie zawiera prawidłowego numeru wersji. Dane wyjściowe polecenia „{0} -version”: „{1}”</value>

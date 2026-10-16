@@ -182,24 +182,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>不支持使用 JDK 版本 `{0}` 生成。请安装 JDK 版本 `{1}`。请参阅 https://aka.ms/xamarin/jdk9-errors</value>
     <comment>The abbreviation "JDK" should not be translated.</comment>
   </data>
-  <data name="XA0031" xml:space="preserve">
-    <value>使用 {1} 时，需要 Java SDK {0} 或更高版本。
-下载最新的 JDK: https://aka.ms/msopenjdk
-注意: Android Designer 与 Java SDK 11.0 不兼容: https://aka.ms/vs2019-and-jdk-11</value>
-    <comment>
-{0} - The Java SDK version number
-{1} - The feature being used: `$(TargetFrameworkVersion) v10.0`</comment>
-  </data>
   <data name="XA0031_NET" xml:space="preserve">
     <value>使用 .NET 6 或更高版本时，需要 Java SDK {0} 或更高版本。在以下位置下载最新的 JDK: https://aka.ms/msopenjdk</value>
     <comment>
 {0} - The Java SDK version number</comment>
-  </data>
-  <data name="XA0032" xml:space="preserve">
-    <value>使用 Android SDK 生成工具 {1} 时需要 Java SDK {0} 或更高版本。</value>
-    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
-{0} - The Java SDK version number
-{1} - The Android SDK Build-Tools version number</comment>
   </data>
   <data name="XA0033" xml:space="preserve">
     <value>未能获取 Java SDK 版本，因为返回的值似乎不包含有效的版本号。`{0} -version` 返回的值为 ```{1}```</value>
@@ -810,7 +796,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the JNI remapping data. {0}</value>
+    <value>无法生成 JNI 重新映射数据。{0}</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
@@ -931,13 +917,13 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The runtime name.</comment>
   </data>
   <data name="XA4330" xml:space="preserve">
-    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <value>本机库“{0}”使用了保留名称 "libbinary_blobs.so"(归档路径 "{1}" 或 ELF SONAME)。此名称为 .NET for Android 二进制数据保留。</value>
     <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
   </data>
   <data name="XA4331" xml:space="preserve">
-    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <value>无法处理捆绑包配置文件 '{0}'，将在运行时忽略拆分的配置文件。</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -945,7 +931,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The path of the missing directory</comment>
   </data>
   <data name="XA5101_ClangRuntime" xml:space="preserve">
-    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <value>无法找到 Android NDK Clang 运行时库。在以下目录中搜索过: {0}。请安装完整的 Android NDK。</value>
     <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
