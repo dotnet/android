@@ -53,7 +53,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
@@ -251,7 +253,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
@@ -449,7 +453,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
@@ -647,7 +653,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
@@ -845,7 +853,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
@@ -1043,7 +1053,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
@@ -1241,7 +1253,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
@@ -1439,7 +1453,9 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				return ref Elements [index];
+				unsafe {
+					return ref Elements [index];
+				}
 			}
 		}
 
