@@ -16,6 +16,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
+	[Category ("GeneratedJniDebuggerBoundary")]
 	public class ConstructorActivationTests
 	{
 		[Test]
@@ -114,8 +115,49 @@ namespace Java.InteropTests
 
 			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
 			Assert.IsNotNull (exception);
+			Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
 			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
 			Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+		}
+
+		[Test]
+		public void JavaSideThrowingConstructorDoesNotLeakPendingException ()
+		{
+			ConstructorActivationThrowing.Reset ();
+			ConstructorActivationDefault.Reset ();
+
+			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+			Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
+			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			AssertRegisteredSame (instance);
+		}
+
+		[Test]
+		public void JavaSideHandledConstructorExceptionDeliversPolicyOnce ()
+		{
+			ConstructorActivationThrowing.Reset ();
+			int notifications = 0;
+			Exception? notifiedException = null;
+			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+				notifiedException = args.Exception;
+				notifications++;
+				args.Handled = true;
+			};
+			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			try {
+				Assert.DoesNotThrow (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+				Assert.AreEqual (1, notifications);
+				Assert.AreSame (ConstructorActivationThrowing.LastException, notifiedException);
+				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+			} finally {
+				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
+			}
+
+			ConstructorActivationDefault.Reset ();
+			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			AssertRegisteredSame (instance);
 		}
 
 		[Test]
@@ -605,16 +647,19 @@ namespace Java.InteropTests
 		public const string ExceptionMessage = "constructor activation throw";
 
 		public static int ConstructorInvocations;
+		public static Exception? LastException;
 
 		public ConstructorActivationThrowing ()
 		{
 			ConstructorInvocations++;
-			throw new InvalidOperationException (ExceptionMessage);
+			LastException = new InvalidOperationException (ExceptionMessage);
+			throw LastException;
 		}
 
 		public static void Reset ()
 		{
 			ConstructorInvocations = 0;
+			LastException = null;
 		}
 	}
 
