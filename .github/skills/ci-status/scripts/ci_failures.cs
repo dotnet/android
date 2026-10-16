@@ -1,7 +1,9 @@
 #!/usr/bin/env dotnet
+#:property TargetFramework=net11.0
 // Evidence-based failure analysis for one dnceng-public `dotnet-android` build.
 // This tool is read-only: it never retries Azure stages or mutates GitHub issues.
 //
+// Needs a .NET 11 SDK and `az login`.
 // Live:
 //   dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android] [--format markdown|json]
 
@@ -1042,27 +1044,18 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		RedirectStandardOutput = true,
 		RedirectStandardError = true,
 		UseShellExecute = false,
+		InheritedHandles = [],
 	};
 	foreach (var arg in cliArgs)
 		psi.ArgumentList.Add (arg);
-	using var process = Process.Start (psi);
-	if (process is null)
-		return (-1, "", $"failed to start {file}");
-	var stdoutTask = process.StandardOutput.ReadToEndAsync ();
-	var stderrTask = process.StandardError.ReadToEndAsync ();
-	using var timeout = new CancellationTokenSource (TimeSpan.FromMinutes (5));
 	try {
-		process.WaitForExitAsync (timeout.Token).GetAwaiter ().GetResult ();
-	} catch (OperationCanceledException) {
-		if (!process.HasExited)
-			process.Kill (entireProcessTree: true);
-		Task.WhenAll (stdoutTask, stderrTask).GetAwaiter ().GetResult ();
-		return (-1, stdoutTask.Result, $"{stderrTask.Result}\n{file} timed out after 5 minutes.");
+		var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
+		return result.ExitStatus.Canceled
+			? (-1, result.StandardOutput, $"{result.StandardError}\n{file} timed out after 5 minutes.")
+			: (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
+	} catch (TimeoutException) {
+		return (-1, "", $"{file} timed out after 5 minutes.");
 	}
-	Task.WhenAll (stdoutTask, stderrTask).GetAwaiter ().GetResult ();
-	string stdout = stdoutTask.Result;
-	string stderr = stderrTask.Result;
-	return (process.ExitCode, stdout, stderr);
 }
 
 static JsonArray GetArray (JsonNode? root, string key)

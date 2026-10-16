@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <DotNetTargetFrameworkVersion>11.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

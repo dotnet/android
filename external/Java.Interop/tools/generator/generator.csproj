@@ -1,7 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <DotNetTargetFrameworkVersion>11.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
   </PropertyGroup>
@@ -14,6 +18,8 @@
 
   <ItemGroup>
     <None Remove="generator.slnf" />
+    <!-- The repository's .NET 12 preview SDK also maps net11.0 to its .NET 12 targeting pack. -->
+    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" />
   </ItemGroup>
 
   <ItemGroup>

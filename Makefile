@@ -77,7 +77,7 @@ include build-tools/scripts/runtime-helpers.mk
 
 .PHONY: prepare
 prepare: install-dotnet
-	$(call SYSTEM_DOTNET_BINLOG,prepare) build-tools/scripts/Prepare.proj -t:Prepare
+	$(call DOTNET_BINLOG,prepare) build-tools/scripts/Prepare.proj -t:Prepare
 
 .PHONY: install-dotnet
 install-dotnet:
