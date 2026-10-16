@@ -25,7 +25,9 @@ namespace Java.Interop {
 			if (value == null)
 				return "";
 
-			return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
+			unsafe {
+				return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
+			}
 		}
 
 		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",
@@ -423,7 +425,9 @@ namespace Java.Interop {
 					return;
 				}
 
-				GetReplacementTypeInfoUnsafe (jniSimpleReference, out replacement, out replacementUtf8);
+				unsafe {
+					GetReplacementTypeInfoUnsafe (jniSimpleReference, out replacement, out replacementUtf8);
+				}
 				if (replacementUtf8 != null)
 					replacement = null;
 			}
@@ -525,7 +529,9 @@ namespace Java.Interop {
 				if (!RuntimeFeature.JniRemapping)
 					return null;
 
-				return GetReplacementMethodInfoUnsafe (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
+				unsafe {
+					return GetReplacementMethodInfoUnsafe (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
+				}
 			}
 
 			/// <summary>
