@@ -18,7 +18,7 @@ namespace Java.Interop
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
 
-		public unsafe JavaException ()
+		public JavaException ()
 		{
 			JniObjectReference reference = default;
 			Construct (ref reference, JniObjectReferenceOptions.None);
@@ -27,9 +27,11 @@ namespace Java.Interop
 				return;
 			}
 
-			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
-			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
+			unsafe {
+				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
+				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
+			}
 			SetJavaStackTrace ();
 		}
 

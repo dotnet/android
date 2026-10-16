@@ -89,7 +89,7 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe Java<#= info.TypeModifier #>Array (int length)
+		public Java<#= info.TypeModifier #>Array (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length));
