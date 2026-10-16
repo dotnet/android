@@ -206,12 +206,12 @@
 
   <ItemGroup>
     <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
+    <AndroidJavaSource Update="java/net/dot/android/test/JniSpliteratorFixture.java" Bind="false" />
     <AndroidJavaSource Update="java\net\dot\android\test\InterfaceCollectionFixture.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/remap/*.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/JniRuntimeExceptionPolicy.java" Bind="false" />
-    <AndroidJavaSource Update="java/net/dot/android/test/JniSpliteratorFixture.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>
