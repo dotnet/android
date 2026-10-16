@@ -111,7 +111,7 @@ namespace Java.Interop {
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
 			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
 			/// </safety>
-			public unsafe byte* TargetJniTypeUtf8Pointer {get; set;}
+			public byte* TargetJniTypeUtf8Pointer {get; unsafe set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method name.
 			/// </summary>
@@ -120,7 +120,7 @@ namespace Java.Interop {
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
 			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
 			/// </safety>
-			public unsafe byte* TargetJniMethodNameUtf8Pointer {get; set;}
+			public byte* TargetJniMethodNameUtf8Pointer {get; unsafe set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method signature.
 			/// </summary>
@@ -129,7 +129,7 @@ namespace Java.Interop {
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
 			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
 			/// </safety>
-			public unsafe byte* TargetJniMethodSignatureUtf8Pointer {get; set;}
+			public byte* TargetJniMethodSignatureUtf8Pointer {get; unsafe set;}
 			public  int?    TargetJniMethodParameterCount   {get; set;}
 			public  bool    TargetJniMethodInstanceToStatic {get; set;}
 

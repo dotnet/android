@@ -37,7 +37,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Boolean* Elements {
+		public new Boolean* Elements {
 			get {return (Boolean*) ElementsPointer;}
 		}
 
@@ -249,7 +249,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe SByte* Elements {
+		public new SByte* Elements {
 			get {return (SByte*) ElementsPointer;}
 		}
 
@@ -461,7 +461,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Char* Elements {
+		public new Char* Elements {
 			get {return (Char*) ElementsPointer;}
 		}
 
@@ -673,7 +673,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Int16* Elements {
+		public new Int16* Elements {
 			get {return (Int16*) ElementsPointer;}
 		}
 
@@ -885,7 +885,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Int32* Elements {
+		public new Int32* Elements {
 			get {return (Int32*) ElementsPointer;}
 		}
 
@@ -1097,7 +1097,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Int64* Elements {
+		public new Int64* Elements {
 			get {return (Int64*) ElementsPointer;}
 		}
 
@@ -1309,7 +1309,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Single* Elements {
+		public new Single* Elements {
 			get {return (Single*) ElementsPointer;}
 		}
 
@@ -1521,7 +1521,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe Double* Elements {
+		public new Double* Elements {
 			get {return (Double*) ElementsPointer;}
 		}
 
