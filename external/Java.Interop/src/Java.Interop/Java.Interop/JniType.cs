@@ -351,13 +351,17 @@ namespace Java.Interop {
 			var _name = Marshal.StringToCoTaskMemUTF8 (name);
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
-				var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
-				thrown      = JniNativeMethods.ExceptionOccurred (env);
-				return id;
+				unsafe {
+					var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
+					thrown      = JniNativeMethods.ExceptionOccurred (env);
+					return id;
+				}
 			}
 			finally {
-				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				unsafe {
+					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
+					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				}
 			}
 		}
 
@@ -408,13 +412,17 @@ namespace Java.Interop {
 			var _name = Marshal.StringToCoTaskMemUTF8 (name);
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
-				var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
-				thrown      = JniNativeMethods.ExceptionOccurred (env);
-				return id;
+				unsafe {
+					var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
+					thrown      = JniNativeMethods.ExceptionOccurred (env);
+					return id;
+				}
 			}
 			finally {
-				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				unsafe {
+					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
+					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				}
 			}
 		}
 
