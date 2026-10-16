@@ -1290,8 +1290,8 @@ public sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Maps a managed type name to its JNI descriptor for constructor signature
 	/// computation. Returns null for types that can't be mapped to JNI
-	/// (matching legacy GetJniSignature behavior). For Java peer object types
-	/// (types with [Register]), resolves to "L&lt;jniName&gt;;" via assembly cache.
+	/// (matching legacy GetJniSignature behavior). For Java peer object types,
+	/// resolves to "L&lt;jniName&gt;;" via assembly cache.
 	/// </summary>
 	string? ManagedTypeToJniDescriptorOrNull (string managedType)
 	{
@@ -1310,8 +1310,8 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Looks up a managed type in its referenced assembly. If the type has
-	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
+	/// Looks up a managed type in its referenced assembly and returns its JNI
+	/// object descriptor, or null if it is not a Java peer.
 	/// </summary>
 	string? TryResolveJniObjectDescriptor (TypeRefData managedType)
 	{
@@ -1341,8 +1341,11 @@ public sealed class JavaPeerScanner : IDisposable
 			return $"L{registerInfo.JniName};";
 		}
 
-		// User peer types (extend a Java peer but lack [Register]) get a CRC64-based
-		// JNI name in ScanAssembly. Mirror that for exported signatures.
+		if (index.AttributesByType.TryGetValue (handle, out var attributeInfo) && attributeInfo.JniName is not null) {
+			return $"L{attributeInfo.JniName};";
+		}
+
+		// Match ScanAssembly's CRC64 fallback when the peer has no explicit JNI name.
 		var typeDef = index.Reader.GetTypeDefinition (handle);
 		if (ExtendsJavaPeer (handle, typeDef, index)) {
 			var (jniName, _) = ComputeAutoJniNames (typeDef, index);

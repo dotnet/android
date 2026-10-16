@@ -234,9 +234,14 @@ static class JniSignatureHelper
 	/// Java source uses '.' for both.
 	/// e.g., "android/app/Activity" → "android.app.Activity"
 	/// e.g., "android/drm/DrmManagerClient$OnEventListener" → "android.drm.DrmManagerClient.OnEventListener"
+	/// Names in <paramref name="generatedPeerNames"/> instead preserve '$' in their top-level class identifiers.
 	/// </summary>
-	internal static string JniNameToJavaName (string jniName)
+	internal static string JniNameToJavaName (string jniName, IReadOnlySet<string>? generatedPeerNames = null)
 	{
+		// Generated wrappers are top-level classes, even when their identifiers contain '$'.
+		if (generatedPeerNames?.Contains (jniName) == true) {
+			return JniNameToJavaBinaryName (jniName);
+		}
 		if (jniName.AsSpan ().IndexOfAny (JavaSourceNameSeparators) < 0) {
 			return jniName;
 		}
@@ -284,8 +289,9 @@ static class JniSignatureHelper
 	/// <summary>
 	/// Converts a JNI type descriptor to a Java source type.
 	/// e.g., "V" \u2192 "void", "I" \u2192 "int", "Landroid/os/Bundle;" \u2192 "android.os.Bundle"
+	/// Names in <paramref name="generatedPeerNames"/> preserve '$', including in array element types.
 	/// </summary>
-	internal static string JniTypeToJava (string jniType)
+	internal static string JniTypeToJava (string jniType, IReadOnlySet<string>? generatedPeerNames = null)
 	{
 		if (jniType.Length == 1) {
 			return jniType [0] switch {
@@ -304,12 +310,12 @@ static class JniSignatureHelper
 
 		// Array types: "[I" \u2192 "int[]", "[Ljava/lang/String;" \u2192 "java.lang.String[]"
 		if (jniType [0] == '[') {
-			return JniTypeToJava (jniType.Substring (1)) + "[]";
+			return JniTypeToJava (jniType.Substring (1), generatedPeerNames) + "[]";
 		}
 
 		// Object types: "Landroid/os/Bundle;" \u2192 "android.os.Bundle"
 		if (jniType [0] == 'L' && jniType [jniType.Length - 1] == ';') {
-			return JniNameToJavaName (jniType.Substring (1, jniType.Length - 2));
+			return JniNameToJavaName (jniType.Substring (1, jniType.Length - 2), generatedPeerNames);
 		}
 
 		throw new ArgumentException ($"Unknown JNI type descriptor: {jniType}");

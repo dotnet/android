@@ -156,6 +156,179 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		static IEnumerable<TestCaseData> ComponentNameSignatureCases ()
+		{
+			var components = new (string Attribute, string Source) [] {
+				("Activity", """
+					[Activity (Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : Activity { }
+					"""),
+				("Service", """
+					[Service (Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : Service
+					{
+						public override IBinder? OnBind (Intent? intent) => null;
+					}
+					"""),
+				("BroadcastReceiver", """
+					[BroadcastReceiver (Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : BroadcastReceiver
+					{
+						public override void OnReceive (Context? context, Intent? intent) { }
+					}
+					"""),
+				("ContentProvider", """
+					[ContentProvider (["example.components.provider"], Name = "example.components.NamedComponent", Exported = false)]
+					public class NamedComponent : ContentProvider
+					{
+						public override bool OnCreate () => true;
+						public override ICursor? Query (Android.Net.Uri uri, string[]? projection, string? selection, string[]? selectionArgs, string? sortOrder) => null;
+						public override string? GetType (Android.Net.Uri uri) => null;
+						public override Android.Net.Uri? Insert (Android.Net.Uri uri, ContentValues? values) => null;
+						public override int Delete (Android.Net.Uri uri, string? selection, string[]? selectionArgs) => 0;
+						public override int Update (Android.Net.Uri uri, ContentValues? values, string? selection, string[]? selectionArgs) => 0;
+					}
+					"""),
+				("Application", """
+					[Application (Name = "example.components.NamedComponent")]
+					public class NamedComponent : Application
+					{
+						public NamedComponent (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+					}
+					"""),
+				("Instrumentation", """
+					[Instrumentation (Name = "example.components.NamedComponent", TargetPackage = "${applicationId}")]
+					public class NamedComponent : Instrumentation
+					{
+						public NamedComponent (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+					}
+					"""),
+			};
+			foreach (var component in components) {
+				foreach (var runtime in new [] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+					foreach (bool separateAssemblies in new [] { false, true }) {
+						foreach (bool dollarName in new [] { false, true }) {
+							yield return new TestCaseData (runtime, separateAssemblies, component.Source, dollarName)
+								.SetName ($"Build_ComponentNameIsUsedInSignatures({component.Attribute},{runtime},{separateAssemblies},{(dollarName ? "DollarName" : "SimpleName")})");
+						}
+					}
+				}
+			}
+		}
+
+		[TestCaseSource (nameof (ComponentNameSignatureCases))]
+		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies, string componentSource, bool dollarName)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+			string componentSimpleName = dollarName ? "Outer$NamedComponent" : "NamedComponent";
+			string componentJavaName = $"example.components.{componentSimpleName}";
+			var component = new BuildItem.Source ("NamedComponent.cs") {
+				TextContent = () => """
+					using System;
+					using Android.App;
+					using Android.Content;
+					using Android.Database;
+					using Android.OS;
+					using Android.Runtime;
+
+					namespace Example.Components;
+
+					""" + Environment.NewLine + componentSource.Replace ("example.components.NamedComponent", componentJavaName),
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("ComponentBinder.cs") {
+						TextContent = () => """
+							using Android.OS;
+							using Android.Runtime;
+							using Example.Components;
+							using Java.Interop;
+
+							namespace Example.Services;
+
+							[Register ("example/components/ComponentBinder")]
+							public class ComponentBinder : Binder
+							{
+								public ComponentBinder (NamedComponent? component) { }
+								public ComponentBinder (NamedComponent[] components) { }
+
+								[Export ("echo")]
+								public NamedComponent? Echo (NamedComponent? component) => component;
+
+								[Export ("echoArray")]
+								public NamedComponent[] EchoArray (NamedComponent[] components) => components;
+
+								[Export ("echoConfig")]
+								public Android.Graphics.Bitmap.Config? EchoConfig (Android.Graphics.Bitmap.Config? config) => config;
+
+								[ExportField ("component")]
+								public NamedComponent? CreateComponent () => null;
+							}
+							""",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				Example.Components.NamedComponent? component = null;
+				Example.Components.NamedComponent[] components = [];
+				using var binder = new Example.Services.ComponentBinder (component);
+				using var arrayBinder = new Example.Services.ComponentBinder (components);
+				System.GC.KeepAlive (binder.Echo (component));
+				System.GC.KeepAlive (arrayBinder.EchoArray (components));
+				System.GC.KeepAlive (binder.EchoConfig (null));
+				System.GC.KeepAlive (binder.CreateComponent ());
+				""");
+			var testRoot = Path.Combine ("temp", TestName);
+			if (separateAssemblies) {
+				var library = new XamarinAndroidLibraryProject {
+					ProjectName = "NamedComponents",
+					IsRelease = true,
+					Sources = { component },
+				};
+				library.SetRuntime (runtime);
+				using var libraryBuilder = CreateDllBuilder (Path.Combine (testRoot, library.ProjectName), cleanupAfterSuccessfulBuild: false);
+				Assert.IsTrue (libraryBuilder.Build (library), "The named component library must build.");
+				proj.References.Add (new BuildItem.ProjectReference (
+					$"..\\{library.ProjectName}\\{library.ProjectName}.csproj", library.ProjectName, library.ProjectGuid));
+			} else {
+				proj.Sources.Add (component);
+			}
+
+			using var builder = CreateApkBuilder (Path.Combine (testRoot, proj.ProjectName));
+			Assert.IsTrue (builder.Build (proj), "Explicit component names must compile in constructor and export signatures.");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
+			var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine (
+				"typemap", runtime == AndroidRuntime.CoreCLR ? "linked-java" : "java", "example", "components"));
+			string componentJava = File.ReadAllText (Path.Combine (javaDirectory, componentSimpleName + ".java"));
+			StringAssert.Contains ($"public class {componentSimpleName}", componentJava);
+			string binderJava = File.ReadAllText (Path.Combine (javaDirectory, "ComponentBinder.java"));
+			StringAssert.Contains ($"public ComponentBinder ({componentJavaName} p0)", binderJava);
+			StringAssert.Contains ($"public ComponentBinder ({componentJavaName}[] p0)", binderJava);
+			StringAssert.Contains ($"public {componentJavaName} echo ({componentJavaName} p0)", binderJava);
+			StringAssert.Contains ($"public {componentJavaName}[] echoArray ({componentJavaName}[] p0)", binderJava);
+			StringAssert.Contains ($"public {componentJavaName} component = CreateComponent ();", binderJava);
+			StringAssert.Contains ("public android.graphics.Bitmap.Config echoConfig (android.graphics.Bitmap.Config p0)", binderJava);
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			const string binderName = "Lexample/components/ComponentBinder;";
+			string componentName = $"Lexample/components/{componentSimpleName};";
+			Assert.IsTrue (DexUtils.ContainsClass (componentName, dexFile, AndroidSdkPath), "The named component must be packaged.");
+			foreach (var (method, signature) in new [] {
+				("<init>", $"({componentName})V"),
+				("<init>", $"([{componentName})V"),
+				("echo", $"({componentName}){componentName}"),
+				("echoArray", $"([{componentName})[{componentName}"),
+				("echoConfig", "(Landroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap$Config;"),
+			}) {
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (binderName, method, signature, dexFile, AndroidSdkPath),
+					$"The packaged binder must contain {method}{signature}.");
+			}
+		}
+
 		[Test]
 		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
 		{
