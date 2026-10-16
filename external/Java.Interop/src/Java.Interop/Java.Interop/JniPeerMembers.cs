@@ -319,7 +319,9 @@ namespace Java.Interop {
 		/// </safety>
 		static unsafe string GetStringFromNullTerminated (byte* value)
 		{
-			return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
+			unsafe {
+				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
+			}
 		}
 
 		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)

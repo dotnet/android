@@ -119,7 +119,9 @@ namespace Java.Interop
 			if (value == null)
 				throw new NotSupportedException ();
 
-			return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
+			unsafe {
+				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
+			}
 		}
 #endif  // DEBUG
 
