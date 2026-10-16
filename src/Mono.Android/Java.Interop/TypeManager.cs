@@ -1,22 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-
-using Android.Runtime;
 
 namespace Java.Interop {
 
 	[Obsolete ("This class is obsolete and will be removed in the next release. Use [Register] on Java peer types instead of explicit type registration.")]
 	public static partial class TypeManager {
-		internal static string GetClassName (IntPtr class_ptr)
-		{
-			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
-			string ret = Marshal.PtrToStringAnsi (ptr)!;
-			RuntimeNativeMethods.monodroid_free (ptr);
-
-			return ret;
-		}
-
 		class TypeNameComparer : IComparer<string> {
 			public int Compare (string? x, string? y)
 			{

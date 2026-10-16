@@ -29,7 +29,6 @@ namespace Xamarin.Android.Tasks
 		// Set in ResolveSdks.Execute();
 		// Requires that ResolveSdks.Execute() run before anything else
 		public static AndroidVersions   SupportedVersions;
-		public static AndroidSdkInfo    AndroidSdk;
 
 		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
 		{
@@ -513,9 +512,13 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
-			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
+			if (string.IsNullOrEmpty (androidSdkDirectory)) {
+				log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
+				return null;
+			}
+			var platformPath = AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (androidSdkDirectory, platform, MonoAndroidHelper.SupportedVersions);
 			if (platformPath == null) {
-				var expectedPath = Path.Combine (AndroidSdk.GetPlatformDirectoryFromId (platform), "android.jar");
+				var expectedPath = Path.Combine (androidSdkDirectory, "platforms", "android-" + platform, "android.jar");
 				var sdkManagerMenuPath = buildingInsideVisualStudio ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_CLI;
 				var details = string.Format (sdkManagerMenuPath, targetFramework, androidSdkDirectory);
 				if (designTimeBuild) {

@@ -20,12 +20,12 @@
       </Item>
       <Item ItemId=";description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A project for creating a .NET for Android Wear application]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[A project for creating a Wear OS app using .NET for Android]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Android için .NET kullanarak Wear OS uygulaması oluşturmaya yönelik bir proje]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[A project for creating a .NET Android Wear application]]></Val>
+            <Val><![CDATA[A project for creating a .NET for Android Wear application]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -39,11 +39,47 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";symbols/Framework/choices/net10.0-android/description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Target net10.0-android]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Hedef net10.0-android]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";symbols/Framework/choices/net11.0-android/description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Target net11.0-android]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Hedef net11.0-android]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";symbols/Framework/description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The target framework for the project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Projenin hedef çerçevesi.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";symbols/packageName/description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Overrides the package name in the AndroidManifest.xml]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[AndroidManifest.xm öğesindeki paket adını geçersiz kılar]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";symbols/skipRestore/description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[If specified, skips the automatic restore of the project on create.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Belirtilmişse oluştururken projenin otomatik geri yüklenmesini atlar.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

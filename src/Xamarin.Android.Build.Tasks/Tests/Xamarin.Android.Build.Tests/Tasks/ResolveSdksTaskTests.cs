@@ -4,10 +4,11 @@ using NUnit.Framework;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using ResolveAndroidTooling = Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling;
-using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
 
 namespace Xamarin.Android.Build.Tests {
 
@@ -110,13 +111,11 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			var validateJavaVersion = new ValidateJavaVersion {
 				BuildEngine = engine,
-				TargetFrameworkVersion = targetFrameworkVersion,
-				AndroidSdkBuildToolsVersion = buildtools,
 				JavaSdkPath = javaPath,
 				JavaToolExe = javaExe,
 				JavacToolExe = javacExe,
 				LatestSupportedJavaVersion = LatestSupportedJavaVersion,
-				MinimumSupportedJavaVersion = "1.7.0",
+				MinimumSupportedJavaVersion = "1.8.0",
 			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
@@ -163,13 +162,11 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			var validateJavaVersion = new ValidateJavaVersion {
 				BuildEngine = engine,
-				TargetFrameworkVersion = "v8.0",
-				AndroidSdkBuildToolsVersion = "26.0.3",
 				JavaSdkPath = javaPath,
 				JavaToolExe = javaExe,
 				JavacToolExe = javacExe,
 				LatestSupportedJavaVersion = "1.8.0",
-				MinimumSupportedJavaVersion = "1.7.0",
+				MinimumSupportedJavaVersion = "1.8.0",
 			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
@@ -211,7 +208,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
 			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
-			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8", "MinimumRequiredJdkVersion should be 1.8");
+			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8.0", "MinimumRequiredJdkVersion should be 1.8.0");
 			Assert.IsFalse (messages.Any (m => m.Message == "ResolveSdks Outputs:" ||
 				m.Message == "ResolveAndroidTooling Outputs:" ||
 				m.Message == "ValidateJavaVersion Outputs:" ||
@@ -221,33 +218,157 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		public void ResolveAndroidToolingWithMissingResolvedSdkDoesNotThrow ()
+		[TestCase (null, "XA5300")]
+		[TestCase ("", "XA5300")]
+		[TestCase ("missing", "XA5300")]
+		[TestCase ("empty", "XA5205")]
+		public void ResolveAndroidToolingWithMissingSdkDoesNotThrow (string sdkPath, string expectedError)
 		{
-			var path = Path.Combine (Path.GetTempPath (), "xa-tests", nameof (ResolveAndroidToolingWithMissingResolvedSdkDoesNotThrow), Guid.NewGuid ().ToString ("N"));
+			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			var errors = new List<BuildErrorEventArgs> ();
-			var originalAndroidSdk = MonoAndroidHelper.AndroidSdk;
 			try {
-				MonoAndroidHelper.AndroidSdk = null;
 				IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 				var androidTooling = new Xamarin.Android.Tasks.ResolveAndroidTooling {
 					BuildEngine = engine,
-					AndroidSdkPath = path,
+					AndroidSdkPath = sdkPath == "empty" ? path : sdkPath == "missing" ? Path.Combine (path, "missing") : sdkPath,
 					AndroidSdkBuildToolsVersion = "36.0.0",
 					TargetPlatformVersion = "37.0",
 					AndroidApplication = true,
 				};
 
-				Assert.IsFalse (androidTooling.Execute (), "ResolveAndroidTooling should fail when SDK resolution has not succeeded.");
+				Assert.IsFalse (androidTooling.Execute (), "ResolveAndroidTooling should fail when the explicit SDK has no tooling.");
 				Assert.AreEqual ("37", androidTooling.AndroidApiLevel, "AndroidApiLevel should still be calculated for dependency resolution.");
-				Assert.IsTrue (errors.Any (e => e.Code == "XA5300"), "XA5300 should be logged when Android SDK tooling is unavailable.");
-				Assert.IsFalse (errors.Any (e => e.Code == "XARAT7001"), "ResolveAndroidTooling should not throw when AndroidSdk is unavailable.");
+				Assert.AreEqual (expectedError, errors.Single ().Code);
 			} finally {
-				MonoAndroidHelper.AndroidSdk = originalAndroidSdk;
 				if (Directory.Exists (path))
 					Directory.Delete (path, recursive: true);
 			}
+		}
+
+		[Test]
+		public void ResolveSdksReturnsAbsolutePaths ([Values (false, true)] bool discoverNdk, [Values (false, true)] bool commandLineTools)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "37.0.0");
+			var ndkPath = CreateFauxAndroidNdkDirectory (discoverNdk ? Path.Combine (path, "android-sdk", "ndk-bundle") : Path.Combine (path, "android-ndk"));
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out _, out _);
+			try {
+				File.WriteAllText (Path.Combine (ndkPath, "source.properties"), "Pkg.Revision = 21.0.6113669");
+				var toolsPath = Path.Combine (sdkPath, commandLineTools ? Path.Combine ("cmdline-tools", "21.0") : "tools");
+				Directory.CreateDirectory (toolsPath);
+				var resolveSdks = new ResolveSdks {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					AndroidSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, sdkPath),
+					AndroidNdkPath = discoverNdk ? null : Path.GetRelativePath (Environment.CurrentDirectory, ndkPath),
+					JavaSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, javaPath),
+					MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
+					LatestSupportedJavaVersion = LatestSupportedJavaVersion,
+					CommandLineToolsVersion = "21.0",
+				};
+				Assert.IsTrue (resolveSdks.Execute ());
+				Assert.AreEqual (sdkPath, resolveSdks.AndroidSdkPath);
+				Assert.AreEqual (ndkPath, resolveSdks.AndroidNdkPath);
+				Assert.AreEqual (javaPath, resolveSdks.JavaSdkPath);
+				Assert.AreEqual (toolsPath, resolveSdks.CommandLineToolsPath);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		public void SdkConsumersUseExplicitPaths ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var firstSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "first-sdk"), "37.0.0", [new ApiInfo { Id = "37" }]);
+			var secondSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "second-sdk"), "36.0.0", [new ApiInfo { Id = "37" }]);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out _, out _);
+			var engine = new MockBuildEngine (TestContext.Out);
+			var resolveSdks = new ResolveSdks {
+				BuildEngine = engine,
+				AndroidSdkPath = firstSdk,
+				JavaSdkPath = javaPath,
+				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
+				LatestSupportedJavaVersion = LatestSupportedJavaVersion,
+			};
+			try {
+				Assert.IsTrue (resolveSdks.Execute ());
+				var tooling = new Xamarin.Android.Tasks.ResolveAndroidTooling {
+					BuildEngine = engine,
+					AndroidSdkPath = secondSdk,
+					TargetPlatformVersion = "37.0",
+				};
+				Assert.IsTrue (tooling.Execute ());
+				Assert.AreEqual (Path.Combine (secondSdk, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
+				Assert.AreEqual (Path.Combine (secondSdk, "tools"), tooling.LintToolPath);
+
+				var proj = new XamarinAndroidApplicationProject {
+					AndroidManifest = """
+						<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.isolation">
+						  <application><uses-library android:name="example" /></application>
+						</manifest>
+						""",
+				};
+				using var builder = CreateApkBuilder (Path.Combine (path, "manifest"));
+				builder.Save (proj);
+				foreach (var sdk in new [] { secondSdk, firstSdk }) {
+					var platformJar = Path.Combine (sdk, "platforms", "android-37", "android.jar");
+					var optionalJar = Path.Combine (sdk, "platforms", "android-37", "optional", "example.jar");
+					Directory.CreateDirectory (Path.GetDirectoryName (optionalJar));
+					File.WriteAllText (optionalJar, "");
+					var platform = new GetJavaPlatformJar {
+						BuildEngine = engine,
+						AndroidSdkDirectory = sdk,
+						AndroidApiLevel = "37",
+						SupportedOSPlatformVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.ToString (),
+					};
+					Assert.IsTrue (platform.Execute ());
+					Assert.AreEqual (platformJar, platform.JavaPlatformJarPath);
+					var manifest = new ReadAndroidManifest {
+						BuildEngine = engine,
+						AndroidSdkDirectory = sdk,
+						AndroidApiLevel = "37",
+						ManifestFile = Path.Combine (Root, builder.ProjectDirectory, "Properties", "AndroidManifest.xml"),
+					};
+					Assert.IsTrue (manifest.Execute ());
+					var libraries = manifest.UsesLibraries;
+					Assert.IsNotNull (libraries);
+					Assert.AreEqual (optionalJar, libraries.Single ().ItemSpec);
+					var jarToXml = new JarToXmlCommandLine {
+						BuildEngine = engine,
+						AndroidSdkDirectory = sdk,
+						AndroidApiLevel = "37",
+						MonoAndroidToolsDirectory = resolveSdks.MonoAndroidToolsPath,
+						OutputFile = Path.Combine (Root, path, "api.xml"),
+					};
+					StringAssert.Contains (platformJar, jarToXml.GetCommandLine ());
+				}
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[TestCase (null, "XA5300")]
+		[TestCase ("", "XA5300")]
+		[TestCase ("missing", "XA5207")]
+		public void PlatformJarWithMissingSdkDoesNotThrow (string sdkPath, string expectedError)
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var engine = new MockBuildEngine (TestContext.Out, errors);
+			MonoAndroidHelper.RefreshSupportedVersions ([]);
+			var jarToXml = new JarToXml {
+				BuildEngine = engine,
+				AndroidSdkDirectory = sdkPath == "missing" ? Path.Combine (Root, "temp", TestName, "missing-sdk") : sdkPath,
+				AndroidApiLevel = "37",
+				SourceJars = [new TaskItem ("source.jar")],
+			};
+			Assert.IsFalse (jarToXml.Execute ());
+			Assert.AreEqual (expectedError, errors.Single ().Code);
+		}
+
+		class JarToXmlCommandLine : JarToXml
+		{
+			public string GetCommandLine () => GenerateCommandLineCommands ();
 		}
 
 	}

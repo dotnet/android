@@ -20,8 +20,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string NetResgenOutputFile { get; set; } = "";
 
-		public string? DesignTimeOutputFile { get; set; }
-
 		public string? JavaResgenInputFile { get; set; }
 
 		public string? RTxtFile { get; set; }
@@ -157,12 +155,6 @@ namespace Xamarin.Android.Tasks
 			// Write out our Resources.Designer.cs file
 
 			WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases, namespaceName);
-
-			// During a regular build, write the designtime/Resource.designer.cs file as well
-
-			if (!DesignTimeOutputFile.IsNullOrEmpty () && Files.CopyIfChanged (NetResgenOutputFile, DesignTimeOutputFile)) {
-				Log.LogDebugMessage ($"Writing to: {DesignTimeOutputFile}");
-			}
 
 			return !Log.HasLoggedErrors;
 		}

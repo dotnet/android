@@ -37,7 +37,6 @@ set(XAMARIN_MONODROID_SOURCES
 
   # Sources shared with the CoreCLR host
   ${CLR_SOURCES_PATH}/host/host-shared.cc
-  ${CLR_SOURCES_PATH}/host/internal-pinvokes-shared.cc
   ${CLR_SOURCES_PATH}/host/gc-bridge.cc
   ${CLR_SOURCES_PATH}/host/os-bridge.cc
   ${CLR_SOURCES_PATH}/host/runtime-util.cc

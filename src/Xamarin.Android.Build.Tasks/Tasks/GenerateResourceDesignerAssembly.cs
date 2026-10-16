@@ -206,6 +206,7 @@ namespace Xamarin.Android.Tasks
 			StrongNameAssembly (assembly.Name);
 			var wp = new WriterParameters () {
 				DeterministicMvid = Deterministic,
+				Timestamp = Deterministic ? 0u : null,
 			};
 			var s = MemoryStreamPool.Shared.Rent ();
 			try {
