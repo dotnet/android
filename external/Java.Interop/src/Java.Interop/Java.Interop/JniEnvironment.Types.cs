@@ -151,8 +151,8 @@ namespace Java.Interop
 				unsafe {
 					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
 					thrown  = JniNativeMethods.ExceptionOccurred (env);
+					Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
 				}
-				Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
 				if (thrown == IntPtr.Zero) {
 					return true;
 				}
@@ -243,7 +243,9 @@ namespace Java.Interop
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
 			{
-				RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				unsafe {
+					RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				}
 			}
 
 			/// <safety>
@@ -305,13 +307,19 @@ namespace Java.Interop
 						unmanagedStrings [i * 2] = name;
 						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
-						natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
+						unsafe {
+							natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
+						}
 					}
-					RegisterNatives (type, natives);
+					unsafe {
+						RegisterNatives (type, natives);
+					}
 				} finally {
-					for (int i = 0; i < unmanagedStrings.Length; ++i) {
-						if (unmanagedStrings [i] != IntPtr.Zero)
-							Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
+					unsafe {
+						for (int i = 0; i < unmanagedStrings.Length; ++i) {
+							if (unmanagedStrings [i] != IntPtr.Zero)
+								Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
+						}
 					}
 					GC.KeepAlive (methods);
 				}
@@ -337,10 +345,12 @@ namespace Java.Interop
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;
-				fixed (JniNativeMethod* methodsPtr = methods) {
-					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
-						(void*) (*((JNIEnv**)env))->RegisterNatives;
-					r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+				unsafe {
+					fixed (JniNativeMethod* methodsPtr = methods) {
+						var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
+							(void*) (*((JNIEnv**)env))->RegisterNatives;
+						r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+					}
 				}
 
 				// Surface (and clear) any pending Java exception raised by JNI::RegisterNatives()
