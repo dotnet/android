@@ -27,6 +27,21 @@ conversion and argument-state creation/cleanup. Primitive, string, and array
 conversion remain supported. `JavaObject` and `JavaException` maintain managed
 peers and their JNI reference ownership.
 
+## Compiler-enforced caller contracts
+
+Java.Interop opts into the preview compiler's `updated-memory-safety-rules`
+feature. Its implementation and reference modules carry
+`MemorySafetyRulesAttribute (2)`, and caller-unsafe members carry
+`RequiresUnsafeAttribute`. Updated-rule consumers must acknowledge those
+contracts at their call sites. Legacy consumers retain the existing compiler
+behavior; the metadata does not validate native addresses or callback ABIs.
+
+A declaration's `unsafe` modifier describes a caller obligation, not an unsafe
+implementation context. Managed alternatives keep pinning, pointer access, and
+native invocation inside explicit local `unsafe` blocks without transferring
+those obligations to their callers. Mono.Android and customer-project opt-in
+remain separate changes.
+
 ## Native callback ownership
 
 `JniType.RegisterNativeMethods` retains the original array and its owner only after
@@ -76,10 +91,10 @@ safe-callable and warning-obsolete. They are explicit compatibility exceptions,
 not pointer validation. Typed base hooks preserve old overrides and base calls;
 the distinct type-producer name avoids existing `out var` ambiguity.
 
-Caller obligations and native implementation scopes are independent; managed
-wrappers remain safe. This preparation does not enable updated memory-safety
-rules. Legacy compilation still requires unsafe contexts for typed address
-reads; final activation introduces safe address getters and unsafe setters.
+Typed pointer getters remain safe: reading an address does not dereference its
+storage. Their setters and the typed raw hooks require unsafe callers, who must
+establish the documented storage lifetime. The warning-obsolete native-int
+compatibility APIs remain safe-callable under both compiler modes.
 
 ## Owned JNI implementation memory
 
@@ -95,9 +110,8 @@ Registration requires readable NUL-terminated names/signatures and a
 descriptor-compatible callback rooted until successful unregistration
 **and completion of all in-flight callbacks**.
 
-The project uses preview syntax for pointer declarations outside unsafe type
-contexts and safe explicit-layout scalar fields. It does **not** opt into the
-updated C# memory-safety rules. Object-reference control blocks and JavaVM
+The updated rules permit pointer declarations outside unsafe type contexts and
+safe explicit-layout scalar fields. Object-reference control blocks and JavaVM
 arguments retain their allocation, encoding, and release behavior. JNI object
 handles and method/field IDs remain opaque `IntPtr` values.
 
@@ -139,16 +153,13 @@ An address-only `JniNativeMethod` constructor stores descriptor addresses; it
 does not read their contents or invoke a callback. Registration, not address
 storage, owns the ABI, provenance, and lifetime obligations described above.
 
-The project uses preview syntax for pointer declarations outside unsafe type
-contexts. It does **not** opt into the
-updated C# memory-safety rules. Caller-unsafe declaration intent is preparation
-for that later opt-in; it is not enforced for pointer-free signatures under
-legacy rules. Generated JNI wrappers and T4 inputs keep implementation unsafe
+Caller-unsafe declarations are enforced for updated-rule consumers, including
+pointer-free signatures whose JNI descriptors carry native ABI obligations.
+Generated JNI wrappers and T4 inputs keep implementation unsafe
 contexts local without changing marshaling, dispatch, or cleanup. Single-value
 operations use `unsafe (...)` expressions, including `return ref unsafe (...)`
 for borrowed refs; pinning, multi-statement operations, and void calls retain
-unsafe blocks. This syntax does not change caller contracts or opt into the
-updated memory-safety rules.
+unsafe blocks. These implementation contexts do not change caller contracts.
 
 ## Generated managed binding safety
 

@@ -65,9 +65,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-		public new unsafe <#= info.ManagedType #>* Elements => unsafe ((<#= info.ManagedType #>*) ElementsPointer);
+		public new <#= info.ManagedType #>* Elements => unsafe ((<#= info.ManagedType #>*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
