@@ -27,17 +27,23 @@ namespace Java.Interop {
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe struct JniNativeMethod
+	public struct JniNativeMethod
 	{
 		byte* name;
 		byte* signature;
-		IntPtr functionPointer;
+		void* functionPointer;
 
-		public JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
+		/// <safety>
+		/// <paramref name="name"/> and <paramref name="signature"/> must address readable
+		/// NUL-terminated UTF-8 memory through registration. <paramref name="functionPointer"/>
+		/// must have the JNI-compatible ABI for the signature, including the environment and
+		/// receiver arguments, and remain callable and rooted until successful unregistration.
+		/// </safety>
+		public unsafe JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
 		{
 			this.name = name;
 			this.signature = signature;
-			this.functionPointer = functionPointer;
+			this.functionPointer = (void*) functionPointer;
 		}
 	}
 }

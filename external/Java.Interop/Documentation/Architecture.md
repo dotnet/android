@@ -27,6 +27,48 @@ conversion and argument-state creation/cleanup. Primitive, string, and array
 conversion remain supported. `JavaObject` and `JavaException` maintain managed
 peers and their JNI reference ownership.
 
+## Borrowed native memory
+
+Java.Interop uses the updated C# memory-safety rules. Raw UTF-8 names and
+signatures are stored as `byte*`, rather than opaque `IntPtr` values. New raw-pointer
+constructors and setters require an unsafe caller context;
+their `<safety>` documentation specifies the backing storage and lifetime.
+Pointer declarations and address-only getters do not themselves dereference
+memory and can remain safe.
+
+The `ReplacementMethodInfo.TargetJni*Utf8Pointer` setters and the raw
+`JniTypeManager.GetReplacementTypeInfoUnsafe` producer require unsafe. Their
+NUL-terminated backing storage must remain readable and unchanged for the
+runtime's lifetime and every subsequent cached metadata read. Managed-string
+metadata remains safe to construct and use. Equality, hashing, and remapping
+diagnostics compare or format addresses without scanning their contents.
+In Debug, borrowed `JniMethodInfo` name/signature constructors also require unsafe
+because diagnostics read those strings lazily.
+
+The native-int `TargetJni*Utf8` properties and the native-int
+`GetReplacementTypeInfoCore`/`GetReplacementMethodInfoCore` virtual hooks shipped
+in .NET 11 RC2. They retain their original signatures and safe-call behavior as
+warning-obsolete compatibility APIs. These legacy entry points are explicit
+exceptions to caller-unsafe enforcement, not proof that a supplied address is
+valid. Their backing-memory obligations are unchanged. New code should use the
+typed APIs; internal storage and production consumers use typed pointers.
+The typed `GetReplacementTypeInfoUnsafe` and `GetReplacementMethodInfoUnsafe`
+hooks dispatch through the legacy virtual slots so existing
+custom type-manager overrides continue to run. The type-name producer has a
+distinct name to avoid making existing `out var` calls ambiguous.
+
+`JniNativeMethod` raw construction requires unsafe. Its name/signature storage
+must remain valid through registration, and its callback must have the matching
+JNI ABI and remain callable and rooted until successful unregistration.
+The callback address is stored as `void*` because JNI methods have heterogeneous
+signatures; it is not represented by an incorrect common function-pointer type.
+
+Primitive-array acquisitions retain native element storage as `void*`. Managed
+`GetElements` calls remain safe, while raw owner constructors and ref-returning
+indexers require unsafe. Acquired elements and escaped references must not be
+used after release or disposal. Existing `IntPtr` compatibility APIs are retained;
+JNI object handles and method/field IDs remain opaque handles, not byte buffers.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java
