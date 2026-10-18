@@ -157,7 +157,7 @@ versions of `libmonosgen-2.0.so`.
     guide][lldb-source-map] to allow stepping through the Mono runtime source
     files.
 
-[using-native-libraries]: https://docs.microsoft.com/xamarin/android/platform/native-libraries
+[using-native-libraries]: https://learn.microsoft.com/dotnet/android/building-apps/build-items#androidnativelibrary
 [lldb-source-map]: https://www.mono-project.com/docs/debug+profile/debug/lldb-source-map/
 
 ### Option B: Upload the library with symbols to the update directory
