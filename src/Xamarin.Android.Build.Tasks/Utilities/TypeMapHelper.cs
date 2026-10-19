@@ -14,20 +14,6 @@ static class TypeMapHelper
 	public const int StackallocThresholdBytes = 256;
 
 	/// <summary>
-	/// Hash the given Java type name for use in java-to-managed typemap array (MonoVM version)
-	/// </summary>
-	public static ulong HashJavaName (string name, bool is64Bit)
-	{
-		if (name.Length == 0) {
-			return UInt64.MaxValue;
-		}
-
-		// Native code (EmbeddedAssemblies::typemap_java_to_managed in embedded-assemblies.cc) will operate on wchar_t cast to a byte array, we need to do
-		// the same
-		return HashString (name, Encoding.Unicode, is64Bit);
-	}
-
-	/// <summary>
 	/// Hash the given type name for use in CoreCLR native typemap arrays.
 	/// </summary>
 	public static uint HashNameForCLR (string name)
@@ -73,26 +59,5 @@ static class TypeMapHelper
 		}
 
 		return Crc32.HashToUInt32 (bytes);
-	}
-
-	// Java type names are always ASCII and typically 20-100 characters,
-	// so the encoded byte count is well within stackalloc limits.
-	static ulong HashString (string name, Encoding encoding, bool is64Bit)
-	{
-		int byteCount = encoding.GetByteCount (name);
-		Span<byte> buffer = byteCount <= StackallocThresholdBytes
-			? stackalloc byte [byteCount]
-			: new byte [byteCount];
-		GetBytes (name, encoding, buffer);
-		return HashBytes (buffer, is64Bit);
-	}
-
-	static ulong HashBytes (ReadOnlySpan<byte> bytes, bool is64Bit)
-	{
-		if (is64Bit) {
-			return XxHash3.HashToUInt64 (bytes);
-		}
-
-		return (ulong)XxHash32.HashToUInt32 (bytes);
 	}
 }

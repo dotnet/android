@@ -8,13 +8,11 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/typemap-tool</OutputPath>
     <OutputType>Exe</OutputType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="../../src/Xamarin.Android.Build.Tasks/Utilities/TypeMapHelper.cs" />
     <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
     <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\AssemblyCompression.cs" />
   </ItemGroup>
