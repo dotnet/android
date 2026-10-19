@@ -32,6 +32,7 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
       <Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
     </ValidateJavaVersion>
     <ResolveAndroidTooling
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         TargetPlatformVersion="$(TargetPlatformVersion)"
         AndroidApiLevel="$(AndroidApiLevel)"
@@ -64,6 +65,7 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
   <Target Name="_CheckGoogleSdkRequirements"
       Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
     <CheckGoogleSdkRequirements
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         AndroidApiLevel="$(_AndroidApiLevel)"
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     />
