@@ -628,38 +628,6 @@ namespace Xamarin.Android.Tasks
 		}
 #endif // MSBUILD
 
-		public static string? GetAssemblyCulture (ITaskItem assembly)
-		{
-			// The best option
-			string? culture = assembly.GetMetadata ("Culture");
-			if (!String.IsNullOrEmpty (culture)) {
-				return TrimSlashes (culture);
-			}
-
-			// ...slightly worse
-			culture = assembly.GetMetadata ("RelativePath");
-			if (!String.IsNullOrEmpty (culture)) {
-				return TrimSlashes (Path.GetDirectoryName (culture));
-			}
-
-			// ...not ideal
-			culture = assembly.GetMetadata ("DestinationSubDirectory");
-			if (!String.IsNullOrEmpty (culture)) {
-				return TrimSlashes (culture);
-			}
-
-			return null;
-
-			string? TrimSlashes (string? s)
-			{
-				if (String.IsNullOrEmpty (s)) {
-					return null;
-				}
-
-				return s.TrimEnd ('/').TrimEnd ('\\');
-			}
-		}
-
 		public static uint ZipAlignmentToPageSize (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: false);
 
 		static uint ZipAlignmentToMaskOrPageSize (int alignment, bool needMask)
@@ -681,16 +649,6 @@ namespace Xamarin.Android.Tasks
 			var builder = new CommandLineBuilder ();
 			builder.AppendFileNameIfNotNull (fileName);
 			return builder.ToString ();
-		}
-
-		public static AndroidRuntime ParseAndroidRuntime (string androidRuntime)
-		{
-			if (string.Equals (androidRuntime, "CoreCLR", StringComparison.OrdinalIgnoreCase))
-				return AndroidRuntime.CoreCLR;
-			if (string.Equals (androidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase))
-				return AndroidRuntime.NativeAOT;
-
-			return AndroidRuntime.CoreCLR;
 		}
 
 		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
@@ -715,30 +673,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return minValue;
-		}
-
-		/// <summary>
-		/// Takes `libItem.ItemSpec` and transforms it to a file name of a native library. It will
-		/// remove any paths from `ItemSpec` and will make sure that the file ends with the `.so`
-		/// extension. Empty string is returned if there's nothing to process. String comparisons
-		/// are ordinal and case-insensitive.
-		/// </summary>
-		public static string GetNormalizedNativeLibraryName (ITaskItem libItem)
-		{
-			if (String.IsNullOrEmpty (libItem.ItemSpec)) {
-				return String.Empty;
-			}
-
-			string ret = Path.GetFileName (libItem.ItemSpec);
-			if (String.IsNullOrEmpty (ret)) {
-				return String.Empty;
-			}
-
-			if (!String.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
-				return $"{ret}.so";
-			}
-
-			return ret;
 		}
 	}
 }

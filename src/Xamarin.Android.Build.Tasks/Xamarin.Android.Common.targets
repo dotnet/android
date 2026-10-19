@@ -59,7 +59,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1517,7 +1517,7 @@ because xbuild doesn't support framework reference assemblies.
     <_AndroidCoreClrBootstrapFile>$(IntermediateOutputPath)android/coreclr-bootstrap.bin</_AndroidCoreClrBootstrapFile>
     <_AndroidCoreClrBootstrapStamp>$(_AndroidStampDirectory)_AndroidGenerateCoreClrBootstrap.stamp</_AndroidCoreClrBootstrapStamp>
     <_AndroidCoreClrBootstrapInputsFile>$(IntermediateOutputPath)coreclr-bootstrap.inputs</_AndroidCoreClrBootstrapInputsFile>
-    <_AndroidCoreClrBootstrapTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Xamarin.Android.Build.Tasks.dll'))</_AndroidCoreClrBootstrapTaskAssembly>
+    <_AndroidCoreClrBootstrapTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidCoreClrBootstrapTaskAssembly>
   </PropertyGroup>
   <ItemGroup>
     <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
@@ -1568,6 +1568,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <GenerateNativeApplicationConfigSources
+      MSBuildRuntime="NET"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       AdditionalResolvedAssemblies="@(_AdditionalNativeConfigResolvedAssemblies)"
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"

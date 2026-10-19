@@ -2,14 +2,26 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
+using System.Text;
 
-using Java.Interop.Tools.TypeNameMappings;
+using ELFSharp.ELF;
+using ELFSharp.ELF.Sections;
 using Microsoft.Android.Build.Tasks;
-using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
+
+enum PackageNamingPolicy
+{
+	LowercaseHash = 0,
+	Lowercase = 1,
+	LowercaseWithAssemblyName = 2,
+	LowercaseMD5 = LowercaseHash,
+	LowercaseCrc64 = 3,
+}
 
 sealed class CoreClrBootstrapBuilder
 {
@@ -66,7 +78,7 @@ sealed class CoreClrBootstrapBuilder
 	{
 		var state = CreateDsoCache ();
 		foreach (var entry in state.Entries) {
-			entry.Hash = TypeMapHelper.HashNameForCLR (entry.HashedName);
+			entry.Hash = HashNameForCLR (entry.HashedName);
 		}
 		state.Entries.Sort ((a, b) => a.Hash.CompareTo (b.Hash));
 
@@ -95,6 +107,9 @@ sealed class CoreClrBootstrapBuilder
 		);
 	}
 
+	static uint HashNameForCLR (string name) =>
+		name.Length == 0 ? UInt32.MaxValue : Crc32.HashToUInt32 (Encoding.UTF8.GetBytes (name));
+
 	DsoCacheState CreateDsoCache ()
 	{
 		var dsos = new List<(string name, ITaskItem item)> ();
@@ -111,7 +126,7 @@ sealed class CoreClrBootstrapBuilder
 		var nameMutations = new List<string> ();
 		ICollection<string> ignorePreload = MakeJniPreloadIgnoreCollection (log, NativeLibrariesAlwaysJniPreload, NativeLibrariesNoJniPreload);
 		foreach (var dso in dsos) {
-			bool isJniLibrary = ELFHelper.IsJniLibrary (log, dso.item.ItemSpec);
+			bool isJniLibrary = IsJniLibrary (log, dso.item.ItemSpec);
 			bool ignoreForPreload = ShouldIgnoreForJniPreload (log, ignorePreload, dso.item);
 			nameMutations.Clear ();
 			AddNameMutations (dso.name);
@@ -150,6 +165,34 @@ sealed class CoreClrBootstrapBuilder
 			if (name.StartsWith (libPrefix, StringComparison.OrdinalIgnoreCase)) {
 				AddNameMutations (name.Substring (libPrefix.Length));
 			}
+		}
+	}
+
+	static bool IsJniLibrary (TaskLoggingHelper log, string elfPath)
+	{
+		if (elfPath.IsNullOrEmpty () || !File.Exists (elfPath)) {
+			return false;
+		}
+
+		const string sectionName = ".dynsym";
+		const string symbolName = "JNI_OnLoad";
+		try {
+			using IELF elf = ELFReader.Load (elfPath);
+			if (!elf.TryGetSection (sectionName, out ISection section) || section is not ISymbolTable symtab) {
+				return false;
+			}
+
+			foreach (var entry in symtab.Entries) {
+				if (MonoAndroidHelper.StringEquals (symbolName, entry.Name) && entry.Type == SymbolType.Function) {
+					return true;
+				}
+			}
+
+			return false;
+		} catch (Exception ex) {
+			log.LogCodedWarning ("XA0148", Xamarin.Android.Tasks.Properties.Resources.XA0148, elfPath, symbolName, sectionName);
+			log.LogWarningFromException (ex, showStackTrace: true);
+			return false;
 		}
 	}
 

@@ -28,7 +28,14 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		var bootstrap = common.Descendants ().Single (element =>
 			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_AndroidGenerateCoreClrBootstrap");
 		StringAssert.Contains ("'$(_AndroidRuntime)' == 'CoreCLR'", (string?)bootstrap.Attribute ("Condition"));
-		Assert.IsTrue (bootstrap.Elements ().Any (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources"));
+		var bootstrapTask = bootstrap.Elements ().Single (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources");
+		Assert.AreEqual ("NET", (string?)bootstrapTask.Attribute ("MSBuildRuntime"));
+		var usingTask = common.Descendants ().Single (element =>
+			element.Name.LocalName == "UsingTask" &&
+			(string?)element.Attribute ("TaskName") == "Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources");
+		Assert.AreEqual ("$(_MicrosoftAndroidBuildTasksAssembly)", (string?)usingTask.Attribute ("AssemblyFile"));
+		var taskAssembly = common.Descendants ().Single (element => element.Name.LocalName == "_AndroidCoreClrBootstrapTaskAssembly");
+		StringAssert.Contains ("$(_MicrosoftAndroidBuildTasksAssembly)", taskAssembly.Value);
 		var java = common.Descendants ().Single (element =>
 			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_GeneratePackageManagerJava");
 		Assert.IsFalse (java.Elements ().Any (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources"));

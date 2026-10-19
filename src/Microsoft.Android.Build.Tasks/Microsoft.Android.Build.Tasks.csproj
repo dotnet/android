@@ -45,6 +45,7 @@
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
@@ -57,6 +58,7 @@
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AndroidRuntime.cs" Link="Utilities\AndroidRuntime.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\KnownMetadata.cs" Link="Utilities\KnownMetadata.cs" />

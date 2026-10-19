@@ -28,23 +28,6 @@ static class TypeMapHelper
 	}
 
 	/// <summary>
-	/// Hash the given type name for use in CoreCLR native typemap arrays.
-	/// </summary>
-	public static uint HashNameForCLR (string name)
-	{
-		if (name.Length == 0) {
-			return UInt32.MaxValue;
-		}
-
-		int byteCount = Encoding.UTF8.GetByteCount (name);
-		Span<byte> buffer = byteCount <= StackallocThresholdBytes
-			? stackalloc byte [byteCount]
-			: new byte [byteCount];
-		GetBytes (name, Encoding.UTF8, buffer);
-		return Crc32.HashToUInt32 (buffer);
-	}
-
-	/// <summary>
 	/// Encodes <paramref name="value"/> into <paramref name="buffer"/>, which must be at least
 	/// <c>encoding.GetByteCount (value)</c> bytes long.  Callers allocate the buffer themselves so
 	/// that short strings can use <c>stackalloc</c>.
