@@ -8,6 +8,11 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
+using System.Xml;
+using System.Xml.Linq;
+using Microsoft.Build.Construction;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Execution;
 
 namespace Xamarin.Android.Build.Tests {
 
@@ -216,6 +221,43 @@ namespace Xamarin.Android.Build.Tests {
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
+		}
+
+		[Test]
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void ResolvedToolingInputsEscapeApostrophes (bool tooling, bool changed)
+		{
+			var file = tooling ? Path.Combine ("Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Tooling.targets") : "Xamarin.Android.Tooling.targets";
+			var document = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", file));
+			var itemName = tooling ? "_AndroidToolingInput" : "_AndroidSdkInput";
+			var changedItemName = tooling ? "_AndroidChangedToolingInput" : "_AndroidChangedSdkInput";
+			var inputGroups = document.Descendants ().Where (e => e.Name.LocalName == "ItemGroup" &&
+				e.Elements ().Any (i => i.Name.LocalName == itemName || i.Name.LocalName == changedItemName));
+			var input = tooling ? "LintToolPath" : "AndroidSdkDirectory";
+			var outerInput = tooling ? "_AndroidOuterToolingInputLintToolPath" : "_AndroidOuterSdkInputAndroidSdkDirectory";
+			const string value = "O'Brien/sdk;a=b";
+			var globals = new Dictionary<string, string> {
+				[input] = value,
+				[outerInput] = changed ? value.ToUpperInvariant () : value,
+				["_ComputeFilesToPublishForRuntimeIdentifiers"] = "true",
+				["_AndroidUseResolvedSdk"] = "true",
+			};
+			var ns = document.Root?.Name.Namespace ?? XNamespace.None;
+			var projectXml = new XElement (ns + "Project",
+				new XElement (ns + "Target", new XAttribute ("Name", "CaptureInputs"), inputGroups.Select (e => new XElement (e))));
+			using var reader = XmlReader.Create (new StringReader (projectXml.ToString ()));
+			using var collection = new ProjectCollection ();
+			var root = ProjectRootElement.Create (reader, collection);
+			root.FullPath = Path.Combine (Root, "EscapingProbe.proj");
+			globals ["_AndroidOuterSdkInputMSBuildProjectFullPath"] = root.FullPath;
+			var instance = new ProjectInstance (root, globals, toolsVersion: null, collection);
+			Assert.IsTrue (instance.Build ("CaptureInputs", []), "Apostrophes must not break MSBuild property functions.");
+			Assert.AreEqual (changed ? 1 : 0, instance.GetItems (changedItemName).Count,
+				"Input matching must remain ordinal: " + string.Join (", ", instance.GetItems (changedItemName).Select (i =>
+					$"{i.EvaluatedInclude}={i.GetMetadataValue ("EscapedValue")} vs {i.GetMetadataValue ("EscapedOuterValue")}")));
 		}
 
 		[Test]

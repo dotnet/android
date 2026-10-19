@@ -220,7 +220,8 @@ _ResolveAssemblies MSBuild target.
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
         ;_OuterCustomViewMapFile=$(_CustomViewMapFile)
-        ;_AndroidNdkDirectory=$(_AndroidNdkDirectory)
+        ;_AndroidNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))
+        ;$(_AndroidResolvedToolingProperties)
       </_AdditionalProperties>
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>
