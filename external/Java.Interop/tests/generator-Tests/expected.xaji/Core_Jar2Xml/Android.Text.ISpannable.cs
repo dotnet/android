@@ -36,27 +36,34 @@ namespace Android.Text {
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_tag, &__n_GetSpanFlags_Ljava_lang_Object_);
 			}
 		}
 		private static int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Text.ISpannable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
-			int __ret = (int) __this.GetSpanFlags (tag);
-			return __ret;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Text.ISpannable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
+				int __ret = (int) __this.GetSpanFlags (tag);
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object tag)
+		public global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object tag)
 		{
-			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-			var __rm = _members_android_text_Spanned.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-			var __result = (global::Android.Text.SpanTypes) __rm;
-			global::System.GC.KeepAlive (tag);
-			return __result;
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
+				var __rm = _members_android_text_Spanned.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+				var __result = (global::Android.Text.SpanTypes) __rm;
+				global::System.GC.KeepAlive (tag);
+				return __result;
+			}
 		}
 
 	}

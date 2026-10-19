@@ -20,7 +20,7 @@ namespace generator.SourceWriters
 
 			Name = method.Name;
 
-			IsUnsafe = true;
+			HasUnsafeBody = true;
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 			ExplicitInterfaceImplementation = opt.GetOutputName (iface.FullName);

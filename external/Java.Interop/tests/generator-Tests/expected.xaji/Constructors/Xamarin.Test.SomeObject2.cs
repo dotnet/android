@@ -32,18 +32,21 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject2']/constructor[@name='SomeObject2' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register (".ctor", "(I)V", "")]
-		public unsafe SomeObject2 (int aint) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public SomeObject2 (int aint) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			const string __id = "(I)V";
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "(I)V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
 
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (aint);
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (aint);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+			}
 		}
 
 	}

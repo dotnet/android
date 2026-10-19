@@ -143,7 +143,11 @@ namespace Java.Lang {
 			throw new NotImplementedException ();
 		}
 
-		public Throwable (IntPtr handle, JniHandleOwnership transfer)
+		protected Throwable (global::Java.Interop.JniObjectReferenceOptions options)
+		{
+		}
+
+		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotImplementedException ();
 		}

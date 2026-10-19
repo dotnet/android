@@ -41,25 +41,32 @@ namespace Xamarin.Test {
 		static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, index, &__n_SetCustomDimension_I);
 			}
 		}
 		private static IntPtr __n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.C> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.C> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='C']/method[@name='setCustomDimension' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("setCustomDimension", "(I)Lxamarin/test/C;", "GetSetCustomDimension_IHandler")]
-		public virtual unsafe global::Java.Lang.Object SetCustomDimension (int index)
+		public virtual global::Java.Lang.Object SetCustomDimension (int index)
 		{
-			const string __id = "setCustomDimension.(I)Lxamarin/test/C;";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (index);
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-			return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "setCustomDimension.(I)Lxamarin/test/C;";
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (index);
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 
 	}

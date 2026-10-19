@@ -90,6 +90,7 @@ namespace generator.SourceWriters
 
 			writer.WriteLine ("unsafe {");
 			writer.Indent ();
+			writer.WriteLine ("// SAFETY: JNI supplies live references matching the registered callback signature.");
 			writer.WriteLine (method.IsVoid ? call + ";" : "return " + call + ";");
 			writer.Unindent ();
 			writer.WriteLine ("}");
@@ -110,6 +111,11 @@ namespace generator.SourceWriters
 			writer.WriteLine ("{");
 
 			writer.Indent ();
+			if (typed_shape == null) {
+				writer.WriteLine ("unsafe {");
+				writer.Indent ();
+				writer.WriteLine ("// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.");
+			}
 			if (typed_shape == null)
 				writer.WriteLine ($"var __this = global::Java.Lang.Object.GetObject<{opt.GetOutputName (type.FullName)}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer){opt.NullForgivingOperator};");
 
@@ -142,6 +148,10 @@ namespace generator.SourceWriters
 			if (!method.IsVoid && useRetTemporary)
 				writer.WriteLine ("return __ret;");
 
+			if (typed_shape == null) {
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			}
 			writer.Unindent ();
 			writer.WriteLine ("}");
 		}

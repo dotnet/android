@@ -33,18 +33,21 @@ namespace Java.Lang {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/class[@name='Enum']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='E']]"
 		[Register ("compareTo", "(Ljava/lang/Enum;)I", "")]
-		public unsafe int CompareTo (global::Java.Lang.Object o)
+		public int CompareTo (global::Java.Lang.Object o)
 		{
-			const string __id = "compareTo.(Ljava/lang/Enum;)I";
-			IntPtr native_o = JNIEnv.ToLocalJniHandle (o);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_o);
-				var __rm = _members.InstanceMethods.InvokeNonvirtualInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				JNIEnv.DeleteLocalRef (native_o);
-				global::System.GC.KeepAlive (o);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "compareTo.(Ljava/lang/Enum;)I";
+				IntPtr native_o = JNIEnv.ToLocalJniHandle (o);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_o);
+					var __rm = _members.InstanceMethods.InvokeNonvirtualInt32Method (__id, this, __args);
+					return __rm;
+				} finally {
+					JNIEnv.DeleteLocalRef (native_o);
+					global::System.GC.KeepAlive (o);
+				}
 			}
 		}
 

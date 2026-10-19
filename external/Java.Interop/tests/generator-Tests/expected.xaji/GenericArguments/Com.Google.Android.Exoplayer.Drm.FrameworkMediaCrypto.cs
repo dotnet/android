@@ -32,31 +32,37 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='com.google.android.exoplayer.drm']/class[@name='FrameworkMediaCrypto']/constructor[@name='FrameworkMediaCrypto' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe FrameworkMediaCrypto () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public FrameworkMediaCrypto () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			const string __id = "()V";
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "()V";
 
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
 
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.google.android.exoplayer.drm']/class[@name='FrameworkMediaCrypto']/method[@name='requiresSecureDecoderComponent' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 		[Register ("requiresSecureDecoderComponent", "(Ljava/lang/String;)Z", "")]
-		public unsafe bool RequiresSecureDecoderComponent (string p0)
+		public bool RequiresSecureDecoderComponent (string p0)
 		{
-			const string __id = "requiresSecureDecoderComponent.(Ljava/lang/String;)Z";
-			IntPtr native_p0 = JNIEnv.NewString ((string)p0);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_p0);
-				var __rm = _members.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-				return __rm;
-			} finally {
-				JNIEnv.DeleteLocalRef (native_p0);
+			unsafe {
+				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+				const string __id = "requiresSecureDecoderComponent.(Ljava/lang/String;)Z";
+				IntPtr native_p0 = JNIEnv.NewString ((string)p0);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_p0);
+					var __rm = _members.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+					return __rm;
+				} finally {
+					JNIEnv.DeleteLocalRef (native_p0);
+				}
 			}
 		}
 

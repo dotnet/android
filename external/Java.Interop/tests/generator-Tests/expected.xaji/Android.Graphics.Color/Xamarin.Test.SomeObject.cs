@@ -57,13 +57,17 @@ namespace Xamarin.Test {
 		static int n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeColor);
 			}
 		}
 		private static int __n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.SomeColor.ToArgb ();
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.SomeColor.ToArgb ();
+			}
 		}
 #pragma warning restore 0169
 
@@ -77,14 +81,18 @@ namespace Xamarin.Test {
 		static void n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
 		{
 			unsafe {
+				// SAFETY: JNI supplies live references matching the registered callback signature.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_newvalue, &__n_SetSomeColor_I);
 			}
 		}
 		private static void __n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var newvalue = new global::Android.Graphics.Color (native_newvalue);
-			__this.SomeColor = newvalue;
+			unsafe {
+				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var newvalue = new global::Android.Graphics.Color (native_newvalue);
+				__this.SomeColor = newvalue;
+			}
 		}
 #pragma warning restore 0169
 
@@ -114,21 +122,27 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		public override unsafe global::Android.Graphics.Color SomeColor {
+		public override global::Android.Graphics.Color SomeColor {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeColor' and count(parameter)=0]"
 			[Register ("getSomeColor", "()I", "GetGetSomeColorHandler")]
 			get {
-				const string __id = "getSomeColor.()I";
-				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-				return new global::Android.Graphics.Color (__rm);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "getSomeColor.()I";
+					var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+					return new global::Android.Graphics.Color (__rm);
+				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeColor' and count(parameter)=1 and parameter[1][@type='Android.Graphics.Color']]"
 			[Register ("setSomeColor", "(I)V", "GetSetSomeColor_IHandler")]
 			set {
-				const string __id = "setSomeColor.(I)V";
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value.ToArgb ());
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				unsafe {
+					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
+					const string __id = "setSomeColor.(I)V";
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (value.ToArgb ());
+					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				}
 			}
 		}
 
