@@ -12,6 +12,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(ProductSnkPath)</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>

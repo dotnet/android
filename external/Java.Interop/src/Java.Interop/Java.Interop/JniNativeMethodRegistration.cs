@@ -27,11 +27,11 @@ namespace Java.Interop {
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe struct JniNativeMethod
+	public struct JniNativeMethod
 	{
 		byte* name;
 		byte* signature;
-		IntPtr functionPointer;
+		void* functionPointer;
 
 		/// <safety>
 		/// <paramref name="name"/> and <paramref name="signature"/> must address readable
@@ -42,11 +42,11 @@ namespace Java.Interop {
 		/// unregistration and release callback storage only after successful unregistration
 		/// and completion of all in-flight calls.
 		/// </safety>
-		public JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
+		public unsafe JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
 		{
 			this.name = name;
 			this.signature = signature;
-			this.functionPointer = functionPointer;
+			this.functionPointer = (void*) functionPointer;
 		}
 	}
 }

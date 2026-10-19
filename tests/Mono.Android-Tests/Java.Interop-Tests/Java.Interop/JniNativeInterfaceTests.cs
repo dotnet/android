@@ -10,6 +10,24 @@ namespace Java.InteropTests;
 [TestFixture]
 public class JniNativeInterfaceTests
 {
+	[Test]
+	public void NativeMethodLayout ()
+	{
+		Assert.AreEqual (3 * IntPtr.Size, Marshal.SizeOf<JniNativeMethod> ());
+		Assert.AreEqual (IntPtr.Zero, Marshal.OffsetOf<JniNativeMethod> ("name"));
+		Assert.AreEqual (new IntPtr (IntPtr.Size), Marshal.OffsetOf<JniNativeMethod> ("signature"));
+		Assert.AreEqual (new IntPtr (2 * IntPtr.Size), Marshal.OffsetOf<JniNativeMethod> ("functionPointer"));
+	}
+
+	[Test]
+	public void ArgumentValueLayout ()
+	{
+		Assert.AreEqual (8, Marshal.SizeOf<JniArgumentValue> ());
+		foreach (var fieldName in new [] { "z", "b", "c", "s", "i", "j", "f", "d", "l" }) {
+			Assert.AreEqual (IntPtr.Zero, Marshal.OffsetOf<JniArgumentValue> (fieldName), fieldName);
+		}
+	}
+
 	[TestCase (nameof (JNIEnv.NewObject), 28)]
 	[TestCase (nameof (JNIEnv.NewObjectV), 29)]
 	[TestCase (nameof (JNIEnv.NewObjectA), 30)]

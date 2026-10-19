@@ -8,7 +8,7 @@ namespace Java.Interop
 {
 	[JniTypeSignature ("java/lang/Object", GenerateJavaPeer=false)]
 	[Serializable]
-	unsafe public partial class JavaObject : IJavaPeerable
+	public partial class JavaObject : IJavaPeerable
 	{
 		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -30,13 +30,15 @@ namespace Java.Interop
 			JniEnvironment.Runtime.ValueManager.FinalizePeer (this);
 		}
 
-		public  unsafe  JniObjectReference          PeerReference {
+		public          JniObjectReference          PeerReference {
 			get {
-				var c = jniObjectReferenceControlBlock;
-				if (c == null) {
-					return default;
+				unsafe {
+					var c = jniObjectReferenceControlBlock;
+					if (c == null) {
+						return default;
+					}
+					return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
 				}
-				return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
 			}
 		}
 
@@ -84,16 +86,18 @@ namespace Java.Interop
 				return;
 			}
 
-			var c   = jniObjectReferenceControlBlock;
-			if (c == null) {
-				c   = jniObjectReferenceControlBlock    =
-					Java.Interop.JniObjectReferenceControlBlock.Alloc (reference);
-			} else {
-				c->handle       = reference.Handle;
-				c->handle_type  = (int) reference.Type;
-			}
+			unsafe {
+				var c   = jniObjectReferenceControlBlock;
+				if (c == null) {
+					c   = jniObjectReferenceControlBlock    =
+						Java.Interop.JniObjectReferenceControlBlock.Alloc (reference);
+				} else {
+					c->handle       = reference.Handle;
+					c->handle_type  = (int) reference.Type;
+				}
 
-			JniObjectReference.Dispose (ref reference, options);
+				JniObjectReference.Dispose (ref reference, options);
+			}
 		}
 
 		public void UnregisterFromRuntime ()
@@ -129,18 +133,22 @@ namespace Java.Interop
 			return false;
 		}
 
-		public override unsafe int GetHashCode ()
+		public override int GetHashCode ()
 		{
-			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			unsafe {
+				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			}
 		}
 
-		public override unsafe string? ToString ()
+		public override string? ToString ()
 		{
-			var lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
-					"toString.()Ljava/lang/String;",
-					this,
-					null);
-			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+			unsafe {
+				var lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
+						"toString.()Ljava/lang/String;",
+						this,
+						null);
+				return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+			}
 		}
 
 		void IJavaPeerable.Disposed ()
@@ -155,7 +163,9 @@ namespace Java.Interop
 			try {
 				Dispose (disposing: false);
 			} finally {
-				Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
+				unsafe {
+					Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
+				}
 			}
 		}
 
@@ -174,11 +184,18 @@ namespace Java.Interop
 			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
 
 			if (!reference.IsValid && managedPeerState.HasFlag (Disposed)) {
-				Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+				unsafe {
+					Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+				}
 			}
 		}
 
-		IntPtr IJavaPeerable.JniObjectReferenceControlBlock =>
-			(IntPtr) jniObjectReferenceControlBlock;
+		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
+			get {
+				unsafe {
+					return (IntPtr) jniObjectReferenceControlBlock;
+				}
+			}
+		}
 	}
 }
