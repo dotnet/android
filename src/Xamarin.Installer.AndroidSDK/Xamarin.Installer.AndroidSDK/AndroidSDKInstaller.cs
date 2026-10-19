@@ -79,6 +79,8 @@ namespace Xamarin.Installer.AndroidSDK
 
 		public ILicensesStorage LicensesStorage { get; private set; }
 
+		public bool IgnoreArchiveChecksumErrors { get; set; }
+
 		/// <summary>
 		/// Raised whenever the installer wants to show a message to the user. Used only by the <code>Install*</code>
 		/// family of methods.
@@ -461,10 +463,11 @@ namespace Xamarin.Installer.AndroidSDK
 		/// Performs installation of all the components in the specified <paramref name="instance"/>. The <paramref name="componentsToInstall"/>
 		/// parameter must not be null or empty and it must contain all the components the hosting application needs to install - no dependency
 		/// checking is performed by this method. It is advised to call the <see cref="GetInstallationSet"/> method prior to calling this one.
-		/// Before installing anything the method checks all the archives in all the passed components to make sure they are installable. 
+		/// Before installing anything the method checks all the archives in all the passed components, including checksum verification, to make sure they are installable.
+		/// Checksum failures can be explicitly ignored with <see cref="IgnoreArchiveChecksumErrors"/>; other archive validation still applies.
 		/// If any invalid archive is found no installation is done. This is to prevent partially successful installations, potentially breaking the SDK
 		/// instance. If <paramref name="throwIfInvalidComponentsFound"/> is set to <c>true</c> and an invalid archive is found then the method
-		/// will throw an exception, otherwise it will silently return without performing installation. All the issues are logged.
+		/// will throw an exception, otherwise it will return without performing installation. All the issues are logged.
 		/// </summary>
 		/// <param name="instance">Android SDK instance.</param>
 		/// <param name="componentsToInstall">Components to install</param>
@@ -496,11 +499,17 @@ namespace Xamarin.Installer.AndroidSDK
 				foreach (Archive a in c.Archives) {
 					if (a == null || !a.WasDownloaded || a.IsInstallable ())
 						continue;
+					if (IgnoreArchiveChecksumErrors && a.IsInstallable (verifyChecksum: false)) {
+						Logger.Action ($"Continuing installation of Android SDK archive '{a.Url}' despite a checksum verification failure because the checksum override is enabled. The archive may be damaged or modified.");
+						continue;
+					}
 					haveInvalidArchives = true;
 				}
 
-				if (haveInvalidArchives)
+				if (haveInvalidArchives) {
+					haveArchiveIssues = true;
 					Logger.Warning ($"Android SDK component '{c.DetailedDescription}' reports issues with downloaded archive(s)");
+				}
 			}
 
 			if (haveArchiveIssues) {

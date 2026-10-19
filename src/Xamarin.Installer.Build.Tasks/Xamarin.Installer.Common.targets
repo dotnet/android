@@ -26,6 +26,7 @@
 				ManifestSource="$(AndroidManifestSource)"
 				TimeoutInMinutes="$(AndroidDependencyInstallationTimeout)"
 				InstallJavaDependencies="$(AndroidInstallJavaDependencies)"
+				IgnoreSdkArchiveChecksumErrors="$(_AndroidIgnoreSdkArchiveChecksumErrors)"
 			>
 		</InstallAndroidDependencies>
 	</Target>
