@@ -69,8 +69,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaBooleanArray (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaBooleanArray (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -261,8 +261,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaSByteArray (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaSByteArray (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -453,8 +453,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaCharArray (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaCharArray (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -645,8 +645,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaInt16Array (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaInt16Array (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -837,8 +837,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaInt32Array (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaInt32Array (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -1029,8 +1029,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaInt64Array (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaInt64Array (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -1221,8 +1221,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaSingleArray (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaSingleArray (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -1413,8 +1413,8 @@ namespace Java.Interop {
 		{
 		}
 
-		public unsafe JavaDoubleArray (int length)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaDoubleArray (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
 			var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);

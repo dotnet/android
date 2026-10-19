@@ -33,7 +33,7 @@ namespace Java.Lang {
 		}
 
 		public unsafe Object (IntPtr handle, JniHandleOwnership transfer)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+			: base (JniObjectReferenceOptions.None)
 		{
 			SetHandle (handle, transfer);
 		}
