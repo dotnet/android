@@ -60,9 +60,11 @@ namespace Java.InteropTests
 		[Test]
 		public void ExplicitRuntimeRegistrationIsNotSupported ()
 		{
+#pragma warning disable CS0618 // Verify the retained obsolete API still rejects explicit registration.
 			Assert.Throws<NotSupportedException> (() => global::Java.Interop.TypeManager.RegisterType (
 				ExplicitRegisteredPeer.RuntimeJniName,
 				typeof (ExplicitRegisteredPeer)));
+#pragma warning restore CS0618
 		}
 
 		[TestCase ("(I)I", "exact", "(I)I")]
