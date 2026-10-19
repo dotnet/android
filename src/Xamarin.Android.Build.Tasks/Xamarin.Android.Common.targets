@@ -1458,7 +1458,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <PropertyGroup>
-  <_GeneratePackageManagerJavaDependsOn>
+  <_AndroidPrepareApplicationSourcesDependsOn>
     _GenerateJavaStubs;
     _ManifestMerger;
     _ConvertCustomView;
@@ -1466,27 +1466,33 @@ because xbuild doesn't support framework reference assemblies.
     _AddStaticResources;
     $(_AfterAddStaticResources);
     _PrepareAssemblies;
-    _GenerateEnvironmentFiles;
     UpdateAndroidAssets;
-    _IncludeNativeSystemLibraries;
+  </_AndroidPrepareApplicationSourcesDependsOn>
+  <_GeneratePackageManagerJavaDependsOn>
+    $(_AndroidPrepareApplicationSourcesDependsOn);
     _GetGeneratePackageManagerJavaInputs;
   </_GeneratePackageManagerJavaDependsOn>
+  <_AndroidGenerateCoreClrBootstrapDependsOn>
+    $(_AndroidPrepareApplicationSourcesDependsOn);
+    _IncludeNativeSystemLibraries;
+    _AndroidGenerateCoreClrBootstrapInputs;
+  </_AndroidGenerateCoreClrBootstrapDependsOn>
 </PropertyGroup>
 
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <PropertyGroup>
-    <_AndroidCoreClrBootstrapFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">$(IntermediateOutputPath)android/coreclr-bootstrap.bin</_AndroidCoreClrBootstrapFile>
+    <_AndroidPackageManagerJavaFile>$(_AndroidIntermediateJavaSourceDirectory)mono/MonoPackageManager_Resources.java</_AndroidPackageManagerJavaFile>
+    <_AndroidPackageManagerJavaInputsFile>$(IntermediateOutputPath)package-manager-java.inputs</_AndroidPackageManagerJavaInputsFile>
+    <_AndroidPackageManagerJavaTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Xamarin.Android.Build.Tasks.dll'))</_AndroidPackageManagerJavaTaskAssembly>
   </PropertyGroup>
-  <!-- Bootstrap content is copied only when changed, so its timestamp can predate the stamp. -->
+  <WriteLinesToFile File="$(_AndroidPackageManagerJavaInputsFile)"
+      Lines="MainAssembly=$([System.IO.Path]::GetFileName('$(TargetPath)'))"
+      Overwrite="true" WriteOnlyWhenDifferent="true" />
   <Delete Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp"
-          Condition=" '$(_AndroidCoreClrBootstrapFile)' != '' and !Exists ('$(_AndroidCoreClrBootstrapFile)') " />
+      Condition=" !$([System.IO.File]::Exists('$(_AndroidPackageManagerJavaFile)')) " />
   <ItemGroup>
-    <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
-    <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
-    <_GeneratePackageManagerJavaInputs Include="@(_AllNativeLibraries)" />
-    <!-- `configProperties` from these files are baked into the generated native application config -->
-    <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
-    <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
+    <_GeneratePackageManagerJavaInputs Include="$(_AndroidPackageManagerJavaInputsFile);$(_AndroidPackageManagerJavaTaskAssembly);$(MSBuildThisFileFullPath)" />
+    <FileWrites Include="$(_AndroidPackageManagerJavaInputsFile);$(_AndroidPackageManagerJavaFile);$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
   </ItemGroup>
 </Target>
 
@@ -1498,11 +1504,46 @@ because xbuild doesn't support framework reference assemblies.
 
   <Delete Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
 
-  <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
       OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono">
   </GeneratePackageManagerJava>
+
+  <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
+</Target>
+
+<Target Name="_AndroidGenerateCoreClrBootstrapInputs">
+  <PropertyGroup>
+    <_AndroidCoreClrBootstrapFile>$(IntermediateOutputPath)android/coreclr-bootstrap.bin</_AndroidCoreClrBootstrapFile>
+    <_AndroidCoreClrBootstrapStamp>$(_AndroidStampDirectory)_AndroidGenerateCoreClrBootstrap.stamp</_AndroidCoreClrBootstrapStamp>
+    <_AndroidCoreClrBootstrapInputsFile>$(IntermediateOutputPath)coreclr-bootstrap.inputs</_AndroidCoreClrBootstrapInputsFile>
+    <_AndroidCoreClrBootstrapTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Xamarin.Android.Build.Tasks.dll'))</_AndroidCoreClrBootstrapTaskAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
+    <_AndroidCoreClrBootstrapInputs Include="@(_ResolvedAssemblies);@(_AdditionalNativeConfigResolvedAssemblies);@(_AndroidResolvedSatellitePaths);@(_EnvironmentFiles);@(_AllNativeLibraries)" />
+    <_AndroidCoreClrBootstrapInputs Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
+    <_AndroidCoreClrBootstrapInputs Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
+    <_AndroidCoreClrBootstrapInputs Include="$(AndroidBundleConfigurationFile)" Condition="Exists('$(AndroidBundleConfigurationFile)')" />
+  </ItemGroup>
+  <WriteLinesToFile File="$(_AndroidCoreClrBootstrapInputsFile)"
+      Lines="Package=$(_AndroidPackage);NamingPolicy=$(AndroidPackageNamingPolicy);AssemblyStore=$(_AndroidUseAssemblyStore);@(_BuildTargetAbis->'Abi=%(Identity)');IgnoreJniPreload=$(AndroidIgnoreAllJniPreload);BundleConfig=$(AndroidBundleConfigurationFile);RuntimeConfig=$(ProjectRuntimeConfigFilePath);RuntimeConfigDev=$(ProjectRuntimeConfigDevFilePath);@(_AndroidCoreClrBootstrapInputs->'%(FullPath)|%(ArchiveFileName)|%(AndroidSkipAddToPackage)|%(Culture)|%(RelativePath)|%(DestinationSubDirectory)');@(AndroidNativeLibraryNoJniPreload->'NoJniPreload=%(Identity)|%(ArchiveFileName)')"
+      Overwrite="true" WriteOnlyWhenDifferent="true" />
+  <!-- CopyIfStreamChanged preserves unchanged payload timestamps; missing data must invalidate the completion stamp. -->
+  <Delete Files="$(_AndroidCoreClrBootstrapStamp)" Condition=" !$([System.IO.File]::Exists('$(_AndroidCoreClrBootstrapFile)')) " />
+  <ItemGroup>
+    <_AndroidCoreClrBootstrapInputs Include="$(_AndroidCoreClrBootstrapInputsFile);$(_AndroidCoreClrBootstrapTaskAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)" />
+    <FileWrites Include="$(_AndroidCoreClrBootstrapInputsFile);$(_AndroidCoreClrBootstrapFile);$(_AndroidCoreClrBootstrapStamp)" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_AndroidGenerateCoreClrBootstrap"
+    Condition=" '$(_AndroidRuntime)' == 'CoreCLR' "
+    DependsOnTargets="$(_AndroidGenerateCoreClrBootstrapDependsOn)"
+    Inputs="@(_AndroidCoreClrBootstrapInputs)"
+    Outputs="$(_AndroidCoreClrBootstrapStamp)">
+
+  <Delete Files="$(_AndroidCoreClrBootstrapStamp)" />
 
   <!-- This is a list of native libraries that must always/never be preloaded for their
        JNI_OnLoad function to be called. The group is stored here to make it both
@@ -1546,10 +1587,7 @@ because xbuild doesn't support framework reference assemblies.
       >
   </GenerateNativeApplicationConfigSources>
 
-  <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
-  <ItemGroup>
-    <FileWrites Include="$(_AndroidCoreClrBootstrapFile)" Condition=" '$(_AndroidCoreClrBootstrapFile)' != '' " />
-  </ItemGroup>
+  <Touch Files="$(_AndroidCoreClrBootstrapStamp)" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_CreateBaseApkInputs">

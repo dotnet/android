@@ -62,7 +62,7 @@ sealed class CoreClrBootstrapBuilder
 		this.runtimeProperties.Remove ("BUNDLE_PROBE");
 	}
 
-	public byte [] Create ()
+	public void Write (MemoryStream output)
 	{
 		var state = CreateDsoCache ();
 		foreach (var entry in state.Entries) {
@@ -87,8 +87,8 @@ sealed class CoreClrBootstrapBuilder
 				preloads.Add ((uint)index);
 			}
 		}
-		return CoreClrBootstrapBlob.Create (
-			IgnoreSplitConfigs, HaveAssemblyStore, (uint)PackageNamingPolicy,
+		CoreClrBootstrapBlob.Write (
+			output, IgnoreSplitConfigs, HaveAssemblyStore, (uint)PackageNamingPolicy,
 			(uint)NumberOfAssembliesInApk, (uint)BundledAssemblyNameWidth, (uint)NativeLibraries.Count,
 			AndroidPackageName, environmentVariables, systemProperties, runtimeProperties,
 			libraries, preloads, (uint)state.PreloadStride

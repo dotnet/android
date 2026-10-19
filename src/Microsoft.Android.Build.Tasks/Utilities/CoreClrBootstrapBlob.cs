@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using Microsoft.Android.Build.Tasks;
+
 namespace Microsoft.Android.Tasks;
 
 // The BLBB envelope is written by the final ELF assembly task. Offsets here are
@@ -18,6 +20,26 @@ internal static class CoreClrBootstrapBlob
 	static readonly UTF8Encoding Utf8 = new (false, true);
 
 	public static byte [] Create (
+		bool ignoreSplitConfigs, bool haveAssemblyStore, uint packageNamingPolicy,
+		uint assemblyCount, uint bundledNameWidth, uint sharedLibraryCount, string packageName,
+		IDictionary<string, string> environment, IDictionary<string, string> systemProperties,
+		IDictionary<string, string> runtimeProperties,
+		IReadOnlyList<(uint Hash, bool Ignore, bool IsJniLibrary, string Name)> libraries,
+		IReadOnlyList<uint> preloads, uint preloadStride)
+	{
+		var output = MemoryStreamPool.Shared.Rent ();
+		try {
+			Write (output, ignoreSplitConfigs, haveAssemblyStore, packageNamingPolicy,
+				assemblyCount, bundledNameWidth, sharedLibraryCount, packageName,
+				environment, systemProperties, runtimeProperties, libraries, preloads, preloadStride);
+			return output.ToArray ();
+		} finally {
+			MemoryStreamPool.Shared.Return (output);
+		}
+	}
+
+	public static void Write (
+		MemoryStream output,
 		bool ignoreSplitConfigs, bool haveAssemblyStore, uint packageNamingPolicy,
 		uint assemblyCount, uint bundledNameWidth, uint sharedLibraryCount, string packageName,
 		IDictionary<string, string> environment, IDictionary<string, string> systemProperties,
@@ -54,7 +76,8 @@ internal static class CoreClrBootstrapBlob
 				runtimeNames.Add (pair);
 			}
 		}
-		var strings = new MemoryStream ();
+		using var stringWriter = MemoryStreamPool.Shared.CreateBinaryWriter (Utf8);
+		var strings = stringWriter.BaseStream;
 		strings.WriteByte (0);
 		var stringOffsets = new Dictionary<string, uint> (StringComparer.Ordinal);
 		uint envOffset = HeaderSize;
@@ -88,7 +111,8 @@ internal static class CoreClrBootstrapBlob
 			return offset;
 		}
 
-		using var output = new MemoryStream ();
+		output.SetLength (0);
+		output.Position = 0;
 		using var writer = new BinaryWriter (output, Utf8, leaveOpen: true);
 		writer.Write (new byte [HeaderSize]);
 		void WritePairs (IEnumerable<KeyValuePair<string, string>> pairs, bool runtime = false)
@@ -120,7 +144,8 @@ internal static class CoreClrBootstrapBlob
 			throw new InvalidDataException ("CoreCLR bootstrap table layout mismatch.");
 		}
 		uint packageOffset = Add (packageName, required: true);
-		writer.Write (strings.ToArray ());
+		strings.Position = 0;
+		strings.CopyTo (output);
 		if (output.Length > MaximumSize) {
 			throw new InvalidDataException ("CoreCLR bootstrap configuration exceeds 256 MiB.");
 		}
@@ -147,19 +172,21 @@ internal static class CoreClrBootstrapBlob
 		writer.Write (assemblyCount);
 		writer.Write (bundledNameWidth);
 		writer.Write (packageOffset);
-		byte [] raw = output.ToArray ();
-		Validate (raw);
-		return raw;
+		writer.Flush ();
+		Validate (output.GetBuffer (), checked ((int)output.Length));
+		output.Position = 0;
 	}
 
-	public static void Validate (byte [] raw)
+	public static void Validate (byte [] raw) => Validate (raw, raw?.Length ?? 0);
+
+	static void Validate (byte [] raw, int length)
 	{
-		if (raw == null || raw.Length < HeaderSize || raw.Length > MaximumSize) {
+		if (raw == null || length < HeaderSize || length > MaximumSize || length > raw.Length) {
 			throw new InvalidDataException ("Invalid CoreCLR bootstrap body length.");
 		}
-		using var reader = new BinaryReader (new MemoryStream (raw), Utf8);
+		using var reader = new BinaryReader (new MemoryStream (raw, 0, length, writable: false), Utf8);
 		if (reader.ReadUInt32 () != Magic || reader.ReadUInt16 () != Version || reader.ReadUInt16 () > 3 ||
-			reader.ReadUInt32 () != raw.Length) {
+			reader.ReadUInt32 () != length) {
 			throw new InvalidDataException ("Invalid CoreCLR bootstrap header.");
 		}
 		uint [] counts = new uint [5];
@@ -187,17 +214,17 @@ internal static class CoreClrBootstrapBlob
 			next += (ulong)counts [i] * entrySizes [i];
 		}
 		if (stride == 0 || counts [4] % stride != 0 || counts [2] < 3 ||
-			offsets [5] != next || next + stringLength != (ulong)raw.Length ||
+			offsets [5] != next || next + stringLength != (ulong)length ||
 			stringLength == 0 || raw [(int)next] != 0) {
 			throw new InvalidDataException ("Invalid CoreCLR bootstrap string pool or preload stride.");
 		}
 		string ReadString (uint offset, bool required)
 		{
 			if (offset == 0 && !required) return "";
-			if (offset <= offsets [5] || offset >= raw.Length || raw [offset - 1] != 0) {
+			if (offset <= offsets [5] || offset >= length || raw [offset - 1] != 0) {
 				throw new InvalidDataException ("Invalid CoreCLR bootstrap string offset.");
 			}
-			int end = Array.IndexOf (raw, (byte)0, (int)offset);
+			int end = Array.IndexOf (raw, (byte)0, (int)offset, length - (int)offset);
 			if (end < 0 || required && end == offset) {
 				throw new InvalidDataException ("Unterminated or empty CoreCLR bootstrap string.");
 			}

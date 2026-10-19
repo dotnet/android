@@ -2090,6 +2090,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was &apos;{0}&apos;..
+        /// </summary>
+        public static string XAGCA7009_UnsupportedRuntime {
+            get {
+                return ResourceManager.GetString("XAGCA7009_UnsupportedRuntime", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Executable &apos;gradlew&apos; not found in project directory &apos;{0}&apos;. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts..
         /// </summary>
         public static string XAGRDL1000 {

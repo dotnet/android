@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -14,6 +15,46 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 public class CoreClrBootstrapBlobTests : BaseTest
 {
 	string DirectoryPath => Path.Combine (Root, "temp", TestName);
+
+	[Test]
+	public void PooledStreamCanBeReusedForSmallerPayloadAfterFailure ()
+	{
+		var pool = new MemoryStreamPool ();
+		var output = pool.Rent ();
+		try {
+			var environment = new Dictionary<string, string> { ["LARGE_VALUE"] = new string ('x', 128 * 1024) };
+			void Write () => CoreClrBootstrapBlob.Write (
+				output, false, false, 0, 0, 0, 0, "com.example.test",
+				environment, new Dictionary<string, string> (), new Dictionary<string, string> (), [], [], 1);
+
+			Write ();
+			Assert.Greater (output.Length, 128 * 1024);
+			Assert.AreEqual (0, output.Position);
+			environment ["INVALID"] = "embedded\0nul";
+			Assert.Throws<InvalidDataException> (() => Write ());
+			pool.Return (output);
+			var previous = output;
+			output = pool.Rent ();
+			Assert.AreSame (previous, output);
+			environment.Clear ();
+			environment ["EMPTY"] = "";
+			environment ["UTF8"] = "\u00e9\u65e5";
+			Write ();
+
+			byte [] expected = CoreClrBootstrapBlob.Create (
+				false, false, 0, 0, 0, 0, "com.example.test",
+				environment, new Dictionary<string, string> (), new Dictionary<string, string> (), [], [], 1);
+			Assert.Less (output.Length, 1024, "A smaller payload must not retain bytes from the previous use.");
+			Assert.Greater (output.Capacity, output.Length, "Validation must use the logical length, not pooled buffer capacity.");
+			Assert.AreEqual (0, output.Position);
+			CollectionAssert.AreEqual (expected, output.ToArray ());
+			CoreClrBootstrapBlob.Validate (output.ToArray ());
+			Assert.Throws<InvalidDataException> (() => CoreClrBootstrapBlob.Validate (output.GetBuffer ()),
+				"The byte-array validator must still reject trailing capacity as extra payload bytes.");
+		} finally {
+			pool.Return (output);
+		}
+	}
 
 	[Test]
 	public void EmptyRemappingPublishesBootstrapOnly ()
