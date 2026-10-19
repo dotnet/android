@@ -27,6 +27,25 @@ conversion and argument-state creation/cleanup. Primitive, string, and array
 conversion remain supported. `JavaObject` and `JavaException` maintain managed
 peers and their JNI reference ownership.
 
+## Native callback ownership
+
+`JniType.RegisterNativeMethods` snapshots and retains delegates from every attempted
+registration, including repeated, failed, and partial registrations. The runtime
+retains each registration owner until disposal. Successful unregistration releases
+the owner's callback roots; failed unregistration preserves them. Callers must
+quiesce native invocations and wait for all in-flight callbacks to complete before
+unregistering or disposing the owner.
+
+Direct `JniEnvironment.Types.RegisterNatives` calls do not retain callback roots
+after returning. Their callers must keep delegates or raw callback storage callable
+and rooted for as long as JNI can invoke them, including after failed or partial
+registration. Quiesce native invocations before unregistration and release callback
+storage only after successful unregistration and completion of all in-flight calls.
+
+`JniNativeMethod` name/signature storage must remain readable and NUL-terminated
+through registration. Its raw callback must match the JNI descriptor's ABI,
+including the environment and receiver/class arguments.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java
