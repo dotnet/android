@@ -24,20 +24,23 @@ namespace Android.Security
 		/// </remarks>
 		public static X509Certificate2? GetX509Certificate2WithPrivateKey (Android.Content.Context context, string alias)
 		{
-			var privateKey = KeyChain.GetPrivateKey (context, alias);
-			if (privateKey is null) {
-				return null;
-			}
+			unsafe {
+				// SAFETY: the PrivateKeyEntry peer owns the native handle and remains live until X509Certificate2 completes its duplication.
+				var privateKey = KeyChain.GetPrivateKey (context, alias);
+				if (privateKey is null) {
+					return null;
+				}
 
-			var chain = KeyChain.GetCertificateChain (context, alias);
-			if (chain is null) {
-				return null;
-			}
+				var chain = KeyChain.GetCertificateChain (context, alias);
+				if (chain is null) {
+					return null;
+				}
 
-			var privateKeyEntry = new Java.Security.KeyStore.PrivateKeyEntry (privateKey, chain);
-			var certificate = new X509Certificate2 (privateKeyEntry.Handle);
-			GC.KeepAlive (privateKeyEntry);
-			return certificate;
+				var privateKeyEntry = new Java.Security.KeyStore.PrivateKeyEntry (privateKey, chain);
+				var certificate = new X509Certificate2 (privateKeyEntry.Handle);
+				GC.KeepAlive (privateKeyEntry);
+				return certificate;
+			}
 		}
 
 		/// <summary>

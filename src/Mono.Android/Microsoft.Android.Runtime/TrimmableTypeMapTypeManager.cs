@@ -408,10 +408,13 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	protected override unsafe void GetReplacementTypeInfoUnsafe (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
 	{
-		replacement = null;
-		replacementUtf8 = RuntimeFeature.JniRemapping
-			? JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference)
-			: null;
+		unsafe {
+			// SAFETY: the process-lifetime remapping table retains the returned native UTF-8 name.
+			replacement = null;
+			replacementUtf8 = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference)
+				: null;
+		}
 	}
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
@@ -420,14 +423,24 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			: null;
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> RuntimeFeature.JniRemapping
-			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
-			: null;
+	{
+		unsafe {
+			// SAFETY: the managed source name and process-lifetime remapping table retain all borrowed names through lookup.
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+				: null;
+		}
+	}
 
 	protected override unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoUnsafe (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> RuntimeFeature.JniRemapping
+	{
+		unsafe {
+			// SAFETY: the type-manager hook borrows the native type-name string retained by its JNI member lookup for the duration of this synchronous lookup.
+			return RuntimeFeature.JniRemapping
 			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
 			: null;
+		}
+	}
 
 	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
 		=> RuntimeFeature.JniRemapping

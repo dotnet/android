@@ -17,7 +17,12 @@ namespace Android.Runtime {
 		}
 
 		public int Count {
-			get { return JNIEnv.GetArrayLength (Handle); }
+			get {
+				unsafe {
+					// SAFETY: this managed array peer retains its JNI array, element conversion uses the matching T and checked indices, and marshaling completes synchronously.
+					return JNIEnv.GetArrayLength (Handle);
+				}
+			}
 		}
 
 		public bool IsReadOnly {
@@ -26,11 +31,19 @@ namespace Android.Runtime {
 
 		public T this [int index] {
 			get {
-				if (index < 0 || index >= Count)
-					throw new ArgumentOutOfRangeException ("index");
-				return JNIEnv.GetArrayItem<T> (Handle, index);
+				unsafe {
+					// SAFETY: this managed array peer retains its JNI array, element conversion uses the matching T and checked indices, and marshaling completes synchronously.
+					if (index < 0 || index >= Count)
+						throw new ArgumentOutOfRangeException ("index");
+					return JNIEnv.GetArrayItem<T> (Handle, index);
+				}
 			}
-			set { JNIEnv.SetArrayItem<T> (Handle, index, value); }
+			set {
+				unsafe {
+					// SAFETY: this managed array peer retains its JNI array, element conversion uses the matching T and checked indices, and marshaling completes synchronously.
+					JNIEnv.SetArrayItem<T> (Handle, index, value);
+				}
+			}
 		}
 
 		public void Add (T item)
@@ -50,9 +63,12 @@ namespace Android.Runtime {
 
 		public void CopyTo (T[] array, int array_index)
 		{
-			var items = JNIEnv.GetArray<T> (Handle)!;
-			for (int i = 0; i < Count; i++)
-				array [array_index + i] = items [i];
+			unsafe {
+				// SAFETY: this managed array peer retains its JNI array, element conversion uses the matching T and checked indices, and marshaling completes synchronously.
+				var items = JNIEnv.GetArray<T> (Handle)!;
+				for (int i = 0; i < Count; i++)
+					array [array_index + i] = items [i];
+			}
 		}
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
@@ -62,15 +78,22 @@ namespace Android.Runtime {
 
 		public IEnumerator<T> GetEnumerator ()
 		{
-			var items = JNIEnv.GetArray<T> (Handle);
+			T[]? items;
+			unsafe {
+				// SAFETY: this array peer owns the live JNI array; marshaling completes before iterator suspension.
+				items = JNIEnv.GetArray<T> (Handle);
+			}
                         for (int i = 0; i < items!.Length; i++)
                                 yield return items [i];
 		}
 
 		public int IndexOf (T item)
 		{
-			var items = JNIEnv.GetArray<T> (Handle)!;
-			return Array.IndexOf (items, item);
+			unsafe {
+				// SAFETY: this managed array peer retains its JNI array, element conversion uses the matching T and checked indices, and marshaling completes synchronously.
+				var items = JNIEnv.GetArray<T> (Handle)!;
+				return Array.IndexOf (items, item);
+			}
 		}
 
 		public void Insert (int index, T item)

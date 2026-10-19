@@ -17,7 +17,7 @@ namespace Android.Runtime
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
-		internal unsafe struct JnienvInitializeArgs {
+		internal struct JnienvInitializeArgs {
 			public IntPtr          javaVm;
 			public IntPtr          env;
 			public IntPtr          grefLoader;
@@ -48,9 +48,16 @@ namespace Android.Runtime
 			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
 		}
 
-		internal static void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
+		/// <safety>
+		/// <paramref name="args"/> must come from the native host with the matching descriptor layout,
+		/// process-lifetime remapping data, and runtime-lifetime global references.
+		/// </safety>
+		internal static unsafe void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
-			InitializeCommonState (args);
+			unsafe {
+				// SAFETY: the native host retains the remapping body and global references beyond initialization.
+				InitializeCommonState (args);
+			}
 			TypeMapLoader.Initialize ();
 		}
 
@@ -63,7 +70,11 @@ namespace Android.Runtime
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
 		// Only used for NativeAOT after the runtime has been created. CoreCLR uses Initialize().
-		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
+		/// <safety>
+		/// <paramref name="args"/> must retain the native host's matching descriptor and process-lifetime
+		/// GC-bridge initializer. Its VM and global references must remain live for the runtime lifetime.
+		/// </safety>
+		internal static unsafe void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			if (!RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
@@ -77,52 +88,71 @@ namespace Android.Runtime
 			}
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
-			JavaMarshalGCBridge.Initialize (args);
+			unsafe {
+				// SAFETY: the caller retains the native host's process-lifetime initializer and matching runtime descriptor.
+				JavaMarshalGCBridge.Initialize (args);
+			}
 			TrimmableTypeMap.RegisterNativeMethods ();
 			SetSynchronizationContext ();
 		}
 
 		// Only used for CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
+		/// <safety>
+		/// <paramref name="args"/> must address the native host's readable and writable initialization descriptor
+		/// for the call. Its VM must outlive the runtime, environment must belong to the current thread,
+		/// and global references/remapping data must retain their documented runtime/process lifetimes.
+		/// </safety>
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
+			ArgumentNullException.ThrowIfNull (args);
+			unsafe {
+				// SAFETY: the native host calls this entry point with its matching live descriptor, current-thread environment and runtime-lifetime VM/global references.
+				if (RuntimeFeature.IsNativeAotRuntime) {
+					throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
+				}
+				if (!RuntimeFeature.IsCoreClrRuntime) {
+					throw new NotSupportedException ("Internal error: CoreCLR must be enabled.");
+				}
+
+				if (RuntimeFeature.StartupNoGCRegion) {
+					StartupNoGCRegion.Start ();
+				}
+
+				InitializeBeforeRuntimeCreation (*args);
+
+				androidRuntime = new AndroidRuntime (
+						args->env,
+						args->javaVm,
+						args->grefLoader,
+						new TrimmableTypeMapTypeManager (),
+						new TrimmableTypeMapValueManager ()
+				);
+				JniRuntime.SetCurrent (androidRuntime);
+				JavaMarshalGCBridge.Initialize (*args);
+				TrimmableTypeMap.RegisterNativeMethods ();
+
+				args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+
+				RunStartupHooksIfNeeded ();
+				SetSynchronizationContext ();
 			}
-			if (!RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: CoreCLR must be enabled.");
-			}
-
-			if (RuntimeFeature.StartupNoGCRegion) {
-				StartupNoGCRegion.Start ();
-			}
-
-			InitializeBeforeRuntimeCreation (*args);
-
-			androidRuntime = new AndroidRuntime (
-					args->env,
-					args->javaVm,
-					args->grefLoader,
-					new TrimmableTypeMapTypeManager (),
-					new TrimmableTypeMapValueManager ()
-			);
-			JniRuntime.SetCurrent (androidRuntime);
-			JavaMarshalGCBridge.Initialize (*args);
-			TrimmableTypeMap.RegisterNativeMethods ();
-
-			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
-
-			RunStartupHooksIfNeeded ();
-			SetSynchronizationContext ();
 		}
 
-		static void InitializeCommonState (JnienvInitializeArgs args)
+		/// <safety>
+		/// <paramref name="args"/> must retain its native remapping body for the process lifetime
+		/// and its JNI global references for the runtime lifetime.
+		/// </safety>
+		static unsafe void InitializeCommonState (JnienvInitializeArgs args)
 		{
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
 			InitializeMaxGrefCounts (args);
 			if (RuntimeFeature.JniRemapping) {
-				JniRemappingLookup.Initialize (args.jniRemappingData);
+				unsafe {
+					// SAFETY: the host supplies the process-lifetime descriptor and remapping body.
+					JniRemappingLookup.Initialize (args.jniRemappingData);
+				}
 			}
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;

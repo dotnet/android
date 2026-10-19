@@ -64,7 +64,10 @@ namespace Android.Animation {
 					JNIEnv.StartCreateInstance ("mono/android/animation/AnimatorEventDispatcher", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 		}
 
 		public EventHandler? AnimationCancel;
