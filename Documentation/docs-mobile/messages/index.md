@@ -45,8 +45,8 @@ ms.date: 04/11/2024
 
 ## XA0xxx: Environment issue or missing tooling
 
-+ [XA0000](xa0000.md): Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion).
-+ [XA0001](xa0001.md): Invalid or unsupported `$(TargetFrameworkVersion)` value.
++ [XA0000](xa0000.md): Unhandled exception or error in an MSBuild task.
++ [XA0001](xa0001.md): Legacy `$(TargetFrameworkVersion)` validation; no longer emitted by current SDKs.
 + [XA0002](xa0002.md): Could not find mono.android.jar
 + [XA0003](xa0003.md): Invalid \`android:versionCode\` value \`{code}\` in \`AndroidManifest.xml\`. It must be an integer value.
 + [XA0004](xa0004.md): Invalid \`android:versionCode\` value \`{code}\` in \`AndroidManifest.xml\`. The value must be in the range of 0 to {maxVersionCode}.
@@ -68,10 +68,10 @@ ms.date: 04/11/2024
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
 + [XA0111](xa0111.md): Could not get the `aapt2` version. Please check it is installed correctly.
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
-+ [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v11.0 (API level 30) or above.
++ [XA0113](xa0113.md): Legacy Google Play target API warning; no longer emitted by current SDKs.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
-+ [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
++ [XA0117](xa0117.md): Legacy deprecated `TargetFrameworkVersion` warning; no longer emitted by current SDKs.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
