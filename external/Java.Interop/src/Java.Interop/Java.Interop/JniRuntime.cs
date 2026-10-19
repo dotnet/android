@@ -399,6 +399,8 @@ namespace Java.Interop
 		{
 			List<JniType> values;
 			lock (TrackedInstances) {
+				// Dispose removes each owner via UnTrack after successful unregistration.
+				// Do not clear the set here: failed unregistration must retain callback roots.
 				values = new List<JniType> (TrackedInstances);
 			}
 

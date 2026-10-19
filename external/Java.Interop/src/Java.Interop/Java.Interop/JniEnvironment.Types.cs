@@ -313,8 +313,9 @@ namespace Java.Interop
 			/// through this call. Each callback must match its JNI descriptor's ABI, including
 			/// the leading JNIEnv and receiver/class pointers. Keep callback storage callable and
 			/// rooted for as long as JNI can invoke it, including after failed or partial registration.
-			/// Quiesce native invocations before unregistration and release callback storage only
-			/// after successful unregistration and completion of all in-flight calls.
+			/// Prevent new calls to the registered native methods before unregistration. Release
+			/// callback storage only after unregistration succeeds and all callbacks already
+			/// running have finished.
 			/// </safety>
 			public static unsafe void RegisterNatives (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
 			{

@@ -18,21 +18,33 @@ namespace Java.InteropTests {
 		const string ClassName = "net/dot/jni/test/RegisterNativesTestType";
 
 		[Test]
-		public void RetainsSnapshotsAcrossRepeatedRegistrations ()
+		public void RetainsTransferredArrayAndRejectsRepeatedRegistration ()
 		{
 			using (var type = new JniType (ClassName)) {
 				var first = RegisterCapturedDelegate (type, 10, fail: false);
-				var second = RegisterCapturedDelegate (type, 20, fail: false);
+				var rejected = RegisterCapturedDelegate (type, 20, fail: false, reject: true);
 
 				Collect ();
-				Assert.IsTrue (first.IsAlive, "The previous registration must remain rooted.");
-				Assert.IsTrue (second.IsAlive, "Mutating the input array must not remove the delegate root.");
-				Assert.AreEqual (27, InvokeAdd (type));
+				Assert.IsTrue (first.Methods.IsAlive, "The original transferred array must remain rooted.");
+				Assert.IsTrue (first.Callback.IsAlive);
+				Assert.IsFalse (rejected.Methods.IsAlive, "A rejected registration must not take ownership of its array.");
+				Assert.IsFalse (rejected.Callback.IsAlive);
+				Assert.AreEqual (17, InvokeAdd (type));
 
 				type.UnregisterNativeMethods ();
 				Collect ();
-				Assert.IsFalse (first.IsAlive);
-				Assert.IsFalse (second.IsAlive);
+				Assert.IsFalse (first.Methods.IsAlive);
+				Assert.IsFalse (first.Callback.IsAlive);
+
+				var replacement = RegisterCapturedDelegate (type, 30, fail: false);
+				Collect ();
+				Assert.IsTrue (replacement.Methods.IsAlive);
+				Assert.IsTrue (replacement.Callback.IsAlive);
+				Assert.AreEqual (37, InvokeAdd (type));
+				type.UnregisterNativeMethods ();
+				Collect ();
+				Assert.IsFalse (replacement.Methods.IsAlive);
+				Assert.IsFalse (replacement.Callback.IsAlive);
 			}
 		}
 
@@ -43,6 +55,7 @@ namespace Java.InteropTests {
 			var references = RegisterWithoutKeepingOwner (fail);
 			Collect ();
 			Assert.IsTrue (references.Owner.IsAlive, "The runtime must retain the registration owner.");
+			Assert.IsTrue (references.Methods.IsAlive, "The owner must retain the transferred array.");
 			Assert.IsTrue (references.Callback.IsAlive, "A failed attempt may have published a callback.");
 
 			var type = references.Owner.Target as JniType;
@@ -52,49 +65,57 @@ namespace Java.InteropTests {
 			using (type) {
 				if (!fail)
 					Assert.AreEqual (37, InvokeAdd (type));
-				type.UnregisterNativeMethods ();
+				type.Dispose ();
 				Collect ();
+				Assert.IsFalse (references.Methods.IsAlive);
 				Assert.IsFalse (references.Callback.IsAlive);
 			}
 		}
 
 		[Test]
-		public void FailedRegistrationPreservesPreviousAndAttemptedDelegates ()
+		public void FailedRegistrationRetainsTransferredArrayAndRejectsRetry ()
 		{
 			using (var type = new JniType (ClassName)) {
-				var previous = RegisterCapturedDelegate (type, 10, fail: false);
 				var attempted = RegisterCapturedDelegate (type, 20, fail: true);
+				var rejected = RegisterCapturedDelegate (type, 30, fail: false, reject: true);
 
 				Collect ();
-				Assert.IsTrue (previous.IsAlive);
-				Assert.IsTrue (attempted.IsAlive);
-				Assert.That (InvokeAdd (type), Is.EqualTo (17).Or.EqualTo (27));
+				Assert.IsTrue (attempted.Methods.IsAlive);
+				Assert.IsTrue (attempted.Callback.IsAlive);
+				Assert.IsFalse (rejected.Methods.IsAlive);
+				Assert.IsFalse (rejected.Callback.IsAlive);
 
 				type.UnregisterNativeMethods ();
 				Collect ();
-				Assert.IsFalse (previous.IsAlive);
-				Assert.IsFalse (attempted.IsAlive);
+				Assert.IsFalse (attempted.Methods.IsAlive);
+				Assert.IsFalse (attempted.Callback.IsAlive);
 			}
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
-		static (WeakReference Owner, WeakReference Callback) RegisterWithoutKeepingOwner (bool fail)
+		static (WeakReference Owner, WeakReference Methods, WeakReference Callback) RegisterWithoutKeepingOwner (bool fail)
 		{
 			var type = new JniType (ClassName);
-			var callback = RegisterCapturedDelegate (type, 30, fail);
-			return (new WeakReference (type), callback);
+			var registration = RegisterCapturedDelegate (type, 30, fail);
+			return (new WeakReference (type), registration.Methods, registration.Callback);
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Delegate registration tests run only on runtimes supporting dynamic code.")]
-		static WeakReference RegisterCapturedDelegate (JniType type, int offset, bool fail)
+		static (WeakReference Methods, WeakReference Callback) RegisterCapturedDelegate (JniType type, int offset, bool fail, bool reject = false)
 		{
 			var callback = new AddCallback ((env, self, a, b) => a + b + offset);
 			var registration = new JniNativeMethodRegistration ("add", "(II)I", callback);
 			var methods = fail
 				? new [] { registration, new JniNativeMethodRegistration ("__missing_native_method__", "(II)I", callback) }
 				: new [] { registration };
-			if (fail) {
+			if (reject) {
+				Assert.Throws<InvalidOperationException> (() => {
+					unsafe {
+						type.RegisterNativeMethods (methods);
+					}
+				});
+			} else if (fail) {
 				var error = Assert.Throws<Java.Lang.NoSuchMethodError> (() => {
 					unsafe {
 						type.RegisterNativeMethods (methods);
@@ -109,8 +130,7 @@ namespace Java.InteropTests {
 					type.RegisterNativeMethods (methods);
 				}
 			}
-			Array.Clear (methods, 0, methods.Length);
-			return new WeakReference (callback);
+			return (new WeakReference (methods), new WeakReference (callback));
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]

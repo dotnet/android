@@ -38,9 +38,9 @@ namespace Java.Interop {
 		/// NUL-terminated UTF-8 memory through registration. <paramref name="functionPointer"/>
 		/// must have the JNI-compatible ABI for the signature, including the environment and
 		/// receiver arguments, and remain callable and rooted for as long as JNI can invoke it,
-		/// including after failed or partial registration. Quiesce native invocations before
-		/// unregistration and release callback storage only after successful unregistration
-		/// and completion of all in-flight calls.
+		/// including after failed or partial registration. Prevent new calls to the registered
+		/// native methods before unregistration. Release callback storage only after
+		/// unregistration succeeds and all callbacks already running have finished.
 		/// </safety>
 		public JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
 		{

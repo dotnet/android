@@ -133,8 +133,8 @@ namespace Java.Interop {
 		}
 
 		/// <remarks>
-		/// Quiesce native invocations and wait for all in-flight callbacks to complete before
-		/// disposing a type with registered native methods.
+		/// Prevent new calls to the registered native methods and wait for callbacks already
+		/// running to finish before disposing this type.
 		/// </remarks>
 		public void Dispose ()
 		{
@@ -176,15 +176,24 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-		List<JniNativeMethodRegistration[]>? methods;
+		JniNativeMethodRegistration[]? methods;
 
 		/// <remarks>
-		/// Snapshots and retains delegates from every attempted registration, including failed
-		/// or partial registrations, until successful unregistration. Coordinate registration,
-		/// unregistration, and disposal with native invocations so no callbacks are in flight
+		/// Retains the transferred registration array and delegates until successful
+		/// unregistration, including after failed or partial registration. Another registration
+		/// attempt is rejected until successful unregistration. Coordinate registration,
+		/// unregistration, and disposal with native invocations so no callbacks are running
 		/// when unregistering.
 		/// </remarks>
+		/// <exception cref="InvalidOperationException">
+		/// A previous registration attempt has not been successfully unregistered.
+		/// </exception>
 		/// <safety>
+		/// The caller transfers ownership of <paramref name="methods"/> to this instance for
+		/// an accepted registration attempt. Do not modify the array or its entries through
+		/// any alias until successful unregistration and completion of all callbacks, even if
+		/// registration fails or completes only partially. A call rejected because this
+		/// instance already has a registration does not transfer ownership.
 		/// The caller must ensure each Marshaler delegate in <paramref name="methods"/> has
 		/// parameter and return types, calling convention, and marshaling attributes compatible
 		/// with its JNI method descriptor, including the leading JNIEnv and receiver/class pointers.
@@ -198,17 +207,18 @@ namespace Java.Interop {
 
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
+			if (this.methods != null)
+				throw new InvalidOperationException ("Native methods have already been registered or registration has failed. Unregister them before registering again.");
 
-			var snapshot = (JniNativeMethodRegistration[]) methods.Clone ();
 			RegisterWithRuntime ();
-			this.methods ??= new List<JniNativeMethodRegistration[]> ();
-			this.methods.Add (snapshot);
-			JniEnvironment.Types.RegisterNatives (PeerReference, snapshot, snapshot.Length);
+			this.methods = methods;
+			JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length);
 		}
 
 		/// <remarks>
-		/// Quiesce native invocations and wait for all in-flight callbacks to complete before
-		/// calling this method. Delegate roots are released only after successful unregistration.
+		/// Prevent new calls to the registered native methods and wait for callbacks already
+		/// running to finish before calling this method. Delegate roots are released only
+		/// after successful unregistration.
 		/// </remarks>
 		public void UnregisterNativeMethods ()
 		{

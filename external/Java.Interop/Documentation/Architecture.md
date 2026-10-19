@@ -29,18 +29,23 @@ peers and their JNI reference ownership.
 
 ## Native callback ownership
 
-`JniType.RegisterNativeMethods` snapshots and retains delegates from every attempted
-registration, including repeated, failed, and partial registrations. The runtime
-retains each registration owner until disposal. Successful unregistration releases
-the owner's callback roots; failed unregistration preserves them. Callers must
-quiesce native invocations and wait for all in-flight callbacks to complete before
-unregistering or disposing the owner.
+`JniType.RegisterNativeMethods` takes ownership of the supplied registration array
+and retains it and its delegates until successful unregistration, including after
+failed or partial registration. Callers must not modify the array or its entries
+through any alias until successful unregistration and completion of all callbacks.
+Another registration attempt throws `InvalidOperationException` until successful
+unregistration without taking ownership of the rejected array. The runtime retains
+each registration owner until disposal. Successful unregistration releases the
+owner's callback roots; failed unregistration preserves them. Callers must prevent
+new calls to the registered native methods and wait for callbacks already running
+to finish before unregistering or disposing the owner.
 
 Direct `JniEnvironment.Types.RegisterNatives` calls do not retain callback roots
 after returning. Their callers must keep delegates or raw callback storage callable
 and rooted for as long as JNI can invoke them, including after failed or partial
-registration. Quiesce native invocations before unregistration and release callback
-storage only after successful unregistration and completion of all in-flight calls.
+registration. Prevent new calls to the registered native methods before
+unregistration. Release callback storage only after unregistration succeeds and
+all callbacks already running have finished.
 
 `JniNativeMethod` name/signature storage must remain readable and NUL-terminated
 through registration. Its raw callback must match the JNI descriptor's ABI,
