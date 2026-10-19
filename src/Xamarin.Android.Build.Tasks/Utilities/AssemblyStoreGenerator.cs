@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
@@ -140,8 +141,8 @@ partial class AssemblyStoreGenerator
 				throw new InvalidOperationException ($"Internal error: corrupted store '{storePath}' stream");
 			}
 
-			uint name_with_ext_hash = TypeMapHelper.HashBytesForCLR (info.AssemblyNameBytes);
-			uint name_no_ext_hash = TypeMapHelper.HashBytesForCLR (info.AssemblyNameNoExtBytes);
+			uint name_with_ext_hash = HashAssemblyName (info.AssemblyNameBytes);
+			uint name_no_ext_hash = HashAssemblyName (info.AssemblyNameNoExtBytes);
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, entryIndex, info.Ignored));
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, entryIndex, info.Ignored));
 
@@ -284,5 +285,14 @@ partial class AssemblyStoreGenerator
 			writer.Write ((uint)info.AssemblyNameBytes.Length);
 			writer.Write (info.AssemblyNameBytes);
 		}
+	}
+
+	static uint HashAssemblyName (ReadOnlySpan<byte> bytes)
+	{
+		if (bytes.Length == 0) {
+			return UInt32.MaxValue;
+		}
+
+		return Crc32.HashToUInt32 (bytes);
 	}
 }
