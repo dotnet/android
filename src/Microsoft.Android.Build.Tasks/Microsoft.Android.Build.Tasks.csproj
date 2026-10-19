@@ -13,6 +13,8 @@
     <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
+    <Features>$(Features);updated-memory-safety-rules</Features>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
