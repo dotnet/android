@@ -351,7 +351,7 @@ namespace Xamarin.Installer.Build.Tasks
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
 			if (SkipSignCheck) {
-				LogMessage ($"Microsoft OpenJDK signature verification was skipped for '{archive.Url}' because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive.");
+				LogMessage ($"Microsoft OpenJDK signature verification was skipped for '{archive.Url}' because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive.", MessageImportance.High);
 				return true;
 			}
 

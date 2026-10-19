@@ -320,7 +320,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (engine.Warnings);
 			if (skip) {
 				var message = engine.Messages.Single (entry => entry.Message.Contains ("_SkipSignCheck=true"));
-				Assert.AreEqual (MessageImportance.Normal, message.Importance);
+				Assert.AreEqual (MessageImportance.High, message.Importance);
 				StringAssert.Contains ("signature verification was skipped", message.Message);
 				Assert.IsEmpty (handler.Requests, "The bypass must not request a signature or key.");
 			} else {
