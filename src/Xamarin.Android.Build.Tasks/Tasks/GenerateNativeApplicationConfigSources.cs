@@ -183,9 +183,13 @@ namespace Xamarin.Android.Tasks
 				HaveAssemblyStore = UseAssemblyStore,
 			};
 
-			byte [] raw = bootstrapBuilder.Create ();
-			using var stream = new MemoryStream (raw, writable: false);
-			Files.CopyIfStreamChanged (stream, bootstrapPath);
+			var stream = MemoryStreamPool.Shared.Rent ();
+			try {
+				bootstrapBuilder.Write (stream);
+				Files.CopyIfStreamChanged (stream, bootstrapPath);
+			} finally {
+				MemoryStreamPool.Shared.Return (stream);
+			}
 
 			return !Log.HasLoggedErrors;
 		}
