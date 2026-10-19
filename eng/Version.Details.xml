@@ -1,8 +1,8 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.403-servicing.26509.104">
+    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.403-servicing.26512.108">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>ec1487b271c2b36aa54da91bf73d9808f4b510a3</Sha>
+      <Sha>f009a9309c13506b779f3163c50c61381627a1e6</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink" Version="10.0.3-servicing.26065.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
@@ -40,13 +40,13 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="10.0.0-beta.26509.104">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="10.0.0-beta.26512.108">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>ec1487b271c2b36aa54da91bf73d9808f4b510a3</Sha>
+      <Sha>f009a9309c13506b779f3163c50c61381627a1e6</Sha>
     </Dependency>
     <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.403">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>ec1487b271c2b36aa54da91bf73d9808f4b510a3</Sha>
+      <Sha>f009a9309c13506b779f3163c50c61381627a1e6</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
