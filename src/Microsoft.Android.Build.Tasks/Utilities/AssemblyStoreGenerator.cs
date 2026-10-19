@@ -141,8 +141,8 @@ partial class AssemblyStoreGenerator
 				throw new InvalidOperationException ($"Internal error: corrupted store '{storePath}' stream");
 			}
 
-			uint name_with_ext_hash = HashBytes (info.AssemblyNameBytes);
-			uint name_no_ext_hash = HashBytes (info.AssemblyNameNoExtBytes);
+			uint name_with_ext_hash = Crc32.HashToUInt32 (info.AssemblyNameBytes);
+			uint name_no_ext_hash = Crc32.HashToUInt32 (info.AssemblyNameNoExtBytes);
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, entryIndex, info.Ignored));
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, entryIndex, info.Ignored));
 
@@ -180,11 +180,6 @@ partial class AssemblyStoreGenerator
 		}
 
 		return storePath;
-	}
-
-	static uint HashBytes (ReadOnlySpan<byte> bytes)
-	{
-		return bytes.Length == 0 ? UInt32.MaxValue : Crc32.HashToUInt32 (bytes);
 	}
 
 	void CopyData (FileInfo? src, Stream dest, string storePath)
