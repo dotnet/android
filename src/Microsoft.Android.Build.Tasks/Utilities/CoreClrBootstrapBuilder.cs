@@ -78,7 +78,7 @@ sealed class CoreClrBootstrapBuilder
 	{
 		var state = CreateDsoCache ();
 		foreach (var entry in state.Entries) {
-			entry.Hash = HashNameForCLR (entry.HashedName);
+			entry.Hash = Crc32.HashToUInt32 (Encoding.UTF8.GetBytes (entry.HashedName));
 		}
 		state.Entries.Sort ((a, b) => a.Hash.CompareTo (b.Hash));
 
@@ -106,9 +106,6 @@ sealed class CoreClrBootstrapBuilder
 			libraries, preloads, (uint)state.PreloadStride
 		);
 	}
-
-	static uint HashNameForCLR (string name) =>
-		name.Length == 0 ? UInt32.MaxValue : Crc32.HashToUInt32 (Encoding.UTF8.GetBytes (name));
 
 	DsoCacheState CreateDsoCache ()
 	{
