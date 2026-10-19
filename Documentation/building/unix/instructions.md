@@ -279,7 +279,7 @@ There are a few ways to do it:
 
 ## The short way
 
-From the top of the Xamarin Android source tree you can run make for the following
+From the top of the .NET for Android source tree you can run make for the following
 targets, which implement the steps to rebuild the runtime and BCL described further
 down in the document:
 
