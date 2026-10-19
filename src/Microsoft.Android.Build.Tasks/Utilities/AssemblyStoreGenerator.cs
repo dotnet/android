@@ -2,12 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 //
 // Assembly store format
@@ -72,7 +74,7 @@ partial class AssemblyStoreGenerator
 
 	public void Add (AssemblyStoreAssemblyInfo asmInfo)
 	{
-		if (!assemblies.TryGetValue (asmInfo.Arch, out List<AssemblyStoreAssemblyInfo> infos)) {
+		if (!assemblies.TryGetValue (asmInfo.Arch, out List<AssemblyStoreAssemblyInfo>? infos)) {
 			infos = new List<AssemblyStoreAssemblyInfo> ();
 			assemblies.Add (asmInfo.Arch, infos);
 		}
@@ -121,7 +123,6 @@ partial class AssemblyStoreGenerator
 		// We'll start writing to the stream after we seek to the position just after the header, index, descriptors and name data.
 		ulong curPos = assemblyDataStart;
 
-		Directory.CreateDirectory (Path.GetDirectoryName (storePath));
 		using var fs = File.Open (storePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 
@@ -140,8 +141,8 @@ partial class AssemblyStoreGenerator
 				throw new InvalidOperationException ($"Internal error: corrupted store '{storePath}' stream");
 			}
 
-			uint name_with_ext_hash = TypeMapHelper.HashBytesForCLR (info.AssemblyNameBytes);
-			uint name_no_ext_hash = TypeMapHelper.HashBytesForCLR (info.AssemblyNameNoExtBytes);
+			uint name_with_ext_hash = HashBytes (info.AssemblyNameBytes);
+			uint name_no_ext_hash = HashBytes (info.AssemblyNameNoExtBytes);
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, entryIndex, info.Ignored));
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, entryIndex, info.Ignored));
 
@@ -179,6 +180,11 @@ partial class AssemblyStoreGenerator
 		}
 
 		return storePath;
+	}
+
+	static uint HashBytes (ReadOnlySpan<byte> bytes)
+	{
+		return bytes.Length == 0 ? UInt32.MaxValue : Crc32.HashToUInt32 (bytes);
 	}
 
 	void CopyData (FileInfo? src, Stream dest, string storePath)
