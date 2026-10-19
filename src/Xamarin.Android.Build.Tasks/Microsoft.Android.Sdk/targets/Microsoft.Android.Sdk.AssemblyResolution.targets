@@ -226,12 +226,13 @@ _ResolveAssemblies MSBuild target.
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>
     <ItemGroup>
-      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)" />
+      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity)" />
     </ItemGroup>
 
     <MSBuild
         Condition=" '$(DesignTimeBuild)' != 'true' "
         Projects="@(_ProjectToBuild)"
+        Properties="$(_AdditionalProperties)"
         BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />

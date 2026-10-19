@@ -96,6 +96,20 @@ namespace Xamarin.Android.Build.Tests
 			project.SetProperty ("AndroidLinkTool", "r8");
 			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			project.SetProperty ("AndroidEnableAssemblyCompression", "true");
+			project.SetProperty ("LintToolPath", Path.Combine (Root, "temp", TestName, "O'Brien;tag=1"));
+			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			imports.TextContent = () => """
+				<Project>
+				  <Target Name="_TestInnerToolingPaths" AfterTargets="_ResolveMonoAndroidSdks"
+				      Condition=" '$(_OuterIntermediateOutputPath)' != '' ">
+				    <Error Condition=" '$(_AndroidUseResolvedSdk)' != 'true' or '$(_AndroidUseResolvedTooling)' != 'true' "
+				        Text="Escaped tooling paths must not disable reuse." />
+				    <Error Condition=" '$(_AndroidOuterLintToolPath)' != '$(LintToolPath)' or '$(_AndroidOuterToolingInputLintToolPath)' != '$(LintToolPath)' "
+				        Text="The lint path changed during forwarding." />
+				    <Error Condition=" '$(tag)' != '' " Text="The path was split into a separate property." />
+				  </Target>
+				</Project>
+				""";
 			using var builder = CreateApkBuilder ();
 			builder.Target = "Publish";
 			builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
@@ -115,6 +129,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("_AndroidAllowMissingSdkTooling=true", 2)]
 		[TestCase ("Configuration=Release", 2)]
 		[TestCase ("AndroidSdkBuildToolsVersion=0.0.0", 2)]
+		[TestCase ("LatestSupportedJavaVersion=99.0", 2)]
 		public void NestedBuildToolingFallsBackForChangedInputs (string innerProperties, int javaCalls)
 		{
 			var project = new XamarinAndroidApplicationProject ();
