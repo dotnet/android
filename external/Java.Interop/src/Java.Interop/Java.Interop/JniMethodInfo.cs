@@ -20,7 +20,7 @@ namespace Java.Interop
 
 #if DEBUG
 		string? name, signature;
-		unsafe byte* nameUtf8, signatureUtf8;
+		byte* nameUtf8, signatureUtf8;
 #endif  // !DEBUG
 
 		public      string  Name {

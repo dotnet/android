@@ -110,7 +110,7 @@ namespace Java.Interop {
 		JniType?            jniPeerType;
 		string              sourceJniPeerTypeName;
 		string?             jniPeerTypeName;
-		unsafe byte*        jniPeerTypeNameUtf8;
+		byte*               jniPeerTypeNameUtf8;
 		JniInstanceMethods  instanceMethods;
 		JniInstanceFields   instanceFields;
 		JniStaticMethods    staticMethods;

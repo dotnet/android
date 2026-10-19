@@ -14,6 +14,82 @@ public class JniEnvMemorySafetyTests : BaseTest
 	const string RulesAttribute = "System.Runtime.CompilerServices.MemorySafetyRulesAttribute";
 	const string UnsafeAttribute = "System.Diagnostics.CodeAnalysis.RequiresUnsafeAttribute";
 
+	[Test]
+	public void RuntimeCreationRequiresUnsafeOnDerivedConstructor ()
+	{
+		var project = new XamarinAndroidLibraryProject {
+			ProjectName = "RuntimeCreationContract",
+		};
+		project.SetProperty ("AllowUnsafeBlocks", "true");
+		project.SetProperty ("LangVersion", "preview");
+		project.SetProperty ("Features", "updated-memory-safety-rules");
+		var source = new BuildItem.Source ("Runtime.cs") {
+			TextContent = () => """
+				public sealed class Runtime : Java.Interop.JniRuntime {
+					public Runtime (CreationOptions options) : base (options) {}
+				}
+				""",
+		};
+		project.Sources.Add (source);
+		using var builder = CreateDllBuilder (Path.Combine ("temp", TestName));
+		builder.ThrowOnBuildFailure = false;
+		Assert.IsFalse (builder.Build (project), "A safe derived constructor cannot hide native pointers in CreationOptions.");
+		StringAssert.Contains ("CS9362", string.Join (Environment.NewLine, builder.LastBuildOutput));
+
+		source.TextContent = () => """
+			public sealed class Runtime : Java.Interop.JniRuntime {
+				public unsafe Runtime (CreationOptions options) : base (options) {}
+			}
+			""";
+		project.Touch ("Runtime.cs");
+		Assert.IsTrue (builder.Build (project), "An unsafe constructor provides the audited initializer context.");
+	}
+
+	[TestCase ("TargetJniTypeUtf8Pointer")]
+	[TestCase ("TargetJniMethodNameUtf8Pointer")]
+	[TestCase ("TargetJniMethodSignatureUtf8Pointer")]
+	public void RemappingPointerRequiresUnsafeSetterOnly (string property)
+	{
+		var project = new XamarinAndroidLibraryProject {
+			ProjectName = "RemappingPointerContract",
+		};
+		project.SetProperty ("AllowUnsafeBlocks", "true");
+		project.SetProperty ("LangVersion", "preview");
+		project.SetProperty ("Features", "updated-memory-safety-rules");
+		var source = new BuildItem.Source ("Consumer.cs") {
+			TextContent = () => $$"""
+				public static class Consumer {
+					public static void Read (Java.Interop.JniRuntime.ReplacementMethodInfo value) {
+						var address = value.{{property}};
+					}
+					public static void Write (ref Java.Interop.JniRuntime.ReplacementMethodInfo value, byte* address) {
+						value.{{property}} = address;
+					}
+				}
+				""",
+		};
+		project.Sources.Add (source);
+		using var builder = CreateDllBuilder (Path.Combine ("temp", TestName));
+		builder.ThrowOnBuildFailure = false;
+		Assert.IsFalse (builder.Build (project), "Publishing borrowed storage requires an unsafe caller.");
+		StringAssert.Contains ("CS9362", string.Join (Environment.NewLine, builder.LastBuildOutput));
+
+		source.TextContent = () => $$"""
+			public static class Consumer {
+				public static void Read (Java.Interop.JniRuntime.ReplacementMethodInfo value) {
+					var address = value.{{property}};
+				}
+				public static void Write (ref Java.Interop.JniRuntime.ReplacementMethodInfo value, byte* address) {
+					unsafe {
+						value.{{property}} = address;
+					}
+				}
+			}
+			""";
+		project.Touch ("Consumer.cs");
+		Assert.IsTrue (builder.Build (project), "Reading an address remains safe while a local region acknowledges publication.");
+	}
+
 	[TestCase (false)]
 	[TestCase (true)]
 	public void GeneratedContractsCompileAndEnforceRawCalls (bool updatedRules)

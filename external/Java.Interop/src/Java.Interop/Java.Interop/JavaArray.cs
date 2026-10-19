@@ -314,7 +314,7 @@ namespace Java.Interop
 
 	public abstract class JniArrayElements : IDisposable {
 
-		unsafe void* elements;
+		void* elements;
 		int elementCount;
 		int sizeOfElement;
 
@@ -352,7 +352,7 @@ namespace Java.Interop
 			}
 		}
 
-		internal unsafe void* ElementsPointer {
+		internal void* ElementsPointer {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);

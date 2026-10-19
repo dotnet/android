@@ -1,4 +1,7 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection;
 
 using Java.Interop;
 
@@ -9,6 +12,48 @@ namespace Java.InteropTests;
 [TestFixture]
 [Category ("JniPrimitiveArrayBounds")]
 public class JavaPrimitiveArraySafetyTests {
+
+	[TestCase (typeof (JniBooleanArrayElements))]
+	[TestCase (typeof (JniSByteArrayElements))]
+	[TestCase (typeof (JniCharArrayElements))]
+	[TestCase (typeof (JniInt16ArrayElements))]
+	[TestCase (typeof (JniInt32ArrayElements))]
+	[TestCase (typeof (JniInt64ArrayElements))]
+	[TestCase (typeof (JniSingleArrayElements))]
+	[TestCase (typeof (JniDoubleArrayElements))]
+	public void RefIndexerRequiresUnsafe (
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicProperties)] Type type)
+	{
+		var getter = type.GetProperty ("Item")?.GetMethod
+			?? throw new InvalidOperationException ($"No ref-returning indexer on {type}.");
+		Assert.IsTrue (getter.ReturnType.IsByRef, $"{type}.Item must preserve its ref return.");
+		Assert.IsTrue (RequiresUnsafe (getter), $"{type}.Item must require an unsafe caller context.");
+		var address = type.GetProperty ("Elements", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)?.GetMethod
+			?? throw new InvalidOperationException ($"No typed address getter on {type}.");
+		Assert.IsTrue (address.ReturnType.IsPointer);
+		Assert.IsFalse (RequiresUnsafe (address), $"{type}.Elements only reads an address.");
+	}
+
+	[TestCase (typeof (JavaBooleanArray))]
+	[TestCase (typeof (JavaSByteArray))]
+	[TestCase (typeof (JavaCharArray))]
+	[TestCase (typeof (JavaInt16Array))]
+	[TestCase (typeof (JavaInt32Array))]
+	[TestCase (typeof (JavaInt64Array))]
+	[TestCase (typeof (JavaSingleArray))]
+	[TestCase (typeof (JavaDoubleArray))]
+	[TestCase (typeof (JavaPrimitiveArray<int>))]
+	public void GetElementsRemainsSafe (
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)] Type type)
+	{
+		var method = type.GetMethod ("GetElements", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+			?? throw new InvalidOperationException ($"No declared GetElements method on {type}.");
+		Assert.IsFalse (RequiresUnsafe (method), $"{type}.GetElements must remain safe-callable.");
+	}
+
+	static bool RequiresUnsafe (MethodInfo method)
+		=> method.GetCustomAttributesData ().Any (
+			attribute => attribute.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.RequiresUnsafeAttribute");
 
 	unsafe delegate ref T RefIndexer<T> (int index);
 

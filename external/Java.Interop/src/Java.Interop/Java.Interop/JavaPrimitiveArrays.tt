@@ -57,7 +57,7 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		public new unsafe <#= info.ManagedType #>* Elements {
+		public new <#= info.ManagedType #>* Elements {
 			get {return (<#= info.ManagedType #>*) ElementsPointer;}
 		}
 
