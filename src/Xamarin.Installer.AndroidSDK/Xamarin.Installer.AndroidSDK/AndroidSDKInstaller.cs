@@ -496,10 +496,11 @@ namespace Xamarin.Installer.AndroidSDK
 					continue;
 
 				bool haveInvalidArchives = false;
+				bool checkPlatform = !(c.Info is AndroidComponentInfoSystemImage);
 				foreach (Archive a in c.Archives) {
-					if (a == null || !a.WasDownloaded || a.IsInstallable ())
+					if (a == null || !a.WasDownloaded || a.IsInstallable (checkPlatform: checkPlatform))
 						continue;
-					if (IgnoreArchiveChecksumErrors && a.IsInstallable (verifyChecksum: false)) {
+					if (IgnoreArchiveChecksumErrors && a.IsInstallable (verifyChecksum: false, checkPlatform: checkPlatform)) {
 						Logger.Action ($"Continuing installation of Android SDK archive '{a.Url}' despite a checksum verification failure because the checksum override is enabled. The archive may be damaged or modified.");
 						continue;
 					}
