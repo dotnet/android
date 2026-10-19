@@ -309,9 +309,8 @@
 
   <!--
     The TypeMap generator has dynamic outputs: the set of generated assemblies
-    and Java files comes from scanning references.  FileWrites entries in the
-    generating targets are correct for builds that run those targets, but
-    skipped targets do not execute their ItemGroup bodies on no-op builds.
+    and Java files comes from scanning references.  The ItemGroup in a skipped
+    generating target cannot reconstruct the task's dynamic output items.
     Re-emit the previous dynamic outputs before MSBuild's IncrementalClean
     reads FileWrites, otherwise those outputs look orphaned and can be deleted
     before packaging target inputs are evaluated.
@@ -501,8 +500,8 @@
   </Target>
 
   <!--
-    _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
-    In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
+    _GenerateJavaStubs: retains the hook used by Microsoft.Android.Sdk.BuildOrder.targets.
+    TypeMap generation already happened in _GenerateTrimmableTypeMap,
     so this target only handles the manifest and runtime providers.
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
 

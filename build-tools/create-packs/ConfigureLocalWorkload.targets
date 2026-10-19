@@ -45,7 +45,7 @@
 
   <Target Name="CreateLocalRuntimeLists"
       DependsOnTargets="_CreateLocalRuntimeListsInputs"
-      Inputs="$(MSBuildAllProjects);@(_RuntimeListInputs)"
+      Inputs="$(MSBuildAllProjects);$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj;@(_RuntimeListInputs)"
       Outputs="@(_RuntimeListOutputs);@(_ManagedRuntimeListOutputs)">
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_RuntimeListOutputs.AndroidApiLevel) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_ManagedRuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_ManagedRuntimeListOutputs.AndroidApiLevel) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
