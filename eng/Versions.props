@@ -1,16 +1,16 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>12.0.100-alpha.1.26509.101</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>12.0.100-alpha.1.26516.101</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>12.0.0-alpha.1.26509.101</MicrosoftNETILLinkPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>12.0.0-alpha.1.26509.101</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>12.0.0-alpha.1.26516.101</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>12.0.0-alpha.1.26516.101</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <!-- Last version built for net10.0, needed for CI steps that only have the .NET 10 SDK installed (e.g., BAR manifest publishing) -->
     <MicrosoftDotNetBuildTasksFeedPackageVersionNet10>11.0.0-beta.26060.102</MicrosoftDotNetBuildTasksFeedPackageVersionNet10>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>12.0.0-beta.26509.101</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>12.0.100-alpha.1.26509.101</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26509.101</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>12.0.0-beta.26516.101</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>12.0.100-alpha.1.26516.101</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26516.101</MicrosoftDotNetCecilPackageVersion>
     <MSTestPackageVersion>4.6.0-preview.26509.15</MSTestPackageVersion>
     <SystemIOHashingPackageVersion>10.0.12</SystemIOHashingPackageVersion>
     <SystemReflectionMetadataPackageVersion>11.0.0-preview.1.26104.118</SystemReflectionMetadataPackageVersion>
