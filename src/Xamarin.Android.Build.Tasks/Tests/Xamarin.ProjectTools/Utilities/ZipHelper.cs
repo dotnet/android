@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.ProjectTools
 {
@@ -12,18 +11,17 @@ namespace Xamarin.ProjectTools
 		{
 			if (!File.Exists (zipFile))
 				return null;
-			return ZipArchive.Open (zipFile, FileMode.Open);
+			return ZipFile.OpenRead (zipFile);
 		}
 
 		public static byte [] ReadFileFromZip (ZipArchive zip, string filename)
 		{
-			if (zip.ContainsEntry (filename)) {
-				var entry = zip.FirstOrDefault (x => x.FullName == filename);
-				if (entry != null) {
-					using (var ms = new MemoryStream ()) {
-						entry.Extract (ms);
-						return ms.ToArray ();
-					}
+			var entry = zip.GetEntry (filename);
+			if (entry != null) {
+				using (var stream = entry.Open ())
+				using (var ms = new MemoryStream ()) {
+					stream.CopyTo (ms);
+					return ms.ToArray ();
 				}
 			}
 			return null;
@@ -31,10 +29,9 @@ namespace Xamarin.ProjectTools
 
 		public static byte [] ReadFileFromZip (string zipFile, string filename)
 		{
-			using (var zip = ZipArchive.Open (zipFile, FileMode.Open)) {
+			using (var zip = ZipFile.OpenRead (zipFile)) {
 				return ReadFileFromZip (zip, filename);
 			}
 		}
 	}
 }
-
