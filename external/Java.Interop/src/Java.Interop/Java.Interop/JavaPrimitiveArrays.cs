@@ -32,16 +32,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Boolean))
+			: base (elements, elementCount, sizeof (Boolean))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Boolean* Elements {
-			get {return (Boolean*) base.Elements;}
+			get {return (Boolean*) ElementsPointer;}
 		}
 
-		public ref Boolean this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Boolean this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -92,14 +98,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniBooleanArrayElements GetElements ()
+		public new JniBooleanArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
-			return new JniBooleanArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
+				return new JniBooleanArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (Boolean item)
@@ -224,16 +232,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (SByte))
+			: base (elements, elementCount, sizeof (SByte))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe SByte* Elements {
-			get {return (SByte*) base.Elements;}
+			get {return (SByte*) ElementsPointer;}
 		}
 
-		public ref SByte this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref SByte this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -284,14 +298,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniSByteArrayElements GetElements ()
+		public new JniSByteArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
-			return new JniSByteArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
+				return new JniSByteArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (SByte item)
@@ -416,16 +432,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Char))
+			: base (elements, elementCount, sizeof (Char))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Char* Elements {
-			get {return (Char*) base.Elements;}
+			get {return (Char*) ElementsPointer;}
 		}
 
-		public ref Char this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Char this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -476,14 +498,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniCharArrayElements GetElements ()
+		public new JniCharArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
-			return new JniCharArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
+				return new JniCharArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (Char item)
@@ -608,16 +632,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int16))
+			: base (elements, elementCount, sizeof (Int16))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Int16* Elements {
-			get {return (Int16*) base.Elements;}
+			get {return (Int16*) ElementsPointer;}
 		}
 
-		public ref Int16 this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Int16 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -668,14 +698,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniInt16ArrayElements GetElements ()
+		public new JniInt16ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
-			return new JniInt16ArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
+				return new JniInt16ArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (Int16 item)
@@ -800,16 +832,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int32))
+			: base (elements, elementCount, sizeof (Int32))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Int32* Elements {
-			get {return (Int32*) base.Elements;}
+			get {return (Int32*) ElementsPointer;}
 		}
 
-		public ref Int32 this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Int32 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -860,14 +898,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniInt32ArrayElements GetElements ()
+		public new JniInt32ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
-			return new JniInt32ArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
+				return new JniInt32ArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (Int32 item)
@@ -992,16 +1032,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int64))
+			: base (elements, elementCount, sizeof (Int64))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Int64* Elements {
-			get {return (Int64*) base.Elements;}
+			get {return (Int64*) ElementsPointer;}
 		}
 
-		public ref Int64 this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Int64 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -1052,14 +1098,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniInt64ArrayElements GetElements ()
+		public new JniInt64ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
-			return new JniInt64ArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
+				return new JniInt64ArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (Int64 item)
@@ -1184,16 +1232,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Single))
+			: base (elements, elementCount, sizeof (Single))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Single* Elements {
-			get {return (Single*) base.Elements;}
+			get {return (Single*) ElementsPointer;}
 		}
 
-		public ref Single this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Single this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -1244,14 +1298,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniSingleArrayElements GetElements ()
+		public new JniSingleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
-			return new JniSingleArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
+				return new JniSingleArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (Single item)
@@ -1376,16 +1432,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Double))
+			: base (elements, elementCount, sizeof (Double))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Double* Elements {
-			get {return (Double*) base.Elements;}
+			get {return (Double*) ElementsPointer;}
 		}
 
-		public ref Double this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref Double this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -1436,14 +1498,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniDoubleArrayElements GetElements ()
+		public new JniDoubleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");
-			return new JniDoubleArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");
+				return new JniDoubleArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (Double item)

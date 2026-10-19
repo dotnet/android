@@ -52,16 +52,22 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (<#= info.ManagedType #>))
+			: base (elements, elementCount, sizeof (<#= info.ManagedType #>))
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe <#= info.ManagedType #>* Elements {
-			get {return (<#= info.ManagedType #>*) base.Elements;}
+			get {return (<#= info.ManagedType #>*) ElementsPointer;}
 		}
 
-		public ref <#= info.ManagedType #> this [int index] {
+		/// <safety>
+		/// The caller must keep the underlying Java array and this element acquisition alive and
+		/// undisposed for every access through the returned reference. The reference must not be
+		/// used after the elements are released or disposed, including after leaving a using scope.
+		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// </safety>
+		public unsafe ref <#= info.ManagedType #> this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
@@ -112,14 +118,16 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe Jni<#= info.TypeModifier #>ArrayElements GetElements ()
+		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");
-			return new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements, Length);
+			unsafe {
+				var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");
+				return new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements, Length);
+			}
 		}
 
 		public override unsafe int IndexOf (<#= info.ManagedType #> item)
