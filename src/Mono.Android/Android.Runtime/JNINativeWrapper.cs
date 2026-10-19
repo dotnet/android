@@ -27,6 +27,7 @@ namespace Android.Runtime {
 		}
 
 		[RequiresDynamicCode ("This method uses System.Reflection.Emit to create a delegate at runtime.")]
+		[Obsolete ("JNINativeWrapper.CreateDelegate is obsolete and will be removed in .NET 12. Rebuild bindings with the current .NET for Android binding generator and use generated JNI callbacks.", error: true)]
 		public static Delegate CreateDelegate (Delegate dlg)
 		{
 			if (dlg == null)
