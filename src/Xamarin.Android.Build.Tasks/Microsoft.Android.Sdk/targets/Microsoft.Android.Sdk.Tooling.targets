@@ -35,14 +35,12 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         TargetPlatformVersion="$(TargetPlatformVersion)"
         AndroidApiLevel="$(AndroidApiLevel)"
-        AndroidApplication="$(AndroidApplication)"
         AndroidSdkPath="$(_AndroidSdkDirectory)"
         AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
         AotAssemblies="$(AotAssemblies)"
         Aapt2ToolPath="$(Aapt2ToolPath)"
         CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
         SequencePointsMode="$(_AndroidSequencePointsMode)"
-        ProjectFilePath="$(MSBuildProjectFullPath)"			
         LintToolPath="$(LintToolPath)"
         ZipAlignPath="$(ZipAlignToolPath)">
       <Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
