@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Include generated environment files from the later stages of the build.
-			var envBuilder = new EnvironmentBuilder ();
+			var envBuilder = new EnvironmentBuilder (escapeValues: false);
 			envBuilder.Read (Environments);
 
 			int assemblyNameWidth = 0;

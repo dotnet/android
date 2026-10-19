@@ -94,7 +94,20 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			  }
 			}
 			""");
-		File.WriteAllText (environmentPath, "BOOTSTRAP_VALUE=\u00e9\u65e5\nBOOTSTRAP_EMPTY=\nDOTNET_MODIFIABLE_ASSEMBLIES=Debug\ndebug.dotnet.log=gref\n");
+		string pathValue = """C:\app\config\settings.json""";
+		string quotedValue = """{"message":"say \"hello\"","path":"C:\\app"}""";
+		File.WriteAllLines (environmentPath, [
+			"BOOTSTRAP_VALUE=\u00e9\u65e5",
+			"BOOTSTRAP_EMPTY=",
+			$"BOOTSTRAP_PATH={pathValue}",
+			$"BOOTSTRAP_QUOTES={quotedValue}",
+			"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",
+			"debug.dotnet.log=gref",
+			$"debug.bootstrap.path={pathValue}",
+			$"debug.bootstrap.quotes={quotedValue}",
+			"debug.bootstrap.unicode=\u00e9\u65e5",
+			"debug.bootstrap.empty=",
+		]);
 		var libraries = new List<ITaskItem> ();
 		foreach (string name in new [] { "plain.so", "libprefixed.so", "libmanaged.dll.so" }) {
 			string libraryPath = Path.Combine (outputRoot, name);
@@ -125,9 +138,18 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		Assert.AreEqual (12, config.number_of_dso_cache_entries, "The 2/4/6-alias libraries must retain all cache entries.");
 		Assert.AreEqual (ignoreSplitConfigs ? 4 : 6, bootstrap.Preloads.IndexStride);
 		Assert.AreEqual (ignoreSplitConfigs ? 8 : 18, bootstrap.Preloads.Entries.Count);
-		Assert.AreEqual ("\u00e9\u65e5", bootstrap.EnvironmentVariables ["BOOTSTRAP_VALUE"]);
-		Assert.AreEqual ("", bootstrap.EnvironmentVariables ["BOOTSTRAP_EMPTY"]);
-		Assert.AreEqual (bootstrap.EnvironmentVariables.Count, config.environment_variable_count);
+		Assert.Multiple (() => {
+			Assert.AreEqual ("\u00e9\u65e5", bootstrap.EnvironmentVariables ["BOOTSTRAP_VALUE"]);
+			Assert.AreEqual ("", bootstrap.EnvironmentVariables ["BOOTSTRAP_EMPTY"]);
+			Assert.AreEqual (pathValue, bootstrap.EnvironmentVariables ["BOOTSTRAP_PATH"]);
+			Assert.AreEqual (quotedValue, bootstrap.EnvironmentVariables ["BOOTSTRAP_QUOTES"]);
+			Assert.AreEqual (bootstrap.EnvironmentVariables.Count, config.environment_variable_count);
+			Assert.AreEqual (pathValue, bootstrap.SystemProperties ["debug.bootstrap.path"]);
+			Assert.AreEqual (quotedValue, bootstrap.SystemProperties ["debug.bootstrap.quotes"]);
+			Assert.AreEqual ("\u00e9\u65e5", bootstrap.SystemProperties ["debug.bootstrap.unicode"]);
+			Assert.AreEqual ("", bootstrap.SystemProperties ["debug.bootstrap.empty"]);
+			Assert.AreEqual (bootstrap.SystemProperties.Count, config.system_property_count);
+		});
 		byte [] raw = File.ReadAllBytes (rawPath);
 		StringAssert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
 		StringAssert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));
