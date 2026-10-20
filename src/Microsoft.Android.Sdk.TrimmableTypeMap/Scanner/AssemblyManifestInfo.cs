@@ -16,5 +16,6 @@ internal sealed class AssemblyManifestInfo
 	public List<InstrumentationInfo> Instrumentations { get; } = [];
 	public List<SupportsGLTextureInfo> SupportsGLTextures { get; } = [];
 
+	public int ApplicationAttributeCount { get; set; }
 	public Dictionary<string, object?>? ApplicationProperties { get; set; }
 }

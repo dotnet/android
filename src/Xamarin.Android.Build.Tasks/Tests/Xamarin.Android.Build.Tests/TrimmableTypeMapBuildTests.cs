@@ -498,10 +498,18 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.CoreCLR, "AppCategory")]
 		[TestCase (AndroidRuntime.CoreCLR, "GwpAsan")]
 		[TestCase (AndroidRuntime.CoreCLR, "RequiredContentUriPermission")]
+		[TestCase (AndroidRuntime.CoreCLR, "UiOptions")]
+		[TestCase (AndroidRuntime.CoreCLR, "TypeApplicationConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "MixedApplicationConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "InstrumentationProperty")]
 		[TestCase (AndroidRuntime.NativeAOT, "BackupAgent")]
 		[TestCase (AndroidRuntime.NativeAOT, "AppCategory")]
 		[TestCase (AndroidRuntime.NativeAOT, "GwpAsan")]
 		[TestCase (AndroidRuntime.NativeAOT, "RequiredContentUriPermission")]
+		[TestCase (AndroidRuntime.NativeAOT, "UiOptions")]
+		[TestCase (AndroidRuntime.NativeAOT, "TypeApplicationConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "MixedApplicationConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "InstrumentationProperty")]
 		public void InvalidManifestAttributeFails (AndroidRuntime runtime, string invalidProperty)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -519,8 +527,25 @@ namespace Xamarin.Android.Build.Tests {
 				"BackupAgent" => "[Application (BackupAgent = typeof (InvalidBackupAgent))]",
 				"AppCategory" => "[Application (AppCategory = ApplicationCategories.Undefined)]",
 				"GwpAsan" => "[Application (GwpAsanMode = (GwpAsan) 99)]",
+				"UiOptions" => "[Application (UiOptions = (UiOptions) 99)]",
+				"MixedApplicationConflict" => "[Application]",
+				"TypeApplicationConflict" => "[Application]",
 				_ => "[Application]",
 			};
+			var assemblyAttributes = invalidProperty == "MixedApplicationConflict" ? "[assembly: Application]" : "";
+			var additionalApplication = invalidProperty == "TypeApplicationConflict"
+				? """
+					[Application]
+					public class AdditionalApplication : Application {}
+					"""
+				: "";
+			var additionalInstrumentation = invalidProperty == "InstrumentationProperty"
+				? """
+					[Instrumentation]
+					[Property ("instrumentation.property", Value = "instrumentation-property")]
+					public class InvalidInstrumentation : Instrumentation {}
+					"""
+				: "";
 			var activityAttribute = invalidProperty == "RequiredContentUriPermission"
 				? "[Activity (RequireContentUriPermissionFromCaller = (RequiredContentUriPermission) 99)]"
 				: "[Activity]";
@@ -531,6 +556,8 @@ namespace Xamarin.Android.Build.Tests {
 					using Android.Content.PM;
 					using Android.Runtime;
 
+					{{assemblyAttributes}}
+
 					namespace UnnamedProject;
 
 					{{applicationAttribute}}
@@ -538,6 +565,10 @@ namespace Xamarin.Android.Build.Tests {
 					{
 						public InvalidApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 					}
+
+					{{additionalApplication}}
+
+					{{additionalInstrumentation}}
 
 					{{activityAttribute}}
 					public class InvalidBackupAgent : Activity {}
@@ -547,11 +578,14 @@ namespace Xamarin.Android.Build.Tests {
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), $"{runtime} build should reject {invalidProperty}.");
-			var expectedError = invalidProperty == "BackupAgent"
-				? "must be a subclass of the type Android.App.Backup.BackupAgent"
-				: invalidProperty == "AppCategory"
-					? "Unsupported ApplicationCategories value 'Undefined'"
-					: $"Unsupported {invalidProperty} value '99'";
+			var expectedError = invalidProperty switch {
+				"BackupAgent" => "must be a subclass of the type Android.App.Backup.BackupAgent",
+				"AppCategory" => "Unsupported ApplicationCategories value 'Undefined'",
+				"TypeApplicationConflict" => "There can be only one type with an [Application] attribute",
+				"MixedApplicationConflict" => "Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.",
+				"InstrumentationProperty" => "unexpected element <property> found in <manifest><instrumentation>",
+				_ => $"Unsupported {invalidProperty} value '99'",
+			};
 			Assert.IsTrue (builder.LastBuildOutput.ContainsText (expectedError), $"Build output should contain '{expectedError}'.");
 		}
 

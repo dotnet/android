@@ -988,6 +988,7 @@ sealed class AssemblyIndex : IDisposable
 				}
 				break;
 			case "ApplicationAttribute":
+				info.ApplicationAttributeCount++;
 				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
 				foreach (var kvp in props) {
 					info.ApplicationProperties [kvp.Key] = kvp.Value;

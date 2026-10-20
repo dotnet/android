@@ -99,7 +99,7 @@ static class AndroidEnumConverter
 	public static string? UiOptionsToString (int value) => value switch {
 		0 => "none",
 		1 => "splitActionBarWhenNarrow",
-		_ => null,
+		_ => throw new ArgumentException ($"Unsupported UiOptions value '{value}'."),
 	};
 
 	public static string? RequiredContentUriPermissionToString (int value) => value switch {

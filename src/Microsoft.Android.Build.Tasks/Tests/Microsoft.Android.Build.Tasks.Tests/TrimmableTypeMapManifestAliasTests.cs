@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -107,5 +108,28 @@ public class TrimmableTypeMapManifestAliasTests
 		var generatedProvider = application.Element ("provider");
 		Assert.IsNotNull (generatedProvider);
 		Assert.AreEqual ("my.app.permission.READ", (string) generatedProvider.Attribute (android + "readPermission"));
+	}
+
+	[Test]
+	public void MultipleAssemblyApplicationAttributesAreRejected ()
+	{
+		var manifestGenerator = new ManifestGenerator {
+			PackageName = "my.app",
+			MinSdkVersion = "24",
+			TargetSdkVersion = "35",
+			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+		};
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
+			  <application />
+			</manifest>
+			""");
+		var assemblyInfo = new AssemblyManifestInfo {
+			ApplicationAttributeCount = 2,
+		};
+
+		var exception = Assert.Throws<InvalidOperationException> (
+			() => manifestGenerator.Generate (manifest, [], assemblyInfo));
+		Assert.AreEqual ("There can be only one [assembly:Application] attribute defined.", exception.Message);
 	}
 }

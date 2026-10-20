@@ -53,6 +53,7 @@ class ManifestGenerator
 			throw new InvalidOperationException ("Manifest document has no root element.");
 		}
 
+		ValidateApplicationDeclarations (allPeers, assemblyInfo);
 		EnsureManifestAttributes (manifest);
 		// Template component names must be resolved before compat-name rewriting.
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName);
@@ -162,6 +163,28 @@ class ManifestGenerator
 		ReplaceGeneratedPackageNameTokens (doc, PackageName, templateAttributes, generatedAttributes);
 
 		return (doc, providerNames);
+	}
+
+	internal static void ValidateApplicationDeclarations (
+		IReadOnlyList<JavaPeerInfo> allPeers,
+		AssemblyManifestInfo assemblyInfo)
+	{
+		if (assemblyInfo.ApplicationAttributeCount > 1) {
+			throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
+		}
+
+		var applicationPeers = allPeers
+			.Where (peer => peer.ComponentAttribute?.Kind == ComponentKind.Application)
+			.ToList ();
+		if (applicationPeers.Count > 1) {
+			throw new InvalidOperationException (
+				"There can be only one type with an [Application] attribute; found: " +
+				string.Join (", ", applicationPeers.Select (peer => peer.ManagedTypeName)));
+		}
+		if (assemblyInfo.ApplicationAttributeCount > 0 && applicationPeers.Count > 0) {
+			throw new InvalidOperationException (
+				"Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
+		}
 	}
 
 	static void ReplaceGeneratedPackageNameTokens (
