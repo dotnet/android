@@ -27,6 +27,34 @@ conversion and argument-state creation/cleanup. Primitive, string, and array
 conversion remain supported. `JavaObject` and `JavaException` maintain managed
 peers and their JNI reference ownership.
 
+## Native callback ownership
+
+`JniType.RegisterNativeMethods` retains the original array and its owner only after
+successful registration. Callers must not modify the array or its entries through
+any alias while its callbacks can be invoked. Only the latest successfully registered
+array is retained, so callers must not start another JNI registration on the same
+instance before successful unregistration. This safety requirement is not checked
+at runtime. Failed or partial JNI registration does not retain the supplied array;
+the caller must keep its delegates rooted until successful unregistration and
+completion of all callbacks. Registration errors propagate as exceptions without
+attempting to recover from or roll back partial native registration.
+
+Disposal unregisters callbacks before removing the runtime's owner root or releasing
+the JNI reference. Failed unregistration preserves those roots and the reference.
+Prevent new calls and wait for callbacks already running to finish before
+unregistering or disposing the owner.
+
+Direct `JniEnvironment.Types.RegisterNatives` calls do not retain callback roots
+after returning. Their callers must keep delegates or raw callback storage callable
+and rooted for as long as JNI can invoke them, including after failed or partial
+registration. Prevent new calls to the registered native methods before
+unregistration. Release callback storage only after unregistration succeeds and
+all callbacks already running have finished.
+
+`JniNativeMethod` name/signature storage must remain readable and NUL-terminated
+through registration. Its raw callback must match the JNI descriptor's ABI,
+including the environment and receiver/class arguments.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java

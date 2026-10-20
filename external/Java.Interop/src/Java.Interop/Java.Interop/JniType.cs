@@ -132,14 +132,18 @@ namespace Java.Interop {
 			return cachedType;
 		}
 
+		/// <remarks>
+		/// Prevent new calls to the registered native methods and wait for callbacks already
+		/// running to finish before disposing this type.
+		/// </remarks>
 		public void Dispose ()
 		{
 			if (!PeerReference.IsValid)
 				return;
-			if (registered)
-				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			if (methods != null)
 				UnregisterNativeMethods ();
+			if (registered)
+				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
@@ -172,30 +176,56 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-#pragma warning disable 0414
-		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
 		JniNativeMethodRegistration[]? methods;
-#pragma warning restore 0414
 
+		/// <remarks>
+		/// After successful registration, retains the original array without copying it.
+		/// A failed registration does not retain the supplied array, even if JNI installed
+		/// some callbacks before reporting the failure. Registration exceptions propagate
+		/// without attempting to roll back partial native registration.
+		/// </remarks>
+		/// <safety>
+		/// The caller must not start another JNI registration on this instance before
+		/// successful unregistration, including after a failed or partial JNI attempt.
+		/// This is not checked: only the latest successfully registered array is retained,
+		/// so registering again can allow earlier delegates to be collected while JNI still uses them.
+		/// Do not modify <paramref name="methods"/> or its entries through any alias during
+		/// this call. After successful registration, ownership of the array transfers to this
+		/// instance: do not modify it until successful unregistration and completion of all
+		/// callbacks. If registration fails, the caller must keep the delegates strongly
+		/// reachable until successful unregistration and completion of all callbacks.
+		/// The caller must ensure each Marshaler delegate in <paramref name="methods"/> has
+		/// parameter and return types, calling convention, and marshaling attributes compatible
+		/// with its JNI method descriptor, including the leading JNIEnv and receiver/class pointers.
+		/// Managed by-ref parameters must not be used to receive JNI scalar values.
+		/// This method retains delegates but does not validate their ABI compatibility.
+		/// </safety>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
+		public unsafe void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
 			AssertValid ();
 
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
 
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
-			// Prevents method delegates from being GC'd so long as this type remains
+			unsafe {
+				// SAFETY: Caller guarantees callback ABI and roots delegates on failure; success retains the array.
+				JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
+			}
 			this.methods = methods;
 			RegisterWithRuntime ();
 		}
 
+		/// <remarks>
+		/// Prevent new calls to the registered native methods and wait for callbacks already
+		/// running to finish before calling this method.
+		/// </remarks>
 		public void UnregisterNativeMethods ()
 		{
 			AssertValid ();
 
 			JniEnvironment.Types.UnregisterNatives (PeerReference);
+			methods = null;
 		}
 
 		public JniMethodInfo GetConstructor (string signature)

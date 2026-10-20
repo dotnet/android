@@ -401,8 +401,9 @@ namespace Java.Interop
 		{
 			List<IDisposable> values;
 			lock (TrackedInstances) {
+				// Dispose untracks each owner only after successful unregistration.
+				// Pre-clearing would drop callback roots if unregistration fails.
 				values = new List<IDisposable> (TrackedInstances.Values);
-				TrackedInstances.Clear ();
 			}
 
 			foreach (var d in values)
