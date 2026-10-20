@@ -216,12 +216,35 @@ namespace Java.Interop
 				return value.Replace ('.', '/');
 			}
 
+			/// <safety>
+			/// The caller must keep the Marshaler delegates in <paramref name="methods"/> strongly
+			/// reachable for as long as JNI can invoke their callbacks, including after a failed
+			/// or partially completed registration. Returning from this call does not end that lifetime.
+			/// Release those roots only after successful unregistration and completion of all
+			/// in-flight callbacks.
+			/// Each delegate's parameter and return types, calling convention, and marshaling
+			/// attributes must match its JNI descriptor, including the leading JNIEnv and
+			/// receiver/class pointers. JNI scalar values must not be interpreted as managed references.
+			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
+			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
 			{
-				RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				unsafe {
+					// SAFETY: Caller supplies JNI-compatible delegates and keeps them rooted while JNI can invoke them.
+					RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				}
 			}
 
+			/// <safety>
+			/// The caller must keep the Marshaler delegates in the first <paramref name="numMethods"/>
+			/// entries of <paramref name="methods"/> strongly reachable for as long as JNI can invoke
+			/// their callbacks, including after a failed or partially completed registration.
+			/// Returning from this call does not end that lifetime. Release those roots only after
+			/// successful unregistration and completion of all in-flight callbacks.
+			/// Each registered delegate's parameter and return types, calling convention, and
+			/// marshaling attributes must match its JNI descriptor, including the leading JNIEnv
+			/// and receiver/class pointers. JNI scalar values must not be interpreted as managed references.
+			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
 			{
@@ -271,16 +294,21 @@ namespace Java.Interop
 						unmanagedStrings [i * 2] = name;
 						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
-						natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
+						unsafe {
+							// SAFETY: UTF-8 allocations remain live through registration; caller guarantees the delegate ABI.
+							natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
+						}
 					}
-					RegisterNatives (type, natives);
-					// Keep the Marshaler delegates alive at least until JNI has consumed the function pointers.
-					GC.KeepAlive (methods);
+					unsafe {
+						// SAFETY: Names/signatures stay allocated until finally; caller guarantees callback ABI and lifetime.
+						RegisterNatives (type, natives);
+					}
 				} finally {
 					for (int i = 0; i < unmanagedStrings.Length; ++i) {
 						if (unmanagedStrings [i] != IntPtr.Zero)
 							Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
 					}
+					GC.KeepAlive (methods);
 				}
 			}
 
@@ -289,6 +317,15 @@ namespace Java.Interop
 			/// with raw function pointers and UTF-8 name/signature pointers.
 			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
 			/// </summary>
+			/// <safety>
+			/// Each method's name and signature must address readable NUL-terminated UTF-8 memory
+			/// through this call. Each callback must match its JNI descriptor's ABI, including
+			/// the leading JNIEnv and receiver/class pointers. Keep callback storage callable and
+			/// rooted for as long as JNI can invoke it, including after failed or partial registration.
+			/// Prevent new calls to the registered native methods before unregistration. Release
+			/// callback storage only after unregistration succeeds and all callbacks already
+			/// running have finished.
+			/// </safety>
 			public static unsafe void RegisterNatives (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
 			{
 				if (!type.IsValid)
@@ -296,10 +333,14 @@ namespace Java.Interop
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;
-				fixed (JniNativeMethod* methodsPtr = methods) {
-					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
-						(void*) (*((JNIEnv**)env))->RegisterNatives;
-					r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+				unsafe {
+					// SAFETY: The runtime supplies this thread's JNIEnv and the span is pinned for the call.
+					// Caller guarantees valid name/signature storage and callback ABI and lifetime.
+					fixed (JniNativeMethod* methodsPtr = methods) {
+						var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
+							(void*) (*((JNIEnv**)env))->RegisterNatives;
+						r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+					}
 				}
 
 				// Surface (and clear) any pending Java exception raised by JNI::RegisterNatives()
