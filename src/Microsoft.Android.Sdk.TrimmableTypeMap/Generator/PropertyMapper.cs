@@ -170,7 +170,13 @@ static class PropertyMapper
 		new ("TargetProcesses", "targetProcesses"),
 	];
 
-	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false, int targetSdkVersion = 0)
+	internal static void ApplyMappings (
+		XElement element,
+		IReadOnlyDictionary<string, object?> properties,
+		PropertyMapping[] mappings,
+		bool skipExisting = false,
+		int targetSdkVersion = 0,
+		ISet<XAttribute>? writtenAttributes = null)
 	{
 		foreach (var m in mappings) {
 			if (!properties.TryGetValue (m.PropertyName, out var value) || value is null) {
@@ -182,21 +188,33 @@ static class PropertyMapper
 			switch (m.Kind) {
 			case MappingKind.String when value is string s && !string.IsNullOrEmpty (s):
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, s);
+				AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				break;
 			case MappingKind.Bool when value is bool b:
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, b ? "true" : "false");
+				AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				break;
 			case MappingKind.Number:
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, FormatNumber (value));
+				AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				break;
 			case MappingKind.Enum when m.EnumConverter is not null:
 				int intValue = value switch { int i => i, long l => (int)l, short s => s, byte b => b, _ => 0 };
 				var strValue = m.EnumConverter (intValue, targetSdkVersion);
 				if (strValue is not null) {
 					element.SetAttributeValue (AndroidNs + m.XmlAttributeName, strValue);
+					AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				}
 				break;
 			}
+		}
+	}
+
+	static void AddWrittenAttribute (XElement element, string xmlAttributeName, ISet<XAttribute>? writtenAttributes)
+	{
+		var attribute = element.Attribute (AndroidNs + xmlAttributeName);
+		if (attribute is not null) {
+			writtenAttributes?.Add (attribute);
 		}
 	}
 

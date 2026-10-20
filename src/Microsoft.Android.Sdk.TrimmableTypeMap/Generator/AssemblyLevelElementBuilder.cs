@@ -194,13 +194,18 @@ static class AssemblyLevelElementBuilder
 		XElement app,
 		IReadOnlyDictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
-		Action<int, string>? warn = null)
+		Action<int, string>? warn = null,
+		ISet<XAttribute>? writtenAttributes = null)
 	{
-		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings);
+		PropertyMapper.ApplyMappings (
+			app,
+			properties,
+			PropertyMapper.ApplicationPropertyMappings,
+			writtenAttributes: writtenAttributes);
 
 		// BackupAgent and ManageSpaceActivity are Type properties — resolve managed type names to JNI names
-		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent", warn);
-		ApplyTypeProperty (app, properties, allPeers, "ManageSpaceActivity", "manageSpaceActivity", warn);
+		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent", warn, writtenAttributes);
+		ApplyTypeProperty (app, properties, allPeers, "ManageSpaceActivity", "manageSpaceActivity", warn, writtenAttributes);
 	}
 
 	static void ApplyTypeProperty (
@@ -209,7 +214,8 @@ static class AssemblyLevelElementBuilder
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		string propertyName,
 		string xmlAttrName,
-		Action<int, string>? warn)
+		Action<int, string>? warn,
+		ISet<XAttribute>? writtenAttributes)
 	{
 		if (!properties.TryGetValue (propertyName, out var value) || value is not string managedName || managedName.Length == 0) {
 			return;
@@ -222,6 +228,10 @@ static class AssemblyLevelElementBuilder
 					$"The Type '{peer.ManagedTypeName}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.");
 			}
 			app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
+			var attribute = app.Attribute (AndroidNs + xmlAttrName);
+			if (attribute is not null) {
+				writtenAttributes?.Add (attribute);
+			}
 			return;
 		}
 

@@ -242,16 +242,29 @@ static class ComponentElementBuilder
 		return hasAttribute ? element : null;
 	}
 
-	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer, int targetSdkVersion = 0)
+	internal static void UpdateApplicationElement (
+		XElement app,
+		JavaPeerInfo peer,
+		int targetSdkVersion = 0,
+		ISet<XAttribute>? writtenAttributes = null)
 	{
 		string jniName = JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName);
 		app.SetAttributeValue (AttName, jniName);
+		var nameAttribute = app.Attribute (AttName);
+		if (nameAttribute is not null) {
+			writtenAttributes?.Add (nameAttribute);
+		}
 
 		var component = peer.ComponentAttribute;
 		if (component is null) {
 			return;
 		}
-		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings, targetSdkVersion: targetSdkVersion);
+		PropertyMapper.ApplyMappings (
+			app,
+			component.Properties,
+			PropertyMapper.ApplicationElementMappings,
+			targetSdkVersion: targetSdkVersion,
+			writtenAttributes: writtenAttributes);
 		foreach (var meta in component.MetaData) {
 			app.Add (CreateMetaDataElement (meta));
 		}

@@ -56,9 +56,8 @@ class ManifestGenerator
 		EnsureManifestAttributes (manifest);
 		// Template component names must be resolved before compat-name rewriting.
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName);
-		var templateAttributes = doc.Descendants ()
-			.Attributes ()
-			.ToDictionary (attribute => attribute, attribute => attribute.Value);
+		var templateAttributes = new HashSet<XAttribute> (doc.Descendants ().Attributes ());
+		var generatedAttributes = new HashSet<XAttribute> ();
 		var app = EnsureApplicationElement (manifest);
 		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
 
@@ -68,7 +67,12 @@ class ManifestGenerator
 
 		// Apply assembly-level [Application] properties
 		if (assemblyInfo.ApplicationProperties is not null) {
-			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers, Warn);
+			AssemblyLevelElementBuilder.ApplyApplicationProperties (
+				app,
+				assemblyInfo.ApplicationProperties,
+				allPeers,
+				Warn,
+				generatedAttributes);
 		}
 		AssemblyLevelElementBuilder.AddUsesLibraries (app, assemblyInfo.UsesLibraries);
 
@@ -96,8 +100,13 @@ class ManifestGenerator
 
 			// Skip Application types (handled separately via assembly-level attribute)
 			if (peer.ComponentAttribute.Kind == ComponentKind.Application) {
-				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue);
-				AssemblyLevelElementBuilder.ApplyApplicationProperties (app, peer.ComponentAttribute.Properties, allPeers, Warn);
+				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue, generatedAttributes);
+				AssemblyLevelElementBuilder.ApplyApplicationProperties (
+					app,
+					peer.ComponentAttribute.Properties,
+					allPeers,
+					Warn,
+					generatedAttributes);
 				continue;
 			}
 
@@ -150,7 +159,7 @@ class ManifestGenerator
 
 		// Apply manifest placeholders
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
-		ReplaceGeneratedPackageNameTokens (doc, PackageName, templateAttributes);
+		ReplaceGeneratedPackageNameTokens (doc, PackageName, templateAttributes, generatedAttributes);
 
 		return (doc, providerNames);
 	}
@@ -158,10 +167,11 @@ class ManifestGenerator
 	static void ReplaceGeneratedPackageNameTokens (
 		XDocument doc,
 		string packageName,
-		IReadOnlyDictionary<XAttribute, string> templateAttributes)
+		ISet<XAttribute> templateAttributes,
+		ISet<XAttribute> generatedAttributes)
 	{
 		foreach (var attribute in doc.Descendants ().Attributes ()) {
-			if (templateAttributes.TryGetValue (attribute, out var templateValue) && attribute.Value == templateValue) {
+			if (templateAttributes.Contains (attribute) && !generatedAttributes.Contains (attribute)) {
 				continue;
 			}
 			if (attribute.Value.Contains ("@PACKAGE_NAME@", StringComparison.Ordinal)) {

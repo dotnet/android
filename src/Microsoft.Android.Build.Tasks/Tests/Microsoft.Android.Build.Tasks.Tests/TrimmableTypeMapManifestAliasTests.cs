@@ -81,9 +81,16 @@ public class TrimmableTypeMapManifestAliasTests
 		};
 		var manifest = XDocument.Parse ("""
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
-			  <application android:permission="@PACKAGE_NAME@.template.permission" />
+			  <application
+			    android:description="@PACKAGE_NAME@.template.description"
+			    android:permission="@PACKAGE_NAME@.permission.READ" />
 			</manifest>
 			""");
+		var assemblyInfo = new AssemblyManifestInfo {
+			ApplicationProperties = new Dictionary<string, object?> {
+				["Permission"] = "@PACKAGE_NAME@.permission.READ",
+			},
+		};
 		var manifestGenerator = new ManifestGenerator {
 			PackageName = "my.app",
 			MinSdkVersion = "24",
@@ -91,11 +98,12 @@ public class TrimmableTypeMapManifestAliasTests
 			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
 		};
 
-		var (document, _) = manifestGenerator.Generate (manifest, [provider], new AssemblyManifestInfo ());
+		var (document, _) = manifestGenerator.Generate (manifest, [provider], assemblyInfo);
 		XNamespace android = "http://schemas.android.com/apk/res/android";
 		var application = document.Root?.Element ("application");
 		Assert.IsNotNull (application);
-		Assert.AreEqual ("@PACKAGE_NAME@.template.permission", (string) application.Attribute (android + "permission"));
+		Assert.AreEqual ("@PACKAGE_NAME@.template.description", (string) application.Attribute (android + "description"));
+		Assert.AreEqual ("my.app.permission.READ", (string) application.Attribute (android + "permission"));
 		var generatedProvider = application.Element ("provider");
 		Assert.IsNotNull (generatedProvider);
 		Assert.AreEqual ("my.app.permission.READ", (string) generatedProvider.Attribute (android + "readPermission"));

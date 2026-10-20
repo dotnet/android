@@ -195,7 +195,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.NativeAOT)]
 		public void ManifestAttributesAreGeneratedForTrimmableComponents (AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -203,6 +203,7 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
 			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("TrimMode", "full");
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
@@ -404,6 +405,16 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("parity", (string) typeInstrumentation.Attribute (android + "targetProcesses"));
 			Assert.AreEqual ("@drawable/instrumentation_round", (string) typeInstrumentation.Attribute (android + "roundIcon"));
 			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				var linkedAssembly = Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
+				FileAssert.Exists (linkedAssembly);
+				using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
+				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
+					"Type-level Application.BackupAgent should preserve the referenced type through trimming.");
+				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
+					"Type-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
+			}
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
