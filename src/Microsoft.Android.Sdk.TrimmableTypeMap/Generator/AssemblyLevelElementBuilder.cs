@@ -158,10 +158,13 @@ static class AssemblyLevelElementBuilder
 				manifest.Add (new XElement ("supports-gl-texture", new XAttribute (AttName, gl.Name)));
 			}
 		}
+	}
 
+	internal static void AddInstrumentations (XElement manifest, IEnumerable<InstrumentationInfo> instrumentations)
+	{
 		var existingInstrumentations = new HashSet<string> (
 			manifest.Descendants ("instrumentation").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
-		foreach (var instrumentation in info.Instrumentations) {
+		foreach (var instrumentation in instrumentations) {
 			if (string.IsNullOrEmpty (instrumentation.Name)) {
 				continue;
 			}
@@ -258,7 +261,7 @@ static class AssemblyLevelElementBuilder
 			(assemblyName is null || peer.AssemblyName == assemblyName));
 	}
 
-	static bool IsSubclassOf (JavaPeerInfo peer, string baseJavaName, IReadOnlyList<JavaPeerInfo> allPeers)
+	internal static bool IsSubclassOf (JavaPeerInfo peer, string baseJavaName, IReadOnlyList<JavaPeerInfo> allPeers)
 	{
 		var currentBase = peer.BaseJavaName;
 		var visited = new HashSet<string> (StringComparer.Ordinal);

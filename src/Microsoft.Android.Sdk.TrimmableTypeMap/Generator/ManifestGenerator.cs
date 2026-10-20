@@ -76,6 +76,7 @@ class ManifestGenerator
 				generatedAttributes);
 		}
 		AssemblyLevelElementBuilder.AddUsesLibraries (app, assemblyInfo.UsesLibraries);
+		AssemblyLevelElementBuilder.AddInstrumentations (manifest, assemblyInfo.Instrumentations);
 
 		var existingTypes = new HashSet<string> (
 			app.Descendants ()
@@ -176,6 +177,12 @@ class ManifestGenerator
 		var applicationPeers = allPeers
 			.Where (peer => peer.ComponentAttribute?.Kind == ComponentKind.Application)
 			.ToList ();
+		foreach (var peer in applicationPeers) {
+			if (!AssemblyLevelElementBuilder.IsSubclassOf (peer, "android/app/Application", allPeers)) {
+				throw new InvalidOperationException (
+					$"Found [Application] on type {peer.ManagedTypeName}.  [Application] can only be used on subclasses of Application.");
+			}
+		}
 		if (applicationPeers.Count > 1) {
 			throw new InvalidOperationException (
 				"There can be only one type with an [Application] attribute; found: " +

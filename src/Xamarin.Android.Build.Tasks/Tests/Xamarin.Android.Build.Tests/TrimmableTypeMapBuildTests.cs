@@ -232,6 +232,7 @@ namespace Xamarin.Android.Build.Tests {
 
 					[assembly: Instrumentation (Name = "assembly.instrumentation", TargetPackage = "assembly.target", RoundIcon = "@drawable/assembly_round")]
 					[assembly: Instrumentation (Name = "assembly.generated", TargetPackage = "assembly.generated.target", RoundIcon = "@drawable/assembly_round")]
+					[assembly: Instrumentation (Name = "shared.instrumentation", TargetPackage = "assembly.shared.target", RoundIcon = "@drawable/assembly_round")]
 					[assembly: UsesLibrary (Name = "application.library", Required = true)]
 
 					namespace UnnamedProject;
@@ -289,7 +290,7 @@ namespace Xamarin.Android.Build.Tests {
 						public override int Update (Android.Net.Uri? uri, ContentValues? values, string? selection, string[]? selectionArgs) => 0;
 					}
 
-					[Instrumentation (RoundIcon = "@drawable/instrumentation_round", TargetProcesses = "parity")]
+					[Instrumentation (Name = "shared.instrumentation", RoundIcon = "@drawable/instrumentation_round", TargetProcesses = "parity")]
 					[MetaData ("instrumentation.metadata", Value = "instrumentation-value")]
 					public class ParityInstrumentation : Instrumentation {}
 
@@ -401,7 +402,15 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("assembly.generated.target", (string) generatedInstrumentation.Attribute (android + "targetPackage"));
 			Assert.AreEqual ("@drawable/assembly_round", (string) generatedInstrumentation.Attribute (android + "roundIcon"));
 
-			var typeInstrumentation = root.Elements ("instrumentation").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityInstrumentation", StringComparison.Ordinal));
+			var sharedInstrumentations = root.Elements ("instrumentation")
+				.Where (element => (string) element.Attribute (android + "name") == "shared.instrumentation")
+				.ToList ();
+			Assert.AreEqual (2, sharedInstrumentations.Count);
+			var assemblySharedInstrumentation = sharedInstrumentations.Single (
+				element => (string) element.Attribute (android + "targetPackage") == "assembly.shared.target");
+			Assert.AreEqual ("assembly.shared.target", (string) assemblySharedInstrumentation.Attribute (android + "targetPackage"));
+			Assert.AreEqual ("@drawable/assembly_round", (string) assemblySharedInstrumentation.Attribute (android + "roundIcon"));
+			var typeInstrumentation = sharedInstrumentations.Single (element => element.Attribute (android + "targetProcesses") is not null);
 			Assert.AreEqual ("parity", (string) typeInstrumentation.Attribute (android + "targetProcesses"));
 			Assert.AreEqual ("@drawable/instrumentation_round", (string) typeInstrumentation.Attribute (android + "roundIcon"));
 			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
@@ -502,6 +511,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.CoreCLR, "TypeApplicationConflict")]
 		[TestCase (AndroidRuntime.CoreCLR, "MixedApplicationConflict")]
 		[TestCase (AndroidRuntime.CoreCLR, "InstrumentationProperty")]
+		[TestCase (AndroidRuntime.CoreCLR, "ApplicationBaseType")]
 		[TestCase (AndroidRuntime.NativeAOT, "BackupAgent")]
 		[TestCase (AndroidRuntime.NativeAOT, "AppCategory")]
 		[TestCase (AndroidRuntime.NativeAOT, "GwpAsan")]
@@ -510,6 +520,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.NativeAOT, "TypeApplicationConflict")]
 		[TestCase (AndroidRuntime.NativeAOT, "MixedApplicationConflict")]
 		[TestCase (AndroidRuntime.NativeAOT, "InstrumentationProperty")]
+		[TestCase (AndroidRuntime.NativeAOT, "ApplicationBaseType")]
 		public void InvalidManifestAttributeFails (AndroidRuntime runtime, string invalidProperty)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -530,6 +541,7 @@ namespace Xamarin.Android.Build.Tests {
 				"UiOptions" => "[Application (UiOptions = (UiOptions) 99)]",
 				"MixedApplicationConflict" => "[Application]",
 				"TypeApplicationConflict" => "[Application]",
+				"ApplicationBaseType" => "",
 				_ => "[Application]",
 			};
 			var assemblyAttributes = invalidProperty == "MixedApplicationConflict" ? "[assembly: Application]" : "";
@@ -544,6 +556,12 @@ namespace Xamarin.Android.Build.Tests {
 					[Instrumentation]
 					[Property ("instrumentation.property", Value = "instrumentation-property")]
 					public class InvalidInstrumentation : Instrumentation {}
+					"""
+				: "";
+			var invalidApplicationType = invalidProperty == "ApplicationBaseType"
+				? """
+					[Application]
+					public class InvalidApplicationType : Activity {}
 					"""
 				: "";
 			var activityAttribute = invalidProperty == "RequiredContentUriPermission"
@@ -570,6 +588,8 @@ namespace Xamarin.Android.Build.Tests {
 
 					{{additionalInstrumentation}}
 
+					{{invalidApplicationType}}
+
 					{{activityAttribute}}
 					public class InvalidBackupAgent : Activity {}
 					""",
@@ -584,6 +604,7 @@ namespace Xamarin.Android.Build.Tests {
 				"TypeApplicationConflict" => "There can be only one type with an [Application] attribute",
 				"MixedApplicationConflict" => "Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.",
 				"InstrumentationProperty" => "unexpected element <property> found in <manifest><instrumentation>",
+				"ApplicationBaseType" => "[Application] can only be used on subclasses of Application.",
 				_ => $"Unsupported {invalidProperty} value '99'",
 			};
 			Assert.IsTrue (builder.LastBuildOutput.ContainsText (expectedError), $"Build output should contain '{expectedError}'.");
