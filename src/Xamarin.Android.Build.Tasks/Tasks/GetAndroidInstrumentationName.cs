@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ManifestFile { get; set; } = "";
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		/// <summary>
 		/// Set when the application was already found to have no launchable
 		/// &lt;activity&gt;, in which case a missing &lt;instrumentation&gt; element
@@ -29,7 +31,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
+			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths));
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
 
 			var instrumentation = manifest.Document?.Root?.Element ("instrumentation");

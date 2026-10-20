@@ -12,6 +12,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		string temp;
 		string manifest;
+		string [] referenceAssemblyPaths;
 
 		[SetUp]
 		public void Setup ()
@@ -24,9 +25,9 @@ namespace Xamarin.Android.Build.Tests
 			var references = CreateFauxReferencesDirectory (Path.Combine (tempDirectoryName, "references"), new [] {
 				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0", Stable = true },
 			});
-			MonoAndroidHelper.RefreshSupportedVersions (new [] {
+			referenceAssemblyPaths = new [] {
 				Path.Combine (references, "MonoAndroid"),
-			});
+			};
 		}
 
 		[TearDown]
@@ -48,6 +49,7 @@ namespace Xamarin.Android.Build.Tests
 
 		GetAndroidInstrumentationName CreateTask (List<BuildErrorEventArgs> errors, bool noLaunchableActivity = false) =>
 			new GetAndroidInstrumentationName {
+				ReferenceAssemblyPaths = referenceAssemblyPaths,
 				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
 				ManifestFile = manifest,
 				NoLaunchableActivity = noLaunchableActivity,

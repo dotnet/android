@@ -32,6 +32,10 @@ namespace Xamarin.Android.Tasks
 
 		public bool AotAssemblies { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
+		AndroidVersions SupportedVersions => MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+
 		[Output]
 		public string? AndroidApiLevel { get; set; }
 
@@ -185,7 +189,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode ?? "");
 			AndroidSequencePointsMode = mode.ToString ();
 
-			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
+			AndroidApiLevelName = SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -236,7 +240,7 @@ namespace Xamarin.Android.Tasks
 
 		int GetMaxStableApiLevel ()
 		{
-			var stableVersion = MonoAndroidHelper.SupportedVersions.MaxStableVersion;
+			var stableVersion = SupportedVersions.MaxStableVersion;
 			if (stableVersion is null)
 				throw new ArgumentNullException ("MaxStableVersion");
 			return stableVersion.ApiLevel;

@@ -16,9 +16,11 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ManifestFile { get; set; } = "";
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		public override bool RunTask ()
 		{
-			ManifestDocument manifest = new ManifestDocument (ManifestFile);
+			ManifestDocument manifest = new ManifestDocument (ManifestFile, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths));
 
 			int? compileSdk = null;
 
