@@ -213,6 +213,31 @@ namespace Xamarin.Android.Build.Tests {
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
+			proj.Sources.Add (new BuildItem.Source ("AssemblyAliases.cs") {
+				TextContent = () => """
+					using System;
+
+					namespace AssemblyAliases;
+
+					[AttributeUsage (AttributeTargets.Assembly)]
+					public sealed class ApplicationAttribute : Attribute {}
+
+					[AttributeUsage (AttributeTargets.Assembly)]
+					public sealed class InstrumentationAttribute : Attribute
+					{
+						public InstrumentationAttribute (string name) => Name = name;
+						public string Name { get; }
+					}
+
+					[AttributeUsage (AttributeTargets.Assembly)]
+					public sealed class MetaDataAttribute : Attribute
+					{
+						public MetaDataAttribute (string name) => Name = name;
+						public string Name { get; }
+						public string? Value { get; set; }
+					}
+					""",
+			});
 			proj.AndroidManifest = proj.AndroidManifest
 				.Replace (
 					"</application>",
@@ -240,6 +265,9 @@ namespace Xamarin.Android.Build.Tests {
 					[assembly: Instrumentation (Name = "assembly.generated", TargetPackage = "assembly.generated.target", RoundIcon = "@drawable/assembly_round")]
 					[assembly: Instrumentation (Name = "shared.instrumentation", TargetPackage = "assembly.shared.target", RoundIcon = "@drawable/assembly_round")]
 					[assembly: UsesLibrary (Name = "application.library", Required = true)]
+					[assembly: AssemblyAliases.Application]
+					[assembly: AssemblyAliases.Instrumentation ("user.instrumentation")]
+					[assembly: AssemblyAliases.MetaData ("user.assembly.metadata", Value = "user-metadata")]
 
 					namespace UnnamedProject;
 
@@ -265,6 +293,14 @@ namespace Xamarin.Android.Build.Tests {
 						public sealed class GrantUriPermissionAttribute : Attribute
 						{
 							public string? Path { get; set; }
+						}
+
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class MetaDataAttribute : Attribute
+						{
+							public MetaDataAttribute (string name) => Name = name;
+							public string Name { get; }
+							public string? Value { get; set; }
 						}
 					}
 
@@ -295,6 +331,7 @@ namespace Xamarin.Android.Build.Tests {
 					[Property ("application.property", Value = "application-property")]
 					[UserAttributes.Property ("user.property", Value = "user-property")]
 					[UserAttributes.UsesLibrary ("user.library", Required = true)]
+					[UserAttributes.MetaData ("user.application.metadata", Value = "user-metadata")]
 					public class ParityApplication : Application
 					{
 						public ParityApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
@@ -326,6 +363,7 @@ namespace Xamarin.Android.Build.Tests {
 
 					[Instrumentation (Name = "shared.instrumentation", RoundIcon = "@drawable/instrumentation_round", TargetProcesses = "parity")]
 					[MetaData ("instrumentation.metadata", Value = "instrumentation-value")]
+					[UserAttributes.MetaData ("user.instrumentation.metadata", Value = "user-metadata")]
 					public class ParityInstrumentation : Instrumentation {}
 
 					public class ParityManageActivity : Activity {}
@@ -415,8 +453,9 @@ namespace Xamarin.Android.Build.Tests {
 			var templateUsesLibrary = application.Elements ("uses-library").Single (element => (string) element.Attribute (android + "name") == "template.library");
 			Assert.AreEqual ("true", (string) templateUsesLibrary.Attribute (android + "required"));
 			Assert.IsFalse (application.Elements ("uses-library").Any (element => (string) element.Attribute (android + "name") == "user.library"));
-			Assert.AreEqual ("application-property", (string) application.Element ("property").Attribute (android + "value"));
+			Assert.AreEqual ("application-property", (string) application.Elements ("property").Single (element => (string) element.Attribute (android + "name") == "application.property").Attribute (android + "value"));
 			Assert.IsFalse (application.Elements ("property").Any (element => (string) element.Attribute (android + "name") == "user.property"));
+			Assert.IsFalse (application.Elements ("meta-data").Any (element => ((string) element.Attribute (android + "name")).StartsWith ("user.", StringComparison.Ordinal)));
 
 			var activity = application.Elements ("activity").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityActivity", StringComparison.Ordinal));
 			Assert.AreEqual ("true", (string) activity.Attribute (android + "canDisplayOnRemoteDevices"));
@@ -438,6 +477,8 @@ namespace Xamarin.Android.Build.Tests {
 			var generatedInstrumentation = root.Elements ("instrumentation").Single (element => (string) element.Attribute (android + "name") == "assembly.generated");
 			Assert.AreEqual ("assembly.generated.target", (string) generatedInstrumentation.Attribute (android + "targetPackage"));
 			Assert.AreEqual ("@drawable/assembly_round", (string) generatedInstrumentation.Attribute (android + "roundIcon"));
+			Assert.IsFalse (root.Elements ("instrumentation").Any (element => (string) element.Attribute (android + "name") == "user.instrumentation"));
+			Assert.IsFalse (application.Elements ("meta-data").Any (element => (string) element.Attribute (android + "name") == "user.assembly.metadata"));
 
 			var sharedInstrumentations = root.Elements ("instrumentation")
 				.Where (element => (string) element.Attribute (android + "name") == "shared.instrumentation")
@@ -451,6 +492,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("parity", (string) typeInstrumentation.Attribute (android + "targetProcesses"));
 			Assert.AreEqual ("@drawable/instrumentation_round", (string) typeInstrumentation.Attribute (android + "roundIcon"));
 			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
+			Assert.IsFalse (typeInstrumentation.Elements ("meta-data").Any (element => (string) element.Attribute (android + "name") == "user.instrumentation.metadata"));
 
 			var linkedAssembly = runtime == AndroidRuntime.NativeAOT
 				? Path.Combine (intermediate, "android", "assets", "shrunk", "arm64-v8a", $"{proj.ProjectName}.dll")
@@ -551,6 +593,9 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.CoreCLR, "MixedApplicationConflict")]
 		[TestCase (AndroidRuntime.CoreCLR, "InstrumentationProperty")]
 		[TestCase (AndroidRuntime.CoreCLR, "ApplicationBaseType")]
+		[TestCase (AndroidRuntime.CoreCLR, "ApplicationMetadataConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "ApplicationPropertyConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "PackageTokenDuplicateConflict")]
 		[TestCase (AndroidRuntime.NativeAOT, "BackupAgent")]
 		[TestCase (AndroidRuntime.NativeAOT, "AppCategory")]
 		[TestCase (AndroidRuntime.NativeAOT, "GwpAsan")]
@@ -560,6 +605,9 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.NativeAOT, "MixedApplicationConflict")]
 		[TestCase (AndroidRuntime.NativeAOT, "InstrumentationProperty")]
 		[TestCase (AndroidRuntime.NativeAOT, "ApplicationBaseType")]
+		[TestCase (AndroidRuntime.NativeAOT, "ApplicationMetadataConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "ApplicationPropertyConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "PackageTokenDuplicateConflict")]
 		public void InvalidManifestAttributeFails (AndroidRuntime runtime, string invalidProperty)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -583,7 +631,18 @@ namespace Xamarin.Android.Build.Tests {
 				"ApplicationBaseType" => "",
 				_ => "[Application]",
 			};
-			var assemblyAttributes = invalidProperty == "MixedApplicationConflict" ? "[assembly: Application]" : "";
+			var assemblyAttributes = invalidProperty switch {
+				"MixedApplicationConflict" => "[assembly: Application]",
+				"ApplicationMetadataConflict" => "[assembly: MetaData (\"duplicate.metadata\", Value = \"assembly\")]",
+				"ApplicationPropertyConflict" => "[assembly: Property (\"duplicate.property\", Value = \"assembly\")]",
+				"PackageTokenDuplicateConflict" => "[assembly: MetaData (\"duplicate.package\", Value = \"@PACKAGE_NAME@\")]",
+				_ => "",
+			};
+			var applicationChildAttributes = invalidProperty switch {
+				"ApplicationMetadataConflict" => "[MetaData (\"duplicate.metadata\", Value = \"type\")]",
+				"ApplicationPropertyConflict" => "[Property (\"duplicate.property\", Value = \"type\")]",
+				_ => "",
+			};
 			var additionalApplication = invalidProperty == "TypeApplicationConflict"
 				? """
 					[Application]
@@ -606,6 +665,11 @@ namespace Xamarin.Android.Build.Tests {
 			var activityAttribute = invalidProperty == "RequiredContentUriPermission"
 				? "[Activity (RequireContentUriPermissionFromCaller = (RequiredContentUriPermission) 99)]"
 				: "[Activity]";
+			if (invalidProperty == "PackageTokenDuplicateConflict") {
+				proj.AndroidManifest = proj.AndroidManifest.Replace (
+					"</application>",
+					"""<meta-data android:name="duplicate.package" android:value="@PACKAGE_NAME@" /></application>""");
+			}
 			proj.Sources.Add (new BuildItem.Source ("InvalidApplication.cs") {
 				TextContent = () => $$"""
 					using System;
@@ -618,6 +682,7 @@ namespace Xamarin.Android.Build.Tests {
 					namespace UnnamedProject;
 
 					{{applicationAttribute}}
+					{{applicationChildAttributes}}
 					public class InvalidApplication : Application
 					{
 						public InvalidApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
@@ -644,6 +709,9 @@ namespace Xamarin.Android.Build.Tests {
 				"MixedApplicationConflict" => "Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.",
 				"InstrumentationProperty" => "unexpected element <property> found in <manifest><instrumentation>",
 				"ApplicationBaseType" => "[Application] can only be used on subclasses of Application.",
+				"ApplicationMetadataConflict" => "Element meta-data#duplicate.metadata",
+				"ApplicationPropertyConflict" => "Element property#duplicate.property",
+				"PackageTokenDuplicateConflict" => "Element meta-data#duplicate.package",
 				_ => $"Unsupported {invalidProperty} value '99'",
 			};
 			Assert.IsTrue (builder.LastBuildOutput.ContainsText (expectedError), $"Build output should contain '{expectedError}'.");

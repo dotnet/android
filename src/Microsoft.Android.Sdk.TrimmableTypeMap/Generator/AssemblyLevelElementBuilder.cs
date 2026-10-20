@@ -106,9 +106,7 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (md.Name)) {
 				continue;
 			}
-			if (!app.Elements ("meta-data").Any (e => (string?)e.Attribute (AndroidNs + "name") == md.Name)) {
-				app.Add (ComponentElementBuilder.CreateMetaDataElement (md));
-			}
+			app.Add (ComponentElementBuilder.CreateMetaDataElement (md));
 		}
 
 		// Assembly-level <property> inside <application>
@@ -116,17 +114,15 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (prop.Name)) {
 				continue;
 			}
-			if (!app.Elements ("property").Any (e => (string?)e.Attribute (AndroidNs + "name") == prop.Name)) {
-				var element = new XElement ("property",
-					new XAttribute (AndroidNs + "name", prop.Name));
-				if (prop.Value is not null) {
-					element.SetAttributeValue (AndroidNs + "value", prop.Value);
-				}
-				if (prop.Resource is not null) {
-					element.SetAttributeValue (AndroidNs + "resource", prop.Resource);
-				}
-				app.Add (element);
+			var element = new XElement ("property",
+				new XAttribute (AndroidNs + "name", prop.Name));
+			if (prop.Value is not null) {
+				element.SetAttributeValue (AndroidNs + "value", prop.Value);
 			}
+			if (prop.Resource is not null) {
+				element.SetAttributeValue (AndroidNs + "resource", prop.Resource);
+			}
+			app.Add (element);
 		}
 
 		// <uses-configuration> elements

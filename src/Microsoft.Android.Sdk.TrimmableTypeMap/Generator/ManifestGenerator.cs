@@ -77,6 +77,7 @@ class ManifestGenerator
 		}
 		AssemblyLevelElementBuilder.AddUsesLibraries (app, assemblyInfo.UsesLibraries);
 		AssemblyLevelElementBuilder.AddInstrumentations (manifest, assemblyInfo.Instrumentations);
+		AssemblyLevelElementBuilder.AddAssemblyLevelElements (manifest, app, assemblyInfo);
 
 		var existingTypes = new HashSet<string> (
 			app.Descendants ()
@@ -128,9 +129,6 @@ class ManifestGenerator
 			}
 		}
 
-		// Add assembly-level manifest elements
-		AssemblyLevelElementBuilder.AddAssemblyLevelElements (manifest, app, assemblyInfo);
-
 		// Add runtime provider
 		var providerNames = AddRuntimeProviders (app);
 
@@ -156,12 +154,12 @@ class ManifestGenerator
 			AssemblyLevelElementBuilder.AddInternetPermission (manifest);
 		}
 
-		RemoveDuplicateElements (doc);
-		RemoveNodes (doc);
-
 		// Apply manifest placeholders
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
 		ReplaceGeneratedPackageNameTokens (doc, PackageName, templateAttributes, generatedAttributes);
+
+		RemoveDuplicateElements (doc);
+		RemoveNodes (doc);
 
 		return (doc, providerNames);
 	}

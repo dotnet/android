@@ -222,7 +222,7 @@ sealed class AssemblyIndex : IDisposable
 			} else if (attrName == "IntentFilterAttribute") {
 				intentFilters ??= new List<IntentFilterInfo> ();
 				intentFilters.Add (ParseIntentFilterAttribute (ca));
-			} else if (attrName == "MetaDataAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "MetaDataAttribute")) {
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
 				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
@@ -945,7 +945,9 @@ sealed class AssemblyIndex : IDisposable
 		foreach (var caHandle in asmDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
 			var attrName = GetCustomAttributeName (ca);
-			if (attrName is null || !KnownAssemblyAttributes.Contains (attrName)) {
+			if (attrName is null ||
+			    !KnownAssemblyAttributes.Contains (attrName) ||
+			    !IsCustomAttributeMatch (ca, Reader, "Android.App", attrName)) {
 				continue;
 			}
 
