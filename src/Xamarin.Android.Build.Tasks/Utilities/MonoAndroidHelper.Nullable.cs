@@ -52,9 +52,18 @@ public partial class MonoAndroidHelper
 	}
 
 #if MSBUILD
-	public static void RefreshSupportedVersions (string[]? referenceAssemblyPaths)
+	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths)
 	{
-		SupportedVersions   = new AndroidVersions (referenceAssemblyPaths ?? []);
+		var paths = (referenceAssemblyPaths ?? []).Select (Path.GetFullPath).ToArray ();
+		// Share immutable API metadata by input, never a process-wide "current SDK".
+		var key = (typeof (MonoAndroidHelper).Assembly.Location, nameof (AndroidVersions), string.Join ("\0", paths));
+		var cached = engine.GetRegisteredTaskObjectAssemblyLocal<AndroidVersions> (key, RegisteredTaskObjectLifetime.Build);
+		if (cached != null)
+			return cached;
+
+		var versions = new AndroidVersions (paths);
+		engine.RegisterTaskObjectAssemblyLocal (key, versions, RegisteredTaskObjectLifetime.Build);
+		return versions;
 	}
 #endif  // MSBUILD
 }

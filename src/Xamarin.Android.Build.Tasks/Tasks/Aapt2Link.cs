@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks {
 
 		public string? PackageName { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		public ITaskItem []? AdditionalResourceArchives { get; set; }
 
 		public ITaskItem []? AdditionalAndroidResourcePaths { get; set; }
@@ -81,20 +83,28 @@ namespace Xamarin.Android.Tasks {
 		SortedSet<string> rulesFiles = new SortedSet<string> ();
 		Dictionary<string, long> apks = new Dictionary<string, long> ();
 		string? resourceSymbolsTextFileTemp;
+		AndroidVersions? supportedVersions;
 
 		protected override int GetRequiredDaemonInstances ()
 		{
 			return Math.Min (CreatePackagePerAbi ? (SupportedAbis?.Length ?? 1) : 1, DaemonMaxInstanceCount);
 		}
 
+		public override bool RunTask ()
+		{
+			supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths?.Select (GetFullPath).ToArray ());
+			return base.RunTask ();
+		}
+
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			try {
+				var versions = supportedVersions ?? throw new InvalidOperationException ("API metadata must be resolved before linking resources.");
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 				resourceSymbolsTextFileTemp = GetTempFile ();
 
-				await this.WhenAll (ManifestFiles, ProcessManifest);
+				await this.WhenAll (ManifestFiles, manifest => ProcessManifest (manifest, versions));
 
 				ProcessOutput ();
 				// now check for
@@ -145,7 +155,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		string [] GenerateCommandLineCommands (string ManifestFile, string? currentAbi, string currentResourceOutputFile)
+		string [] GenerateCommandLineCommands (string ManifestFile, string? currentAbi, string currentResourceOutputFile, AndroidVersions versions)
 		{
 			List<string> cmd = new List<string> ();
 			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");
@@ -155,7 +165,7 @@ namespace Xamarin.Android.Tasks {
 			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version v)) {
 				targetSdkVersion = v.Major.ToString (CultureInfo.InvariantCulture);
 			}
-			ManifestDocument manifest = new ManifestDocument (ManifestFile);
+			ManifestDocument manifest = new ManifestDocument (ManifestFile, versions);
 			manifest.TargetSdkVersion = targetSdkVersion;
 			if (!VersionCodePattern.IsNullOrEmpty ()) {
 				try {
@@ -325,7 +335,7 @@ namespace Xamarin.Android.Tasks {
 			// Add min SDK version from AndroidManifestFile if available
 			string? minSdkVersion = null;
 			if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
-				var doc = AndroidAppManifest.Load (GetFullPath (AndroidManifestFile.ItemSpec), MonoAndroidHelper.SupportedVersions);
+				var doc = AndroidAppManifest.Load (GetFullPath (AndroidManifestFile.ItemSpec), versions);
 				if (doc.MinSdkVersion.HasValue) {
 					minSdkVersion = doc.MinSdkVersion.Value.ToString (CultureInfo.InvariantCulture);
 				}
@@ -360,7 +370,7 @@ namespace Xamarin.Android.Tasks {
 				File.GetLastWriteTime (flagFile) > File.GetLastWriteTime (manifestFile);
 		}
 
-		void ProcessManifest (ITaskItem manifestFile)
+		void ProcessManifest (ITaskItem manifestFile, AndroidVersions versions)
 		{
 			var manifest = GetFullPath (manifestFile.ItemSpec);
 			if (!File.Exists (manifest)) {
@@ -387,7 +397,7 @@ namespace Xamarin.Android.Tasks {
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", outputFile, abi) : outputFile;
 				if (!currentResourceOutputFile.IsNullOrEmpty () && !Path.IsPathRooted (currentResourceOutputFile))
 					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);
-				string[] cmd = GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile);
+				string[] cmd = GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile, versions);
 				if (!cmd.Any () || !ExecuteForAbi (cmd, currentResourceOutputFile)) {
 					Cancel ();
 				}

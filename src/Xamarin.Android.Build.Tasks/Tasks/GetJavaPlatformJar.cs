@@ -37,6 +37,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? TargetPlatformVersion { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		[Output]
 		public string? JavaPlatformJarPath { get; set; }
 
@@ -104,21 +106,22 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			platform            = GetTargetSdkVersion (platform, target_sdk);
-			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform,
+			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+			platform            = GetTargetSdkVersion (platform, target_sdk, supportedVersions);
+			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform, supportedVersions,
 				designTimeBuild: DesignTimeBuild, buildingInsideVisualStudio: BuildingInsideVisualStudio,
 				targetFramework: TargetFramework, androidSdkDirectory: AndroidSdkDirectory);
-			TargetSdkVersion = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (platform).ToString ();
+			TargetSdkVersion = supportedVersions.GetApiLevelFromId (platform).ToString ();
 			if (JavaPlatformJarPath == null)
 				return !Log.HasLoggedErrors;
 
 			return !Log.HasLoggedErrors;
 		}
 
-		string GetTargetSdkVersion (string target, XAttribute? target_sdk)
+		string GetTargetSdkVersion (string target, XAttribute? target_sdk, AndroidVersions supportedVersions)
 		{
-			string targetFrameworkVersion = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel) ?? "";
-			string targetSdkVersion       = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (target) ?? "";
+			string targetFrameworkVersion = supportedVersions.GetIdFromApiLevel (AndroidApiLevel) ?? "";
+			string targetSdkVersion       = supportedVersions.GetIdFromApiLevel (target) ?? "";
 
 			// For .NET 6+ projects, use TargetPlatformVersion directly
 			string targetPlatformVersionDisplay = !TargetPlatformVersion.IsNullOrEmpty () ? TargetPlatformVersion : "";
@@ -133,7 +136,7 @@ namespace Xamarin.Android.Tasks
 						messageArgs:      new [] {
 							targetSdkVersion,
 							targetPlatformVersionDisplay,
-							MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (targetFrameworkVersion) ?? "",
+							supportedVersions.GetIdFromApiLevel (targetFrameworkVersion) ?? "",
 						}
 				);
 				return targetFrameworkVersion;
@@ -148,7 +151,7 @@ namespace Xamarin.Android.Tasks
 						messageArgs:      new [] {
 							targetSdkVersion,
 							targetPlatformVersionDisplay,
-							MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (targetFrameworkVersion) ?? "",
+							supportedVersions.GetIdFromApiLevel (targetFrameworkVersion) ?? "",
 						}
 				);
 				return targetFrameworkVersion;
