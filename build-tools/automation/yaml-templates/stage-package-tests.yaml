@@ -39,11 +39,12 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
-    - task: DotNetCoreCLI@2
-      displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-      inputs:
-        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+        project: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+        continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -133,11 +134,12 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
-    - task: DotNetCoreCLI@2
-      displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-      inputs:
-        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+        project: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+        continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:

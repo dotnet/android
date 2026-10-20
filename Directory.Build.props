@@ -7,15 +7,15 @@
     <DotNetTargetFrameworkVersion>11.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
-    <!-- Used for bootstrap, command-line tooling, and desktop NUnit projects -->
+    <!-- Used for stable command-line tooling and desktop NUnit projects -->
     <DotNetStableTargetFramework>net10.0</DotNetStableTargetFramework>
     <TargetFrameworkNETStandard>netstandard2.0</TargetFrameworkNETStandard>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
     <BootstrapOutputDirectory>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BootstrapOutputDirectory>
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
-    <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
-    <PrepTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\xa-prep-tasks.dll</PrepTasksAssembly>
+    <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(DotNetTargetFramework)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
+    <PrepTasksAssembly>$(BootstrapOutputDirectory)$(DotNetTargetFramework)\xa-prep-tasks.dll</PrepTasksAssembly>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and Exists('$(DotNetPreviewPath)') ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">dotnet</DotNetPreviewTool>
