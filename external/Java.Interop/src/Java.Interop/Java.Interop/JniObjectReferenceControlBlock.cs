@@ -30,11 +30,11 @@ internal struct JniObjectReferenceControlBlock {
 	/// </safety>
 	public static unsafe void Free (ref JniObjectReferenceControlBlock* value)
 	{
+		if (value == null) {
+			return;
+		}
 		unsafe {
-			// SAFETY: The caller supplies the exclusively owned NativeMemory allocation; null is not dereferenced.
-			if (value == null) {
-				return;
-			}
+			// SAFETY: The caller supplies the exclusively owned NativeMemory allocation; aliases are no longer used.
 			NativeMemory.Free (value);
 			value   = null;
 		}

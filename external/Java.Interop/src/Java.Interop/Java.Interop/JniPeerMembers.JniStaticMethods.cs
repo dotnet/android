@@ -115,10 +115,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return void. parameters must address readable initialized JNI slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// and unchanged through the call, including failure; local references belong to this thread.
-		/// No buffer is retained; exclude concurrent writes or release through every alias.
+		/// The resolved method must return void. parameters must supply readable, initialized JNI slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe void InvokeVoidMethod (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -130,10 +129,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI boolean. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI boolean. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe bool InvokeBooleanMethod (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -145,10 +143,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI byte. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI byte. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe sbyte InvokeSByteMethod (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -160,10 +157,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI char. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI char. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe char InvokeCharMethod (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -175,10 +171,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI short. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI short. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe short InvokeInt16Method (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -190,10 +185,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI int. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI int. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe int InvokeInt32Method (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -205,10 +199,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI long. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI long. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe long InvokeInt64Method (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -220,10 +213,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI float. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI float. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe float InvokeSingleMethod (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -235,10 +227,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return JNI double. parameters must address readable initialized slots
-		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
-		/// through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return JNI double. parameters must supply readable, initialized slots
+		/// matching its descriptor (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe double InvokeDoubleMethod (string encodedMember, JniArgumentValue* parameters)
 		{
@@ -250,10 +241,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// The resolved method must return a JNI reference. parameters must address readable initialized
-		/// slots matching its descriptor, or be null for no arguments. Keep storage and Java references
-		/// live through the call, including failure; local references belong to this thread.
-		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// The resolved method must return a JNI reference. parameters must supply readable, initialized
+		/// descriptor-matched slots (null only for no arguments), with live references on this thread
+		/// until return or failure. Exclude writes/frees through aliases; the buffer is not retained.
 		/// </safety>
 		public unsafe JniObjectReference InvokeObjectMethod (string encodedMember, JniArgumentValue* parameters)
 		{

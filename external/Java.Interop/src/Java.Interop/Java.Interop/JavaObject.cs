@@ -99,9 +99,8 @@ namespace Java.Interop
 					c->handle       = reference.Handle;
 					c->handle_type  = (int) reference.Type;
 				}
-
-				JniObjectReference.Dispose (ref reference, options);
 			}
+			JniObjectReference.Dispose (ref reference, options);
 		}
 
 		public void UnregisterFromRuntime ()
@@ -147,14 +146,15 @@ namespace Java.Interop
 
 		public override string? ToString ()
 		{
+			JniObjectReference lref;
 			unsafe {
-				// SAFETY: toString takes no arguments; the returned local string is consumed and disposed below.
-				var lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
+				// SAFETY: toString takes no arguments; its returned local reference is consumed below.
+				lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
 						"toString.()Ljava/lang/String;",
 						this,
 						null);
-				return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 			}
+			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		void IJavaPeerable.Disposed ()

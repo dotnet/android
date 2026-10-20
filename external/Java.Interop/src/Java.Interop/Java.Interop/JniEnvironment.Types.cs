@@ -133,20 +133,19 @@ namespace Java.Interop
 					javaName [i] = classname [i] == (byte) '/' ? (byte) '.' : classname [i];
 				javaName [classname.Length] = 0;
 
+				IntPtr s;
 				unsafe {
-					// SAFETY: javaName owns classname.Length + 1 bytes and an explicit NUL; pin it through NewStringUTF.
-					// env must be the current thread's live JNI environment; the native call does not retain this buffer.
-					fixed (byte* pJavaName = javaName) {
-						var s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
-						var e = JniEnvironment.GetExceptionForLastThrowable ();
-						if (e != null)
-							ExceptionDispatchInfo.Capture (e).Throw ();
-
-						var r = new JniObjectReference (s, JniObjectReferenceType.Local);
-						JniEnvironment.LogCreateLocalRef (r);
-						return r;
-					}
+					// SAFETY: Pin the NUL-terminated name through NewStringUTF on this thread's live JNI environment.
+					fixed (byte* pJavaName = javaName)
+						s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
 				}
+				var e = JniEnvironment.GetExceptionForLastThrowable ();
+				if (e != null)
+					ExceptionDispatchInfo.Capture (e).Throw ();
+
+				var r = new JniObjectReference (s, JniObjectReferenceType.Local);
+				JniEnvironment.LogCreateLocalRef (r);
+				return r;
 			}
 
 			static bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)

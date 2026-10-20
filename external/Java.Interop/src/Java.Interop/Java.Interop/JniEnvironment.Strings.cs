@@ -40,10 +40,10 @@ namespace Java.Interop
 			{
 				if (!value.IsValid)
 					return null;
+				int len = JniEnvironment.Strings.GetStringLength (value);
 				unsafe {
 					// SAFETY: JNI owns the returned len-character buffer until ReleaseStringChars in finally.
 					// Copy it before release and preserve the existing reference-transfer cleanup on failure.
-					int len = JniEnvironment.Strings.GetStringLength (value);
 					var p   = JniEnvironment.Strings.GetStringChars (value, null);
 					try {
 						return new string ((char*) p, 0, len);

@@ -88,23 +88,11 @@ Managed alternatives such as `JniType.DefineClass` with a `byte[]` and
 operations remain inside their implementations; local scopes do not transfer
 buffer ownership to callers or change JNI reference cleanup.
 
-Caller-unsafe declarations and implementation scopes serve different purposes.
-Methods that consume borrowed argument buffers or callbacks require the caller
-to provide the descriptor-compatible storage, references, and lifetime described
-by their `<safety>` contract. Managed wrappers that pin or allocate their own
-buffers discharge those storage obligations internally. `// SAFETY:` comments
-record the concrete bounds, pinning, ownership, or caller precondition at each
-audited native operation; the existence of a local block is not proof of a
-caller's contract.
-
 `JniNativeMethod` preserves the sequential layout of JNI's `JNINativeMethod`.
-Its callback is stored as `void*`, since JNI callbacks have heterogeneous
-signatures. Construction only packages addresses and does not read the buffers
-or invoke the callback. The legacy-preparation constructor's `unsafe` modifier
-provides syntax context, not a new pointee-lifetime obligation at packaging time.
-At registration, name and signature storage must remain readable and
-NUL-terminated through the native call. The callback must match its JNI
-descriptor and remain callable and rooted until successful unregistration
+It stores heterogeneous callbacks as `void*`. Construction only copies addresses;
+its legacy `unsafe` modifier is syntax context, not a pointee-lifetime contract.
+Registration requires readable NUL-terminated names/signatures and a
+descriptor-compatible callback rooted until successful unregistration
 **and completion of all in-flight callbacks**.
 
 The project uses preview syntax for pointer declarations outside unsafe type

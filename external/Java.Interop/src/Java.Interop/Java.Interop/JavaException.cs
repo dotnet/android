@@ -45,19 +45,19 @@ namespace Java.Interop
 		public JavaException (string message)
 			: base (message)
 		{
-			unsafe {
-				// SAFETY: One initialized stack slot matches the String parameter; its local reference lives through both calls.
-				const string signature  = "(Ljava/lang/String;)V";
-				var native_message = JniEnvironment.Strings.NewString (message);
-				try {
+			const string signature  = "(Ljava/lang/String;)V";
+			var native_message = JniEnvironment.Strings.NewString (message);
+			try {
+				unsafe {
+					// SAFETY: One initialized slot matches the String parameter; its reference survives both calls.
 					var args = stackalloc JniArgumentValue [1];
 					args [0] = new JniArgumentValue (native_message);
 					var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
 					Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
-				} finally {
-					JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 				}
+			} finally {
+				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			SetJavaStackTrace ();
 		}
@@ -65,19 +65,19 @@ namespace Java.Interop
 		public JavaException (string message, Exception innerException)
 			: base (message, innerException)
 		{
-			unsafe {
-				// SAFETY: One initialized stack slot matches the String parameter; finally releases the message even on failure.
-				const string signature  = "(Ljava/lang/String;)V";
-				var native_message  = JniEnvironment.Strings.NewString (message);
-				try {
+			const string signature  = "(Ljava/lang/String;)V";
+			var native_message  = JniEnvironment.Strings.NewString (message);
+			try {
+				unsafe {
+					// SAFETY: One initialized String slot stays live through both calls; finally releases it on failure.
 					var args = stackalloc JniArgumentValue [1];
 					args [0] = new JniArgumentValue (native_message);
 					var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
 					Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
-				} finally {
-					JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 				}
+			} finally {
+				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			SetJavaStackTrace ();
 		}
@@ -188,9 +188,8 @@ namespace Java.Interop
 					c->handle       = reference.Handle;
 					c->handle_type  = (int) reference.Type;
 				}
-
-				JniObjectReference.Dispose (ref reference, options);
 			}
+			JniObjectReference.Dispose (ref reference, options);
 		}
 
 		public void UnregisterFromRuntime ()
@@ -285,31 +284,38 @@ namespace Java.Interop
 
 		string? GetJavaStack (JniObjectReference handle)
 		{
-			unsafe {
-				// SAFETY: Each initialized one-slot buffer matches its fixed descriptor and remains on the stack during JNI.
-				// Local writer references stay live until the matching finally blocks, including on exceptions.
-				using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
-				using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {
-					var StringWriter_init       = StringWriter_class.GetConstructor ("()V");
-					var PrintWriter_init        = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V");
-					var swriter                 = StringWriter_class.NewObject (StringWriter_init, null);
-					try {
+			using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
+			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {
+				var StringWriter_init       = StringWriter_class.GetConstructor ("()V");
+				var PrintWriter_init        = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V");
+				JniObjectReference swriter;
+				unsafe {
+					// SAFETY: StringWriter's ()V constructor reads no argument slots.
+					swriter = StringWriter_class.NewObject (StringWriter_init, null);
+				}
+				try {
+					JniObjectReference pwriter;
+					unsafe {
+						// SAFETY: One Writer slot matches the descriptor; swriter stays live until the outer finally.
 						var pwriter_args = stackalloc JniArgumentValue [1];
 						pwriter_args [0] = new JniArgumentValue (swriter);
-						var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
-						try {
-							var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace.(Ljava/io/PrintWriter;)V");
+						pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
+					}
+					try {
+						var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace.(Ljava/io/PrintWriter;)V");
+						unsafe {
+							// SAFETY: The one PrintWriter slot stays live until JNI returns, before the inner finally.
 							var pst_args = stackalloc JniArgumentValue [1];
 							pst_args [0] = new JniArgumentValue (pwriter);
 							JniEnvironment.InstanceMethods.CallVoidMethod (handle, pst, pst_args);
-							var s = JniEnvironment.Object.ToString (swriter);
-							return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
-						} finally {
-							JniObjectReference.Dispose (ref pwriter, JniObjectReferenceOptions.CopyAndDispose);
 						}
+						var s = JniEnvironment.Object.ToString (swriter);
+						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 					} finally {
-						JniObjectReference.Dispose (ref swriter, JniObjectReferenceOptions.CopyAndDispose);
+						JniObjectReference.Dispose (ref pwriter, JniObjectReferenceOptions.CopyAndDispose);
 					}
+				} finally {
+					JniObjectReference.Dispose (ref swriter, JniObjectReferenceOptions.CopyAndDispose);
 				}
 			}
 		}
