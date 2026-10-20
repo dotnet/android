@@ -145,28 +145,9 @@
   <data name="IL6001" xml:space="preserve">
     <value>어셈블리 '{0}'에 더 이상 사용되지 않는 특성 'Android.Runtime.PreserveAttribute'에 대한 참조가 포함되어 있습니다. 이 특성이 적용된 멤버는 잘릴 수 있습니다. 대신 System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute를 사용하세요.</value>
   </data>
-  <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
-    <value>'{0}'의 $(TargetFrameworkVersion)에 대한 API 레벨을 확인할 수 없습니다.</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
-{0} - The current value of $(TargetFrameworkVersion)</comment>
-  </data>
-  <data name="XA0000_API_or_TargetFrameworkVersion_Fail" xml:space="preserve">
-    <value>$(AndroidApiLevel) 또는 $(TargetFrameworkVersion)을 확인할 수 없습니다. 이 오류 메시지가 표시되면 안 됩니다.</value>
-    <comment>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
-In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</comment>
-  </data>
   <data name="XA0000_Exception" xml:space="preserve">
     <value>처리되지 않은 예외: {0}</value>
     <comment>{0} - The exception message of the associated exception</comment>
-  </data>
-  <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
-    <value>API 레벨 '{0}'의 $(TargetFrameworkVersion)을 확인할 수 없습니다.</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
-{0} - The API level number</comment>
-  </data>
-  <data name="XA0001" xml:space="preserve">
-    <value>'{0}'의 $(TargetFrameworkVersion) 값이 지원되지 않거나 잘못되었습니다. 프로젝트 옵션을 업데이트하세요.</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
   <data name="XA0003" xml:space="preserve">
     <value>'AndroidManifest'의 'android:versionCode' 값 '{0}'이(가) 잘못되었습니다. 정수 값이어야 합니다.</value>
@@ -237,23 +218,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>'{0}' 경로에 AAPT2가 없습니다. 텍스트 편집기에서 프로젝트 파일을 열고 'Aapt2ToolPath' MSBuild 속성을 제거하거나 유효한 위치로 설정되었는지 확인하세요.</value>
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
-  <data name="XA0113" xml:space="preserve">
-    <value>Google Play에서는 새 애플리케이션 및 업데이트가 {0}(API 레벨 {1}) 이상의 TargetFrameworkVersion을 사용하도록 요구합니다. 현재 {2}(API 레벨 {3})을(를) 대상으로 하고 있습니다.</value>
-    <comment>The following are literal names and should not be translated: TargetFrameworkVersion
-{0} - The required minimum TargetFrameworkVersion, such as 'v10.0'
-{1} - The required minimum API level number, such as '29'
-{2} - The specified TargetFrameworkVersion
-{3} - The specified API level number</comment>
-  </data>
   <data name="XA0116" xml:space="preserve">
     <value>이름이 '{0}'인 'EmbeddedResource'를 찾을 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: EmbeddedResource
 {0} - The name of the missing resource</comment>
-  </data>
-  <data name="XA0117" xml:space="preserve">
-    <value>TargetFrameworkVersion {0}은(는) 사용되지 않습니다. v5.0 이상으로 업데이트하세요.</value>
-    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v5.0
-{0} - The current value of TargetFrameworkVersion</comment>
   </data>
   <data name="XA0118_Parse" xml:space="preserve">
     <value>'{0}'을(를) 구문 분석할 수 없습니다.</value>
@@ -1361,6 +1329,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>
+  </data>
+  <data name="XAGCA7009_UnsupportedRuntime" xml:space="preserve">
+    <value>GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.</value>
+    <comment>The following are literal names and should not be translated: GenerateNativeApplicationConfigSources, CoreCLR, AndroidRuntime.
+{0} - The unsupported AndroidRuntime task parameter value.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>프로젝트 디렉터리 '{0}'에서 실행 파일 'gradlew'를 찾을 수 없습니다. Gradle 프로젝트 폴더의 경로가 올바르고 Gradle Wrapper 스크립트가 포함되어 있는지 확인하세요.</value>

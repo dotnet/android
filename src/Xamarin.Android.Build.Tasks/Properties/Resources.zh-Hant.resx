@@ -145,28 +145,9 @@
   <data name="IL6001" xml:space="preserve">
     <value>組件 '{0}' 包含過時屬性 'Android.Runtime.PreserveAttribute' 的參考。可以修剪具有此屬性的成員。請改用 System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute</value>
   </data>
-  <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
-    <value>無法判斷 '{0}' 的 $(TargetFrameworkVersion) API 層級。</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
-{0} - The current value of $(TargetFrameworkVersion)</comment>
-  </data>
-  <data name="XA0000_API_or_TargetFrameworkVersion_Fail" xml:space="preserve">
-    <value>無法判斷 $(AndroidApiLevel) 或 $(TargetFrameworkVersion); 不應送達。</value>
-    <comment>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
-In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</comment>
-  </data>
   <data name="XA0000_Exception" xml:space="preserve">
     <value>未處理的例外狀況: {0}</value>
     <comment>{0} - The exception message of the associated exception</comment>
-  </data>
-  <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
-    <value>無法判斷 API 層級 '{0}' 的 $(TargetFrameworkVersion)。</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
-{0} - The API level number</comment>
-  </data>
-  <data name="XA0001" xml:space="preserve">
-    <value>$(TargetFrameworkVersion) 值 '{0}' 不受支援或無效。請更新您的專案選項。</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
   <data name="XA0003" xml:space="preserve">
     <value>`AndroidManifest.xml` 中的 `android:versionCode` 值 `{0}` 無效。其必須為整數值。</value>
@@ -237,23 +218,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>在路徑 '{0}' 找不到 AAPT2。請在文字編輯器中開啟專案檔，並移除 'Aapt2ToolPath' MSBuild 屬性，或確定其已設定為有效的位置。</value>
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
-  <data name="XA0113" xml:space="preserve">
-    <value>Google Play 要求新的應用程式與更新，必須使用版本為 {0} 或更新版的 TargetFrameworkVersion (API 層級 {1})。但您目前的目標為 {2} (API 層級 {3})。</value>
-    <comment>The following are literal names and should not be translated: TargetFrameworkVersion
-{0} - The required minimum TargetFrameworkVersion, such as 'v10.0'
-{1} - The required minimum API level number, such as '29'
-{2} - The specified TargetFrameworkVersion
-{3} - The specified API level number</comment>
-  </data>
   <data name="XA0116" xml:space="preserve">
     <value>找不到名為 `{0}` 的 `EmbeddedResource`。</value>
     <comment>The following are literal names and should not be translated: EmbeddedResource
 {0} - The name of the missing resource</comment>
-  </data>
-  <data name="XA0117" xml:space="preserve">
-    <value>TargetFrameworkVersion {0} 已淘汰。請將其更新為 v5.0 或更高版本。</value>
-    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v5.0
-{0} - The current value of TargetFrameworkVersion</comment>
   </data>
   <data name="XA0118_Parse" xml:space="preserve">
     <value>無法剖析 '{0}'</value>
@@ -1361,6 +1329,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>
+  </data>
+  <data name="XAGCA7009_UnsupportedRuntime" xml:space="preserve">
+    <value>GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.</value>
+    <comment>The following are literal names and should not be translated: GenerateNativeApplicationConfigSources, CoreCLR, AndroidRuntime.
+{0} - The unsupported AndroidRuntime task parameter value.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>在專案目錄 '{0}' 中找不到可執行檔 'gradlew'。請確定 Gradle 專案資料夾的路徑正確，且其中包含 Gradle 包裝函式指令碼。</value>

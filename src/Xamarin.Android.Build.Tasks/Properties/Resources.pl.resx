@@ -145,28 +145,9 @@ Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidMa
   <data name="IL6001" xml:space="preserve">
     <value>Zestaw „{0}” zawiera odwołanie do przestarzałego atrybutu „Android.Runtime.PreserveAttribute”. Elementy członkowskie z tym atrybutem mogą zostać przycięte. Zamiast tego użyj elementu System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute</value>
   </data>
-  <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
-    <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
-{0} - The current value of $(TargetFrameworkVersion)</comment>
-  </data>
-  <data name="XA0000_API_or_TargetFrameworkVersion_Fail" xml:space="preserve">
-    <value>Nie można określić parametru $(AndroidApiLevel) lub $(TargetFrameworkVersion); ten komunikat nie powinien być wyświetlany.</value>
-    <comment>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
-In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</comment>
-  </data>
   <data name="XA0000_Exception" xml:space="preserve">
     <value>Nieobsłużony wyjątek: {0}</value>
     <comment>{0} - The exception message of the associated exception</comment>
-  </data>
-  <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
-    <value>Nie można określić parametru $(TargetFrameworkVersion) dla poziomu „{0}” interfejsu API.</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
-{0} - The API level number</comment>
-  </data>
-  <data name="XA0001" xml:space="preserve">
-    <value>Nieobsługiwana lub nieprawidłowa wartość parametru $(TargetFrameworkVersion) dla elementu „{0}”. Zaktualizuj opcje projektu.</value>
-    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
   <data name="XA0003" xml:space="preserve">
     <value>Nieprawidłowa wartość „android:versionCode” „{0}” w pliku „AndroidManifest.xml”. Musi to być wartość całkowita.</value>
@@ -237,23 +218,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Nie znaleziono narzędzia AAPT2 w ścieżce „{0}”. Otwórz plik projektu w edytorze tekstu i usuń właściwość programu MSBuild o nazwie „Aapt2ToolPath” lub upewnij się, że jest ona ustawiona na prawidłową lokalizację.</value>
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
-  <data name="XA0113" xml:space="preserve">
-    <value>Sklep Google Play wymaga, aby nowe aplikacje i aktualizacje używały elementu TargetFrameworkVersion o wartości {0} (poziom interfejsu API: {1}) lub wyższej. Obecna wersja docelowa to {2} (poziom interfejsu API: {3}).</value>
-    <comment>The following are literal names and should not be translated: TargetFrameworkVersion
-{0} - The required minimum TargetFrameworkVersion, such as 'v10.0'
-{1} - The required minimum API level number, such as '29'
-{2} - The specified TargetFrameworkVersion
-{3} - The specified API level number</comment>
-  </data>
   <data name="XA0116" xml:space="preserve">
     <value>Nie można odnaleźć elementu „EmbeddedResource” o nazwie „{0}”.</value>
     <comment>The following are literal names and should not be translated: EmbeddedResource
 {0} - The name of the missing resource</comment>
-  </data>
-  <data name="XA0117" xml:space="preserve">
-    <value>Wartość {0} dla elementu TargetFrameworkVersion jest przestarzała. Zaktualizuj ją na wartość v5.0 lub wyższą.</value>
-    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v5.0
-{0} - The current value of TargetFrameworkVersion</comment>
   </data>
   <data name="XA0118_Parse" xml:space="preserve">
     <value>Nie można przeanalizować elementu „{0}”</value>
@@ -1361,6 +1329,11 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>
+  </data>
+  <data name="XAGCA7009_UnsupportedRuntime" xml:space="preserve">
+    <value>GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.</value>
+    <comment>The following are literal names and should not be translated: GenerateNativeApplicationConfigSources, CoreCLR, AndroidRuntime.
+{0} - The unsupported AndroidRuntime task parameter value.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>Nie znaleziono pliku wykonywalnego „gradlew” w katalogu projektu „{0}”. Upewnij się, że ścieżka do folderu projektu Gradle jest poprawna i że zawiera skrypty Gradle Wrapper.</value>
