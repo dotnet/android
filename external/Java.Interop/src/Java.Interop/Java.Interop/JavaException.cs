@@ -28,6 +28,8 @@ namespace Java.Interop
 			}
 
 			unsafe {
+				// SAFETY: ()V takes no arguments, so the argument pointer is null.
+				// The current-thread local peer is copied/disposed before synchronous initialization uses this peer.
 				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);

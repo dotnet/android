@@ -35,6 +35,8 @@ namespace Java.Interop
 		public JavaObjectArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = NewArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}

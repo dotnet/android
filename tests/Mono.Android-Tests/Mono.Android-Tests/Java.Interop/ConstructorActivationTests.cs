@@ -37,6 +37,8 @@ namespace Java.InteropTests
 		{
 			ConstructorActivationJavaException.Reset ();
 
+			// SAFETY: StartCreateInstance allocates a real current-thread local reference.
+			// Keep it through peer assertions/disposal; finally deletes it even if initialization throws.
 			var handle = JNIEnv.StartCreateInstance (typeof (ConstructorActivationJavaException), "()V");
 			try {
 				JNIEnv.FinishCreateInstance (handle, "()V");

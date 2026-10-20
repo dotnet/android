@@ -72,6 +72,8 @@ namespace Java.Interop {
 		public JavaBooleanArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewBooleanArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -264,6 +266,8 @@ namespace Java.Interop {
 		public JavaSByteArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewByteArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -456,6 +460,8 @@ namespace Java.Interop {
 		public JavaCharArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewCharArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -648,6 +654,8 @@ namespace Java.Interop {
 		public JavaInt16Array (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewShortArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -840,6 +848,8 @@ namespace Java.Interop {
 		public JavaInt32Array (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewIntArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -1032,6 +1042,8 @@ namespace Java.Interop {
 		public JavaInt64Array (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewLongArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -1224,6 +1236,8 @@ namespace Java.Interop {
 		public JavaSingleArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewFloatArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
@@ -1416,6 +1430,8 @@ namespace Java.Interop {
 		public JavaDoubleArray (int length)
 			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = JniEnvironment.Arrays.NewDoubleArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}

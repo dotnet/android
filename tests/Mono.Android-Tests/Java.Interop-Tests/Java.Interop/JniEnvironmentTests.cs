@@ -16,6 +16,7 @@ namespace Java.InteropTests
 		public void Transition_RejectsNullEnvironmentPointer ()
 		{
 			var environmentPointer = JniEnvironment.EnvironmentPointer;
+			// SAFETY: Zero is rejected before JNI dispatch; do not substitute a fabricated nonzero address.
 			Assert.Throws<ArgumentNullException> (() => new JniTransition (IntPtr.Zero));
 			Assert.AreEqual (environmentPointer, JniEnvironment.EnvironmentPointer);
 		}
