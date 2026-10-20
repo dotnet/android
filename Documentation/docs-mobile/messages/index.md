@@ -280,6 +280,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5302](xa5302.md): Two processes may be building this project at once. Lock file exists at path: {path}
 + [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
 + [XA5304](xa5304.md): Invalid AssemblyStore compression level '{level}'. The value must be between {min} and {max}.
++ [XA5305](xa5305.md): Could not verify the Microsoft OpenJDK archive signature.
 
 ## XA6xxx: Internal tools
 
