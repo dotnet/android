@@ -72,7 +72,7 @@ safe-outputs:
   create-pull-request-review-comment:
     max: 50
   submit-pull-request-review:
-    max: 1
+    max: 2
     allowed-events: [COMMENT]
 ---
 
