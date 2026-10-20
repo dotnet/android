@@ -1809,8 +1809,8 @@
       <Item ItemId=";XA4325" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to generate the JNI remapping data. {0}]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Nepodařilo se vygenerovat data přemapování R8 JNI. {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nepovedlo se vygenerovat data mapování JNI. {0}]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Failed to generate the R8 JNI remapping data. {0}]]></Val>
@@ -2028,6 +2028,9 @@
       <Item ItemId=";XA4330" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nativní knihovna {0} používá vyhrazený název libbinary_blobs.so (cesta archivu {1} nebo ELF SONAME). Tento název je vyhrazený pro binární data platformy .NET pro Android.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2052,6 +2055,9 @@
       <Item ItemId=";XA5101_ClangRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nepovedlo se najít knihovny modulu runtime Android NDK Clang. Prohledává se pod: {0}. Nainstalujte prosím kompletní sadu Android NDK.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
