@@ -19,6 +19,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (Boolean value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (Z)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -34,6 +35,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref booleanValue, "booleanValue", "()Z");
 			try {
 				unsafe {
+					// SAFETY: The cached booleanValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallBooleanMethod (self, booleanValue);
 				}
 			} finally {
@@ -144,6 +146,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (SByte value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (B)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -159,6 +162,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref byteValue, "byteValue", "()B");
 			try {
 				unsafe {
+					// SAFETY: The cached byteValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallByteMethod (self, byteValue);
 				}
 			} finally {
@@ -300,6 +304,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (Char value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (C)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -315,6 +320,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref charValue, "charValue", "()C");
 			try {
 				unsafe {
+					// SAFETY: The cached charValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallCharMethod (self, charValue);
 				}
 			} finally {
@@ -425,6 +431,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (Int16 value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (S)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -440,6 +447,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref shortValue, "shortValue", "()S");
 			try {
 				unsafe {
+					// SAFETY: The cached shortValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallShortMethod (self, shortValue);
 				}
 			} finally {
@@ -550,6 +558,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (Int32 value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (I)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -565,6 +574,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
 			try {
 				unsafe {
+					// SAFETY: The cached intValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallIntMethod (self, intValue);
 				}
 			} finally {
@@ -675,6 +685,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (Int64 value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (J)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -690,6 +701,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref longValue, "longValue", "()J");
 			try {
 				unsafe {
+					// SAFETY: The cached longValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallLongMethod (self, longValue);
 				}
 			} finally {
@@ -800,6 +812,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (Single value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (F)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -815,6 +828,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref floatValue, "floatValue", "()F");
 			try {
 				unsafe {
+					// SAFETY: The cached floatValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallFloatMethod (self, floatValue);
 				}
 			} finally {
@@ -925,6 +939,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (Double value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (D)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -940,6 +955,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref doubleValue, "doubleValue", "()D");
 			try {
 				unsafe {
+					// SAFETY: The cached doubleValue ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.CallDoubleMethod (self, doubleValue);
 				}
 			} finally {

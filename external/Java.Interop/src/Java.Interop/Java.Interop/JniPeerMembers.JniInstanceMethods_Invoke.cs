@@ -10,6 +10,12 @@ namespace Java.Interop {
 		partial class JniInstanceMethods {
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeVoidStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				
@@ -18,6 +24,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -32,12 +39,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe void InvokeAbstractVoidMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeVoidStaticRedirect (m, self, parameters)) {
 							return;
@@ -52,12 +67,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe void InvokeVirtualVoidMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -83,6 +106,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe void InvokeNonvirtualVoidMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -90,6 +120,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeVoidStaticRedirect (m, self, parameters)) {
 							return;
 						}
@@ -103,6 +134,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeBooleanStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out bool r)
 			{
 				r = default;
@@ -111,6 +148,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -125,12 +163,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe bool InvokeAbstractBooleanMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeBooleanStaticRedirect (m, self, parameters, out bool r)) {
 							return r;
@@ -145,12 +191,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe bool InvokeVirtualBooleanMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -176,6 +230,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe bool InvokeNonvirtualBooleanMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -183,6 +244,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeBooleanStaticRedirect (m, self, parameters, out bool r)) {
 							return r;
 						}
@@ -196,6 +258,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeSByteStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out sbyte r)
 			{
 				r = default;
@@ -204,6 +272,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -218,12 +287,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe sbyte InvokeAbstractSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeSByteStaticRedirect (m, self, parameters, out sbyte r)) {
 							return r;
@@ -238,12 +315,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe sbyte InvokeVirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -269,6 +354,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe sbyte InvokeNonvirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -276,6 +368,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeSByteStaticRedirect (m, self, parameters, out sbyte r)) {
 							return r;
 						}
@@ -289,6 +382,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeCharStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out char r)
 			{
 				r = default;
@@ -297,6 +396,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -311,12 +411,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe char InvokeAbstractCharMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeCharStaticRedirect (m, self, parameters, out char r)) {
 							return r;
@@ -331,12 +439,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe char InvokeVirtualCharMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -362,6 +478,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe char InvokeNonvirtualCharMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -369,6 +492,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeCharStaticRedirect (m, self, parameters, out char r)) {
 							return r;
 						}
@@ -382,6 +506,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeInt16StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out short r)
 			{
 				r = default;
@@ -390,6 +520,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -404,12 +535,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe short InvokeAbstractInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeInt16StaticRedirect (m, self, parameters, out short r)) {
 							return r;
@@ -424,12 +563,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe short InvokeVirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -455,6 +602,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe short InvokeNonvirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -462,6 +616,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeInt16StaticRedirect (m, self, parameters, out short r)) {
 							return r;
 						}
@@ -475,6 +630,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeInt32StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out int r)
 			{
 				r = default;
@@ -483,6 +644,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -497,12 +659,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe int InvokeAbstractInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeInt32StaticRedirect (m, self, parameters, out int r)) {
 							return r;
@@ -517,12 +687,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe int InvokeVirtualInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -548,6 +726,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe int InvokeNonvirtualInt32Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -555,6 +740,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeInt32StaticRedirect (m, self, parameters, out int r)) {
 							return r;
 						}
@@ -568,6 +754,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeInt64StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out long r)
 			{
 				r = default;
@@ -576,6 +768,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -590,12 +783,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe long InvokeAbstractInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeInt64StaticRedirect (m, self, parameters, out long r)) {
 							return r;
@@ -610,12 +811,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe long InvokeVirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -641,6 +850,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe long InvokeNonvirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -648,6 +864,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeInt64StaticRedirect (m, self, parameters, out long r)) {
 							return r;
 						}
@@ -661,6 +878,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeSingleStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out float r)
 			{
 				r = default;
@@ -669,6 +892,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -683,12 +907,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe float InvokeAbstractSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeSingleStaticRedirect (m, self, parameters, out float r)) {
 							return r;
@@ -703,12 +935,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe float InvokeVirtualSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -734,6 +974,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe float InvokeNonvirtualSingleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -741,6 +988,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeSingleStaticRedirect (m, self, parameters, out float r)) {
 							return r;
 						}
@@ -754,6 +1002,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeDoubleStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out double r)
 			{
 				r = default;
@@ -762,6 +1016,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -776,12 +1031,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe double InvokeAbstractDoubleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeDoubleStaticRedirect (m, self, parameters, out double r)) {
 							return r;
@@ -796,12 +1059,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe double InvokeVirtualDoubleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -827,6 +1098,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe double InvokeNonvirtualDoubleMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -834,6 +1112,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeDoubleStaticRedirect (m, self, parameters, out double r)) {
 							return r;
 						}
@@ -847,6 +1126,12 @@ namespace Java.Interop {
 			}
 
 #pragma warning disable CA1801
+			/// <safety>
+			/// When redirection is configured, <paramref name="parameters"/> must contain the
+			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
+			/// Keep that storage and its referenced peers live and unchanged through this call;
+			/// it must not be released or written concurrently.
+			/// </safety>
 			static unsafe bool TryInvokeObjectStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out JniObjectReference r)
 			{
 				r = default;
@@ -855,6 +1140,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
 					int c   = method.ParameterCount.Value;
 					Debug.Assert (c > 0);
 					var p   = stackalloc JniArgumentValue [c];
@@ -869,12 +1155,20 @@ namespace Java.Interop {
 			}
 #pragma warning restore CA1801
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe JniObjectReference InvokeAbstractObjectMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
 						var m   = GetMethodInfo (encodedMember);
 						if (TryInvokeObjectStaticRedirect (m, self, parameters, out JniObjectReference r)) {
 							return r;
@@ -889,12 +1183,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe JniObjectReference InvokeVirtualObjectMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
 					unsafe {
+						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
 						var declaringType   = DeclaringType;
 						if (Members.UsesVirtualDispatch (self, declaringType)) {
 							var m   = GetMethodInfo (encodedMember);
@@ -920,6 +1222,13 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
+			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
+			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
+			/// managed) and its JNI references live on this attached thread through exceptional
+			/// completion. Prevent concurrent mutation or release through aliases.
+			/// </safety>
 			public unsafe JniObjectReference InvokeNonvirtualObjectMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
@@ -927,6 +1236,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
+						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
 						if (TryInvokeObjectStaticRedirect (m, self, parameters, out JniObjectReference r)) {
 							return r;
 						}

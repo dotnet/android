@@ -109,6 +109,12 @@ lifetimes. Managed alternatives such as `JniType.DefineClass` with a `byte[]` an
 `JniEnvironment.Strings.NewString` with a `string` own their pinning and keep
 unsafe operations inside their implementations.
 
+Caller annotations and implementation regions are audited independently.
+Each audited `unsafe` body has a `// SAFETY:` explanation naming the storage,
+extent, ABI, or lifetime it relies on. The raw `JniNativeMethods` boundary
+requires a live `JNIEnv*` on its attached thread; that obligation is not
+implied merely by using opaque object, field, or method handles.
+
 For UTF-8 span lookups, callers must provide readable NUL-terminated backing
 storage throughout the call. Complete C# UTF-8 literals supply a trailing NUL
 outside the span length; copying or slicing a span does not preserve that
@@ -119,6 +125,10 @@ must match their JNI descriptors and remain callable and rooted until successful
 unregistration **and completion of all in-flight callbacks**, including after
 failed or partial registration. Declaration-level contracts do not validate
 callback ABIs or change registration ownership.
+
+An address-only `JniNativeMethod` constructor stores descriptor addresses; it
+does not read their contents or invoke a callback. Registration, not address
+storage, owns the ABI, provenance, and lifetime obligations described above.
 
 The project uses preview syntax for pointer declarations outside unsafe type
 contexts. It does **not** opt into the

@@ -28,6 +28,7 @@ public class JniNativeInterfaceTests
 	[Test]
 	public void FunctionPointerSignatures ()
 	{
+		// SAFETY: These assertions inspect managed signature metadata only; no callback is invoked with an unverified ABI.
 		AssertFunctionPointerSignature (nameof (JNIEnv.DefineClass), typeof (IntPtr), typeof (IntPtr), typeof (IntPtr), typeof (IntPtr), typeof (IntPtr), typeof (int));
 		AssertFunctionPointerSignature (nameof (JNIEnv.ExceptionCheck), typeof (byte), typeof (IntPtr));
 		AssertFunctionPointerSignature (nameof (JNIEnv.GetJavaVM), typeof (int), typeof (IntPtr), typeof (IntPtr).MakePointerType ());

@@ -54,12 +54,22 @@ namespace Java.Interop
 				// Convert dot-separated names (e.g. "java.lang.Object") to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				var jniClassName = classname.Contains ('.') ? classname.Replace ('.', '/') : classname;
-				if (TryRawFindClass (info.EnvironmentPointer, jniClassName, out var c, out var thrown)) {
+				IntPtr c;
+				IntPtr thrown;
+				bool found;
+				unsafe {
+					// SAFETY: info supplies this attached thread's live environment; the helper owns marshaling of the managed class name.
+					found = TryRawFindClass (info.EnvironmentPointer, jniClassName, out c, out thrown);
+				}
+				if (found) {
 					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
 					return r;
 				}
-				RawExceptionClear (info.EnvironmentPointer);
+				unsafe {
+					// SAFETY: Clear only the pending lookup exception in this same attached thread's environment before invoking the fallback.
+					RawExceptionClear (info.EnvironmentPointer);
+				}
 				var java = info.ToJavaName (classname);
 				try {
 					if (TryLoadClassWithFallback (info, thrown, java, throwOnError, out var result))
@@ -95,7 +105,10 @@ namespace Java.Interop
 						JniEnvironment.LogCreateLocalRef (result);
 						return true;
 					}
-					RawExceptionClear (info.EnvironmentPointer);
+					unsafe {
+						// SAFETY: The fallback's pending exception belongs to info's current JNI thread; no foreign JNIEnv is used.
+						RawExceptionClear (info.EnvironmentPointer);
+					}
 					JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, forNameThrown);
 				}
 
@@ -114,7 +127,11 @@ namespace Java.Interop
 				return false;
 			}
 
-			static JniObjectReference NewJavaNameFromUtf8 (IntPtr env, ReadOnlySpan<byte> classname)
+			/// <safety>
+			/// <paramref name="env"/> must remain a live JNIEnv for the calling attached thread.
+			/// The class-name span itself is read within its bounds and converted to owned storage.
+			/// </safety>
+			static unsafe JniObjectReference NewJavaNameFromUtf8 (IntPtr env, ReadOnlySpan<byte> classname)
 			{
 				var terminator = classname.IndexOf ((byte) 0);
 				if (terminator >= 0)
@@ -145,11 +162,15 @@ namespace Java.Interop
 				return r;
 			}
 
-			static bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
+			/// <safety>
+			/// <paramref name="env"/> must remain a live JNIEnv for the calling attached thread
+			/// throughout the native lookup and exception query, including failure.
+			/// </safety>
+			static unsafe bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
 			{
 				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
 				unsafe {
-					// SAFETY: StringToCoTaskMemUTF8 supplies terminated storage alive through FindClass and exception capture.
+					// SAFETY: This helper owns the UTF8 allocation until JNI and exception polling finish; env comes from the calling thread's JniEnvironmentInfo.
 					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
 					thrown  = JniNativeMethods.ExceptionOccurred (env);
 				}
@@ -163,7 +184,10 @@ namespace Java.Interop
 				return false;
 			}
 
-			static void RawExceptionClear (IntPtr env)
+			/// <safety>
+			/// <paramref name="env"/> must be the current attached thread's live JNI environment.
+			/// </safety>
+			static unsafe void RawExceptionClear (IntPtr env)
 			{
 				unsafe {
 					// SAFETY: env is the current lookup thread's JNI environment; only its pending exception is cleared.
@@ -229,7 +253,11 @@ namespace Java.Interop
 				if (!type.IsValid)
 					return null;
 
-				var s = JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName);
+				JniObjectReference s;
+				unsafe {
+					// SAFETY: Class_getName was resolved as Class.getName()String; it reads no argument buffer and type remains the lookup's live class reference.
+					s = JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName);
+				}
 				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose)!);
 			}
 
@@ -251,6 +279,9 @@ namespace Java.Interop
 			/// Each delegate's parameter and return types, calling convention, and marshaling
 			/// attributes must match its JNI descriptor, including the leading JNIEnv and
 			/// receiver/class pointers. JNI scalar values must not be interpreted as managed references.
+			/// Do not mutate registration entries while this call reads them. Concurrent native
+			/// invocations must be quiesced before roots are reclaimed; an exception does not
+			/// establish that JNI retained no callbacks.
 			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
@@ -270,6 +301,9 @@ namespace Java.Interop
 			/// Each registered delegate's parameter and return types, calling convention, and
 			/// marshaling attributes must match its JNI descriptor, including the leading JNIEnv
 			/// and receiver/class pointers. JNI scalar values must not be interpreted as managed references.
+			/// Do not mutate the selected entries while this call reads them. Quiesce native
+			/// invocations before reclaiming roots; thrown/failed registration may still leave
+			/// native callbacks installed.
 			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
@@ -321,7 +355,7 @@ namespace Java.Interop
 						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
 						unsafe {
-							// SAFETY: Strings remain allocated through registration; caller guarantees the delegate ABI.
+							// SAFETY: Descriptor stores tracked addresses; registration owns callback validity.
 							natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
 						}
 					}
@@ -331,6 +365,7 @@ namespace Java.Interop
 					}
 				} finally {
 					unsafe {
+						// SAFETY: Only allocations recorded in unmanagedStrings are freed, after JNI finishes reading their names/signatures; delegate KeepAlive follows this loop.
 						for (int i = 0; i < unmanagedStrings.Length; ++i) {
 							if (unmanagedStrings [i] != IntPtr.Zero)
 								Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
@@ -353,6 +388,9 @@ namespace Java.Interop
 			/// Prevent new calls to the registered native methods before unregistration. Release
 			/// callback storage only after unregistration succeeds and all callbacks already
 			/// running have finished.
+			/// Keep the descriptor span stable and unmodified through the call. Name/signature
+			/// aliases must not race JNI reads; callback storage has the longer lifetime above,
+			/// even if registration returns an error or throws.
 			/// </safety>
 			public static unsafe void RegisterNatives (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
 			{
@@ -401,10 +439,16 @@ namespace Java.Interop
 			/// The caller must ensure the backing storage remains readable and NUL-terminated
 			/// for the duration of the call. C# UTF-8 literals provide a
 			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+			/// Keep the backing bytes readable and unchanged until completion, including failure;
+			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
+			/// backing storage during the JNI read.
 			/// </safety>
 			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
 			{
-				return TryFindClass (classname, throwOnError: true);
+				unsafe {
+					// SAFETY: The caller guarantees the terminator and byte lifetime; lookup pins the span only for JNI's synchronous read.
+					return TryFindClass (classname, throwOnError: true);
+				}
 			}
 
 			/// <summary>
@@ -415,14 +459,24 @@ namespace Java.Interop
 			/// The caller must ensure the backing storage remains readable and NUL-terminated
 			/// for the duration of the call. C# UTF-8 literals provide a
 			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+			/// Keep the backing bytes readable and unchanged until completion, including failure;
+			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
+			/// backing storage during the JNI read.
 			/// </safety>
 			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
 			{
-				instance = TryFindClass (classname, throwOnError: false);
+				unsafe {
+					// SAFETY: The caller supplies readable terminated bytes through failed or successful lookup; the helper owns JNI pinning.
+					instance = TryFindClass (classname, throwOnError: false);
+				}
 				return instance.IsValid;
 			}
 
-			static JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
+			/// <safety>
+			/// <paramref name="classname"/> must have readable, unchanged NUL-terminated backing
+			/// storage through lookup and fallback, even when the terminator is beyond its length.
+			/// </safety>
+			static unsafe JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
 			{
 				if (classname.Length == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
@@ -436,7 +490,10 @@ namespace Java.Interop
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
 				if (!hasDots) {
-					return TryFindClassFromPtr (info, classname, classname, terminator, throwOnError);
+					unsafe {
+						// SAFETY: No copy is made; the caller's termination guarantee applies to the pinned classname storage.
+						return TryFindClassFromPtr (info, classname, classname, terminator, throwOnError);
+					}
 				}
 
 				Span<byte> jniClassName = nameLength + 1 <= 256
@@ -446,26 +503,42 @@ namespace Java.Interop
 					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
 				jniClassName [nameLength] = 0;
 
-				return TryFindClassFromPtr (info, classname, jniClassName, terminator, throwOnError);
+				unsafe {
+					// SAFETY: jniClassName owns its appended NUL; the original caller-owned span remains readable for bounded fallback conversion.
+					return TryFindClassFromPtr (info, classname, jniClassName, terminator, throwOnError);
+				}
 			}
 
-			static JniObjectReference TryFindClassFromPtr (JniEnvironmentInfo info, ReadOnlySpan<byte> classname, ReadOnlySpan<byte> findClassSpan, int terminator, bool throwOnError)
+			/// <safety>
+			/// <paramref name="findClassSpan"/> must have readable NUL-terminated backing storage
+			/// and no concurrently mutating alias. <paramref name="info"/> must describe this JNI thread.
+			/// </safety>
+			static unsafe JniObjectReference TryFindClassFromPtr (JniEnvironmentInfo info, ReadOnlySpan<byte> classname, ReadOnlySpan<byte> findClassSpan, int terminator, bool throwOnError)
 			{
 				IntPtr c;
 				unsafe {
+					// SAFETY: The caller supplies termination; fixed pins the span while this thread's live JNIEnv reads through its NUL.
 					fixed (byte* _classname_ptr = findClassSpan) {
 						c = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
 					}
 				}
-				var thrown  = JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer);
+				IntPtr thrown;
+				unsafe {
+					// SAFETY: info is the current lookup's attached-thread environment, queried immediately after FindClass before fallback clears its exception.
+					thrown = JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer);
+				}
 				if (thrown == IntPtr.Zero) {
 					var r = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
 					return r;
 				}
 
-				RawExceptionClear (info.EnvironmentPointer);
-				var javaName = NewJavaNameFromUtf8 (info.EnvironmentPointer, classname);
+				JniObjectReference javaName;
+				unsafe {
+					// SAFETY: Both operations use the same current-thread JNIEnv; NewJavaNameFromUtf8 constructs and pins its own terminated copy for fallback only.
+					RawExceptionClear (info.EnvironmentPointer);
+					javaName = NewJavaNameFromUtf8 (info.EnvironmentPointer, classname);
+				}
 				try {
 					if (TryLoadClassWithFallback (info, thrown, javaName, throwOnError, out var result))
 						return result;

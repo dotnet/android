@@ -189,13 +189,10 @@ namespace Xamarin.Java.Interop
 					continue;
 
 				var returnType = entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true);
-				bool requiresUnsafe = entry.CallerSafetyRequirements.Length > 0 || returnType.IndexOf ('*') >= 0 ||
-					entry.Parameters.Any (p => p.Type.GetMarshalType (isReturn: false, isPinvoke: true).IndexOf ('*') >= 0);
-
 				o.WriteLine ();
-				WriteCallerSafetyRequirements (o, entry);
+				WriteCallerSafetyRequirements (o, entry, isRaw: true);
 				o.WriteLine ("\t\t[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
-				o.Write ("\t\tinternal static {0}", requiresUnsafe ? "unsafe " : "");
+				o.Write ("\t\tinternal static unsafe ");
 				o.Write (entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true));
 				o.Write ($" {entry.Name} (IntPtr env");
 				foreach (var p in entry.Parameters) {
@@ -206,6 +203,7 @@ namespace Xamarin.Java.Interop
 				o.WriteLine (")");
 				o.WriteLine ("\t\t{");
 				o.WriteLine ("\t\t\tunsafe {");
+				o.WriteLine ("\t\t\t\t// SAFETY: The caller supplies this thread's live JNIEnv and arguments matching the {0} JNI slot.", entry.Name);
 				o.Write ("\t\t\t\t");
 				if (returnType != "void") {
 					o.Write ("return ");
@@ -257,6 +255,7 @@ namespace Xamarin.Java.Interop
 					if (!is_void)
 						o.WriteLine ($"\t\t\t{entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true)} tmp;");
 					o.WriteLine ("\t\t\tunsafe {");
+					o.WriteLine ("\t\t\t\t// SAFETY: {0} uses this attached thread's __env; strings are marshaled here and raw buffers satisfy this member's caller bounds/lifetime contract.", entry.Name);
 					o.Write ("\t\t\t\t");
 					if (!is_void)
 						o.Write ("tmp = ");
@@ -274,6 +273,7 @@ namespace Xamarin.Java.Interop
 					if (entry.Throws) {
 						o.WriteLine ("\t\t\tIntPtr thrown;");
 						o.WriteLine ("\t\t\tunsafe {");
+						o.WriteLine ("\t\t\t\t// SAFETY: The same live thread-local JNIEnv is queried immediately after the JNI call, before buffer cleanup.");
 						o.WriteLine ("\t\t\t\tthrown = JniNativeMethods.ExceptionOccurred (__env);");
 						o.WriteLine ("\t\t\t}");
 					}
@@ -294,13 +294,50 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\t}");
 		}
 
-		static void WriteCallerSafetyRequirements (TextWriter o, JniFunction entry)
+		static void WriteCallerSafetyRequirements (TextWriter o, JniFunction entry, bool isRaw = false)
 		{
-			if (entry.CallerSafetyRequirements.Length == 0)
+			var requirements = entry.CallerSafetyRequirements.ToList ();
+			if (isRaw) {
+				requirements.Insert (0, "<paramref name=\"env\"/> must be a live JNIEnv for the calling attached thread with the JNI vtable ABI; it must not be used on another thread or after detachment.");
+			}
+			foreach (var parameter in entry.Parameters) {
+				switch (parameter.Type.JniType) {
+				case "jvalue*":
+					requirements.Add ($"<paramref name=\"{parameter.Name}\"/> must contain the initialized jvalue entries required by the method descriptor, with matching JNI types and live object references. Null is allowed only when no arguments are read.");
+					requirements.Add ("Keep the argument storage readable, stable, and pinned when managed through the call, including exceptional completion; do not mutate or release it concurrently.");
+					break;
+				case "const char*":
+					if (isRaw)
+						requirements.Add ($"<paramref name=\"{parameter.Name}\"/> must address readable, unchanged NUL-terminated JNI UTF-8 storage through the call, including exceptional completion.");
+					break;
+				case "jboolean*":
+					if (parameter.Name == "isCopy")
+						requirements.Add ("A non-null <paramref name=\"isCopy\"/> must address writable storage for one JNI boolean, stable and pinned when managed through this call, without concurrent access.");
+					goto default;
+				case "JavaVM**":
+					if (isRaw)
+						requirements.Add ("<paramref name=\"vm\"/> must address writable storage for one JavaVM pointer for this call.");
+					break;
+				default:
+					if (parameter.Name == "elements") {
+						requirements.Add ("<paramref name=\"elements\"/> must be the still-active acquisition for <paramref name=\"array\"/> and the matching element type. Use a valid JNI release mode; prevent access or release through aliases during release and never use the storage after final release.");
+					} else if (parameter.Name == "buffer" && entry.Name.EndsWith ("ArrayRegion", StringComparison.Ordinal)) {
+						var access = entry.Name.StartsWith ("Get", StringComparison.Ordinal) ? "writable" : "readable and initialized";
+						requirements.Add ($"<paramref name=\"buffer\"/> must address at least <paramref name=\"length\"/> {access} elements of the matching JNI primitive type. Keep it stable and pinned when managed through the call, including exceptional completion, without conflicting alias access.");
+						requirements.Add ("<paramref name=\"length\"/> must be nonnegative; the buffer extent is not checked by this wrapper.");
+					} else if (parameter.Name == "unicodeChars") {
+						requirements.Add ("<paramref name=\"unicodeChars\"/> must address at least <paramref name=\"length\"/> readable initialized UTF-16 code units, stable and pinned when managed through the call, including exceptional completion. The length must be nonnegative and no alias may modify the buffer during the read.");
+					} else if (parameter.Name == "chars") {
+						requirements.Add ("<paramref name=\"chars\"/> must come from a still-active GetStringChars acquisition for <paramref name=\"stringInstance\"/>. Prevent concurrent access or release and do not use any alias after release.");
+					}
+					break;
+				}
+			}
+			if (requirements.Count == 0)
 				return;
 
 			o.WriteLine ("\t\t/// <safety>");
-			foreach (var requirement in entry.CallerSafetyRequirements)
+			foreach (var requirement in requirements)
 				o.WriteLine ("\t\t/// {0}", requirement);
 			o.WriteLine ("\t\t/// </safety>");
 		}
@@ -792,6 +829,7 @@ namespace Xamarin.Java.Interop
 		{
 			return new[]{
 				"unsafe {",
+				$"\t// SAFETY: _{variable}_ptr is this wrapper's StringToCoTaskMemUTF8 allocation; JNI has finished reading it and it is freed once here.",
 				$"\tMarshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
 				"}",
 			};

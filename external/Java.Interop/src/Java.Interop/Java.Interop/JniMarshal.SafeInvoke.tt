@@ -25,6 +25,12 @@ namespace Java.Interop {
 		string invokeParams   = i == 0 ? "" : ", " + string.Join (", ", parameters);
 #>
 
+		/// <safety>
+		/// <paramref name="action"/> must be a non-null callable managed entry point with this exact
+		/// signature and remain executable until the invocation completes, including exception handling.
+		/// <paramref name="jnienv"/> must belong to the current attached JNI thread; object handles
+		/// passed to the action must remain valid for the uses made by that action.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void SafeInvokeAction<#= typeParams #> (IntPtr jnienv, IntPtr self<#= methodParams #>, delegate* managed<IntPtr, IntPtr<#= delegateParams #>, void> action)
 		{
@@ -33,6 +39,7 @@ namespace Java.Interop {
 
 			try {
 				unsafe {
+					// SAFETY: The caller supplies the exact managed action ABI and live JNI arguments; the surrounding catch/finally completes the marshal transition.
 					action (jnienv, self<#= invokeParams #>);
 				}
 			} catch (Exception __e) {
@@ -42,6 +49,12 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="action"/> must be a non-null callable managed entry point with this exact
+		/// signature and remain executable until the invocation completes, including exception handling.
+		/// <paramref name="jnienv"/> must belong to the current attached JNI thread; object handles
+		/// passed to the action must remain valid for the uses made by that action.
+		/// </safety>
 		[return: MaybeNull]
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult SafeInvokeFunc<#= funcTypeParams #> (IntPtr jnienv, IntPtr self<#= methodParams #>, delegate* managed<IntPtr, IntPtr<#= delegateParams #>, TResult> action)
@@ -51,6 +64,7 @@ namespace Java.Interop {
 
 			try {
 				unsafe {
+					// SAFETY: The caller supplies the exact managed function ABI and live JNI arguments; the return value crosses only the declared managed signature.
 					return action (jnienv, self<#= invokeParams #>);
 				}
 			} catch (Exception __e) {

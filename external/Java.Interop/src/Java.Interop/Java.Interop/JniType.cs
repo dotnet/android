@@ -465,11 +465,14 @@ namespace Java.Interop {
 		/// The caller must ensure the backing storage remains readable and NUL-terminated
 		/// for the duration of the call. C# UTF-8 literals provide a
 		/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+		/// Keep the bytes unchanged through failed or successful lookup; aliases must not
+		/// mutate or reclaim them concurrently. The lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniType (ReadOnlySpan<byte> classname)
 		{
 			JniObjectReference peer;
 			unsafe {
+				// SAFETY: The caller supplies a readable terminated name; FindClass pins it for JNI and returns an owned local reference for Initialize.
 				peer = JniEnvironment.Types.FindClass (classname);
 			}
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
@@ -478,6 +481,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="classname"/> has readable NUL-terminated
 		/// backing storage for the duration of the call.
+		/// Keep its bytes unchanged until completion, including failure, without concurrent
+		/// reclamation or mutation; the lookup pins managed storage.
 		/// </safety>
 		public static unsafe JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
 		{
@@ -485,6 +490,7 @@ namespace Java.Interop {
 				return cachedType;
 			JniType t;
 			unsafe {
+				// SAFETY: On a cache miss the caller's terminated bytes remain readable through construction; the constructor owns JNI pinning.
 				t = new JniType (classname);
 			}
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
@@ -496,12 +502,15 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
 		/// backing storage for the duration of the call.
+		/// Keep its bytes unchanged until completion, including failure, without concurrent
+		/// reclamation or mutation; the lookup pins managed storage.
 		/// </safety>
 		public unsafe JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			unsafe {
+				// SAFETY: The <init> literal has static NUL-terminated storage; the caller supplies the signature's terminator and lookup pins both spans.
 				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature);
 			}
 		}
@@ -509,12 +518,15 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="signature"/> has readable NUL-terminated
 		/// backing storage for the duration of the call.
+		/// Keep its bytes unchanged until completion, including failure, without concurrent
+		/// reclamation or mutation; the lookup pins managed storage.
 		/// </safety>
 		public unsafe JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			unsafe {
+				// SAFETY: The constructor name is a complete UTF8 literal; the caller keeps the signature terminated and unchanged for a possible cache miss.
 				return GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature);
 			}
 		}
@@ -522,12 +534,15 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; this lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			unsafe {
+				// SAFETY: Both caller-owned spans satisfy termination and lifetime requirements; GetFieldID pins them for this class's JNI lookup.
 				return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
 			}
 		}
@@ -535,6 +550,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; a cache-miss lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
@@ -544,6 +561,7 @@ namespace Java.Interop {
 				return cachedField;
 			JniFieldInfo m;
 			unsafe {
+				// SAFETY: On a cache miss the same terminated caller bytes are consumed synchronously; only field metadata, not their addresses, is cached.
 				m = GetInstanceField (name, signature);
 			}
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
@@ -555,12 +573,15 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; this lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			unsafe {
+				// SAFETY: GetStaticFieldID pins both caller-guaranteed terminated spans for the current class's synchronous JNI read.
 				return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
 			}
 		}
@@ -568,6 +589,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; a cache-miss lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
@@ -577,6 +600,7 @@ namespace Java.Interop {
 				return cachedField;
 			JniFieldInfo m;
 			unsafe {
+				// SAFETY: The caller maintains both terminated byte sequences until the cache-miss lookup completes, including JNI exception handling.
 				m = GetStaticField (name, signature);
 			}
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
@@ -588,12 +612,15 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; this lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			unsafe {
+				// SAFETY: The caller supplies termination and byte lifetime; GetMethodID pins the spans and does not retain their addresses.
 				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
 			}
 		}
@@ -601,6 +628,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; a cache-miss lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
@@ -610,6 +639,7 @@ namespace Java.Interop {
 				return cachedMethod;
 			JniMethodInfo m;
 			unsafe {
+				// SAFETY: The cache miss forwards the caller's still-live terminated spans; the result caches an opaque method ID rather than borrowed bytes.
 				m = GetInstanceMethod (name, signature);
 			}
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
@@ -621,12 +651,15 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; this lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();
 
 			unsafe {
+				// SAFETY: Both terminated spans are caller-valid for this call; GetStaticMethodID pins them before the current-thread JNI read.
 				return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
 			}
 		}
@@ -634,6 +667,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
 		/// readable NUL-terminated backing storage for the duration of the call.
+		/// Prevent concurrent mutation/reclamation of either sequence through success or
+		/// failure; a cache-miss lookup pins managed backing storage.
 		/// </safety>
 		public unsafe JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
@@ -643,6 +678,7 @@ namespace Java.Interop {
 				return cachedMethod;
 			JniMethodInfo m;
 			unsafe {
+				// SAFETY: A cache miss consumes the caller's terminated bytes only through lookup completion; published metadata retains no byte-buffer alias.
 				m = GetStaticMethod (name, signature);
 			}
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {

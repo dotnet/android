@@ -39,6 +39,7 @@ namespace Java.Interop {
 		internal static JniObjectReference CreateLocalRef (<#= type.Type #> value)
 		{
 			unsafe {
+				// SAFETY: The sole jvalue is initialized for the (<#= type.JniType #>)V constructor and its stack storage survives the synchronous JNI call.
 				var args    = stackalloc JniArgumentValue [1];
 				args [0]    = new JniArgumentValue (value);
 
@@ -54,6 +55,7 @@ namespace Java.Interop {
 			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
 			try {
 				unsafe {
+					// SAFETY: The cached <#= type.GetValue #> ID has no arguments and the peer reference is retained until the enclosing finally.
 					return JniEnvironment.InstanceMethods.Call<#= type.JniCallType #>Method (self, <#= type.GetValue #>);
 				}
 			} finally {
