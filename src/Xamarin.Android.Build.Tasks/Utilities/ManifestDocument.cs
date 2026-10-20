@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tasks {
 		public bool ForceExtractNativeLibs { get; set; }
 		public bool ForceDebuggable { get; set; }
 		public string VersionName { get; set; }
-		public IVersionResolver VersionResolver { get; set; } = new MonoAndroidHelperVersionResolver ();
+		public IVersionResolver VersionResolver { get; set; }
 		public AndroidRuntime AndroidRuntime { get; set; }
 
 		string versionCode;
@@ -116,8 +116,9 @@ namespace Xamarin.Android.Tasks {
 			return targetAttr.Value;
 		}
 
-		public ManifestDocument (string templateFilename) : base ()
+		public ManifestDocument (string templateFilename, AndroidVersions supportedVersions = null) : base ()
 		{
+			VersionResolver = new AndroidVersionsResolver (supportedVersions ?? new AndroidVersions (frameworkDirectories: []));
 			Assemblies = new List<string> ();
 
 			attName = androidNs + "name";
@@ -1064,12 +1065,19 @@ namespace Xamarin.Android.Tasks {
 		int? GetApiLevelFromId (string id);
 	}
 
-	class MonoAndroidHelperVersionResolver : IVersionResolver
+	class AndroidVersionsResolver : IVersionResolver
 	{
+		readonly AndroidVersions versions;
+
+		public AndroidVersionsResolver (AndroidVersions versions)
+		{
+			this.versions = versions ?? throw new ArgumentNullException (nameof (versions));
+		}
+
 		public string? GetIdFromApiLevel (string apiLevel)
-			=> MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiLevel);
+			=> versions.GetIdFromApiLevel (apiLevel);
 
 		public int? GetApiLevelFromId (string id)
-			=> MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
+			=> versions.GetApiLevelFromId (id);
 	}
 }

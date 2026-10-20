@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ using Xamarin.Installer.AndroidSDK.Manager;
 using Xamarin.Installer.Build.Tasks.Properties;
 using Xamarin.Installer.Common;
 using System.Threading;
+using OperationStatus = Xamarin.Installer.Common.OperationStatus;
 
 namespace Xamarin.Installer.Build.Tasks
 {
@@ -39,6 +41,12 @@ namespace Xamarin.Installer.Build.Tasks
 		public bool InstallJavaDependencies { get; set; } = true;
 
 		public bool IgnoreSdkArchiveChecksumErrors { get; set; }
+
+		public bool SkipSignCheck { get; set; }
+
+		public string OpenJdkPublicKeyUrl { get; set; } = "";
+
+		public string OpenJdkPublicKeySha256 { get; set; } = "";
 
 		List<string> temporaryFiles = new List<string> ();
 
@@ -335,9 +343,68 @@ namespace Xamarin.Installer.Build.Tasks
 
 			await DownloadAsync(installationContext.HttpClient, jdkToInstall, cancellationToken);
 			cancellationToken.ThrowIfCancellationRequested ();
+			if (!await VerifyJavaArchiveAsync (installationContext.HttpClient, jdkToInstall, cancellationToken))
+				return false;
+			cancellationToken.ThrowIfCancellationRequested ();
 			javaInstaller.InstallJdk(jdkToInstall);
 
 			return true;
+		}
+
+		internal async Task<bool> VerifyJavaArchiveAsync (HttpClient httpClient, Archive archive, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested ();
+			if (SkipSignCheck) {
+				LogMessage ($"Microsoft OpenJDK signature verification was skipped for '{archive.Url}' because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive.", MessageImportance.High);
+				return true;
+			}
+
+			try {
+				var keyUrl = string.IsNullOrEmpty (OpenJdkPublicKeyUrl) ? OpenJdkSignatureVerifier.PublicKeyUrl : OpenJdkPublicKeyUrl;
+				if (!Uri.TryCreate (keyUrl, UriKind.Absolute, out var publicKeyUrl) ||
+					(publicKeyUrl.Scheme != Uri.UriSchemeHttps && publicKeyUrl.Scheme != Uri.UriSchemeHttp))
+					throw new InvalidDataException ("The OpenJDK public key URL must be an absolute HTTP or HTTPS URL.");
+				var trustedKeySha256 = string.IsNullOrEmpty (OpenJdkPublicKeySha256) ? OpenJdkSignatureVerifier.PublicKeySha256 : OpenJdkPublicKeySha256;
+				if (trustedKeySha256.Length != 64 || !trustedKeySha256.All (Uri.IsHexDigit))
+					throw new InvalidDataException ("The OpenJDK public key SHA-256 hash must contain exactly 64 hexadecimal characters.");
+				var signatureUrl = new UriBuilder (archive.Url);
+				signatureUrl.Path += ".sig";
+				var signature = await DownloadVerificationFileAsync (httpClient, signatureUrl.Uri, cancellationToken);
+				var publicKey = await DownloadVerificationFileAsync (httpClient, publicKeyUrl, cancellationToken);
+				using (var file = File.OpenRead (archive.DownloadedFilePath))
+					OpenJdkSignatureVerifier.Verify (file, signature, publicKey, trustedKeySha256, cancellationToken);
+				return true;
+			} catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
+				throw;
+			} catch (Exception ex) when (ex is HttpRequestException || ex is IOException || ex is InvalidDataException ||
+				ex is System.Security.Cryptography.CryptographicException || ex is FormatException || ex is OperationCanceledException) {
+				LogCodedError ("XA5305", Resources.XA5305, archive.Url, ex.Message);
+				return false;
+			}
+		}
+
+		internal static async Task<byte []> DownloadVerificationFileAsync (HttpClient httpClient, Uri url, CancellationToken cancellationToken, ArrayPool<byte> bufferPool = null)
+		{
+			using (var response = await httpClient.GetAsync (url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)) {
+				response.EnsureSuccessStatusCode ();
+				using (var input = await response.Content.ReadAsStreamAsync ()) {
+					const int maximumLength = 64 * 1024;
+					var pool = bufferPool ?? ArrayPool<byte>.Shared;
+					var buffer = pool.Rent (maximumLength + 1);
+					try {
+						int length = 0;
+						int count;
+						while ((count = await input.ReadAsync (buffer, length, buffer.Length - length, cancellationToken)) > 0) {
+							length += count;
+							if (length > maximumLength)
+								throw new InvalidDataException ("The OpenJDK verification file exceeds 64 KiB.");
+						}
+						return buffer.AsSpan (0, length).ToArray ();
+					} finally {
+						pool.Return (buffer);
+					}
+				}
+			}
 		}
 
 		async Task AcceptLicensesAsync(InstallationContext installationContext, CancellationToken cancellationToken)
@@ -391,21 +458,26 @@ namespace Xamarin.Installer.Build.Tasks
 				temporaryFiles.Add (path);
 				using (var fileStream = File.OpenWrite (path)) {
 					using (var httpStream = await response.Content.ReadAsStreamAsync ()) {
-						var buffer = new byte[16 * 1024];
-						int bytesRead;
-						double bytesWritten = 0;
-						double previousProgress = 0;
-						while ((bytesRead = await httpStream.ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
-							fileStream.Write (buffer, 0, bytesRead);
-							bytesWritten += bytesRead;
-							// Log download progress roughly every 10%.
-							var progress = bytesWritten / fileLength;
-							if (progress - previousProgress > .10) {
-								Info ($"Downloaded {progress:P0} of {Path.GetFileName (archive.Url.AbsolutePath)}");
-								previousProgress = progress;
+						const int bufferSize = 16 * 1024;
+						var buffer = ArrayPool<byte>.Shared.Rent (bufferSize);
+						try {
+							int bytesRead;
+							double bytesWritten = 0;
+							double previousProgress = 0;
+							while ((bytesRead = await httpStream.ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
+								fileStream.Write (buffer, 0, bytesRead);
+								bytesWritten += bytesRead;
+								// Log download progress roughly every 10%.
+								var progress = bytesWritten / fileLength;
+								if (progress - previousProgress > .10) {
+									Info ($"Downloaded {progress:P0} of {Path.GetFileName (archive.Url.AbsolutePath)}");
+									previousProgress = progress;
+								}
 							}
+							fileStream.Flush ();
+						} finally {
+							ArrayPool<byte>.Shared.Return (buffer);
 						}
-						fileStream.Flush ();
 					}
 				}
 				Info ("Wrote '{0}' to '{1}'", archive.Url, path);

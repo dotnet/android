@@ -54,14 +54,6 @@ namespace Xamarin.Android.Build.Tests
 			var path = Path.Combine (Root, "temp", $"CheckPackageManagerAssemblyOrder{testHash}");
 			Directory.CreateDirectory (path);
 
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new [] {
-				new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true },
-				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0",  Stable = true },
-			});
-			MonoAndroidHelper.RefreshSupportedVersions (new [] {
-				Path.Combine (referencePath, "MonoAndroid"),
-			});
-
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.net6.helloandroid' android:versionCode='1' />");
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=YYYY");
 

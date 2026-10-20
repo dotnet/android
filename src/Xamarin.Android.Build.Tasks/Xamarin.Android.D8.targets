@@ -58,6 +58,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     </ItemGroup>
 
     <R8
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         Condition=" '$(_UseR8)' == 'True' "
         ToolPath="$(JavaToolPath)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
@@ -94,6 +95,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         MapDiagnostics="@(_AndroidR8MapDiagnostics)"
     />
     <D8
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         Condition=" '$(_UseR8)' != 'True' "
         ToolPath="$(JavaToolPath)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
