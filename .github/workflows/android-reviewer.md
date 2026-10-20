@@ -22,7 +22,7 @@ permissions:
   checks: read
   contents: read
   pull-requests: read
-model: gpt-5.6-sol
+model: gpt-5.6
 engine:
   id: copilot
   # Pinned to the gh-aw compiler-tested Copilot CLI version. Bump manually
