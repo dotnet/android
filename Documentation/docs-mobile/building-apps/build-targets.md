@@ -151,6 +151,11 @@ MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
 Calls the [`GetAndroidDependencies`](#getandroiddependencies) target, then installs
 the Android SDK packages specified in the `@(AndroidDependency)` item group.
 
+Before it extracts a downloaded Microsoft OpenJDK archive, this target verifies
+the archive's detached digital signature. The signing key must match the trusted
+key hash included with the .NET for Android SDK. Missing or invalid signatures
+stop installation with [XA5305](../messages/xa5305.md).
+
 ```dotnetcli
 dotnet build -t:InstallAndroidDependencies -f net8.0-android "-p:AndroidSdkDirectory=<path to sdk>" "-p:JavaSdkDirectory=<path to java sdk>"
 ```
