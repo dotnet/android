@@ -93,6 +93,7 @@ class ManifestGenerator
 			// Skip Application types (handled separately via assembly-level attribute)
 			if (peer.ComponentAttribute.Kind == ComponentKind.Application) {
 				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue);
+				AssemblyLevelElementBuilder.ApplyApplicationProperties (app, peer.ComponentAttribute.Properties, allPeers, Warn);
 				continue;
 			}
 

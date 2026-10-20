@@ -101,6 +101,34 @@ static class AndroidEnumConverter
 		_ => null,
 	};
 
+	public static string? RequiredContentUriPermissionToString (int value) => value switch {
+		0 => "none",
+		1 => "read",
+		2 => "write",
+		3 => "readOrWrite",
+		4 => "readAndWrite",
+		_ => null,
+	};
+
+	public static string? ApplicationCategoriesToString (int value) => value switch {
+		0 => "game",
+		1 => "audio",
+		2 => "video",
+		3 => "image",
+		4 => "social",
+		5 => "news",
+		6 => "maps",
+		7 => "productivity",
+		8 => "accessibility",
+		_ => null,
+	};
+
+	public static string? GwpAsanToString (int value) => value switch {
+		0 => "never",
+		1 => "always",
+		_ => null,
+	};
+
 	public static string? ForegroundServiceTypeToString (int value)
 	{
 		var parts = new List<string> ();

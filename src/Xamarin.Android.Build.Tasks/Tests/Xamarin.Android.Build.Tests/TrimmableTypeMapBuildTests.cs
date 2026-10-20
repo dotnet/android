@@ -191,6 +191,178 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("@string/application_metadata_resource", (string) resourceMetadata.Attribute (android + "resource"));
 		}
 
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void ManifestAttributesAreGeneratedForTrimmableComponents (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			proj.Sources.Add (new BuildItem.Source ("ManifestParity.cs") {
+				TextContent = () => """
+					using System;
+					using Android.App;
+					using Android.Content;
+					using Android.Content.PM;
+					using Android.Runtime;
+
+					[assembly: Instrumentation (Name = "assembly.instrumentation", TargetPackage = "assembly.target", RoundIcon = "@drawable/assembly_round")]
+
+					namespace UnnamedProject;
+
+					[Application (
+						Description = "@string/application_description",
+						Permission = "application-permission",
+						Process = "application-process",
+						TaskAffinity = "application-affinity",
+						Banner = "@drawable/application_banner",
+						Logo = "@drawable/application_logo",
+						RestoreAnyVersion = true,
+						Enabled = false,
+						ExtractNativeLibs = false,
+						UiOptions = UiOptions.SplitActionBarWhenNarrow,
+						DataExtractionRules = "@xml/application_rules",
+						AppCategory = ApplicationCategories.Game,
+						GwpAsanMode = GwpAsan.Always,
+						BackupAgent = typeof (ParityActivity),
+						ManageSpaceActivity = typeof (ParityManageActivity))]
+					[UsesLibrary (Name = "application.library", Required = false)]
+					[Property ("application.property", Value = "application-property")]
+					public class ParityApplication : Application
+					{
+						public ParityApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+					}
+
+					[Activity (
+						CanDisplayOnRemoteDevices = true,
+						EnableOnBackInvokedCallback = true,
+						RequireContentUriPermissionFromCaller = RequiredContentUriPermission.Read)]
+					[Property ("activity.property", Resource = "@string/activity_property")]
+					public class ParityActivity : Activity {}
+
+					[ContentProvider (
+						new [] { "parity.provider" },
+						ReadPermission = "provider.read",
+						WritePermission = "provider.write")]
+					[GrantUriPermission (Path = "/path")]
+					[Property ("provider.property", Value = "provider-property")]
+					public class ParityProvider : ContentProvider
+					{
+						public override bool OnCreate () => true;
+						public override Android.Database.ICursor? Query (Android.Net.Uri? uri, string[]? projection, string? selection, string[]? selectionArgs, string? sortOrder) => null;
+						public override string? GetType (Android.Net.Uri? uri) => null;
+						public override Android.Net.Uri? Insert (Android.Net.Uri? uri, ContentValues? values) => null;
+						public override int Delete (Android.Net.Uri? uri, string? selection, string[]? selectionArgs) => 0;
+						public override int Update (Android.Net.Uri? uri, ContentValues? values, string? selection, string[]? selectionArgs) => 0;
+					}
+
+					[Instrumentation (RoundIcon = "@drawable/instrumentation_round", TargetProcesses = "parity")]
+					[MetaData ("instrumentation.metadata", Value = "instrumentation-value")]
+					public class ParityInstrumentation : Instrumentation {}
+
+					public class ParityManageActivity : Activity {}
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\parity.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<string name="activity_property">activity-resource</string>
+						<string name="application_description">application-description</string>
+					</resources>
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\application_banner.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#FF0000" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\application_logo.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#00FF00" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\instrumentation_round.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#0000FF" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\assembly_round.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#FFFF00" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\xml\\application_rules.xml") {
+				TextContent = () => """
+						<resources />
+						""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} build should have succeeded.");
+
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+			var root = manifest.Root;
+			Assert.IsNotNull (root);
+			var application = root.Element ("application");
+			Assert.IsNotNull (application);
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+
+			Assert.AreEqual ("@string/application_description", (string) application.Attribute (android + "description"));
+			Assert.AreEqual ("application-permission", (string) application.Attribute (android + "permission"));
+			Assert.AreEqual ("application-process", (string) application.Attribute (android + "process"));
+			Assert.AreEqual ("application-affinity", (string) application.Attribute (android + "taskAffinity"));
+			Assert.AreEqual ("@drawable/application_banner", (string) application.Attribute (android + "banner"));
+			Assert.AreEqual ("@drawable/application_logo", (string) application.Attribute (android + "logo"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "restoreAnyVersion"));
+			Assert.AreEqual ("false", (string) application.Attribute (android + "enabled"));
+			Assert.AreEqual ("false", (string) application.Attribute (android + "extractNativeLibs"));
+			Assert.AreEqual ("splitActionBarWhenNarrow", (string) application.Attribute (android + "uiOptions"));
+			Assert.AreEqual ("@xml/application_rules", (string) application.Attribute (android + "dataExtractionRules"));
+			Assert.AreEqual ("game", (string) application.Attribute (android + "appCategory"));
+			Assert.AreEqual ("always", (string) application.Attribute (android + "gwpAsanMode"));
+			Assert.AreEqual ("application.library", (string) application.Element ("uses-library").Attribute (android + "name"));
+			Assert.AreEqual ("false", (string) application.Element ("uses-library").Attribute (android + "required"));
+			Assert.AreEqual ("application-property", (string) application.Element ("property").Attribute (android + "value"));
+
+			var activity = application.Elements ("activity").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityActivity", StringComparison.Ordinal));
+			Assert.AreEqual ("true", (string) activity.Attribute (android + "canDisplayOnRemoteDevices"));
+			Assert.AreEqual ("true", (string) activity.Attribute (android + "enableOnBackInvokedCallback"));
+			Assert.AreEqual ("read", (string) activity.Attribute (android + "requireContentUriPermissionFromCaller"));
+			Assert.AreEqual ("@string/activity_property", (string) activity.Element ("property").Attribute (android + "resource"));
+
+			var provider = application.Elements ("provider").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityProvider", StringComparison.Ordinal));
+			Assert.AreEqual ("provider.read", (string) provider.Attribute (android + "readPermission"));
+			Assert.AreEqual ("provider.write", (string) provider.Attribute (android + "writePermission"));
+			Assert.AreEqual ("/path", (string) provider.Element ("grant-uri-permission").Attribute (android + "path"));
+			Assert.AreEqual ("provider-property", (string) provider.Element ("property").Attribute (android + "value"));
+
+			var instrumentation = root.Elements ("instrumentation").Single (element => (string) element.Attribute (android + "name") == "assembly.instrumentation");
+			Assert.AreEqual ("assembly.target", (string) instrumentation.Attribute (android + "targetPackage"));
+			Assert.AreEqual ("@drawable/assembly_round", (string) instrumentation.Attribute (android + "roundIcon"));
+
+			var typeInstrumentation = root.Elements ("instrumentation").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityInstrumentation", StringComparison.Ordinal));
+			Assert.AreEqual ("parity", (string) typeInstrumentation.Attribute (android + "targetProcesses"));
+			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
+		}
+
 		[Test]
 		public void Build_TrimmableTypeMap_WithCollectionExport_Succeeds ([Values (false, true)] bool isRelease)
 		{

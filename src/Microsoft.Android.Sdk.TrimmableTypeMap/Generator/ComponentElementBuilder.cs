@@ -61,6 +61,16 @@ static class ComponentElementBuilder
 			element.Add (CreateMetaDataElement (meta));
 		}
 
+		foreach (var property in component.ManifestProperties) {
+			element.Add (CreatePropertyElement (property));
+		}
+
+		if (component.Kind == ComponentKind.ContentProvider) {
+			foreach (var grant in component.GrantUriPermissions) {
+				element.Add (CreateGrantUriPermissionElement (grant));
+			}
+		}
+
 		// Match ManifestDocumentElement.ToElement's attribute ordering.
 		SortAttributesAlphabetically (element);
 
@@ -245,6 +255,16 @@ static class ComponentElementBuilder
 		foreach (var meta in component.MetaData) {
 			app.Add (CreateMetaDataElement (meta));
 		}
+		foreach (var property in component.ManifestProperties) {
+			app.Add (CreatePropertyElement (property));
+		}
+		foreach (var library in component.UsesLibraries) {
+			if (!string.IsNullOrEmpty (library.Name)) {
+				app.Add (new XElement ("uses-library",
+					new XAttribute (AttName, library.Name),
+					new XAttribute (AndroidNs + "required", library.Required ? "true" : "false")));
+			}
+		}
 	}
 
 	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer, string packageName)
@@ -264,6 +284,37 @@ static class ComponentElementBuilder
 			element.SetAttributeValue (AndroidNs + "targetPackage", packageName);
 		}
 
+		foreach (var meta in component.MetaData) {
+			element.Add (CreateMetaDataElement (meta));
+		}
+
 		manifest.Add (element);
+	}
+
+	internal static XElement CreatePropertyElement (PropertyInfo property)
+	{
+		var element = new XElement ("property", new XAttribute (AndroidNs + "name", property.Name));
+		if (property.Value is not null) {
+			element.SetAttributeValue (AndroidNs + "value", property.Value);
+		}
+		if (property.Resource is not null) {
+			element.SetAttributeValue (AndroidNs + "resource", property.Resource);
+		}
+		return element;
+	}
+
+	static XElement CreateGrantUriPermissionElement (GrantUriPermissionInfo grant)
+	{
+		var element = new XElement ("grant-uri-permission");
+		if (grant.Path is not null) {
+			element.SetAttributeValue (AndroidNs + "path", grant.Path);
+		}
+		if (grant.PathPattern is not null) {
+			element.SetAttributeValue (AndroidNs + "pathPattern", grant.PathPattern);
+		}
+		if (grant.PathPrefix is not null) {
+			element.SetAttributeValue (AndroidNs + "pathPrefix", grant.PathPrefix);
+		}
+		return element;
 	}
 }

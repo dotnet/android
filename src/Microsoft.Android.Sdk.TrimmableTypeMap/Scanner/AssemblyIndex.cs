@@ -174,6 +174,9 @@ sealed class AssemblyIndex : IDisposable
 		// with the wrong AttributeName.
 		List<IntentFilterInfo>? intentFilters = null;
 		List<MetaDataInfo>? metaData = null;
+		List<PropertyInfo>? properties = null;
+		List<UsesLibraryInfo>? usesLibraries = null;
+		List<GrantUriPermissionInfo>? grantUriPermissions = null;
 		Dictionary<string, object?>? layoutProperties = null;
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
@@ -223,6 +226,22 @@ sealed class AssemblyIndex : IDisposable
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
 				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
+			} else if (attrName == "PropertyAttribute") {
+				properties ??= new List<PropertyInfo> ();
+				var (propertyName, propertyProps) = ParseNameAndProperties (ca);
+				properties.Add (CreatePropertyInfo (propertyName, propertyProps));
+			} else if (attrName == "UsesLibraryAttribute") {
+				usesLibraries ??= new List<UsesLibraryInfo> ();
+				var (libraryName, libraryProps) = ParseNameAndProperties (ca);
+				usesLibraries.Add (CreateUsesLibraryInfo (libraryName, libraryProps));
+			} else if (attrName == "GrantUriPermissionAttribute") {
+				grantUriPermissions ??= new List<GrantUriPermissionInfo> ();
+				var (_, grantProps) = ParseNameAndProperties (ca);
+				grantUriPermissions.Add (new GrantUriPermissionInfo {
+					Path = grantProps.TryGetValue ("Path", out var path) && path is string pathValue ? pathValue : null,
+					PathPattern = grantProps.TryGetValue ("PathPattern", out var pattern) && pattern is string patternValue ? patternValue : null,
+					PathPrefix = grantProps.TryGetValue ("PathPrefix", out var prefix) && prefix is string prefixValue ? prefixValue : null,
+				});
 			} else if (attrName == "LayoutAttribute") {
 				layoutProperties = ParseLayoutAttribute (ca);
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
@@ -242,6 +261,15 @@ sealed class AssemblyIndex : IDisposable
 			}
 			if (metaData is not null) {
 				attrInfo.MetaData.AddRange (metaData);
+			}
+			if (properties is not null) {
+				attrInfo.ManifestProperties.AddRange (properties);
+			}
+			if (usesLibraries is not null) {
+				attrInfo.UsesLibraries.AddRange (usesLibraries);
+			}
+			if (grantUriPermissions is not null) {
+				attrInfo.GrantUriPermissions.AddRange (grantUriPermissions);
 			}
 			if (layoutProperties is not null) {
 				attrInfo.LayoutProperties = layoutProperties;
@@ -906,6 +934,7 @@ sealed class AssemblyIndex : IDisposable
 		"UsesConfigurationAttribute",
 		"MetaDataAttribute",
 		"PropertyAttribute",
+		"InstrumentationAttribute",
 		"SupportsGLTextureAttribute",
 		"ApplicationAttribute",
 	};
@@ -949,6 +978,9 @@ sealed class AssemblyIndex : IDisposable
 				break;
 			case "PropertyAttribute":
 				info.Properties.Add (CreatePropertyInfo (name, props));
+				break;
+			case "InstrumentationAttribute":
+				info.Instrumentations.Add (new InstrumentationInfo { Name = name, Properties = props });
 				break;
 			case "SupportsGLTextureAttribute":
 				if (name.Length > 0) {
@@ -1093,6 +1125,9 @@ class TypeAttributeInfo (string attributeName)
 	/// Metadata entries declared on this type via [MetaData] attributes.
 	/// </summary>
 	public List<MetaDataInfo> MetaData { get; } = [];
+	public List<PropertyInfo> ManifestProperties { get; } = [];
+	public List<UsesLibraryInfo> UsesLibraries { get; } = [];
+	public List<GrantUriPermissionInfo> GrantUriPermissions { get; } = [];
 
 	/// <summary>
 	/// Named property values from a [Layout] attribute on this type, or null if none.

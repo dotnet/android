@@ -82,6 +82,9 @@ static class PropertyMapper
 		new ("SupportsPictureInPicture", "supportsPictureInPicture", MappingKind.Bool),
 		new ("TurnScreenOn", "turnScreenOn", MappingKind.Bool),
 		new ("VisibleToInstantApps", "visibleToInstantApps", MappingKind.Bool),
+		new ("CanDisplayOnRemoteDevices", "canDisplayOnRemoteDevices", MappingKind.Bool),
+		new ("EnableOnBackInvokedCallback", "enableOnBackInvokedCallback", MappingKind.Bool),
+		new ("RequireContentUriPermissionFromCaller", "requireContentUriPermissionFromCaller", MappingKind.Enum, AndroidEnumConverter.RequiredContentUriPermissionToString),
 		new ("LaunchMode", "launchMode", MappingKind.Enum, AndroidEnumConverter.LaunchModeToString),
 		new ("ScreenOrientation", "screenOrientation", MappingKind.Enum, AndroidEnumConverter.ScreenOrientationToString),
 		new ("ConfigurationChanges", "configChanges", MappingKind.Enum, AndroidEnumConverter.ConfigChangesToString),
@@ -103,6 +106,8 @@ static class PropertyMapper
 		new ("GrantUriPermissions", "grantUriPermissions", MappingKind.Bool),
 		new ("Syncable", "syncable", MappingKind.Bool),
 		new ("MultiProcess", "multiprocess", MappingKind.Bool),
+		new ("ReadPermission", "readPermission"),
+		new ("WritePermission", "writePermission"),
 	];
 
 	internal static readonly PropertyMapping[] ApplicationElementMappings = [
@@ -118,6 +123,19 @@ static class PropertyMapper
 		new ("Debuggable", "debuggable", MappingKind.Bool),
 		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
 		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
+		new ("Description", "description"),
+		new ("Permission", "permission"),
+		new ("Process", "process"),
+		new ("TaskAffinity", "taskAffinity"),
+		new ("Banner", "banner"),
+		new ("Logo", "logo"),
+		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
+		new ("Enabled", "enabled", MappingKind.Bool),
+		new ("ExtractNativeLibs", "extractNativeLibs", MappingKind.Bool),
+		new ("UiOptions", "uiOptions", MappingKind.Enum, AndroidEnumConverter.UiOptionsToString),
+		new ("DataExtractionRules", "dataExtractionRules"),
+		new ("AppCategory", "appCategory", MappingKind.Enum, AndroidEnumConverter.ApplicationCategoriesToString),
+		new ("GwpAsanMode", "gwpAsanMode", MappingKind.Enum, AndroidEnumConverter.GwpAsanToString),
 	];
 
 	internal static readonly PropertyMapping[] InstrumentationMappings = [
@@ -126,6 +144,8 @@ static class PropertyMapper
 		new ("TargetPackage", "targetPackage"),
 		new ("FunctionalTest", "functionalTest", MappingKind.Bool),
 		new ("HandleProfiling", "handleProfiling", MappingKind.Bool),
+		new ("RoundIcon", "roundIcon"),
+		new ("TargetProcesses", "targetProcesses"),
 	];
 
 	internal static readonly PropertyMapping[] ApplicationPropertyMappings = [
@@ -147,6 +167,30 @@ static class PropertyMapper
 		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
 		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
 		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
+		new ("AllowClearUserData", "allowClearUserData", MappingKind.Bool),
+		new ("AllowCrossUidActivitySwitchFromBelow", "allowCrossUidActivitySwitchFromBelow", MappingKind.Bool),
+		new ("AllowNativeHeapPointerTagging", "allowNativeHeapPointerTagging", MappingKind.Bool),
+		new ("AllowTaskReparenting", "allowTaskReparenting", MappingKind.Bool),
+		new ("AppCategory", "appCategory", MappingKind.Enum, AndroidEnumConverter.ApplicationCategoriesToString),
+		new ("BackupInForeground", "backupInForeground", MappingKind.Bool),
+		new ("DataExtractionRules", "dataExtractionRules"),
+		new ("EnableOnBackInvokedCallback", "enableOnBackInvokedCallback", MappingKind.Bool),
+		new ("ExtractNativeLibs", "extractNativeLibs", MappingKind.Bool),
+		new ("FullBackupContent", "fullBackupContent", MappingKind.Bool),
+		new ("FullBackupOnly", "fullBackupOnly", MappingKind.Bool),
+		new ("GwpAsanMode", "gwpAsanMode", MappingKind.Enum, AndroidEnumConverter.GwpAsanToString),
+		new ("HasCode", "hasCode", MappingKind.Bool),
+		new ("HasFragileUserData", "hasFragileUserData", MappingKind.Bool),
+		new ("KillAfterRestore", "killAfterRestore", MappingKind.Bool),
+		new ("PageSizeCompat", "pageSizeCompat"),
+		new ("Persistent", "persistent", MappingKind.Bool),
+		new ("RequestLegacyExternalStorage", "requestLegacyExternalStorage", MappingKind.Bool),
+		new ("RequiredAccountType", "requiredAccountType"),
+		new ("ResizeableActivity", "resizeableActivity", MappingKind.Bool),
+		new ("RestrictedAccountType", "restrictedAccountType"),
+		new ("TestOnly", "testOnly", MappingKind.Bool),
+		new ("UiOptions", "uiOptions", MappingKind.Enum, AndroidEnumConverter.UiOptionsToString),
+		new ("VMSafeMode", "vmSafeMode", MappingKind.Bool),
 	];
 
 	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false, int targetSdkVersion = 0)

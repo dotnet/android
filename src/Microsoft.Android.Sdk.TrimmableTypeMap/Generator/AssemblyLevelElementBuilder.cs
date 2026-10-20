@@ -170,11 +170,23 @@ static class AssemblyLevelElementBuilder
 				manifest.Add (new XElement ("supports-gl-texture", new XAttribute (AttName, gl.Name)));
 			}
 		}
+
+		foreach (var instrumentation in info.Instrumentations) {
+			if (string.IsNullOrEmpty (instrumentation.Name)) {
+				continue;
+			}
+			var element = new XElement ("instrumentation", new XAttribute (AttName, instrumentation.Name));
+			PropertyMapper.ApplyMappings (element, instrumentation.Properties, PropertyMapper.InstrumentationMappings);
+			if (element.Attribute (AndroidNs + "targetPackage") is null) {
+				element.SetAttributeValue (AndroidNs + "targetPackage", (string?) manifest.Attribute ("package"));
+			}
+			manifest.Add (element);
+		}
 	}
 
 	internal static void ApplyApplicationProperties (
 		XElement app,
-		Dictionary<string, object?> properties,
+		IReadOnlyDictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		Action<int, string>? warn = null)
 	{
@@ -187,7 +199,7 @@ static class AssemblyLevelElementBuilder
 
 	static void ApplyTypeProperty (
 		XElement app,
-		Dictionary<string, object?> properties,
+		IReadOnlyDictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		string propertyName,
 		string xmlAttrName,
