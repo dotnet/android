@@ -51,21 +51,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI <#= info.JniMarshalType #> array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// Get<#= info.JniMarshalType #>ArrayElements result, with the matching <#= info.ManagedType #> representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount)
 			: base (elements, elementCount, sizeof (<#= info.ManagedType #>))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe <#= info.ManagedType #>* Elements {
-			get {return (<#= info.ManagedType #>*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (<#= info.ManagedType #>*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref <#= info.ManagedType #> this [int index] {
 			get {
@@ -74,6 +95,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -120,11 +142,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");

@@ -319,15 +319,23 @@ namespace Java.Interop
 		int sizeOfElement;
 
 		/// <safety>
-		/// <paramref name="elements"/> must address a live JNI acquisition of
-		/// <paramref name="elementCount"/> elements of <paramref name="sizeOfElement"/> bytes.
-		/// The acquisition and its Java array must remain valid until this owner releases them.
+		/// <paramref name="elements"/> must be the non-null address of a live JNI array acquisition.
+		/// <paramref name="elementCount"/> must be non-negative and fit within that acquisition;
+		/// <paramref name="sizeOfElement"/> must match its primitive JNI element size.
+		/// This constructor checks only for null, not the buffer extent or element representation.
+		/// Keep the Java array reference valid until release, release the acquisition only through
+		/// this owner, and coordinate access through any aliases with release and disposal.
+		/// JNI operations require a thread attached to the same JVM as the acquisition.
+		/// If construction throws, the caller remains responsible for the acquisition.
 		/// </safety>
 		internal unsafe JniArrayElements (void* elements, int elementCount, int sizeOfElement)
 		{
-			if (elements == null)
-				throw new ArgumentException ("'elements' must not be null.", nameof (elements));
-			this.elements = elements;
+			unsafe {
+				// SAFETY: The caller supplies the JNI buffer extent and ABI; this only checks and stores its address.
+				if (elements == null)
+					throw new ArgumentException ("'elements' must not be null.", nameof (elements));
+				this.elements = elements;
+			}
 			this.elementCount = elementCount;
 			this.sizeOfElement = sizeOfElement;
 		}
@@ -335,6 +343,7 @@ namespace Java.Interop
 		internal bool IsDisposed {
 			get {
 				unsafe {
+					// SAFETY: Comparing the release sentinel does not read the acquired buffer.
 					return elements == null;
 				}
 			}
@@ -347,6 +356,7 @@ namespace Java.Interop
 		public  IntPtr  Elements {
 			get {
 				unsafe {
+					// SAFETY: This exposes only the checked address, without dereferencing or extending its lifetime.
 					return (IntPtr) ElementsPointer;
 				}
 			}
@@ -354,6 +364,7 @@ namespace Java.Interop
 
 		internal unsafe void* ElementsPointer {
 			get {
+				// SAFETY: Reading the address does not dereference storage or synchronize with release.
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				return elements;
@@ -381,6 +392,7 @@ namespace Java.Interop
 				throw new ObjectDisposedException (GetType ().FullName);
 			Synchronize (releaseMode);
 			unsafe {
+				// SAFETY: Synchronize returned successfully; clearing the sentinel does not access the buffer.
 				elements = null;
 			}
 		}
@@ -435,6 +447,10 @@ namespace Java.Interop
 			}
 		}
 
+		/// <remarks>
+		/// Acquires an element owner through the concrete array's implementation, without borrowing
+		/// a pointer or reference. Any later borrow must keep the Java array and acquisition valid.
+		/// </remarks>
 		public JniArrayElements GetElements ()
 		{
 			return CreateElements ();

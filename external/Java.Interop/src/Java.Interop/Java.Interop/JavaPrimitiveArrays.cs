@@ -31,21 +31,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Boolean array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetBooleanArrayElements result, with the matching Boolean representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount)
 			: base (elements, elementCount, sizeof (Boolean))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe Boolean* Elements {
-			get {return (Boolean*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (Boolean*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref Boolean this [int index] {
 			get {
@@ -54,6 +75,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -100,11 +122,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniBooleanArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
@@ -233,21 +261,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Byte array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetByteArrayElements result, with the matching SByte representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount)
 			: base (elements, elementCount, sizeof (SByte))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe SByte* Elements {
-			get {return (SByte*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (SByte*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref SByte this [int index] {
 			get {
@@ -256,6 +305,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -302,11 +352,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniSByteArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
@@ -435,21 +491,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Char array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetCharArrayElements result, with the matching Char representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount)
 			: base (elements, elementCount, sizeof (Char))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe Char* Elements {
-			get {return (Char*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (Char*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref Char this [int index] {
 			get {
@@ -458,6 +535,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -504,11 +582,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniCharArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
@@ -637,21 +721,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Short array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetShortArrayElements result, with the matching Int16 representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount)
 			: base (elements, elementCount, sizeof (Int16))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe Int16* Elements {
-			get {return (Int16*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (Int16*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref Int16 this [int index] {
 			get {
@@ -660,6 +765,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -706,11 +812,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniInt16ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
@@ -839,21 +951,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Int array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetIntArrayElements result, with the matching Int32 representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount)
 			: base (elements, elementCount, sizeof (Int32))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe Int32* Elements {
-			get {return (Int32*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (Int32*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref Int32 this [int index] {
 			get {
@@ -862,6 +995,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -908,11 +1042,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniInt32ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
@@ -1041,21 +1181,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Long array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetLongArrayElements result, with the matching Int64 representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount)
 			: base (elements, elementCount, sizeof (Int64))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe Int64* Elements {
-			get {return (Int64*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (Int64*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref Int64 this [int index] {
 			get {
@@ -1064,6 +1225,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -1110,11 +1272,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniInt64ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
@@ -1243,21 +1411,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Float array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetFloatArrayElements result, with the matching Single representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount)
 			: base (elements, elementCount, sizeof (Single))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe Single* Elements {
-			get {return (Single*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (Single*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref Single this [int index] {
 			get {
@@ -1266,6 +1455,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -1312,11 +1502,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniSingleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
@@ -1445,21 +1641,42 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// <paramref name="arrayHandle"/> must reference a live JNI Double array in the
+		/// current thread's JVM, and <paramref name="elements"/> must be its unreleased
+		/// GetDoubleArrayElements result, with the matching Double representation and alignment.
+		/// <paramref name="elementCount"/> must be non-negative and not exceed that array's length.
+		/// Keep the array reference valid through release; do not release the acquisition separately
+		/// or race access through aliases with release/disposal. This owner does not root the Java
+		/// array wrapper. If construction throws, the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount)
 			: base (elements, elementCount, sizeof (Double))
 		{
+			// SAFETY: The caller pairs this buffer with its live JNI array; retain the handle for the matching release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Returns the acquired buffer's address without dereferencing it or extending its lifetime.
+		/// The disposed check does not synchronize with release or make later pointer access safe.
+		/// </remarks>
 		public new unsafe Double* Elements {
-			get {return (Double*) ElementsPointer;}
+			get {
+				// SAFETY: The constructor establishes the element representation; this cast only exposes the checked address.
+				return (Double*) ElementsPointer;
+			}
 		}
 
 		/// <safety>
-		/// The caller must keep the underlying Java array and this element acquisition alive and
-		/// undisposed for every access through the returned reference. The reference must not be
-		/// used after the elements are released or disposed, including after leaving a using scope.
-		/// The caller must prevent concurrent release or disposal while accessing the reference.
+		/// The disposed and bounds checks reject invalid accesses before dereferencing the buffer;
+		/// they do not synchronize with release or validate an escaped reference.
+		/// Keep both the underlying Java array reference and this acquisition alive and unreleased
+		/// for the entire indexer call and every later read or write through the returned reference.
+		/// Do not use a borrowed reference after Release or Dispose, including after a using scope.
+		/// Prevent concurrent release/disposal from the start of the call through the last ref use,
+		/// and coordinate conflicting reads/writes through other refs or pointer aliases.
+		/// A throwing call returns no reference and does not release the acquisition.
 		/// </safety>
 		public unsafe ref Double this [int index] {
 			get {
@@ -1468,6 +1685,7 @@ namespace Java.Interop {
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: The owner supplies the typed extent, guards checked this index, and the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
@@ -1514,11 +1732,17 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
+		/// <remarks>
+		/// Acquires a managed owner for JNI array elements; no pointer or reference is borrowed here.
+		/// Dispose the owner to apply the existing release policy. Borrowing from it separately
+		/// requires keeping this Java array and the acquisition valid for every borrowed access.
+		/// </remarks>
 		public new JniDoubleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
+				// SAFETY: JNI supplies this array's typed buffer; reject NULL before pairing it with the array and length.
 				var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");
