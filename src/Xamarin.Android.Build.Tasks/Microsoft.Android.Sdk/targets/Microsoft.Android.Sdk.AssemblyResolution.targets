@@ -29,6 +29,14 @@ _ResolveAssemblies MSBuild target.
     </CompileDependsOn>
   </PropertyGroup>
 
+  <Target Name="_AndroidInvalidateLinkerCache"
+      BeforeTargets="_RunILLink"
+      DependsOnTargets="_CreatePropertiesCache"
+      Inputs="$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_LinkSemaphore)">
+    <Delete Files="$(_LinkSemaphore)" />
+  </Target>
+
   <!-- Some NuGet packages add assemblies as @(Reference) items with CopyToOutputDirectory
        metadata, or as @(None) items with CopyToOutputDirectory. Both paths flow into
        @(_SourceItemsToCopyToPublishDirectory) which gets blanket-removed from
