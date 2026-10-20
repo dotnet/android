@@ -55,12 +55,11 @@ namespace Com.Xamarin.Test
 			case TransactionSend: {
 				data.EnforceInterface (descriptor);
 				global::Com.Xamarin.Test.MyData arg0 = default (global::Com.Xamarin.Test.MyData);
-				arg0 = data.ReadInt () != 0 ? (global::Com.Xamarin.Test.MyData) global::Android.OS.Bundle.Creator.CreateFromParcel (data) : null;
+				arg0 = data.ReadInt () != 0 ? (global::Com.Xamarin.Test.MyData) global::Com.Xamarin.Test.MyData.Creator.CreateFromParcel (data) : null;
 				this.Send (arg0);
 				reply.WriteNoException ();
 				return true;
 				}
-
 			}
 			return base.OnTransact (code, data, reply, flags);
 		}
@@ -112,4 +111,3 @@ namespace Com.Xamarin.Test
 
 	}
 }
-
