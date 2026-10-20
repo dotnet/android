@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -120,7 +121,8 @@ static class AndroidEnumConverter
 		6 => "maps",
 		7 => "productivity",
 		8 => "accessibility",
-		_ => null,
+		-1 => throw new ArgumentException ("Unsupported ApplicationCategories value 'Undefined'."),
+		_ => throw new ArgumentException ($"Unsupported ApplicationCategories value '{value}'."),
 	};
 
 	public static string? GwpAsanToString (int value) => value switch {

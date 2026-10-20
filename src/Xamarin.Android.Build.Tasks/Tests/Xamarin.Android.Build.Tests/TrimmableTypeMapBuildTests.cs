@@ -223,8 +223,10 @@ namespace Xamarin.Android.Build.Tests {
 				TextContent = () => """
 					using System;
 					using Android.App;
+					using Android.App.Backup;
 					using Android.Content;
 					using Android.Content.PM;
+					using Android.OS;
 					using Android.Runtime;
 
 					[assembly: Instrumentation (Name = "assembly.instrumentation", TargetPackage = "assembly.target", RoundIcon = "@drawable/assembly_round")]
@@ -252,7 +254,7 @@ namespace Xamarin.Android.Build.Tests {
 						HasCode = true,
 						Persistent = true,
 						TestOnly = true,
-						BackupAgent = typeof (ParityActivity),
+						BackupAgent = typeof (ParityBackupAgent),
 						ManageSpaceActivity = typeof (ParityManageActivity))]
 					[UsesLibrary (Name = "application.library", Required = false)]
 					[UsesLibrary (Name = "template.library", Required = false)]
@@ -290,6 +292,12 @@ namespace Xamarin.Android.Build.Tests {
 					public class ParityInstrumentation : Instrumentation {}
 
 					public class ParityManageActivity : Activity {}
+
+					public class ParityBackupAgent : BackupAgent
+					{
+						public override void OnBackup (ParcelFileDescriptor oldState, BackupDataOutput data, ParcelFileDescriptor newState) {}
+						public override void OnRestore (BackupDataInput data, int appVersionCode, ParcelFileDescriptor newState) {}
+					}
 					""",
 			});
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\parity.xml") {
@@ -413,10 +421,12 @@ namespace Xamarin.Android.Build.Tests {
 			proj.Sources.Add (new BuildItem.Source ("AssemblyApplication.cs") {
 				TextContent = () => """
 					using Android.App;
+					using Android.App.Backup;
+					using Android.OS;
 
 					[assembly: Application (
 						Description = "@string/assembly_description",
-						BackupAgent = typeof (UnnamedProject.ParityActivity),
+						BackupAgent = typeof (UnnamedProject.ParityBackupAgent),
 						ManageSpaceActivity = typeof (UnnamedProject.ParityManageActivity))]
 
 					namespace UnnamedProject;
@@ -426,6 +436,12 @@ namespace Xamarin.Android.Build.Tests {
 
 					[Activity]
 					public class ParityManageActivity : Activity {}
+
+					public class ParityBackupAgent : BackupAgent
+					{
+						public override void OnBackup (ParcelFileDescriptor oldState, BackupDataOutput data, ParcelFileDescriptor newState) {}
+						public override void OnRestore (BackupDataInput data, int appVersionCode, ParcelFileDescriptor newState) {}
+					}
 					""",
 			});
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\application.xml") {
@@ -447,8 +463,56 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotNull (application);
 			XNamespace android = "http://schemas.android.com/apk/res/android";
 			Assert.AreEqual ("@string/assembly_description", (string) application.Attribute (android + "description"));
-			StringAssert.EndsWith (".ParityActivity", (string) application.Attribute (android + "backupAgent"));
+			StringAssert.EndsWith (".ParityBackupAgent", (string) application.Attribute (android + "backupAgent"));
 			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR, "BackupAgent")]
+		[TestCase (AndroidRuntime.CoreCLR, "AppCategory")]
+		[TestCase (AndroidRuntime.NativeAOT, "BackupAgent")]
+		[TestCase (AndroidRuntime.NativeAOT, "AppCategory")]
+		public void InvalidApplicationManifestAttributeFails (AndroidRuntime runtime, string invalidProperty)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			var applicationProperty = invalidProperty == "BackupAgent"
+				? "BackupAgent = typeof (InvalidBackupAgent)"
+				: "AppCategory = ApplicationCategories.Undefined";
+			proj.Sources.Add (new BuildItem.Source ("InvalidApplication.cs") {
+				TextContent = () => $$"""
+					using System;
+					using Android.App;
+					using Android.Content.PM;
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Application ({{applicationProperty}})]
+					public class InvalidApplication : Application
+					{
+						public InvalidApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+					}
+
+					public class InvalidBackupAgent : Activity {}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime} build should reject {invalidProperty}.");
+			var expectedError = invalidProperty == "BackupAgent"
+				? "must be a subclass of the type Android.App.Backup.BackupAgent"
+				: "Unsupported ApplicationCategories value 'Undefined'";
+			Assert.IsTrue (builder.LastBuildOutput.ContainsText (expectedError), $"Build output should contain '{expectedError}'.");
 		}
 
 		[Test]

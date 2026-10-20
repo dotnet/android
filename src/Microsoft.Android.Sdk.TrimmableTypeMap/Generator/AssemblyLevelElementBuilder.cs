@@ -223,6 +223,10 @@ static class AssemblyLevelElementBuilder
 
 		foreach (var peer in allPeers) {
 			if (peer.ManagedTypeName == managedName) {
+				if (propertyName == "BackupAgent" && !IsSubclassOf (peer, "android/app/backup/BackupAgent", allPeers)) {
+					throw new InvalidOperationException (
+						$"The Type '{managedName}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.");
+				}
 				app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
 				return;
 			}
@@ -230,6 +234,19 @@ static class AssemblyLevelElementBuilder
 
 		// Code 0 = no XA code assigned; the caller may silently ignore it.
 		warn?.Invoke (0, $"Could not resolve {propertyName} type '{managedName}' to a Java peer for android:{xmlAttrName}.");
+	}
+
+	static bool IsSubclassOf (JavaPeerInfo peer, string baseJavaName, IReadOnlyList<JavaPeerInfo> allPeers)
+	{
+		var currentBase = peer.BaseJavaName;
+		var visited = new HashSet<string> (StringComparer.Ordinal);
+		while (currentBase is not null && visited.Add (currentBase)) {
+			if (currentBase == baseJavaName) {
+				return true;
+			}
+			currentBase = allPeers.FirstOrDefault (candidate => candidate.JavaName == currentBase)?.BaseJavaName;
+		}
+		return false;
 	}
 
 	internal static void AddInternetPermission (XElement manifest)
