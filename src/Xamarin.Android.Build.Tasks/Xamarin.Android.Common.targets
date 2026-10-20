@@ -1871,6 +1871,12 @@ because xbuild doesn't support framework reference assemblies.
         Condition=" (('$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '') Or '$(AndroidEnableMultiDex)' == 'True') And Exists('$(_AndroidR8BuildMetadataFile)') "
         Include="com.android.tools/r8.json:$(_AndroidR8BuildMetadataFile)"
     />
+    <AndroidAppBundleMetaDataFile
+        Condition=" '$(Configuration)' == 'Release' And '$(AndroidPackageFormat)' == 'aab' And '$(_AndroidRuntime)' == 'NativeAOT' And Exists('%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)') "
+        Include="com.android.tools.build.debugsymbols/%(ResolvedFileToPublish._AndroidNativeAotAbi)/lib$(TargetName).so.dbg:%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)">
+      <_AndroidNativeAotDebugSymbols>%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)</_AndroidNativeAotDebugSymbols>
+    </AndroidAppBundleMetaDataFile>
+    <_AndroidNativeAotBundleDebugSymbols Include="@(AndroidAppBundleMetaDataFile->'%(_AndroidNativeAotDebugSymbols)')" />
   </ItemGroup>
 </Target>
 
@@ -1978,7 +1984,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_BuildApkEmbed"
   DependsOnTargets="_ProcessAssemblyCompressionFailures;_AndroidGenerateBinaryBlobs"
-  Inputs="$(_BuildApkEmbedInputs);@(_AndroidBinaryBlobLibrary);@(_AndroidBinaryBlobGenerationStamp)"
+  Inputs="$(_BuildApkEmbedInputs);@(_AndroidBinaryBlobLibrary);@(_AndroidBinaryBlobGenerationStamp);@(_AndroidNativeAotBundleDebugSymbols)"
   Outputs="$(_BuildApkEmbedOutputs)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
