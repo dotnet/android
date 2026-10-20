@@ -421,15 +421,15 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("@drawable/instrumentation_round", (string) typeInstrumentation.Attribute (android + "roundIcon"));
 			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
 
-			if (runtime == AndroidRuntime.CoreCLR) {
-				var linkedAssembly = Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
-				FileAssert.Exists (linkedAssembly);
-				using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
-				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
-					"Type-level Application.BackupAgent should preserve the referenced type through trimming.");
-				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
-					"Type-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
-			}
+			var linkedAssembly = runtime == AndroidRuntime.NativeAOT
+				? Path.Combine (intermediate, "android", "assets", "shrunk", "arm64-v8a", $"{proj.ProjectName}.dll")
+				: Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
+			FileAssert.Exists (linkedAssembly);
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
+				"Type-level Application.BackupAgent should preserve the referenced type through trimming.");
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
+				"Type-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
@@ -498,15 +498,15 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.EndsWith (".ParityBackupAgent", (string) application.Attribute (android + "backupAgent"));
 			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));
 
-			if (runtime == AndroidRuntime.CoreCLR) {
-				var linkedAssembly = Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
-				FileAssert.Exists (linkedAssembly);
-				using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
-				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
-					"Assembly-level Application.BackupAgent should preserve the referenced type through trimming.");
-				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
-					"Assembly-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
-			}
+			var linkedAssembly = runtime == AndroidRuntime.NativeAOT
+				? Path.Combine (intermediate, "android", "assets", "shrunk", "arm64-v8a", $"{proj.ProjectName}.dll")
+				: Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
+			FileAssert.Exists (linkedAssembly);
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
+				"Assembly-level Application.BackupAgent should preserve the referenced type through trimming.");
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
+				"Assembly-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, "BackupAgent")]
