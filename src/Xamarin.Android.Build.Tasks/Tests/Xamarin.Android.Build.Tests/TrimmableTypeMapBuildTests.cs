@@ -458,6 +458,7 @@ namespace Xamarin.Android.Build.Tests {
 					using Android.OS;
 
 					[assembly: Application (
+						Name = "assembly.application",
 						Description = "@string/assembly_description",
 						BackupAgent = typeof (UnnamedProject.ParityBackupAgent),
 						ManageSpaceActivity = typeof (UnnamedProject.ParityManageActivity))]
@@ -494,6 +495,7 @@ namespace Xamarin.Android.Build.Tests {
 			var application = manifest.Root?.Element ("application");
 			Assert.IsNotNull (application);
 			XNamespace android = "http://schemas.android.com/apk/res/android";
+			Assert.AreEqual ("assembly.application", (string) application.Attribute (android + "name"));
 			Assert.AreEqual ("@string/assembly_description", (string) application.Attribute (android + "description"));
 			StringAssert.EndsWith (".ParityBackupAgent", (string) application.Attribute (android + "backupAgent"));
 			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));
