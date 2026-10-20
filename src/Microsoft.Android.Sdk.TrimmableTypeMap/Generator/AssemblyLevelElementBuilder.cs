@@ -215,25 +215,37 @@ static class AssemblyLevelElementBuilder
 			return;
 		}
 
-		// Strip assembly qualification if present (e.g., "MyApp.MyAgent, MyAssembly")
-		var commaIndex = managedName.IndexOf (',');
-		if (commaIndex > 0) {
-			managedName = managedName.Substring (0, commaIndex).Trim ();
-		}
-
-		foreach (var peer in allPeers) {
-			if (peer.ManagedTypeName == managedName) {
-				if (propertyName == "BackupAgent" && !IsSubclassOf (peer, "android/app/backup/BackupAgent", allPeers)) {
-					throw new InvalidOperationException (
-						$"The Type '{managedName}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.");
-				}
-				app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
-				return;
+		var peer = FindPeerByAssemblyQualifiedName (allPeers, managedName);
+		if (peer is not null) {
+			if (propertyName == "BackupAgent" && !IsSubclassOf (peer, "android/app/backup/BackupAgent", allPeers)) {
+				throw new InvalidOperationException (
+					$"The Type '{peer.ManagedTypeName}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.");
 			}
+			app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
+			return;
 		}
 
 		// Code 0 = no XA code assigned; the caller may silently ignore it.
 		warn?.Invoke (0, $"Could not resolve {propertyName} type '{managedName}' to a Java peer for android:{xmlAttrName}.");
+	}
+
+	internal static JavaPeerInfo? FindPeerByAssemblyQualifiedName (IReadOnlyList<JavaPeerInfo> allPeers, string value)
+	{
+		var managedTypeName = value.Trim ();
+		string? assemblyName = null;
+		var commaIndex = managedTypeName.IndexOf (',');
+		if (commaIndex > 0) {
+			var assemblyStart = commaIndex + 1;
+			var assemblyEnd = managedTypeName.IndexOf (',', assemblyStart);
+			assemblyName = managedTypeName.Substring (
+				assemblyStart,
+				assemblyEnd < 0 ? managedTypeName.Length - assemblyStart : assemblyEnd - assemblyStart).Trim ();
+			managedTypeName = managedTypeName.Substring (0, commaIndex).Trim ();
+		}
+
+		return allPeers.FirstOrDefault (peer =>
+			peer.ManagedTypeName == managedTypeName &&
+			(assemblyName is null || peer.AssemblyName == assemblyName));
 	}
 
 	static bool IsSubclassOf (JavaPeerInfo peer, string baseJavaName, IReadOnlyList<JavaPeerInfo> allPeers)

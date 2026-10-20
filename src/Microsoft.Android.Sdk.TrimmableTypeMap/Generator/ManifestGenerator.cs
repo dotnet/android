@@ -147,8 +147,18 @@ class ManifestGenerator
 
 		// Apply manifest placeholders
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
+		ReplacePackageNameTokens (doc, PackageName);
 
 		return (doc, providerNames);
+	}
+
+	static void ReplacePackageNameTokens (XDocument doc, string packageName)
+	{
+		foreach (var attribute in doc.Descendants ().Attributes ()) {
+			if (attribute.Value.Contains ("@PACKAGE_NAME@", StringComparison.Ordinal)) {
+				attribute.Value = attribute.Value.Replace ("@PACKAGE_NAME@", packageName);
+			}
+		}
 	}
 
 	/// <summary>

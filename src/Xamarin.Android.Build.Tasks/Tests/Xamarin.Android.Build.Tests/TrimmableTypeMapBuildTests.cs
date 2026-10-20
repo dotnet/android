@@ -273,8 +273,8 @@ namespace Xamarin.Android.Build.Tests {
 
 					[ContentProvider (
 						new [] { "parity.provider" },
-						ReadPermission = "provider.read",
-						WritePermission = "provider.write")]
+						ReadPermission = "@PACKAGE_NAME@.permission.READ",
+						WritePermission = "@PACKAGE_NAME@.permission.WRITE")]
 					[GrantUriPermission (Path = "/path")]
 					[Property ("provider.property", Value = "provider-property")]
 					public class ParityProvider : ContentProvider
@@ -386,8 +386,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("@string/activity_property", (string) activity.Element ("property").Attribute (android + "resource"));
 
 			var provider = application.Elements ("provider").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityProvider", StringComparison.Ordinal));
-			Assert.AreEqual ("provider.read", (string) provider.Attribute (android + "readPermission"));
-			Assert.AreEqual ("provider.write", (string) provider.Attribute (android + "writePermission"));
+			Assert.AreEqual ($"{proj.PackageName}.permission.READ", (string) provider.Attribute (android + "readPermission"));
+			Assert.AreEqual ($"{proj.PackageName}.permission.WRITE", (string) provider.Attribute (android + "writePermission"));
 			Assert.AreEqual ("/path", (string) provider.Element ("grant-uri-permission").Attribute (android + "path"));
 			Assert.AreEqual ("provider-property", (string) provider.Element ("property").Attribute (android + "value"));
 
@@ -404,14 +404,15 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.NativeAOT)]
 		public void AssemblyApplicationOverridesManifestTemplate (AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
 			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("TrimMode", "full");
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
@@ -465,6 +466,14 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("@string/assembly_description", (string) application.Attribute (android + "description"));
 			StringAssert.EndsWith (".ParityBackupAgent", (string) application.Attribute (android + "backupAgent"));
 			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				var linkedAssembly = Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
+				FileAssert.Exists (linkedAssembly);
+				using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
+				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
+					"Assembly-level Application.BackupAgent should preserve the referenced type through trimming.");
+			}
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, "BackupAgent")]
