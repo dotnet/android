@@ -242,6 +242,9 @@ static class ComponentElementBuilder
 			return;
 		}
 		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings, targetSdkVersion: targetSdkVersion);
+		foreach (var meta in component.MetaData) {
+			app.Add (CreateMetaDataElement (meta));
+		}
 	}
 
 	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer, string packageName)

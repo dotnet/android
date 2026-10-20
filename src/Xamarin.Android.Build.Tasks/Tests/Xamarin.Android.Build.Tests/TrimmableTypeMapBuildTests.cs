@@ -126,6 +126,71 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void ApplicationMetadataIsGenerated (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			proj.Sources.Add (new BuildItem.Source ("MetadataApplication.cs") {
+				TextContent = () => """
+					using System;
+					using Android.App;
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Application]
+					[MetaData ("application.value", Value = "application-present")]
+					[MetaData ("application.resource", Resource = "@string/application_metadata_resource")]
+					public class MetadataApplication : Application
+					{
+						public MetadataApplication (IntPtr handle, JniHandleOwnership transfer)
+							: base (handle, transfer)
+						{
+						}
+					}
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\metadata.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<string name="application_metadata_resource">application-resource-present</string>
+					</resources>
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} build should have succeeded.");
+
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+			var application = manifest.Root?.Element ("application");
+			Assert.IsNotNull (application);
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+			Assert.IsNotNull (application.Attribute (android + "name"));
+
+			var valueMetadata = application.Elements ("meta-data")
+				.Single (element => (string) element.Attribute (android + "name") == "application.value");
+			Assert.AreEqual ("application-present", (string) valueMetadata.Attribute (android + "value"));
+
+			var resourceMetadata = application.Elements ("meta-data")
+				.Single (element => (string) element.Attribute (android + "name") == "application.resource");
+			Assert.AreEqual ("@string/application_metadata_resource", (string) resourceMetadata.Attribute (android + "resource"));
+		}
+
 		[Test]
 		public void Build_TrimmableTypeMap_WithCollectionExport_Succeeds ([Values (false, true)] bool isRelease)
 		{
