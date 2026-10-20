@@ -71,8 +71,13 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		/// <safety>
 		/// <paramref name="resource"/> must be an embedded resource from <paramref name="peReader"/>.
-		/// The caller must keep <paramref name="peReader"/> undisposed until the returned stream
-		/// has been disposed, because the stream borrows its unmanaged image memory.
+		/// Its length prefix and payload must describe a valid range in that reader's image.
+		/// Keep the reader and its image alive and undisposed throughout this call, including
+		/// exceptional exits, and, on success, until the returned stream has been disposed.
+		/// If the reader borrows externally owned storage, keep that storage readable and at a
+		/// stable address for the same duration, pinned if it is managed memory.
+		/// Prevent aliases or other threads from disposing the reader or invalidating that storage
+		/// during this time. The returned stream neither retains nor owns the reader.
 		/// </safety>
 		public static unsafe Stream GetEmbeddedResourceStream (this PEReader peReader, ManifestResource resource)
 		{
@@ -81,8 +86,9 @@ namespace Xamarin.Android.Tasks
 				// Locate start and end of PE image in unmanaged memory.
 				var block = peReader.GetEntireImage ();
 				byte* peImageStart;
-				// SAFETY: This image belongs to peReader, whose lifetime is the caller's obligation.
 				unsafe {
+					// SAFETY: GetEntireImage supplies the image bounds; the caller keeps the reader
+					// and any borrowed backing storage alive and stable, without concurrent disposal.
 					Debug.Assert (block.Pointer != null && block.Length > 0);
 					peImageStart = block.Pointer;
 				}
@@ -102,8 +108,9 @@ namespace Xamarin.Android.Tasks
 				}
 
 				int resourceLength;
-				// SAFETY: The length prefix is within the image; the caller keeps peReader alive.
 				unsafe {
+					// SAFETY: The embedded resource belongs to this image, and the preceding check
+					// bounds its four-byte prefix; the caller prevents invalidation during this read.
 					resourceLength = new BlobReader (resourceStart, sizeof (int)).ReadInt32 ();
 				}
 				resourceStart += sizeof (int);
@@ -111,8 +118,9 @@ namespace Xamarin.Android.Tasks
 					throw new BadImageFormatException ("resource offset or length out of bounds.");
 				}
 
-				// SAFETY: The resource fits in the image; the caller owns the borrowed memory's lifetime.
 				unsafe {
+					// SAFETY: The checked offset/length bound the read-only stream to this image.
+					// The caller keeps its storage alive and stable until the stream is disposed.
 					return new UnmanagedMemoryStream (resourceStart, resourceLength);
 				}
 			}

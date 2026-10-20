@@ -158,8 +158,9 @@ namespace Xamarin.Android.Tools
 					char* leftEnd = l + first.Length;
 					char* rightEnd = r + second.Length;
 
-					// SAFETY: The strings stay pinned and both cursors stop at their string's end.
 					unsafe {
+						// SAFETY: Both immutable strings remain pinned for this traversal. The end
+						// checks precede each dereference, and neither cursor escapes its fixed scope.
 						while (l != leftEnd && r != rightEnd && (*l == *r || (ignoreCase && char.ToUpperInvariant((*l)) == char.ToUpperInvariant((*r)))))
 						{
 							commonChars++;

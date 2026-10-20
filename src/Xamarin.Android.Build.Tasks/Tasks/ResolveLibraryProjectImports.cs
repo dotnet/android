@@ -258,8 +258,9 @@ namespace Xamarin.Android.Tasks
 						// embedded jars (EmbeddedJar, EmbeddedReferenceJar)
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
 							Stream stream;
-							// SAFETY: This reader owns resource and outlives the stream's using scope.
 							unsafe {
+								// SAFETY: resource comes from this local reader. The synchronous copy and
+								// stream disposal finish before pe's enclosing using exits, also on failure.
 								stream = pe.GetEmbeddedResourceStream (resource);
 							}
 							using (stream) {
@@ -271,8 +272,9 @@ namespace Xamarin.Android.Tasks
 						else if (name == "__AndroidNativeLibraries__.zip") {
 							List<string> files = new List<string> ();
 							Stream stream;
-							// SAFETY: This reader owns resource and outlives both using scopes.
 							unsafe {
+								// SAFETY: resource comes from this local reader. Extraction and both nested
+								// disposals complete before pe is disposed, including exceptions and early returns.
 								stream = pe.GetEmbeddedResourceStream (resource);
 							}
 							using (stream)
@@ -300,8 +302,9 @@ namespace Xamarin.Android.Tasks
 							// temporarily extracted directory will look like:
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
 							Stream stream;
-							// SAFETY: This reader owns resource and outlives both using scopes.
 							unsafe {
+								// SAFETY: resource comes from this local reader. Extraction and both nested
+								// disposals complete before pe is disposed, including exceptions and early returns.
 								stream = pe.GetEmbeddedResourceStream (resource);
 							}
 							using (stream)
