@@ -245,6 +245,18 @@ namespace Xamarin.Android.Build.Tests {
 				["_ComputeFilesToPublishForRuntimeIdentifiers"] = "true",
 				["_AndroidUseResolvedSdk"] = "true",
 			};
+			var outerInputPrefix = tooling ? "_AndroidOuterToolingInput" : "_AndroidOuterSdkInput";
+			foreach (var item in inputGroups.Elements ().Where (e => e.Name.LocalName == itemName)) {
+				var include = (string?) item.Attribute ("Include");
+				if (include == null)
+					continue;
+				foreach (var identity in include.Split (';')) {
+					var propertyName = (string?) item.Attribute ("PropertyName") ?? identity;
+					if (propertyName != "MSBuildProjectFullPath")
+						globals.TryAdd (propertyName, "");
+					globals.TryAdd (outerInputPrefix + identity, "");
+				}
+			}
 			var ns = document.Root?.Name.Namespace ?? XNamespace.None;
 			var projectXml = new XElement (ns + "Project",
 				new XElement (ns + "Target", new XAttribute ("Name", "CaptureInputs"), inputGroups.Select (e => new XElement (e))));
