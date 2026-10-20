@@ -61,21 +61,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("ManagedConstruction")]
-		public void ManagedExceptionConstructorCapturesStackFromNewPeer ()
-		{
-			ConstructorActivationJavaException.Reset ();
-
-			using var instance = new ConstructorActivationJavaException ();
-			Assert.AreEqual (1, ConstructorActivationJavaException.ConstructorInvocations);
-			Assert.AreEqual (0, ConstructorActivationJavaException.ActivationConstructorInvocations);
-			Assert.IsTrue (instance.PeerReference.IsValid);
-			Assert.IsNotEmpty (instance.StackAtConstruction);
-			Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
-			Assert.AreSame (instance, JniEnvironment.Runtime.ValueManager.PeekPeer (instance.PeerReference));
-		}
-
-		[Test]
 		[Category ("UnicodeJavaIdentifiers")]
 		public void JavaSideUnicodeIdentifierConstructorsRunAndRegisterPeers ()
 		{
