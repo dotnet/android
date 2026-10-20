@@ -39,10 +39,9 @@ namespace Java.Interop {
 
 #pragma warning disable CA1801
 			/// <safety>
-			/// When redirection is configured, <paramref name="parameters"/> must contain the
-			/// initialized jvalue entries for the redirected descriptor after its leading receiver.
-			/// Keep that storage and its referenced peers live and unchanged through this call;
-			/// it must not be released or written concurrently.
+			/// For a redirect, <paramref name="parameters"/> must contain initialized jvalues
+			/// matching the descriptor after its receiver. Keep storage stable and peers live
+			/// through failure or return; exclude concurrent mutation or release.
 			/// </safety>
 			static unsafe bool TryInvoke<#= returnType.ManagedType #>StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters<#= byRefParamDecl #>)
 			{
@@ -51,10 +50,10 @@ namespace Java.Interop {
 					return false;
 				}
 
+				int c   = method.ParameterCount.Value;
+				Debug.Assert (c > 0);
 				unsafe {
-					// SAFETY: The caller supplies c-1 descriptor-matching arguments; the c-entry stack buffer adds self and lives through the synchronous redirected call.
-					int c   = method.ParameterCount.Value;
-					Debug.Assert (c > 0);
+					// SAFETY: p adds self to the caller's c-1 arguments and lives through JNI.
 					var p   = stackalloc JniArgumentValue [c];
 					p [0]   = new JniArgumentValue (self);
 					for (int i = 0; i < c-1; ++i) {
@@ -62,26 +61,25 @@ namespace Java.Interop {
 					}
 
 					<#= setByRefParam #>JniEnvironment.StaticMethods.CallStatic<#= returnType.JniCallType #>Method (method.StaticRedirect.PeerReference, method, p);
-					return true;
 				}
+				return true;
 			}
 #pragma warning restore CA1801
 
 			/// <safety>
-			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
-			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
-			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
-			/// managed) and its JNI references live on this attached thread through exceptional
-			/// completion. Prevent concurrent mutation or release through aliases.
+			/// <paramref name="parameters"/> must contain initialized jvalues matching
+			/// <paramref name="encodedMember"/>; null is valid only for zero arguments.
+			/// Keep storage readable, stable (pinned when managed), and peers live on this
+			/// JNI thread through failure or return; exclude mutation/release through aliases.
 			/// </safety>
 			public unsafe <#= returnType.ReturnType #> InvokeAbstract<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
+					var m   = GetMethodInfo (encodedMember);
 					unsafe {
-						// SAFETY: The caller supplies descriptor-matching argument storage; self is retained by the finally across ordinary and redirected invocation.
-						var m   = GetMethodInfo (encodedMember);
+						// SAFETY: Caller-owned arguments match m; finally keeps self alive.
 						if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (m, self, parameters<#= byRefParamDecl #>)) {
 							<#= returnByRefParam #>;
 						}
@@ -96,38 +94,40 @@ namespace Java.Interop {
 			}
 
 			/// <safety>
-			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
-			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
-			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
-			/// managed) and its JNI references live on this attached thread through exceptional
-			/// completion. Prevent concurrent mutation or release through aliases.
+			/// <paramref name="parameters"/> must contain initialized jvalues matching
+			/// <paramref name="encodedMember"/>; null is valid only for zero arguments.
+			/// Keep storage readable, stable (pinned when managed), and peers live on this
+			/// JNI thread through failure or return; exclude mutation/release through aliases.
 			/// </safety>
 			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
 				try {
-					unsafe {
-						// SAFETY: Each dispatch path uses the resolved method with caller-supplied matching arguments; the finally keeps self alive even when JNI throws.
-						var declaringType   = DeclaringType;
-						if (Members.UsesVirtualDispatch (self, declaringType)) {
-							var m   = GetMethodInfo (encodedMember);
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						unsafe {
+							// SAFETY: Caller-owned arguments match m; finally keeps self alive.
 							if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (m, self, parameters<#= byRefParamDecl #>)) {
 								<#= returnByRefParam #>;
 							}
 							<#= setByRefParam #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
 							<#= returnByRefParam #>;
 						}
-						var j = Members.GetPeerMembers (self);
-						var n = j.InstanceMethods.GetMethodInfo (encodedMember);
-						do {
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						unsafe {
+							// SAFETY: n targets j's declaring type with the same live argument buffer.
 							if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (n, self, parameters<#= byRefParamDecl #>)) {
 								<#= returnByRefParam #>;
 							}
 							<#= setByRefParam #>JniEnvironment.InstanceMethods.CallNonvirtual<#= returnType.JniCallType #>Method (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
 							<#= returnByRefParam #>;
-						} while (false);
-					}
+						}
+					} while (false);
 				}
 				finally {
 					GC.KeepAlive (self);
@@ -135,11 +135,10 @@ namespace Java.Interop {
 			}
 
 			/// <safety>
-			/// <paramref name="parameters"/> must contain all initialized jvalue entries, in order
-			/// and with the JNI types described by <paramref name="encodedMember"/>; null is valid
-			/// only for a zero-argument method. Keep the buffer readable and stable (pinned when
-			/// managed) and its JNI references live on this attached thread through exceptional
-			/// completion. Prevent concurrent mutation or release through aliases.
+			/// <paramref name="parameters"/> must contain initialized jvalues matching
+			/// <paramref name="encodedMember"/>; null is valid only for zero arguments.
+			/// Keep storage readable, stable (pinned when managed), and peers live on this
+			/// JNI thread through failure or return; exclude mutation/release through aliases.
 			/// </safety>
 			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
@@ -148,7 +147,7 @@ namespace Java.Interop {
 				var m   = GetMethodInfo (encodedMember);
 				try {
 					unsafe {
-						// SAFETY: m and JniPeerType select the nonvirtual target; the caller's argument buffer stays valid through the call and self through the finally.
+						// SAFETY: Caller-owned arguments match m and JniPeerType; finally retains self.
 						if (TryInvoke<#= returnType.ManagedType #>StaticRedirect (m, self, parameters<#= byRefParamDecl #>)) {
 							<#= returnByRefParam #>;
 						}

@@ -26,10 +26,9 @@ namespace Java.Interop {
 #>
 
 		/// <safety>
-		/// <paramref name="action"/> must be a non-null callable managed entry point with this exact
-		/// signature and remain executable until the invocation completes, including exception handling.
-		/// <paramref name="jnienv"/> must belong to the current attached JNI thread; object handles
-		/// passed to the action must remain valid for the uses made by that action.
+		/// <paramref name="action"/> must be a non-null managed entry point with this exact ABI,
+		/// executable through return or failure. <paramref name="jnienv"/> must be this attached
+		/// JNI thread's live environment; handles must stay valid for the action's uses.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void SafeInvokeAction<#= typeParams #> (IntPtr jnienv, IntPtr self<#= methodParams #>, delegate* managed<IntPtr, IntPtr<#= delegateParams #>, void> action)
@@ -39,7 +38,7 @@ namespace Java.Interop {
 
 			try {
 				unsafe {
-					// SAFETY: The caller supplies the exact managed action ABI and live JNI arguments; the surrounding catch/finally completes the marshal transition.
+					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
 					action (jnienv, self<#= invokeParams #>);
 				}
 			} catch (Exception __e) {
@@ -50,10 +49,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// <paramref name="action"/> must be a non-null callable managed entry point with this exact
-		/// signature and remain executable until the invocation completes, including exception handling.
-		/// <paramref name="jnienv"/> must belong to the current attached JNI thread; object handles
-		/// passed to the action must remain valid for the uses made by that action.
+		/// <paramref name="action"/> must be a non-null managed entry point with this exact ABI,
+		/// executable through return or failure. <paramref name="jnienv"/> must be this attached
+		/// JNI thread's live environment; handles must stay valid for the action's uses.
 		/// </safety>
 		[return: MaybeNull]
 		[DebuggerDisableUserUnhandledExceptions]
@@ -64,7 +62,7 @@ namespace Java.Interop {
 
 			try {
 				unsafe {
-					// SAFETY: The caller supplies the exact managed function ABI and live JNI arguments; the return value crosses only the declared managed signature.
+					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
 					return action (jnienv, self<#= invokeParams #>);
 				}
 			} catch (Exception __e) {

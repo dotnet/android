@@ -254,8 +254,10 @@ namespace Xamarin.Java.Interop
 					o.WriteLine ($"\t\t\tIntPtr __env = JniEnvironment.EnvironmentPointer;");
 					if (!is_void)
 						o.WriteLine ($"\t\t\t{entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true)} tmp;");
+					if (entry.Throws)
+						o.WriteLine ("\t\t\tIntPtr thrown;");
 					o.WriteLine ("\t\t\tunsafe {");
-					o.WriteLine ("\t\t\t\t// SAFETY: {0} uses this attached thread's __env; strings are marshaled here and raw buffers satisfy this member's caller bounds/lifetime contract.", entry.Name);
+					o.WriteLine ("\t\t\t\t// SAFETY: {0} uses this thread's JNIEnv; owned strings and caller-validated buffers survive the call.", entry.Name);
 					o.Write ("\t\t\t\t");
 					if (!is_void)
 						o.Write ("tmp = ");
@@ -269,14 +271,9 @@ namespace Xamarin.Java.Interop
 						o.Write (p.Type.GetManagedToMarshalExpression (Escape (entry.Parameters [i].Name)));
 					}
 					o.WriteLine (");");
-					o.WriteLine ("\t\t\t}");
-					if (entry.Throws) {
-						o.WriteLine ("\t\t\tIntPtr thrown;");
-						o.WriteLine ("\t\t\tunsafe {");
-						o.WriteLine ("\t\t\t\t// SAFETY: The same live thread-local JNIEnv is queried immediately after the JNI call, before buffer cleanup.");
+					if (entry.Throws)
 						o.WriteLine ("\t\t\t\tthrown = JniNativeMethods.ExceptionOccurred (__env);");
-						o.WriteLine ("\t\t\t}");
-					}
+					o.WriteLine ("\t\t\t}");
 					CleanupParameters (o, entry.Parameters);
 					RaiseException (o, entry);
 					if (is_void) {

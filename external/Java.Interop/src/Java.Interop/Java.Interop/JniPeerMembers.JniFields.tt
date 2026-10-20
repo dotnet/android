@@ -36,11 +36,7 @@ namespace Java.Interop {
 			JniPeerMembers.AssertSelf (self);
 
 			var f   = GetFieldInfo (encodedMember);
-			<#= info.ReturnType #> r;
-			unsafe {
-				// SAFETY: f was resolved for this member's field type; self is kept alive through the JNI read below.
-				r = JniEnvironment.InstanceFields.Get<#= info.JniCallType #>Field (self.PeerReference, f);
-			}
+			var r   = JniEnvironment.InstanceFields.Get<#= info.JniCallType #>Field (self.PeerReference, f);
 			GC.KeepAlive (self);
 			return r;
 		}
@@ -50,10 +46,7 @@ namespace Java.Interop {
 			JniPeerMembers.AssertSelf (self);
 
 			var f  = GetFieldInfo (encodedMember);
-			unsafe {
-				// SAFETY: The resolved <#= info.JniCallType #> field receives its matching JNI value; self stays alive until after the synchronous write.
-				JniEnvironment.InstanceFields.Set<#= info.JniCallType #>Field (self.PeerReference, f, value);
-			}
+			JniEnvironment.InstanceFields.Set<#= info.JniCallType #>Field (self.PeerReference, f, value);
 			GC.KeepAlive (self);
 		}
 <#
@@ -69,19 +62,13 @@ namespace Java.Interop {
 		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			unsafe {
-				// SAFETY: f is the cached <#= info.JniCallType #> field ID for the resolved declaring class; no caller buffer is dereferenced.
-				return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f);
-			}
+			return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			unsafe {
-				// SAFETY: The cached declaring class and field ID match this <#= info.JniCallType #> value; the call consumes no borrowed native buffer.
-				JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f, value);
-			}
+			JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 <#
 	}
