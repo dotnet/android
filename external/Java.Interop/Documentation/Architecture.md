@@ -57,50 +57,29 @@ including the environment and receiver/class arguments.
 
 ## Borrowed UTF-8 metadata
 
-Raw UTF-8 names and signatures are stored as `byte*`, not opaque `IntPtr`
-values. The `ReplacementMethodInfo.TargetJni*Utf8Pointer` properties and the
-`JniTypeManager.GetReplacementTypeInfoUnsafe` and
-`GetReplacementMethodInfoUnsafe` hooks expose these borrowed buffers explicitly.
-Their `<safety>` documentation specifies readable NUL-terminated storage and its
-lifetime. Retained names must remain alive and unchanged for the runtime's
-lifetime and every subsequent cached metadata read. Java.Interop does not own
-or free them. Managed-string alternatives remain safe to construct and use;
-non-null pointers take precedence over managed replacement names.
-The readable range includes the NUL byte. Read-only aliases may overlap, but
-owners must prevent writes or frees while readers can still access the storage,
-including error diagnostics and concurrent metadata reads. A failed later lookup
-does not release previously published buffers. The pointers do not root their owners.
+Retained names/signatures use `byte*`; JNI handles and method/field IDs remain
+opaque `IntPtr` values. `ReplacementMethodInfo.TargetJni*Utf8Pointer` and the
+`JniTypeManager.GetReplacementTypeInfoUnsafe` / `GetReplacementMethodInfoUnsafe`
+hooks expose borrowed storage. Owners must retain readable bytes through the
+NUL terminator, unchanged for the runtime and every cached/diagnostic read, even
+after a later lookup fails. Read-only aliases may overlap; no concurrent write
+or free is allowed. Java.Interop neither roots nor frees these buffers.
 
-Peer members cache the borrowed type name and lazily cache its managed
-conversion. In Debug, `JniMethodInfo` also reads borrowed names and signatures
-lazily. Its raw constructors require an unsafe context, while its public
-diagnostic getters use the lifetime established at construction. Remapping
-equality, hashing, and `ToString` compare or format addresses without reading
-their contents. JNI object handles and method/field IDs remain opaque handles.
+Peer names and Debug `JniMethodInfo` strings are converted lazily under that
+lifetime contract. Managed-string alternatives remain safe; non-null native
+names take precedence. Complete UTF-8 literals retain their zero-copy path.
+Remapping equality, hashing and `ToString` inspect addresses, not their contents.
 
-The native-int `TargetJni*Utf8` properties and
-`GetReplacementTypeInfoCore`/`GetReplacementMethodInfoCore` virtual hooks shipped
-in .NET 11 RC2. They retain all six accessors and both virtual slots with their
-original signatures and safe-call behavior as warning-obsolete compatibility
-APIs. These are explicit exceptions to caller-unsafe enforcement, not proof
-that an address is valid; their backing-memory obligations are unchanged.
-Typed base hooks dispatch through the old virtual slots so existing custom
-overrides and their base calls continue to run. The typed type-name producer
-has a distinct name to avoid ambiguity in existing `out var` calls.
+The .NET 11 RC2 native-int `TargetJni*Utf8` accessors and two native-int
+`GetReplacementTypeInfoCore` / `GetReplacementMethodInfoCore` virtual slots stay
+safe-callable and warning-obsolete. They are explicit compatibility exceptions,
+not pointer validation. Typed base hooks preserve old overrides and base calls;
+the distinct type-producer name avoids existing `out var` ambiguity.
 
-Caller contracts and implementation regions are audited independently. Raw
-constructors, retained-pointer setters, and raw lookup hooks keep their caller
-obligations; managed-name wrappers use explicit native implementation regions
-instead of requiring unsafe callers. Each audited region records the storage,
-bound, lifetime, or address-only invariant that makes its operations valid.
-Complete UTF-8 literals keep their existing zero-copy path and trailing NUL;
-no new copy, allocation, or validation restriction is introduced by this audit.
-
-This compatibility preparation does not enable the updated C# memory-safety
-rules. Under the existing rules, even reading a typed pointer address requires
-an unsafe context; the API baseline records those intermediate compilation
-semantics without `RequiresUnsafe` metadata. Global caller enforcement and
-address-only safe getters are a separate activation change.
+Caller obligations and native implementation scopes are independent; managed
+wrappers remain safe. This preparation does not enable updated memory-safety
+rules. Legacy compilation still requires unsafe contexts for typed address
+reads; final activation introduces safe address getters and unsafe setters.
 
 ## Naming conventions
 

@@ -407,10 +407,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		=> RuntimeFeature.JniRemapping ? JniRemappingLookup.GetReplacementType (jniSimpleReference) : null;
 
 	/// <safety>
-	/// A non-null result borrows immutable NUL-terminated bytes from the native remapping
-	/// table. Keep its native owner alive through runtime/cache reads; do not race table
-	/// reinitialization, mutation or runtime disposal with consumers. Read-only aliases may
-	/// overlap. No storage is transferred or freed, including on failure.
+	/// Results borrow host-retained table bytes through every runtime/cache read, including
+	/// diagnostics after failure. No alias may modify/free the table or race reinitialization
+	/// or runtime disposal with readers. No ownership transfers.
 	/// </safety>
 	protected override unsafe void GetReplacementTypeInfoUnsafe (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
 	{
@@ -434,10 +433,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			: null;
 
 	/// <safety>
-	/// The source must be readable through its NUL terminator and immutable until return or
-	/// exception; no alias may write or free it. Source storage is neither retained nor freed.
-	/// Target pointers borrow the native table for all runtime/cache reads; do not race its
-	/// reinitialization, mutation or disposal with consumers. Read-only aliases may overlap.
+	/// Source bytes must be readable through their NUL and unchanged until return or throw,
+	/// without writes/frees through aliases. Targets borrow the host-retained table for all
+	/// later reads; no concurrent mutation/reinitialization or runtime disposal is allowed.
 	/// </safety>
 	protected override unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoUnsafe (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 	{

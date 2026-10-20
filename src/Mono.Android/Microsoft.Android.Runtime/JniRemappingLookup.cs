@@ -293,18 +293,17 @@ static class JniRemappingLookup
 	}
 
 	/// <safety>
-	/// Returned bytes are borrowed from the initialized generated table, not copied or rooted
-	/// by this method. Keep its native owner alive through every retained use and do not race
-	/// reinitialization or mutation with lookup/readers. Entries include their NUL terminator;
-	/// read-only aliases may overlap. No bytes are freed, including if lookup throws.
+	/// Retain the native table owner through every use of returned NUL-terminated bytes;
+	/// no alias may modify/free them or race table reinitialization with readers. Read-only
+	/// aliasing is allowed. No ownership transfers, including on failure.
 	/// </safety>
 	internal static unsafe byte* GetReplacementTypeUtf8 (string? jniSimpleReference)
 	{
-		unsafe {
-			// SAFETY: startup supplies the process-lived table; the writer validates offsets, lengths and NULs before publication.
-			if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || table == null || jniSimpleReference.Length == 0)
-				return null;
+		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || table == null || jniSimpleReference.Length == 0)
+			return null;
 
+		unsafe {
+			// SAFETY: the writer validates table strings; the native host retains their NUL-terminated storage.
 			return LookupType (0, jniSimpleReference);
 		}
 	}
@@ -358,10 +357,9 @@ static class JniRemappingLookup
 	}
 
 	/// <safety>
-	/// The source pointer must be readable through its NUL terminator and immutable until
-	/// return or exception. Read-only aliases may overlap; no alias may write or free it.
-	/// Source storage is not retained or freed. Targets borrow the process-lived generated
-	/// table; do not race reinitialization or mutation with lookup or later target reads.
+	/// Keep source bytes readable through their NUL and unchanged until return or throw;
+	/// no alias may write/free them. Targets borrow the host-retained table; do not race
+	/// mutation/reinitialization with readers. Source ownership does not transfer.
 	/// </safety>
 	internal static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 	{
@@ -374,10 +372,9 @@ static class JniRemappingLookup
 	}
 
 	/// <safety>
-	/// A non-null native source must be readable through its NUL and immutable until return
-	/// or exception; null selects the managed source span. No source storage is retained or
-	/// freed. Keep the generated table's owner alive and its contents immutable through all
-	/// later target metadata reads, including failure diagnostics. Read-only aliases may overlap.
+	/// A non-null source has the raw overload's call-duration contract; null selects the
+	/// managed span. Keep the native table immutable and alive through all returned target
+	/// reads, including failure diagnostics. No source ownership transfers.
 	/// </safety>
 	static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (
 		ReadOnlySpan<char> jniSourceType,
@@ -385,38 +382,54 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> jniMethodName,
 		ReadOnlySpan<char> jniMethodSignature)
 	{
-		unsafe {
-			// SAFETY: source bytes obey the call-lifetime contract; all target pointers stay inside the immutable process-lived table.
-			if (!RuntimeFeature.JniRemapping || table == null)
-				return null;
+		if (!RuntimeFeature.JniRemapping || table == null)
+			return null;
 
-			byte* matchedSignature;
-			NativeJniRemappingReplacementMethod? result = jniSourceTypeUtf8 == null
+		byte* matchedSignature;
+		NativeJniRemappingReplacementMethod? result;
+		unsafe {
+			// SAFETY: the caller retains source bytes through the NUL; lookup borrows the process-lived generated table.
+			result = jniSourceTypeUtf8 == null
 				? LookupMethod (jniSourceType, jniMethodName, jniMethodSignature, out matchedSignature)
 				: LookupMethod (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (jniSourceTypeUtf8),
 					jniMethodName, jniMethodSignature, out matchedSignature);
+		}
 
-			if (result is not { } method)
-				return null;
-			if (method.target_type == null || method.target_name == null) {
-				string sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
-				throw new InvalidDataException (
-					$"JNI remapping entry for `{sourceType}.{jniMethodName}{jniMethodSignature}` has invalid target information.");
+		if (result is not { } method)
+			return null;
+		if (method.target_type == null || method.target_name == null) {
+			string sourceType;
+			unsafe {
+				// SAFETY: the caller retains source storage through lookup failure diagnostics.
+				sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
 			}
+			throw new InvalidDataException (
+				$"JNI remapping entry for `{sourceType}.{jniMethodName}{jniMethodSignature}` has invalid target information.");
+		}
 
-			int? paramCount = null;
-			bool isStatic = method.is_static != 0;
-			string? targetSignature = null;
-			if (isStatic) {
-				string sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
-				string sourceSignature = jniMethodSignature.ToString ();
-				paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (sourceSignature) + 1;
+		int? paramCount = null;
+		bool isStatic = method.is_static != 0;
+		string? targetSignature = null;
+		if (isStatic) {
+			string sourceType;
+			unsafe {
+				// SAFETY: the native source remains readable through this synchronous managed copy.
+				sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
+			}
+			string sourceSignature = jniMethodSignature.ToString ();
+			paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (sourceSignature) + 1;
+			unsafe {
+				// SAFETY: the generated target signature is immutable and NUL-terminated for the native host's lifetime.
 				targetSignature = method.target_signature == null
 					? $"(L{sourceType};" + sourceSignature.Substring ("(".Length)
 					: Marshal.PtrToStringUTF8 ((IntPtr)method.target_signature);
 			}
+		}
 
-			var ret = new JniRuntime.ReplacementMethodInfo {
+		JniRuntime.ReplacementMethodInfo ret;
+		unsafe {
+			// SAFETY: all published target addresses borrow the host-retained table, including later cached diagnostics.
+			ret = new JniRuntime.ReplacementMethodInfo {
 				TargetJniTypeUtf8Pointer        = method.target_type,
 				TargetJniMethodNameUtf8Pointer  = method.target_name,
 				TargetJniMethodSignature        = targetSignature,
@@ -426,21 +439,25 @@ static class JniRemappingLookup
 				TargetJniMethodParameterCount   = paramCount,
 				TargetJniMethodInstanceToStatic = isStatic,
 			};
-
-			if (Logger.LogAssembly) {
-				string sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
-				string targetType = Marshal.PtrToStringUTF8 ((IntPtr)method.target_type) ?? "";
-				string targetName = Marshal.PtrToStringUTF8 ((IntPtr)method.target_name) ?? "";
-				string effectiveTargetSignature = targetSignature ??
-					(matchedSignature == null ? jniMethodSignature.ToString () : Marshal.PtrToStringUTF8 ((IntPtr)matchedSignature) ?? "");
-				var message = $"Remapping method `{sourceType}.{jniMethodName}{jniMethodSignature}` to " +
-					$"`{targetType}.{targetName}{effectiveTargetSignature}`; " +
-					$"param-count: {paramCount}; instance-to-static? {isStatic}";
-				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
-			}
-
-			return ret;
 		}
+
+		if (Logger.LogAssembly) {
+			string sourceType, targetType, targetName, effectiveTargetSignature;
+			unsafe {
+				// SAFETY: source bytes outlive the call; target bytes and matched signatures borrow immutable table storage.
+				sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
+				targetType = Marshal.PtrToStringUTF8 ((IntPtr)method.target_type) ?? "";
+				targetName = Marshal.PtrToStringUTF8 ((IntPtr)method.target_name) ?? "";
+				effectiveTargetSignature = targetSignature ??
+					(matchedSignature == null ? jniMethodSignature.ToString () : Marshal.PtrToStringUTF8 ((IntPtr)matchedSignature) ?? "");
+			}
+			var message = $"Remapping method `{sourceType}.{jniMethodName}{jniMethodSignature}` to " +
+				$"`{targetType}.{targetName}{effectiveTargetSignature}`; " +
+				$"param-count: {paramCount}; instance-to-static? {isStatic}";
+			Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+		}
+
+		return ret;
 	}
 
 	internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (string jniSourceType, string jniFieldName, string jniFieldSignature)
@@ -488,9 +505,8 @@ static class JniRemappingLookup
 	}
 
 	/// <safety>
-	/// A non-null native source must remain readable through its NUL terminator and immutable
-	/// until return or exception. No alias may write or free it during conversion; read-only
-	/// aliases may overlap. Null uses the managed source; no pointer is retained or freed.
+	/// Keep non-null source bytes readable through their NUL and unchanged until return or
+	/// throw, without writes/frees through aliases. Null uses the managed source; no bytes are retained.
 	/// </safety>
 	static unsafe string GetSourceTypeForDiagnostics (ReadOnlySpan<char> jniSourceType, byte* jniSourceTypeUtf8)
 	{

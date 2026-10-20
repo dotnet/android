@@ -54,10 +54,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// A non-null UTF-8 class name must be readable through its NUL terminator and unchanged
-		/// until return or exception. Read-only aliases may overlap; no alias may write or
-		/// free the bytes during lookup. The pointer is not retained or freed. JNI runs on
-		/// the current attached thread; the owning runtime must not be disposed concurrently.
+		/// Keep non-null UTF-8 bytes readable through their NUL and unchanged until return or
+		/// exception; no alias may write/free them, and runtime disposal must not race lookup.
+		/// JNI uses the current attached thread. No source storage is retained or freed.
 		/// </safety>
 		internal unsafe JniType (byte* classname)
 		{
@@ -132,10 +131,8 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// On a cache miss, a non-null UTF-8 class name must be readable through its NUL terminator
-		/// and unchanged until return or exception; no alias may write or free it during lookup.
-		/// No name pointer is retained or freed. Do not race runtime or cached-type disposal
-		/// with lookup; JNI uses the current attached thread. A cache hit does not read the name.
+		/// On a cache miss, the name has <see cref="JniType(byte*)"/>'s call-duration contract.
+		/// Do not race cached-type disposal with lookup. No name pointer is retained.
 		/// </safety>
 		internal static unsafe JniType GetCachedJniType ([NotNull] ref JniType? cachedType, byte* classname)
 		{
@@ -568,11 +565,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The UTF-8 name must be readable through its NUL terminator and immutable until lookup
-		/// returns or throws, and through all later reads of returned Debug metadata. It is
-		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
-		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
-		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
+		/// Keep the UTF-8 name readable through its NUL and unchanged through lookup and later
+		/// Debug metadata reads; no alias may write/free it. No ownership transfers, even on
+		/// failure. JNI uses the current thread; do not race type/runtime disposal.
 		/// </safety>
 		internal unsafe bool TryGetInstanceMethod (byte* name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
@@ -585,11 +580,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// Both UTF-8 buffers must be readable through their NUL terminators and immutable until lookup
-		/// returns or throws, and through all later reads of returned Debug metadata. Neither is
-		/// rooted or freed; read-only aliases may overlap, but no alias may write or free them
-		/// while readers remain. Do not race type/runtime disposal with JNI lookup on the current
-		/// attached thread. Failure transfers no ownership and retains no new metadata.
+		/// Keep both UTF-8 buffers readable through their NULs and unchanged through lookup and
+		/// later Debug reads. Read-only aliases may overlap; no writes/frees or type/runtime
+		/// disposal may race readers. JNI uses the current thread; failure takes no ownership.
 		/// </safety>
 		internal unsafe bool TryGetInstanceMethod (byte* name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
@@ -602,11 +595,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The UTF-8 signature must be readable through its NUL terminator and immutable until lookup
-		/// returns or throws, and through all later reads of returned Debug metadata. It is
-		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
-		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
-		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
+		/// Keep the UTF-8 signature readable through its NUL and unchanged through lookup and
+		/// later Debug reads; no alias may write/free it. No ownership transfers, even on failure.
+		/// JNI uses the current thread; do not race type/runtime disposal.
 		/// </safety>
 		internal unsafe bool TryGetInstanceMethod (ReadOnlySpan<char> name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
@@ -626,11 +617,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The UTF-8 name must be readable through its NUL terminator and immutable until lookup
-		/// returns or throws, and through all later reads of returned Debug metadata. It is
-		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
-		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
-		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
+		/// Keep the UTF-8 name readable through its NUL and unchanged through lookup and later
+		/// Debug metadata reads; no alias may write/free it. No ownership transfers, even on
+		/// failure. JNI uses the current thread; do not race type/runtime disposal.
 		/// </safety>
 		internal unsafe bool TryGetStaticMethod (byte* name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
@@ -643,11 +632,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// Both UTF-8 buffers must be readable through their NUL terminators and immutable until lookup
-		/// returns or throws, and through all later reads of returned Debug metadata. Neither is
-		/// rooted or freed; read-only aliases may overlap, but no alias may write or free them
-		/// while readers remain. Do not race type/runtime disposal with JNI lookup on the current
-		/// attached thread. Failure transfers no ownership and retains no new metadata.
+		/// Keep both UTF-8 buffers readable through their NULs and unchanged through lookup and
+		/// later Debug reads. Read-only aliases may overlap; no writes/frees or type/runtime
+		/// disposal may race readers. JNI uses the current thread; failure takes no ownership.
 		/// </safety>
 		internal unsafe bool TryGetStaticMethod (byte* name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
@@ -660,11 +647,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The UTF-8 signature must be readable through its NUL terminator and immutable until lookup
-		/// returns or throws, and through all later reads of returned Debug metadata. It is
-		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
-		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
-		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
+		/// Keep the UTF-8 signature readable through its NUL and unchanged through lookup and
+		/// later Debug reads; no alias may write/free it. No ownership transfers, even on failure.
+		/// JNI uses the current thread; do not race type/runtime disposal.
 		/// </safety>
 		internal unsafe bool TryGetStaticMethod (ReadOnlySpan<char> name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
@@ -700,10 +685,8 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// A non-null UTF-8 name must remain readable through its NUL terminator and immutable for
-		/// every later Debug metadata read; no alias may free or modify it during those reads.
-		/// Read-only aliases may overlap. The address is neither rooted nor freed, including
-		/// on failure; id is an opaque method ID, not a buffer.
+		/// The name has the borrowed lifetime of <see cref="JniMethodInfo(byte*, string, IntPtr, bool)"/>.
+		/// The ID remains opaque; construction takes no buffer ownership, including on failure.
 		/// </safety>
 		static unsafe JniMethodInfo CreateMethodInfo (byte* name, ReadOnlySpan<char> signature, IntPtr id, bool isStatic)
 		{
@@ -718,10 +701,8 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// A non-null UTF-8 signature must remain readable through its NUL terminator and immutable
-		/// for every later Debug metadata read; no alias may free or modify it during those reads.
-		/// Read-only aliases may overlap. The address is neither rooted nor freed, including
-		/// on failure; id is an opaque method ID, not a buffer.
+		/// The signature has the borrowed lifetime of <see cref="JniMethodInfo(string, byte*, IntPtr, bool)"/>.
+		/// The ID remains opaque; construction takes no buffer ownership, including on failure.
 		/// </safety>
 		static unsafe JniMethodInfo CreateMethodInfo (ReadOnlySpan<char> name, byte* signature, IntPtr id, bool isStatic)
 		{
@@ -779,9 +760,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The UTF-8 name must be readable through its NUL terminator and immutable until return or
-		/// exception, without concurrent writes or frees through aliases. The bytes are not
-		/// retained or freed. Do not race type/runtime disposal; JNI uses the current thread.
+		/// Keep UTF-8 name bytes readable through their NUL and unchanged until return or throw;
+		/// no alias may write/free them. JNI uses the current thread; do not race type/runtime
+		/// disposal. The bytes are neither retained nor freed.
 		/// </safety>
 		unsafe IntPtr GetMemberID (byte* name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
@@ -794,10 +775,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// Both UTF-8 buffers must be readable through their NUL terminators and immutable until
-		/// return or exception. Read-only aliases may overlap; no alias may write or free them.
-		/// JNI consumes them synchronously without retaining or freeing them, even on lookup
-		/// failure. Do not race type/runtime disposal; the environment belongs to the current thread.
+		/// Keep both UTF-8 buffers readable through their NULs and unchanged until return or throw;
+		/// read-only aliases may overlap, but no alias may write/free them. JNI uses the current
+		/// thread; do not race type/runtime disposal. The bytes are neither retained nor freed.
 		/// </safety>
 		unsafe IntPtr GetMemberID (byte* name, byte* signature, MemberKind kind, bool throwOnError = true)
 		{
@@ -840,9 +820,9 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The UTF-8 signature must be readable through its NUL terminator and immutable until return
-		/// or exception, without concurrent writes or frees through aliases. It is not retained
-		/// or freed. Do not race type/runtime disposal; JNI uses the current attached thread.
+		/// Keep UTF-8 signature bytes readable through their NUL and unchanged until return or
+		/// throw; no alias may write/free them. JNI uses the current thread; do not race type/runtime
+		/// disposal. The bytes are neither retained nor freed.
 		/// </safety>
 		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, byte* signature, MemberKind kind, bool throwOnError = true)
 		{
@@ -855,9 +835,8 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The UTF-8 otherValue must be readable through its NUL terminator and immutable until return or
-		/// exception; no alias may write or free it during JNI lookup. Read-only aliasing is allowed.
-		/// No source bytes are retained or freed. Do not race type/runtime disposal; JNI uses the current thread.
+		/// OtherValue has the same call-duration buffer and current-thread JNI contract as
+		/// <see cref="GetMemberID(byte*, byte*, MemberKind, bool)"/>. No source bytes are retained.
 		/// </safety>
 		unsafe IntPtr GetMemberID (ReadOnlySpan<char> value, byte* otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
 		{

@@ -68,12 +68,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// A non-null UTF-8 name must be readable from its first byte through its NUL terminator.
-		/// In Debug it is borrowed, not copied or rooted: its owner must keep it alive and
-		/// unchanged through every metadata read, including concurrent readers. Read-only
-		/// aliases are permitted; do not free or write through any alias during those reads.
-		/// Construction does not take ownership, including if it fails. A null name is not
-		/// dereferenced; reading its unavailable diagnostic value throws.
+		/// In Debug, keep a non-null UTF-8 name readable through its NUL and unchanged through
+		/// every metadata read; no alias may write or free it concurrently. No ownership is
+		/// taken, including on failure. Null diagnostic names throw when read.
 		/// </safety>
 		internal unsafe JniMethodInfo (byte* nameUtf8, string signature, IntPtr methodID, bool isStatic)
 		{
@@ -90,12 +87,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// Each non-null UTF-8 pointer must be readable from its first byte through its NUL terminator.
-		/// In Debug both buffers are borrowed, not copied or rooted: their owner must keep them
-		/// alive and unchanged through every metadata read, including concurrent readers.
-		/// Read-only aliases may overlap; no alias may write or free storage during those reads.
-		/// Construction takes no ownership, including on failure. Null diagnostic pointers
-		/// are not dereferenced; reading an unavailable diagnostic value throws.
+		/// In Debug, keep both non-null UTF-8 buffers readable through their NULs and unchanged
+		/// through every metadata read. Read-only aliases may overlap; no concurrent writes
+		/// or frees are allowed. No ownership is taken, even on failure. Null diagnostics throw.
 		/// </safety>
 		internal unsafe JniMethodInfo (byte* nameUtf8, byte* signatureUtf8, IntPtr methodID, bool isStatic)
 		{
@@ -112,12 +106,9 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// A non-null UTF-8 signature must be readable from its first byte through its NUL terminator.
-		/// In Debug it is borrowed, not copied or rooted: its owner must keep it alive and
-		/// unchanged through every metadata read, including concurrent readers. Read-only
-		/// aliases are permitted; do not free or write through any alias during those reads.
-		/// Construction takes no ownership, including on failure. A null signature is not
-		/// dereferenced; reading its unavailable diagnostic value throws.
+		/// In Debug, keep a non-null UTF-8 signature readable through its NUL and unchanged
+		/// through every metadata read; no alias may write or free it concurrently. No ownership
+		/// is taken, including on failure. Null diagnostic signatures throw when read.
 		/// </safety>
 		internal unsafe JniMethodInfo (string name, byte* signatureUtf8, IntPtr methodID, bool isStatic)
 		{
@@ -135,9 +126,8 @@ namespace Java.Interop
 
 #if DEBUG
 		/// <safety>
-		/// A non-null UTF-8 value must be readable through its NUL terminator and unchanged until
-		/// the call returns or throws; aliases must not write or free it during the scan.
-		/// Null throws before scanning. No storage is retained or freed by this conversion.
+		/// Keep non-null UTF-8 bytes readable through their NUL and unchanged until return or
+		/// exception, without writes/frees through aliases. Null throws; no storage is retained.
 		/// </safety>
 		static unsafe string GetUtf8String (byte* value)
 		{
