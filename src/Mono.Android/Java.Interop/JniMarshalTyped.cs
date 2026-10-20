@@ -50,16 +50,15 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_X<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, void> body)
 			where TPeer : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -80,8 +79,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_S<[DynamicallyAccessedMembers (Constructors)] TPeer, TResult> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, TResult> body)
@@ -89,8 +89,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -111,16 +110,16 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_O<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -141,8 +140,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, void> body)
@@ -150,8 +149,7 @@ namespace Java.Interop {
 			where T0 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -172,8 +170,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, TResult> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, TResult> body)
@@ -182,8 +181,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -204,8 +202,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, IJavaObject?> body)
@@ -213,8 +212,7 @@ namespace Java.Interop {
 			where T0 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -236,8 +234,8 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, void> body)
@@ -245,8 +243,7 @@ namespace Java.Interop {
 			where T0 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -269,8 +266,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, TResult> body)
@@ -279,8 +277,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -303,8 +300,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, IJavaObject?> body)
@@ -312,8 +310,7 @@ namespace Java.Interop {
 			where T0 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -335,8 +332,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, void> body)
@@ -345,8 +342,7 @@ namespace Java.Interop {
 			where T1 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -367,8 +363,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, TResult> body)
@@ -378,8 +375,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -400,8 +396,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, IJavaObject?> body)
@@ -410,8 +407,7 @@ namespace Java.Interop {
 			where T1 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -433,8 +429,8 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, void> body)
@@ -443,8 +439,7 @@ namespace Java.Interop {
 			where T1 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -467,8 +462,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, TResult> body)
@@ -478,8 +474,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -502,8 +497,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, IJavaObject?> body)
@@ -512,8 +508,7 @@ namespace Java.Interop {
 			where T1 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -536,8 +531,8 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, void> body)
@@ -546,8 +541,7 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -570,8 +564,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, TResult> body)
@@ -581,8 +576,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -605,8 +599,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, IJavaObject?> body)
@@ -615,8 +610,7 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -640,8 +634,8 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, void> body)
@@ -650,8 +644,7 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -676,8 +669,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, TResult> body)
@@ -687,8 +681,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -713,8 +706,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, IJavaObject?> body)
@@ -723,8 +717,7 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -747,8 +740,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, void> body)
@@ -758,8 +751,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -780,8 +772,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, TResult> body)
@@ -792,8 +785,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -814,8 +806,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, IJavaObject?> body)
@@ -825,8 +818,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -848,8 +840,8 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, void> body)
@@ -859,8 +851,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -883,8 +874,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, TResult> body)
@@ -895,8 +887,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -919,8 +910,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, IJavaObject?> body)
@@ -930,8 +922,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -954,8 +945,8 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, void> body)
@@ -965,8 +956,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -989,8 +979,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, TResult> body)
@@ -1001,8 +992,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1025,8 +1015,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, IJavaObject?> body)
@@ -1036,8 +1027,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1061,8 +1051,8 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, void> body)
@@ -1072,8 +1062,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1098,8 +1087,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, TResult> body)
@@ -1110,8 +1100,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1136,8 +1125,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, IJavaObject?> body)
@@ -1147,8 +1137,7 @@ namespace Java.Interop {
 			where T2 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1172,8 +1161,8 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, void> body)
@@ -1183,8 +1172,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1207,8 +1195,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, TResult> body)
@@ -1219,8 +1208,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1243,8 +1231,9 @@ namespace Java.Interop {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, IJavaObject?> body)
@@ -1254,8 +1243,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1279,8 +1267,8 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, void> body)
@@ -1290,8 +1278,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1316,8 +1303,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, TResult> body)
@@ -1328,8 +1316,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1354,8 +1341,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, IJavaObject?> body)
@@ -1365,8 +1353,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1391,8 +1378,8 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, void> body)
@@ -1402,8 +1389,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1428,8 +1414,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, TResult> body)
@@ -1440,8 +1427,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1466,8 +1452,9 @@ namespace Java.Interop {
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, IJavaObject?> body)
@@ -1477,8 +1464,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1504,8 +1490,8 @@ namespace Java.Interop {
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_OOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, void> body)
@@ -1515,8 +1501,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1543,8 +1528,9 @@ namespace Java.Interop {
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_OOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, TResult> body)
@@ -1555,8 +1541,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1583,8 +1568,9 @@ namespace Java.Interop {
 		/// <paramref name="native_p0"/> must be null or a live JNI reference compatible with <typeparamref name="T0"/>.
 		/// <paramref name="native_p1"/> must be null or a live JNI reference compatible with <typeparamref name="T1"/>.
 		/// <paramref name="native_p2"/> must be null or a live JNI reference compatible with <typeparamref name="T2"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_OOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, IJavaObject?> body)
@@ -1594,8 +1580,7 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1619,8 +1604,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, void> body)
@@ -1631,8 +1616,7 @@ namespace Java.Interop {
 			where T3 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1653,8 +1637,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, TResult> body)
@@ -1666,8 +1651,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1688,8 +1672,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, IJavaObject?> body)
@@ -1700,8 +1685,7 @@ namespace Java.Interop {
 			where T3 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1722,8 +1706,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, void> body)
@@ -1735,8 +1719,7 @@ namespace Java.Interop {
 			where T4 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1757,8 +1740,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, TResult> body)
@@ -1771,8 +1755,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1793,8 +1776,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, IJavaObject?> body)
@@ -1806,8 +1790,7 @@ namespace Java.Interop {
 			where T4 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1828,8 +1811,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, void> body)
@@ -1842,8 +1825,7 @@ namespace Java.Interop {
 			where T5 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1864,8 +1846,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, TResult> body)
@@ -1879,8 +1862,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1901,8 +1883,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, IJavaObject?> body)
@@ -1915,8 +1898,7 @@ namespace Java.Interop {
 			where T5 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -1937,8 +1919,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, void> body)
@@ -1952,8 +1934,7 @@ namespace Java.Interop {
 			where T6 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -1974,8 +1955,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> body)
@@ -1990,8 +1972,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -2012,8 +1993,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, IJavaObject?> body)
@@ -2027,8 +2009,7 @@ namespace Java.Interop {
 			where T6 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -2049,8 +2030,8 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void Invoke_SSSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, void> body)
@@ -2065,8 +2046,7 @@ namespace Java.Interop {
 			where T7 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return;
 
@@ -2087,8 +2067,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult Invoke_SSSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> body)
@@ -2104,8 +2085,7 @@ namespace Java.Interop {
 			where TResult : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 
@@ -2126,8 +2106,9 @@ namespace Java.Interop {
 		/// <safety>
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread.
 		/// <paramref name="self"/> must be a live instance reference compatible with <typeparamref name="TPeer"/>.
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe IntPtr Invoke_SSSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, IJavaObject?> body)
@@ -2142,8 +2123,7 @@ namespace Java.Interop {
 			where T7 : unmanaged
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return default;
 

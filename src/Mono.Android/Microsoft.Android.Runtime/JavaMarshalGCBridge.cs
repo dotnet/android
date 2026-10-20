@@ -53,6 +53,9 @@ static class JavaMarshalGCBridge
 	/// <paramref name="args"/> must contain the native host's process-lifetime initializer with the declared
 	/// unmanaged ABI. The JNI runtime must already be published; its bridge graphs remain live for each callback.
 	/// The supplied initializer must not have been invoked outside this one-shot initialization path.
+	/// Retain its native callback and all CLR-supplied descriptor/array storage for each full callback, including
+	/// failure. Initialization can start the native processing thread before a later managed operation throws;
+	/// an exception does not undo that registration or authorize releasing its code/storage.
 	/// </safety>
 	internal static unsafe void Initialize (JNIEnvInit.JnienvInitializeArgs args)
 	{
@@ -86,7 +89,7 @@ static class JavaMarshalGCBridge
 	static void ProcessBridge (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the registered CLR callback supplies args and all counted arrays until FinishCrossReferenceProcessing; identity checks do not validate their native bounds, and failures terminate the process.
 			try {
 				ArgumentNullException.ThrowIfNull (args);
 				bool gcBridgeEventEnabled = RuntimeFeature.EventSourceSupport && RuntimeEventSource.GCBridgeStart ();
@@ -112,7 +115,7 @@ static class JavaMarshalGCBridge
 	static ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the CLR retains mcr's counted components and contexts for this callback; collected contexts are queued for later free, after their associated handles are passed back to the CLR.
 			List<GCHandle> handlesToFree = [];
 
 			for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
@@ -151,7 +154,7 @@ static class JavaMarshalGCBridge
 	static void Process (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the CLR owns args and its arrays throughout this synchronous prepare/GC/cleanup sequence; validation checks null/count consistency, not arbitrary native allocation provenance.
 			ValidateArguments (args);
 			if (RuntimeFeature.GCBridgeLogging) {
 				LogArguments (args);
@@ -168,7 +171,7 @@ static class JavaMarshalGCBridge
 	static void ValidateArguments (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: args is the CLR-supplied readable descriptor; these null/count checks do not dereference its component arrays or establish their bounds.
 			if (args->ComponentCount > 0 && args->Components == null)
 				throw new InvalidOperationException ("Components must not be null when ComponentCount is greater than zero.");
 			if (args->CrossReferenceCount > 0 && args->CrossReferences == null)
@@ -179,7 +182,7 @@ static class JavaMarshalGCBridge
 	static void PrepareForJavaCollection (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the CLR retains the graph for its declared counts; references are linked before each existing global is replaced with a weak global.
 			PrepareComponentsAndCrossReferences (args);
 
 			for (nuint i = 0; i < args->ComponentCount; i++) {
@@ -194,7 +197,7 @@ static class JavaMarshalGCBridge
 	static void PrepareComponentsAndCrossReferences (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: component and cross-reference arrays are CLR-owned for this callback; TemporaryPeerMap owns its extra JNI locals until the using scope exits, including on failure.
 			using var temporaryPeers = new TemporaryPeerMap (args);
 
 			for (nuint i = 0; i < args->ComponentCount; i++) {
@@ -220,7 +223,7 @@ static class JavaMarshalGCBridge
 	static void AddCircularReferences (StronglyConnectedComponent component)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: only components with Count > 1 reach this path; previousIndex and nextIndex stay within the CLR-provided context array while the cycle is linked.
 			nuint previousIndex = component.Count - 1;
 			for (nuint nextIndex = 0; nextIndex < component.Count; nextIndex++) {
 				var previous = GetContext (component, previousIndex);
@@ -241,7 +244,7 @@ static class JavaMarshalGCBridge
 			TemporaryPeerMap temporaryPeers)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: SelectCrossReferenceTarget checks each component index before access; source/destination references and temporary peers remain owned by this bridge callback.
 			var source = SelectCrossReferenceTarget (args, sourceIndex, temporaryPeers);
 			var destination = SelectCrossReferenceTarget (args, destinationIndex, temporaryPeers);
 			if (BridgeJni.AddReference (source.Reference, destination.Reference, source.IsGCUserPeerKnown)) {
@@ -256,7 +259,7 @@ static class JavaMarshalGCBridge
 			TemporaryPeerMap temporaryPeers)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: componentIndex is checked before array access; the CLR retains its components and TemporaryPeerMap retains any borrowed temporary peer.
 			if (componentIndex >= args->ComponentCount)
 				throw new InvalidOperationException ("A GC bridge cross-reference component index is out of range.");
 
@@ -274,7 +277,7 @@ static class JavaMarshalGCBridge
 	static void CleanupAfterJavaCollection (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the CLR retains the counted contexts while weak references are promoted, links cleared and component liveness compared; no context is freed here.
 			for (nuint i = 0; i < args->ComponentCount; i++) {
 				StronglyConnectedComponent component = args->Components [i];
 				for (nuint j = 0; j < component.Count; j++) {
@@ -290,7 +293,7 @@ static class JavaMarshalGCBridge
 	static void ClearReferencesIfNeeded (HandleContext* context)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: context remains registered during bridge processing; only a live global reference with added links is passed to monodroidClearReferences.()V.
 			if (context->IsCollected)
 				return;
 			if (context->PeerReference.Type != JniObjectReferenceType.Global)
@@ -306,7 +309,7 @@ static class JavaMarshalGCBridge
 	static void TakeWeakGlobalReference (HandleContext* context)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the registered context owns global; weak is created before global is released, and failure to create a valid weak reference terminates rather than publishing it.
 			JniObjectReference global = context->PeerReference;
 			if (global.Type != JniObjectReferenceType.Global)
 				throw new InvalidOperationException ("Expected a global reference before Java GC bridge processing.");
@@ -336,7 +339,7 @@ static class JavaMarshalGCBridge
 	static void TakeGlobalReference (HandleContext* context)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the registered context owns weak; promotion supplies global or the collected/null result before weak is released, and unexpected JNI failure terminates.
 			JniObjectReference weak = context->PeerReference;
 			if (weak.Type != JniObjectReferenceType.WeakGlobal)
 				throw new InvalidOperationException ("Expected a weak global reference after Java GC bridge processing.");
@@ -369,7 +372,7 @@ static class JavaMarshalGCBridge
 	static void EnsureAllCollectedOrAllAlive (StronglyConnectedComponent component)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the CLR retains component.Contexts for Count entries; zero count returns before access, and the loop checks every remaining context against the first.
 			if (component.Count == 0)
 				return;
 
@@ -384,7 +387,7 @@ static class JavaMarshalGCBridge
 	static HandleContext* GetContext (StronglyConnectedComponent component, nuint index)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: callers bound index by component.Count in the CLR-owned context array; the checks reject null arrays/elements but cannot validate arbitrary pointer extents.
 			if (component.Contexts == null)
 				throw new InvalidOperationException ("A non-empty component must have contexts.");
 			var context = (HandleContext*) component.Contexts [index];
@@ -412,7 +415,7 @@ static class JavaMarshalGCBridge
 	static void LogArguments (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the CLR retains args and its counted arrays during diagnostic iteration; class-name lookup borrows only references reported live by their registered contexts.
 			if (!Logger.LogGC)
 				return;
 
@@ -449,7 +452,7 @@ static class JavaMarshalGCBridge
 	static void LogSummary (MarkCrossReferencesArgs* args)
 	{
 		unsafe {
-			// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+			// SAFETY: the CLR retains args and its counted contexts during this summary; only IsCollected is read before the callback releases or queues contexts.
 			if (!Logger.LogGC)
 				return;
 
@@ -474,7 +477,7 @@ static class JavaMarshalGCBridge
 		public CrossReferenceTarget (JniObjectReference temporaryPeer)
 		{
 			unsafe {
-				// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+				// SAFETY: only a null context address is stored here; Reference borrows the TemporaryPeerMap-owned local until that map is disposed.
 				Reference = temporaryPeer;
 				context = null;
 				IsGCUserPeerKnown = true;
@@ -484,7 +487,7 @@ static class JavaMarshalGCBridge
 		public CrossReferenceTarget (HandleContext* context)
 		{
 			unsafe {
-				// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+				// SAFETY: context comes from the current CLR graph and remains registered; Reference snapshots its peer without taking ownership or extending its lifetime.
 				this.context = context;
 				Reference = context->PeerReference;
 				IsGCUserPeerKnown = context->RefsAdded != 0;
@@ -497,7 +500,7 @@ static class JavaMarshalGCBridge
 		public void MarkRefsAdded ()
 		{
 			unsafe {
-				// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+				// SAFETY: a nonnull context is still registered for this bridge callback; only its refs_added marker is written, and temporary-peer targets have no context to update.
 				if (context != null)
 					context->RefsAdded = 1;
 			}
@@ -513,7 +516,7 @@ static class JavaMarshalGCBridge
 		public TemporaryPeerMap (MarkCrossReferencesArgs* args)
 		{
 			unsafe {
-				// SAFETY: the CLR owns the graph and registered contexts throughout bridge processing; existing index checks and reference transitions preserve their lifetimes.
+				// SAFETY: the CLR owns args/components for ComponentCount entries; checked conversion bounds the managed peers array, and the constructor only counts empty components.
 				int count = checked((int)args->ComponentCount);
 				int temporaryPeerCount = 0;
 				for (nuint i = 0; i < args->ComponentCount; i++) {

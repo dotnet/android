@@ -145,8 +145,13 @@ namespace Java.Interop {
 <#
 			}
 #>
-		/// All JNI references must remain usable for the callback. <paramref name="body"/> must be a live
-		/// managed function pointer with exactly the declared signature and calling convention.
+		/// Retain input references and <paramref name="body"/> through invocation and exception reporting.
+		/// The managed function signature and scalar widths must match the registered JNI ABI; do not race release or mutation.
+<# if (ret == 'O') { #>
+		/// A nonzero result is a new local reference for the receiving JNI frame; default can also indicate failure.
+<# } else if (ret == 'S') { #>
+		/// A default result can indicate transition failure or a reported exception; it is not proof of success.
+<# } #>
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe <#= returnType #> <#= name #><<#= string.Join (", ", typeParams) #>> (<#= parameters #>)
@@ -159,8 +164,7 @@ namespace Java.Interop {
 #>
 		{
 			unsafe {
-				// SAFETY: the generated JNI callback supplies the current-thread environment and borrowed references;
-				// the caller supplies a managed callback with this helper's exact ABI, live until the invocation completes.
+				// SAFETY: JNI retains this thread's environment and borrowed peers; body matches the registered ABI through callback/exception marshaling.
 				if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 					return<#= ret == 'X' ? "" : " default" #>;
 

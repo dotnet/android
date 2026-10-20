@@ -47,9 +47,9 @@ public partial interface IList
 	[Register ("reversed", "()Ljava/util/List;", "GetReversedHandler:Java.Util.IList, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", ApiSince = 35)]
 	Java.Util.ISequencedCollection Java.Util.ISequencedCollection.Reversed ()
 	{
+		const string __id = "reversed.()Ljava/util/List;";
 		unsafe {
 			// SAFETY: the parameterless List.reversed call returns a List implementing SequencedCollection; its local reference transfers to the managed peer.
-			const string __id = "reversed.()Ljava/util/List;";
 			try {
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
 				return global::Java.Lang.Object.GetObject<Java.Util.ISequencedCollection> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;

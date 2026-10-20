@@ -11,9 +11,9 @@ namespace Android.Animation
 		[Register ("setDuration", "(J)Landroid/animation/Animator;", "GetSetDuration_JHandler")]
 		public override Android.Animation.Animator SetDuration (long duration)
 		{
+			const string __id = "setDuration.(J)Landroid/animation/Animator;";
 			unsafe {
 				// SAFETY: setDuration takes one JNI long and returns Animator; the one-element argument buffer remains live for the call.
-				const string __id = "setDuration.(J)Landroid/animation/Animator;";
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (duration);

@@ -55,6 +55,12 @@ namespace Android.Widget {
 			T
 	> : AdapterView  where T : IAdapter {
 
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live AdapterView-compatible reference from this VM
+		/// usable on this thread until construction returns or throws. Own the requested reference transfer,
+		/// exclude concurrent release/use of consumed aliases, and use zero only for empty-peer initialization.
+		/// Caller-unsafe enforcement on raw peer constructors is deferred; existing initialization APIs are unchanged.
+		/// </safety>
 		public AdapterView (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -64,11 +70,11 @@ namespace Android.Widget {
 		public AdapterView (Android.Content.Context context)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				if (Handle != IntPtr.Zero)
-					return;
+			if (Handle != IntPtr.Zero)
+				return;
 
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;)V constructor with the matching arguments before this constructor returns.
 				SetHandle (
 						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;)V", new JValue (context)),
 						JniHandleOwnership.TransferLocalRef);
@@ -81,11 +87,11 @@ namespace Android.Widget {
 		public AdapterView (Android.Content.Context context, Android.Util.IAttributeSet attrs)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				if (Handle != IntPtr.Zero)
-					return;
+			if (Handle != IntPtr.Zero)
+				return;
 
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;Landroid/util/AttributeSet;)V constructor with the matching arguments before this constructor returns.
 				SetHandle (
 						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs)),
 						JniHandleOwnership.TransferLocalRef);
@@ -99,11 +105,11 @@ namespace Android.Widget {
 		public AdapterView (Android.Content.Context context, Android.Util.IAttributeSet attrs, int defStyle)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				if (Handle != IntPtr.Zero)
-					return;
+			if (Handle != IntPtr.Zero)
+				return;
 
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;Landroid/util/AttributeSet;I)V constructor with the matching arguments before this constructor returns.
 				SetHandle (
 						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle)),
 						JniHandleOwnership.TransferLocalRef);

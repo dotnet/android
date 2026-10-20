@@ -49,7 +49,7 @@ namespace Android.Util
 		public new virtual E Get (int key)
 		{
 			unsafe {
-				// SAFETY: the cached SparseArray member IDs match their literal JNI signatures and argument order; WithLocalJniHandle retains each borrowed value for the call.
+				// SAFETY: SparseArray.get.(I)Ljava/lang/Object; matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (id_get_I == IntPtr.Zero)
 					id_get_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "(I)Ljava/lang/Object;");
 				return JavaConvert.FromJniHandle<E>(JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_get_I, new JValue (key)), JniHandleOwnership.TransferLocalRef);
@@ -62,7 +62,7 @@ namespace Android.Util
 		public virtual E Get (int key, E valueIfKeyNotFound)
 		{
 			unsafe {
-				// SAFETY: the cached SparseArray member IDs match their literal JNI signatures and argument order; WithLocalJniHandle retains each borrowed value for the call.
+				// SAFETY: SparseArray.get.(ILjava/lang/Object;)Ljava/lang/Object; matches this peer's JNI ABI. WithLocalJniHandle retains borrowed arguments.
 				if (id_get_ILjava_lang_Object_ == IntPtr.Zero)
 					id_get_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "(ILjava/lang/Object;)Ljava/lang/Object;");
 				IntPtr value = JavaConvert.WithLocalJniHandle (valueIfKeyNotFound,
@@ -76,7 +76,7 @@ namespace Android.Util
 		public virtual int IndexOfValue (E value)
 		{
 			unsafe {
-				// SAFETY: the cached SparseArray member IDs match their literal JNI signatures and argument order; WithLocalJniHandle retains each borrowed value for the call.
+				// SAFETY: SparseArray.indexOfValue.(Ljava/lang/Object;)I matches this peer's JNI ABI. WithLocalJniHandle retains borrowed arguments.
 				if (id_indexOfValue_Ljava_lang_Object_ == IntPtr.Zero)
 					id_indexOfValue_Ljava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "indexOfValue", "(Ljava/lang/Object;)I");
 				return JavaConvert.WithLocalJniHandle (value,
@@ -89,7 +89,7 @@ namespace Android.Util
 		public virtual void Put (int key, E value)
 		{
 			unsafe {
-				// SAFETY: the cached SparseArray member IDs match their literal JNI signatures and argument order; WithLocalJniHandle retains each borrowed value for the call.
+				// SAFETY: SparseArray.put.(ILjava/lang/Object;)V matches this peer's JNI ABI. WithLocalJniHandle retains borrowed arguments.
 				if (id_put_ILjava_lang_Object_ == IntPtr.Zero)
 					id_put_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "put", "(ILjava/lang/Object;)V");
 				JavaConvert.WithLocalJniHandle (value, lref => {
@@ -104,7 +104,7 @@ namespace Android.Util
 		public virtual void SetValueAt (int index, E value)
 		{
 			unsafe {
-				// SAFETY: the cached SparseArray member IDs match their literal JNI signatures and argument order; WithLocalJniHandle retains each borrowed value for the call.
+				// SAFETY: SparseArray.setValueAt.(ILjava/lang/Object;)V matches this peer's JNI ABI. WithLocalJniHandle retains borrowed arguments.
 				if (id_setValueAt_ILjava_lang_Object_ == IntPtr.Zero)
 					id_setValueAt_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "setValueAt", "(ILjava/lang/Object;)V");
 				JavaConvert.WithLocalJniHandle (value, lref => {
@@ -120,7 +120,7 @@ namespace Android.Util
 		public new virtual E ValueAt (int index)
 		{
 			unsafe {
-				// SAFETY: the cached SparseArray member IDs match their literal JNI signatures and argument order; WithLocalJniHandle retains each borrowed value for the call.
+				// SAFETY: SparseArray.valueAt.(I)Ljava/lang/Object; matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (id_valueAt_I == IntPtr.Zero)
 					id_valueAt_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "valueAt", "(I)Ljava/lang/Object;");
 				return JavaConvert.FromJniHandle<E> (

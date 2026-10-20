@@ -30,6 +30,8 @@ static class JavaMarshalRegisteredPeers
 	public static void CollectPeers ()
 	{
 		unsafe {
+			// SAFETY: the bridge enqueues registered contexts after collection; each dequeued allocation
+			// stays live through bucket removal and is freed only afterward, outside bridge processing.
 			while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
 				Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
 				HandleContext* context = (HandleContext*)contextPtr;

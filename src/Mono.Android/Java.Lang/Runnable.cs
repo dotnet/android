@@ -15,14 +15,14 @@ namespace Java.Lang {
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
 				JNIEnv.FinishCreateInstance (Handle, "()V");
-				if (handler == null) {
-					base.Dispose ();
-					throw new ArgumentNullException ("handler");
-				}
-				this.handler = handler;
 			}
+			if (handler == null) {
+				base.Dispose ();
+				throw new ArgumentNullException ("handler");
+			}
+			this.handler = handler;
 		}
 
 		public void Run ()

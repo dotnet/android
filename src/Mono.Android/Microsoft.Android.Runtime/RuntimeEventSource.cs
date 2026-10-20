@@ -277,7 +277,8 @@ internal static class RuntimeEventSource
 		void WriteGlobalReference (int eventId, ulong sourceHandle, ulong handle, int sourceType, int referenceType, int globalCount, int weakCount, int managedThreadId, int bridgeOperation)
 		{
 			unsafe {
-				// SAFETY: EventData entries describe the exact scalar sizes and pinned string extent; EventSource consumes the stack payload synchronously.
+				// SAFETY: eight stack entries address two ulongs and six ints with their exact sizes;
+				// WriteEventCore consumes them synchronously before this frame unwinds, without retaining pointers.
 				EventData* data = stackalloc EventData [8];
 				data [0] = new EventData { DataPointer = (IntPtr) (&sourceHandle), Size = sizeof (ulong) };
 				data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
@@ -314,7 +315,8 @@ internal static class RuntimeEventSource
 		void WriteLocalReference (int eventId, ulong sourceHandle, ulong handle, int localCount, int managedThreadId, int bridgeOperation)
 		{
 			unsafe {
-				// SAFETY: EventData entries describe the exact scalar sizes and pinned string extent; EventSource consumes the stack payload synchronously.
+				// SAFETY: five stack entries address two ulongs and three ints with their exact sizes;
+				// WriteEventCore consumes them before return or exception unwinding; no string buffer is involved.
 				EventData* data = stackalloc EventData [5];
 				data [0] = new EventData { DataPointer = (IntPtr) (&sourceHandle), Size = sizeof (ulong) };
 				data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
@@ -342,7 +344,8 @@ internal static class RuntimeEventSource
 		public void WeakGlobalReferenceCollected (ulong handle)
 		{
 			unsafe {
-				// SAFETY: EventData entries describe the exact scalar sizes and pinned string extent; EventSource consumes the stack payload synchronously.
+				// SAFETY: the one descriptor addresses the live ulong handle scalar, not JNI memory;
+				// WriteEventCore copies its sizeof(ulong) bytes before this frame ends.
 				EventData data = new () { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
 				WriteEventCore (WeakGlobalReferenceCollectedEventId, 1, &data);
 			}
@@ -353,7 +356,8 @@ internal static class RuntimeEventSource
 		public void ReferenceStackTrace (int referenceEventId, ulong handle, int managedThreadId, string stackTrace)
 		{
 			unsafe {
-				// SAFETY: EventData entries describe the exact scalar sizes and pinned string extent; EventSource consumes the stack payload synchronously.
+				// SAFETY: three scalar descriptors use exact widths, and fixed pins stackTrace including
+				// its UTF-16 terminator for the fourth; WriteEventCore consumes all four before the pin ends.
 				fixed (char* text = stackTrace) {
 					EventData* data = stackalloc EventData [4];
 					data [0] = new EventData { DataPointer = (IntPtr) (&referenceEventId), Size = sizeof (int) };

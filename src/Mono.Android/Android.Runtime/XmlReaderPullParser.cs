@@ -11,11 +11,11 @@ namespace Android.Runtime
 	{
 		public new static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
+			if (value == null)
+				return IntPtr.Zero;
+
 			unsafe {
 				// SAFETY: the managed parser adapter retains its JNI peer until the owned local reference is duplicated and existing KeepAlive completes.
-				if (value == null)
-					return IntPtr.Zero;
-
 				var xpr = value as XmlResourceParserReader;
 				if (xpr != null) {
 					IntPtr result = JNIEnv.NewLocalRef (xpr.Handle);
@@ -132,11 +132,11 @@ namespace Android.Runtime
 	{
 		public static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
+			if (value == null)
+				return IntPtr.Zero;
+
 			unsafe {
 				// SAFETY: the managed parser adapter retains its JNI peer until the owned local reference is duplicated and existing KeepAlive completes.
-				if (value == null)
-					return IntPtr.Zero;
-
 				var xppr = value as XmlPullParserReader;
 				if (xppr != null) {
 					IntPtr result = JNIEnv.NewLocalRef (xppr.Handle);

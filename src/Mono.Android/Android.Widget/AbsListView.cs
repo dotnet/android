@@ -75,9 +75,9 @@ namespace Android.Widget {
 		[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
 		public virtual void SetAdapter (Android.Widget.IListAdapter adapter)
 		{
+			const string id = "setAdapter.(Landroid/widget/ListAdapter;)V";
 			unsafe {
 				// SAFETY: the adapter member signature matches the receiver and argument buffer; adapter references survive until the existing finally cleanup.
-				const string id = "setAdapter.(Landroid/widget/ListAdapter;)V";
 				try {
 					JniArgumentValue* args = stackalloc JniArgumentValue [1];
 					args [0] = new JniArgumentValue (adapter);
@@ -96,7 +96,8 @@ namespace Android.Widget {
 		public override IListAdapter? Adapter {
 			get {
 				unsafe {
-					// SAFETY: the adapter member signature matches the receiver and argument buffer; adapter references survive until the existing finally cleanup.
+					// SAFETY: getAdapter.()Landroid/widget/Adapter; takes no arguments on this peer;
+					// the returned local transfers to IListAdapter conversion; no argument buffer is read.
 					IntPtr value;
 					const string __id = "getAdapter.()Landroid/widget/Adapter;";
 					value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
@@ -104,9 +105,10 @@ namespace Android.Widget {
 				}
 			}
 			set {
+				const string __id = "setAdapter.(Landroid/widget/Adapter;)V";
 				unsafe {
-					// SAFETY: the adapter member signature matches the receiver and argument buffer; adapter references survive until the existing finally cleanup.
-					const string __id = "setAdapter.(Landroid/widget/Adapter;)V";
+					// SAFETY: setAdapter.(Landroid/widget/Adapter;)V reads one stack argument holding
+					// the owned native_value local; finally deletes that local after invocation, including on failure.
 					IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
 					try {
 						JniArgumentValue* __args = stackalloc JniArgumentValue [1];

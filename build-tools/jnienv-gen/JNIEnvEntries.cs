@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Xamarin.Android.JniEnv
 {
@@ -29,25 +30,43 @@ namespace Xamarin.Android.JniEnv
 				requirements.Add ("<paramref name=\"capacity\"/> must be non-negative and within JNI's direct-buffer capacity limits.");
 				requirements.Add ("<paramref name=\"address\"/> must address at least <paramref name=\"capacity\"/> bytes of accessible memory.");
 				requirements.Add ("The backing memory must remain allocated and accessible for every use of the returned Java buffer.");
+				requirements.Add ("The wrapper does not own or release address on success or failure. Coordinate Java/native aliases; obtaining a buffer does not pin its allocation.");
 				return requirements;
 			}
 
 			foreach (var parameter in entry.Parameters) {
 				if (IsObjectReferenceType (parameter.Type)) {
+					bool nullable = entry.Name == "IsSameObject" || entry.Name == "NewGlobalRef" ||
+						entry.Name == "NewLocalRef" || entry.Name == "PopLocalFrame" ||
+						parameter.Name == "value" || parameter.Name == "val" || parameter.Name == "initialElement";
 					requirements.Add (string.Format (
-						"<paramref name=\"{0}\"/> must be a live JNI {1} reference usable on the current thread for the entire call, or null only where this JNI operation permits it.",
-						parameter.Name.TrimStart ('@'), parameter.Type.Type));
+						"<paramref name=\"{0}\"/> must be {2}a live JNI {1} reference from this VM, usable on the current thread until the operation returns or throws.",
+						parameter.Name.TrimStart ('@'), parameter.Type.Type, nullable ? "null or " : ""));
 				} else if (IsMemberID (parameter.Type)) {
 					requirements.Add (string.Format (
-						"<paramref name=\"{0}\"/> must be a live {1} for the supplied receiver or class, with the static/instance kind and value/return ABI required by this operation.",
+						"<paramref name=\"{0}\"/> must be a live {1} for the supplied receiver or class, with the static/instance kind and value/return ABI required by this operation; retain its declaring class.",
 						parameter.Name, parameter.Type.Type));
 				} else if (parameter.Type.ManagedType == "JValue*") {
 					requirements.Add (string.Format (
 						"<paramref name=\"{0}\"/> must supply all arguments in the member's declared JNI order and types; referenced objects must remain live.{1}",
 						parameter.Name,
-						pointerArguments ? " Pointer storage must remain readable for that argument count throughout the call." : ""));
+						pointerArguments ? " Pointer storage must remain readable for that argument count throughout the call, including exception unwinding; do not mutate it concurrently." :
+							" The array must contain that full argument count and must not be mutated concurrently; pinning does not retain the referenced objects."));
 				}
 			}
+			if (entry.Parameters.Any (p => IsMemberID (p.Type)) && !entry.Parameters.Any (p => p.Type.ManagedType == "JValue*") &&
+					entry.Name.StartsWith ("Call", System.StringComparison.Ordinal))
+				requirements.Add ("The method must take zero JNI arguments; the absence of an argument buffer does not validate its signature.");
+			if (entry.Name == "PopLocalFrame")
+				requirements.Add ("The caller must own the current local frame and stop using every reference from it after this call; only the returned reference survives in the previous frame.");
+			if (entry.Name == "NewObjectArray")
+				requirements.Add ("A nonnull initialElement must be assignable to elementClass; the returned local array reference belongs to the current JNI frame.");
+			if (entry.Name == "SetObjectArrayElement")
+				requirements.Add ("The array must be an object array and a nonnull value must be assignable to its element class; primitive-array handles are not interchangeable.");
+			if (entry.Name == "GetDirectBufferAddress" || entry.Name == "GetDirectBufferCapacity")
+				requirements.Add ("A returned address/capacity does not pin or own the backing storage. Retain the buffer and its backing allocation, respect its byte extent, and synchronize aliases for every later access.");
+			if (entry.Name == "MonitorExit")
+				requirements.Add ("The current thread must own the matching monitor entry; no protected-memory alias may outlive the synchronization that makes its use valid.");
 			return requirements;
 		}
 

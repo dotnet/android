@@ -53,11 +53,11 @@ namespace Java.Lang {
 		[OnDeserialized]
 		internal void SetHandleOnDeserialized (StreamingContext context)
 		{
-			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				if (Handle != IntPtr.Zero)
-					return;
+			if (Handle != IntPtr.Zero)
+				return;
 
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the ()V constructor with the matching arguments before this constructor returns.
 				SetHandle (
 						JNIEnv.StartCreateInstance (GetType (), "()V"),
 						JniHandleOwnership.TransferLocalRef);

@@ -10,7 +10,7 @@ namespace Android.Content {
 		public bool GetAsBoolean (string key)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.getAsBoolean.(Ljava/lang/String;)Ljava/lang/Boolean; matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_getAsBoolean_Ljava_lang_String_ == IntPtr.Zero)
 					id_getAsBoolean_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAsBoolean", "(Ljava/lang/String;)Ljava/lang/Boolean;");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -29,7 +29,7 @@ namespace Android.Content {
 		public sbyte GetAsByte (string key)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.getAsByte.(Ljava/lang/String;)Ljava/lang/Byte; matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_getAsByte_Ljava_lang_String_ == IntPtr.Zero)
 					id_getAsByte_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAsByte", "(Ljava/lang/String;)Ljava/lang/Byte;");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -48,7 +48,7 @@ namespace Android.Content {
 		public double GetAsDouble (string key)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.getAsDouble.(Ljava/lang/String;)Ljava/lang/Double; matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_getAsDouble_Ljava_lang_String_ == IntPtr.Zero)
 					id_getAsDouble_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAsDouble", "(Ljava/lang/String;)Ljava/lang/Double;");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -67,7 +67,7 @@ namespace Android.Content {
 		public float GetAsFloat (string key)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.getAsFloat.(Ljava/lang/String;)Ljava/lang/Float; matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_getAsFloat_Ljava_lang_String_ == IntPtr.Zero)
 					id_getAsFloat_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAsFloat", "(Ljava/lang/String;)Ljava/lang/Float;");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -86,7 +86,7 @@ namespace Android.Content {
 		public int GetAsInteger (string key)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.getAsInteger.(Ljava/lang/String;)Ljava/lang/Integer; matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_getAsInteger_Ljava_lang_String_ == IntPtr.Zero)
 					id_getAsInteger_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAsInteger", "(Ljava/lang/String;)Ljava/lang/Integer;");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -105,7 +105,7 @@ namespace Android.Content {
 		public long GetAsLong (string key)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.getAsLong.(Ljava/lang/String;)Ljava/lang/Long; matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_getAsLong_Ljava_lang_String_ == IntPtr.Zero)
 					id_getAsLong_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAsLong", "(Ljava/lang/String;)Ljava/lang/Long;");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -124,7 +124,7 @@ namespace Android.Content {
 		public short GetAsShort (string key)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.getAsShort.(Ljava/lang/String;)Ljava/lang/Short; matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_getAsShort_Ljava_lang_String_ == IntPtr.Zero)
 					id_getAsShort_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAsShort", "(Ljava/lang/String;)Ljava/lang/Short;");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -144,7 +144,7 @@ namespace Android.Content {
 		public void Put (string key, bool value)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.put.(Ljava/lang/String;Ljava/lang/Boolean;)V matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_put_Ljava_lang_String_Ljava_lang_Boolean_ == IntPtr.Zero)
 					id_put_Ljava_lang_String_Ljava_lang_Boolean_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "put", "(Ljava/lang/String;Ljava/lang/Boolean;)V");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -163,7 +163,7 @@ namespace Android.Content {
 		public void Put (string key, sbyte value)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.put.(Ljava/lang/String;Ljava/lang/Byte;)V matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_put_Ljava_lang_String_Ljava_lang_Byte_ == IntPtr.Zero)
 					id_put_Ljava_lang_String_Ljava_lang_Byte_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "put", "(Ljava/lang/String;Ljava/lang/Byte;)V");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -182,7 +182,7 @@ namespace Android.Content {
 		public void Put (string key, short value)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.put.(Ljava/lang/String;Ljava/lang/Short;)V matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_put_Ljava_lang_String_Ljava_lang_Short_ == IntPtr.Zero)
 					id_put_Ljava_lang_String_Ljava_lang_Short_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "put", "(Ljava/lang/String;Ljava/lang/Short;)V");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -201,7 +201,7 @@ namespace Android.Content {
 		public void Put (string key, int value)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.put.(Ljava/lang/String;Ljava/lang/Integer;)V matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_put_Ljava_lang_String_Ljava_lang_Integer_ == IntPtr.Zero)
 					id_put_Ljava_lang_String_Ljava_lang_Integer_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "put", "(Ljava/lang/String;Ljava/lang/Integer;)V");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -220,7 +220,7 @@ namespace Android.Content {
 		public void Put (string key, long value)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.put.(Ljava/lang/String;Ljava/lang/Long;)V matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_put_Ljava_lang_String_Ljava_lang_Long_ == IntPtr.Zero)
 					id_put_Ljava_lang_String_Ljava_lang_Long_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "put", "(Ljava/lang/String;Ljava/lang/Long;)V");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -239,7 +239,7 @@ namespace Android.Content {
 		public void Put (string key, float value)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.put.(Ljava/lang/String;Ljava/lang/Float;)V matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_put_Ljava_lang_String_Ljava_lang_Float_ == IntPtr.Zero)
 					id_put_Ljava_lang_String_Ljava_lang_Float_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "put", "(Ljava/lang/String;Ljava/lang/Float;)V");
 				IntPtr jkey = JNIEnv.NewString (key);
@@ -258,7 +258,7 @@ namespace Android.Content {
 		public void Put (string key, double value)
 		{
 			unsafe {
-				// SAFETY: the ContentValues member ID matches its literal signature; key/value JNI references stay live through the call and existing finally cleanup.
+				// SAFETY: ContentValues.put.(Ljava/lang/String;Ljava/lang/Double;)V matches this peer's JNI ABI. The owned key local lasts until finally.
 				if (id_put_Ljava_lang_String_Ljava_lang_Double_ == IntPtr.Zero)
 					id_put_Ljava_lang_String_Ljava_lang_Double_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "put", "(Ljava/lang/String;Ljava/lang/Double;)V");
 				IntPtr jkey = JNIEnv.NewString (key);

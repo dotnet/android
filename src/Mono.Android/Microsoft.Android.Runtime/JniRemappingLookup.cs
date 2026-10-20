@@ -165,6 +165,8 @@ static class JniRemappingLookup
 	/// remains readable for its declared size throughout the process lifetime.
 	/// The body must be a valid generated remapping table, including in-bounds record/string offsets and lengths
 	/// and readable NUL-terminated UTF-8 strings; descriptor/section checks alone do not prove those invariants.
+	/// Serialize initialization against lookups and any other initialization. The table pointer is published
+	/// before validation finishes: on failure, keep its storage live and do not perform lookups on that state.
 	/// </safety>
 	internal static unsafe void Initialize (IntPtr data)
 	{
@@ -215,7 +217,7 @@ static class JniRemappingLookup
 	static NativeJniRemappingString ReadString (uint offset)
 	{
 		unsafe {
-			// SAFETY: Initialize's caller retains the valid generated table; Read checks the record access.
+			// SAFETY: Read bounds the string record; Initialize's caller, not these checks, guarantees its relative pointer/length describe process-lifetime readable UTF-8 data.
 			return new () {
 				str = table + Read (offset),
 				length = Read (offset + 4),
@@ -226,7 +228,7 @@ static class JniRemappingLookup
 	static NativeJniRemappingTypeReplacementEntry ReadType (uint offset)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: Read bounds this type record; ReadString and CString borrow offsets whose target extents/terminators are guaranteed by the generated-table producer.
 			return new () {
 				name = ReadString (offset),
 				replacement = CString (Read (offset + 8)),
@@ -249,7 +251,7 @@ static class JniRemappingLookup
 	static NativeJniRemappingReplacementMethod ReadReplacementMethod (uint offset)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: Read bounds the replacement record and validates the static flag; target strings borrow the producer-validated process-lifetime table, without copying.
 			uint isStatic = Read (offset + 12);
 			if (isStatic > 1)
 				throw new InvalidDataException ("JNI remapping method has an invalid instance-to-static flag.");
@@ -265,7 +267,7 @@ static class JniRemappingLookup
 	static NativeJniRemappingReplacementField ReadReplacementField (uint offset)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: Read bounds the three field offsets; CString borrows their producer-validated process-lifetime NUL-terminated targets.
 			return new () {
 				target_type = CString (Read (offset)),
 				target_name = CString (Read (offset + 4)),
@@ -288,7 +290,7 @@ static class JniRemappingLookup
 	static byte* CString (uint offset)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: offset is a generated-table string offset or zero; pointer addition alone does not validate its target, whose extent/terminator is the Initialize caller's contract.
 			return offset == 0 ? null : table + offset;
 		}
 	}
@@ -329,10 +331,10 @@ static class JniRemappingLookup
 	/// no alias may modify/free them or race table reinitialization with readers. Read-only
 	/// aliasing is allowed. No ownership transfers, including on failure.
 	/// </safety>
-	internal static unsafe byte* GetReplacementTypeUtf8 (string? jniSimpleReference)
+	internal static byte* GetReplacementTypeUtf8 (string? jniSimpleReference)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: the input is managed text; only Initialize-owned process-lifetime table storage is inspected, and the returned pointer merely borrows that storage.
 			if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || table == null || jniSimpleReference.Length == 0)
 				return null;
 
@@ -343,7 +345,7 @@ static class JniRemappingLookup
 	internal static string? GetReverseType (string? jniSimpleReference)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: the cache factory reads the retained native table and copies any matched string to managed storage; no input pointer comes from the managed caller.
 			if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || table == null || jniSimpleReference.Length == 0)
 				return null;
 
@@ -355,7 +357,7 @@ static class JniRemappingLookup
 	static string LookupReverseType (string jniSimpleReference)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: LookupType returns null or a process-lifetime generated-table string; PtrToStringUTF8 consumes that producer-validated NUL-terminated region.
 			byte* replacement = LookupType (1, jniSimpleReference);
 			return replacement == null
 				? jniSimpleReference
@@ -366,7 +368,7 @@ static class JniRemappingLookup
 	internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, string jniMethodName, string jniMethodSignature)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: all source inputs are managed strings; target pointers borrow the generated table while PtrToStringUTF8 creates the existing managed copies.
 			var replacement = GetReplacementMethodInfo (jniSourceType, jniMethodName.AsSpan (), jniMethodSignature.AsSpan ());
 			if (replacement is not JniRuntime.ReplacementMethodInfo info)
 				return null;
@@ -421,7 +423,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> jniMethodSignature)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: the optional native source name is caller-retained and NUL-terminated; all replacement pointers come from producer-validated table offsets, retained even if lookup throws.
 			if (!RuntimeFeature.JniRemapping || table == null)
 				return null;
 
@@ -488,7 +490,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> jniFieldSignature)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: source field names are managed; matched target strings borrow the generated process-lifetime table while the existing managed result strings are created.
 			if (!RuntimeFeature.JniRemapping || table == null)
 				return null;
 
@@ -543,7 +545,7 @@ static class JniRemappingLookup
 	static bool Equal (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: value comes from the generated table and retains its producer-validated byte extent; equality first checks length, then reads exactly key.Length bytes.
 			return value.length == (uint)key.Length &&
 				new ReadOnlySpan<byte> (value.str, key.Length).SequenceEqual (key);
 		}
@@ -552,7 +554,7 @@ static class JniRemappingLookup
 	static bool Equal (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: value's pointer/length come from the producer-validated retained table; checked conversion limits the managed span length, not the underlying native extent.
 			ReadOnlySpan<byte> utf8 = new ReadOnlySpan<byte> (value.str, checked ((int)value.length));
 			return keyIsAscii
 				? Ascii.Equals (utf8, key)
@@ -563,7 +565,7 @@ static class JniRemappingLookup
 	static int Compare (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: value's generated-table pointer remains readable for value.length bytes during comparison; checked conversion prevents an oversized managed span length.
 			return new ReadOnlySpan<byte> (value.str, checked ((int)value.length)).SequenceCompareTo (key);
 		}
 	}
@@ -571,7 +573,7 @@ static class JniRemappingLookup
 	static int Compare (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: value's producer-validated byte extent is retained with the native table; the managed key spans bound the ASCII/UTF-16 comparison.
 			ReadOnlySpan<byte> utf8 = new ReadOnlySpan<byte> (value.str, checked ((int)value.length));
 			return keyIsAscii ? CompareUtf8ToAscii (utf8, key) : CompareUtf8ToUtf16 (utf8, key);
 		}
@@ -681,7 +683,7 @@ static class JniRemappingLookup
 	static byte* LookupType (int section, ReadOnlySpan<char> key)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: the managed key is bounded; Entry checks record positions while CString borrows the producer-validated, process-lifetime replacement string.
 			bool keyIsAscii = Ascii.IsValid (key);
 			uint index = LowerBoundByName (section, 0, Header.GetCount (section), TypeStride, key, keyIsAscii);
 			if (index >= Header.GetCount (section))
@@ -697,7 +699,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<byte> sourceType, ReadOnlySpan<char> name, ReadOnlySpan<char> signature, out byte* matchedSignature)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: the native-name overload supplies a bounded borrowed span; table records and target strings retain the extents guaranteed by the Initialize caller.
 			matchedSignature = null;
 			uint typeIndex = LowerBoundByName (2, 0, Header.method_replacement_index_count, IndexStride, sourceType);
 			if (typeIndex >= Header.method_replacement_index_count)
@@ -711,7 +713,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> sourceType, ReadOnlySpan<char> name, ReadOnlySpan<char> signature, out byte* matchedSignature)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: the managed source/name/signature spans are bounded; the table owner retains every record/string extent read by the shared lookup.
 			matchedSignature = null;
 			bool sourceTypeIsAscii = Ascii.IsValid (sourceType);
 			uint typeIndex = LowerBoundByName (2, 0, Header.method_replacement_index_count, IndexStride, sourceType, sourceTypeIsAscii);
@@ -727,7 +729,7 @@ static class JniRemappingLookup
 		NativeJniRemappingIndexTypeEntry type, ReadOnlySpan<char> name, ReadOnlySpan<char> signature, out byte* matchedSignature)
 	{
 		unsafe {
-			// SAFETY: Initialize establishes the native table's process lifetime; validated table offsets and native UTF-8 storage remain readable throughout lookup.
+			// SAFETY: matchedSignature borrows the generated table; bounded managed keys are compared against producer-validated native string extents until lookup completes.
 			matchedSignature = null;
 			if (type.methods > Header.method_count || type.method_count > Header.method_count - type.methods)
 				throw new InvalidDataException ("JNI remapping method group exceeds its table.");

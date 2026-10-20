@@ -42,14 +42,15 @@ namespace System.Linq {
 				throw new ArgumentNullException ("source");
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
-					IntPtr element;
+					object? element;
 					unsafe {
 						// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.
-						element = JNIEnv.CallObjectMethod (iterator.Handle, id_next);
+						// The returned local transfers to conversion before iterator suspension, including its existing failure path.
+						element = JavaConvert.FromJniHandle (
+								JNIEnv.CallObjectMethod (iterator.Handle, id_next),
+								JniHandleOwnership.TransferLocalRef);
 					}
-					yield return JavaConvert.FromJniHandle (
-							element,
-							JniHandleOwnership.TransferLocalRef);
+					yield return element;
 				}
 		}
 
@@ -57,14 +58,15 @@ namespace System.Linq {
 		{
 			using (source)
 				while (source.HasNext) {
-					IntPtr element;
+					object? element;
 					unsafe {
 						// SAFETY: source is retained by using and id_next is the matching zero-argument Object-returning member.
-						element = JNIEnv.CallObjectMethod (source.Handle, id_next);
+						// The returned local transfers to conversion before iterator suspension, including its existing failure path.
+						element = JavaConvert.FromJniHandle (
+								JNIEnv.CallObjectMethod (source.Handle, id_next),
+								JniHandleOwnership.TransferLocalRef);
 					}
-					yield return JavaConvert.FromJniHandle (
-							element,
-							JniHandleOwnership.TransferLocalRef);
+					yield return element;
 				}
 		}
 
@@ -86,14 +88,15 @@ namespace System.Linq {
 				throw new ArgumentNullException ("source");
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
-					IntPtr element;
+					T? element;
 					unsafe {
 						// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.
-						element = JNIEnv.CallObjectMethod (iterator.Handle, id_next);
+						// Conversion receives the owned local before yield; no JNI reference or unsafe context spans suspension.
+						element = JavaConvert.FromJniHandle<T> (
+								JNIEnv.CallObjectMethod (iterator.Handle, id_next),
+								JniHandleOwnership.TransferLocalRef);
 					}
-					yield return JavaConvert.FromJniHandle<T>(
-							element,
-							JniHandleOwnership.TransferLocalRef)!;
+					yield return element;
 				}
 		}
 
@@ -104,14 +107,17 @@ namespace System.Linq {
 		{
 			using (source)
 				while (source.HasNext) {
-					IntPtr element;
+					T? element;
 					unsafe {
 						// SAFETY: source is retained by using and id_next is the matching zero-argument Object-returning member.
-						element = JNIEnv.CallObjectMethod (source.Handle, id_next);
+						// Conversion receives the owned local before yield; no JNI reference or unsafe context spans suspension.
+						element = JavaConvert.FromJniHandle<T> (
+								JNIEnv.CallObjectMethod (source.Handle, id_next),
+								JniHandleOwnership.TransferLocalRef);
 					}
-					yield return JavaConvert.FromJniHandle<T>(
-							element,
-							JniHandleOwnership.TransferLocalRef)!;
+#pragma warning disable CS8603 // Java iterators can return null even when T is non-nullable.
+					yield return element;
+#pragma warning restore CS8603
 				}
 		}
 	}

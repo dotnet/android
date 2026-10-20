@@ -17,7 +17,8 @@ sealed class JavaMarshalGCBridgeJni
 	public JavaMarshalGCBridgeJni ()
 	{
 		unsafe {
-			// SAFETY: complete UTF-8 literals provide NUL termination; cached members match the Java GC bridge signatures and references remain live through each invocation.
+			// SAFETY: complete UTF-8 literals provide trailing NULs for each lookup; getRuntime.()Ljava/lang/Runtime;
+			// returns the local duplicated before finally, and cached JniTypes retain the classes for the recorded member IDs.
 			using var runtimeType = new JniType ("java/lang/Runtime"u8);
 			var getRuntime = runtimeType.GetStaticMethod ("getRuntime"u8, "()Ljava/lang/Runtime;"u8);
 			var localRuntime = JniEnvironment.StaticMethods.CallStaticObjectMethod (runtimeType.PeerReference, getRuntime);
@@ -42,7 +43,8 @@ sealed class JavaMarshalGCBridgeJni
 	public bool AddReference (JniObjectReference source, JniObjectReference destination, bool knownGCUserPeer)
 	{
 		unsafe {
-			// SAFETY: complete UTF-8 literals provide NUL termination; cached members match the Java GC bridge signatures and references remain live through each invocation.
+			// SAFETY: the bridge supplies live source/destination references; source is checked for IGCUserPeer
+			// unless already known, and the one stack argument matches monodroidAddReference.(Ljava/lang/Object;)V.
 			if (!source.IsValid)
 				throw new InvalidOperationException ("A GC bridge reference source is invalid.");
 			if (!destination.IsValid)
@@ -67,7 +69,8 @@ sealed class JavaMarshalGCBridgeJni
 	public void TriggerJavaGC ()
 	{
 		unsafe {
-			// SAFETY: complete UTF-8 literals provide NUL termination; cached members match the Java GC bridge signatures and references remain live through each invocation.
+			// SAFETY: runtimeInstance is the owned global Runtime and runtimeGc is its cached gc.()V
+			// instance method; no argument buffer is required or read during this synchronous call.
 			try {
 				JniEnvironment.InstanceMethods.CallVoidMethod (runtimeInstance, runtimeGc);
 			} catch (JavaException e) {
@@ -79,7 +82,8 @@ sealed class JavaMarshalGCBridgeJni
 	public void ClearReferences (JniObjectReference reference)
 	{
 		unsafe {
-			// SAFETY: complete UTF-8 literals provide NUL termination; cached members match the Java GC bridge signatures and references remain live through each invocation.
+			// SAFETY: the bridge supplies a live global IGCUserPeer reference; clearReferencesMethod is
+			// monodroidClearReferences.()V from the retained IGCUserPeer class, with no arguments.
 			JniEnvironment.InstanceMethods.CallVoidMethod (reference, clearReferencesMethod);
 		}
 	}
@@ -87,7 +91,8 @@ sealed class JavaMarshalGCBridgeJni
 	public JniObjectReference CreateTemporaryPeer ()
 		{
 		unsafe {
-			// SAFETY: complete UTF-8 literals provide NUL termination; cached members match the Java GC bridge signatures and references remain live through each invocation.
+			// SAFETY: gcUserPeerType retains the class for its cached ()V constructor; the null argument
+			// buffer is valid for zero parameters, and ownership of the new local transfers to TemporaryPeerMap.
 			return gcUserPeerType.NewObject (gcUserPeerConstructor, null);
 		}
 	}

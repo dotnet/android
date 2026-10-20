@@ -12,6 +12,11 @@ namespace Android.Runtime {
 	/// Each constructor corresponds to one of the JNI primitive types or an object reference.
 	/// See the <see href="https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html">JNI Type Specification</see>.
 	/// </para>
+	/// <para>
+	/// Constructing or reading this union stores bits only; it does not retain a JNI reference.
+	/// The eventual JNI caller must select the member matching the method signature and keep every
+	/// referenced object alive for that invocation. The explicit layout is the JNI argument ABI.
+	/// </para>
 	/// </remarks>
 	[StructLayout(LayoutKind.Explicit)]
 	public struct JValue {

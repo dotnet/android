@@ -31,6 +31,12 @@ namespace Android.OS {
 			get { return typeof (AsyncTask); }
 		}
 
+		/// <safety>
+		/// A nonzero <paramref name="doNotUse"/> must be a live AsyncTask-compatible JNI reference from
+		/// this VM, usable on this thread until construction returns or throws. Own the requested transfer
+		/// and exclude concurrent release/use of consumed aliases; zero preserves empty-peer initialization.
+		/// Caller-unsafe enforcement on raw peer constructors is deferred; existing initialization APIs are unchanged.
+		/// </safety>
 		public AsyncTask (IntPtr doNotUse, JniHandleOwnership transfer)
 			: base (doNotUse, transfer)
 		{
@@ -40,11 +46,12 @@ namespace Android.OS {
 		public AsyncTask ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			unsafe {
-				// SAFETY: the AsyncTask signatures match the argument/return ABI; the owned object array and retained receiver span invocation and copy-back.
-				if (Handle != IntPtr.Zero)
-					return;
+			if (Handle != IntPtr.Zero)
+				return;
 
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle for its zero-argument
+				// instance constructor; no argument array or arbitrary caller handle is consumed here.
 				SetHandle (
 						JNIEnv.StartCreateInstance (GetType (), "()V"),
 						JniHandleOwnership.TransferLocalRef);
@@ -70,7 +77,8 @@ namespace Android.OS {
 		public Android.OS.AsyncTask<TParams, TProgress, TResult>? Execute (params TParams[] @params)
 		{
 			unsafe {
-				// SAFETY: the AsyncTask signatures match the argument/return ABI; the owned object array and retained receiver span invocation and copy-back.
+				// SAFETY: execute.([Ljava/lang/Object;)Landroid/os/AsyncTask; receives the owned params
+				// array; its local survives invocation/copy-back and is released by the existing finally.
 				if (id_execute_arrayLjava_lang_Object_ == IntPtr.Zero)
 					id_execute_arrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;");
 				IntPtr native__params = JNIEnv.NewObjectArray<TParams> (@params);
@@ -92,7 +100,8 @@ namespace Android.OS {
 		public TResult? GetResult ()
 		{
 			unsafe {
-				// SAFETY: the AsyncTask signatures match the argument/return ABI; the owned object array and retained receiver span invocation and copy-back.
+				// SAFETY: get.()Ljava/lang/Object; is a zero-argument instance call on this AsyncTask;
+				// its returned local reference transfers to the synchronous TResult conversion.
 				if (id_get == IntPtr.Zero)
 					id_get = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "()Ljava/lang/Object;");
 				return JavaConvert.FromJniHandle<TResult>(JNIEnv.CallObjectMethod  (Handle, id_get), JniHandleOwnership.TransferLocalRef);

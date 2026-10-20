@@ -45,7 +45,11 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
 		{
-			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+			unsafe {
+				// SAFETY: the registered native callback supplies this thread's live environment and
+				// borrowed Throwable; reporting completes within the callback without transferring its input reference.
+				JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+			}
 		}
 
 		/// <safety>

@@ -14,36 +14,43 @@ namespace Android.Runtime {
 			return Java.Interop.JavaConvert.ToLocalJniHandle (obj);
 		}
 
-		public static object? GetObject (IntPtr handle, JniHandleOwnership transfer)
+		/// <safety>
+		/// <paramref name="handle"/> must be null or a live JNI object reference from this VM usable on
+		/// the current thread until conversion returns or throws. The requested transfer must be owned by the
+		/// caller; do not race its release or reuse aliases once consumed, including on a later conversion failure.
+		/// </safety>
+		public static unsafe object? GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{
-			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				Java.Lang.Object? jlo = Java.Lang.Object.GetObject (handle, transfer) as Java.Lang.Object;
-				if (jlo == null)
-					return null;
-				else if (jlo is Java.Lang.Boolean)
-					return Dispose ((Java.Lang.Boolean) jlo, v => v.BooleanValue ());
-				else if (jlo is Java.Lang.Byte)
-					return Dispose ((Java.Lang.Byte) jlo, v => v.ByteValue ());
-				else if (jlo is Java.Lang.Character)
-					return Dispose ((Java.Lang.Character) jlo, v => v.CharValue ());
-				else if (jlo is Java.Lang.Short)
-					return Dispose ((Java.Lang.Short) jlo, v => v.ShortValue ());
-				else if (jlo is Java.Lang.Integer)
-					return Dispose ((Java.Lang.Integer) jlo, v => v.IntValue ());
-				else if (jlo is Java.Lang.Long)
-					return Dispose ((Java.Lang.Long) jlo, v => v.LongValue ());
-				else if (jlo is Java.Lang.Float)
-					return Dispose ((Java.Lang.Float) jlo, v => v.FloatValue ());
-				else if (jlo is Java.Lang.Double)
-					return Dispose ((Java.Lang.Double) jlo, v => v.DoubleValue ());
-				else if (jlo is Java.Lang.String)
-					return Dispose (jlo, v => JNIEnv.GetString (v.Handle, JniHandleOwnership.DoNotTransfer));
-				else if (jlo is JavaObject)
-					return ((JavaObject) jlo).inst;
-				else
-					return jlo;
-			}
+			Java.Lang.Object? jlo = Java.Lang.Object.GetObject (handle, transfer) as Java.Lang.Object;
+			if (jlo == null)
+				return null;
+			else if (jlo is Java.Lang.Boolean)
+				return Dispose ((Java.Lang.Boolean) jlo, v => v.BooleanValue ());
+			else if (jlo is Java.Lang.Byte)
+				return Dispose ((Java.Lang.Byte) jlo, v => v.ByteValue ());
+			else if (jlo is Java.Lang.Character)
+				return Dispose ((Java.Lang.Character) jlo, v => v.CharValue ());
+			else if (jlo is Java.Lang.Short)
+				return Dispose ((Java.Lang.Short) jlo, v => v.ShortValue ());
+			else if (jlo is Java.Lang.Integer)
+				return Dispose ((Java.Lang.Integer) jlo, v => v.IntValue ());
+			else if (jlo is Java.Lang.Long)
+				return Dispose ((Java.Lang.Long) jlo, v => v.LongValue ());
+			else if (jlo is Java.Lang.Float)
+				return Dispose ((Java.Lang.Float) jlo, v => v.FloatValue ());
+			else if (jlo is Java.Lang.Double)
+				return Dispose ((Java.Lang.Double) jlo, v => v.DoubleValue ());
+			else if (jlo is Java.Lang.String)
+				return Dispose (jlo, v => {
+					unsafe {
+						// SAFETY: v is the typed String peer; Dispose retains its wrapper until GetString returns or throws.
+						return JNIEnv.GetString (v.Handle, JniHandleOwnership.DoNotTransfer);
+					}
+				});
+			else if (jlo is JavaObject)
+				return ((JavaObject) jlo).inst;
+			else
+				return jlo;
 		}
 
 		static TRet Dispose<T, TRet>(T value, Func<T, TRet> c)
@@ -64,11 +71,11 @@ namespace Android.Runtime {
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
 				JNIEnv.FinishCreateInstance (Handle, "()V");
-
-				this.inst = inst;
 			}
+
+			this.inst = inst;
 		}
 
 		public object Instance {

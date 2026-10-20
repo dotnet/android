@@ -23,7 +23,6 @@ namespace Java.InteropTests
 	{
 		[Test]
 		[Category ("JniStringLength")]
-		[Category ("JniSafetyPreparation")]
 		public void NewStringValidatesLengthAndSupportsPrefix ()
 		{
 			var text = new[] { 'f', 'o', 'o' };

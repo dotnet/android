@@ -18,9 +18,9 @@ namespace Java.Util
 		{
 			public override bool TryAdvance (IConsumer? action)
 			{
+				const string __id = "tryAdvance.(Ljava/util/function/Consumer;)Z";
 				unsafe {
 					// SAFETY: tryAdvance is an instance Boolean-returning call with one Consumer; the local reference and argument buffer survive until finally.
-					const string __id = "tryAdvance.(Ljava/util/function/Consumer;)Z";
 					IntPtr native_action = JNIEnv.ToLocalJniHandle (action);
 					try {
 						JniArgumentValue* __args = stackalloc JniArgumentValue [1];

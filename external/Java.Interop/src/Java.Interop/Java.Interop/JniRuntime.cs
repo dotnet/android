@@ -195,6 +195,10 @@ namespace Java.Interop
 		/// with readable JNI table storage. When only the VM is supplied, initialization obtains an environment
 		/// through GetEnv or attaches the current thread. Any supplied class-loader reference must remain live
 		/// until initialization duplicates it; local references must belong to the current thread.
+		/// Do not concurrently destroy the VM, release the loader, or mutate the supplied options while construction
+		/// reads them. Construction can publish runtime state before it throws; failure alone does not release native
+		/// resources or authorize invalidating outstanding JNI references. If DestroyRuntimeOnDispose is set,
+		/// disposal must be the sole owner of VM destruction after all other VM users have stopped.
 		/// </safety>
 		protected unsafe JniRuntime (CreationOptions options)
 		{

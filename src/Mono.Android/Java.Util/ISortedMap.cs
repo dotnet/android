@@ -47,9 +47,9 @@ public partial interface ISortedMap
 	[Register ("reversed", "()Ljava/util/SortedMap;", "GetReversedHandler:Java.Util.ISortedMap, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", ApiSince = 35)]
 	Java.Util.ISequencedMap Java.Util.ISequencedMap.Reversed ()
 	{
+		const string __id = "reversed.()Ljava/util/SortedMap;";
 		unsafe {
 			// SAFETY: the parameterless SortedMap.reversed call returns a SortedMap implementing SequencedMap; its local reference transfers to the managed peer.
-			const string __id = "reversed.()Ljava/util/SortedMap;";
 			try {
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
 				return global::Java.Lang.Object.GetObject<Java.Util.ISequencedMap> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;

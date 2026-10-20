@@ -14,9 +14,9 @@ public partial class HardwareBuffer
 	[Register ("create", "(IIIIJ)Landroid/hardware/HardwareBuffer;", "", ApiSince = 26)]
 	public static Android.Hardware.HardwareBuffer Create (int width, int height, [global::Android.Runtime.GeneratedEnum] Android.Hardware.HardwareBufferFormat format, int layers, Android.Hardware.HardwareBufferUsage usage)
 	{
+		const string __id = "create.(IIIIJ)Landroid/hardware/HardwareBuffer;";
 		unsafe {
 			// SAFETY: the create/getUsage signatures use JNI long for usage; the five-element argument buffer and peer reference remain live during the call.
-			const string __id = "create.(IIIIJ)Landroid/hardware/HardwareBuffer;";
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [5];
 				__args [0] = new JniArgumentValue (width);
@@ -36,9 +36,9 @@ public partial class HardwareBuffer
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.hardware']/class[@name='HardwareBuffer']/method[@name='getUsage' and count(parameter)=0]"
 		[Register ("getUsage", "()J", "", ApiSince = 26)]
 		get {
+			const string __id = "getUsage.()J";
 			unsafe {
-				// SAFETY: the create/getUsage signatures use JNI long for usage; the five-element argument buffer and peer reference remain live during the call.
-				const string __id = "getUsage.()J";
+				// SAFETY: getUsage.()J takes no arguments and returns a JNI long; the existing finally retains this peer through the call.
 				try {
 					var __rm = _members.InstanceMethods.InvokeAbstractInt64Method (__id, this, null);
 					return (Android.Hardware.HardwareBufferUsage) __rm!;

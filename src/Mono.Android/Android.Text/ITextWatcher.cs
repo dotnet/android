@@ -103,14 +103,14 @@ namespace Android.Text {
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
-				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
 				JNIEnv.FinishCreateInstance (Handle, "()V");
-
-				this.inst = inst;
-				AfterTextChanged = after_handler;
-				BeforeTextChanged = before_handler;
-				TextChanged = changed_handler;
 			}
+
+			this.inst = inst;
+			AfterTextChanged = after_handler;
+			BeforeTextChanged = before_handler;
+			TextChanged = changed_handler;
 		}
 
 		void ITextWatcher.AfterTextChanged (Android.Text.IEditable? s)

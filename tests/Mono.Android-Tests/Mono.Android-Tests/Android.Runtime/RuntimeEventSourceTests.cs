@@ -22,7 +22,6 @@ namespace Android.RuntimeTests
 	{
 		[Test]
 		[Category ("GCBridge")]
-		[Category ("JniSafetyPreparation")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
 		public void ProviderContractAndEmission ()
 		{
