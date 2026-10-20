@@ -469,9 +469,13 @@ namespace Xamarin.Android.Build.Tests {
 
 		[TestCase (AndroidRuntime.CoreCLR, "BackupAgent")]
 		[TestCase (AndroidRuntime.CoreCLR, "AppCategory")]
+		[TestCase (AndroidRuntime.CoreCLR, "GwpAsan")]
+		[TestCase (AndroidRuntime.CoreCLR, "RequiredContentUriPermission")]
 		[TestCase (AndroidRuntime.NativeAOT, "BackupAgent")]
 		[TestCase (AndroidRuntime.NativeAOT, "AppCategory")]
-		public void InvalidApplicationManifestAttributeFails (AndroidRuntime runtime, string invalidProperty)
+		[TestCase (AndroidRuntime.NativeAOT, "GwpAsan")]
+		[TestCase (AndroidRuntime.NativeAOT, "RequiredContentUriPermission")]
+		public void InvalidManifestAttributeFails (AndroidRuntime runtime, string invalidProperty)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -484,9 +488,15 @@ namespace Xamarin.Android.Build.Tests {
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
-			var applicationProperty = invalidProperty == "BackupAgent"
-				? "BackupAgent = typeof (InvalidBackupAgent)"
-				: "AppCategory = ApplicationCategories.Undefined";
+			var applicationAttribute = invalidProperty switch {
+				"BackupAgent" => "[Application (BackupAgent = typeof (InvalidBackupAgent))]",
+				"AppCategory" => "[Application (AppCategory = ApplicationCategories.Undefined)]",
+				"GwpAsan" => "[Application (GwpAsanMode = (GwpAsan) 99)]",
+				_ => "[Application]",
+			};
+			var activityAttribute = invalidProperty == "RequiredContentUriPermission"
+				? "[Activity (RequireContentUriPermissionFromCaller = (RequiredContentUriPermission) 99)]"
+				: "[Activity]";
 			proj.Sources.Add (new BuildItem.Source ("InvalidApplication.cs") {
 				TextContent = () => $$"""
 					using System;
@@ -496,12 +506,13 @@ namespace Xamarin.Android.Build.Tests {
 
 					namespace UnnamedProject;
 
-					[Application ({{applicationProperty}})]
+					{{applicationAttribute}}
 					public class InvalidApplication : Application
 					{
 						public InvalidApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 					}
 
+					{{activityAttribute}}
 					public class InvalidBackupAgent : Activity {}
 					""",
 			});
@@ -511,7 +522,9 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (builder.Build (proj), $"{runtime} build should reject {invalidProperty}.");
 			var expectedError = invalidProperty == "BackupAgent"
 				? "must be a subclass of the type Android.App.Backup.BackupAgent"
-				: "Unsupported ApplicationCategories value 'Undefined'";
+				: invalidProperty == "AppCategory"
+					? "Unsupported ApplicationCategories value 'Undefined'"
+					: $"Unsupported {invalidProperty} value '99'";
 			Assert.IsTrue (builder.LastBuildOutput.ContainsText (expectedError), $"Build output should contain '{expectedError}'.");
 		}
 

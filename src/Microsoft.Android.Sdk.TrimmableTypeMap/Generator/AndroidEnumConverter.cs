@@ -108,7 +108,7 @@ static class AndroidEnumConverter
 		2 => "write",
 		3 => "readOrWrite",
 		4 => "readAndWrite",
-		_ => null,
+		_ => throw new ArgumentException ($"Unsupported RequiredContentUriPermission value '{value}'."),
 	};
 
 	public static string? ApplicationCategoriesToString (int value) => value switch {
@@ -129,7 +129,7 @@ static class AndroidEnumConverter
 		-1 => "never",
 		0 => "never",
 		1 => "always",
-		_ => null,
+		_ => throw new ArgumentException ($"Unsupported GwpAsan value '{value}'."),
 	};
 
 	public static string? ForegroundServiceTypeToString (int value)
