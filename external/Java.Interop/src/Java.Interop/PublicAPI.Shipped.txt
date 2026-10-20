@@ -312,7 +312,7 @@ unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualObjectMethod(
 unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
 unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
 unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
-unsafe Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(string! constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(string! constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
 Java.Interop.JniPeerMembers.JniPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType) -> void
 Java.Interop.JniPeerMembers.JniPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
 Java.Interop.JniPeerMembers.JniPeerType.get -> Java.Interop.JniType!

@@ -99,6 +99,9 @@ namespace Java.Interop {
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI type name.
 			/// </summary>
+			/// <remarks>
+			/// The getter only copies the address; it does not validate, read, or extend the lifetime of its storage.
+			/// </remarks>
 			/// <safety>
 			/// Keep non-null UTF-8 bytes readable through their NUL and unchanged for the runtime
 			/// and all later cached/diagnostic reads, even after lookup failure. Read-only aliases
@@ -109,6 +112,9 @@ namespace Java.Interop {
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method name.
 			/// </summary>
+			/// <remarks>
+			/// The getter only copies the address; it does not validate, read, or extend the lifetime of its storage.
+			/// </remarks>
 			/// <safety>
 			/// The setter's buffer has the same NUL, lifetime, aliasing and failure obligations as
 			/// <see cref="TargetJniTypeUtf8Pointer"/>. The getter returns only the address.
@@ -117,6 +123,9 @@ namespace Java.Interop {
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method signature.
 			/// </summary>
+			/// <remarks>
+			/// The getter only copies the address; it does not validate, read, or extend the lifetime of its storage.
+			/// </remarks>
 			/// <safety>
 			/// The setter's buffer has the same NUL, lifetime, aliasing and failure obligations as
 			/// <see cref="TargetJniTypeUtf8Pointer"/>. The getter returns only the address.

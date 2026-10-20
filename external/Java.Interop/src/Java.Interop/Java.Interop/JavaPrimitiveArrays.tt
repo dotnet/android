@@ -65,6 +65,12 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
+		/// <remarks>
+		/// Reading this address does not access the elements or keep the acquisition alive.
+		/// Access through it must stay within the acquired element count while this owner and
+		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
+		/// a disposal check when obtaining the address does not protect subsequent pointer use.
+		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new <#= info.ManagedType #>* Elements => unsafe ((<#= info.ManagedType #>*) ElementsPointer);
 

@@ -42,6 +42,14 @@ native invocation inside explicit local `unsafe` blocks without transferring
 those obligations to their callers. Mono.Android and customer-project opt-in
 remain separate changes.
 
+This is an unsafe audit, not an implementation redesign. Caller-unsafe
+declarations and local implementation scopes are reviewed independently.
+Each audited `unsafe` block records its concrete `// SAFETY:` justification;
+`<safety>` describes the actual caller's ABI, bounds, lifetime, aliasing, and
+thread obligations, including obligations that survive a failed operation.
+Neither kind of annotation adds validation, ownership, pinning, or cleanup
+that the implementation does not perform.
+
 ## Native callback ownership
 
 `JniType.RegisterNativeMethods` retains the original array and its owner only after
@@ -69,6 +77,9 @@ all callbacks already running have finished.
 `JniNativeMethod` name/signature storage must remain readable and NUL-terminated
 through registration. Its raw callback must match the JNI descriptor's ABI,
 including the environment and receiver/class arguments.
+The descriptor's constructor is safe-callable: it only stores addresses and
+neither reads their memory nor invokes the callback. Registration, not address
+storage, is the caller-unsafe boundary that consumes those addresses.
 
 ## Borrowed UTF-8 metadata
 
@@ -95,6 +106,9 @@ Typed pointer getters remain safe: reading an address does not dereference its
 storage. Their setters and the typed raw hooks require unsafe callers, who must
 establish the documented storage lifetime. The warning-obsolete native-int
 compatibility APIs remain safe-callable under both compiler modes.
+Copying or reading an address does not retain its backing storage. Changing a
+property or observing a failed lookup does not invalidate copies already
+cached by the runtime or permit their backing storage to be freed.
 
 ## Owned JNI implementation memory
 
@@ -104,8 +118,8 @@ operations remain inside their implementations; local scopes do not transfer
 buffer ownership to callers or change JNI reference cleanup.
 
 `JniNativeMethod` preserves the sequential layout of JNI's `JNINativeMethod`.
-It stores opaque callback addresses as `IntPtr`. Construction only copies addresses;
-its legacy `unsafe` modifier is syntax context, not a pointee-lifetime contract.
+It stores opaque callback addresses as `IntPtr`. Construction only copies addresses
+and remains safe-callable; registration owns the pointee-lifetime contract.
 Registration requires readable NUL-terminated names/signatures and a
 descriptor-compatible callback rooted until successful unregistration
 **and completion of all in-flight callbacks**.

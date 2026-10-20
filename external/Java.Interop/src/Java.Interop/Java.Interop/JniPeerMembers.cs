@@ -54,7 +54,7 @@ namespace Java.Interop {
 
 			public string SourceName { get; }
 			public string? TargetName { get; }
-			public unsafe byte* TargetNameUtf8 { get; }
+			public byte* TargetNameUtf8 { get; }
 		}
 
 		static JniPeerTypeNameInfo GetReplacementType (string jniPeerTypeName)
