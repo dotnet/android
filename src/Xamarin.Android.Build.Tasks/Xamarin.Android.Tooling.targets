@@ -54,7 +54,16 @@ used by all .NET Android projects.
       <_AndroidApiInfoDirectoryPaths>@(_AndroidApiInfoDirectories)</_AndroidApiInfoDirectoryPaths>
     </PropertyGroup>
     <ItemGroup>
-      <_AndroidSdkInput Include="MSBuildProjectFullPath;Configuration;TargetFramework;TargetPlatformVersion;AndroidSdkDirectory;AndroidNdkDirectory;JavaSdkDirectory;AndroidCommandLineToolsVersion;MinimumSupportedJavaVersion;LatestSupportedJavaVersion" />
+      <_AndroidSdkInput Include="MSBuildProjectFullPath" />
+      <_AndroidSdkInput Include="Configuration" />
+      <_AndroidSdkInput Include="TargetFramework" />
+      <_AndroidSdkInput Include="TargetPlatformVersion" />
+      <_AndroidSdkInput Include="AndroidSdkDirectory" />
+      <_AndroidSdkInput Include="AndroidNdkDirectory" />
+      <_AndroidSdkInput Include="JavaSdkDirectory" />
+      <_AndroidSdkInput Include="AndroidCommandLineToolsVersion" />
+      <_AndroidSdkInput Include="MinimumSupportedJavaVersion" />
+      <_AndroidSdkInput Include="LatestSupportedJavaVersion" />
       <_AndroidSdkInput Include="AndroidApiInfoDirectories" PropertyName="_AndroidApiInfoDirectoryPaths" />
       <_AndroidSdkInput Include="SkipNdkResolution" PropertyName="_SkipNdkResolution" />
       <_AndroidSdkInput Include="AllowMissingSdkTooling" PropertyName="_AndroidAllowMissingSdkTooling" />

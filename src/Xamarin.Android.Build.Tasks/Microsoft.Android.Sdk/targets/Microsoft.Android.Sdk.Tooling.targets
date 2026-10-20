@@ -20,7 +20,21 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
       <_AndroidUseJavaExeVersion Condition=" '$(_AndroidUseJavaExeVersion)' == '' ">false</_AndroidUseJavaExeVersion>
     </PropertyGroup>
     <ItemGroup>
-      <_AndroidToolingInput Include="AndroidApiLevel;AndroidApplication;AndroidSdkBuildToolsVersion;AndroidCommandLineToolsVersion;AndroidSdkBuildToolsPath;AndroidSdkBuildToolsBinPath;Aapt2ToolPath;ZipAlignToolPath;LintToolPath;ApkSignerJar;AndroidUseApkSigner;JavaToolExe;JavacToolExe;MinimumSupportedJavaVersion;LatestSupportedJavaVersion" />
+      <_AndroidToolingInput Include="AndroidApiLevel" />
+      <_AndroidToolingInput Include="AndroidApplication" />
+      <_AndroidToolingInput Include="AndroidSdkBuildToolsVersion" />
+      <_AndroidToolingInput Include="AndroidCommandLineToolsVersion" />
+      <_AndroidToolingInput Include="AndroidSdkBuildToolsPath" />
+      <_AndroidToolingInput Include="AndroidSdkBuildToolsBinPath" />
+      <_AndroidToolingInput Include="Aapt2ToolPath" />
+      <_AndroidToolingInput Include="ZipAlignToolPath" />
+      <_AndroidToolingInput Include="LintToolPath" />
+      <_AndroidToolingInput Include="ApkSignerJar" />
+      <_AndroidToolingInput Include="AndroidUseApkSigner" />
+      <_AndroidToolingInput Include="JavaToolExe" />
+      <_AndroidToolingInput Include="JavacToolExe" />
+      <_AndroidToolingInput Include="MinimumSupportedJavaVersion" />
+      <_AndroidToolingInput Include="LatestSupportedJavaVersion" />
       <_AndroidToolingInput Include="UseJavaExeVersion" PropertyName="_AndroidUseJavaExeVersion" />
       <_AndroidToolingInput Update="@(_AndroidToolingInput)">
         <PropertyName Condition=" '%(_AndroidToolingInput.PropertyName)' == '' ">%(_AndroidToolingInput.Identity)</PropertyName>
