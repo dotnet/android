@@ -60,4 +60,44 @@ public class TrimmableTypeMapManifestAliasTests
 		Assert.AreEqual (expectedAliasName, (string) alias.Attribute (android + "name"));
 		Assert.AreEqual (GeneratedActivityName, (string) alias.Attribute (android + "targetActivity"));
 	}
+
+	[Test]
+	public void PackageNameTokenIsReplacedOnlyInGeneratedAttributes ()
+	{
+		var provider = new JavaPeerInfo {
+			JavaName = "crc64deadbeefcafebabe/TokenProvider",
+			CompatJniName = "myapp/TokenProvider",
+			ManagedTypeName = "MyApp.TokenProvider",
+			ManagedTypeNamespace = "MyApp",
+			ManagedTypeShortName = "TokenProvider",
+			AssemblyName = "MyApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.ContentProvider,
+				Properties = new Dictionary<string, object?> {
+					["Authorities"] = "my.app.provider",
+					["ReadPermission"] = "@PACKAGE_NAME@.permission.READ",
+				},
+			},
+		};
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
+			  <application android:permission="@PACKAGE_NAME@.template.permission" />
+			</manifest>
+			""");
+		var manifestGenerator = new ManifestGenerator {
+			PackageName = "my.app",
+			MinSdkVersion = "24",
+			TargetSdkVersion = "35",
+			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+		};
+
+		var (document, _) = manifestGenerator.Generate (manifest, [provider], new AssemblyManifestInfo ());
+		XNamespace android = "http://schemas.android.com/apk/res/android";
+		var application = document.Root?.Element ("application");
+		Assert.IsNotNull (application);
+		Assert.AreEqual ("@PACKAGE_NAME@.template.permission", (string) application.Attribute (android + "permission"));
+		var generatedProvider = application.Element ("provider");
+		Assert.IsNotNull (generatedProvider);
+		Assert.AreEqual ("my.app.permission.READ", (string) generatedProvider.Attribute (android + "readPermission"));
+	}
 }

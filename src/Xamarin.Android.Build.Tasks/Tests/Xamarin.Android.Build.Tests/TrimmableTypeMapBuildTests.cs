@@ -230,6 +230,7 @@ namespace Xamarin.Android.Build.Tests {
 					using Android.Runtime;
 
 					[assembly: Instrumentation (Name = "assembly.instrumentation", TargetPackage = "assembly.target", RoundIcon = "@drawable/assembly_round")]
+					[assembly: Instrumentation (Name = "assembly.generated", TargetPackage = "assembly.generated.target", RoundIcon = "@drawable/assembly_round")]
 					[assembly: UsesLibrary (Name = "application.library", Required = true)]
 
 					namespace UnnamedProject;
@@ -395,8 +396,13 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("template.target", (string) instrumentation.Attribute (android + "targetPackage"));
 			Assert.AreEqual ("@drawable/assembly_round", (string) instrumentation.Attribute (android + "roundIcon"));
 
+			var generatedInstrumentation = root.Elements ("instrumentation").Single (element => (string) element.Attribute (android + "name") == "assembly.generated");
+			Assert.AreEqual ("assembly.generated.target", (string) generatedInstrumentation.Attribute (android + "targetPackage"));
+			Assert.AreEqual ("@drawable/assembly_round", (string) generatedInstrumentation.Attribute (android + "roundIcon"));
+
 			var typeInstrumentation = root.Elements ("instrumentation").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityInstrumentation", StringComparison.Ordinal));
 			Assert.AreEqual ("parity", (string) typeInstrumentation.Attribute (android + "targetProcesses"));
+			Assert.AreEqual ("@drawable/instrumentation_round", (string) typeInstrumentation.Attribute (android + "roundIcon"));
 			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
 		}
 
@@ -435,7 +441,6 @@ namespace Xamarin.Android.Build.Tests {
 					[Activity]
 					public class ParityActivity : Activity {}
 
-					[Activity]
 					public class ParityManageActivity : Activity {}
 
 					public class ParityBackupAgent : BackupAgent
@@ -473,6 +478,8 @@ namespace Xamarin.Android.Build.Tests {
 				using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
 				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
 					"Assembly-level Application.BackupAgent should preserve the referenced type through trimming.");
+				Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
+					"Assembly-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
 			}
 		}
 

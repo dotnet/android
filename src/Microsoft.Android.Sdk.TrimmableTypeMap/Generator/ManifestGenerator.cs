@@ -56,6 +56,9 @@ class ManifestGenerator
 		EnsureManifestAttributes (manifest);
 		// Template component names must be resolved before compat-name rewriting.
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName);
+		var templateAttributes = doc.Descendants ()
+			.Attributes ()
+			.ToDictionary (attribute => attribute, attribute => attribute.Value);
 		var app = EnsureApplicationElement (manifest);
 		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
 
@@ -147,14 +150,20 @@ class ManifestGenerator
 
 		// Apply manifest placeholders
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
-		ReplacePackageNameTokens (doc, PackageName);
+		ReplaceGeneratedPackageNameTokens (doc, PackageName, templateAttributes);
 
 		return (doc, providerNames);
 	}
 
-	static void ReplacePackageNameTokens (XDocument doc, string packageName)
+	static void ReplaceGeneratedPackageNameTokens (
+		XDocument doc,
+		string packageName,
+		IReadOnlyDictionary<XAttribute, string> templateAttributes)
 	{
 		foreach (var attribute in doc.Descendants ().Attributes ()) {
+			if (templateAttributes.TryGetValue (attribute, out var templateValue) && attribute.Value == templateValue) {
+				continue;
+			}
 			if (attribute.Value.Contains ("@PACKAGE_NAME@", StringComparison.Ordinal)) {
 				attribute.Value = attribute.Value.Replace ("@PACKAGE_NAME@", packageName);
 			}
