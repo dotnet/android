@@ -143,7 +143,7 @@ namespace Java.Interop {
 			if (methods != null)
 				UnregisterNativeMethods ();
 			if (registered)
-				JniEnvironment.Runtime.UnTrack (this);
+				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
@@ -179,21 +179,21 @@ namespace Java.Interop {
 		JniNativeMethodRegistration[]? methods;
 
 		/// <remarks>
-		/// Retains the transferred registration array and delegates until successful
-		/// unregistration, including after failed or partial registration. Another registration
-		/// attempt is rejected until successful unregistration. Coordinate registration,
-		/// unregistration, and disposal with native invocations so no callbacks are running
-		/// when unregistering.
+		/// After successful registration, retains the original array without copying it.
+		/// A failed registration does not retain the supplied array, even if JNI installed
+		/// some callbacks before reporting the failure. Registration exceptions propagate
+		/// without attempting to roll back partial native registration.
 		/// </remarks>
-		/// <exception cref="InvalidOperationException">
-		/// A previous registration attempt has not been successfully unregistered.
-		/// </exception>
 		/// <safety>
-		/// The caller transfers ownership of <paramref name="methods"/> to this instance for
-		/// an accepted registration attempt. Do not modify the array or its entries through
-		/// any alias until successful unregistration and completion of all callbacks, even if
-		/// registration fails or completes only partially. A call rejected because this
-		/// instance already has a registration does not transfer ownership.
+		/// The caller must not start another JNI registration on this instance before
+		/// successful unregistration, including after a failed or partial JNI attempt.
+		/// This is not checked: only the latest successfully registered array is retained,
+		/// so registering again can allow earlier delegates to be collected while JNI still uses them.
+		/// Do not modify <paramref name="methods"/> or its entries through any alias during
+		/// this call. After successful registration, ownership of the array transfers to this
+		/// instance: do not modify it until successful unregistration and completion of all
+		/// callbacks. If registration fails, the caller must keep the delegates strongly
+		/// reachable until successful unregistration and completion of all callbacks.
 		/// The caller must ensure each Marshaler delegate in <paramref name="methods"/> has
 		/// parameter and return types, calling convention, and marshaling attributes compatible
 		/// with its JNI method descriptor, including the leading JNIEnv and receiver/class pointers.
@@ -201,24 +201,24 @@ namespace Java.Interop {
 		/// This method retains delegates but does not validate their ABI compatibility.
 		/// </safety>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
+		public unsafe void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
 			AssertValid ();
 
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
-			if (this.methods != null)
-				throw new InvalidOperationException ("Native methods have already been registered or registration has failed. Unregister them before registering again.");
 
-			RegisterWithRuntime ();
+			unsafe {
+				// SAFETY: Caller guarantees callback ABI and roots delegates on failure; success retains the array.
+				JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
+			}
 			this.methods = methods;
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length);
+			RegisterWithRuntime ();
 		}
 
 		/// <remarks>
 		/// Prevent new calls to the registered native methods and wait for callbacks already
-		/// running to finish before calling this method. Delegate roots are released only
-		/// after successful unregistration.
+		/// running to finish before calling this method.
 		/// </remarks>
 		public void UnregisterNativeMethods ()
 		{

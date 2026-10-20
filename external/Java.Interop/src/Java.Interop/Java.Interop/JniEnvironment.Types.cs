@@ -227,9 +227,12 @@ namespace Java.Interop
 			/// receiver/class pointers. JNI scalar values must not be interpreted as managed references.
 			/// </safety>
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
+			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
 			{
-				RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				unsafe {
+					// SAFETY: Caller supplies JNI-compatible delegates and keeps them rooted while JNI can invoke them.
+					RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				}
 			}
 
 			/// <safety>
@@ -291,9 +294,15 @@ namespace Java.Interop
 						unmanagedStrings [i * 2] = name;
 						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
-						natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
+						unsafe {
+							// SAFETY: UTF-8 allocations remain live through registration; caller guarantees the delegate ABI.
+							natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
+						}
 					}
-					RegisterNatives (type, natives);
+					unsafe {
+						// SAFETY: Names/signatures stay allocated until finally; caller guarantees callback ABI and lifetime.
+						RegisterNatives (type, natives);
+					}
 				} finally {
 					for (int i = 0; i < unmanagedStrings.Length; ++i) {
 						if (unmanagedStrings [i] != IntPtr.Zero)
@@ -324,10 +333,14 @@ namespace Java.Interop
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;
-				fixed (JniNativeMethod* methodsPtr = methods) {
-					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
-						(void*) (*((JNIEnv**)env))->RegisterNatives;
-					r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+				unsafe {
+					// SAFETY: The runtime supplies this thread's JNIEnv and the span is pinned for the call.
+					// Caller guarantees valid name/signature storage and callback ABI and lifetime.
+					fixed (JniNativeMethod* methodsPtr = methods) {
+						var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
+							(void*) (*((JNIEnv**)env))->RegisterNatives;
+						r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+					}
 				}
 
 				// Surface (and clear) any pending Java exception raised by JNI::RegisterNatives()

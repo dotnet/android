@@ -161,7 +161,7 @@ namespace Java.Interop
 			current = newCurrent;
 		}
 
-		HashSet<JniType>                                TrackedInstances    = new HashSet<JniType> ();
+		Dictionary<IntPtr, IDisposable>                 TrackedInstances    = new Dictionary<IntPtr, IDisposable> ();
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyRuntimeOnDispose;
@@ -384,24 +384,26 @@ namespace Java.Interop
 		internal void Track (JniType value)
 		{
 			lock (TrackedInstances) {
-				TrackedInstances.Add (value);
+				if (!TrackedInstances.ContainsKey (value.PeerReference.Handle))
+					TrackedInstances [value.PeerReference.Handle] = value;
 			}
 		}
 
-		internal void UnTrack (JniType value)
+		internal void UnTrack (IntPtr key)
 		{
 			lock (TrackedInstances) {
-				TrackedInstances.Remove (value);
+				if (TrackedInstances.ContainsKey (key))
+					TrackedInstances.Remove (key);
 			}
 		}
 
 		void ClearTrackedReferences ()
 		{
-			List<JniType> values;
+			List<IDisposable> values;
 			lock (TrackedInstances) {
-				// Dispose removes each owner via UnTrack after successful unregistration.
-				// Do not clear the set here: failed unregistration must retain callback roots.
-				values = new List<JniType> (TrackedInstances);
+				// Dispose untracks each owner only after successful unregistration.
+				// Pre-clearing would drop callback roots if unregistration fails.
+				values = new List<IDisposable> (TrackedInstances.Values);
 			}
 
 			foreach (var d in values)
