@@ -258,8 +258,10 @@ static class ComponentElementBuilder
 		foreach (var property in component.ManifestProperties) {
 			app.Add (CreatePropertyElement (property));
 		}
+		var existingLibraries = new HashSet<string> (
+			app.Elements ("uses-library").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
 		foreach (var library in component.UsesLibraries) {
-			if (!string.IsNullOrEmpty (library.Name)) {
+			if (!string.IsNullOrEmpty (library.Name) && existingLibraries.Add (library.Name)) {
 				app.Add (new XElement ("uses-library",
 					new XAttribute (AttName, library.Name),
 					new XAttribute (AndroidNs + "required", library.Required ? "true" : "false")));

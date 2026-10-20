@@ -206,12 +206,19 @@ namespace Xamarin.Android.Build.Tests {
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
-			proj.AndroidManifest = proj.AndroidManifest.Replace (
-				"</manifest>",
-				"""
-				  <instrumentation android:name="assembly.instrumentation" android:targetPackage="template.target" android:roundIcon="@drawable/assembly_round" />
-				</manifest>
-				""");
+			proj.AndroidManifest = proj.AndroidManifest
+				.Replace (
+					"</application>",
+					"""
+					  <uses-library android:name="application.library" android:required="true" />
+					</application>
+					""")
+				.Replace (
+					"</manifest>",
+					"""
+					  <instrumentation android:name="assembly.instrumentation" android:targetPackage="template.target" android:roundIcon="@drawable/assembly_round" />
+					</manifest>
+					""");
 			proj.Sources.Add (new BuildItem.Source ("ManifestParity.cs") {
 				TextContent = () => """
 					using System;
@@ -356,8 +363,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("true", (string) application.Attribute (android + "hasCode"));
 			Assert.AreEqual ("true", (string) application.Attribute (android + "persistent"));
 			Assert.AreEqual ("true", (string) application.Attribute (android + "testOnly"));
-			Assert.AreEqual ("application.library", (string) application.Element ("uses-library").Attribute (android + "name"));
-			Assert.AreEqual ("false", (string) application.Element ("uses-library").Attribute (android + "required"));
+			var usesLibrary = application.Elements ("uses-library").Single (element => (string) element.Attribute (android + "name") == "application.library");
+			Assert.AreEqual ("true", (string) usesLibrary.Attribute (android + "required"));
 			Assert.AreEqual ("application-property", (string) application.Element ("property").Attribute (android + "value"));
 
 			var activity = application.Elements ("activity").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityActivity", StringComparison.Ordinal));
