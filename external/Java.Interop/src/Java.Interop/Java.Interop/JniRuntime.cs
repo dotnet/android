@@ -28,13 +28,21 @@ namespace Java.Interop
 		public int DestroyJavaVM (IntPtr javavm)
 		{
 			unsafe {
+				// SAFETY: Runtime initialization binds this vtable to javavm; disposal controls when that VM is destroyed.
 				return destroyJavaVM (javavm);
 			}
 		}
 
-		public int AttachCurrentThread (IntPtr javavm, out IntPtr env, ref JavaVMThreadAttachArgs args)
+		/// <safety>
+		/// A non-null args.name must be readable NUL-terminated storage in the VM's expected encoding
+		/// until attachment returns, including failure. Keep args.group's global reference live.
+		/// The arguments and writable output must not be concurrently mutated or released through aliases.
+		/// This vtable and javavm must refer to the same live VM.
+		/// </safety>
+		public unsafe int AttachCurrentThread (IntPtr javavm, out IntPtr env, ref JavaVMThreadAttachArgs args)
 		{
 			unsafe {
+				// SAFETY: Pin both writable ref slots; caller supplies the VM and live name/group storage.
 				fixed (IntPtr* envp = &env)
 				fixed (JavaVMThreadAttachArgs* argsp = &args)
 					return attachCurrentThread (javavm, envp, argsp);
@@ -44,6 +52,7 @@ namespace Java.Interop
 		public int GetEnv (IntPtr javavm, out IntPtr envptr, int version)
 		{
 			unsafe {
+				// SAFETY: Pin one address-sized output slot for the vtable bound to this live VM.
 				fixed (IntPtr* envp = &envptr)
 					return getEnv (javavm, envp, version);
 			}
@@ -198,6 +207,8 @@ namespace Java.Interop
 				InvocationPointer   = options.InvocationPointer;
 			}
 			unsafe {
+				// SAFETY: CreationOptions must identify a live JavaVM with a readable invocation table; nonzero checks alone
+				// do not validate that external storage. Copy the table while that runtime remains alive.
 				Invoker = *(JavaVMInterface*) Marshal.ReadIntPtr (InvocationPointer);
 			}
 
@@ -360,18 +371,24 @@ namespace Java.Interop
 			};
 			try {
 				unsafe {
+					// SAFETY: Own the optional HGlobal string until attachment finishes; preserve the existing encoding.
 					if (name != null)
 						threadArgs.name = (byte*) Marshal.StringToHGlobalAnsi (name);
 				}
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
 				IntPtr jnienv;
-				int r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
+				int r;
+				unsafe {
+					// SAFETY: threadArgs is local; its optional name allocation and supplied group stay live through attachment.
+					r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
+				}
 				if (r != JNI_OK)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;
 			} finally {
 				unsafe {
+					// SAFETY: Free only the HGlobal allocated above, after attachment returns or throws; zero is permitted.
 					Marshal.FreeHGlobal ((IntPtr) threadArgs.name);
 				}
 			}

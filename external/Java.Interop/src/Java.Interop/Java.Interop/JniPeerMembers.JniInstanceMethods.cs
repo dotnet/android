@@ -163,6 +163,7 @@ namespace Java.Interop
 
 		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
+			// SAFETY: parameters is not read or retained; this phase only allocates the peer selected by declaringType.
 			#pragma warning disable CS1717
 			parameters = parameters;    // Silence CA1801
 			#pragma warning restore CS1717
@@ -179,6 +180,13 @@ namespace Java.Interop
 			return r;
 		}
 
+		/// <safety>
+		/// parameters must address readable initialized JNI argument slots matching constructorSignature,
+		/// or be null only for a zero-argument constructor. Keep the buffer and referenced Java objects
+		/// live through this call, including failure, with no concurrent writes or release through aliases.
+		/// self must refer to an allocated instance compatible with the resolved constructor.
+		/// The buffer is not retained; JNI local references must belong to the invoking thread.
+		/// </safety>
 		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JniArgumentValue* parameters)
 		{
 			if (constructorSignature == null)
@@ -189,6 +197,7 @@ namespace Java.Interop
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);
 			unsafe {
+				// SAFETY: The caller keeps constructor-compatible slots/references alive for the nonvirtual JNI call.
 				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
 			}
 		}

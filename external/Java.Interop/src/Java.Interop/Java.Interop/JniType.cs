@@ -25,6 +25,7 @@ namespace Java.Interop {
 			if (classFileData == null)
 				return null;
 			unsafe {
+				// SAFETY: Pin the complete managed class-file array through JNI's synchronous read of its exact length.
 				fixed (byte* buf = classFileData) {
 					var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
 					return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
@@ -268,11 +269,19 @@ namespace Java.Interop {
 			return JniEnvironment.Object.AllocObject (PeerReference);
 		}
 
+		/// <safety>
+		/// constructor must describe a constructor for this type. parameters must address readable,
+		/// initialized JNI slots matching its descriptor, or be null only for no arguments.
+		/// Keep the storage and referenced Java objects live until return or failure; local references
+		/// must belong to the invoking thread. Exclude concurrent writes or release through aliases.
+		/// The argument buffer is not retained.
+		/// </safety>
 		public unsafe JniObjectReference NewObject (JniMethodInfo constructor, JniArgumentValue* @parameters)
 		{
 			AssertValid ();
 
 			unsafe {
+				// SAFETY: The caller keeps constructor-compatible argument slots and their Java references live.
 				return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
 			}
 		}
@@ -352,6 +361,7 @@ namespace Java.Interop {
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
 				unsafe {
+					// SAFETY: Both terminated buffers are allocated above and remain owned until the matching finally.
 					var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
 					thrown      = JniNativeMethods.ExceptionOccurred (env);
 					return id;
@@ -359,6 +369,7 @@ namespace Java.Interop {
 			}
 			finally {
 				unsafe {
+					// SAFETY: Free the two CoTaskMemUTF8 allocations once, after native lookup and exception capture.
 					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
 					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
 				}
@@ -413,6 +424,7 @@ namespace Java.Interop {
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
 				unsafe {
+					// SAFETY: This call owns both terminated CoTaskMem buffers through static lookup and exception capture.
 					var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
 					thrown      = JniNativeMethods.ExceptionOccurred (env);
 					return id;
@@ -420,6 +432,7 @@ namespace Java.Interop {
 			}
 			finally {
 				unsafe {
+					// SAFETY: Release only the CoTaskMemUTF8 allocations created above, in their existing failure-safe order.
 					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
 					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
 				}

@@ -9,6 +9,7 @@ namespace Java.Interop
 	[StructLayout(LayoutKind.Explicit)]
 	public struct JniArgumentValue : IEquatable<JniArgumentValue> {
 #pragma warning disable 0414
+		// SAFETY: Only reference-free scalar values overlap; reading another view cannot manufacture a managed reference.
 		[FieldOffset(0)] safe bool z;
 		[FieldOffset(0)] safe sbyte b;
 		[FieldOffset(0)] safe char c;

@@ -33,6 +33,7 @@ namespace Java.Interop
 		public          JniObjectReference          PeerReference {
 			get {
 				unsafe {
+					// SAFETY: Read this peer's control block only while its reference-manager lifetime permits access.
 					var c = jniObjectReferenceControlBlock;
 					if (c == null) {
 						return default;
@@ -89,6 +90,7 @@ namespace Java.Interop
 			}
 
 			unsafe {
+				// SAFETY: This peer owns the allocated block; reference-manager updates must not race its release.
 				var c   = jniObjectReferenceControlBlock;
 				if (c == null) {
 					c   = jniObjectReferenceControlBlock    =
@@ -138,6 +140,7 @@ namespace Java.Interop
 		public override int GetHashCode ()
 		{
 			unsafe {
+				// SAFETY: hashCode.()I has no arguments, so the virtual call does not read the null buffer.
 				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
 			}
 		}
@@ -145,6 +148,7 @@ namespace Java.Interop
 		public override string? ToString ()
 		{
 			unsafe {
+				// SAFETY: toString takes no arguments; the returned local string is consumed and disposed below.
 				var lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
 						"toString.()Ljava/lang/String;",
 						this,
@@ -166,6 +170,7 @@ namespace Java.Interop
 				Dispose (disposing: false);
 			} finally {
 				unsafe {
+					// SAFETY: Finalization has detached tracking; FreeIfInvalid preserves a callback-reattached reference.
 					Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
 				}
 			}
@@ -187,6 +192,7 @@ namespace Java.Interop
 
 			if (!reference.IsValid && managedPeerState.HasFlag (Disposed)) {
 				unsafe {
+					// SAFETY: Disposed-reference clearing releases this peer's block once and clears its owner slot.
 					Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
 				}
 			}
@@ -195,6 +201,7 @@ namespace Java.Interop
 		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
 			get {
 				unsafe {
+					// SAFETY: Return only the address; this getter neither dereferences it nor extends the block's lifetime.
 					return (IntPtr) jniObjectReferenceControlBlock;
 				}
 			}

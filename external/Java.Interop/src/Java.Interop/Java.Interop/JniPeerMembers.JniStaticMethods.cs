@@ -114,82 +114,152 @@ namespace Java.Interop
 			return null;
 		}
 
+		/// <safety>
+		/// The resolved method must return void. parameters must address readable initialized JNI slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// and unchanged through the call, including failure; local references belong to this thread.
+		/// No buffer is retained; exclude concurrent writes or release through every alias.
+		/// </safety>
 		public unsafe void InvokeVoidMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: Caller-provided slots match the resolved void method and remain readable until JNI returns.
 				JniEnvironment.StaticMethods.CallStaticVoidMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI boolean. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe bool InvokeBooleanMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller supplies the resolved boolean method's complete argument buffer for this call.
 				return JniEnvironment.StaticMethods.CallStaticBooleanMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI byte. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe sbyte InvokeSByteMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller supplies the resolved byte method's readable slots and live Java references.
 				return JniEnvironment.StaticMethods.CallStaticByteMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI char. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe char InvokeCharMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller supplies descriptor-compatible slots for the resolved UTF-16 character result.
 				return JniEnvironment.StaticMethods.CallStaticCharMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI short. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe short InvokeInt16Method (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller keeps every resolved short method argument readable and correctly represented.
 				return JniEnvironment.StaticMethods.CallStaticShortMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI int. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe int InvokeInt32Method (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller supplies the resolved int method's complete descriptor-matched argument buffer.
 				return JniEnvironment.StaticMethods.CallStaticIntMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI long. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe long InvokeInt64Method (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller keeps the resolved long method's slots and Java references live during JNI.
 				return JniEnvironment.StaticMethods.CallStaticLongMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI float. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe float InvokeSingleMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller supplies the resolved float method's complete readable argument buffer.
 				return JniEnvironment.StaticMethods.CallStaticFloatMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return JNI double. parameters must address readable initialized slots
+		/// matching its descriptor, or be null for no arguments. Keep storage and Java references live
+		/// through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe double InvokeDoubleMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller provides descriptor-compatible slots for the resolved double-returning method.
 				return JniEnvironment.StaticMethods.CallStaticDoubleMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}
 
+		/// <safety>
+		/// The resolved method must return a JNI reference. parameters must address readable initialized
+		/// slots matching its descriptor, or be null for no arguments. Keep storage and Java references
+		/// live through the call, including failure; local references belong to this thread.
+		/// Exclude writes or release through aliases while JNI reads the buffer; it is not retained.
+		/// </safety>
 		public unsafe JniObjectReference InvokeObjectMethod (string encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			unsafe {
+				// SAFETY: The caller owns readable descriptor-matched slots; the JNI result is a local reference.
 				return JniEnvironment.StaticMethods.CallStaticObjectMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 			}
 		}

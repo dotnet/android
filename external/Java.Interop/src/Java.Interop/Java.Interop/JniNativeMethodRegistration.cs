@@ -45,6 +45,7 @@ namespace Java.Interop {
 		/// </remarks>
 		public unsafe JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
 		{
+			// SAFETY: Only store pointer-sized values; no pointee is read and no callback is invoked here.
 			this.name = name;
 			this.signature = signature;
 			this.functionPointer = (void*) functionPointer;

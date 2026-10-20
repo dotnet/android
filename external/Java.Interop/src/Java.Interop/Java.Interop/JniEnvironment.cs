@@ -185,6 +185,7 @@ namespace Java.Interop {
 			internal static void RawDeleteLocalRef (IntPtr env, IntPtr localRef)
 			{
 				unsafe {
+					// SAFETY: The lookup supplies an owned local reference from this attached thread's environment.
 					JniNativeMethods.DeleteLocalRef (env, localRef);
 				}
 			}
@@ -269,6 +270,7 @@ namespace Java.Interop {
 			jniTypeName.AsSpan ().Replace (javaName, '/', '.');
 
 			unsafe {
+				// SAFETY: The thread-local name buffer bounds javaName to length; pin it through the UTF-16 copy.
 				fixed (char* dst = javaName) {
 					return JniEnvironment.Strings.NewString (dst, length);
 				}

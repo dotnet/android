@@ -14,6 +14,7 @@ namespace Java.Interop
 				if (value == null)
 					return new JniObjectReference ();
 				unsafe {
+					// SAFETY: Pin the managed string for the synchronous copy of exactly value.Length UTF-16 characters.
 					fixed (char* s = value)
 						return NewString (s, value.Length);
 				}
@@ -40,6 +41,8 @@ namespace Java.Interop
 				if (!value.IsValid)
 					return null;
 				unsafe {
+					// SAFETY: JNI owns the returned len-character buffer until ReleaseStringChars in finally.
+					// Copy it before release and preserve the existing reference-transfer cleanup on failure.
 					int len = JniEnvironment.Strings.GetStringLength (value);
 					var p   = JniEnvironment.Strings.GetStringChars (value, null);
 					try {

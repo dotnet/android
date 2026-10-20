@@ -46,6 +46,7 @@ namespace Java.Interop
 			: base (message)
 		{
 			unsafe {
+				// SAFETY: One initialized stack slot matches the String parameter; its local reference lives through both calls.
 				const string signature  = "(Ljava/lang/String;)V";
 				var native_message = JniEnvironment.Strings.NewString (message);
 				try {
@@ -65,6 +66,7 @@ namespace Java.Interop
 			: base (message, innerException)
 		{
 			unsafe {
+				// SAFETY: One initialized stack slot matches the String parameter; finally releases the message even on failure.
 				const string signature  = "(Ljava/lang/String;)V";
 				var native_message  = JniEnvironment.Strings.NewString (message);
 				try {
@@ -144,6 +146,7 @@ namespace Java.Interop
 		public          JniObjectReference          PeerReference {
 			get {
 				unsafe {
+					// SAFETY: Read this peer's control block only while its reference-manager lifetime permits access.
 					var c = jniObjectReferenceControlBlock;
 					if (c == null) {
 						return default;
@@ -176,6 +179,7 @@ namespace Java.Interop
 			}
 
 			unsafe {
+				// SAFETY: This peer owns the block; reference-manager writes must not race its release or finalization.
 				var c   = jniObjectReferenceControlBlock;
 				if (c == null) {
 					c   = jniObjectReferenceControlBlock    =
@@ -229,6 +233,7 @@ namespace Java.Interop
 		public override int GetHashCode ()
 		{
 			unsafe {
+				// SAFETY: hashCode.()I has no parameters; virtual dispatch does not read the null argument buffer.
 				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
 			}
 		}
@@ -281,6 +286,8 @@ namespace Java.Interop
 		string? GetJavaStack (JniObjectReference handle)
 		{
 			unsafe {
+				// SAFETY: Each initialized one-slot buffer matches its fixed descriptor and remains on the stack during JNI.
+				// Local writer references stay live until the matching finally blocks, including on exceptions.
 				using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
 				using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {
 					var StringWriter_init       = StringWriter_class.GetConstructor ("()V");
@@ -320,6 +327,7 @@ namespace Java.Interop
 				Dispose (disposing: false);
 			} finally {
 				unsafe {
+					// SAFETY: Finalization has detached tracking; a valid callback-reattached reference keeps its block.
 					Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
 				}
 			}
@@ -340,6 +348,7 @@ namespace Java.Interop
 			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
 			if (!reference.IsValid && JniManagedPeerState.HasFlag (Disposed)) {
 				unsafe {
+					// SAFETY: This disposed peer owns the block; Free clears the owner slot after releasing it.
 					Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
 				}
 			}
@@ -348,6 +357,7 @@ namespace Java.Interop
 		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
 			get {
 				unsafe {
+					// SAFETY: Only copy the address; no memory access or lifetime extension occurs in this getter.
 					return (IntPtr) jniObjectReferenceControlBlock;
 				}
 			}

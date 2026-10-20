@@ -86,6 +86,8 @@ namespace Java.Interop
 					IntPtr c;
 					IntPtr forNameThrown;
 					unsafe {
+						// SAFETY: Three initialized stack slots match Class.forName(String, boolean, ClassLoader).
+						// Their storage and the local/global references stay live until the synchronous call returns.
 						fixed (JniArgumentValue* argsPtr = args)
 							c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out forNameThrown, Class_reference.Handle, Class_forName.ID, (IntPtr) argsPtr);
 					}
@@ -132,6 +134,8 @@ namespace Java.Interop
 				javaName [classname.Length] = 0;
 
 				unsafe {
+					// SAFETY: javaName owns classname.Length + 1 bytes and an explicit NUL; pin it through NewStringUTF.
+					// env must be the current thread's live JNI environment; the native call does not retain this buffer.
 					fixed (byte* pJavaName = javaName) {
 						var s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
 						var e = JniEnvironment.GetExceptionForLastThrowable ();
@@ -149,6 +153,7 @@ namespace Java.Interop
 			{
 				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
 				unsafe {
+					// SAFETY: StringToCoTaskMemUTF8 supplies terminated storage alive through FindClass and exception capture.
 					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
 					thrown  = JniNativeMethods.ExceptionOccurred (env);
 				}
@@ -162,14 +167,22 @@ namespace Java.Interop
 			static void RawExceptionClear (IntPtr env)
 			{
 				unsafe {
+					// SAFETY: env is the current lookup thread's JNI environment; only its pending exception is cleared.
 					JniNativeMethods.ExceptionClear (env);
 				}
 			}
 
-			static IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
+			/// <safety>
+			/// env must belong to the current attached thread and clazz/jmethodID must identify the static
+			/// method being invoked. args must address readable initialized slots matching its descriptor,
+			/// or be zero for no arguments. Keep storage and object references live and unchanged through
+			/// the call and exception capture, including failure. No argument storage is retained.
+			/// </safety>
+			static unsafe IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
 			{
 				IntPtr r;
 				unsafe {
+					// SAFETY: The caller supplies a descriptor-matched live argument buffer for this JNI thread.
 					r       = JniNativeMethods.CallStaticObjectMethodA (env, clazz, jmethodID, args);
 					thrown  = JniNativeMethods.ExceptionOccurred (env);
 				}
