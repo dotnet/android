@@ -149,6 +149,8 @@ namespace Xamarin.Android.Build.Tests {
 					using Android.App;
 					using Android.Runtime;
 
+					[assembly: MetaData ("assembly.metadata", Value = "assembly-present")]
+
 					namespace UnnamedProject;
 
 					[Application]
@@ -189,6 +191,10 @@ namespace Xamarin.Android.Build.Tests {
 			var resourceMetadata = application.Elements ("meta-data")
 				.Single (element => (string) element.Attribute (android + "name") == "application.resource");
 			Assert.AreEqual ("@string/application_metadata_resource", (string) resourceMetadata.Attribute (android + "resource"));
+
+			var assemblyMetadata = application.Elements ("meta-data")
+				.Single (element => (string) element.Attribute (android + "name") == "assembly.metadata");
+			Assert.AreEqual ("assembly-present", (string) assemblyMetadata.Attribute (android + "value"));
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
