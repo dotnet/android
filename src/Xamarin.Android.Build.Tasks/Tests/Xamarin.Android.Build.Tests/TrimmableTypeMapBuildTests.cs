@@ -210,7 +210,7 @@ namespace Xamarin.Android.Build.Tests {
 				.Replace (
 					"</application>",
 					"""
-					  <uses-library android:name="application.library" android:required="true" />
+					  <uses-library android:name="template.library" android:required="true" />
 					</application>
 					""")
 				.Replace (
@@ -228,6 +228,7 @@ namespace Xamarin.Android.Build.Tests {
 					using Android.Runtime;
 
 					[assembly: Instrumentation (Name = "assembly.instrumentation", TargetPackage = "assembly.target", RoundIcon = "@drawable/assembly_round")]
+					[assembly: UsesLibrary (Name = "application.library", Required = true)]
 
 					namespace UnnamedProject;
 
@@ -254,6 +255,7 @@ namespace Xamarin.Android.Build.Tests {
 						BackupAgent = typeof (ParityActivity),
 						ManageSpaceActivity = typeof (ParityManageActivity))]
 					[UsesLibrary (Name = "application.library", Required = false)]
+					[UsesLibrary (Name = "template.library", Required = false)]
 					[Property ("application.property", Value = "application-property")]
 					public class ParityApplication : Application
 					{
@@ -365,6 +367,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("true", (string) application.Attribute (android + "testOnly"));
 			var usesLibrary = application.Elements ("uses-library").Single (element => (string) element.Attribute (android + "name") == "application.library");
 			Assert.AreEqual ("true", (string) usesLibrary.Attribute (android + "required"));
+			var templateUsesLibrary = application.Elements ("uses-library").Single (element => (string) element.Attribute (android + "name") == "template.library");
+			Assert.AreEqual ("true", (string) templateUsesLibrary.Attribute (android + "required"));
 			Assert.AreEqual ("application-property", (string) application.Element ("property").Attribute (android + "value"));
 
 			var activity = application.Elements ("activity").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityActivity", StringComparison.Ordinal));
@@ -386,6 +390,65 @@ namespace Xamarin.Android.Build.Tests {
 			var typeInstrumentation = root.Elements ("instrumentation").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityInstrumentation", StringComparison.Ordinal));
 			Assert.AreEqual ("parity", (string) typeInstrumentation.Attribute (android + "targetProcesses"));
 			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void AssemblyApplicationOverridesManifestTemplate (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"<application ",
+				"""<application android:description="@string/template_description" android:backupAgent="template.BackupAgent" android:manageSpaceActivity="template.ManageSpaceActivity" """);
+			proj.Sources.Add (new BuildItem.Source ("AssemblyApplication.cs") {
+				TextContent = () => """
+					using Android.App;
+
+					[assembly: Application (
+						Description = "@string/assembly_description",
+						BackupAgent = typeof (UnnamedProject.ParityActivity),
+						ManageSpaceActivity = typeof (UnnamedProject.ParityManageActivity))]
+
+					namespace UnnamedProject;
+
+					[Activity]
+					public class ParityActivity : Activity {}
+
+					[Activity]
+					public class ParityManageActivity : Activity {}
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\application.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<string name="assembly_description">assembly-description</string>
+						<string name="template_description">template-description</string>
+					</resources>
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} build should have succeeded.");
+
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+			var application = manifest.Root?.Element ("application");
+			Assert.IsNotNull (application);
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+			Assert.AreEqual ("@string/assembly_description", (string) application.Attribute (android + "description"));
+			StringAssert.EndsWith (".ParityActivity", (string) application.Attribute (android + "backupAgent"));
+			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));
 		}
 
 		[Test]

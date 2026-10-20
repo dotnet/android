@@ -101,18 +101,6 @@ static class AssemblyLevelElementBuilder
 			}
 		}
 
-		// <uses-library> elements inside <application>
-		foreach (var ul in info.UsesLibraries) {
-			if (string.IsNullOrEmpty (ul.Name)) {
-				continue;
-			}
-			if (!app.Elements ("uses-library").Any (e => (string?)e.Attribute (AttName) == ul.Name)) {
-				app.Add (new XElement ("uses-library",
-					new XAttribute (AttName, ul.Name),
-					new XAttribute (AndroidNs + "required", ul.Required ? "true" : "false")));
-			}
-		}
-
 		// Assembly-level <meta-data> inside <application>
 		foreach (var md in info.MetaData) {
 			if (string.IsNullOrEmpty (md.Name)) {
@@ -189,13 +177,26 @@ static class AssemblyLevelElementBuilder
 		}
 	}
 
+	internal static void AddUsesLibraries (XElement app, IEnumerable<UsesLibraryInfo> libraries)
+	{
+		var existingLibraries = new HashSet<string> (
+			app.Elements ("uses-library").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+		foreach (var library in libraries) {
+			if (!string.IsNullOrEmpty (library.Name) && existingLibraries.Add (library.Name)) {
+				app.Add (new XElement ("uses-library",
+					new XAttribute (AttName, library.Name),
+					new XAttribute (AndroidNs + "required", library.Required ? "true" : "false")));
+			}
+		}
+	}
+
 	internal static void ApplyApplicationProperties (
 		XElement app,
 		IReadOnlyDictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		Action<int, string>? warn = null)
 	{
-		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings, skipExisting: true);
+		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings);
 
 		// BackupAgent and ManageSpaceActivity are Type properties — resolve managed type names to JNI names
 		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent", warn);
@@ -210,9 +211,6 @@ static class AssemblyLevelElementBuilder
 		string xmlAttrName,
 		Action<int, string>? warn)
 	{
-		if (app.Attribute (AndroidNs + xmlAttrName) is not null) {
-			return;
-		}
 		if (!properties.TryGetValue (propertyName, out var value) || value is not string managedName || managedName.Length == 0) {
 			return;
 		}

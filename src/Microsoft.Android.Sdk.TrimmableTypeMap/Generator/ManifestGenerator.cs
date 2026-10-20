@@ -67,6 +67,7 @@ class ManifestGenerator
 		if (assemblyInfo.ApplicationProperties is not null) {
 			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers, Warn);
 		}
+		AssemblyLevelElementBuilder.AddUsesLibraries (app, assemblyInfo.UsesLibraries);
 
 		var existingTypes = new HashSet<string> (
 			app.Descendants ()
