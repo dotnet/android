@@ -226,15 +226,15 @@ sealed class AssemblyIndex : IDisposable
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
 				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
-			} else if (attrName == "PropertyAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "PropertyAttribute")) {
 				properties ??= new List<PropertyInfo> ();
 				var (propertyName, propertyProps) = ParseNameAndProperties (ca);
 				properties.Add (CreatePropertyInfo (propertyName, propertyProps));
-			} else if (attrName == "UsesLibraryAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "UsesLibraryAttribute")) {
 				usesLibraries ??= new List<UsesLibraryInfo> ();
 				var (libraryName, libraryProps) = ParseNameAndProperties (ca);
 				usesLibraries.Add (CreateUsesLibraryInfo (libraryName, libraryProps));
-			} else if (attrName == "GrantUriPermissionAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.Content", "GrantUriPermissionAttribute")) {
 				grantUriPermissions ??= new List<GrantUriPermissionInfo> ();
 				var (_, grantProps) = ParseNameAndProperties (ca);
 				grantUriPermissions.Add (new GrantUriPermissionInfo {

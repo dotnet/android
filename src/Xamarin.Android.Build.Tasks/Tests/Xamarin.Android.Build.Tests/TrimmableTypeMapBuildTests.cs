@@ -243,6 +243,31 @@ namespace Xamarin.Android.Build.Tests {
 
 					namespace UnnamedProject;
 
+					public static class UserAttributes
+					{
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class PropertyAttribute : Attribute
+						{
+							public PropertyAttribute (string name) => Name = name;
+							public string Name { get; }
+							public string? Value { get; set; }
+						}
+
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class UsesLibraryAttribute : Attribute
+						{
+							public UsesLibraryAttribute (string name) => Name = name;
+							public string Name { get; }
+							public bool Required { get; set; }
+						}
+
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class GrantUriPermissionAttribute : Attribute
+						{
+							public string? Path { get; set; }
+						}
+					}
+
 					[Application (
 						Description = "@string/application_description",
 						Permission = "application-permission",
@@ -268,6 +293,8 @@ namespace Xamarin.Android.Build.Tests {
 					[UsesLibrary (Name = "application.library", Required = false)]
 					[UsesLibrary (Name = "template.library", Required = false)]
 					[Property ("application.property", Value = "application-property")]
+					[UserAttributes.Property ("user.property", Value = "user-property")]
+					[UserAttributes.UsesLibrary ("user.library", Required = true)]
 					public class ParityApplication : Application
 					{
 						public ParityApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
@@ -286,6 +313,7 @@ namespace Xamarin.Android.Build.Tests {
 						WritePermission = "@PACKAGE_NAME@.permission.WRITE")]
 					[GrantUriPermission (Path = "/path")]
 					[Property ("provider.property", Value = "provider-property")]
+					[UserAttributes.GrantUriPermission (Path = "/user-path")]
 					public class ParityProvider : ContentProvider
 					{
 						public override bool OnCreate () => true;
@@ -386,7 +414,9 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("true", (string) usesLibrary.Attribute (android + "required"));
 			var templateUsesLibrary = application.Elements ("uses-library").Single (element => (string) element.Attribute (android + "name") == "template.library");
 			Assert.AreEqual ("true", (string) templateUsesLibrary.Attribute (android + "required"));
+			Assert.IsFalse (application.Elements ("uses-library").Any (element => (string) element.Attribute (android + "name") == "user.library"));
 			Assert.AreEqual ("application-property", (string) application.Element ("property").Attribute (android + "value"));
+			Assert.IsFalse (application.Elements ("property").Any (element => (string) element.Attribute (android + "name") == "user.property"));
 
 			var activity = application.Elements ("activity").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityActivity", StringComparison.Ordinal));
 			Assert.AreEqual ("true", (string) activity.Attribute (android + "canDisplayOnRemoteDevices"));
@@ -398,6 +428,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ($"{proj.PackageName}.permission.READ", (string) provider.Attribute (android + "readPermission"));
 			Assert.AreEqual ($"{proj.PackageName}.permission.WRITE", (string) provider.Attribute (android + "writePermission"));
 			Assert.AreEqual ("/path", (string) provider.Element ("grant-uri-permission").Attribute (android + "path"));
+			Assert.IsFalse (provider.Elements ("grant-uri-permission").Any (element => (string) element.Attribute (android + "path") == "/user-path"));
 			Assert.AreEqual ("provider-property", (string) provider.Element ("property").Attribute (android + "value"));
 
 			var instrumentation = root.Elements ("instrumentation").Single (element => (string) element.Attribute (android + "name") == "assembly.instrumentation");
