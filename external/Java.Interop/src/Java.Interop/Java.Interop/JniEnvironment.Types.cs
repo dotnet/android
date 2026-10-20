@@ -230,7 +230,7 @@ namespace Java.Interop
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
 			{
 				unsafe {
-					// SAFETY: Caller supplies JNI-compatible delegates and keeps them rooted while JNI can invoke them.
+					// SAFETY: Caller supplies JNI-compatible delegates and keeps them rooted.
 					RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
 				}
 			}
@@ -295,12 +295,12 @@ namespace Java.Interop
 						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
 						unsafe {
-							// SAFETY: UTF-8 allocations remain live through registration; caller guarantees the delegate ABI.
+							// SAFETY: Strings remain allocated through registration; caller guarantees the delegate ABI.
 							natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
 						}
 					}
 					unsafe {
-						// SAFETY: Names/signatures stay allocated until finally; caller guarantees callback ABI and lifetime.
+						// SAFETY: Strings remain allocated until finally; caller guarantees callback ABI and lifetime.
 						RegisterNatives (type, natives);
 					}
 				} finally {
@@ -333,10 +333,9 @@ namespace Java.Interop
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;
-				unsafe {
-					// SAFETY: The runtime supplies this thread's JNIEnv and the span is pinned for the call.
-					// Caller guarantees valid name/signature storage and callback ABI and lifetime.
-					fixed (JniNativeMethod* methodsPtr = methods) {
+				fixed (JniNativeMethod* methodsPtr = methods) {
+					unsafe {
+						// SAFETY: Runtime supplies JNIEnv; span is pinned; caller guarantees strings and callback ABI/lifetime.
 						var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
 							(void*) (*((JNIEnv**)env))->RegisterNatives;
 						r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
