@@ -26,6 +26,8 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		internal FrameworkMediaCrypto (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,13 +36,13 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		[Register (".ctor", "()V", "")]
 		public FrameworkMediaCrypto () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
+			const string __id = "()V";
+
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "()V";
-
-				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-					return;
-
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
 				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
 				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
@@ -51,9 +53,9 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		[Register ("requiresSecureDecoderComponent", "(Ljava/lang/String;)Z", "")]
 		public bool RequiresSecureDecoderComponent (string p0)
 		{
+			const string __id = "requiresSecureDecoderComponent.(Ljava/lang/String;)Z";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "requiresSecureDecoderComponent.(Ljava/lang/String;)Z";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_p0 = JNIEnv.NewString ((string)p0);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];

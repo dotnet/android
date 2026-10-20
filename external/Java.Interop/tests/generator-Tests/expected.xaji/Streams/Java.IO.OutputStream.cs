@@ -26,6 +26,8 @@ namespace Java.IO {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected OutputStream (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,13 +36,13 @@ namespace Java.IO {
 		[Register (".ctor", "()V", "")]
 		public OutputStream () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
+			const string __id = "()V";
+
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "()V";
-
-				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-					return;
-
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
 				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
 				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
@@ -51,20 +53,25 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetCloseHandler ()
 		{
-			return cb_close_Close_V ??= new _JniMarshal_PP_V (n_Close);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_close_Close_V ??= new _JniMarshal_PP_V (n_Close);
+			}
 		}
 
-		static void n_Close (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Close);
 			}
 		}
-		private static void __n_Close (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				__this.Close ();
 			}
@@ -75,9 +82,9 @@ namespace Java.IO {
 		[Register ("close", "()V", "GetCloseHandler")]
 		public virtual void Close ()
 		{
+			const string __id = "close.()V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "close.()V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 			}
 		}
@@ -86,20 +93,25 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetFlushHandler ()
 		{
-			return cb_flush_Flush_V ??= new _JniMarshal_PP_V (n_Flush);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_flush_Flush_V ??= new _JniMarshal_PP_V (n_Flush);
+			}
 		}
 
-		static void n_Flush (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_Flush (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Flush);
 			}
 		}
-		private static void __n_Flush (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_Flush (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				__this.Flush ();
 			}
@@ -110,9 +122,9 @@ namespace Java.IO {
 		[Register ("flush", "()V", "GetFlushHandler")]
 		public virtual void Flush ()
 		{
+			const string __id = "flush.()V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "flush.()V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 			}
 		}
@@ -121,20 +133,25 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetWrite_arrayBHandler ()
 		{
-			return cb_write_Write_arrayB_V ??= new _JniMarshal_PPL_V (n_Write_arrayB);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_write_Write_arrayB_V ??= new _JniMarshal_PPL_V (n_Write_arrayB);
+			}
 		}
 
-		static void n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_buffer, &__n_Write_arrayB);
 			}
 		}
-		private static void __n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
 				__this.Write (buffer);
@@ -148,9 +165,9 @@ namespace Java.IO {
 		[Register ("write", "([B)V", "GetWrite_arrayBHandler")]
 		public virtual void Write (byte[] buffer)
 		{
+			const string __id = "write.([B)V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "write.([B)V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_buffer = JNIEnv.NewArray (buffer);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
@@ -170,20 +187,25 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetWrite_arrayBIIHandler ()
 		{
-			return cb_write_Write_arrayBII_V ??= new _JniMarshal_PPLII_V (n_Write_arrayBII);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_write_Write_arrayBII_V ??= new _JniMarshal_PPLII_V (n_Write_arrayBII);
+			}
 		}
 
-		static void n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_buffer, offset, count, &__n_Write_arrayBII);
 			}
 		}
-		private static void __n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
 				__this.Write (buffer, offset, count);
@@ -197,9 +219,9 @@ namespace Java.IO {
 		[Register ("write", "([BII)V", "GetWrite_arrayBIIHandler")]
 		public virtual void Write (byte[] buffer, int offset, int count)
 		{
+			const string __id = "write.([BII)V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "write.([BII)V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_buffer = JNIEnv.NewArray (buffer);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [3];
@@ -221,20 +243,25 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetWrite_IHandler ()
 		{
-			return cb_write_Write_I_V ??= new _JniMarshal_PPI_V (n_Write_I);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_write_Write_I_V ??= new _JniMarshal_PPI_V (n_Write_I);
+			}
 		}
 
-		static void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, oneByte, &__n_Write_I);
 			}
 		}
-		private static void __n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				__this.Write (oneByte);
 			}
@@ -249,6 +276,8 @@ namespace Java.IO {
 
 	[global::Android.Runtime.Register ("java/io/OutputStream", DoNotGenerateAcw=true)]
 	internal partial class OutputStreamInvoker : OutputStream {
+		/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		public OutputStreamInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
@@ -265,9 +294,9 @@ namespace Java.IO {
 		[Register ("write", "(I)V", "GetWrite_IHandler")]
 		public override void Write (int oneByte)
 		{
+			const string __id = "write.(I)V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "write.(I)V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (oneByte);
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);

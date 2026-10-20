@@ -27,6 +27,8 @@ namespace Java.Lang {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected Enum (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -35,9 +37,9 @@ namespace Java.Lang {
 		[Register ("compareTo", "(Ljava/lang/Enum;)I", "")]
 		public int CompareTo (global::Java.Lang.Object o)
 		{
+			const string __id = "compareTo.(Ljava/lang/Enum;)I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "compareTo.(Ljava/lang/Enum;)I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_o = JNIEnv.ToLocalJniHandle (o);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
@@ -55,6 +57,8 @@ namespace Java.Lang {
 
 	[global::Android.Runtime.Register ("java/lang/Enum", DoNotGenerateAcw=true)]
 	internal partial class EnumInvoker : Enum, global::Java.Lang.IComparable {
+		/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		public EnumInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

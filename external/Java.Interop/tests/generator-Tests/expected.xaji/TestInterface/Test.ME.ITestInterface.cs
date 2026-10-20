@@ -23,7 +23,10 @@ namespace Test.ME {
 				const string __id = "DEFAULT_FOO.Ljava/lang/Object;";
 
 				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 
@@ -60,24 +63,26 @@ namespace Test.ME {
 	public static partial class ITestInterfaceExtensions {
 		public static void Append (this Test.ME.ITestInterface self, string value)
 		{
+			global::Java.Lang.String jls_value;
 			unsafe {
-				// SAFETY: Temporary Java strings remain live until the managed binding call completes.
-				var jls_value = value == null ? null : new global::Java.Lang.String (value);
-				self.Append (jls_value);
-				jls_value?.Dispose ();
+				// SAFETY: The constructor copies a managed string into a new Java peer; no raw reference is supplied.
+				jls_value = value == null ? null : new global::Java.Lang.String (value);
 			}
+			self.Append (jls_value);
+			jls_value?.Dispose ();
 		}
 
 		public static string Identity (this Test.ME.ITestInterface self, string value)
 		{
+			global::Java.Lang.String jls_value;
 			unsafe {
-				// SAFETY: Temporary Java strings remain live until the managed binding call completes.
-				var jls_value = value == null ? null : new global::Java.Lang.String (value);
-				global::Java.Lang.ICharSequence __result = self.IdentityFormatted (jls_value);
-				var __rsval = __result?.ToString ();
-				jls_value?.Dispose ();
-				return __rsval;
+				// SAFETY: The constructor copies a managed string into a new Java peer; no raw reference is supplied.
+				jls_value = value == null ? null : new global::Java.Lang.String (value);
 			}
+			global::Java.Lang.ICharSequence __result = self.IdentityFormatted (jls_value);
+			var __rsval = __result?.ToString ();
+			jls_value?.Dispose ();
+			return __rsval;
 		}
 
 	}
@@ -92,6 +97,8 @@ namespace Test.ME {
 
 		static readonly JniPeerMembers _members_test_me_TestInterface = new JniPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
 
+		/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		public ITestInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
@@ -100,20 +107,25 @@ namespace Test.ME {
 #pragma warning disable 0169
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()
 		{
-			return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_);
+			}
 		}
 
-		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_tag, &__n_GetSpanFlags_Ljava_lang_Object_);
 			}
 		}
-		private static int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
 				int __ret = __this.GetSpanFlags (tag);
@@ -124,9 +136,9 @@ namespace Test.ME {
 
 		public int GetSpanFlags (global::Java.Lang.Object tag)
 		{
+			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
 				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
@@ -140,20 +152,25 @@ namespace Test.ME {
 #pragma warning disable 0169
 		static Delegate GetAppend_Ljava_lang_CharSequence_Handler ()
 		{
-			return cb_append_Append_Ljava_lang_CharSequence__V ??= new _JniMarshal_PPL_V (n_Append_Ljava_lang_CharSequence_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_append_Append_Ljava_lang_CharSequence__V ??= new _JniMarshal_PPL_V (n_Append_Ljava_lang_CharSequence_);
+			}
 		}
 
-		static void n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_value, &__n_Append_Ljava_lang_CharSequence_);
 			}
 		}
-		private static void __n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
 				__this.Append (value);
@@ -163,9 +180,9 @@ namespace Test.ME {
 
 		public void Append (global::Java.Lang.ICharSequence value)
 		{
+			const string __id = "append.(Ljava/lang/CharSequence;)V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "append.(Ljava/lang/CharSequence;)V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_value = CharSequence.ToLocalJniHandle (value);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
@@ -182,20 +199,25 @@ namespace Test.ME {
 #pragma warning disable 0169
 		static Delegate GetIdentity_Ljava_lang_CharSequence_Handler ()
 		{
-			return cb_identity_Identity_Ljava_lang_CharSequence__Ljava_lang_CharSequence_ ??= new _JniMarshal_PPL_L (n_Identity_Ljava_lang_CharSequence_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_identity_Identity_Ljava_lang_CharSequence__Ljava_lang_CharSequence_ ??= new _JniMarshal_PPL_L (n_Identity_Ljava_lang_CharSequence_);
+			}
 		}
 
-		static IntPtr n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_value, &__n_Identity_Ljava_lang_CharSequence_);
 			}
 		}
-		private static IntPtr __n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
 				IntPtr __ret = CharSequence.ToLocalJniHandle (__this.IdentityFormatted (value));
@@ -206,9 +228,9 @@ namespace Test.ME {
 
 		public global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value)
 		{
+			const string __id = "identity.(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "identity.(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_value = CharSequence.ToLocalJniHandle (value);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];

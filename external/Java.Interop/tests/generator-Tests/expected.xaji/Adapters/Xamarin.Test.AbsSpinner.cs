@@ -26,6 +26,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected AbsSpinner (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,20 +36,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetAdapterHandler ()
 		{
-			return cb_getAdapter_GetAdapter_Lxamarin_test_SpinnerAdapter_ ??= new _JniMarshal_PP_L (n_GetAdapter);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getAdapter_GetAdapter_Lxamarin_test_SpinnerAdapter_ ??= new _JniMarshal_PP_L (n_GetAdapter);
+			}
 		}
 
-		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetAdapter);
 			}
 		}
-		private static IntPtr __n_GetAdapter (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AbsSpinner> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.ToLocalJniHandle (__this.Adapter);
 			}
@@ -58,20 +65,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetSetAdapter_Lxamarin_test_SpinnerAdapter_Handler ()
 		{
-			return cb_setAdapter_SetAdapter_Lxamarin_test_SpinnerAdapter__V ??= new _JniMarshal_PPL_V (n_SetAdapter_Lxamarin_test_SpinnerAdapter_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setAdapter_SetAdapter_Lxamarin_test_SpinnerAdapter__V ??= new _JniMarshal_PPL_V (n_SetAdapter_Lxamarin_test_SpinnerAdapter_);
+			}
 		}
 
-		static void n_SetAdapter_Lxamarin_test_SpinnerAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_SetAdapter_Lxamarin_test_SpinnerAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_adapter, &__n_SetAdapter_Lxamarin_test_SpinnerAdapter_);
 			}
 		}
-		private static void __n_SetAdapter_Lxamarin_test_SpinnerAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_SetAdapter_Lxamarin_test_SpinnerAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AbsSpinner> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var adapter = (global::Xamarin.Test.ISpinnerAdapter)global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
 				__this.Adapter = adapter;
@@ -83,9 +95,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']/method[@name='getAdapter' and count(parameter)=0]"
 			[Register ("getAdapter", "()Lxamarin/test/SpinnerAdapter;", "GetGetAdapterHandler")]
 			get {
+				const string __id = "getAdapter.()Lxamarin/test/SpinnerAdapter;";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getAdapter.()Lxamarin/test/SpinnerAdapter;";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
 					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				}
@@ -93,9 +105,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='xamarin.test.SpinnerAdapter']]"
 			[Register ("setAdapter", "(Lxamarin/test/SpinnerAdapter;)V", "GetSetAdapter_Lxamarin_test_SpinnerAdapter_Handler")]
 			set {
+				const string __id = "setAdapter.(Lxamarin/test/SpinnerAdapter;)V";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "setAdapter.(Lxamarin/test/SpinnerAdapter;)V";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
 					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
@@ -108,6 +120,8 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/AbsSpinner", DoNotGenerateAcw=true)]
 	internal partial class AbsSpinnerInvoker : AbsSpinner {
+		/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		public AbsSpinnerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
@@ -124,9 +138,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='getAdapter' and count(parameter)=0]"
 			[Register ("getAdapter", "()Lxamarin/test/Adapter;", "GetGetAdapterHandler")]
 			get {
+				const string __id = "getAdapter.()Lxamarin/test/Adapter;";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getAdapter.()Lxamarin/test/Adapter;";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
 					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				}
@@ -134,9 +148,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='T']]"
 			[Register ("setAdapter", "(Lxamarin/test/Adapter;)V", "GetSetAdapter_Lxamarin_test_Adapter_Handler")]
 			set {
+				const string __id = "setAdapter.(Lxamarin/test/Adapter;)V";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "setAdapter.(Lxamarin/test/Adapter;)V";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
 					try {
 						JniArgumentValue* __args = stackalloc JniArgumentValue [1];

@@ -15,8 +15,9 @@ namespace generator.SourceWriters
 		{
 			Name = klass.Name;
 			IsUnsafe = SourceWriterExtensions.IsThrowable (klass);
-			if (IsUnsafe)
-				Comments.Add ("/// <safety><paramref name=\"javaReference\"/> must be a live JNI throwable reference compatible with this type; <paramref name=\"transfer\"/> must match its ownership.</safety>");
+			Comments.Add ("/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>");
+			if (!IsUnsafe)
+				Comments.Add ("/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>");
 
 			if (klass.IsFinal)
 				IsInternal = true;

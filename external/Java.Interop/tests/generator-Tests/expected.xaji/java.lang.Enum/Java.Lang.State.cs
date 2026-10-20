@@ -26,7 +26,10 @@ namespace Java.Lang {
 				const string __id = "BLOCKED.Ljava/lang/State;";
 
 				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 
@@ -38,7 +41,10 @@ namespace Java.Lang {
 				const string __id = "NEW.Ljava/lang/State;";
 
 				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 
@@ -50,7 +56,10 @@ namespace Java.Lang {
 				const string __id = "RUNNABLE.Ljava/lang/State;";
 
 				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 
@@ -62,7 +71,10 @@ namespace Java.Lang {
 				const string __id = "TERMINATED.Ljava/lang/State;";
 
 				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 
@@ -74,7 +86,10 @@ namespace Java.Lang {
 				const string __id = "TIMED_WAITING.Ljava/lang/State;";
 
 				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 
@@ -86,7 +101,10 @@ namespace Java.Lang {
 				const string __id = "WAITING.Ljava/lang/State;";
 
 				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 		}
 
@@ -98,6 +116,8 @@ namespace Java.Lang {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		internal State (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}

@@ -147,31 +147,34 @@ blocks local without changing marshaling, dispatch, or cleanup.
 
 ## Generated managed binding safety
 
-The binding generator keeps managed method, constructor, and property contracts
-safe. JNI argument storage, invocation, string conversion, array copy-back, and
-reference cleanup live in local `unsafe` implementation regions. SourceWriter's
-`HasUnsafeBody` and accessor-body flags are independent of `IsUnsafe`, which
-continues to describe a caller obligation. Abstract and interface declarations
-are not made caller-unsafe to accommodate their implementations.
+Managed binding methods, properties and ordinary constructors stay caller-safe;
+JNI operations use local `unsafe` blocks with concrete `// SAFETY:` rationale.
+SourceWriter body/accessor flags do not imply `IsUnsafe` on the declaration.
+Constants, guards and managed-only operations stay outside these blocks where
+possible. Interleaved JNI argument preparation, invocation and cleanup remain
+together when their temporary lifetimes require it; success/failure cleanup,
+normal-return copy-back, dispatch and allocations are unchanged.
 
-These blocks use existing C# syntax so generated bindings remain usable with
-legacy compilers. Generator tests retain the legacy Roslyn harness and also use
-the build SDK's actual compiler with updated memory-safety rules, including
-implementation/reference metadata and negative callsite checks. This preparation
-does not enable those rules on Mono.Android or customer projects.
+Raw callback entry points and marshal targets require the registered ABI,
+current-thread JNI frame and live compatible borrowed references without
+concurrent deletion. Their `<safety>` contracts do not validate raw addresses.
+Typed managed targets stay safe. Generated syntax and the existing legacy
+compiler test harness are preserved; this does not activate product/customer
+memory-safety rules.
 
-Throwable-derived bindings have a separate deferred-peer constructor taking
-`JniObjectReferenceOptions.None`. The protected forwarding chain has no Java
-constructor registration and creates no Java peer; the managed binding
-constructor still performs the original JNI construction. Existing peer-constructor
-partial hooks are preserved in the forwarding path. Raw-handle constructors
-retain their caller obligations. For a referenced intermediate base, the generator
-checks whether the actual assembly exposes this constructor. Older bases without
-it keep legacy zero-handle initialization rather than receiving an unresolvable
-constructor call. If an updated base marks its raw constructor requires-unsafe
-but lacks the deferred constructor, a safe generated constructor fails the
-updated-rules compilation; regenerating the base supplies the safe path. Legacy
-reference metadata does not enforce the new raw caller contract.
+Throwable bindings forward `JniObjectReferenceOptions.None` through an unregistered
+empty-peer constructor, preserving partial hooks and normal JNI construction.
+Imported bases are checked for that accessible capability; older bases keep
+legacy zero-handle initialization. A rules2 raw base lacking the safe capability
+can still reject a safe derived initializer; regenerating the base supplies it.
+
+Other generated raw constructors, including class/interface invokers, construct
+JNI peers, not opaque-address containers. Their documented handle type, lifetime,
+thread, aliasing, ownership and failure duties still apply. `RequiresUnsafe`
+enforcement is explicitly deferred to preserve safe zero/`DoNotTransfer` base
+initializers, without adding a general initialization API or weakening the
+approved Throwable path.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java

@@ -26,6 +26,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,20 +36,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetSomeIntegerHandler ()
 		{
-			return cb_getSomeInteger_GetSomeInteger_I ??= new _JniMarshal_PP_I (n_GetSomeInteger);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getSomeInteger_GetSomeInteger_I ??= new _JniMarshal_PP_I (n_GetSomeInteger);
+			}
 		}
 
-		static int n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe int n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeInteger);
 			}
 		}
-		private static int __n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe int __n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return __this.SomeInteger;
 			}
@@ -58,20 +65,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetSetSomeInteger_IHandler ()
 		{
-			return cb_setSomeInteger_SetSomeInteger_I_V ??= new _JniMarshal_PPI_V (n_SetSomeInteger_I);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setSomeInteger_SetSomeInteger_I_V ??= new _JniMarshal_PPI_V (n_SetSomeInteger_I);
+			}
 		}
 
-		static void n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, newvalue, &__n_SetSomeInteger_I);
 			}
 		}
-		private static void __n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				__this.SomeInteger = newvalue;
 			}
@@ -92,20 +104,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetSomeObjectPropertyHandler ()
 		{
-			return cb_getSomeObjectProperty_GetSomeObjectProperty_Ljava_lang_Object_ ??= new _JniMarshal_PP_L (n_GetSomeObjectProperty);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getSomeObjectProperty_GetSomeObjectProperty_Ljava_lang_Object_ ??= new _JniMarshal_PP_L (n_GetSomeObjectProperty);
+			}
 		}
 
-		static IntPtr n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeObjectProperty);
 			}
 		}
-		private static IntPtr __n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.ToLocalJniHandle (__this.SomeObjectProperty);
 			}
@@ -116,20 +133,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetSetSomeObjectProperty_Ljava_lang_Object_Handler ()
 		{
-			return cb_setSomeObjectProperty_SetSomeObjectProperty_Ljava_lang_Object__V ??= new _JniMarshal_PPL_V (n_SetSomeObjectProperty_Ljava_lang_Object_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setSomeObjectProperty_SetSomeObjectProperty_Ljava_lang_Object__V ??= new _JniMarshal_PPL_V (n_SetSomeObjectProperty_Ljava_lang_Object_);
+			}
 		}
 
-		static void n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_newvalue, &__n_SetSomeObjectProperty_Ljava_lang_Object_);
 			}
 		}
-		private static void __n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var newvalue = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_newvalue, JniHandleOwnership.DoNotTransfer);
 				__this.SomeObjectProperty = newvalue;
@@ -151,20 +173,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetSomeStringHandler ()
 		{
-			return cb_getSomeString_GetSomeString_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_GetSomeString);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getSomeString_GetSomeString_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_GetSomeString);
+			}
 		}
 
-		static IntPtr n_GetSomeString (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_GetSomeString (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeString);
 			}
 		}
-		private static IntPtr __n_GetSomeString (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_GetSomeString (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.NewString (__this.SomeString);
 			}
@@ -175,20 +202,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetSetSomeString_Ljava_lang_String_Handler ()
 		{
-			return cb_setSomeString_SetSomeString_Ljava_lang_String__V ??= new _JniMarshal_PPL_V (n_SetSomeString_Ljava_lang_String_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setSomeString_SetSomeString_Ljava_lang_String__V ??= new _JniMarshal_PPL_V (n_SetSomeString_Ljava_lang_String_);
+			}
 		}
 
-		static void n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_newvalue, &__n_SetSomeString_Ljava_lang_String_);
 			}
 		}
-		private static void __n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var newvalue = JNIEnv.GetString (native_newvalue, JniHandleOwnership.DoNotTransfer);
 				__this.SomeString = newvalue;
@@ -210,6 +242,8 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	internal partial class SomeObjectInvoker : SomeObject {
+		/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		public SomeObjectInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
@@ -226,9 +260,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeInteger' and count(parameter)=0]"
 			[Register ("getSomeInteger", "()I", "GetGetSomeIntegerHandler")]
 			get {
+				const string __id = "getSomeInteger.()I";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getSomeInteger.()I";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
 					return __rm;
 				}
@@ -236,9 +270,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
 			[Register ("setSomeInteger", "(I)V", "GetSetSomeInteger_IHandler")]
 			set {
+				const string __id = "setSomeInteger.(I)V";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "setSomeInteger.(I)V";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (value);
 					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
@@ -250,9 +284,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeObjectProperty' and count(parameter)=0]"
 			[Register ("getSomeObjectProperty", "()Ljava/lang/Object;", "GetGetSomeObjectPropertyHandler")]
 			get {
+				const string __id = "getSomeObjectProperty.()Ljava/lang/Object;";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getSomeObjectProperty.()Ljava/lang/Object;";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
 					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				}
@@ -260,9 +294,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeObjectProperty' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 			[Register ("setSomeObjectProperty", "(Ljava/lang/Object;)V", "GetSetSomeObjectProperty_Ljava_lang_Object_Handler")]
 			set {
+				const string __id = "setSomeObjectProperty.(Ljava/lang/Object;)V";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "setSomeObjectProperty.(Ljava/lang/Object;)V";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
 					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
@@ -275,9 +309,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeString' and count(parameter)=0]"
 			[Register ("getSomeString", "()Ljava/lang/String;", "GetGetSomeStringHandler")]
 			get {
+				const string __id = "getSomeString.()Ljava/lang/String;";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getSomeString.()Ljava/lang/String;";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
 					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				}
@@ -285,9 +319,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 			[Register ("setSomeString", "(Ljava/lang/String;)V", "GetSetSomeString_Ljava_lang_String_Handler")]
 			set {
+				const string __id = "setSomeString.(Ljava/lang/String;)V";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "setSomeString.(Ljava/lang/String;)V";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					IntPtr native_value = JNIEnv.NewString ((string)value);
 					try {
 						JniArgumentValue* __args = stackalloc JniArgumentValue [1];

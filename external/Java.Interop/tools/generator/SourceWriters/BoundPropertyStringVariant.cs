@@ -48,8 +48,6 @@ namespace generator.SourceWriters
 				return;
 
 			HasSet = true;
-			HasUnsafeSetterBody = true;
-			SetBody.Add ("// SAFETY: Temporary Java strings remain live until the property assignment completes.");
 
 			if (is_array) {
 				SetBody.Add ($"global::Java.Lang.ICharSequence[] jlsa = {arrayConvertMethod} (value);");
@@ -57,7 +55,11 @@ namespace generator.SourceWriters
 				SetBody.Add ($"foreach (var jls in jlsa) if (jls != null) jls.Dispose ();");
 			} else {
 				if (isOriginalVirtual) {
-					SetBody.Add ($"var jls = value == null ? null : new global::Java.Lang.String (value);");
+					SetBody.Add ($"global::Java.Lang.String{opt.NullableOperator} jls;");
+					SetBody.Add ("unsafe {");
+					SetBody.Add ("\t// SAFETY: The constructor copies a managed string into a new Java peer; no raw reference is supplied.");
+					SetBody.Add ("\tjls = value == null ? null : new global::Java.Lang.String (value);");
+					SetBody.Add ("}");
 					SetBody.Add ($"{property.AdjustedName} = jls;");
 					SetBody.Add ($"if (jls != null) jls.Dispose ();");
 				} else {
@@ -69,9 +71,15 @@ namespace generator.SourceWriters
 					SetBody.Add ($"global::Java.Interop.JniObjectReference {parameter.ToNative (opt)} = global::Java.Interop.JniEnvironment.Strings.NewString (value);");
 
 					SetBody.Add ("try {");
+					SetBody.Add ("\tunsafe {");
+					SetBody.Add ("\t\t// SAFETY: __id takes one string reference; the initialized argument slot is synchronous and finally releases the local.");
 
+					var unsafeBodyStart = SetBody.Count;
 					SourceWriterExtensions.AddMethodBodyTryBlock (SetBody, method, opt);
+					for (var i = unsafeBodyStart; i < SetBody.Count; i++)
+						SetBody [i] = "\t" + SetBody [i];
 
+					SetBody.Add ("\t}");
 					SetBody.Add ("} finally {");
 					SetBody.Add ($"\tglobal::Java.Interop.JniObjectReference.Dispose (ref {parameter.ToNative (opt)});");
 					SetBody.Add ("}");

@@ -26,7 +26,6 @@ namespace generator.SourceWriters
 
 			IsStatic = method.IsStatic;
 			IsSealed = method.IsOverride && method.IsFinal;
-			HasUnsafeBody = true;
 
 			SetVisibility (type is InterfaceGen && !IsStatic ? string.Empty : method.Visibility);
 

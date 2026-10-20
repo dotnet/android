@@ -11,20 +11,25 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 #pragma warning disable 0169
 	private static Delegate GetDoDefaultHandler ()
 	{
-		return cb_DoDefault_DoDefault_V ??= new _JniMarshal_PP_V (n_DoDefault);
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_DoDefault_DoDefault_V ??= new _JniMarshal_PP_V (n_DoDefault);
+		}
 	}
 
-	private static void n_DoDefault (IntPtr jnienv, IntPtr native__this)
+	/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+	private static unsafe void n_DoDefault (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
-			// SAFETY: JNI supplies live references matching the registered callback signature.
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoDefault);
 		}
 	}
-	private static void __n_DoDefault (IntPtr jnienv, IntPtr native__this)
+	/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+	private static unsafe void __n_DoDefault (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
-			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.DoDefault ();
 		}
@@ -35,9 +40,9 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	[Register ("DoDefault", "()V", "GetDoDefaultHandler:java.code.IMyInterface, MyAssembly")]
 	virtual void DoDefault ()
 	{
+		const string __id = "DoDefault.()V";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "DoDefault.()V";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 	}
@@ -54,6 +59,8 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static readonly JniPeerMembers _members_java_code_IMyInterface = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
+	/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+	/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
 	}
@@ -62,20 +69,25 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 #pragma warning disable 0169
 	static Delegate GetDoDeclarationHandler ()
 	{
-		return cb_DoDeclaration_DoDeclaration_V ??= new _JniMarshal_PP_V (n_DoDeclaration);
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_DoDeclaration_DoDeclaration_V ??= new _JniMarshal_PP_V (n_DoDeclaration);
+		}
 	}
 
-	static void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
+	/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+	static unsafe void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
-			// SAFETY: JNI supplies live references matching the registered callback signature.
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoDeclaration);
 		}
 	}
-	private static void __n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
+	/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+	private static unsafe void __n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
-			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.DoDeclaration ();
 		}
@@ -84,9 +96,9 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	public void DoDeclaration ()
 	{
+		const string __id = "DoDeclaration.()V";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "DoDeclaration.()V";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 	}

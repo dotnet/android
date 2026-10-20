@@ -1747,28 +1747,29 @@ namespace generatortests
 			if (final == "true") {
 				Assert.True (writer.ToString ().Contains (
 		@"set {
-			unsafe {
-				// SAFETY: Temporary Java strings remain live until the property assignment completes.
-				const string __id = ""setText.(Ljava/lang/CharSequence;)V"";
-				global::Java.Interop.JniObjectReference native_text = global::Java.Interop.JniEnvironment.Strings.NewString (value);
-				try {
+			const string __id = ""setText.(Ljava/lang/CharSequence;)V"";
+			global::Java.Interop.JniObjectReference native_text = global::Java.Interop.JniEnvironment.Strings.NewString (value);
+			try {
+				unsafe {
+					// SAFETY: __id takes one string reference; the initialized argument slot is synchronous and finally releases the local.
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (native_text);
 					_members.InstanceMethods.InvokeNonvirtualVoidMethod (__id, this, __args);
-				} finally {
-					global::Java.Interop.JniObjectReference.Dispose (ref native_text);
 				}
+			} finally {
+				global::Java.Interop.JniObjectReference.Dispose (ref native_text);
 			}
 		}"), $"was: `{writer}`");
 			} else {
 				Assert.True (writer.ToString ().Contains (
 		@"set {
+			global::Java.Lang.String jls;
 			unsafe {
-				// SAFETY: Temporary Java strings remain live until the property assignment completes.
-				var jls = value == null ? null : new global::Java.Lang.String (value);
-				TextFormatted = jls;
-				if (jls != null) jls.Dispose ();
+				// SAFETY: The constructor copies a managed string into a new Java peer; no raw reference is supplied.
+				jls = value == null ? null : new global::Java.Lang.String (value);
 			}
+			TextFormatted = jls;
+			if (jls != null) jls.Dispose ();
 		}"), $"was: `{writer}`");
 			}
 		}

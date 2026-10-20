@@ -26,12 +26,14 @@ namespace Java.IO {
 			get { return _members; }
 		}
 
-		/// <safety><paramref name="javaReference"/> must be a live JNI throwable reference compatible with this type; <paramref name="transfer"/> must match its ownership.</safety>
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
 		protected unsafe IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
 
 		// Initializes an empty peer; the Java constructor is invoked by the derived binding.
+		/// <param name="options">Must be JniObjectReferenceOptions.None; other values throw before a peer is constructed.</param>
+		/// <remarks>No JNI reference is accepted or transferred. The forwarding chain preserves peer-constructor partial hooks; JNI-dependent members require the derived binding to complete peer construction.</remarks>
 		protected IOException (global::Java.Interop.JniObjectReferenceOptions options) : base (options)
 		{
 		}
@@ -40,20 +42,25 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetPrintStackTraceHandler ()
 		{
-			return cb_printStackTrace_PrintStackTrace_V ??= new _JniMarshal_PP_V (n_PrintStackTrace);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_printStackTrace_PrintStackTrace_V ??= new _JniMarshal_PP_V (n_PrintStackTrace);
+			}
 		}
 
-		static void n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_PrintStackTrace);
 			}
 		}
-		private static void __n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.IOException> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				__this.PrintStackTrace ();
 			}
@@ -64,9 +71,9 @@ namespace Java.IO {
 		[Register ("printStackTrace", "()V", "GetPrintStackTraceHandler")]
 		public virtual void PrintStackTrace ()
 		{
+			const string __id = "printStackTrace.()V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "printStackTrace.()V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 			}
 		}
@@ -75,7 +82,7 @@ namespace Java.IO {
 
 	[global::Android.Runtime.Register ("java/io/IOException", DoNotGenerateAcw=true)]
 	internal partial class IOExceptionInvoker : IOException {
-		/// <safety><paramref name="handle"/> must be a live JNI throwable reference compatible with this type; <paramref name="transfer"/> must match its ownership.</safety>
+		/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
 		public unsafe IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

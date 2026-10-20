@@ -121,7 +121,7 @@ namespace generatortests
 				source);
 			Assert.False (source.Contains ("WaitForBridgeProcessing"), source);
 			Assert.True (source.Contains (
-				"private static IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
+				"private static unsafe IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
 				source);
 			Assert.True (source.Contains ("global::Java.Lang.Object.GetObject<global::Com.Example.Widget> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)"), source);
 		}
@@ -237,7 +237,7 @@ namespace generatortests
 			Assert.True (source.Contains ("\"clear\", \"()V\", \"n_Clear\")"), source);
 
 			foreach (var name in new [] { "n_Remove", "n_Remove_1", "n_Remove_2", "n_Clear" })
-				Assert.True (source.Contains ($"static void {name} (IntPtr jnienv"), $"missing {name}\n{source}");
+				Assert.True (source.Contains ($"static unsafe void {name} (IntPtr jnienv"), $"missing {name}\n{source}");
 		}
 
 		[Test]
@@ -278,7 +278,7 @@ namespace generatortests
 			Assert.True (source.Contains ("&global::Com.Example.Widget.m0_1);"), source);
 			Assert.True (source.Contains ("private static void m0_1 (global::Com.Example.Widget __this)"), source);
 			Assert.True (source.Contains ("[Register (\"work\", \"()V\", \"n_Work_1\")]"), source);
-			Assert.True (source.Contains ("static void n_Work_1 (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Work_1 (IntPtr jnienv"), source);
 		}
 
 		[Test]
@@ -302,8 +302,8 @@ namespace generatortests
 			Assert.True (source.Contains ("\"remove\", \"(J)V\", \"n_Remove_1:Com.Example.IListenerInvoker"), source);
 
 			// ... and the invoker really does declare callbacks under those names.
-			Assert.True (source.Contains ("static void n_Remove (IntPtr jnienv"), source);
-			Assert.True (source.Contains ("static void n_Remove_1 (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Remove (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Remove_1 (IntPtr jnienv"), source);
 		}
 
 		[Test]
@@ -333,7 +333,7 @@ namespace generatortests
 			// Legacy names still carry the escaped Java signature, and the connector still names a
 			// connector method rather than the callback.
 			Assert.True (source.Contains ("\"remove\", \"(I)V\", \"GetRemove_IHandler\")"), source);
-			Assert.True (source.Contains ("static void n_Remove_I (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Remove_I (IntPtr jnienv"), source);
 			Assert.True (source.Contains ("static Delegate GetRemove_IHandler ()"), source);
 			Assert.False (source.Contains ("n_Remove_1"), source);
 			Assert.False (source.Contains ("&m0)"), source);
@@ -345,28 +345,22 @@ namespace generatortests
 			delegate long _JniMarshal_PPI_J (IntPtr env, IntPtr self, int value);
 			delegate void _JniMarshal_PPJ_V (IntPtr env, IntPtr self, long value);
 			delegate void _JniMarshal_PPI_V (IntPtr env, IntPtr self, int value);
-			""" + TypedCompilationSupport + """
 			namespace Java.Interop {
-				public static class JniMarshal {
-					public static unsafe void SafeInvokeAction<T1, T2> (IntPtr env, IntPtr self, T1 a, T2 b, delegate*<IntPtr, IntPtr, T1, T2, void> target) { }
-					public static unsafe void SafeInvokeAction<T> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, void> target) { }
-					public static unsafe T SafeInvokeFunc<T> (IntPtr env, IntPtr self, delegate*<IntPtr, IntPtr, T> target) => default;
-					public static unsafe TResult SafeInvokeFunc<T, TResult> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, TResult> target) => default;
-				}
-			}
-			""";
-
-		internal const string TypedCompilationSupport = """
-			namespace Java.Interop {
-				public static class JniMarshalTyped {
-					public static unsafe void Invoke_X<TSelf> (IntPtr env, IntPtr self, delegate*<TSelf, void> target)
+				public static unsafe class JniMarshalTyped {
+					public static void Invoke_X<TSelf> (IntPtr env, IntPtr self, delegate*<TSelf, void> target)
 						where TSelf : class, Android.Runtime.IJavaObject { }
-					public static unsafe void Invoke_SX<TSelf, T> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, void> target)
+					public static void Invoke_SX<TSelf, T> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, void> target)
 						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged { }
-					public static unsafe T Invoke_S<TSelf, T> (IntPtr env, IntPtr self, delegate*<TSelf, T> target)
+					public static T Invoke_S<TSelf, T> (IntPtr env, IntPtr self, delegate*<TSelf, T> target)
 						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged => default;
-					public static unsafe TResult Invoke_SS<TSelf, T, TResult> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, TResult> target)
+					public static TResult Invoke_SS<TSelf, T, TResult> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, TResult> target)
 						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged where TResult : unmanaged => default;
+				}
+				public static unsafe class JniMarshal {
+					public static void SafeInvokeAction<T1, T2> (IntPtr env, IntPtr self, T1 a, T2 b, delegate*<IntPtr, IntPtr, T1, T2, void> target) { }
+					public static void SafeInvokeAction<T> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, void> target) { }
+					public static T SafeInvokeFunc<T> (IntPtr env, IntPtr self, delegate*<IntPtr, IntPtr, T> target) => default;
+					public static TResult SafeInvokeFunc<T, TResult> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, TResult> target) => default;
 				}
 			}
 			""";

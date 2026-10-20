@@ -38,11 +38,9 @@ namespace generator.SourceWriters
 			}
 
 			if (HasGet) {
-				HasUnsafeGetterBody = true;
 				SourceWriterExtensions.AddMethodBody (GetBody, property.Getter, opt, $"_members_{property.Getter.DeclaringType.JavaFullNameId}");
 			}
 			if (HasSet) {
-				HasUnsafeSetterBody = true;
 				var pname = property.Setter.Parameters [0].Name;
 				property.Setter.Parameters [0].Name = "value";
 				SourceWriterExtensions.AddMethodBody (SetBody, property.Setter, opt, $"_members_{property.Setter.DeclaringType.JavaFullNameId}");

@@ -26,6 +26,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,9 +36,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeInteger' and count(parameter)=0]"
 			[Register ("getSomeInteger", "()I", "")]
 			get {
+				const string __id = "getSomeInteger.()I";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getSomeInteger.()I";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 					return __rm;
 				}
@@ -44,9 +46,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
 			[Register ("setSomeInteger", "(I)V", "")]
 			set {
+				const string __id = "setSomeInteger.(I)V";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "setSomeInteger.(I)V";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 					__args [0] = new JniArgumentValue (value);
 					_members.StaticMethods.InvokeVoidMethod (__id, __args);
@@ -58,9 +60,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeString' and count(parameter)=0]"
 			[Register ("getSomeString", "()Ljava/lang/String;", "")]
 			get {
+				const string __id = "getSomeString.()Ljava/lang/String;";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getSomeString.()Ljava/lang/String;";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				}
@@ -68,9 +70,9 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 			[Register ("setSomeString", "(Ljava/lang/String;)V", "")]
 			set {
+				const string __id = "setSomeString.(Ljava/lang/String;)V";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "setSomeString.(Ljava/lang/String;)V";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					IntPtr native_value = JNIEnv.NewString ((string)value);
 					try {
 						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
@@ -87,9 +89,9 @@ namespace Xamarin.Test {
 		[Register ("getSomeObject", "()Ljava/lang/Object;", "")]
 		public static global::Java.Lang.Object GetSomeObject ()
 		{
+			const string __id = "getSomeObject.()Ljava/lang/Object;";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "getSomeObject.()Ljava/lang/Object;";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 				return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
@@ -99,9 +101,9 @@ namespace Xamarin.Test {
 		[Register ("setSomeObject", "(Ljava/lang/Object;)V", "")]
 		public static void SetSomeObject (global::Java.Lang.Object newvalue)
 		{
+			const string __id = "setSomeObject.(Ljava/lang/Object;)V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "setSomeObject.(Ljava/lang/Object;)V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue ((newvalue == null) ? IntPtr.Zero : ((global::Java.Lang.Object) newvalue).Handle);
 				_members.StaticMethods.InvokeVoidMethod (__id, __args);

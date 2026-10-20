@@ -21,11 +21,11 @@ public abstract class Parent : Java.Lang.Object {
 	[global::System.Obsolete (@"Use 'Com.Xamarin.Android.IParent.ApiName'. This class will be removed in a future release.")]
 	public static string ApiName {
 		get {
-			unsafe {
-				// SAFETY: The string reference comes from the generated Java field and is consumed exactly once.
-				const string __id = "API_NAME.Ljava/lang/String;";
+			const string __id = "API_NAME.Ljava/lang/String;";
 
-				var __v = _members.StaticFields.GetObjectValue (__id);
+			var __v = _members.StaticFields.GetObjectValue (__id);
+			unsafe {
+				// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
 				return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
@@ -36,9 +36,9 @@ public abstract class Parent : Java.Lang.Object {
 	[Register ("comparing", "()I", "")]
 	public static int Comparing ()
 	{
+		const string __id = "comparing.()I";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "comparing.()I";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 			return __rm;
 		}
@@ -49,9 +49,9 @@ public abstract class Parent : Java.Lang.Object {
 	[Register ("comparingOld", "()I", "")]
 	public static int ComparingOld ()
 	{
+		const string __id = "comparingOld.()I";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "comparingOld.()I";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 			return __rm;
 		}
@@ -80,11 +80,11 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 	[Register ("API_NAME")]
 	public static string ApiName {
 		get {
-			unsafe {
-				// SAFETY: The string reference comes from the generated Java field and is consumed exactly once.
-				const string __id = "API_NAME.Ljava/lang/String;";
+			const string __id = "API_NAME.Ljava/lang/String;";
 
-				var __v = _members.StaticFields.GetObjectValue (__id);
+			var __v = _members.StaticFields.GetObjectValue (__id);
+			unsafe {
+				// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
 				return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
@@ -94,9 +94,9 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 	[Register ("comparing", "()I", "")]
 	public static int Comparing ()
 	{
+		const string __id = "comparing.()I";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "comparing.()I";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 			return __rm;
 		}
@@ -107,9 +107,9 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 	[Register ("comparingOld", "()I", "")]
 	public static int ComparingOld ()
 	{
+		const string __id = "comparingOld.()I";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "comparingOld.()I";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 			return __rm;
 		}
@@ -127,6 +127,8 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 
 	static readonly JniPeerMembers _members_com_xamarin_android_Parent = new JniPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
+	/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+	/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 	public IParentInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
 	}

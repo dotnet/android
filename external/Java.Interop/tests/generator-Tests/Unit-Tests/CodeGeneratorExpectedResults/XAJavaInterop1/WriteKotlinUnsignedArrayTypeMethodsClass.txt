@@ -3,6 +3,8 @@
 public partial class MyClass {
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
 
+	/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+	/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 	{
 	}
@@ -11,9 +13,9 @@ public partial class MyClass {
 	[Register ("Echo", "([I)[I", "")]
 	public uint[] Echo (uint[] value)
 	{
+		const string __id = "Echo.([I)[I";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "Echo.([I)[I";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			IntPtr native_value = JNIEnv.NewArray (value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
@@ -34,9 +36,9 @@ public partial class MyClass {
 	[Register ("Echo", "([S)[S", "")]
 	public ushort[] Echo (ushort[] value)
 	{
+		const string __id = "Echo.([S)[S";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "Echo.([S)[S";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			IntPtr native_value = JNIEnv.NewArray (value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
@@ -57,9 +59,9 @@ public partial class MyClass {
 	[Register ("Echo", "([J)[J", "")]
 	public ulong[] Echo (ulong[] value)
 	{
+		const string __id = "Echo.([J)[J";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "Echo.([J)[J";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			IntPtr native_value = JNIEnv.NewArray (value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
@@ -80,9 +82,9 @@ public partial class MyClass {
 	[Register ("Echo", "([B)[B", "")]
 	public byte[] Echo (byte[] value)
 	{
+		const string __id = "Echo.([B)[B";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "Echo.([B)[B";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			IntPtr native_value = JNIEnv.NewArray (value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];

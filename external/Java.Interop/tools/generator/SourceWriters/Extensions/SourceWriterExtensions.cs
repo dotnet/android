@@ -12,7 +12,7 @@ namespace generator.SourceWriters
 {
 	public static class SourceWriterExtensions
 	{
-		internal const string JniCallSafetyComment = "// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.";
+		internal const string JniCallSafetyComment = "// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.";
 
 		internal static bool IsThrowable (ClassGen klass)
 		{
@@ -252,8 +252,10 @@ namespace generator.SourceWriters
 
 		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
 		{
-			body.Add (JniCallSafetyComment);
 			body.Add ($"const string __id = \"{method.JavaName}.{method.JniSignature}\";");
+			body.Add ("unsafe {");
+			var unsafeBodyStart = body.Count;
+			body.Add (JniCallSafetyComment);
 
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
 				body.Add (prep);
@@ -300,6 +302,9 @@ namespace generator.SourceWriters
 				if (!method.IsVoid && hasKeepAlive)
 					body.Add ("return __result;");
 			}
+			for (var i = unsafeBodyStart; i < body.Count; i++)
+				body [i] = "\t" + body [i];
+			body.Add ("}");
 		}
 
 		public static void WriteKeepAlive (CodeWriter writer, ParameterList parameters, CodeGenerationOptions opt)
@@ -480,16 +485,19 @@ namespace generator.SourceWriters
 
 		public static void WriteMethodStringOverloadBody (CodeWriter writer, Method method, CodeGenerationOptions opt, bool haveSelf)
 		{
-			writer.WriteLine ("unsafe {");
-			writer.Indent ();
-			writer.WriteLine ("// SAFETY: Temporary Java strings remain live until the managed binding call completes.");
 			var call = new StringBuilder ();
 
 			foreach (var p in method.Parameters) {
 				var pname = p.Name;
 				if (p.Type == "Java.Lang.ICharSequence") {
 					pname = p.GetName ("jls_");
-					writer.WriteLine ($"var {pname} = {p.Name} == null ? null : new global::Java.Lang.String ({p.Name});");
+					writer.WriteLine ($"global::Java.Lang.String{opt.NullableOperator} {pname};");
+					writer.WriteLine ("unsafe {");
+					writer.Indent ();
+					writer.WriteLine ("// SAFETY: The constructor copies a managed string into a new Java peer; no raw reference is supplied.");
+					writer.WriteLine ($"{pname} = {p.Name} == null ? null : new global::Java.Lang.String ({p.Name});");
+					writer.Unindent ();
+					writer.WriteLine ("}");
 				} else if (p.Type == "Java.Lang.ICharSequence[]" || p.Type == "params Java.Lang.ICharSequence[]") {
 					pname = p.GetName ("jlca_");
 					writer.WriteLine ($"var {pname} = {opt.GetStringArrayToCharSequenceArrayMethodName ()} ({p.Name});");
@@ -526,9 +534,6 @@ namespace generator.SourceWriters
 
 			if (!method.RetVal.IsVoid)
 				writer.WriteLine ($"return __rsval{opt.GetNullForgiveness (method.RetVal)};");
-
-			writer.Unindent ();
-			writer.WriteLine ("}");
 		}
 
 		public static TypeWriter BuildManagedTypeModel (GenBase gen, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)

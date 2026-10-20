@@ -70,7 +70,7 @@ namespace Android.Runtime {
 		}
 
 		[DllImport ("libc")]
-		static unsafe extern int gettid ();
+		static extern int gettid ();
 
 		delegate Delegate GetCallbackHandler ();
 
@@ -254,8 +254,7 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		/// <safety><paramref name="jobject"/> must be zero or an owned live JNI local reference on the current thread.</safety>
-		public static unsafe void DeleteLocalRef (IntPtr jobject)
+		public static void DeleteLocalRef (IntPtr jobject)
 		{
 			throw new NotImplementedException ();
 		}
@@ -312,7 +311,6 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		/// <safety><paramref name="value"/> must be a live JNI string reference with the indicated ownership.</safety>
 		public static unsafe string GetString (IntPtr value, JniHandleOwnership transfer)
 		{
 			throw new NotImplementedException ();
@@ -338,12 +336,12 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray (IntPtr src, bool[] dest)
+		public static void CopyArray (IntPtr src, bool[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray (IntPtr src, string[] dest)
+		public static void CopyArray (IntPtr src, string[] dest)
 		{
 			throw new NotImplementedException ();
 		}
@@ -363,7 +361,7 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray (IntPtr src, Array dest, Type elementType = null)
+		public static void CopyArray (IntPtr src, Array dest, Type elementType = null)
 		{
 			throw new NotImplementedException ();
 		}
@@ -373,22 +371,22 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray<T> (IntPtr src, T[] dest)
+		public static void CopyArray<T> (IntPtr src, T[] dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray (bool[] src, IntPtr dest)
+		public static void CopyArray (bool[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray (string[] src, IntPtr dest)
+		public static void CopyArray (string[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray (IJavaObject[] src, IntPtr dest)
+		public static void CopyArray (IJavaObject[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
@@ -403,12 +401,12 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray (Array source, Type elementType, IntPtr dest)
+		public static void CopyArray (Array source, Type elementType, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe void CopyArray<T> (T[] src, IntPtr dest)
+		public static void CopyArray<T> (T[] src, IntPtr dest)
 		{
 			throw new NotImplementedException ();
 		}
@@ -458,7 +456,7 @@ namespace Android.Runtime {
 			throw new NotImplementedException ();
 		}
 
-		public static unsafe IntPtr NewArray (bool[] array)
+		public static IntPtr NewArray (bool[] array)
 		{
 			throw new NotImplementedException ();
 		}

@@ -9,13 +9,16 @@ public partial class MyClass {
 			const string __id = "field.Ljava/code/Example;";
 
 			var __v = _members.InstanceFields.GetObjectValue (__id, this);
-			return global::Java.Lang.Object.GetObject<java.code.Example> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+				return global::Java.Lang.Object.GetObject<java.code.Example> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 		set {
-			unsafe {
-				// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-				const string __id = "field.Ljava/code/Example;";
+			const string __id = "field.Ljava/code/Example;";
 
+			unsafe {
+				// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 				IntPtr native_value = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);
 				try {
 					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -28,6 +31,8 @@ public partial class MyClass {
 
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
 
+	/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+	/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 	{
 	}

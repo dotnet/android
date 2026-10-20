@@ -26,13 +26,16 @@ namespace Xamarin.Test {
 				const string __id = "myStrings.[Ljava/lang/String;";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<string>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Android.Runtime.JavaArray<string>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				unsafe {
-					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-					const string __id = "myStrings.[Ljava/lang/String;";
+				const string __id = "myStrings.[Ljava/lang/String;";
 
+				unsafe {
+					// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 					IntPtr native_value = global::Android.Runtime.JavaArray<string>.ToLocalJniHandle (value);
 					try {
 						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -51,13 +54,16 @@ namespace Xamarin.Test {
 				const string __id = "myInts.[I";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<int>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Android.Runtime.JavaArray<int>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				unsafe {
-					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-					const string __id = "myInts.[I";
+				const string __id = "myInts.[I";
 
+				unsafe {
+					// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 					IntPtr native_value = global::Android.Runtime.JavaArray<int>.ToLocalJniHandle (value);
 					try {
 						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -76,13 +82,16 @@ namespace Xamarin.Test {
 				const string __id = "mybools.[Z";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<bool>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Android.Runtime.JavaArray<bool>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				unsafe {
-					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-					const string __id = "mybools.[Z";
+				const string __id = "mybools.[Z";
 
+				unsafe {
+					// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 					IntPtr native_value = global::Android.Runtime.JavaArray<bool>.ToLocalJniHandle (value);
 					try {
 						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -101,13 +110,16 @@ namespace Xamarin.Test {
 				const string __id = "myObjects.[Ljava/lang/Object;";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<global::Java.Lang.Object>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Android.Runtime.JavaArray<global::Java.Lang.Object>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				unsafe {
-					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-					const string __id = "myObjects.[Ljava/lang/Object;";
+				const string __id = "myObjects.[Ljava/lang/Object;";
 
+				unsafe {
+					// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 					IntPtr native_value = global::Android.Runtime.JavaArray<global::Java.Lang.Object>.ToLocalJniHandle (value);
 					try {
 						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -126,13 +138,16 @@ namespace Xamarin.Test {
 				const string __id = "myfloats.[F";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<float>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Android.Runtime.JavaArray<float>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				unsafe {
-					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-					const string __id = "myfloats.[F";
+				const string __id = "myfloats.[F";
 
+				unsafe {
+					// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 					IntPtr native_value = global::Android.Runtime.JavaArray<float>.ToLocalJniHandle (value);
 					try {
 						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -151,13 +166,16 @@ namespace Xamarin.Test {
 				const string __id = "mydoubles.[D";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<double>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Android.Runtime.JavaArray<double>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				unsafe {
-					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-					const string __id = "mydoubles.[D";
+				const string __id = "mydoubles.[D";
 
+				unsafe {
+					// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 					IntPtr native_value = global::Android.Runtime.JavaArray<double>.ToLocalJniHandle (value);
 					try {
 						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -176,13 +194,16 @@ namespace Xamarin.Test {
 				const string __id = "mylongs.[J";
 
 				var __v = _members.InstanceFields.GetObjectValue (__id, this);
-				return global::Android.Runtime.JavaArray<long>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+					return global::Android.Runtime.JavaArray<long>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 			set {
-				unsafe {
-					// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.
-					const string __id = "mylongs.[J";
+				const string __id = "mylongs.[J";
 
+				unsafe {
+					// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
 					IntPtr native_value = global::Android.Runtime.JavaArray<long>.ToLocalJniHandle (value);
 					try {
 						_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
@@ -201,6 +222,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}

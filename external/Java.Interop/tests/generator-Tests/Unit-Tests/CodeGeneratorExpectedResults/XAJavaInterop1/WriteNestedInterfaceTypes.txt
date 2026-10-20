@@ -28,6 +28,8 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 
 		static readonly JniPeerMembers _members_com_xamarin_android_Parent_Child = new JniPeerMembers ("com/xamarin/android/Parent$Child", typeof (IChildInvoker));
 
+		/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		public IChildInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
@@ -36,20 +38,25 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 #pragma warning disable 0169
 		static Delegate GetGetBarHandler ()
 		{
-			return cb_getBar_GetBar_I ??= new _JniMarshal_PP_I (n_GetBar);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getBar_GetBar_I ??= new _JniMarshal_PP_I (n_GetBar);
+			}
 		}
 
-		static int n_GetBar (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe int n_GetBar (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetBar);
 			}
 		}
-		private static int __n_GetBar (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe int __n_GetBar (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<Com.Xamarin.Android.IParent.IChild> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return __this.Bar;
 			}
@@ -58,9 +65,9 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 
 		public int Bar {
 			get {
+				const string __id = "getBar.()I";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getBar.()I";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members_com_xamarin_android_Parent_Child.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
 					return __rm;
 				}
@@ -81,6 +88,8 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 
 	static readonly JniPeerMembers _members_com_xamarin_android_Parent = new JniPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
+	/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+	/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 	public IParentInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
 	}
@@ -89,20 +98,25 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 #pragma warning disable 0169
 	static Delegate GetGetBarHandler ()
 	{
-		return cb_getBar_GetBar_I ??= new _JniMarshal_PP_I (n_GetBar);
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_getBar_GetBar_I ??= new _JniMarshal_PP_I (n_GetBar);
+		}
 	}
 
-	static int n_GetBar (IntPtr jnienv, IntPtr native__this)
+	/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+	static unsafe int n_GetBar (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
-			// SAFETY: JNI supplies live references matching the registered callback signature.
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetBar);
 		}
 	}
-	private static int __n_GetBar (IntPtr jnienv, IntPtr native__this)
+	/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+	private static unsafe int __n_GetBar (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
-			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 			var __this = global::Java.Lang.Object.GetObject<Com.Xamarin.Android.IParent> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.Bar;
 		}
@@ -111,9 +125,9 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 
 	public int Bar {
 		get {
+			const string __id = "getBar.()I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "getBar.()I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members_com_xamarin_android_Parent.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
 				return __rm;
 			}

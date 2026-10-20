@@ -19,9 +19,6 @@ namespace generator.SourceWriters
 			this.field = field;
 			this.opt = opt;
 
-			HasUnsafeGetterBody = field.Symbol is StringSymbol;
-			HasUnsafeSetterBody = field.Symbol.IsArray || field.SetParameters.HasCleanup;
-
 			Name = field.Name;
 
 			string fieldType = field.Symbol.IsArray
@@ -75,8 +72,6 @@ namespace generator.SourceWriters
 
 		protected override void WriteGetterBody (CodeWriter writer)
 		{
-			if (HasUnsafeGetterBody)
-				writer.WriteLine ("// SAFETY: The string reference comes from the generated Java field and is consumed exactly once.");
 			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
 			writer.WriteLine ();
 
@@ -88,6 +83,11 @@ namespace generator.SourceWriters
 
 			writer.WriteLine ($"var __v = {field.Symbol.ReturnCast}_members.{indirect}.{invoke} (__id{(field.IsStatic ? "" : ", this")});");
 
+			if (invokeType == "Object") {
+				writer.WriteLine ("unsafe {");
+				writer.Indent ();
+				writer.WriteLine ("// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.");
+			}
 			if (field.Symbol.IsArray) {
 				writer.WriteLine ($"return global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);");
 			} else if (field.Symbol.NativeType != field.Symbol.FullName && !field.Symbol.OnlyFormatOnMarshal) {
@@ -95,17 +95,24 @@ namespace generator.SourceWriters
 			} else {
 				writer.WriteLine ("return __v;");
 			}
+			if (invokeType == "Object") {
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			}
 		}
 
 		protected override void WriteSetterBody (CodeWriter writer)
 		{
-			if (HasUnsafeSetterBody)
-				writer.WriteLine ("// SAFETY: The owned Java reference remains live through the field assignment and is released in finally.");
 			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
 			writer.WriteLine ();
 
 			var invokeType = SourceWriterExtensions.GetInvokeType (field.GetMethodPrefix);
 			var indirect = field.IsStatic ? "StaticFields" : "InstanceFields";
+			if (invokeType == "Object") {
+				writer.WriteLine ("unsafe {");
+				writer.Indent ();
+				writer.WriteLine ("// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.");
+			}
 
 			string native_arg = opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName ("value"));
 			string arg;
@@ -156,6 +163,10 @@ namespace generator.SourceWriters
 						writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
 				}
 
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			}
+			if (invokeType == "Object") {
 				writer.Unindent ();
 				writer.WriteLine ("}");
 			}

@@ -134,7 +134,7 @@ namespace Java.Lang {
 		{
 		}
 
-		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
+		public Throwable (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotImplementedException ();
 		}

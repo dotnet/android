@@ -24,20 +24,25 @@ namespace Java.Lang {
 #pragma warning disable 0169
 		static Delegate GetGetMessageHandler ()
 		{
-			return cb_getMessage_GetMessage_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_GetMessage);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getMessage_GetMessage_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_GetMessage);
+			}
 		}
 
-		static IntPtr n_GetMessage (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetMessage);
 			}
 		}
-		private static IntPtr __n_GetMessage (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.NewString (__this.Message);
 			}
@@ -48,9 +53,9 @@ namespace Java.Lang {
 			// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/class[@name='Throwable']/method[@name='getMessage' and count(parameter)=0]"
 			[Register ("getMessage", "()Ljava/lang/String;", "GetGetMessageHandler")]
 			get {
+				const string __id = "getMessage.()Ljava/lang/String;";
 				unsafe {
-					// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-					const string __id = "getMessage.()Ljava/lang/String;";
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
 					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				}

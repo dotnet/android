@@ -26,6 +26,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,9 +36,9 @@ namespace Xamarin.Test {
 		[Register ("methodAsInt", "()I", "")]
 		public static int MethodAsInt ()
 		{
+			const string __id = "methodAsInt.()I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "methodAsInt.()I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 				return __rm;
 			}
@@ -46,9 +48,9 @@ namespace Xamarin.Test {
 		[Register ("methodAsString", "()Ljava/lang/String;", "")]
 		public static string MethodAsString ()
 		{
+			const string __id = "methodAsString.()Ljava/lang/String;";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "methodAsString.()Ljava/lang/String;";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
@@ -59,9 +61,9 @@ namespace Xamarin.Test {
 		[Register ("Obsoletemethod", "()Ljava/lang/String;", "")]
 		public static string Obsoletemethod ()
 		{
+			const string __id = "Obsoletemethod.()Ljava/lang/String;";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "Obsoletemethod.()Ljava/lang/String;";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}

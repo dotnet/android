@@ -26,6 +26,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,13 +36,13 @@ namespace Xamarin.Test {
 		[Register (".ctor", "(Ljava/lang/Class;)V", "")]
 		public SomeObject (global::Java.Lang.Class c) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
+			const string __id = "(Ljava/lang/Class;)V";
+
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "(Ljava/lang/Class;)V";
-
-				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-					return;
-
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue ((c == null) ? IntPtr.Zero : ((global::Java.Lang.Object) c).Handle);
 				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
@@ -54,20 +56,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetTypeHandler ()
 		{
-			return cb_getType_GetType_arrayI ??= new _JniMarshal_PP_L (n_GetType);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getType_GetType_arrayI ??= new _JniMarshal_PP_L (n_GetType);
+			}
 		}
 
-		static IntPtr n_GetType (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_GetType (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetType);
 			}
 		}
-		private static IntPtr __n_GetType (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_GetType (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.NewArray (__this.GetType ());
 			}
@@ -78,9 +85,9 @@ namespace Xamarin.Test {
 		[Register ("getType", "()[I", "GetGetTypeHandler")]
 		public new virtual int[] GetType ()
 		{
+			const string __id = "getType.()[I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "getType.()[I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
 				return (int[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (int));
 			}
@@ -90,20 +97,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler ()
 		{
-			return cb_handle_Handle_Ljava_lang_Object_Ljava_lang_Throwable__I ??= new _JniMarshal_PPLL_I (n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_handle_Handle_Ljava_lang_Object_Ljava_lang_Throwable__I ??= new _JniMarshal_PPLL_I (n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
+			}
 		}
 
-		static int n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_ (IntPtr jnienv, IntPtr native__this, IntPtr native_o, IntPtr native_t)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe int n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_ (IntPtr jnienv, IntPtr native__this, IntPtr native_o, IntPtr native_t)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_o, native_t, &__n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
 			}
 		}
-		private static int __n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_ (IntPtr jnienv, IntPtr native__this, IntPtr native_o, IntPtr native_t)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe int __n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_ (IntPtr jnienv, IntPtr native__this, IntPtr native_o, IntPtr native_t)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var o = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_o, JniHandleOwnership.DoNotTransfer);
 				var t = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (native_t, JniHandleOwnership.DoNotTransfer);
@@ -117,9 +129,9 @@ namespace Xamarin.Test {
 		[Register ("handle", "(Ljava/lang/Object;Ljava/lang/Throwable;)I", "GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler")]
 		public new virtual int Handle (global::Java.Lang.Object o, global::Java.Lang.Throwable t)
 		{
+			const string __id = "handle.(Ljava/lang/Object;Ljava/lang/Throwable;)I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "handle.(Ljava/lang/Object;Ljava/lang/Throwable;)I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				JniArgumentValue* __args = stackalloc JniArgumentValue [2];
 				__args [0] = new JniArgumentValue ((o == null) ? IntPtr.Zero : ((global::Java.Lang.Object) o).Handle);
 				__args [1] = new JniArgumentValue ((t == null) ? IntPtr.Zero : ((global::Java.Lang.Throwable) t).Handle);
@@ -135,20 +147,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetIntegerMethodHandler ()
 		{
-			return cb_IntegerMethod_IntegerMethod_I ??= new _JniMarshal_PP_I (n_IntegerMethod);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_IntegerMethod_IntegerMethod_I ??= new _JniMarshal_PP_I (n_IntegerMethod);
+			}
 		}
 
-		static int n_IntegerMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe int n_IntegerMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_IntegerMethod);
 			}
 		}
-		private static int __n_IntegerMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe int __n_IntegerMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return __this.IntegerMethod ();
 			}
@@ -159,9 +176,9 @@ namespace Xamarin.Test {
 		[Register ("IntegerMethod", "()I", "GetIntegerMethodHandler")]
 		public virtual int IntegerMethod ()
 		{
+			const string __id = "IntegerMethod.()I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "IntegerMethod.()I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
 				return __rm;
 			}
@@ -171,20 +188,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetVoidMethodHandler ()
 		{
-			return cb_VoidMethod_VoidMethod_V ??= new _JniMarshal_PP_V (n_VoidMethod);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_VoidMethod_VoidMethod_V ??= new _JniMarshal_PP_V (n_VoidMethod);
+			}
 		}
 
-		static void n_VoidMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_VoidMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_VoidMethod);
 			}
 		}
-		private static void __n_VoidMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_VoidMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				__this.VoidMethod ();
 			}
@@ -195,9 +217,9 @@ namespace Xamarin.Test {
 		[Register ("VoidMethod", "()V", "GetVoidMethodHandler")]
 		public virtual void VoidMethod ()
 		{
+			const string __id = "VoidMethod.()V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "VoidMethod.()V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 			}
 		}
@@ -206,20 +228,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetStringMethodHandler ()
 		{
-			return cb_StringMethod_StringMethod_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_StringMethod);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_StringMethod_StringMethod_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_StringMethod);
+			}
 		}
 
-		static IntPtr n_StringMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_StringMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_StringMethod);
 			}
 		}
-		private static IntPtr __n_StringMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_StringMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.NewString (__this.StringMethod ());
 			}
@@ -230,9 +257,9 @@ namespace Xamarin.Test {
 		[Register ("StringMethod", "()Ljava/lang/String;", "GetStringMethodHandler")]
 		public virtual string StringMethod ()
 		{
+			const string __id = "StringMethod.()Ljava/lang/String;";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "StringMethod.()Ljava/lang/String;";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
@@ -242,20 +269,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetObjectMethodHandler ()
 		{
-			return cb_ObjectMethod_ObjectMethod_Ljava_lang_Object_ ??= new _JniMarshal_PP_L (n_ObjectMethod);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_ObjectMethod_ObjectMethod_Ljava_lang_Object_ ??= new _JniMarshal_PP_L (n_ObjectMethod);
+			}
 		}
 
-		static IntPtr n_ObjectMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe IntPtr n_ObjectMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_ObjectMethod);
 			}
 		}
-		private static IntPtr __n_ObjectMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe IntPtr __n_ObjectMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.ToLocalJniHandle (__this.ObjectMethod ());
 			}
@@ -266,9 +298,9 @@ namespace Xamarin.Test {
 		[Register ("ObjectMethod", "()Ljava/lang/Object;", "GetObjectMethodHandler")]
 		public virtual global::Java.Lang.Object ObjectMethod ()
 		{
+			const string __id = "ObjectMethod.()Ljava/lang/Object;";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "ObjectMethod.()Ljava/lang/Object;";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
 				return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
@@ -278,20 +310,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetVoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_Handler ()
 		{
-			return cb_VoidMethodWithParams_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object__V ??= new _JniMarshal_PPLIL_V (n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_VoidMethodWithParams_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object__V ??= new _JniMarshal_PPLIL_V (n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_);
+			}
 		}
 
-		static void n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_astring, int anint, IntPtr native_anObject)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_astring, int anint, IntPtr native_anObject)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_astring, anint, native_anObject, &__n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_);
 			}
 		}
-		private static void __n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_astring, int anint, IntPtr native_anObject)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_astring, int anint, IntPtr native_anObject)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var astring = JNIEnv.GetString (native_astring, JniHandleOwnership.DoNotTransfer);
 				var anObject = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_anObject, JniHandleOwnership.DoNotTransfer);
@@ -304,9 +341,9 @@ namespace Xamarin.Test {
 		[Register ("VoidMethodWithParams", "(Ljava/lang/String;ILjava/lang/Object;)V", "GetVoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_Handler")]
 		public virtual void VoidMethodWithParams (string astring, int anint, global::Java.Lang.Object anObject)
 		{
+			const string __id = "VoidMethodWithParams.(Ljava/lang/String;ILjava/lang/Object;)V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "VoidMethodWithParams.(Ljava/lang/String;ILjava/lang/Object;)V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_astring = JNIEnv.NewString ((string)astring);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [3];
@@ -326,22 +363,27 @@ namespace Xamarin.Test {
 		[global::System.Obsolete]
 		static Delegate GetObsoleteMethodHandler ()
 		{
-			return cb_ObsoleteMethod_ObsoleteMethod_I ??= new _JniMarshal_PP_I (n_ObsoleteMethod);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_ObsoleteMethod_ObsoleteMethod_I ??= new _JniMarshal_PP_I (n_ObsoleteMethod);
+			}
 		}
 
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
 		[global::System.Obsolete]
-		static int n_ObsoleteMethod (IntPtr jnienv, IntPtr native__this)
+		static unsafe int n_ObsoleteMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_ObsoleteMethod);
 			}
 		}
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
 		[global::System.Obsolete]
-		private static int __n_ObsoleteMethod (IntPtr jnienv, IntPtr native__this)
+		private static unsafe int __n_ObsoleteMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return __this.ObsoleteMethod ();
 			}
@@ -353,9 +395,9 @@ namespace Xamarin.Test {
 		[Register ("ObsoleteMethod", "()I", "GetObsoleteMethodHandler")]
 		public virtual int ObsoleteMethod ()
 		{
+			const string __id = "ObsoleteMethod.()I";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "ObsoleteMethod.()I";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
 				return __rm;
 			}
@@ -365,20 +407,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetArrayListTest_Ljava_util_ArrayList_Handler ()
 		{
-			return cb_ArrayListTest_ArrayListTest_Ljava_util_ArrayList__V ??= new _JniMarshal_PPL_V (n_ArrayListTest_Ljava_util_ArrayList_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_ArrayListTest_ArrayListTest_Ljava_util_ArrayList__V ??= new _JniMarshal_PPL_V (n_ArrayListTest_Ljava_util_ArrayList_);
+			}
 		}
 
-		static void n_ArrayListTest_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		static unsafe void n_ArrayListTest_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
 			unsafe {
-				// SAFETY: JNI supplies live references matching the registered callback signature.
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_p0, &__n_ArrayListTest_Ljava_util_ArrayList_);
 			}
 		}
-		private static void __n_ArrayListTest_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		private static unsafe void __n_ArrayListTest_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
 			unsafe {
-				// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var p0 = global::Android.Runtime.JavaList<global::Java.Lang.Integer>.FromJniHandle (native_p0, JniHandleOwnership.DoNotTransfer);
 				__this.ArrayListTest (p0);
@@ -390,9 +437,9 @@ namespace Xamarin.Test {
 		[Register ("ArrayListTest", "(Ljava/util/ArrayList;)V", "GetArrayListTest_Ljava_util_ArrayList_Handler")]
 		public virtual void ArrayListTest (global::System.Collections.Generic.IList<global::Java.Lang.Integer> p0)
 		{
+			const string __id = "ArrayListTest.(Ljava/util/ArrayList;)V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "ArrayListTest.(Ljava/util/ArrayList;)V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				IntPtr native_p0 = global::Android.Runtime.JavaList<global::Java.Lang.Integer>.ToLocalJniHandle (p0);
 				try {
 					JniArgumentValue* __args = stackalloc JniArgumentValue [1];

@@ -79,11 +79,7 @@ namespace generatortests
 				out hasErrors, out output, allowWarnings: true, out assemblyImage);
 		}
 
-		internal static IEnumerable<string> GetSupportFilePaths ()
-			=> Directory.EnumerateFiles (Path.Combine (Path.GetDirectoryName (supportFilePath), "SupportFiles"),
-				"*.cs", SearchOption.AllDirectories);
-
-		internal static string [] GetReferencePaths ()
+		static string [] GetReferencePaths ()
 		{
 			var binDir = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
 			var facDir = GetFacadesPath ();

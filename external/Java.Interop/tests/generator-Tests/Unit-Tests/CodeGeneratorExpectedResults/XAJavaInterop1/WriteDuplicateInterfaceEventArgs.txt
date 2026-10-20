@@ -21,6 +21,8 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 
 	static readonly JniPeerMembers _members_java_code_AnimatorListener = new JniPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
 
+	/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+	/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 	public AnimatorListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
 	}
@@ -29,20 +31,25 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IHandler ()
 	{
-		return cb_OnAnimationEnd_OnAnimationEnd_I_Z ??= new _JniMarshal_PPI_B (n_OnAnimationEnd_I);
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_OnAnimationEnd_OnAnimationEnd_I_Z ??= new _JniMarshal_PPI_B (n_OnAnimationEnd_I);
+		}
 	}
 
-	static sbyte n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
+	/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+	static unsafe sbyte n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
 	{
 		unsafe {
-			// SAFETY: JNI supplies live references matching the registered callback signature.
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, param1, &__n_OnAnimationEnd_I);
 		}
 	}
-	private static sbyte __n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
+	/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+	private static unsafe sbyte __n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
 	{
 		unsafe {
-			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.OnAnimationEnd (param1) ? (sbyte)1 : (sbyte)0;
 		}
@@ -51,9 +58,9 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 
 	public bool OnAnimationEnd (int param1)
 	{
+		const string __id = "OnAnimationEnd.(I)Z";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "OnAnimationEnd.(I)Z";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (param1);
 			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
@@ -65,20 +72,25 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IIHandler ()
 	{
-		return cb_OnAnimationEnd_OnAnimationEnd_II_Z ??= new _JniMarshal_PPII_B (n_OnAnimationEnd_II);
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_OnAnimationEnd_OnAnimationEnd_II_Z ??= new _JniMarshal_PPII_B (n_OnAnimationEnd_II);
+		}
 	}
 
-	static sbyte n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
+	/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+	static unsafe sbyte n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
 	{
 		unsafe {
-			// SAFETY: JNI supplies live references matching the registered callback signature.
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, param1, param2, &__n_OnAnimationEnd_II);
 		}
 	}
-	private static sbyte __n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
+	/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+	private static unsafe sbyte __n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
 	{
 		unsafe {
-			// SAFETY: Callback references match the registered JNI signature and remain live through marshaling and copy-back.
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
 			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.OnAnimationEnd (param1, param2) ? (sbyte)1 : (sbyte)0;
 		}
@@ -87,9 +99,9 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 
 	public bool OnAnimationEnd (int param1, int param2)
 	{
+		const string __id = "OnAnimationEnd.(II)Z";
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "OnAnimationEnd.(II)Z";
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 			JniArgumentValue* __args = stackalloc JniArgumentValue [2];
 			__args [0] = new JniArgumentValue (param1);
 			__args [1] = new JniArgumentValue (param2);
@@ -143,16 +155,16 @@ internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Ob
 
 	public AnimatorListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
+		const string __id = "()V";
+		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+			return;
 		unsafe {
-			// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-			const string __id = "()V";
-			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-				return;
+			// SAFETY: ()V needs no arguments; SetHandle takes the new local peer before FinishCreateInstance.
 			var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
 			SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
 			JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
-			this.sender = sender;
 		}
+		this.sender = sender;
 	}
 
 	#pragma warning disable 0649

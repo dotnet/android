@@ -22,7 +22,6 @@ namespace generator.SourceWriters
 
 			SetVisibility (gen is InterfaceGen ? string.Empty : property.Getter.IsAbstract && property.Getter.RetVal.IsGeneric ? "protected" : (property.Setter ?? property.Getter).Visibility);
 
-			HasUnsafeGetterBody = true;
 			HasGet = true;
 
 			var is_virtual = property.Getter.IsVirtual && (property.Setter == null || property.Setter.IsVirtual);
@@ -99,7 +98,6 @@ namespace generator.SourceWriters
 
 			if (property.Setter != null) {
 				HasSet = true;
-				HasUnsafeSetterBody = true;
 
 				if (gen.IsGeneratable)
 					SetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Setter.JavaName}'{property.Setter.Parameters.GetMethodXPathPredicate ()}]\"");

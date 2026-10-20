@@ -28,8 +28,11 @@ namespace Xamarin.SourceWriter
 		public bool IsAutoProperty { get; set; }
 		public bool IsAbstract { get; set; }
 		public bool IsVirtual { get; set; }
+		/// <summary>Marks the property declaration as requiring an unsafe caller under updated memory-safety rules.</summary>
 		public bool IsUnsafe { get; set; }
+		/// <summary>Emits a getter implementation block independently of the property caller contract.</summary>
 		public bool HasUnsafeGetterBody { get; set; }
+		/// <summary>Emits a setter implementation block independently of the property caller contract.</summary>
 		public bool HasUnsafeSetterBody { get; set; }
 		public List<string> GetterComments { get; } = new List<string> ();
 		public List<string> SetterComments { get; } = new List<string> ();

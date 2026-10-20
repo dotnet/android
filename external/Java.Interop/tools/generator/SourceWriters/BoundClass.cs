@@ -129,6 +129,8 @@ namespace generator.SourceWriters
 					};
 					deferred.SetVisibility (klass.IsFinal ? "internal" : "protected");
 					deferred.Comments.Add ("// Initializes an empty peer; the Java constructor is invoked by the derived binding.");
+					deferred.Comments.Add ("/// <param name=\"options\">Must be JniObjectReferenceOptions.None; other values throw before a peer is constructed.</param>");
+					deferred.Comments.Add ("/// <remarks>No JNI reference is accepted or transferred. The forwarding chain preserves peer-constructor partial hooks; JNI-dependent members require the derived binding to complete peer construction.</remarks>");
 					deferred.Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("global::Java.Interop.JniObjectReferenceOptions")));
 					if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod))
 						deferred.Body.Add ($"{klass.PeerConstructorPartialMethod} ();");

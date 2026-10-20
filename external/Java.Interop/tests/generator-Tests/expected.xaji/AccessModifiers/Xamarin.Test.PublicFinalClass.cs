@@ -26,6 +26,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		internal PublicFinalClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -34,9 +36,9 @@ namespace Xamarin.Test {
 		[Register ("publicMethod", "()V", "")]
 		public void PublicMethod ()
 		{
+			const string __id = "publicMethod.()V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "publicMethod.()V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 			}
 		}
@@ -45,9 +47,9 @@ namespace Xamarin.Test {
 		[Register ("packageMethodB", "()V", "")]
 		public void PackageMethodB ()
 		{
+			const string __id = "packageMethodB.()V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "packageMethodB.()V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 			}
 		}
@@ -56,9 +58,9 @@ namespace Xamarin.Test {
 		[Register ("packageMethodA", "()V", "")]
 		public void PackageMethodA ()
 		{
+			const string __id = "packageMethodA.()V";
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "packageMethodA.()V";
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 			}
 		}

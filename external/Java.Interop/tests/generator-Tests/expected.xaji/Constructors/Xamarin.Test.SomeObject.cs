@@ -26,6 +26,8 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
+		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
+		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -35,13 +37,13 @@ namespace Xamarin.Test {
 		[global::System.Obsolete (@"deprecated")]
 		public SomeObject () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
+			const string __id = "()V";
+
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "()V";
-
-				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-					return;
-
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
 				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
 				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
@@ -52,13 +54,13 @@ namespace Xamarin.Test {
 		[Register (".ctor", "(I)V", "")]
 		public SomeObject (int aint) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
+			const string __id = "(I)V";
+
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+
 			unsafe {
-				// SAFETY: The generated JNI signature matches the arguments; references and argument storage remain live through the call.
-				const string __id = "(I)V";
-
-				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
-					return;
-
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (aint);
 				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
