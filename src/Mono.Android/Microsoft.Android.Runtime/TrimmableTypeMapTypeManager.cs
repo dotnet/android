@@ -406,12 +406,21 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		=> RuntimeFeature.JniRemapping ? JniRemappingLookup.GetReplacementType (jniSimpleReference) : null;
 
+	/// <safety>
+	/// A non-null result borrows immutable NUL-terminated bytes from the native remapping
+	/// table. Keep its native owner alive through runtime/cache reads; do not race table
+	/// reinitialization, mutation or runtime disposal with consumers. Read-only aliases may
+	/// overlap. No storage is transferred or freed, including on failure.
+	/// </safety>
 	protected override unsafe void GetReplacementTypeInfoUnsafe (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
 	{
 		replacement = null;
-		replacementUtf8 = RuntimeFeature.JniRemapping
-			? JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference)
-			: null;
+		unsafe {
+			// SAFETY: the generated table's native owner retains NUL-terminated result bytes for the runtime and cached readers.
+			replacementUtf8 = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference)
+				: null;
+		}
 	}
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
@@ -424,10 +433,21 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
 			: null;
 
+	/// <safety>
+	/// The source must be readable through its NUL terminator and immutable until return or
+	/// exception; no alias may write or free it. Source storage is neither retained nor freed.
+	/// Target pointers borrow the native table for all runtime/cache reads; do not race its
+	/// reinitialization, mutation or disposal with consumers. Read-only aliases may overlap.
+	/// </safety>
 	protected override unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoUnsafe (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> RuntimeFeature.JniRemapping
-			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
-			: null;
+	{
+		unsafe {
+			// SAFETY: the caller retains source bytes through lookup; targets borrow the immutable process-lived table.
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
+				: null;
+		}
+	}
 
 	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
 		=> RuntimeFeature.JniRemapping

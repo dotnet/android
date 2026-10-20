@@ -17,8 +17,9 @@ namespace Java.Interop {
 	public partial class JniRuntime {
 
 		/// <safety>
-		/// A non-null value must address readable NUL-terminated UTF-8 storage
-		/// that remains alive and unchanged for the duration of the call.
+		/// A non-null UTF-8 value must be readable through its NUL terminator and unchanged until
+		/// return or exception. Read-only aliases may overlap; no alias may write or free it
+		/// during the scan. Null converts to an empty string. No source storage is retained.
 		/// </safety>
 		static unsafe string GetUtf8String (byte* value)
 		{
@@ -26,6 +27,7 @@ namespace Java.Interop {
 				return "";
 
 			unsafe {
+				// SAFETY: the caller supplies immutable readable bytes through the terminator for this synchronous copy.
 				return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
 			}
 		}
@@ -51,11 +53,13 @@ namespace Java.Interop {
 			public IntPtr TargetJniTypeUtf8 {
 				get {
 					unsafe {
+						// SAFETY: the legacy getter copies an address only; it never reads the pointed-to bytes.
 						return (IntPtr) TargetJniTypeUtf8Pointer;
 					}
 				}
 				set {
 					unsafe {
+						// SAFETY: this released compatibility shim stores an address only; callers still owe the typed setter's lifetime.
 						TargetJniTypeUtf8Pointer = (byte*) value;
 					}
 				}
@@ -72,11 +76,13 @@ namespace Java.Interop {
 			public IntPtr TargetJniMethodNameUtf8 {
 				get {
 					unsafe {
+						// SAFETY: the legacy getter returns the address without scanning borrowed method-name storage.
 						return (IntPtr) TargetJniMethodNameUtf8Pointer;
 					}
 				}
 				set {
 					unsafe {
+						// SAFETY: the released setter preserves the address; it neither validates nor takes ownership of the buffer.
 						TargetJniMethodNameUtf8Pointer = (byte*) value;
 					}
 				}
@@ -93,11 +99,13 @@ namespace Java.Interop {
 			public IntPtr TargetJniMethodSignatureUtf8 {
 				get {
 					unsafe {
+						// SAFETY: return only the stored signature address; no borrowed bytes are read.
 						return (IntPtr) TargetJniMethodSignatureUtf8Pointer;
 					}
 				}
 				set {
 					unsafe {
+						// SAFETY: the released safe-call shim retains no ownership; its caller must satisfy the typed buffer contract.
 						TargetJniMethodSignatureUtf8Pointer = (byte*) value;
 					}
 				}
@@ -109,7 +117,11 @@ namespace Java.Interop {
 			/// <safety>
 			/// When setting a non-null pointer, the caller must supply readable NUL-terminated UTF-8
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
-			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
+			/// every subsequent cached metadata read, including error diagnostics. The readable
+			/// range includes the terminator; no concurrent writer or freeing alias is permitted.
+			/// Read-only aliases may overlap. Java.Interop neither roots nor frees this memory,
+			/// including if a later lookup fails; failure does not invalidate existing cached borrows.
+			/// Reading this property only returns the address, without accessing the storage.
 			/// </safety>
 			public unsafe byte* TargetJniTypeUtf8Pointer {get; set;}
 			/// <summary>
@@ -118,7 +130,11 @@ namespace Java.Interop {
 			/// <safety>
 			/// When setting a non-null pointer, the caller must supply readable NUL-terminated UTF-8
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
-			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
+			/// every subsequent cached metadata read, including error diagnostics. The readable
+			/// range includes the terminator; no concurrent writer or freeing alias is permitted.
+			/// Read-only aliases may overlap. Java.Interop neither roots nor frees this memory,
+			/// including if a later lookup fails; failure does not invalidate existing cached borrows.
+			/// Reading this property only returns the address, without accessing the storage.
 			/// </safety>
 			public unsafe byte* TargetJniMethodNameUtf8Pointer {get; set;}
 			/// <summary>
@@ -127,7 +143,11 @@ namespace Java.Interop {
 			/// <safety>
 			/// When setting a non-null pointer, the caller must supply readable NUL-terminated UTF-8
 			/// memory and keep it alive and unchanged for the associated runtime's lifetime and
-			/// every subsequent cached metadata read. Java.Interop does not own or free this memory.
+			/// every subsequent cached metadata read, including error diagnostics. The readable
+			/// range includes the terminator; no concurrent writer or freeing alias is permitted.
+			/// Read-only aliases may overlap. Java.Interop neither roots nor frees this memory,
+			/// including if a later lookup fails; failure does not invalidate existing cached borrows.
+			/// Reading this property only returns the address, without accessing the storage.
 			/// </safety>
 			public unsafe byte* TargetJniMethodSignatureUtf8Pointer {get; set;}
 			public  int?    TargetJniMethodParameterCount   {get; set;}
@@ -144,6 +164,7 @@ namespace Java.Interop {
 			public bool Equals (ReplacementMethodInfo other)
 			{
 				unsafe {
+					// SAFETY: equality compares pointer values only; neither operand's borrowed storage is accessed.
 					return string.Equals (SourceJniType, other.SourceJniType) &&
 						string.Equals (SourceJniMethodName, other.SourceJniMethodName) &&
 						string.Equals (SourceJniMethodSignature, other.SourceJniMethodSignature) &&
@@ -161,6 +182,7 @@ namespace Java.Interop {
 			public override int GetHashCode ()
 			{
 				unsafe {
+					// SAFETY: hashing converts addresses to native integers without reading the addressed memory.
 					return HashCode.Combine (
 						SourceJniType,
 						SourceJniMethodName,
@@ -182,6 +204,7 @@ namespace Java.Interop {
 			public override string ToString ()
 			{
 				unsafe {
+					// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
 					return $"{nameof (ReplacementMethodInfo)} {{ " +
 						$"{nameof (SourceJniType)} = \"{SourceJniType}\"" +
 						$", {nameof (SourceJniMethodName)} = \"{SourceJniMethodName}\"" +
@@ -403,6 +426,7 @@ namespace Java.Interop {
 			public string? GetReplacementType (string jniSimpleReference)
 			{
 				unsafe {
+					// SAFETY: the type-manager producer retains the returned UTF-8 borrow while this wrapper copies its contents.
 					GetReplacementTypeInfo (jniSimpleReference, out var replacement, out var replacementUtf8);
 					return replacementUtf8 != null ? GetUtf8String (replacementUtf8) : replacement;
 				}
@@ -411,8 +435,11 @@ namespace Java.Interop {
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
 
 			/// <safety>
-			/// A non-null UTF-8 result is borrowed from the type manager. It must remain readable,
-			/// NUL-terminated and unchanged for the associated runtime's lifetime and every cached use.
+			/// Keep the owning runtime alive during lookup; do not race its disposal with the call.
+			/// A non-null UTF-8 result is borrowed from the type manager, readable through its NUL
+			/// terminator and immutable for the runtime's lifetime and every later cached read.
+			/// The producer owns the storage; copying the pointer neither roots nor transfers it.
+			/// Lookup failure does not release buffers retained by earlier successful lookups.
 			/// </safety>
 			internal unsafe void GetReplacementTypeInfo (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
 			{
@@ -426,6 +453,7 @@ namespace Java.Interop {
 				}
 
 				unsafe {
+					// SAFETY: the virtual producer's contract retains immutable result bytes for the runtime and all cached readers.
 					GetReplacementTypeInfoUnsafe (jniSimpleReference, out replacement, out replacementUtf8);
 				}
 				if (replacementUtf8 != null)
@@ -445,10 +473,15 @@ namespace Java.Interop {
 			/// <safety>
 			/// Overrides that return a non-null <paramref name="replacementUtf8"/> must supply readable
 			/// NUL-terminated UTF-8 memory and keep it alive and unchanged for the associated runtime's
-			/// lifetime and every subsequent cached metadata read. Java.Interop does not own or free it.
+			/// lifetime and every subsequent cached metadata read, including failure diagnostics.
+			/// The readable range includes the terminator. Read-only aliases may overlap, but no
+			/// alias may write or free storage while it can still be read. Keep the runtime alive
+			/// during calls and do not race disposal. Java.Interop neither roots nor frees this
+			/// memory; failure must not invalidate buffers already returned to cached consumers.
 			/// </safety>
 			protected virtual unsafe void GetReplacementTypeInfoUnsafe (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
 			{
+				// SAFETY: preserve the released virtual slot; its override owns returned storage, and this bridge only converts the address.
 #pragma warning disable CS0618 // Preserve dispatch to existing native-int overrides.
 				GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out var legacyUtf8);
 #pragma warning restore CS0618
@@ -461,7 +494,9 @@ namespace Java.Interop {
 			/// <safety>
 			/// A nonzero <paramref name="replacementUtf8"/> must meet the backing-storage and lifetime
 			/// requirements of <see cref="GetReplacementTypeInfoUnsafe"/>. This compatibility
-			/// hook does not enforce unsafe on existing callers or overrides.
+			/// hook does not enforce unsafe on existing callers or overrides. The default returns
+			/// no native storage; overrides remain responsible for their previously published borrows
+			/// even if a later lookup throws.
 			/// </safety>
 			[Obsolete ("Override GetReplacementTypeInfoUnsafe and explicitly audit the borrowed storage lifetime.")]
 			protected virtual void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
@@ -513,8 +548,11 @@ namespace Java.Interop {
 			}
 
 			/// <safety>
-			/// The source type must address readable NUL-terminated UTF-8 storage
-			/// that remains alive and unchanged for the duration of the call.
+			/// The non-null source type must be readable through its NUL terminator and unchanged
+			/// until return or exception; no alias may write or free it during lookup. Read-only
+			/// aliases may overlap. Keep the owning runtime alive and do not race its disposal.
+			/// The call does not take ownership of source storage; returned target pointers carry
+			/// their own runtime/cache lifetime contracts.
 			/// </safety>
 			internal unsafe ReplacementMethodInfo? GetReplacementMethodInfo (byte* jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
@@ -530,6 +568,7 @@ namespace Java.Interop {
 					return null;
 
 				unsafe {
+					// SAFETY: the caller retains the source bytes through dispatch; returned targets have the producer's cache lifetime.
 					return GetReplacementMethodInfoUnsafe (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
 				}
 			}
@@ -545,11 +584,16 @@ namespace Java.Interop {
 			/// Resolves member remapping with a source JNI type in stable NUL-terminated UTF-8 memory.
 			/// </summary>
 			/// <safety>
-			/// A non-null source type must address readable NUL-terminated UTF-8 storage that
-			/// remains alive and unchanged for the call. The result does not take ownership of it.
+			/// A non-null source type must be readable through its NUL terminator and unchanged
+			/// until return or exception. Read-only aliases may overlap; no alias may write or free
+			/// it during lookup. Keep the runtime alive and do not race its disposal. The default
+			/// implementation converts the source synchronously without retaining it. An override
+			/// that publishes source storage as target metadata must also satisfy that target's
+			/// runtime/cache lifetime; returning or throwing does not transfer ownership.
 			/// </safety>
 			protected virtual unsafe ReplacementMethodInfo? GetReplacementMethodInfoUnsafe (byte* jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
+				// SAFETY: forwarding changes only address representation; the caller's source lifetime also covers legacy override dispatch.
 #pragma warning disable CS0618 // Preserve dispatch to existing native-int overrides.
 				return GetReplacementMethodInfoCore ((IntPtr) jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
 #pragma warning restore CS0618
@@ -559,13 +603,16 @@ namespace Java.Interop {
 			/// Resolves member remapping using the legacy native-int source type contract.
 			/// </summary>
 			/// <safety>
-			/// A nonzero source type must address readable NUL-terminated UTF-8 storage for the call.
-			/// This compatibility hook does not enforce unsafe on existing callers or overrides.
+			/// A nonzero source type must be readable through its NUL terminator and immutable until
+			/// return or exception; no alias may write or free it during lookup. No ownership is
+			/// transferred. This compatibility hook does not enforce unsafe on existing callers or
+			/// overrides; published target metadata retains its separate runtime/cache obligations.
 			/// </safety>
 			[Obsolete ("Use GetReplacementMethodInfoUnsafe and explicitly audit the borrowed storage lifetime.")]
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
 				unsafe {
+					// SAFETY: the released hook's caller retains source bytes while they are copied; virtual string dispatch is preserved.
 					return GetReplacementMethodInfoCore (GetUtf8String ((byte*) jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
 				}
 			}

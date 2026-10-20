@@ -21,6 +21,7 @@ public class JniUtf8RemappingTests {
 		var pointer = new IntPtr (address);
 		JniRuntime.ReplacementMethodInfo info;
 		unsafe {
+			// SAFETY: sentinel addresses are only stored, formatted, compared and hashed; no lookup or string scan is performed.
 			info = new JniRuntime.ReplacementMethodInfo {
 				SourceJniType = "example/Source",
 				TargetJniType = "example/Target",
@@ -100,6 +101,7 @@ public class JniUtf8RemappingTests {
 		};
 		var typed = new JniRuntime.ReplacementMethodInfo ();
 		unsafe {
+			// SAFETY: these sentinel addresses test aliasing of property storage only; the test never dereferences them.
 			typed.TargetJniTypeUtf8Pointer = (byte*) address;
 			typed.TargetJniMethodNameUtf8Pointer = (byte*) address;
 			typed.TargetJniMethodSignatureUtf8Pointer = (byte*) address;
@@ -168,6 +170,7 @@ public class JniUtf8RemappingTests {
 	public void BorrowedPeerNameIsConvertedAndCachedLazily ()
 	{
 		unsafe {
+			// SAFETY: the complete u8 literal supplies its trailing NUL; all reads and peer disposal occur inside this fixed scope.
 			fixed (byte* target = "example/N\u00E1tive"u8) {
 				using var owner = new PeerNameOwner ();
 				var constructor = owner.DescriptorType.GetConstructor ([typeof (string), typeof (byte*)])
@@ -205,6 +208,7 @@ public class JniUtf8RemappingTests {
 			?? throw new InvalidOperationException ("Missing borrowed metadata constructor.");
 
 		unsafe {
+			// SAFETY: both complete u8 literals include trailing NULs, remain pinned, and outlive every lazy metadata read here.
 			fixed (byte* namePointer = "m\u00E9thod"u8)
 			fixed (byte* signaturePointer = "()V"u8) {
 				object nameArgument = variant == 2 ? name : Pointer.Box (namePointer, typeof (byte*));
@@ -243,6 +247,7 @@ public class JniUtf8RemappingTests {
 		public JniRuntime.ReplacementMethodInfo? LookupLiteral ()
 		{
 			unsafe {
+				// SAFETY: a complete immutable u8 literal includes a NUL and is fixed through this synchronous source-name conversion.
 				fixed (byte* name = "example/Source"u8) {
 					return GetReplacementMethodInfoUnsafe (name, "method".AsSpan (), "()V".AsSpan ());
 				}
@@ -268,9 +273,12 @@ public class JniUtf8RemappingTests {
 		protected override unsafe void GetReplacementTypeInfoUnsafe (
 			string jniSimpleReference, [MaybeNull] out string replacement, out byte* replacementUtf8)
 		{
-			base.GetReplacementTypeInfoUnsafe (jniSimpleReference, out replacement, out replacementUtf8);
-			fixed (byte* name = "example/Native"u8) {
-				replacementUtf8 = name;
+			unsafe {
+				// SAFETY: the base producer preserves legacy dispatch; the returned full u8 literal is immutable module-lifetime storage.
+				base.GetReplacementTypeInfoUnsafe (jniSimpleReference, out replacement, out replacementUtf8);
+				fixed (byte* name = "example/Native"u8) {
+					replacementUtf8 = name;
+				}
 			}
 		}
 	}
@@ -285,6 +293,7 @@ public class JniUtf8RemappingTests {
 			base.GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out replacementUtf8);
 			LegacyCalls++;
 			unsafe {
+				// SAFETY: the complete u8 literal has immutable module-lifetime storage, so its address remains valid after fixed exits.
 				fixed (byte* name = "example/Legacy"u8) {
 					replacementUtf8 = (IntPtr) name;
 				}

@@ -66,6 +66,10 @@ lifetime. Retained names must remain alive and unchanged for the runtime's
 lifetime and every subsequent cached metadata read. Java.Interop does not own
 or free them. Managed-string alternatives remain safe to construct and use;
 non-null pointers take precedence over managed replacement names.
+The readable range includes the NUL byte. Read-only aliases may overlap, but
+owners must prevent writes or frees while readers can still access the storage,
+including error diagnostics and concurrent metadata reads. A failed later lookup
+does not release previously published buffers. The pointers do not root their owners.
 
 Peer members cache the borrowed type name and lazily cache its managed
 conversion. In Debug, `JniMethodInfo` also reads borrowed names and signatures
@@ -83,6 +87,14 @@ that an address is valid; their backing-memory obligations are unchanged.
 Typed base hooks dispatch through the old virtual slots so existing custom
 overrides and their base calls continue to run. The typed type-name producer
 has a distinct name to avoid ambiguity in existing `out var` calls.
+
+Caller contracts and implementation regions are audited independently. Raw
+constructors, retained-pointer setters, and raw lookup hooks keep their caller
+obligations; managed-name wrappers use explicit native implementation regions
+instead of requiring unsafe callers. Each audited region records the storage,
+bound, lifetime, or address-only invariant that makes its operations valid.
+Complete UTF-8 literals keep their existing zero-copy path and trailing NUL;
+no new copy, allocation, or validation restriction is introduced by this audit.
 
 This compatibility preparation does not enable the updated C# memory-safety
 rules. Under the existing rules, even reading a typed pointer address requires

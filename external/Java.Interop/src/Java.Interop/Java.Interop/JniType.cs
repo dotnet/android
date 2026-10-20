@@ -54,15 +54,22 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The class name must address readable NUL-terminated UTF-8 storage for the call.
+		/// A non-null UTF-8 class name must be readable through its NUL terminator and unchanged
+		/// until return or exception. Read-only aliases may overlap; no alias may write or
+		/// free the bytes during lookup. The pointer is not retained or freed. JNI runs on
+		/// the current attached thread; the owning runtime must not be disposed concurrently.
 		/// </safety>
 		internal unsafe JniType (byte* classname)
 		{
 			if (classname == null)
 				throw new ArgumentNullException (nameof (classname));
 
-			var name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated (classname);
-			var peer = JniEnvironment.Types.FindClass (name);
+			JniObjectReference peer;
+			unsafe {
+				// SAFETY: the caller retains bytes through the NUL; FindClass borrows them synchronously, including its fallback path.
+				var name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated (classname);
+				peer = JniEnvironment.Types.FindClass (name);
+			}
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -125,13 +132,20 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The class name must address readable NUL-terminated UTF-8 storage for the call.
+		/// On a cache miss, a non-null UTF-8 class name must be readable through its NUL terminator
+		/// and unchanged until return or exception; no alias may write or free it during lookup.
+		/// No name pointer is retained or freed. Do not race runtime or cached-type disposal
+		/// with lookup; JNI uses the current attached thread. A cache hit does not read the name.
 		/// </safety>
 		internal static unsafe JniType GetCachedJniType ([NotNull] ref JniType? cachedType, byte* classname)
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
-			var t = new JniType (classname);
+			JniType t;
+			unsafe {
+				// SAFETY: the caller retains the class name during construction; only the resulting JNI type is cached.
+				t = new JniType (classname);
+			}
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
@@ -554,35 +568,53 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The name must remain readable, NUL-terminated and unchanged through the lookup
-		/// and every subsequent read of the returned method metadata.
+		/// The UTF-8 name must be readable through its NUL terminator and immutable until lookup
+		/// returns or throws, and through all later reads of returned Debug metadata. It is
+		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
+		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
+		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
 		/// </safety>
 		internal unsafe bool TryGetInstanceMethod (byte* name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
-			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: false);
+			unsafe {
+				// SAFETY: the caller retains name bytes through lookup and lazy metadata reads; the managed signature is copied in Debug.
+				var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
+				method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: false);
+			}
 			return method != null;
 		}
 
 		/// <safety>
-		/// The name and signature must remain readable, NUL-terminated and unchanged through
-		/// every subsequent read of the returned method metadata.
+		/// Both UTF-8 buffers must be readable through their NUL terminators and immutable until lookup
+		/// returns or throws, and through all later reads of returned Debug metadata. Neither is
+		/// rooted or freed; read-only aliases may overlap, but no alias may write or free them
+		/// while readers remain. Do not race type/runtime disposal with JNI lookup on the current
+		/// attached thread. Failure transfers no ownership and retains no new metadata.
 		/// </safety>
 		internal unsafe bool TryGetInstanceMethod (byte* name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
-			method = id == IntPtr.Zero ? null : new JniMethodInfo (name, signature, id, isStatic: false);
+			unsafe {
+				// SAFETY: both caller-owned NUL-terminated buffers remain immutable through lookup and any later Debug reads.
+				var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
+				method = id == IntPtr.Zero ? null : new JniMethodInfo (name, signature, id, isStatic: false);
+			}
 			return method != null;
 		}
 
 		/// <safety>
-		/// The signature must remain readable, NUL-terminated and unchanged through the lookup
-		/// and every subsequent read of the returned method metadata.
+		/// The UTF-8 signature must be readable through its NUL terminator and immutable until lookup
+		/// returns or throws, and through all later reads of returned Debug metadata. It is
+		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
+		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
+		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
 		/// </safety>
 		internal unsafe bool TryGetInstanceMethod (ReadOnlySpan<char> name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
-			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: false);
+			unsafe {
+				// SAFETY: the caller retains signature bytes through metadata reads; the managed name is copied in Debug.
+				var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
+				method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: false);
+			}
 			return method != null;
 		}
 
@@ -594,35 +626,53 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// The name must remain readable, NUL-terminated and unchanged through the lookup
-		/// and every subsequent read of the returned method metadata.
+		/// The UTF-8 name must be readable through its NUL terminator and immutable until lookup
+		/// returns or throws, and through all later reads of returned Debug metadata. It is
+		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
+		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
+		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
 		/// </safety>
 		internal unsafe bool TryGetStaticMethod (byte* name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
-			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: true);
+			unsafe {
+				// SAFETY: name storage survives lookup and lazy metadata reads; the managed signature is copied in Debug.
+				var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
+				method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: true);
+			}
 			return method != null;
 		}
 
 		/// <safety>
-		/// The name and signature must remain readable, NUL-terminated and unchanged through
-		/// every subsequent read of the returned method metadata.
+		/// Both UTF-8 buffers must be readable through their NUL terminators and immutable until lookup
+		/// returns or throws, and through all later reads of returned Debug metadata. Neither is
+		/// rooted or freed; read-only aliases may overlap, but no alias may write or free them
+		/// while readers remain. Do not race type/runtime disposal with JNI lookup on the current
+		/// attached thread. Failure transfers no ownership and retains no new metadata.
 		/// </safety>
 		internal unsafe bool TryGetStaticMethod (byte* name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
-			method = id == IntPtr.Zero ? null : new JniMethodInfo (name, signature, id, isStatic: true);
+			unsafe {
+				// SAFETY: both caller-owned NUL-terminated buffers survive this lookup and subsequent Debug metadata reads.
+				var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
+				method = id == IntPtr.Zero ? null : new JniMethodInfo (name, signature, id, isStatic: true);
+			}
 			return method != null;
 		}
 
 		/// <safety>
-		/// The signature must remain readable, NUL-terminated and unchanged through the lookup
-		/// and every subsequent read of the returned method metadata.
+		/// The UTF-8 signature must be readable through its NUL terminator and immutable until lookup
+		/// returns or throws, and through all later reads of returned Debug metadata. It is
+		/// borrowed, not rooted or freed; no alias may write or free it while readers remain.
+		/// Read-only aliases may overlap. Do not race type/runtime disposal with JNI lookup on
+		/// the current attached thread. Failure transfers no ownership and retains no new metadata.
 		/// </safety>
 		internal unsafe bool TryGetStaticMethod (ReadOnlySpan<char> name, byte* signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
-			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: true);
+			unsafe {
+				// SAFETY: signature storage survives all later Debug reads; the managed name is copied before this method returns.
+				var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
+				method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: true);
+			}
 			return method != null;
 		}
 
@@ -649,19 +699,37 @@ namespace Java.Interop {
 #endif
 		}
 
+		/// <safety>
+		/// A non-null UTF-8 name must remain readable through its NUL terminator and immutable for
+		/// every later Debug metadata read; no alias may free or modify it during those reads.
+		/// Read-only aliases may overlap. The address is neither rooted nor freed, including
+		/// on failure; id is an opaque method ID, not a buffer.
+		/// </safety>
 		static unsafe JniMethodInfo CreateMethodInfo (byte* name, ReadOnlySpan<char> signature, IntPtr id, bool isStatic)
 		{
 #if DEBUG
-			return new JniMethodInfo (name, signature.ToString (), id, isStatic);
+			unsafe {
+				// SAFETY: the caller retains name storage for lazy diagnostics; the managed signature is copied, never borrowed.
+				return new JniMethodInfo (name, signature.ToString (), id, isStatic);
+			}
 #else
 			return new JniMethodInfo (id, isStatic);
 #endif
 		}
 
+		/// <safety>
+		/// A non-null UTF-8 signature must remain readable through its NUL terminator and immutable
+		/// for every later Debug metadata read; no alias may free or modify it during those reads.
+		/// Read-only aliases may overlap. The address is neither rooted nor freed, including
+		/// on failure; id is an opaque method ID, not a buffer.
+		/// </safety>
 		static unsafe JniMethodInfo CreateMethodInfo (ReadOnlySpan<char> name, byte* signature, IntPtr id, bool isStatic)
 		{
 #if DEBUG
-			return new JniMethodInfo (name.ToString (), signature, id, isStatic);
+			unsafe {
+				// SAFETY: the caller retains signature storage for lazy reads; the managed name is copied before publication.
+				return new JniMethodInfo (name.ToString (), signature, id, isStatic);
+			}
 #else
 			return new JniMethodInfo (id, isStatic);
 #endif
@@ -700,6 +768,7 @@ namespace Java.Interop {
 				nameBuffer [nameLength - 1] = 0;
 
 				unsafe {
+					// SAFETY: checked size reserves the NUL; fixed keeps stack/pooled bytes stable until JNI returns or throws.
 					fixed (byte* nameStart = nameBuffer)
 						return GetMemberID (nameStart, signature, kind, throwOnError);
 				}
@@ -709,13 +778,27 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <safety>
+		/// The UTF-8 name must be readable through its NUL terminator and immutable until return or
+		/// exception, without concurrent writes or frees through aliases. The bytes are not
+		/// retained or freed. Do not race type/runtime disposal; JNI uses the current thread.
+		/// </safety>
 		unsafe IntPtr GetMemberID (byte* name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
 			if (name == null)
 				throw new ArgumentNullException (nameof (name));
-			return GetMemberID (signature, name, false, kind, throwOnError);
+			unsafe {
+				// SAFETY: name remains borrowed from the caller; the managed signature is encoded into a private terminated buffer.
+				return GetMemberID (signature, name, false, kind, throwOnError);
+			}
 		}
 
+		/// <safety>
+		/// Both UTF-8 buffers must be readable through their NUL terminators and immutable until
+		/// return or exception. Read-only aliases may overlap; no alias may write or free them.
+		/// JNI consumes them synchronously without retaining or freeing them, even on lookup
+		/// failure. Do not race type/runtime disposal; the environment belongs to the current thread.
+		/// </safety>
 		unsafe IntPtr GetMemberID (byte* name, byte* signature, MemberKind kind, bool throwOnError = true)
 		{
 			AssertValid ();
@@ -725,14 +808,19 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (signature));
 
 			var env = JniEnvironment.EnvironmentPointer;
-			IntPtr id = kind switch {
-				MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
-				MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
-				MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
-				MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
-				_ => throw new ArgumentOutOfRangeException (nameof (kind)),
-			};
-			var thrown = JniNativeMethods.ExceptionOccurred (env);
+			IntPtr id;
+			IntPtr thrown;
+			unsafe {
+				// SAFETY: caller buffers include NULs and remain stable; env is current-thread JNI and PeerReference is a live class.
+				id = kind switch {
+					MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
+					MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
+					MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
+					MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, (IntPtr) name, (IntPtr) signature),
+					_ => throw new ArgumentOutOfRangeException (nameof (kind)),
+				};
+				thrown = JniNativeMethods.ExceptionOccurred (env);
+			}
 			if (!throwOnError) {
 				if (thrown != IntPtr.Zero) {
 					JniEnvironment.Exceptions.ExceptionClear ();
@@ -751,13 +839,26 @@ namespace Java.Interop {
 			return id;
 		}
 
+		/// <safety>
+		/// The UTF-8 signature must be readable through its NUL terminator and immutable until return
+		/// or exception, without concurrent writes or frees through aliases. It is not retained
+		/// or freed. Do not race type/runtime disposal; JNI uses the current attached thread.
+		/// </safety>
 		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, byte* signature, MemberKind kind, bool throwOnError = true)
 		{
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
-			return GetMemberID (name, signature, true, kind, throwOnError);
+			unsafe {
+				// SAFETY: the caller retains signature bytes; only the managed name is encoded into a temporary terminated buffer.
+				return GetMemberID (name, signature, true, kind, throwOnError);
+			}
 		}
 
+		/// <safety>
+		/// The UTF-8 otherValue must be readable through its NUL terminator and immutable until return or
+		/// exception; no alias may write or free it during JNI lookup. Read-only aliasing is allowed.
+		/// No source bytes are retained or freed. Do not race type/runtime disposal; JNI uses the current thread.
+		/// </safety>
 		unsafe IntPtr GetMemberID (ReadOnlySpan<char> value, byte* otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
 		{
 			int valueLength = checked (Encoding.UTF8.GetByteCount (value) + 1);
@@ -772,10 +873,13 @@ namespace Java.Interop {
 				Encoding.UTF8.GetBytes (value, valueBuffer);
 				valueBuffer [valueLength - 1] = 0;
 
-				fixed (byte* valueStart = valueBuffer) {
-					return valueIsName
-						? GetMemberID (valueStart, otherValue, kind, throwOnError)
-						: GetMemberID (otherValue, valueStart, kind, throwOnError);
+				unsafe {
+					// SAFETY: the checked buffer includes its NUL; fixed lasts through JNI, and finally returns pooled bytes on failure.
+					fixed (byte* valueStart = valueBuffer) {
+						return valueIsName
+							? GetMemberID (valueStart, otherValue, kind, throwOnError)
+							: GetMemberID (otherValue, valueStart, kind, throwOnError);
+					}
 				}
 			} finally {
 				if (rentedValue != null)

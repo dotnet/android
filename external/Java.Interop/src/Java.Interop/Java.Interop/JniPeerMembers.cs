@@ -31,19 +31,25 @@ namespace Java.Interop {
 				SourceName = sourceName;
 				TargetName = targetName;
 				unsafe {
+					// SAFETY: the managed descriptor publishes no borrowed address.
 					TargetNameUtf8 = null;
 				}
 			}
 
 			/// <safety>
-			/// A non-null target must address readable NUL-terminated UTF-8 storage that remains
-			/// alive and unchanged for the runtime's lifetime, including every cached peer lookup.
+			/// A non-null UTF-8 target must be readable through its NUL terminator. Its owner must
+			/// retain it unchanged for the runtime's lifetime and all later cached peer reads;
+			/// no concurrent writer or freeing alias is permitted. Read-only aliases may overlap.
+			/// This descriptor does not copy, root or free the storage, including on failure.
 			/// </safety>
 			public unsafe JniPeerTypeNameInfo (string sourceName, byte* targetNameUtf8)
 			{
 				SourceName = sourceName;
 				TargetName = null;
-				TargetNameUtf8 = targetNameUtf8;
+				unsafe {
+					// SAFETY: retain the address without scanning; its owner supplies the documented cached-read lifetime.
+					TargetNameUtf8 = targetNameUtf8;
+				}
 			}
 
 			public string SourceName { get; }
@@ -57,6 +63,7 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			unsafe {
+				// SAFETY: the type-manager producer supplies runtime-lived immutable storage; the descriptor preserves that borrow.
 				typeManager.GetReplacementTypeInfo (jniPeerTypeName, out var replacement, out var replacementUtf8);
 				return replacementUtf8 == null
 					? new JniPeerTypeNameInfo (jniPeerTypeName, replacement)
@@ -90,6 +97,7 @@ namespace Java.Interop {
 			sourceJniPeerTypeName = jniPeerTypeName.SourceName;
 			this.jniPeerTypeName = jniPeerTypeName.TargetName;
 			unsafe {
+				// SAFETY: copy the immutable descriptor's address, not its contents; its owner retains it for cached use.
 				jniPeerTypeNameUtf8 = jniPeerTypeName.TargetNameUtf8;
 			}
 			ManagedPeerType = managedPeerType;
@@ -120,6 +128,7 @@ namespace Java.Interop {
 		public      string      JniPeerTypeName {
 			get {
 				unsafe {
+					// SAFETY: the descriptor's producer retains NUL-terminated storage; only the managed conversion is cached here.
 					return jniPeerTypeNameUtf8 == null
 						? jniPeerTypeName ?? sourceJniPeerTypeName
 						: jniPeerTypeName ??= GetStringFromNullTerminated (jniPeerTypeNameUtf8);
@@ -130,6 +139,7 @@ namespace Java.Interop {
 			get {
 				JniType t;
 				unsafe {
+					// SAFETY: the peer-name borrow outlives lookup, and GetCachedJniType does not retain the name pointer.
 					t = jniPeerTypeNameUtf8 == null
 						? JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeName ?? sourceJniPeerTypeName)
 						: JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeNameUtf8);
@@ -242,6 +252,7 @@ namespace Java.Interop {
 		JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			unsafe {
+				// SAFETY: the type-name producer keeps the cached source readable through this synchronous lookup.
 				return jniPeerTypeNameUtf8 == null
 					? JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeName ?? sourceJniPeerTypeName, method, signature)
 					: JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature);
@@ -256,6 +267,7 @@ namespace Java.Interop {
 		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, string fallbackTypeName)
 		{
 			unsafe {
+				// SAFETY: remapping producers retain target names through the runtime's cached uses; class lookup only borrows them.
 				if (info.TargetJniTypeUtf8Pointer != null)
 					return new JniType (info.TargetJniTypeUtf8Pointer);
 			}
@@ -272,6 +284,7 @@ namespace Java.Interop {
 			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
 		{
 			unsafe {
+				// SAFETY: remapping metadata owns no bytes; its producer keeps both borrowed strings immutable through cached reads.
 				if (info.TargetJniMethodNameUtf8Pointer != null) {
 					if (info.TargetJniMethodSignatureUtf8Pointer != null)
 						return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8Pointer, info.TargetJniMethodSignatureUtf8Pointer, out method);
@@ -282,6 +295,7 @@ namespace Java.Interop {
 
 			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
 			unsafe {
+				// SAFETY: the signature borrow survives returned metadata; the managed name is copied in Debug.
 				if (info.TargetJniMethodSignatureUtf8Pointer != null)
 					return type.TryGetInstanceMethod (name, info.TargetJniMethodSignatureUtf8Pointer, out method);
 			}
@@ -297,6 +311,7 @@ namespace Java.Interop {
 			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
 		{
 			unsafe {
+				// SAFETY: the producer retains borrowed names/signatures through lookup and later Debug metadata reads.
 				if (info.TargetJniMethodNameUtf8Pointer != null) {
 					if (info.TargetJniMethodSignatureUtf8Pointer != null)
 						return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8Pointer, info.TargetJniMethodSignatureUtf8Pointer, out method);
@@ -307,6 +322,7 @@ namespace Java.Interop {
 
 			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
 			unsafe {
+				// SAFETY: only the producer-owned signature is borrowed; its lifetime covers later cached diagnostics.
 				if (info.TargetJniMethodSignatureUtf8Pointer != null)
 					return type.TryGetStaticMethod (name, info.TargetJniMethodSignatureUtf8Pointer, out method);
 			}
@@ -315,11 +331,14 @@ namespace Java.Interop {
 		}
 
 		/// <safety>
-		/// A non-null value must address readable NUL-terminated UTF-8 storage for the call.
+		/// The UTF-8 value must be readable through its NUL terminator and immutable until the call
+		/// returns or throws. Read-only aliases may overlap; no alias may write or free it.
+		/// The conversion does not retain or free the source storage.
 		/// </safety>
 		static unsafe string GetStringFromNullTerminated (byte* value)
 		{
 			unsafe {
+				// SAFETY: the caller establishes readability through the terminator for this synchronous managed copy.
 				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
 			}
 		}
@@ -327,6 +346,7 @@ namespace Java.Interop {
 		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
 		{
 			unsafe {
+				// SAFETY: the remapping producer retains the target buffer unchanged while diagnostics scan it.
 				if (info.TargetJniTypeUtf8Pointer != null)
 					return GetStringFromNullTerminated (info.TargetJniTypeUtf8Pointer);
 			}
@@ -338,6 +358,7 @@ namespace Java.Interop {
 		static string GetTargetMethodNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
 			unsafe {
+				// SAFETY: the remapping producer retains the target method name unchanged through this diagnostic copy.
 				if (info.TargetJniMethodNameUtf8Pointer != null)
 					return GetStringFromNullTerminated (info.TargetJniMethodNameUtf8Pointer);
 			}
@@ -349,6 +370,7 @@ namespace Java.Interop {
 		static string GetTargetMethodSignatureForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
 			unsafe {
+				// SAFETY: the remapping producer retains the target signature unchanged through this diagnostic copy.
 				if (info.TargetJniMethodSignatureUtf8Pointer != null)
 					return GetStringFromNullTerminated (info.TargetJniMethodSignatureUtf8Pointer);
 			}
