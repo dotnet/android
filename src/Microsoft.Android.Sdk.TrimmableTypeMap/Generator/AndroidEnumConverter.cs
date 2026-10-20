@@ -124,6 +124,7 @@ static class AndroidEnumConverter
 	};
 
 	public static string? GwpAsanToString (int value) => value switch {
+		-1 => "never",
 		0 => "never",
 		1 => "always",
 		_ => null,

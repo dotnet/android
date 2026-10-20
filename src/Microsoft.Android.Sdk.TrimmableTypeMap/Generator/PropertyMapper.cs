@@ -110,45 +110,7 @@ static class PropertyMapper
 		new ("WritePermission", "writePermission"),
 	];
 
-	internal static readonly PropertyMapping[] ApplicationElementMappings = [
-		new ("Label", "label"),
-		new ("Icon", "icon"),
-		new ("RoundIcon", "roundIcon"),
-		new ("Theme", "theme"),
-		new ("NetworkSecurityConfig", "networkSecurityConfig"),
-		new ("AllowBackup", "allowBackup", MappingKind.Bool),
-		new ("SupportsRtl", "supportsRtl", MappingKind.Bool),
-		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
-		new ("LargeHeap", "largeHeap", MappingKind.Bool),
-		new ("Debuggable", "debuggable", MappingKind.Bool),
-		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
-		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
-		new ("Description", "description"),
-		new ("Permission", "permission"),
-		new ("Process", "process"),
-		new ("TaskAffinity", "taskAffinity"),
-		new ("Banner", "banner"),
-		new ("Logo", "logo"),
-		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
-		new ("Enabled", "enabled", MappingKind.Bool),
-		new ("ExtractNativeLibs", "extractNativeLibs", MappingKind.Bool),
-		new ("UiOptions", "uiOptions", MappingKind.Enum, AndroidEnumConverter.UiOptionsToString),
-		new ("DataExtractionRules", "dataExtractionRules"),
-		new ("AppCategory", "appCategory", MappingKind.Enum, AndroidEnumConverter.ApplicationCategoriesToString),
-		new ("GwpAsanMode", "gwpAsanMode", MappingKind.Enum, AndroidEnumConverter.GwpAsanToString),
-	];
-
-	internal static readonly PropertyMapping[] InstrumentationMappings = [
-		new ("Label", "label"),
-		new ("Icon", "icon"),
-		new ("TargetPackage", "targetPackage"),
-		new ("FunctionalTest", "functionalTest", MappingKind.Bool),
-		new ("HandleProfiling", "handleProfiling", MappingKind.Bool),
-		new ("RoundIcon", "roundIcon"),
-		new ("TargetProcesses", "targetProcesses"),
-	];
-
-	internal static readonly PropertyMapping[] ApplicationPropertyMappings = [
+	internal static readonly PropertyMapping[] ApplicationMappings = [
 		new ("Label", "label"),
 		new ("Icon", "icon"),
 		new ("RoundIcon", "roundIcon"),
@@ -160,20 +122,21 @@ static class PropertyMapper
 		new ("Process", "process"),
 		new ("TaskAffinity", "taskAffinity"),
 		new ("AllowBackup", "allowBackup", MappingKind.Bool),
-		new ("SupportsRtl", "supportsRtl", MappingKind.Bool),
-		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
-		new ("LargeHeap", "largeHeap", MappingKind.Bool),
-		new ("Debuggable", "debuggable", MappingKind.Bool),
-		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
-		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
-		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
 		new ("AllowClearUserData", "allowClearUserData", MappingKind.Bool),
 		new ("AllowCrossUidActivitySwitchFromBelow", "allowCrossUidActivitySwitchFromBelow", MappingKind.Bool),
 		new ("AllowNativeHeapPointerTagging", "allowNativeHeapPointerTagging", MappingKind.Bool),
 		new ("AllowTaskReparenting", "allowTaskReparenting", MappingKind.Bool),
 		new ("AppCategory", "appCategory", MappingKind.Enum, AndroidEnumConverter.ApplicationCategoriesToString),
 		new ("BackupInForeground", "backupInForeground", MappingKind.Bool),
-		new ("DataExtractionRules", "dataExtractionRules"),
+		new ("SupportsRtl", "supportsRtl", MappingKind.Bool),
+		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
+		new ("LargeHeap", "largeHeap", MappingKind.Bool),
+		new ("Debuggable", "debuggable", MappingKind.Bool),
+		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
+		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
+		new ("Banner", "banner"),
+		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
+		new ("Enabled", "enabled", MappingKind.Bool),
 		new ("EnableOnBackInvokedCallback", "enableOnBackInvokedCallback", MappingKind.Bool),
 		new ("ExtractNativeLibs", "extractNativeLibs", MappingKind.Bool),
 		new ("FullBackupContent", "fullBackupContent", MappingKind.Bool),
@@ -191,6 +154,20 @@ static class PropertyMapper
 		new ("TestOnly", "testOnly", MappingKind.Bool),
 		new ("UiOptions", "uiOptions", MappingKind.Enum, AndroidEnumConverter.UiOptionsToString),
 		new ("VMSafeMode", "vmSafeMode", MappingKind.Bool),
+		new ("DataExtractionRules", "dataExtractionRules"),
+	];
+
+	internal static readonly PropertyMapping[] ApplicationElementMappings = ApplicationMappings;
+	internal static readonly PropertyMapping[] ApplicationPropertyMappings = ApplicationMappings;
+
+	internal static readonly PropertyMapping[] InstrumentationMappings = [
+		new ("Label", "label"),
+		new ("Icon", "icon"),
+		new ("TargetPackage", "targetPackage"),
+		new ("FunctionalTest", "functionalTest", MappingKind.Bool),
+		new ("HandleProfiling", "handleProfiling", MappingKind.Bool),
+		new ("RoundIcon", "roundIcon"),
+		new ("TargetProcesses", "targetProcesses"),
 	];
 
 	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false, int targetSdkVersion = 0)

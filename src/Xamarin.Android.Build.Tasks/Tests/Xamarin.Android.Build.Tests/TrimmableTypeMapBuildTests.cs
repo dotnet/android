@@ -206,6 +206,12 @@ namespace Xamarin.Android.Build.Tests {
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"</manifest>",
+				"""
+				  <instrumentation android:name="assembly.instrumentation" android:targetPackage="template.target" android:roundIcon="@drawable/assembly_round" />
+				</manifest>
+				""");
 			proj.Sources.Add (new BuildItem.Source ("ManifestParity.cs") {
 				TextContent = () => """
 					using System;
@@ -231,7 +237,13 @@ namespace Xamarin.Android.Build.Tests {
 						UiOptions = UiOptions.SplitActionBarWhenNarrow,
 						DataExtractionRules = "@xml/application_rules",
 						AppCategory = ApplicationCategories.Game,
-						GwpAsanMode = GwpAsan.Always,
+						GwpAsanMode = GwpAsan.Default,
+						AllowClearUserData = true,
+						BackupInForeground = true,
+						FullBackupContent = true,
+						HasCode = true,
+						Persistent = true,
+						TestOnly = true,
 						BackupAgent = typeof (ParityActivity),
 						ManageSpaceActivity = typeof (ParityManageActivity))]
 					[UsesLibrary (Name = "application.library", Required = false)]
@@ -337,7 +349,13 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("splitActionBarWhenNarrow", (string) application.Attribute (android + "uiOptions"));
 			Assert.AreEqual ("@xml/application_rules", (string) application.Attribute (android + "dataExtractionRules"));
 			Assert.AreEqual ("game", (string) application.Attribute (android + "appCategory"));
-			Assert.AreEqual ("always", (string) application.Attribute (android + "gwpAsanMode"));
+			Assert.AreEqual ("never", (string) application.Attribute (android + "gwpAsanMode"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "allowClearUserData"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "backupInForeground"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "fullBackupContent"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "hasCode"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "persistent"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "testOnly"));
 			Assert.AreEqual ("application.library", (string) application.Element ("uses-library").Attribute (android + "name"));
 			Assert.AreEqual ("false", (string) application.Element ("uses-library").Attribute (android + "required"));
 			Assert.AreEqual ("application-property", (string) application.Element ("property").Attribute (android + "value"));
@@ -355,7 +373,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("provider-property", (string) provider.Element ("property").Attribute (android + "value"));
 
 			var instrumentation = root.Elements ("instrumentation").Single (element => (string) element.Attribute (android + "name") == "assembly.instrumentation");
-			Assert.AreEqual ("assembly.target", (string) instrumentation.Attribute (android + "targetPackage"));
+			Assert.AreEqual ("template.target", (string) instrumentation.Attribute (android + "targetPackage"));
 			Assert.AreEqual ("@drawable/assembly_round", (string) instrumentation.Attribute (android + "roundIcon"));
 
 			var typeInstrumentation = root.Elements ("instrumentation").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityInstrumentation", StringComparison.Ordinal));

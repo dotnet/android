@@ -171,8 +171,13 @@ static class AssemblyLevelElementBuilder
 			}
 		}
 
+		var existingInstrumentations = new HashSet<string> (
+			manifest.Descendants ("instrumentation").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
 		foreach (var instrumentation in info.Instrumentations) {
 			if (string.IsNullOrEmpty (instrumentation.Name)) {
+				continue;
+			}
+			if (!existingInstrumentations.Add (instrumentation.Name)) {
 				continue;
 			}
 			var element = new XElement ("instrumentation", new XAttribute (AttName, instrumentation.Name));
