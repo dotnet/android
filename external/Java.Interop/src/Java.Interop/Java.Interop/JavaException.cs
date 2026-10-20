@@ -19,13 +19,10 @@ namespace Java.Interop
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
 
 		public JavaException ()
+			: this (JniObjectReferenceOptions.None)
 		{
-			JniObjectReference reference = default;
-			Construct (ref reference, JniObjectReferenceOptions.None);
-			if (PeerReference.IsValid) {
-				SetJavaStackTrace ();
+			if (PeerReference.IsValid)
 				return;
-			}
 
 			unsafe {
 				// SAFETY: ()V takes no arguments, so the argument pointer is null.
@@ -35,6 +32,14 @@ namespace Java.Interop
 				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
 			}
 			SetJavaStackTrace ();
+		}
+
+		JavaException (JniObjectReferenceOptions options)
+		{
+			JniObjectReference reference = default;
+			Construct (ref reference, options);
+			if (PeerReference.IsValid)
+				SetJavaStackTrace ();
 		}
 
 		public unsafe JavaException (string message)
