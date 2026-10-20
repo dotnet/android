@@ -2037,6 +2037,9 @@
       <Item ItemId=";XA4331" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to process bundle config file '{0}', split config files will be ignored at run time.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è possibile elaborare il file di configurazione del bundle "{0}"; i file di configurazione suddivisi verranno ignorati in fase di esecuzione.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2052,6 +2055,9 @@
       <Item ItemId=";XA5101_ClangRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è possibile trovare le librerie di runtime Clang di Android NDK. Ricerca eseguita in: {0}. Installare un Android NDK completo.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
