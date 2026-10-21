@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tools.Aidl_Tests
 {
