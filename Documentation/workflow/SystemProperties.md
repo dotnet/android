@@ -49,7 +49,10 @@ Configures native .NET for Android runtime logging. The value is a
 comma-separated list of `NAME[=VALUE]` categories:
 
 * `all` enables all categories.
-* `assembly` logs assembly lookup and loading.
+* `assembly` logs assembly lookup and loading, including unsuccessful probes.
+  These diagnostics are disabled by default; `default` alone does not enable them.
+  Warnings about actual I/O failures and runtime errors remain visible without
+  opting in.
 * `default` enables general runtime messages.
 * `gc` logs garbage-collection messages.
 * `network` logs native network activity.
@@ -66,6 +69,9 @@ Example:
 ```sh
 adb shell setprop debug.dotnet.log default,assembly
 ```
+
+To enable only assembly-loading diagnostics, set
+`adb shell setprop debug.dotnet.log assembly` and restart the application.
 
 ## debug.dotnet.max_grefc
 
