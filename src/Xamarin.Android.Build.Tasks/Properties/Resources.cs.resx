@@ -764,7 +764,7 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to generate the JNI remapping data. {0}</value>
+    <value>Nepovedlo se vygenerovat data mapování JNI. {0}</value>
     <comment>The following is a literal name and should not be translated: JNI.
 {0} - A sentence describing the specific failure.</comment>
   </data>
@@ -885,7 +885,7 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {0} - The runtime name.</comment>
   </data>
   <data name="XA4330" xml:space="preserve">
-    <value>Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.</value>
+    <value>Nativní knihovna {0} používá vyhrazený název libbinary_blobs.so (cesta archivu {1} nebo ELF SONAME). Tento název je vyhrazený pro binární data platformy .NET pro Android.</value>
     <comment>The following is a literal name and should not be translated: libbinary_blobs.so.
 {0} - The source native library path.
 {1} - The conflicting archive path.</comment>
@@ -899,7 +899,7 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <comment>{0} - The path of the missing directory</comment>
   </data>
   <data name="XA5101_ClangRuntime" xml:space="preserve">
-    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <value>Nepovedlo se najít knihovny modulu runtime Android NDK Clang. Prohledává se pod: {0}. Nainstalujte prosím kompletní sadu Android NDK.</value>
     <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">

@@ -175,4 +175,8 @@
   <data name="Licenses_Acceptance_Failed" xml:space="preserve">
     <value>尝试接受 Android SDK 许可证时出错。{0}</value>
   </data>
+  <data name="XA5305" xml:space="preserve">
+    <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
+    <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
+  </data>
 </root>

@@ -891,7 +891,7 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 {1} - The conflicting archive path.</comment>
   </data>
   <data name="XA4331" xml:space="preserve">
-    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <value>Échec du traitement du fichier de configuration du bundle « {0} »; les fichiers de configuration scindés seront ignorés lors de l’exécution.</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -899,7 +899,7 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
     <comment>{0} - The path of the missing directory</comment>
   </data>
   <data name="XA5101_ClangRuntime" xml:space="preserve">
-    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <value>Nous n’avons pas pu trouver les bibliothèques d’exécution Clang de l’Android NDK. Recherche effectuée dans les répertoires suivants : {0}. Installez un Android NDK complet.</value>
     <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">

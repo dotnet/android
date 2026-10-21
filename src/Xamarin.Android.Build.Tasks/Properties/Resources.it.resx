@@ -891,7 +891,7 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
 {1} - The conflicting archive path.</comment>
   </data>
   <data name="XA4331" xml:space="preserve">
-    <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
+    <value>Non è possibile elaborare il file di configurazione del bundle "{0}"; i file di configurazione suddivisi verranno ignorati in fase di esecuzione.</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -899,7 +899,7 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
     <comment>{0} - The path of the missing directory</comment>
   </data>
   <data name="XA5101_ClangRuntime" xml:space="preserve">
-    <value>Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.</value>
+    <value>Non è possibile trovare le librerie di runtime Clang di Android NDK. Ricerca eseguita in: {0}. Installare un Android NDK completo.</value>
     <comment>{0} - Semicolon-separated Clang runtime search directories</comment>
   </data>
   <data name="XA5104" xml:space="preserve">
