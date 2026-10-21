@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 
@@ -56,19 +57,19 @@ partial class MonoAndroidHelper
 	{
 		// The best option
 		string? culture = assembly.GetMetadata ("Culture");
-		if (!String.IsNullOrEmpty (culture)) {
+		if (!culture.IsNullOrEmpty ()) {
 			return TrimSlashes (culture);
 		}
 
 		// ...slightly worse
 		culture = assembly.GetMetadata ("RelativePath");
-		if (!String.IsNullOrEmpty (culture)) {
+		if (!culture.IsNullOrEmpty ()) {
 			return TrimSlashes (Path.GetDirectoryName (culture));
 		}
 
 		// ...not ideal
 		culture = assembly.GetMetadata ("DestinationSubDirectory");
-		if (!String.IsNullOrEmpty (culture)) {
+		if (!culture.IsNullOrEmpty ()) {
 			return TrimSlashes (culture);
 		}
 
@@ -76,7 +77,7 @@ partial class MonoAndroidHelper
 
 		string? TrimSlashes (string? s)
 		{
-			if (String.IsNullOrEmpty (s)) {
+			if (s.IsNullOrEmpty ()) {
 				return null;
 			}
 
@@ -102,12 +103,12 @@ partial class MonoAndroidHelper
 	/// </summary>
 	public static string GetNormalizedNativeLibraryName (ITaskItem libItem)
 	{
-		if (String.IsNullOrEmpty (libItem.ItemSpec)) {
+		if (libItem.ItemSpec.IsNullOrEmpty ()) {
 			return String.Empty;
 		}
 
 		string ret = Path.GetFileName (libItem.ItemSpec);
-		if (String.IsNullOrEmpty (ret)) {
+		if (ret.IsNullOrEmpty ()) {
 			return String.Empty;
 		}
 
