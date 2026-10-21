@@ -202,7 +202,10 @@ namespace Java.Interop
 			JniVersion          = options.JniVersion;
 
 			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer != IntPtr.Zero) {
-				InvocationPointer   = GetInvocationPointerFromEnvironmentPointer (options.EnvironmentPointer);
+				unsafe {
+					// SAFETY: The supplying runtime keeps options.EnvironmentPointer live on this JNI thread through lookup.
+					InvocationPointer   = GetInvocationPointerFromEnvironmentPointer (options.EnvironmentPointer);
+				}
 			} else {
 				InvocationPointer   = options.InvocationPointer;
 			}
