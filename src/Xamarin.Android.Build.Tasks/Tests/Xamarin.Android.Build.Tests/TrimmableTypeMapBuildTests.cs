@@ -126,6 +126,597 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void ApplicationMetadataIsGenerated (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			proj.Sources.Add (new BuildItem.Source ("MetadataApplication.cs") {
+				TextContent = () => """
+					using System;
+					using Android.App;
+					using Android.Runtime;
+
+					[assembly: MetaData ("assembly.metadata", Value = "assembly-present")]
+
+					namespace UnnamedProject;
+
+					[Application]
+					[MetaData ("application.value", Value = "application-present")]
+					[MetaData ("application.resource", Resource = "@string/application_metadata_resource")]
+					public class MetadataApplication : Application
+					{
+						public MetadataApplication (IntPtr handle, JniHandleOwnership transfer)
+							: base (handle, transfer)
+						{
+						}
+					}
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\metadata.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<string name="application_metadata_resource">application-resource-present</string>
+					</resources>
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} build should have succeeded.");
+
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+			var application = manifest.Root?.Element ("application");
+			Assert.IsNotNull (application);
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+			Assert.IsNotNull (application.Attribute (android + "name"));
+
+			var valueMetadata = application.Elements ("meta-data")
+				.Single (element => (string) element.Attribute (android + "name") == "application.value");
+			Assert.AreEqual ("application-present", (string) valueMetadata.Attribute (android + "value"));
+
+			var resourceMetadata = application.Elements ("meta-data")
+				.Single (element => (string) element.Attribute (android + "name") == "application.resource");
+			Assert.AreEqual ("@string/application_metadata_resource", (string) resourceMetadata.Attribute (android + "resource"));
+
+			var assemblyMetadata = application.Elements ("meta-data")
+				.Single (element => (string) element.Attribute (android + "name") == "assembly.metadata");
+			Assert.AreEqual ("assembly-present", (string) assemblyMetadata.Attribute (android + "value"));
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void ManifestAttributesAreGeneratedForTrimmableComponents (AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("TrimMode", "full");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			proj.Sources.Add (new BuildItem.Source ("AssemblyAliases.cs") {
+				TextContent = () => """
+					using System;
+
+					namespace AssemblyAliases;
+
+					[AttributeUsage (AttributeTargets.Assembly)]
+					public sealed class ApplicationAttribute : Attribute {}
+
+					[AttributeUsage (AttributeTargets.Assembly)]
+					public sealed class InstrumentationAttribute : Attribute
+					{
+						public InstrumentationAttribute (string name) => Name = name;
+						public string Name { get; }
+					}
+
+					[AttributeUsage (AttributeTargets.Assembly)]
+					public sealed class MetaDataAttribute : Attribute
+					{
+						public MetaDataAttribute (string name) => Name = name;
+						public string Name { get; }
+						public string? Value { get; set; }
+					}
+					""",
+			});
+			proj.AndroidManifest = proj.AndroidManifest
+				.Replace (
+					"</application>",
+					"""
+					  <uses-library android:name="template.library" android:required="true" />
+					</application>
+					""")
+				.Replace (
+					"</manifest>",
+					"""
+					  <instrumentation android:name="assembly.instrumentation" android:targetPackage="template.target" android:roundIcon="@drawable/assembly_round" />
+					</manifest>
+					""");
+			proj.Sources.Add (new BuildItem.Source ("ManifestParity.cs") {
+				TextContent = () => """
+					using System;
+					using Android.App;
+					using Android.App.Backup;
+					using Android.Content;
+					using Android.Content.PM;
+					using Android.OS;
+					using Android.Runtime;
+
+					[assembly: Instrumentation (Name = "assembly.instrumentation", TargetPackage = "assembly.target", RoundIcon = "@drawable/assembly_round")]
+					[assembly: Instrumentation (Name = "assembly.generated", TargetPackage = "assembly.generated.target", RoundIcon = "@drawable/assembly_round")]
+					[assembly: Instrumentation (Name = "shared.instrumentation", TargetPackage = "assembly.shared.target", RoundIcon = "@drawable/assembly_round")]
+					[assembly: UsesLibrary (Name = "application.library", Required = true)]
+					[assembly: AssemblyAliases.Application]
+					[assembly: AssemblyAliases.Instrumentation ("user.instrumentation")]
+					[assembly: AssemblyAliases.MetaData ("user.assembly.metadata", Value = "user-metadata")]
+
+					namespace UnnamedProject;
+
+					public static class UserAttributes
+					{
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class PropertyAttribute : Attribute
+						{
+							public PropertyAttribute (string name) => Name = name;
+							public string Name { get; }
+							public string? Value { get; set; }
+						}
+
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class UsesLibraryAttribute : Attribute
+						{
+							public UsesLibraryAttribute (string name) => Name = name;
+							public string Name { get; }
+							public bool Required { get; set; }
+						}
+
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class GrantUriPermissionAttribute : Attribute
+						{
+							public string? Path { get; set; }
+						}
+
+						[AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
+						public sealed class MetaDataAttribute : Attribute
+						{
+							public MetaDataAttribute (string name) => Name = name;
+							public string Name { get; }
+							public string? Value { get; set; }
+						}
+					}
+
+					[Application (
+						Description = "@string/application_description",
+						Permission = "application-permission",
+						Process = "application-process",
+						TaskAffinity = "application-affinity",
+						Banner = "@drawable/application_banner",
+						Logo = "@drawable/application_logo",
+						RestoreAnyVersion = true,
+						Enabled = false,
+						ExtractNativeLibs = false,
+						UiOptions = UiOptions.SplitActionBarWhenNarrow,
+						DataExtractionRules = "@xml/application_rules",
+						AppCategory = ApplicationCategories.Game,
+						GwpAsanMode = GwpAsan.Default,
+						AllowClearUserData = true,
+						BackupInForeground = true,
+						FullBackupContent = true,
+						HasCode = true,
+						Persistent = true,
+						TestOnly = true,
+						BackupAgent = typeof (ParityBackupAgent),
+						ManageSpaceActivity = typeof (ParityManageActivity))]
+					[UsesLibrary (Name = "application.library", Required = false)]
+					[UsesLibrary (Name = "template.library", Required = false)]
+					[Property ("application.property", Value = "application-property")]
+					[UserAttributes.Property ("user.property", Value = "user-property")]
+					[UserAttributes.UsesLibrary ("user.library", Required = true)]
+					[UserAttributes.MetaData ("user.application.metadata", Value = "user-metadata")]
+					public class ParityApplication : Application
+					{
+						public ParityApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+					}
+
+					[Activity (
+						CanDisplayOnRemoteDevices = true,
+						EnableOnBackInvokedCallback = true,
+						RequireContentUriPermissionFromCaller = RequiredContentUriPermission.Read)]
+					[Property ("activity.property", Resource = "@string/activity_property")]
+					public class ParityActivity : Activity {}
+
+					[ContentProvider (
+						new [] { "parity.provider" },
+						ReadPermission = "@PACKAGE_NAME@.permission.READ",
+						WritePermission = "@PACKAGE_NAME@.permission.WRITE")]
+					[GrantUriPermission (Path = "/path")]
+					[Property ("provider.property", Value = "provider-property")]
+					[UserAttributes.GrantUriPermission (Path = "/user-path")]
+					public class ParityProvider : ContentProvider
+					{
+						public override bool OnCreate () => true;
+						public override Android.Database.ICursor? Query (Android.Net.Uri? uri, string[]? projection, string? selection, string[]? selectionArgs, string? sortOrder) => null;
+						public override string? GetType (Android.Net.Uri? uri) => null;
+						public override Android.Net.Uri? Insert (Android.Net.Uri? uri, ContentValues? values) => null;
+						public override int Delete (Android.Net.Uri? uri, string? selection, string[]? selectionArgs) => 0;
+						public override int Update (Android.Net.Uri? uri, ContentValues? values, string? selection, string[]? selectionArgs) => 0;
+					}
+
+					[Instrumentation (Name = "shared.instrumentation", RoundIcon = "@drawable/instrumentation_round", TargetProcesses = "parity")]
+					[MetaData ("instrumentation.metadata", Value = "instrumentation-value")]
+					[UserAttributes.MetaData ("user.instrumentation.metadata", Value = "user-metadata")]
+					public class ParityInstrumentation : Instrumentation {}
+
+					public class ParityManageActivity : Activity {}
+
+					public class ParityBackupAgent : BackupAgent
+					{
+						public override void OnBackup (ParcelFileDescriptor oldState, BackupDataOutput data, ParcelFileDescriptor newState) {}
+						public override void OnRestore (BackupDataInput data, int appVersionCode, ParcelFileDescriptor newState) {}
+					}
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\parity.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<string name="activity_property">activity-resource</string>
+						<string name="application_description">application-description</string>
+					</resources>
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\application_banner.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#FF0000" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\application_logo.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#00FF00" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\instrumentation_round.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#0000FF" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\assembly_round.xml") {
+				TextContent = () => """
+						<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+							<solid android:color="#FFFF00" />
+						</shape>
+						""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\xml\\application_rules.xml") {
+				TextContent = () => """
+						<resources />
+						""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} build should have succeeded.");
+
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+			var root = manifest.Root;
+			Assert.IsNotNull (root);
+			var application = root.Element ("application");
+			Assert.IsNotNull (application);
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+
+			Assert.AreEqual ("@string/application_description", (string) application.Attribute (android + "description"));
+			Assert.AreEqual ("application-permission", (string) application.Attribute (android + "permission"));
+			Assert.AreEqual ("application-process", (string) application.Attribute (android + "process"));
+			Assert.AreEqual ("application-affinity", (string) application.Attribute (android + "taskAffinity"));
+			Assert.AreEqual ("@drawable/application_banner", (string) application.Attribute (android + "banner"));
+			Assert.AreEqual ("@drawable/application_logo", (string) application.Attribute (android + "logo"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "restoreAnyVersion"));
+			Assert.AreEqual ("false", (string) application.Attribute (android + "enabled"));
+			Assert.AreEqual ("false", (string) application.Attribute (android + "extractNativeLibs"));
+			Assert.AreEqual ("splitActionBarWhenNarrow", (string) application.Attribute (android + "uiOptions"));
+			Assert.AreEqual ("@xml/application_rules", (string) application.Attribute (android + "dataExtractionRules"));
+			Assert.AreEqual ("game", (string) application.Attribute (android + "appCategory"));
+			Assert.AreEqual ("never", (string) application.Attribute (android + "gwpAsanMode"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "allowClearUserData"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "backupInForeground"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "fullBackupContent"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "hasCode"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "persistent"));
+			Assert.AreEqual ("true", (string) application.Attribute (android + "testOnly"));
+			var usesLibrary = application.Elements ("uses-library").Single (element => (string) element.Attribute (android + "name") == "application.library");
+			Assert.AreEqual ("true", (string) usesLibrary.Attribute (android + "required"));
+			var templateUsesLibrary = application.Elements ("uses-library").Single (element => (string) element.Attribute (android + "name") == "template.library");
+			Assert.AreEqual ("true", (string) templateUsesLibrary.Attribute (android + "required"));
+			Assert.IsFalse (application.Elements ("uses-library").Any (element => (string) element.Attribute (android + "name") == "user.library"));
+			Assert.AreEqual ("application-property", (string) application.Elements ("property").Single (element => (string) element.Attribute (android + "name") == "application.property").Attribute (android + "value"));
+			Assert.IsFalse (application.Elements ("property").Any (element => (string) element.Attribute (android + "name") == "user.property"));
+			Assert.IsFalse (application.Elements ("meta-data").Any (element => ((string) element.Attribute (android + "name")).StartsWith ("user.", StringComparison.Ordinal)));
+
+			var activity = application.Elements ("activity").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityActivity", StringComparison.Ordinal));
+			Assert.AreEqual ("true", (string) activity.Attribute (android + "canDisplayOnRemoteDevices"));
+			Assert.AreEqual ("true", (string) activity.Attribute (android + "enableOnBackInvokedCallback"));
+			Assert.AreEqual ("read", (string) activity.Attribute (android + "requireContentUriPermissionFromCaller"));
+			Assert.AreEqual ("@string/activity_property", (string) activity.Element ("property").Attribute (android + "resource"));
+
+			var provider = application.Elements ("provider").Single (element => ((string) element.Attribute (android + "name")).EndsWith (".ParityProvider", StringComparison.Ordinal));
+			Assert.AreEqual ($"{proj.PackageName}.permission.READ", (string) provider.Attribute (android + "readPermission"));
+			Assert.AreEqual ($"{proj.PackageName}.permission.WRITE", (string) provider.Attribute (android + "writePermission"));
+			Assert.AreEqual ("/path", (string) provider.Element ("grant-uri-permission").Attribute (android + "path"));
+			Assert.IsFalse (provider.Elements ("grant-uri-permission").Any (element => (string) element.Attribute (android + "path") == "/user-path"));
+			Assert.AreEqual ("provider-property", (string) provider.Element ("property").Attribute (android + "value"));
+
+			var instrumentation = root.Elements ("instrumentation").Single (element => (string) element.Attribute (android + "name") == "assembly.instrumentation");
+			Assert.AreEqual ("template.target", (string) instrumentation.Attribute (android + "targetPackage"));
+			Assert.AreEqual ("@drawable/assembly_round", (string) instrumentation.Attribute (android + "roundIcon"));
+
+			var generatedInstrumentation = root.Elements ("instrumentation").Single (element => (string) element.Attribute (android + "name") == "assembly.generated");
+			Assert.AreEqual ("assembly.generated.target", (string) generatedInstrumentation.Attribute (android + "targetPackage"));
+			Assert.AreEqual ("@drawable/assembly_round", (string) generatedInstrumentation.Attribute (android + "roundIcon"));
+			Assert.IsFalse (root.Elements ("instrumentation").Any (element => (string) element.Attribute (android + "name") == "user.instrumentation"));
+			Assert.IsFalse (application.Elements ("meta-data").Any (element => (string) element.Attribute (android + "name") == "user.assembly.metadata"));
+
+			var sharedInstrumentations = root.Elements ("instrumentation")
+				.Where (element => (string) element.Attribute (android + "name") == "shared.instrumentation")
+				.ToList ();
+			Assert.AreEqual (2, sharedInstrumentations.Count);
+			var assemblySharedInstrumentation = sharedInstrumentations.Single (
+				element => (string) element.Attribute (android + "targetPackage") == "assembly.shared.target");
+			Assert.AreEqual ("assembly.shared.target", (string) assemblySharedInstrumentation.Attribute (android + "targetPackage"));
+			Assert.AreEqual ("@drawable/assembly_round", (string) assemblySharedInstrumentation.Attribute (android + "roundIcon"));
+			var typeInstrumentation = sharedInstrumentations.Single (element => element.Attribute (android + "targetProcesses") is not null);
+			Assert.AreEqual ("parity", (string) typeInstrumentation.Attribute (android + "targetProcesses"));
+			Assert.AreEqual ("@drawable/instrumentation_round", (string) typeInstrumentation.Attribute (android + "roundIcon"));
+			Assert.AreEqual ("instrumentation-value", (string) typeInstrumentation.Element ("meta-data").Attribute (android + "value"));
+			Assert.IsFalse (typeInstrumentation.Elements ("meta-data").Any (element => (string) element.Attribute (android + "name") == "user.instrumentation.metadata"));
+
+			var linkedAssembly = runtime == AndroidRuntime.NativeAOT
+				? Path.Combine (intermediate, "android", "assets", "shrunk", "arm64-v8a", $"{proj.ProjectName}.dll")
+				: Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
+			FileAssert.Exists (linkedAssembly);
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
+				"Type-level Application.BackupAgent should preserve the referenced type through trimming.");
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
+				"Type-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void AssemblyApplicationOverridesManifestTemplate (AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("TrimMode", "full");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"<application ",
+				"""<application android:description="@string/template_description" android:backupAgent="template.BackupAgent" android:manageSpaceActivity="template.ManageSpaceActivity" """);
+			proj.Sources.Add (new BuildItem.Source ("AssemblyApplication.cs") {
+				TextContent = () => """
+					using Android.App;
+					using Android.App.Backup;
+					using Android.OS;
+
+					[assembly: Application (
+						Name = "assembly.application",
+						Description = "@string/assembly_description",
+						BackupAgent = typeof (UnnamedProject.ParityBackupAgent),
+						ManageSpaceActivity = typeof (UnnamedProject.ParityManageActivity))]
+
+					namespace UnnamedProject;
+
+					[Activity]
+					public class ParityActivity : Activity {}
+
+					public class ParityManageActivity : Activity {}
+
+					public class ParityBackupAgent : BackupAgent
+					{
+						public override void OnBackup (ParcelFileDescriptor oldState, BackupDataOutput data, ParcelFileDescriptor newState) {}
+						public override void OnRestore (BackupDataInput data, int appVersionCode, ParcelFileDescriptor newState) {}
+					}
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\application.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<string name="assembly_description">assembly-description</string>
+						<string name="template_description">template-description</string>
+					</resources>
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} build should have succeeded.");
+
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+			var application = manifest.Root?.Element ("application");
+			Assert.IsNotNull (application);
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+			Assert.AreEqual ("assembly.application", (string) application.Attribute (android + "name"));
+			Assert.AreEqual ("@string/assembly_description", (string) application.Attribute (android + "description"));
+			StringAssert.EndsWith (".ParityBackupAgent", (string) application.Attribute (android + "backupAgent"));
+			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));
+
+			var linkedAssembly = runtime == AndroidRuntime.NativeAOT
+				? Path.Combine (intermediate, "android", "assets", "shrunk", "arm64-v8a", $"{proj.ProjectName}.dll")
+				: Path.Combine (intermediate, "linked", $"{proj.ProjectName}.dll");
+			FileAssert.Exists (linkedAssembly);
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (linkedAssembly);
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityBackupAgent"),
+				"Assembly-level Application.BackupAgent should preserve the referenced type through trimming.");
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
+				"Assembly-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR, "BackupAgent")]
+		[TestCase (AndroidRuntime.CoreCLR, "AppCategory")]
+		[TestCase (AndroidRuntime.CoreCLR, "GwpAsan")]
+		[TestCase (AndroidRuntime.CoreCLR, "RequiredContentUriPermission")]
+		[TestCase (AndroidRuntime.CoreCLR, "UiOptions")]
+		[TestCase (AndroidRuntime.CoreCLR, "TypeApplicationConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "MixedApplicationConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "InstrumentationProperty")]
+		[TestCase (AndroidRuntime.CoreCLR, "ApplicationBaseType")]
+		[TestCase (AndroidRuntime.CoreCLR, "ApplicationMetadataConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "ApplicationPropertyConflict")]
+		[TestCase (AndroidRuntime.CoreCLR, "PackageTokenDuplicateConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "BackupAgent")]
+		[TestCase (AndroidRuntime.NativeAOT, "AppCategory")]
+		[TestCase (AndroidRuntime.NativeAOT, "GwpAsan")]
+		[TestCase (AndroidRuntime.NativeAOT, "RequiredContentUriPermission")]
+		[TestCase (AndroidRuntime.NativeAOT, "UiOptions")]
+		[TestCase (AndroidRuntime.NativeAOT, "TypeApplicationConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "MixedApplicationConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "InstrumentationProperty")]
+		[TestCase (AndroidRuntime.NativeAOT, "ApplicationBaseType")]
+		[TestCase (AndroidRuntime.NativeAOT, "ApplicationMetadataConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "ApplicationPropertyConflict")]
+		[TestCase (AndroidRuntime.NativeAOT, "PackageTokenDuplicateConflict")]
+		public void InvalidManifestAttributeFails (AndroidRuntime runtime, string invalidProperty)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			var applicationAttribute = invalidProperty switch {
+				"BackupAgent" => "[Application (BackupAgent = typeof (InvalidBackupAgent))]",
+				"AppCategory" => "[Application (AppCategory = ApplicationCategories.Undefined)]",
+				"GwpAsan" => "[Application (GwpAsanMode = (GwpAsan) 99)]",
+				"UiOptions" => "[Application (UiOptions = (UiOptions) 99)]",
+				"MixedApplicationConflict" => "[Application]",
+				"TypeApplicationConflict" => "[Application]",
+				"ApplicationBaseType" => "",
+				_ => "[Application]",
+			};
+			var assemblyAttributes = invalidProperty switch {
+				"MixedApplicationConflict" => "[assembly: Application]",
+				"ApplicationMetadataConflict" => "[assembly: MetaData (\"duplicate.metadata\", Value = \"assembly\")]",
+				"ApplicationPropertyConflict" => "[assembly: Property (\"duplicate.property\", Value = \"assembly\")]",
+				"PackageTokenDuplicateConflict" => "[assembly: MetaData (\"duplicate.package\", Value = \"@PACKAGE_NAME@\")]",
+				_ => "",
+			};
+			var applicationChildAttributes = invalidProperty switch {
+				"ApplicationMetadataConflict" => "[MetaData (\"duplicate.metadata\", Value = \"type\")]",
+				"ApplicationPropertyConflict" => "[Property (\"duplicate.property\", Value = \"type\")]",
+				_ => "",
+			};
+			var additionalApplication = invalidProperty == "TypeApplicationConflict"
+				? """
+					[Application]
+					public class AdditionalApplication : Application {}
+					"""
+				: "";
+			var additionalInstrumentation = invalidProperty == "InstrumentationProperty"
+				? """
+					[Instrumentation]
+					[Property ("instrumentation.property", Value = "instrumentation-property")]
+					public class InvalidInstrumentation : Instrumentation {}
+					"""
+				: "";
+			var invalidApplicationType = invalidProperty == "ApplicationBaseType"
+				? """
+					[Application]
+					public class InvalidApplicationType : Activity {}
+					"""
+				: "";
+			var activityAttribute = invalidProperty == "RequiredContentUriPermission"
+				? "[Activity (RequireContentUriPermissionFromCaller = (RequiredContentUriPermission) 99)]"
+				: "[Activity]";
+			if (invalidProperty == "PackageTokenDuplicateConflict") {
+				proj.AndroidManifest = proj.AndroidManifest.Replace (
+					"</application>",
+					"""<meta-data android:name="duplicate.package" android:value="@PACKAGE_NAME@" /></application>""");
+			}
+			proj.Sources.Add (new BuildItem.Source ("InvalidApplication.cs") {
+				TextContent = () => $$"""
+					using System;
+					using Android.App;
+					using Android.Content.PM;
+					using Android.Runtime;
+
+					{{assemblyAttributes}}
+
+					namespace UnnamedProject;
+
+					{{applicationAttribute}}
+					{{applicationChildAttributes}}
+					public class InvalidApplication : Application
+					{
+						public InvalidApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+					}
+
+					{{additionalApplication}}
+
+					{{additionalInstrumentation}}
+
+					{{invalidApplicationType}}
+
+					{{activityAttribute}}
+					public class InvalidBackupAgent : Activity {}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime} build should reject {invalidProperty}.");
+			var expectedError = invalidProperty switch {
+				"BackupAgent" => "must be a subclass of the type Android.App.Backup.BackupAgent",
+				"AppCategory" => "Unsupported ApplicationCategories value 'Undefined'",
+				"TypeApplicationConflict" => "There can be only one type with an [Application] attribute",
+				"MixedApplicationConflict" => "Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.",
+				"InstrumentationProperty" => "unexpected element <property> found in <manifest><instrumentation>",
+				"ApplicationBaseType" => "[Application] can only be used on subclasses of Application.",
+				"ApplicationMetadataConflict" => "Element meta-data#duplicate.metadata",
+				"ApplicationPropertyConflict" => "Element property#duplicate.property",
+				"PackageTokenDuplicateConflict" => "Element meta-data#duplicate.package",
+				_ => $"Unsupported {invalidProperty} value '99'",
+			};
+			Assert.IsTrue (builder.LastBuildOutput.ContainsText (expectedError), $"Build output should contain '{expectedError}'.");
+		}
+
 		[Test]
 		public void Build_TrimmableTypeMap_WithCollectionExport_Succeeds ([Values (false, true)] bool isRelease)
 		{

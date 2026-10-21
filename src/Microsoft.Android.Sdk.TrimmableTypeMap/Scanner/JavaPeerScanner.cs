@@ -344,32 +344,13 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static void ForceUnconditionalIfPresent (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, string? managedTypeName)
 	{
-		if (managedTypeName is null) {
+		if (managedTypeName is null || managedTypeName.IsNullOrWhiteSpace ()) {
 			return;
 		}
-
-		managedTypeName = managedTypeName.Trim ();
-		if (managedTypeName.Length == 0) {
-			return;
-		}
-
-		// TryGetTypeProperty may return assembly-qualified names like "Ns.Type, Assembly, ..."
-		// Strip to just the type name for lookup
-		var commaIndex = managedTypeName.IndexOf (',');
-		if (commaIndex > 0) {
-			managedTypeName = managedTypeName.Substring (0, commaIndex).Trim ();
-		}
-
-		if (managedTypeName.Length == 0) {
-			return;
-		}
-
-		// Search by managed type name across all assemblies (BackupAgent/ManageSpaceActivity
-		// attribute values are not assembly-qualified).
-		foreach (var key in results.Keys) {
-			if (string.Equals (key.ManagedName, managedTypeName, StringComparison.Ordinal)) {
-				results [key] = results [key] with { IsUnconditional = true };
-			}
+		var peers = results.Values.ToList ();
+		var peer = AssemblyLevelElementBuilder.FindPeerByAssemblyQualifiedName (peers, managedTypeName);
+		if (peer is not null) {
+			peer.IsUnconditional = true;
 		}
 	}
 
@@ -3369,6 +3350,9 @@ public sealed class JavaPeerScanner : IDisposable
 			Properties = attrInfo.Properties,
 			IntentFilters = attrInfo.IntentFilters,
 			MetaData = attrInfo.MetaData,
+			ManifestProperties = attrInfo.ManifestProperties,
+			UsesLibraries = attrInfo.UsesLibraries,
+			GrantUriPermissions = attrInfo.GrantUriPermissions,
 			LayoutProperties = attrInfo.LayoutProperties,
 		};
 	}

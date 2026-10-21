@@ -68,10 +68,12 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
+		ManifestGenerator.ValidateApplicationDeclarations (allPeers, assemblyManifestInfo);
 		bool validConstructors = ValidateConstructors (allPeers);
 
 		RootCustomViewTypes (allPeers, customViewTypeNames);
 		RootManifestReferencedTypes (allPeers, manifestForRooting, manifestConfig?.ApplicationJavaClass);
+		RootAssemblyApplicationTypeReferences (allPeers, assemblyManifestInfo.ApplicationProperties);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting);
@@ -114,6 +116,23 @@ public class TrimmableTypeMapGenerator
 			if (names.Contains (peer.ManagedTypeName) ||
 					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
 					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
+				peer.IsUnconditional = true;
+			}
+		}
+	}
+
+	internal static void RootAssemblyApplicationTypeReferences (
+		List<JavaPeerInfo> allPeers,
+		IReadOnlyDictionary<string, object?>? applicationProperties)
+	{
+		if (applicationProperties is null) {
+			return;
+		}
+
+		foreach (var propertyName in new [] { "BackupAgent", "ManageSpaceActivity" }) {
+			if (applicationProperties.TryGetValue (propertyName, out var value) &&
+			    value is string managedName &&
+			    AssemblyLevelElementBuilder.FindPeerByAssemblyQualifiedName (allPeers, managedName) is JavaPeerInfo peer) {
 				peer.IsUnconditional = true;
 			}
 		}

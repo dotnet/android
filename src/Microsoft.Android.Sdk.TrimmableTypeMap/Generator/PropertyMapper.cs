@@ -82,6 +82,9 @@ static class PropertyMapper
 		new ("SupportsPictureInPicture", "supportsPictureInPicture", MappingKind.Bool),
 		new ("TurnScreenOn", "turnScreenOn", MappingKind.Bool),
 		new ("VisibleToInstantApps", "visibleToInstantApps", MappingKind.Bool),
+		new ("CanDisplayOnRemoteDevices", "canDisplayOnRemoteDevices", MappingKind.Bool),
+		new ("EnableOnBackInvokedCallback", "enableOnBackInvokedCallback", MappingKind.Bool),
+		new ("RequireContentUriPermissionFromCaller", "requireContentUriPermissionFromCaller", MappingKind.Enum, AndroidEnumConverter.RequiredContentUriPermissionToString),
 		new ("LaunchMode", "launchMode", MappingKind.Enum, AndroidEnumConverter.LaunchModeToString),
 		new ("ScreenOrientation", "screenOrientation", MappingKind.Enum, AndroidEnumConverter.ScreenOrientationToString),
 		new ("ConfigurationChanges", "configChanges", MappingKind.Enum, AndroidEnumConverter.ConfigChangesToString),
@@ -103,32 +106,11 @@ static class PropertyMapper
 		new ("GrantUriPermissions", "grantUriPermissions", MappingKind.Bool),
 		new ("Syncable", "syncable", MappingKind.Bool),
 		new ("MultiProcess", "multiprocess", MappingKind.Bool),
+		new ("ReadPermission", "readPermission"),
+		new ("WritePermission", "writePermission"),
 	];
 
-	internal static readonly PropertyMapping[] ApplicationElementMappings = [
-		new ("Label", "label"),
-		new ("Icon", "icon"),
-		new ("RoundIcon", "roundIcon"),
-		new ("Theme", "theme"),
-		new ("NetworkSecurityConfig", "networkSecurityConfig"),
-		new ("AllowBackup", "allowBackup", MappingKind.Bool),
-		new ("SupportsRtl", "supportsRtl", MappingKind.Bool),
-		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
-		new ("LargeHeap", "largeHeap", MappingKind.Bool),
-		new ("Debuggable", "debuggable", MappingKind.Bool),
-		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
-		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
-	];
-
-	internal static readonly PropertyMapping[] InstrumentationMappings = [
-		new ("Label", "label"),
-		new ("Icon", "icon"),
-		new ("TargetPackage", "targetPackage"),
-		new ("FunctionalTest", "functionalTest", MappingKind.Bool),
-		new ("HandleProfiling", "handleProfiling", MappingKind.Bool),
-	];
-
-	internal static readonly PropertyMapping[] ApplicationPropertyMappings = [
+	internal static readonly PropertyMapping[] ApplicationMappings = [
 		new ("Label", "label"),
 		new ("Icon", "icon"),
 		new ("RoundIcon", "roundIcon"),
@@ -140,16 +122,64 @@ static class PropertyMapper
 		new ("Process", "process"),
 		new ("TaskAffinity", "taskAffinity"),
 		new ("AllowBackup", "allowBackup", MappingKind.Bool),
+		new ("AllowClearUserData", "allowClearUserData", MappingKind.Bool),
+		new ("AllowCrossUidActivitySwitchFromBelow", "allowCrossUidActivitySwitchFromBelow", MappingKind.Bool),
+		new ("AllowNativeHeapPointerTagging", "allowNativeHeapPointerTagging", MappingKind.Bool),
+		new ("AllowTaskReparenting", "allowTaskReparenting", MappingKind.Bool),
+		new ("AppCategory", "appCategory", MappingKind.Enum, AndroidEnumConverter.ApplicationCategoriesToString),
+		new ("BackupInForeground", "backupInForeground", MappingKind.Bool),
 		new ("SupportsRtl", "supportsRtl", MappingKind.Bool),
 		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
 		new ("LargeHeap", "largeHeap", MappingKind.Bool),
 		new ("Debuggable", "debuggable", MappingKind.Bool),
 		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
 		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
+		new ("Banner", "banner"),
 		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
+		new ("Enabled", "enabled", MappingKind.Bool),
+		new ("EnableOnBackInvokedCallback", "enableOnBackInvokedCallback", MappingKind.Bool),
+		new ("ExtractNativeLibs", "extractNativeLibs", MappingKind.Bool),
+		new ("FullBackupContent", "fullBackupContent", MappingKind.Bool),
+		new ("FullBackupOnly", "fullBackupOnly", MappingKind.Bool),
+		new ("GwpAsanMode", "gwpAsanMode", MappingKind.Enum, AndroidEnumConverter.GwpAsanToString),
+		new ("HasCode", "hasCode", MappingKind.Bool),
+		new ("HasFragileUserData", "hasFragileUserData", MappingKind.Bool),
+		new ("KillAfterRestore", "killAfterRestore", MappingKind.Bool),
+		new ("PageSizeCompat", "pageSizeCompat"),
+		new ("Persistent", "persistent", MappingKind.Bool),
+		new ("RequestLegacyExternalStorage", "requestLegacyExternalStorage", MappingKind.Bool),
+		new ("RequiredAccountType", "requiredAccountType"),
+		new ("ResizeableActivity", "resizeableActivity", MappingKind.Bool),
+		new ("RestrictedAccountType", "restrictedAccountType"),
+		new ("TestOnly", "testOnly", MappingKind.Bool),
+		new ("UiOptions", "uiOptions", MappingKind.Enum, AndroidEnumConverter.UiOptionsToString),
+		new ("VMSafeMode", "vmSafeMode", MappingKind.Bool),
+		new ("DataExtractionRules", "dataExtractionRules"),
 	];
 
-	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false, int targetSdkVersion = 0)
+	internal static readonly PropertyMapping[] ApplicationElementMappings = ApplicationMappings;
+	internal static readonly PropertyMapping[] ApplicationPropertyMappings = [
+		.. ApplicationMappings,
+		new ("Name", "name"),
+	];
+
+	internal static readonly PropertyMapping[] InstrumentationMappings = [
+		new ("Label", "label"),
+		new ("Icon", "icon"),
+		new ("TargetPackage", "targetPackage"),
+		new ("FunctionalTest", "functionalTest", MappingKind.Bool),
+		new ("HandleProfiling", "handleProfiling", MappingKind.Bool),
+		new ("RoundIcon", "roundIcon"),
+		new ("TargetProcesses", "targetProcesses"),
+	];
+
+	internal static void ApplyMappings (
+		XElement element,
+		IReadOnlyDictionary<string, object?> properties,
+		PropertyMapping[] mappings,
+		bool skipExisting = false,
+		int targetSdkVersion = 0,
+		ISet<XAttribute>? writtenAttributes = null)
 	{
 		foreach (var m in mappings) {
 			if (!properties.TryGetValue (m.PropertyName, out var value) || value is null) {
@@ -161,21 +191,33 @@ static class PropertyMapper
 			switch (m.Kind) {
 			case MappingKind.String when value is string s && !string.IsNullOrEmpty (s):
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, s);
+				AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				break;
 			case MappingKind.Bool when value is bool b:
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, b ? "true" : "false");
+				AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				break;
 			case MappingKind.Number:
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, FormatNumber (value));
+				AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				break;
 			case MappingKind.Enum when m.EnumConverter is not null:
 				int intValue = value switch { int i => i, long l => (int)l, short s => s, byte b => b, _ => 0 };
 				var strValue = m.EnumConverter (intValue, targetSdkVersion);
 				if (strValue is not null) {
 					element.SetAttributeValue (AndroidNs + m.XmlAttributeName, strValue);
+					AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				}
 				break;
 			}
+		}
+	}
+
+	static void AddWrittenAttribute (XElement element, string xmlAttributeName, ISet<XAttribute>? writtenAttributes)
+	{
+		var attribute = element.Attribute (AndroidNs + xmlAttributeName);
+		if (attribute is not null) {
+			writtenAttributes?.Add (attribute);
 		}
 	}
 

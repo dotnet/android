@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
@@ -12,6 +13,42 @@ namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Children)]
 	public class GenerateTrimmableTypeMapTests : BaseTest {
+
+		[Test]
+		public void AssemblyQualifiedApplicationTypeReferencesSelectCorrectPeer ()
+		{
+			var wrongPeer = new JavaPeerInfo {
+				JavaName = "wrong/Agent",
+				CompatJniName = "wrong/Agent",
+				ManagedTypeName = "Example.Agent",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Agent",
+				AssemblyName = "Wrong",
+				BaseJavaName = "android/app/Activity",
+			};
+			var expectedPeer = new JavaPeerInfo {
+				JavaName = "expected/Agent",
+				CompatJniName = "expected/Agent",
+				ManagedTypeName = "Example.Agent",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Agent",
+				AssemblyName = "Expected",
+				BaseJavaName = "android/app/backup/BackupAgent",
+			};
+			var peers = new List<JavaPeerInfo> { wrongPeer, expectedPeer };
+			var properties = new Dictionary<string, object?> {
+				["BackupAgent"] = "Example.Agent, Expected",
+			};
+
+			TrimmableTypeMapGenerator.RootAssemblyApplicationTypeReferences (peers, properties);
+			Assert.IsFalse (wrongPeer.IsUnconditional);
+			Assert.IsTrue (expectedPeer.IsUnconditional);
+
+			var application = new XElement ("application");
+			AssemblyLevelElementBuilder.ApplyApplicationProperties (application, properties, peers);
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+			Assert.AreEqual ("expected.Agent", (string?)application.Attribute (android + "backupAgent"));
+		}
 
 		[TestCase (false, false, false)]
 		[TestCase (false, false, true)]

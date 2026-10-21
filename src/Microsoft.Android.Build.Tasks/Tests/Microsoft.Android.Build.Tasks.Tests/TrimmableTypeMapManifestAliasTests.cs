@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -59,5 +60,76 @@ public class TrimmableTypeMapManifestAliasTests
 		XNamespace android = "http://schemas.android.com/apk/res/android";
 		Assert.AreEqual (expectedAliasName, (string) alias.Attribute (android + "name"));
 		Assert.AreEqual (GeneratedActivityName, (string) alias.Attribute (android + "targetActivity"));
+	}
+
+	[Test]
+	public void PackageNameTokenIsReplacedOnlyInGeneratedAttributes ()
+	{
+		var provider = new JavaPeerInfo {
+			JavaName = "crc64deadbeefcafebabe/TokenProvider",
+			CompatJniName = "myapp/TokenProvider",
+			ManagedTypeName = "MyApp.TokenProvider",
+			ManagedTypeNamespace = "MyApp",
+			ManagedTypeShortName = "TokenProvider",
+			AssemblyName = "MyApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.ContentProvider,
+				Properties = new Dictionary<string, object?> {
+					["Authorities"] = "my.app.provider",
+					["ReadPermission"] = "@PACKAGE_NAME@.permission.READ",
+				},
+			},
+		};
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
+			  <application
+			    android:description="@PACKAGE_NAME@.template.description"
+			    android:permission="@PACKAGE_NAME@.permission.READ" />
+			</manifest>
+			""");
+		var assemblyInfo = new AssemblyManifestInfo {
+			ApplicationProperties = new Dictionary<string, object?> {
+				["Permission"] = "@PACKAGE_NAME@.permission.READ",
+			},
+		};
+		var manifestGenerator = new ManifestGenerator {
+			PackageName = "my.app",
+			MinSdkVersion = "24",
+			TargetSdkVersion = "35",
+			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+		};
+
+		var (document, _) = manifestGenerator.Generate (manifest, [provider], assemblyInfo);
+		XNamespace android = "http://schemas.android.com/apk/res/android";
+		var application = document.Root?.Element ("application");
+		Assert.IsNotNull (application);
+		Assert.AreEqual ("@PACKAGE_NAME@.template.description", (string) application.Attribute (android + "description"));
+		Assert.AreEqual ("my.app.permission.READ", (string) application.Attribute (android + "permission"));
+		var generatedProvider = application.Element ("provider");
+		Assert.IsNotNull (generatedProvider);
+		Assert.AreEqual ("my.app.permission.READ", (string) generatedProvider.Attribute (android + "readPermission"));
+	}
+
+	[Test]
+	public void MultipleAssemblyApplicationAttributesAreRejected ()
+	{
+		var manifestGenerator = new ManifestGenerator {
+			PackageName = "my.app",
+			MinSdkVersion = "24",
+			TargetSdkVersion = "35",
+			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+		};
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
+			  <application />
+			</manifest>
+			""");
+		var assemblyInfo = new AssemblyManifestInfo {
+			ApplicationAttributeCount = 2,
+		};
+
+		var exception = Assert.Throws<InvalidOperationException> (
+			() => manifestGenerator.Generate (manifest, [], assemblyInfo));
+		Assert.AreEqual ("There can be only one [assembly:Application] attribute defined.", exception.Message);
 	}
 }

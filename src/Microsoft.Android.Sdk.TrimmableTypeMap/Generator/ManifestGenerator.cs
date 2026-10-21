@@ -53,9 +53,12 @@ class ManifestGenerator
 			throw new InvalidOperationException ("Manifest document has no root element.");
 		}
 
+		ValidateApplicationDeclarations (allPeers, assemblyInfo);
 		EnsureManifestAttributes (manifest);
 		// Template component names must be resolved before compat-name rewriting.
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName);
+		var templateAttributes = new HashSet<XAttribute> (doc.Descendants ().Attributes ());
+		var generatedAttributes = new HashSet<XAttribute> ();
 		var app = EnsureApplicationElement (manifest);
 		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
 
@@ -65,8 +68,16 @@ class ManifestGenerator
 
 		// Apply assembly-level [Application] properties
 		if (assemblyInfo.ApplicationProperties is not null) {
-			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers, Warn);
+			AssemblyLevelElementBuilder.ApplyApplicationProperties (
+				app,
+				assemblyInfo.ApplicationProperties,
+				allPeers,
+				Warn,
+				generatedAttributes);
 		}
+		AssemblyLevelElementBuilder.AddUsesLibraries (app, assemblyInfo.UsesLibraries);
+		AssemblyLevelElementBuilder.AddInstrumentations (manifest, assemblyInfo.Instrumentations);
+		AssemblyLevelElementBuilder.AddAssemblyLevelElements (manifest, app, assemblyInfo);
 
 		var existingTypes = new HashSet<string> (
 			app.Descendants ()
@@ -92,7 +103,13 @@ class ManifestGenerator
 
 			// Skip Application types (handled separately via assembly-level attribute)
 			if (peer.ComponentAttribute.Kind == ComponentKind.Application) {
-				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue);
+				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue, generatedAttributes);
+				AssemblyLevelElementBuilder.ApplyApplicationProperties (
+					app,
+					peer.ComponentAttribute.Properties,
+					allPeers,
+					Warn,
+					generatedAttributes);
 				continue;
 			}
 
@@ -111,9 +128,6 @@ class ManifestGenerator
 				app.Add (element);
 			}
 		}
-
-		// Add assembly-level manifest elements
-		AssemblyLevelElementBuilder.AddAssemblyLevelElements (manifest, app, assemblyInfo);
 
 		// Add runtime provider
 		var providerNames = AddRuntimeProviders (app);
@@ -140,13 +154,58 @@ class ManifestGenerator
 			AssemblyLevelElementBuilder.AddInternetPermission (manifest);
 		}
 
+		// Apply manifest placeholders
+		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
+		ReplaceGeneratedPackageNameTokens (doc, PackageName, templateAttributes, generatedAttributes);
+
 		RemoveDuplicateElements (doc);
 		RemoveNodes (doc);
 
-		// Apply manifest placeholders
-		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
-
 		return (doc, providerNames);
+	}
+
+	internal static void ValidateApplicationDeclarations (
+		IReadOnlyList<JavaPeerInfo> allPeers,
+		AssemblyManifestInfo assemblyInfo)
+	{
+		if (assemblyInfo.ApplicationAttributeCount > 1) {
+			throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
+		}
+
+		var applicationPeers = allPeers
+			.Where (peer => peer.ComponentAttribute?.Kind == ComponentKind.Application)
+			.ToList ();
+		foreach (var peer in applicationPeers) {
+			if (!AssemblyLevelElementBuilder.IsSubclassOf (peer, "android/app/Application", allPeers)) {
+				throw new InvalidOperationException (
+					$"Found [Application] on type {peer.ManagedTypeName}.  [Application] can only be used on subclasses of Application.");
+			}
+		}
+		if (applicationPeers.Count > 1) {
+			throw new InvalidOperationException (
+				"There can be only one type with an [Application] attribute; found: " +
+				string.Join (", ", applicationPeers.Select (peer => peer.ManagedTypeName)));
+		}
+		if (assemblyInfo.ApplicationAttributeCount > 0 && applicationPeers.Count > 0) {
+			throw new InvalidOperationException (
+				"Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
+		}
+	}
+
+	static void ReplaceGeneratedPackageNameTokens (
+		XDocument doc,
+		string packageName,
+		ISet<XAttribute> templateAttributes,
+		ISet<XAttribute> generatedAttributes)
+	{
+		foreach (var attribute in doc.Descendants ().Attributes ()) {
+			if (templateAttributes.Contains (attribute) && !generatedAttributes.Contains (attribute)) {
+				continue;
+			}
+			if (attribute.Value.Contains ("@PACKAGE_NAME@", StringComparison.Ordinal)) {
+				attribute.Value = attribute.Value.Replace ("@PACKAGE_NAME@", packageName);
+			}
+		}
 	}
 
 	/// <summary>
