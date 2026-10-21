@@ -16,6 +16,7 @@
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Installer.AndroidSDK\Xamarin.Installer.AndroidSDK.csproj" />
   </ItemGroup>
 
 </Project>
