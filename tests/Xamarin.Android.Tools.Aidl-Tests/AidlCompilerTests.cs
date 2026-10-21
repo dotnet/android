@@ -27,5 +27,18 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 
 		[Test]
 		public void ITelephony () => RunTest (nameof (ITelephony));
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void TypeNameNullIdentifierException (bool hasGenericArguments)
+		{
+			TestDelegate action = hasGenericArguments
+				? () => new TypeName (new [] { "android", null }, Array.Empty<TypeName> ())
+				: () => new TypeName (new [] { "android", null });
+
+			var exception = Assert.Throws<ArgumentException> (action);
+			Assert.AreEqual ("identifiers", exception.ParamName);
+			StringAssert.StartsWith ("'identifiers' contain one or more null values: android", exception.Message);
+		}
 	}
 }
