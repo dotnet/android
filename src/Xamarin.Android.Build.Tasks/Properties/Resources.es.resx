@@ -1331,7 +1331,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XAGCA7009_UnsupportedRuntime" xml:space="preserve">
-    <value>GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.</value>
+    <value>GenerateNativeApplicationConfigSources solo admite la configuración de arranque de CoreCLR. El valor proporcionado para AndroidRuntime era "{0}".</value>
     <comment>The following are literal names and should not be translated: GenerateNativeApplicationConfigSources, CoreCLR, AndroidRuntime.
 {0} - The unsupported AndroidRuntime task parameter value.</comment>
   </data>

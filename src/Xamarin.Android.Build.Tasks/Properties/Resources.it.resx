@@ -1331,7 +1331,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XAGCA7009_UnsupportedRuntime" xml:space="preserve">
-    <value>GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.</value>
+    <value>GenerateNativeApplicationConfigSources supporta solo la configurazione bootstrap di CoreCLR. Il valore AndroidRuntime specificato è '{0}'.</value>
     <comment>The following are literal names and should not be translated: GenerateNativeApplicationConfigSources, CoreCLR, AndroidRuntime.
 {0} - The unsupported AndroidRuntime task parameter value.</comment>
   </data>
