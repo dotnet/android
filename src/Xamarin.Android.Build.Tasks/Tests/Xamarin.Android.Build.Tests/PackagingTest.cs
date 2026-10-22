@@ -112,6 +112,44 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[TestCase ("disabled")]
+		[TestCase ("private-members")]
+		public void R8PreservesAccessibilityActionField (string obfuscationMode)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.Core", Version = "1.19.0.1" },
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
+			proj.SetProperty ("TrimMode", "full");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${FIELDS}", """
+					private static readonly int s_actionCollapseId =
+						AndroidX.Core.View.Accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ActionCollapse?.Id ?? 0;
+					""")
+				.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (s_actionCollapseId);");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
+
+			const string className = "Landroidx/core/view/accessibility/AccessibilityNodeInfoCompat$AccessibilityActionCompat;";
+			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
+			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
+			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
+				className, "ACTION_COLLAPSE", className, DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
+				"R8 must preserve ACTION_COLLAPSE with its original name and type for managed JNI access.");
+		}
+
 		[Test]
 		public void CheckR8MetadataFilesExist (
 			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
