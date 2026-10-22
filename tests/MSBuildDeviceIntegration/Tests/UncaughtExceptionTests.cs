@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -19,6 +21,61 @@ namespace Xamarin.Android.Build.Tests
 			public int SequenceNumber = -1;
 			public int Count = 0;
 		};
+
+		[Test]
+		public void FatalManagedExceptionTerminatesProcess ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = true,
+			};
+			app.SetRuntime (runtime);
+			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			app.SetDefaultTargetDevice ();
+			app.MainActivity = app.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				throw new InvalidOperationException ("FatalManagedExceptionTerminatesProcess");
+				""");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (app), "Install should have succeeded.");
+			ClearAdbLogcat ();
+
+			string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "fatal-exception-logcat.log");
+			Assert.IsTrue (MonitorAdbLogcat (
+				line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
+				logcatPath,
+				timeout: ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => StartActivityAndAssert (app)),
+				"The expected managed exception should have been logged.");
+			string remainingPids = "";
+			bool processExited = false;
+			var timeout = TimeSpan.FromSeconds (30);
+			var stopwatch = Stopwatch.StartNew ();
+			while (stopwatch.Elapsed < timeout) {
+				int queryTimeout = (int) (timeout - stopwatch.Elapsed).TotalSeconds;
+				if (queryTimeout < 1) {
+					break;
+				}
+				var (exitCode, output, error) = RunAdbCommandWithExitCode ($"shell pidof {app.PackageName}", timeout: queryTimeout);
+				Assert.IsTrue (exitCode == 0 || exitCode == 1,
+					$"Could not query the app process: exit code {exitCode}, stdout: {output}, stderr: {error}");
+				Assert.IsEmpty (error, "Querying the app process should not write to stderr.");
+				remainingPids = output.Trim ();
+				processExited = exitCode == 1 && remainingPids.Length == 0 && stopwatch.Elapsed < timeout;
+				if (processExited || stopwatch.Elapsed >= timeout) {
+					break;
+				}
+				Thread.Sleep ((int) Math.Min (1000, Math.Max (0, (timeout - stopwatch.Elapsed).TotalMilliseconds)));
+			}
+			TestContext.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
+
+			Assert.IsTrue (processExited,
+				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
+			var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
+			Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
+			Assert.IsFalse (logOutput.Contains (
+				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
+				"The uncaught exception handler should not call a missing native method.");
+		}
 
 		[Test]
 		public void EnsureUncaughtExceptionWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
