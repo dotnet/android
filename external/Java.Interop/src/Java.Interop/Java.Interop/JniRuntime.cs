@@ -231,9 +231,20 @@ namespace Java.Interop
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="envp"/> must be a live JNI environment for the calling thread,
+		/// with a valid GetJavaVM function-table entry, throughout the call.
+		/// A nonzero address is not validated here. The returned JavaVM pointer is borrowed;
+		/// the VM must remain alive for its subsequent use. A failing JNI status throws.
+		/// </safety>
 		static unsafe IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
 		{
+			if (envp == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (envp));
+
 			IntPtr vm   = IntPtr.Zero;
+			// SAFETY: The caller owns the current-thread JNI environment's validity.
+			// JNI writes only the synchronous pointer-sized output slot; &vm does not escape.
 			if (JniNativeMethods.GetJavaVM (envp, &vm) is int r &&
 					r != JNI_OK) {
 				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");

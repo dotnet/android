@@ -25,6 +25,7 @@ Java.Interop.JniRuntime.JniValueManager.CreateLocalObjectReferenceArgument(Syste
 Java.Interop.JavaException.JavaException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions transfer, Java.Interop.JniObjectReference throwableOverride) -> void
 Java.Interop.JavaException.JavaException(Java.Interop.JniObjectReference throwableOverride, Java.Interop.JniObjectReferenceOptions disposeThrowableOnException) -> void
 Java.Interop.JavaException.SetJavaStackTrace(Java.Interop.JniObjectReference peerReferenceOverride = default(Java.Interop.JniObjectReference)) -> void
+Java.Interop.JavaObject.JavaObject(Java.Interop.JniObjectReferenceOptions options) -> void
 Java.Interop.JniRuntime.JniTypeManager.GetInvokerType(System.Type! type) -> System.Type?
 Java.Interop.JniRuntime.JniValueManager.GetPeer(Java.Interop.JniObjectReference reference, System.Type? targetType = null) -> Java.Interop.IJavaPeerable?
 Java.Interop.JniRuntime.JniValueManager.EnsureNotDisposed() -> void
