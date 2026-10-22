@@ -25,7 +25,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FatalManagedExceptionTerminatesProcess ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			string packageName = PackageUtils.MakePackageName (runtime).ToLowerInvariant ();
+			var app = new XamarinAndroidApplicationProject (packageName: packageName) {
 				IsRelease = true,
 			};
 			app.SetRuntime (runtime);
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Build.Tests
 				throw new InvalidOperationException ("FatalManagedExceptionTerminatesProcess");
 				""");
 
-			using var builder = CreateApkBuilder ();
+			using var builder = CreateApkBuilder (packageName: packageName);
 			Assert.IsTrue (builder.Install (app), "Install should have succeeded.");
 			ClearAdbLogcat ();
 
