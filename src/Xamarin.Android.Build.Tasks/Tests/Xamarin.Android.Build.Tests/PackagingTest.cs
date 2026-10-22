@@ -103,6 +103,76 @@ namespace Xamarin.Android.Build.Tests
 				"R8 must preserve ACTION_COLLAPSE with its original name and type for managed JNI access.");
 		}
 
+		[Test]
+		public void R8PreservesInstanceIntFieldType ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var path = Path.Combine ("temp", TestName);
+			var binding = new XamarinAndroidBindingProject {
+				ProjectName = "FieldBinding",
+				IsRelease = true,
+				AndroidJavaSources = {
+					new AndroidItem.AndroidJavaSource ("PlaybackError.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => """
+							package example;
+
+							public class PlaybackError {
+								public final int type;
+
+								public PlaybackError(boolean source, boolean renderer) {
+									type = source ? 0 : renderer ? 1 : 2;
+								}
+
+								public String describe() {
+									switch (type) {
+										case 0: return "source";
+										case 1: return "renderer";
+										default: return "unexpected";
+									}
+								}
+							}
+							""",
+						Metadata = { { "Bind", "true" } },
+					},
+				},
+			};
+			binding.SetRuntime (AndroidRuntime.CoreCLR);
+
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				IsRelease = true,
+				References = {
+					new BuildItem.ProjectReference ($"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj", binding.ProjectName, binding.ProjectGuid),
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, "private-members");
+			proj.SetProperty ("TrimMode", "full");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				using var error = new Example.PlaybackError (Intent.GetBooleanExtra ("source", false), Intent.GetBooleanExtra ("renderer", false));
+				System.Console.WriteLine (error.Describe ());
+				System.Console.WriteLine (error.Type);
+				""");
+
+			using var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName));
+			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+			Assert.IsTrue (bindingBuilder.Build (binding), "The binding build should succeed.");
+			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
+
+			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
+			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
+			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
+				"Lexample/PlaybackError;", "type", "I", DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
+				"R8 must preserve the instance field as int, not narrow it to byte, for managed JNI access.");
+		}
+
 		[TestCase ("", true)]
 		[TestCase ("r8", false)]
 		public void InvalidR8ObfuscationModeIsValidatedOnlyForR8 (string linkTool, bool expectedResult)
