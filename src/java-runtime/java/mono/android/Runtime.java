@@ -11,7 +11,9 @@ public class Runtime {
 	static java.lang.Class mono_android_GCUserPeer = mono.android.GCUserPeer.class;
 	static java.lang.Class net_dot_jni_GCUserPeerable = net.dot.jni.GCUserPeerable.class;
 
-	static {
+	// NativeAOT uses its own managed handler and has no native propagation callback.
+	public static void initUncaughtExceptionHandler ()
+	{
 		Thread.setDefaultUncaughtExceptionHandler (new XamarinUncaughtExceptionHandler (Thread.getDefaultUncaughtExceptionHandler ()));
 	}
 

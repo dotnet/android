@@ -66,6 +66,7 @@ public class MonoPackageManager {
 
 				NativeLibraryHelper.loadLibrary ("monodroid", runtimePackage, apks);
 
+				Runtime.initUncaughtExceptionHandler ();
 				Runtime.initInternal (
 					language,
 					apks,
