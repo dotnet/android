@@ -23,6 +23,56 @@ namespace Xamarin.Android.Build.Tests {
 
 		[TestCase (AndroidRuntime.CoreCLR)]
 		[TestCase (AndroidRuntime.NativeAOT)]
+		public void Build_RegisteredCompatibilityMethods_DoNotRequireJavaOverrides (AndroidRuntime runtime)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.PackageReferences.Add (new Package {
+				Id = "Xamarin.GooglePlayServices.Ads.Lite",
+				Version = "123.4.0",
+			});
+			proj.Sources.Add (new BuildItem.Source ("AdsListener.cs") {
+				TextContent = () => """
+					using Android.Gms.Ads;
+					using Android.Gms.Ads.Mediation;
+					using Android.Runtime;
+
+					[Register ("example/AdsListener")]
+					public class AdsListener : Java.Lang.Object, IMediationBannerListener
+					{
+						public void OnAdClicked (IMediationBannerAdapter adapter) { }
+						public void OnAdClosed (IMediationBannerAdapter adapter) { }
+						public void OnAdFailedToLoad (IMediationBannerAdapter adapter, int errorCode) { }
+						public void OnAdFailedToLoad2 (IMediationBannerAdapter adapter, AdError errorCode) { }
+						public void OnAdLeftApplication (IMediationBannerAdapter adapter) { }
+						public void OnAdLoaded (IMediationBannerAdapter adapter) { }
+						public void OnAdOpened (IMediationBannerAdapter adapter) { }
+						public void Zzb (IMediationBannerAdapter adapter, string first, string second) { }
+					}
+					""",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "using var listener = new AdsListener ();");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Registered compatibility methods must not require a matching Java interface member.");
+
+			var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "java"));
+			string [] wrappers = [
+				Path.Combine (javaDirectory, "mono", "com", "google", "android", "gms", "ads", "mediation", "MediationBannerListenerImplementor.java"),
+				Path.Combine (javaDirectory, "example", "AdsListener.java"),
+			];
+			foreach (var wrapper in wrappers) {
+				FileAssert.Exists (wrapper);
+				var source = File.ReadAllText (wrapper);
+				StringAssert.Contains ("public void zza (", source, "The managed compatibility callback must still be emitted.");
+				StringAssert.Contains ("public void zzb (", source, "The real Java interface method must still be implemented.");
+				StringAssert.DoesNotContain ("@Override", source);
+			}
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
 		public void RetainedTypeMapRulesDriveR8 (AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
