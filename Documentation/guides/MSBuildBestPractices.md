@@ -58,6 +58,40 @@ You will be able to set breakpoints in Tasks (but not Targets) and step through 
 
 If you want to test in-tree using the same the `build-sample-under-dotnet` command will ask you if you want to debug MSBuild tasks and fill in the `MSBUILDDEBUGONSTART` for you. The PID text will appear in the `Terminal` window in VSCode. In addition the `run-sample-under-dotnet` command will ask the same.
 
+## Multithreaded tasks
+
+For tasks that only transform strings or items, use `MultithreadedAndroidTask`
+and put `[MSBuildMultiThreadableTask]` directly on each concrete task class.
+The attribute is not inherited. This base keeps the `AndroidTask` exception
+codes and file-lock diagnostics without capturing the process working
+directory. It implements `IMultiThreadableTask` so the engine supplies the
+`TaskEnvironment` used to resolve paths in exception messages. Its default
+`TaskEnvironment.Fallback` also supports direct task instantiation.
+Keep other tasks on their existing base until all their code paths are safe.
+
+The task projects reference MSBuild 18.9.6, which supplies the attribute.
+Use `TaskEnvironment` for any further project-relative path or environment
+access; the attribute alone does not make process-wide APIs safe.
+
+`Microsoft.Build.TaskAuthoring.Analyzer` is a separate, private build dependency.
+It checks directly marked tasks and their source call chains by default.
+The analyzer also checks direct API calls in `MultithreadedAndroidTask`, which
+declares `IMultiThreadableTask`. The transitive rule skips abstract task roots,
+so review helpers called by that base manually. For concrete marked tasks,
+unsafe environment APIs, relative file access, unsafe source helper calls,
+and invalid task declarations are build errors. The analyzer follows source
+calls within one compilation.
+Review helpers in referenced assemblies separately.
+Do not enable all-task migration checks across legacy tasks just to opt in a
+small set of tasks.
+
+Check both ordinary builds and `-m -mt -nr:false` builds with the local SDK.
+Use `-warnaserror:MSB4286,MSB4287,MSB4288` for the strict checks. Inspect a
+binary log to confirm that each migrated task ran in-process and that item
+paths still belong to the correct project.
+
+See [Microsoft's task migration guide](https://learn.microsoft.com/visualstudio/msbuild/update-task-multithreaded).
+
 ## Naming
 
 MSBuild targets, properties, and item groups are prefixed with an
