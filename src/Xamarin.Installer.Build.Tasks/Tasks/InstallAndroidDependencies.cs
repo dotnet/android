@@ -40,6 +40,8 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public bool InstallJavaDependencies { get; set; } = true;
 
+		public bool IgnoreSdkArchiveChecksumErrors { get; set; }
+
 		public bool SkipSignCheck { get; set; }
 
 		public string OpenJdkPublicKeyUrl { get; set; } = "";
@@ -160,7 +162,9 @@ namespace Xamarin.Installer.Build.Tasks
 				manifestUrl = new Uri (ManifestSource, UriKind.Absolute);
 			}
 
-			var installer = new AndroidSDKInstaller(new Helper(manifestFilePath: manifestFilePath), manifestType, manifestURL: manifestUrl);
+			var installer = new AndroidSDKInstaller(new Helper(manifestFilePath: manifestFilePath), manifestType, manifestURL: manifestUrl) {
+				IgnoreArchiveChecksumErrors = IgnoreSdkArchiveChecksumErrors,
+			};
 			installer.Discover(new List<string> { path });
 
 			var sdkInstance = installer.FindInstance(path);
@@ -489,7 +493,8 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public void Action (string format, params object [] parms)
 		{
-			LogDebugMessage (format, parms);
+			// The checksum override notice uses Action so it is visible at minimal verbosity without a warning.
+			LogMessage (string.Format (format, parms), MessageImportance.High);
 		}
 
 		public void Debug (string format, params object [] parms)
