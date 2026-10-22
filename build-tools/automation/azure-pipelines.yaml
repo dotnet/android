@@ -199,11 +199,14 @@ extends:
           displayName: Install .NET
           retryCountOnTaskFailure: 3
           workingDirectory: $(Build.SourcesDirectory)/maui
+          env:
+            _SkipUpdateBuildNumber: 'true'
 
         - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
           displayName: Pack .NET Maui
           workingDirectory: $(Build.SourcesDirectory)/maui
           env:
+            _SkipUpdateBuildNumber: 'true'
             NoWarn: CS0618
 
         - task: DotNetCoreCLI@2
