@@ -1144,6 +1144,9 @@ An enum-style property that specifies how `r8` obfuscates Java names when
   non-optimizing Android R8 defaults.
 
 This property does not disable R8 code shrinking.
+Generated keep rules preserve bound Java fields accessed from managed code,
+including fields exposed as managed properties. Their names and types must
+remain unchanged for JNI access.
 
 This property was introduced in a .NET 10 servicing release. It defaults to
 `disabled` in .NET 10 and to `private-members` in .NET 11 and later.

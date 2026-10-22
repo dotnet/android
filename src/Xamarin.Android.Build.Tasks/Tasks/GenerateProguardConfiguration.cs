@@ -107,8 +107,30 @@ namespace Xamarin.Android.Tasks
 				ProcessMethod (reader, methodHandle, writer);
 			}
 
+			// Bound Java fields are exposed as managed properties, except for constants.
+			foreach (var propertyHandle in type.GetProperties ()) {
+				ProcessField (reader, reader.GetPropertyDefinition (propertyHandle).GetCustomAttributes (), writer);
+			}
+			foreach (var fieldHandle in type.GetFields ()) {
+				ProcessField (reader, reader.GetFieldDefinition (fieldHandle).GetCustomAttributes (), writer);
+			}
+
 			writer.WriteLine ("}");
 			writer.WriteLine ();
+		}
+
+		void ProcessField (MetadataReader reader, CustomAttributeHandleCollection attributes, TextWriter writer)
+		{
+			foreach (var attrHandle in attributes) {
+				var attr = reader.GetCustomAttribute (attrHandle);
+				if (reader.GetCustomAttributeFullName (attr, Log) == "Android.Runtime.RegisterAttribute") {
+					var args = attr.GetCustomAttributeArguments ();
+					if (args.FixedArguments.Length > 0 && args.FixedArguments [0].Value is string jname) {
+						writer.WriteLine ($"   *** {jname};");
+					}
+					break;
+				}
+			}
 		}
 
 		void ProcessMethod (MetadataReader reader, MethodDefinitionHandle methodHandle, TextWriter writer)
