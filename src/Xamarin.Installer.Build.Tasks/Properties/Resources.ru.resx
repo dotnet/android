@@ -176,7 +176,7 @@
     <value>произошла ошибка при попытке принять лицензии пакета SDK для Android. {0}</value>
   </data>
   <data name="XA5305" xml:space="preserve">
-    <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
+    <value>Не удалось проверить подпись архива Microsoft OpenJDK для '{0}'. Архив не будет установлен. {1}</value>
     <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
   </data>
 </root>

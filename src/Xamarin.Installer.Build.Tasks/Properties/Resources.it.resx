@@ -176,7 +176,7 @@ Aggiornare Java SDK alla versione `{2}` oppure impostare `$(JavaSdkDirectory)` s
     <value>si è verificato un errore durante il tentativo di accettare le licenze di Android SDK. {0}</value>
   </data>
   <data name="XA5305" xml:space="preserve">
-    <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
+    <value>Non è stato possibile verificare la firma dell'archivio Microsoft OpenJDK per '{0}'. L'archivio non verrà installato. {1}</value>
     <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
   </data>
 </root>

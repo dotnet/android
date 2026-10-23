@@ -176,7 +176,7 @@ Pokud chcete nainstalovat doporučenou verzi sady Java SDK do nového umístěn�
     <value>Při pokusu o přijetí licencí Android SDK došlo k chybě. {0}</value>
   </data>
   <data name="XA5305" xml:space="preserve">
-    <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
+    <value>Nepovedlo se ověřit podpis archivu Microsoft OpenJDK pro '{0}'. Archiv nebude nainstalován. {1}</value>
     <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
   </data>
 </root>

@@ -176,7 +176,7 @@ Atualize o SDK do Java para a versão `{2}` ou defina `$(JavaSdkDirectory)` como
     <value>ocorreu um erro ao tentar aceitar as licenças do SDK do Android. {0}</value>
   </data>
   <data name="XA5305" xml:space="preserve">
-    <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
+    <value>Não foi possível verificar a assinatura de arquivo morto do Microsoft OpenJDK para '{0}'. O arquivo morto não será instalado. {1}</value>
     <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
   </data>
 </root>
