@@ -130,10 +130,10 @@
     <XACmakeHashLinux>46BDA18F0F3C28A55F88DA4BA05FEC21ABE3D9BCA0A78A8B18D444987B3DC817</XACmakeHashLinux>
     <XACmakeHashWindows>3A78AD82A3F3E9E613E255618D2ACF1B3C4BDB24EF6E1F9341227CF6FC492A89</XACmakeHashWindows>
     <!-- Android emulator: per-host zips (and per-arch on macOS). -->
-    <XAEmulatorHashMacOSx64>C1A3890F95B8868198918FAD05FFCA16FA20404D93547BA545FF5A5867EE7005</XAEmulatorHashMacOSx64>
-    <XAEmulatorHashMacOSArm64>22530DE9363F34EA945ECB5CAD74523ABD4B615F27F3C1A9899EFB183EA9E144</XAEmulatorHashMacOSArm64>
-    <XAEmulatorHashLinux>95771E0AE431897B2A4BD2D97FA095F29A8B0624A7B216BAF529F9306161C266</XAEmulatorHashLinux>
-    <XAEmulatorHashWindows>5FF441F3B12ACE9B13E9CF96FB0007D233967718652A8110705E995AC47BFEB7</XAEmulatorHashWindows>
+    <XAEmulatorHashMacOSx64>9FDAE8C07AC92155AEB175835669EF9B12ADF19130F5557792139FB4EBD01256</XAEmulatorHashMacOSx64>
+    <XAEmulatorHashMacOSArm64>F4C4A142BDA54FCEC064BDB32B51F19E25BAE0A45AD019197EF968BF7A48979B</XAEmulatorHashMacOSArm64>
+    <XAEmulatorHashLinux>B08FC43D8608D2955F607F1B287BEB525041E730086BDCA3AF152ACCAC3AF9C1</XAEmulatorHashLinux>
+    <XAEmulatorHashWindows>3B524B6E0F1F5506D3D81AF62EC9CE15B2A6F80F467E99574E167514CA181401</XAEmulatorHashWindows>
     <!-- API 29 system image used by the emulator: per-host (x86_64) and macOS arm64 (arm64-v8a). -->
     <XASystemImageHashMacOSx64>B5C3FDA1F4B4931C30518D342E4AD5F7464945E0CDCED3538D4FF2E12F7BF201</XASystemImageHashMacOSx64>
     <XASystemImageHashMacOSArm64>7FD1610E16A69AC2E202278E82077DE134CE404FE099D872019F69F3A340ACDD</XASystemImageHashMacOSArm64>
@@ -204,8 +204,8 @@
     <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">16111833_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">15917651</EmulatorVersion>
-    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">37.1.11</EmulatorPkgRevision>
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">16428233</EmulatorVersion>
+    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">37.2.12</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' != 'Windows'  ">emulator</EmulatorToolExe>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' == 'Windows'  ">emulator.exe</EmulatorToolExe>
