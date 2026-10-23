@@ -55,6 +55,32 @@ all callbacks already running have finished.
 through registration. Its raw callback must match the JNI descriptor's ABI,
 including the environment and receiver/class arguments.
 
+## Borrowed UTF-8 metadata
+
+Retained names/signatures use `byte*`; JNI handles and method/field IDs remain
+opaque `IntPtr` values. `ReplacementMethodInfo.TargetJni*Utf8Pointer` and the
+`JniTypeManager.GetReplacementTypeInfoUnsafe` / `GetReplacementMethodInfoUnsafe`
+hooks expose borrowed storage. Owners must retain readable bytes through the
+NUL terminator, unchanged for the runtime and every cached/diagnostic read, even
+after a later lookup fails. Read-only aliases may overlap; no concurrent write
+or free is allowed. Java.Interop neither roots nor frees these buffers.
+
+Peer names and Debug `JniMethodInfo` strings are converted lazily under that
+lifetime contract. Managed-string alternatives remain safe; non-null native
+names take precedence. Complete UTF-8 literals retain their zero-copy path.
+Remapping equality, hashing and `ToString` inspect addresses, not their contents.
+
+The .NET 11 RC2 native-int `TargetJni*Utf8` accessors and two native-int
+`GetReplacementTypeInfoCore` / `GetReplacementMethodInfoCore` virtual slots stay
+safe-callable and warning-obsolete. They are explicit compatibility exceptions,
+not pointer validation. Typed base hooks preserve old overrides and base calls;
+the distinct type-producer name avoids existing `out var` ambiguity.
+
+Caller obligations and native implementation scopes are independent; managed
+wrappers remain safe. This preparation does not enable updated memory-safety
+rules. Legacy compilation still requires unsafe contexts for typed address
+reads; final activation introduces safe address getters and unsafe setters.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java
