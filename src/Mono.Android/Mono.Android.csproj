@@ -94,7 +94,6 @@
     <Compile Include="Android.Icu\RelativeDateTimeFormatter.cs" />
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Net.Wifi.P2p\WifiP2pManager.cs" />
-    <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\ExtraDelegates.cs" />
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
@@ -114,10 +113,6 @@
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
 
 <ItemGroup>
-    <None Include="Android.Runtime\JNINativeWrapper.g.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>JNINativeWrapper.g.cs</LastGenOutput>
-    </None>
     <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
     <Compile Include="Android\LinkerSafeAttribute.cs" />
     <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />
@@ -240,11 +235,6 @@
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
     <Compile Include="Android.Runtime\JniPeerMembersExtensions.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
-    <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>JNINativeWrapper.g.tt</DependentUpon>
-    </Compile>
     <Compile Include="Android.Runtime\JObjectRefType.cs" />
     <Compile Include="Android.Runtime\JValue.cs" />
     <Compile Include="Android.Runtime\Logger.cs" />
@@ -390,7 +380,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -432,7 +421,6 @@
       <_RefExtras Include="$(OutputPath)*.*" Exclude="$(OutputPath)*.dll" />
       <_SourceFiles Include="$(OutputPath)Mono.Android.*" />
       <_SourceFiles Include="$(OutputPath)Java.Interop.*" />
-      <_SourceFiles Include="$(OutputPath)System.IO.Hashing.dll" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_RefExtras)"

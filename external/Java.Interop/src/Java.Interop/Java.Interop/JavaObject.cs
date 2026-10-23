@@ -52,16 +52,26 @@ namespace Java.Interop
 			Construct (ref reference, options);
 		}
 
+		protected JavaObject (JniObjectReferenceOptions options)
+		{
+			JniObjectReference reference = default;
+			Construct (ref reference, options);
+		}
+
 		[global::Java.Interop.JniConstructorSignature ("()V")]
-		public unsafe JavaObject ()
-			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaObject ()
+			: this (JniObjectReferenceOptions.None)
 		{
 			if (PeerReference.IsValid)
 				return;
 
-			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
-			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
+			unsafe {
+				// SAFETY: ()V takes no arguments, so the argument pointer is null.
+				// The current-thread local peer is copied/disposed before synchronous initialization uses this peer.
+				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
+				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
+			}
 		}
 
 		protected void Construct (ref JniObjectReference reference, JniObjectReferenceOptions options)

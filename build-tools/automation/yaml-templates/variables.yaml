@@ -44,7 +44,7 @@ variables:
 - name: LinuxPoolImage1ESPT
   value: 1ESPT-Ubuntu22.04
 - name: VSEngMicroBuildPool
-  value: VSEngSS-MicroBuild2022-1ES
+  value: VSEng-MicroBuildVSStable
 - name: TeamName
   value: .NET MAUI
 - name: DotNetTargetFramework

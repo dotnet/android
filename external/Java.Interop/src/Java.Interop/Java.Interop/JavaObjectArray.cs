@@ -32,9 +32,11 @@ namespace Java.Interop
 		}
 
 		[SuppressMessage ("ApiDesign", "RS0022:Constructor make noninheritable base class inheritable", Justification = "Existing public API")]
-		public unsafe JavaObjectArray (int length)
-			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaObjectArray (int length)
+			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: JNI allocates the elements; there is no caller-owned buffer.
+			// Construct receives the current-thread local reference with CopyAndDispose.
 			var peer    = NewArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}

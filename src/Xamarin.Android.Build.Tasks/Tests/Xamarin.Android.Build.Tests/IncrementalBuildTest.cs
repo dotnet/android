@@ -2327,7 +2327,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void PostTrimmingPipelineIsSkippedOnSecondBuild ()
+		public void PostTrimmingPipelineIsSkippedOnSecondBuild ([Values ("arm64-v8a", "x86_64")] string abi)
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			const bool isRelease = true;
@@ -2338,13 +2338,14 @@ namespace Lib2
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifier ("arm64-v8a");
+			proj.SetRuntimeIdentifier (abi);
 			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("AndroidAddKeepAlives", "true");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_PostTrimmingPipeline");
-				var linkedAssembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked", $"{proj.ProjectName}.dll");
+				var linkedAssembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi), "linked", $"{proj.ProjectName}.dll");
 				FileAssert.Exists (linkedAssembly, "The post-trimming pipeline should operate on the linked application assembly.");
 				var assemblyHash = Files.HashFile (linkedAssembly);
 				var assemblyWriteTime = File.GetLastWriteTimeUtc (linkedAssembly);
@@ -2353,6 +2354,19 @@ namespace Lib2
 				b.Output.AssertTargetIsSkipped ("_PostTrimmingPipeline");
 				Assert.AreEqual (assemblyHash, Files.HashFile (linkedAssembly), "A no-change build should preserve the linked assembly.");
 				Assert.AreEqual (assemblyWriteTime, File.GetLastWriteTimeUtc (linkedAssembly), "A no-change build should not rewrite the linked assembly.");
+
+				foreach (string keepAlives in new [] { "false", "true" }) {
+					var parameters = new [] { $"AndroidAddKeepAlives={keepAlives}" };
+					Assert.IsTrue (b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true, saveProject: false),
+						"Changing a cached Android property should succeed without changing the project or assemblies.");
+					b.Output.AssertTargetIsNotSkipped ("_AndroidInvalidateLinkerCache");
+					b.Output.AssertTargetIsNotSkipped ("_RunILLink");
+
+					Assert.IsTrue (b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true, saveProject: false),
+						"An unchanged build after a property change should succeed.");
+					b.Output.AssertTargetIsSkipped ("_AndroidInvalidateLinkerCache");
+					b.Output.AssertTargetIsSkipped ("_RunILLink");
+				}
 			}
 		}
 	}

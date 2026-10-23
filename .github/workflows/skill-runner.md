@@ -178,9 +178,11 @@ steps:
         dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
       fi
 description: Weekly (or on-demand) runner that executes a selectable repository Copilot skill end to end, opens a PR for validated changes, and always reports outcome/errors on a tracking issue
-model: gpt-5.6-sol
+model: gpt-6.1-sol
 engine:
   id: copilot
+  # GPT-6.1 Sol requires Copilot CLI 1.0.90 or newer.
+  version: 1.0.102
   env:
     COPILOT_GITHUB_TOKEN: |
       ${{ case(

@@ -1,7 +1,5 @@
 parameters:
   condition: succeeded()
-  runNativeTests: false
-  runNativeDotnetTests: false
   platformName:
 
 steps:
@@ -49,13 +47,6 @@ steps:
   parameters:
     testRunTitle: Java.Interop.Tools.Maven (${{ parameters.platformName }})
     testAssemblyName: Java.Interop.Tools.Maven-Tests
-
-- template: run-dotnet-test.yaml
-  parameters:
-    testRunTitle: Java.Interop ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    testAssemblyName: Java.Interop-Tests
-    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-    retryCount: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: java-source-utils'

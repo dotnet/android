@@ -51,8 +51,50 @@ used by all .NET Android projects.
     <PropertyGroup>
       <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
       <_XATargetFrameworkDirectories>@(_ResolveSdksFrameworkRefAssemblyPaths->Distinct())</_XATargetFrameworkDirectories>
+      <_AndroidApiInfoDirectoryPaths>@(_AndroidApiInfoDirectories)</_AndroidApiInfoDirectoryPaths>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidSdkInput Include="MSBuildProjectFullPath" />
+      <_AndroidSdkInput Include="Configuration" />
+      <_AndroidSdkInput Include="TargetFramework" />
+      <_AndroidSdkInput Include="TargetPlatformVersion" />
+      <_AndroidSdkInput Include="AndroidSdkDirectory" />
+      <_AndroidSdkInput Include="AndroidNdkDirectory" />
+      <_AndroidSdkInput Include="JavaSdkDirectory" />
+      <_AndroidSdkInput Include="AndroidCommandLineToolsVersion" />
+      <_AndroidSdkInput Include="MinimumSupportedJavaVersion" />
+      <_AndroidSdkInput Include="LatestSupportedJavaVersion" />
+      <_AndroidSdkInput Include="AndroidApiInfoDirectories" PropertyName="_AndroidApiInfoDirectoryPaths" />
+      <_AndroidSdkInput Include="SkipNdkResolution" PropertyName="_SkipNdkResolution" />
+      <_AndroidSdkInput Include="AllowMissingSdkTooling" PropertyName="_AndroidAllowMissingSdkTooling" />
+      <_AndroidSdkInput Update="@(_AndroidSdkInput)">
+        <PropertyName Condition=" '%(_AndroidSdkInput.PropertyName)' == '' ">%(_AndroidSdkInput.Identity)</PropertyName>
+      </_AndroidSdkInput>
+      <_AndroidSdkInput Update="@(_AndroidSdkInput)">
+        <EscapedValue>$([MSBuild]::Escape('$(%(_AndroidSdkInput.PropertyName))'))</EscapedValue>
+        <EscapedOuterValue>$([MSBuild]::Escape('$(_AndroidOuterSdkInput%(_AndroidSdkInput.Identity))'))</EscapedOuterValue>
+      </_AndroidSdkInput>
+    </ItemGroup>
+    <ItemGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+      <_AndroidChangedSdkInput Include="@(_AndroidSdkInput)"
+          Condition=" !$([System.String]::Copy('%(_AndroidSdkInput.EscapedValue)').Equals('%(_AndroidSdkInput.EscapedOuterValue)')) " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_AndroidUseResolvedSdk Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and '$(_OuterIntermediateOutputPath)' != '' and '$(DesignTimeBuild)' != 'true' and '$(_AndroidAllowMissingSdkTooling)' != 'true' and '$(_SkipNdkResolution)' != 'true' and '@(_AndroidChangedSdkInput->Count())' == '0' and '$(_AndroidOuterSdkDirectory)' != '' and '$(_AndroidOuterJavaSdkDirectory)' != '' ">true</_AndroidUseResolvedSdk>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(_AndroidUseResolvedSdk)' == 'true' ">
+      <_AndroidToolsDirectory>$(_AndroidOuterToolsDirectory)</_AndroidToolsDirectory>
+      <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(_AndroidOuterSdkDirectory)</AndroidSdkDirectory>
+      <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(_AndroidOuterJavaSdkDirectory)</JavaSdkDirectory>
+      <_AndroidNdkDirectory>$(_AndroidOuterNdkDirectory)</_AndroidNdkDirectory>
+      <_AndroidSdkDirectory>$(_AndroidOuterSdkDirectory)</_AndroidSdkDirectory>
+      <_JavaSdkDirectory>$(_AndroidOuterJavaSdkDirectory)</_JavaSdkDirectory>
+      <MonoAndroidToolsDirectory>$(_AndroidOuterMonoToolsDirectory)</MonoAndroidToolsDirectory>
+      <MonoAndroidBinDirectory>$(_AndroidOuterMonoBinDirectory)</MonoAndroidBinDirectory>
+      <MonoAndroidLibDirectory>$(_AndroidOuterMonoLibDirectory)</MonoAndroidLibDirectory>
     </PropertyGroup>
     <ResolveSdks
+        Condition=" '$(_AndroidUseResolvedSdk)' != 'true' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
         AndroidSdkPath="$(AndroidSdkDirectory)"
@@ -78,10 +120,23 @@ used by all .NET Android projects.
     <PropertyGroup Condition=" '$(_SkipNdkResolution)' == 'true' ">
       <_AndroidNdkDirectory />
     </PropertyGroup>
+    <PropertyGroup Condition=" '$(DesignTimeBuild)' != 'true' and '$(_AndroidAllowMissingSdkTooling)' != 'true' and '$(_SkipNdkResolution)' != 'true' ">
+      <_AndroidResolvedSdkProperties>
+        @(_AndroidSdkInput->'_AndroidOuterSdkInput%(Identity)=%(EscapedValue)')
+        ;_AndroidOuterToolsDirectory=$([MSBuild]::Escape('$(_AndroidToolsDirectory)'))
+        ;_AndroidOuterSdkDirectory=$([MSBuild]::Escape('$(_AndroidSdkDirectory)'))
+        ;_AndroidOuterNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))
+        ;_AndroidOuterJavaSdkDirectory=$([MSBuild]::Escape('$(_JavaSdkDirectory)'))
+        ;_AndroidOuterMonoToolsDirectory=$([MSBuild]::Escape('$(MonoAndroidToolsDirectory)'))
+        ;_AndroidOuterMonoBinDirectory=$([MSBuild]::Escape('$(MonoAndroidBinDirectory)'))
+        ;_AndroidOuterMonoLibDirectory=$([MSBuild]::Escape('$(MonoAndroidLibDirectory)'))
+      </_AndroidResolvedSdkProperties>
+    </PropertyGroup>
   </Target>
 
   <Target Name="_GetJavaPlatformJar">
     <GetJavaPlatformJar
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         AndroidApiLevel="$(_AndroidApiLevel)"
         AndroidSdkDirectory="$(_AndroidSdkDirectory)"
         AndroidManifest="$(_AndroidManifestAbs)"

@@ -102,11 +102,13 @@ This file contains targets specific for Android application projects.
       also declare a launchable <activity>. $(EnableMSTestRunner) sets this by default.
     -->
     <GetAndroidInstrumentationName
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(AndroidUseInstrumentation)' == 'true' "
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="InstrumentationName" PropertyName="AndroidInstrumentation" />
     </GetAndroidInstrumentationName>
     <GetAndroidActivityName
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' "
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
@@ -116,6 +118,7 @@ This file contains targets specific for Android application projects.
       their <instrumentation> instead. This errors if the app has neither.
     -->
     <GetAndroidInstrumentationName
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' "
         NoLaunchableActivity="true"
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
@@ -173,6 +176,7 @@ This file contains targets specific for Android application projects.
   <Target Name="RunWithLogging"
           DependsOnTargets="$(_RunWithLoggingDependsOn);_PrepareRunWithLogging">
     <GetAndroidActivityName
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         Condition=" '$(AndroidLaunchActivity)' == '' "
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />

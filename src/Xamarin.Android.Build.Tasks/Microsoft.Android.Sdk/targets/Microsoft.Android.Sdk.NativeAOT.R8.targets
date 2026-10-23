@@ -37,7 +37,7 @@
     <MSBuild
         Projects="@(_ProjectToBuild)"
         Targets="_AndroidLinkNativeAotForRuntimeIdentifier"
-        Properties="_AndroidNativeAotLinkAfterR8=true;_AndroidR8JniMappingFile=$(_AndroidR8JniMappingFile)"
+        Properties="$(_AdditionalProperties);_AndroidNativeAotLinkAfterR8=true;_AndroidR8JniMappingFile=$(_AndroidR8JniMappingFile)"
         BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)">
       <Output TaskParameter="TargetOutputs" ItemName="_AndroidNativeAotLinkedFileToPublish" />
     </MSBuild>

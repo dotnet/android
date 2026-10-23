@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO.Hashing;
 using System.Text;
 
 using Xamarin.Android.Tools;
@@ -218,18 +217,6 @@ partial class MonoAndroidHelper
 	}
 
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
-	public static byte[] Utf16StringToBytes (string str) => Encoding.Unicode.GetBytes (str);
-
-	public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (Utf8StringToBytes (str), is64Bit);
-
-	public static ulong GetXxHash (byte[] stringBytes, bool is64Bit)
-	{
-		if (is64Bit) {
-			return XxHash3.HashToUInt64 (stringBytes);
-		}
-
-		return (ulong)XxHash32.HashToUInt32 (stringBytes);
-	}
 
 	/// <summary>
 	/// Helper method to compare two strings with specified comparison mode.
