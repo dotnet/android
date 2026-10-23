@@ -1115,6 +1115,10 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>Vlastnost MSBuild RunAOTCompilation není kompatibilní s modulem runtime CoreCLR. Sestavení nemůže pokračovat, pokud je tato vlastnost nastavena na hodnotu false. Odeberte vlastnost. Počínaje rozhraním .NET 11 nastavte PublishReadyToRun na false, aby se zakázala kompilace AOT ReadyToRun (R2R).</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
+  </data>
   <data name="XA1045" xml:space="preserve">
     <value>Vstupní soubor `{0}` nezačíná na `&lt;replacements/&gt;`.</value>
     <comment>{0} - file path</comment>

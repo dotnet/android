@@ -1115,6 +1115,10 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>La proprietà 'RunAOTCompilation' di MSBuild non è compatibile con il runtime di CoreCLR. La compilazione non può continuare se questa proprietà è impostata su 'false'. Rimuovere la proprietà. A partire da .NET 11, impostare 'PublishReadyToRun' su 'false' per disabilitare la compilazione AOT ReadyToRun (R2R).</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
+  </data>
   <data name="XA1045" xml:space="preserve">
     <value>Il file di input ''{0}'' non inizia con ''&lt;replacements/&gt;''.</value>
     <comment>{0} - file path</comment>
