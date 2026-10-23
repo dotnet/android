@@ -203,8 +203,7 @@ namespace Xamarin.Android.Tasks
 				var il = c.Value.Body.GetILProcessor ();
 				il.Emit(OpCodes.Ret);
 			}
-			// Roslyn requires the historical identity when compiling against existing binary libraries.
-			assembly.Name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;
+			assembly.Name.HashAlgorithm = AssemblyHashAlgorithm.SHA1; // CodeQL [SM02196] Roslyn requires the historical identity when compiling against existing binary libraries.
 			assembly.Name.PublicKey = GetPublicKey ();
 			var wp = new WriterParameters () {
 				DeterministicMvid = Deterministic,
@@ -228,23 +227,27 @@ namespace Xamarin.Android.Tasks
 		{
 			using var keyStream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk")
 				?? throw new InvalidOperationException ("Could not find embedded Resource.Designer.snk.");
-			using var keyBlob = new MemoryStream ();
-			keyStream.CopyTo (keyBlob);
-			using var rsa = new RSACryptoServiceProvider { PersistKeyInCsp = false };
-			rsa.ImportCspBlob (keyBlob.ToArray ());
-			var cspBlob = rsa.ExportCspBlob (includePrivateParameters: false);
+			var buffer = MemoryStreamPool.Shared.Rent ();
+			try {
+				keyStream.CopyTo (buffer);
+				using var rsa = new RSACryptoServiceProvider { PersistKeyInCsp = false };
+				rsa.ImportCspBlob (buffer.ToArray ());
+				var cspBlob = rsa.ExportCspBlob (includePrivateParameters: false);
 
-			const uint RsaSignAlgorithm = 0x2400; // CALG_RSA_SIGN
-			using var publicKey = new MemoryStream ();
-			using var writer = new BinaryWriter (publicKey);
-			writer.Write (RsaSignAlgorithm);
-			writer.Write ((uint) AssemblyHashAlgorithm.SHA1);
-			writer.Write (cspBlob.Length);
-			// ExportCspBlob uses CALG_RSA_KEYX on Unix; preserve the historical CALG_RSA_SIGN identity.
-			writer.Write (cspBlob, 0, 4);
-			writer.Write (RsaSignAlgorithm);
-			writer.Write (cspBlob, 8, cspBlob.Length - 8);
-			return publicKey.ToArray ();
+				const uint RsaSignAlgorithm = 0x2400; // CALG_RSA_SIGN
+				buffer.SetLength (0);
+				using var writer = new BinaryWriter (buffer, Encoding.UTF8, leaveOpen: true);
+				writer.Write (RsaSignAlgorithm);
+				writer.Write ((uint) AssemblyHashAlgorithm.SHA1); // CodeQL [SM02196] Historical strong-name public-key header, not a security hash.
+				writer.Write (cspBlob.Length);
+				// ExportCspBlob uses CALG_RSA_KEYX on Unix; preserve the historical CALG_RSA_SIGN identity.
+				writer.Write (cspBlob, 0, 4);
+				writer.Write (RsaSignAlgorithm);
+				writer.Write (cspBlob, 8, cspBlob.Length - 8);
+				return buffer.ToArray ();
+			} finally {
+				MemoryStreamPool.Shared.Return (buffer);
+			}
 		}
 
 		MethodReference ImportCustomAttributeConstructor (TypeDefinitionCache cache, string type, ModuleDefinition module, ModuleDefinition? sourceModule = null, int argCount = 0)
