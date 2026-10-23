@@ -6,9 +6,10 @@ using System.IO.Hashing;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 //
 // Assembly store format
@@ -73,7 +74,7 @@ partial class AssemblyStoreGenerator
 
 	public void Add (AssemblyStoreAssemblyInfo asmInfo)
 	{
-		if (!assemblies.TryGetValue (asmInfo.Arch, out List<AssemblyStoreAssemblyInfo> infos)) {
+		if (!assemblies.TryGetValue (asmInfo.Arch, out List<AssemblyStoreAssemblyInfo>? infos)) {
 			infos = new List<AssemblyStoreAssemblyInfo> ();
 			assemblies.Add (asmInfo.Arch, infos);
 		}
@@ -122,7 +123,6 @@ partial class AssemblyStoreGenerator
 		// We'll start writing to the stream after we seek to the position just after the header, index, descriptors and name data.
 		ulong curPos = assemblyDataStart;
 
-		Directory.CreateDirectory (Path.GetDirectoryName (storePath));
 		using var fs = File.Open (storePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 
@@ -141,8 +141,8 @@ partial class AssemblyStoreGenerator
 				throw new InvalidOperationException ($"Internal error: corrupted store '{storePath}' stream");
 			}
 
-			uint name_with_ext_hash = HashAssemblyName (info.AssemblyNameBytes);
-			uint name_no_ext_hash = HashAssemblyName (info.AssemblyNameNoExtBytes);
+			uint name_with_ext_hash = Crc32.HashToUInt32 (info.AssemblyNameBytes);
+			uint name_no_ext_hash = Crc32.HashToUInt32 (info.AssemblyNameNoExtBytes);
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, entryIndex, info.Ignored));
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, entryIndex, info.Ignored));
 
@@ -285,14 +285,5 @@ partial class AssemblyStoreGenerator
 			writer.Write ((uint)info.AssemblyNameBytes.Length);
 			writer.Write (info.AssemblyNameBytes);
 		}
-	}
-
-	static uint HashAssemblyName (ReadOnlySpan<byte> bytes)
-	{
-		if (bytes.Length == 0) {
-			return UInt32.MaxValue;
-		}
-
-		return Crc32.HashToUInt32 (bytes);
 	}
 }
