@@ -44,6 +44,7 @@
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
+    <PackageReference Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="$(MSBuildTaskAuthoringAnalyzerVersion)" PrivateAssets="all" IncludeAssets="analyzers" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
