@@ -314,6 +314,7 @@ namespace Java.Interop
 
 	public abstract class JniArrayElements : IDisposable {
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		unsafe void* elements;
 		int elementCount;
 		int sizeOfElement;
@@ -359,12 +360,15 @@ namespace Java.Interop
 			}
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		internal unsafe void* ElementsPointer {
 			get {
-				// SAFETY: Read only the address; this does not synchronize with release.
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				return elements;
+				unsafe {
+					// SAFETY: Read only the address; this does not synchronize with release.
+					return elements;
+				}
 			}
 		}
 

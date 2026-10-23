@@ -65,10 +65,13 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe <#= info.ManagedType #>* Elements {
 			get {
-				// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-				return (<#= info.ManagedType #>*) ElementsPointer;
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (<#= info.ManagedType #>*) ElementsPointer;
+				}
 			}
 		}
 
@@ -92,9 +95,12 @@ namespace Java.Interop {
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -146,7 +152,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public override unsafe int IndexOf (<#= info.ManagedType #> item)
+		public override int IndexOf (<#= info.ManagedType #> item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -157,24 +163,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (<#= info.ManagedType #>);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (<#= info.ManagedType #>);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, <#= info.ManagedType #>[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, <#= info.ManagedType #>[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -182,11 +194,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (<#= info.ManagedType #>* b = destinationArray)
-				JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (<#= info.ManagedType #>* b = destinationArray)
+					JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (<#= info.ManagedType #>[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (<#= info.ManagedType #>[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -194,8 +209,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (<#= info.ManagedType #>* b = sourceArray)
-				JniEnvironment.Arrays.Set<#= info.JniMarshalType #>ArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (<#= info.ManagedType #>* b = sourceArray)
+					JniEnvironment.Arrays.Set<#= info.JniMarshalType #>ArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
