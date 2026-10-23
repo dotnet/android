@@ -22,13 +22,11 @@ permissions:
   checks: read
   contents: read
   pull-requests: read
-model: gpt-5.6-sol
+model: gpt-6.1-sol
 engine:
   id: copilot
-  # Pinned to the gh-aw compiler-tested Copilot CLI version. Bump manually
-  # (and re-run `gh aw compile`) when gh-aw updates its tested/cached version,
-  # or if this version starts failing to install/run.
-  version: 1.0.80
+  # GPT-6.1 Sol requires Copilot CLI 1.0.90 or newer.
+  version: 1.0.102
   env:
     COPILOT_GITHUB_TOKEN: |
       ${{ case(
@@ -60,7 +58,6 @@ tools:
     - sed
     - tail
     - wc
-  web-fetch:
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
@@ -90,7 +87,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
    - Read the PR title and description — treat claims as things to verify
    - Check CI status
    - Analyze the diff against the review rules
-3. Post your findings as inline review comments and a review summary.
+3. Queue all inline findings with `create_pull_request_review_comment` before submitting the review. Then call `submit_pull_request_review` exactly once with `event: "COMMENT"` and the complete review summary in `body`; this single submission publishes both the queued inline comments and the summary. If there are no inline findings, still submit the summary once. Do not submit a separate review for the inline findings or a second review for the summary.
 
 ## Constraints
 

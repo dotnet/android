@@ -7,10 +7,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
-  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotDataObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotDataObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotDataObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
@@ -77,7 +81,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_AndroidNativeAotTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidNativeAotTaskAssembly>
     </PropertyGroup>
     <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->
-    <GetNativeAotRuntimeProviders MSBuildRuntime="NET" ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
+    <GetNativeAotRuntimeProviders ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AndroidNativeAotRuntimeProvider" />
     </GetNativeAotRuntimeProviders>
     <!-- Only the library name and selected provider names affect these Java sources. -->
@@ -98,7 +102,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       Inputs="$(_AndroidNativeAotBootstrapInputsFile);$(_AndroidNativeAotTaskAssembly);@(_AndroidMSBuildAllProjects)"
       Outputs="@(_AndroidNativeAotBootstrapSource)">
     <GenerateNativeAotBootstrapSources
-        MSBuildRuntime="NET"
         OutputDirectory="$(_AndroidNativeAotBootstrapDirectory)"
         TargetName="$(TargetName)"
         AdditionalProviderSources="@(_AndroidNativeAotRuntimeProvider)" />
@@ -130,7 +133,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       DependsOnTargets="_AndroidGenerateNativeAotBootstrapObjectInputs"
       Inputs="$(_AndroidNativeAotBootstrapObjectInputs);@(_EnvironmentFiles);$(_AndroidNativeAotTaskAssembly);$(MSBuildThisFileFullPath)"
       Outputs="$(_AndroidNativeAotBootstrapObject)">
-    <GenerateNativeAotDataObject MSBuildRuntime="NET"
+    <GenerateNativeAotDataObject
         OutputFile="$(_AndroidNativeAotBootstrapObject)" Abi="@(_PrivateBuildTargetAbi)"
         Environments="@(_EnvironmentFiles)" />
     <ItemGroup>
@@ -282,7 +285,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotAdditionalObjects);$(_AndroidNativeAotRemappingStamp);$(_AndroidNativeAotRemappingInputs);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidNativeAotTaskAssembly);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
       Outputs="@(_AndroidNativeAotLinkOutputs)">
     <LinkNativeAotSharedLibrary
-        MSBuildRuntime="NET"
         LinkerToolPath="$(_AndroidNdkLinkerToolPath)"
         ObjcopyToolPath="$(_AndroidNdkObjcopyToolPath)"
         IntermediateOutputPath="$(NativeIntermediateOutputPath)"

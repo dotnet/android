@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Threading;
 
 using Android.Text;
@@ -19,6 +20,26 @@ namespace Java.InteropTests
 	[Category ("TrimmableTypeMapRuntimeCoverage")]
 	public class TrimmableTypeMapRuntimeCoverageTests
 	{
+		[Test]
+		public void LegacyConnector_ThrowsWhenInvokedDirectly ()
+		{
+			var connector = typeof (LegacyConnectorPeer).GetMethod ("GetGetHashCodeHandler", BindingFlags.NonPublic | BindingFlags.Static)
+				?? throw new AssertionException ("The legacy connector must remain available.");
+			var exception = Assert.Throws<TargetInvocationException> (() => connector.Invoke (null, null));
+
+			Assert.IsInstanceOf<NotSupportedException> (exception?.InnerException);
+			Assert.That (exception?.InnerException?.Message, Does.Contain ("Trimmable typemaps"));
+		}
+
+		[Test]
+		public void LegacyConnector_IsBypassedByTrimmableTypeMap ()
+		{
+			using var peer = new LegacyConnectorPeer ();
+			var method = JNIEnv.GetMethodID (peer.Class.Handle, "hashCode", "()I");
+
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
+		}
+
 		[Test]
 		public void JavaToManagedTextWatcherCallback_MarshalsStringAndPrimitiveParameters ()
 		{
@@ -256,6 +277,35 @@ namespace Java.InteropTests
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
 			return result;
+		}
+	}
+
+	[Register ("net/dot/android/test/LegacyConnectorPeer")]
+	class LegacyConnectorPeer : Java.Lang.Object
+	{
+		public LegacyConnectorPeer ()
+		{
+		}
+
+		[Register ("hashCode", "()I", "GetGetHashCodeHandler")]
+		public override int GetHashCode () => 42;
+
+		[Obsolete ("Legacy binding connector fixture.", error: true)]
+		static Delegate GetGetHashCodeHandler ()
+		{
+			return JNINativeWrapper.CreateDelegate (new Func<IntPtr, IntPtr, int> (n_GetHashCode));
+		}
+
+		static unsafe int n_GetHashCode (IntPtr jnienv, IntPtr nativeThis)
+		{
+			return JniMarshal.SafeInvokeFunc (jnienv, nativeThis, &InvokeCallback);
+		}
+
+		static int InvokeCallback (IntPtr jnienv, IntPtr nativeThis)
+		{
+			var peer = Java.Lang.Object.GetObject<LegacyConnectorPeer> (jnienv, nativeThis, JniHandleOwnership.DoNotTransfer)
+				?? throw new InvalidOperationException ("The legacy callback peer was not found.");
+			return peer.GetHashCode ();
 		}
 	}
 

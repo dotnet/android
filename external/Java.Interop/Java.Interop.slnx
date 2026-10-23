@@ -26,14 +26,10 @@
     <Project Path="src/Java.Interop.Tools.JavaSource/Java.Interop.Tools.JavaSource.csproj" />
     <Project Path="src/Java.Interop.Tools.JavaTypeSystem/Java.Interop.Tools.JavaTypeSystem.csproj" />
     <Project Path="src/Java.Interop.Tools.Maven/Java.Interop.Tools.Maven.csproj" />
-    <Project Path="src/Xamarin.Android.Tools.AnnotationSupport.Cecil/Xamarin.Android.Tools.AnnotationSupport.Cecil.csproj" />
     <Project Path="src/Xamarin.Android.Tools.AnnotationSupport/Xamarin.Android.Tools.AnnotationSupport.csproj" />
     <Project Path="src/Xamarin.Android.Tools.ApiXmlAdjuster/Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
     <Project Path="src/Xamarin.Android.Tools.Bytecode/Xamarin.Android.Tools.Bytecode.csproj" />
     <Project Path="src/Xamarin.SourceWriter/Xamarin.SourceWriter.csproj" />
-  </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/Java.Interop.Tools.TypeNameMappings/Java.Interop.Tools.TypeNameMappings.csproj" />
   </Folder>
   <Folder Name="/Tools/">
     <Project Path="tools/class-parse/class-parse.csproj" />
