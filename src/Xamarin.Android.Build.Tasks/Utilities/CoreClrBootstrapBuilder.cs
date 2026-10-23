@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
 
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
@@ -62,11 +63,11 @@ sealed class CoreClrBootstrapBuilder
 		this.runtimeProperties.Remove ("BUNDLE_PROBE");
 	}
 
-	public byte [] Create ()
+	public void Write (MemoryStream output)
 	{
 		var state = CreateDsoCache ();
 		foreach (var entry in state.Entries) {
-			entry.Hash = TypeMapHelper.HashNameForCLR (entry.HashedName);
+			entry.Hash = HashLibraryName (entry.HashedName);
 		}
 		state.Entries.Sort ((a, b) => a.Hash.CompareTo (b.Hash));
 
@@ -87,8 +88,8 @@ sealed class CoreClrBootstrapBuilder
 				preloads.Add ((uint)index);
 			}
 		}
-		return CoreClrBootstrapBlob.Create (
-			IgnoreSplitConfigs, HaveAssemblyStore, (uint)PackageNamingPolicy,
+		CoreClrBootstrapBlob.Write (
+			output, IgnoreSplitConfigs, HaveAssemblyStore, (uint)PackageNamingPolicy,
 			(uint)NumberOfAssembliesInApk, (uint)BundledAssemblyNameWidth, (uint)NativeLibraries.Count,
 			AndroidPackageName, environmentVariables, systemProperties, runtimeProperties,
 			libraries, preloads, (uint)state.PreloadStride
@@ -205,5 +206,14 @@ sealed class CoreClrBootstrapBuilder
 			return null;
 		}
 		return name;
+	}
+
+	static uint HashLibraryName (string name)
+	{
+		if (name.Length == 0) {
+			return UInt32.MaxValue;
+		}
+
+		return Crc32.HashToUInt32 (MonoAndroidHelper.Utf8StringToBytes (name));
 	}
 }

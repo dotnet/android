@@ -125,7 +125,19 @@
       Inputs="$(ProjectAssetsFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TypeMapOutputDirectory)framework-implementation-assemblies.txt;$(_TypeMapOutputDirectory)reference-implementation-assemblies.txt">
     <PropertyGroup>
-      <_TrimmableTypeMapResolveProperties>_ComputeFilesToPublishForRuntimeIdentifiers=true;SelfContained=true;DesignTimeBuild=$(DesignTimeBuild);AppendRuntimeIdentifierToOutputPath=true;ResolveAssemblyReferencesFindRelatedSatellites=false;SkipCompilerExecution=true;_OuterIntermediateAssembly=@(IntermediateAssembly);_OuterOutputPath=$(OutputPath);_OuterIntermediateOutputPath=$(IntermediateOutputPath);_AndroidNdkDirectory=$(_AndroidNdkDirectory)</_TrimmableTypeMapResolveProperties>
+      <_TrimmableTypeMapResolveProperties>
+        _ComputeFilesToPublishForRuntimeIdentifiers=true
+        ;SelfContained=true
+        ;DesignTimeBuild=$(DesignTimeBuild)
+        ;AppendRuntimeIdentifierToOutputPath=true
+        ;ResolveAssemblyReferencesFindRelatedSatellites=false
+        ;SkipCompilerExecution=true
+        ;_OuterIntermediateAssembly=@(IntermediateAssembly)
+        ;_OuterOutputPath=$(OutputPath)
+        ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
+        ;_AndroidNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))
+        ;$(_AndroidResolvedToolingProperties)
+      </_TrimmableTypeMapResolveProperties>
     </PropertyGroup>
     <ItemGroup>
       <_TrimmableTypeMapResolveRid Include="$(_TrimmableTypeMapEffectiveRuntimeIdentifiers)" />
@@ -367,12 +379,12 @@
 
   <!--
     Populates @(_AdditionalNativeConfigResolvedAssemblies) with the trimmable TypeMap DLLs
-    so that GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava) accounts
+    so that the CoreCLR bootstrap generator accounts
     for them.  This must NOT live inside _GenerateJavaStubs because that target can be
     skipped on incremental builds, which would leave the item group empty.
   -->
   <Target Name="_PrepareTrimmableNativeConfigAssemblies"
-      BeforeTargets="_GeneratePackageManagerJava"
+      BeforeTargets="_AndroidGenerateCoreClrBootstrapInputs"
       DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
       <_AdditionalNativeConfigResolvedAssemblies Remove="@(_AdditionalNativeConfigResolvedAssemblies)" />
@@ -387,7 +399,7 @@
     the item groups empty for targets such as Install.
   -->
   <Target Name="_PrepareTrimmableTypeMapAssemblies"
-      BeforeTargets="_CollectAssembliesToCompress;_GeneratePackageManagerJava;_RemoveRegisterAttribute"
+      BeforeTargets="_CollectAssembliesToCompress;_AndroidGenerateCoreClrBootstrapInputs;_RemoveRegisterAttribute"
       DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies;_DefineBuildTargetAbis">
     <PropertyGroup>
       <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
@@ -399,7 +411,7 @@
     </PropertyGroup>
 
     <!-- Add TypeMap DLLs to _ResolvedAssemblies and _ShrunkAssemblies so they are counted by
-         GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava),
+         the CoreCLR bootstrap generator,
          included in the assembly store hash table, and keep _RemoveRegisterAttribute
          source/destination counts in sync. -->
     <ItemGroup>
@@ -503,14 +515,13 @@
   <!--
     _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
     In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
-    so this target only handles the manifest, assembly store setup, and native config.
+    so this target only handles the manifest and runtime providers.
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
 
     Inputs uses both generator stamps. The pre-trim stamp covers the generated manifest and
     other shared outputs, while _TrimmableJavaSourceStamp covers the selected JCW set (the
     post-trim stamp for trimmed CoreCLR builds). Both remain stable on no-op builds.
-    We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
-    (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
+    We keep _GetGenerateJavaStubsInputs in DependsOnTargets to collect environment inputs.
     NativeAOT environment configuration is generated separately as linked data objects;
     only CoreCLR configuration depends on the environment inputs below.
   -->

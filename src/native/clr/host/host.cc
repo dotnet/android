@@ -16,6 +16,7 @@
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
 #include <host/fastdev-assemblies.hh>
+#include <host/gc-bridge.hh>
 #include <host/host.hh>
 #include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
@@ -44,7 +45,7 @@ void Host::clr_error_writer (const char *message) noexcept
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
 	// TODO: `path` might be a full path, make sure it isn't
-	log_debugf (LOG_DEFAULT, "clr_external_assembly_probe (\"%s\"...)", optional_string (path));
+	log_debugf (LOG_ASSEMBLY, "clr_external_assembly_probe (\"%s\"...)", optional_string (path));
 	if (data_start == nullptr || size == nullptr) {
 		return false; // TODO: abort instead?
 	}
@@ -448,9 +449,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	init.maxGrefCount                                   = static_cast<int>(AndroidSystem::get_max_gref_count ());
-	jclass lrefClass                                    = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, false);
-	Class_getName                                       = env->GetMethodID (lrefClass, "getName", "()Ljava/lang/String;");
-	env->DeleteLocalRef (lrefClass);
+	init.initializeGCBridge                            = &GCBridge::initialize_callback;
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);

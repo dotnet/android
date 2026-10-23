@@ -24,6 +24,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidApiLevel { get; set; } = "";
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		/// <summary>
 		/// True if //manifest/application/[@android:extractNativeLibs='false']. False otherwise.
 		/// </summary>
@@ -54,7 +56,8 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
-			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
+			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+			var manifest = AndroidAppManifest.Load (ManifestFile, supportedVersions);
 			var root = manifest.Document.Element ("manifest");
 			var app = root?.Element ("application");
 
@@ -80,7 +83,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				var libraries = new List<ITaskItem> ();
-				var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions);
+				var platformPath = AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (AndroidSdkDirectory, AndroidApiLevel, supportedVersions);
 				if (platformPath == null) {
 					Log.LogDebugMessage ($"Could not find platform directory for API level '{AndroidApiLevel}'");
 				}

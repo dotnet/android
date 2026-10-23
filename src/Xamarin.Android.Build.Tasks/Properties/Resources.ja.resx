@@ -541,10 +541,6 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
     <comment>{0} - The managed type name
 {1} - The exception message of the associated exception</comment>
   </data>
-  <data name="XA4210" xml:space="preserve">
-    <value>ExportAttribute または ExportFieldAttribute を使用するときには、Mono.Android.Export.dll への参照を追加してください。</value>
-    <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
-  </data>
   <data name="XA4211" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' は $(TargetPlatformVersion) '{1}' 未満です。ACW のコンパイルに API-{2} を使用します。</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
@@ -682,7 +678,7 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.</value>
+    <value>Android コード生成ターゲット '{0}' はサポートされなくなりました。'AndroidCodegenTarget' プロパティでサポートされるのは 'XAJavaInterop1' のみです。</value>
     <comment>The following are literal names and should not be translated: AndroidCodegenTarget, XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -923,14 +919,14 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The invalid input record.</comment>
   </data>
   <data name="XA4329_RequiredProperty" xml:space="preserve">
-    <value>AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.</value>
+    <value>AndroidR8ObfuscationMode=runtime-remapping では $({0}) を '{1}' する必要がありますが、{2} です。</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping.
 {0} - The required MSBuild property name.
 {1} - The required literal value.
 {2} - The actual value, including quotes.</comment>
   </data>
   <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
-    <value>AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <value>AndroidR8ObfuscationMode=runtime-remapping は、ランタイム '{0}' ではサポートされていません。サポートされているランタイムは CoreCLR と NativeAOT です。</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, runtime-remapping, CoreCLR, NativeAOT.
 {0} - The runtime name.</comment>
   </data>
@@ -1174,7 +1170,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.</value>
+    <value>'AndroidR8ObfuscationMode' MSBuild プロパティの値 '{0}' が無効です。有効な値は 'disabled'、'private-members'、および 'runtime-remapping' です。</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>

@@ -31,6 +31,8 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public string? AndroidManifestFile { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		// general d8 feature options.
 		public bool Debug { get; set; }
 		public bool EnableDesugar { get; set; } = true;
@@ -106,7 +108,7 @@ namespace Xamarin.Android.Tasks
 
 			//NOTE: if this is blank, we can omit --min-api in this call
 			if (!AndroidManifestFile.IsNullOrEmpty ()) {
-				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
+				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths));
 				if (doc.MinSdkVersion.HasValue) {
 					MinSdkVersion = doc.MinSdkVersion.Value;
 					WriteArg (response, "--min-api");

@@ -2,5 +2,9 @@
   "author": "Microsoft",
   "name": "Biblioteca de clases de Android",
   "description": "Proyecto para crear una biblioteca de clases .NET para Android",
-  "symbols/supportedOSVersion/description": "Invalida $(SupportedOSPlatformVersion) en el proyecto"
+  "symbols/Framework/description": "The target framework for the project.",
+  "symbols/Framework/choices/net11.0-android/description": "Target net11.0-android",
+  "symbols/Framework/choices/net10.0-android/description": "Target net10.0-android",
+  "symbols/supportedOSVersion/description": "Invalida $(SupportedOSPlatformVersion) en el proyecto",
+  "symbols/skipRestore/description": "If specified, skips the automatic restore of the project on create."
 }

@@ -12,12 +12,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ManifestFile { get; set; } = "";
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		[Output]
 		public string? ActivityName { get; set; }
 
 		public override bool RunTask ()
 		{
-			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
+			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths));
 
 			ActivityName = manifest.GetLaunchableUserActivityName ();
 

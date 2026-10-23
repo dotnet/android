@@ -17,14 +17,19 @@ Some additional context for this project is documented in the [Motivation][motiv
 and [Architecture][architecture] pages.
 
 [jni]: http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html
-[motivation]: /Documentation/Motivation.md
-[architecture]: /Documentation/Architecture.md
+[motivation]: Documentation/Motivation.md
+[architecture]: Documentation/Architecture.md
 [android]: https://github.com/dotnet/android
 
 ## Building
 
-- The `main` branch is configured to build with .NET 10, available [here][net-10].
+- The standalone tooling and test target framework on `main` is .NET 10, available [here][net-10].
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
+
+The standalone tooling build does not require a locally built Android SDK.
+For the Android product build, follow the enclosing repository's
+[build instructions](../../Documentation/README.md#building-from-source).
+Run the following commands from `external/Java.Interop/`.
 
 `Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:
 
@@ -32,7 +37,7 @@ and [Architecture][architecture] pages.
 dotnet build -t:Prepare
 ```
 
-Once `Java.Interop.slnx` has been prepared, it can be built in Visual Studio 2022 or with `dotnet`:
+Once `Java.Interop.slnx` has been prepared, build it with `dotnet`:
 
 ```
 dotnet build
@@ -43,7 +48,7 @@ dotnet build
 
 Additional build options are documented [here][build-configuration].
 
-[build-configuration]: /Documentation/BuildConfiguration.md
+[build-configuration]: Documentation/BuildConfiguration.md
 
 ## Feedback and Contributing
 

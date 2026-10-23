@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Java;
 using System.Threading;
 
 using Java.Interop;
@@ -16,7 +17,7 @@ namespace Android.Runtime
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
-		internal struct JnienvInitializeArgs {
+		internal unsafe struct JnienvInitializeArgs {
 			public IntPtr          javaVm;
 			public IntPtr          env;
 			public IntPtr          grefLoader;
@@ -29,6 +30,7 @@ namespace Android.Runtime
 			public IntPtr          jniRemappingData;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public int             maxGrefCount;
+			public delegate* unmanaged<delegate* unmanaged<MarkCrossReferencesArgs*, void>, delegate* unmanaged<MarkCrossReferencesArgs*, void>> initializeGCBridge;
 		}
 #pragma warning restore 0649
 
@@ -61,7 +63,7 @@ namespace Android.Runtime
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
 		// Only used for NativeAOT after the runtime has been created. CoreCLR uses Initialize().
-		internal static void InitializeNativeAotRuntime (JniRuntime runtime)
+		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			if (!RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
@@ -75,7 +77,7 @@ namespace Android.Runtime
 			}
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
-			JavaMarshalRegisteredPeers.InitializeIfNeeded ();
+			JavaMarshalGCBridge.Initialize (args);
 			TrimmableTypeMap.RegisterNativeMethods ();
 			SetSynchronizationContext ();
 		}
@@ -105,7 +107,7 @@ namespace Android.Runtime
 					new TrimmableTypeMapValueManager ()
 			);
 			JniRuntime.SetCurrent (androidRuntime);
-			JavaMarshalRegisteredPeers.InitializeIfNeeded ();
+			JavaMarshalGCBridge.Initialize (*args);
 			TrimmableTypeMap.RegisterNativeMethods ();
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
@@ -147,7 +149,7 @@ namespace Android.Runtime
 
 			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
 			if (type is null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+				Logger.Log (LogLevel.Warn, "monodroid",
 					$"Could not load type '{typeName}'. Skipping startup hooks.");
 				return;
 			}
@@ -155,7 +157,7 @@ namespace Android.Runtime
 			var method = type.GetMethod (methodName, 
 				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
 			if (method is null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+				Logger.Log (LogLevel.Warn, "monodroid",
 					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
 				return;
 			}

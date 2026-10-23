@@ -49,6 +49,7 @@ TypesMustExist : Type 'Xamarin.Android.Net.AndroidClientHandler' does not exist 
 CannotRemoveBaseTypeOrInterface : Type 'Android.Views.InputMethods.EditorInfo' does not implement interface 'Android.Text.IInputType' in the implementation but it does in the contract.
 CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'Java.Interop.ExportAttribute' in the contract but not the implementation.
 TypesMustExist : Type 'Android.Graphics.ColorValueMarshaler' does not exist in the implementation but it does exist in the contract.
+CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.ExtensionAttribute' exists on 'Android.Runtime.JNINativeWrapper' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'Java.Interop.JniValueMarshalerAttribute' exists on 'Android.Graphics.Color' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'Java.Interop.JniValueMarshalerAttribute' exists on 'Android.Runtime.IJavaObject' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.SupportedOSPlatformAttribute' exists on 'Android.AccessibilityServices.AccessibilityService.DisableSelf()' in the contract but not the implementation.
@@ -5598,3 +5599,9 @@ CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatform
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.ExceptionUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.LangUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.VersionInfo' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.LinkerSafeAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Runtime.PreserveAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Runtime.TypeManager' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Widget.ItemEventArgs' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Interop.AndroidEventHelper' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Interop.DoNotPackageAttribute' in the contract but not the implementation.

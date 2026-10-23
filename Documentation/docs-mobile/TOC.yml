@@ -128,7 +128,7 @@
         href: "messages/index.md#xa0xxx-environment-issue-or-missing-tooling"
       - name: XA0000
         href: messages/xa0000.md
-      - name: XA0001
+      - name: XA0001 (legacy)
         href: messages/xa0001.md
       - name: XA0002
         href: messages/xa0002.md
@@ -168,13 +168,13 @@
         href: messages/xa0111.md
       - name: XA0112
         href: messages/xa0112.md
-      - name: XA0113
+      - name: XA0113 (legacy)
         href: messages/xa0113.md
       - name: XA0115
         href: messages/xa0115.md
       - name: XA0116
         href: messages/xa0116.md
-      - name: XA0117
+      - name: XA0117 (legacy)
         href: messages/xa0117.md
       - name: XA0118
         href: messages/xa0118.md
@@ -430,6 +430,8 @@
         href: messages/xa5301.md
       - name: XA5302
         href: messages/xa5302.md
+      - name: XA5305
+        href: messages/xa5305.md
     - name: "XA6xxx: Internal tools"
       href: "messages/index.md#xa6xxx-internal-tools"
     - name: "XAccc7xxx: Unhandled MSBuild exceptions"

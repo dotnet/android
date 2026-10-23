@@ -32,9 +32,20 @@ namespace Java.Lang {
 		{
 		}
 
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live JNI object reference compatible
+		/// with this peer's Java type and VM throughout construction and cleanup, including failure.
+		/// Local references must belong to the calling thread; aliases must not delete the reference
+		/// concurrently. TransferLocalRef/TransferGlobalRef must match its actual reference kind.
+		/// SetHandle releases transferred references in its finally, even if peer construction fails;
+		/// an earlier base-constructor failure does not enter that cleanup. DoNotTransfer retains
+		/// the caller's ownership. Zero is accepted and does not supply a new Java peer.
+		/// </safety>
 		public unsafe Object (IntPtr handle, JniHandleOwnership transfer)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: The caller supplies the reference and transfer rights described above.
+			// SetHandle delegates peer construction and releases the transferred handle in its finally.
 			SetHandle (handle, transfer);
 		}
 

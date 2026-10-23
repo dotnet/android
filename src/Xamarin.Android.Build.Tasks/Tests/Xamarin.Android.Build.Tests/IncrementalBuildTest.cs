@@ -437,17 +437,98 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
 			proj.Touch ("MainActivity.cs");
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Changed assembly should rebuild.");
-			builder.Output.AssertTargetIsNotSkipped ("_GeneratePackageManagerJava");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateCoreClrBootstrap");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
 			CollectionAssert.AreEqual (contents, File.ReadAllBytes (bootstrap));
 			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (bootstrap), "Unchanged XCFG must retain its timestamp.");
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateCoreClrBootstrap");
 			builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
 
 			File.Delete (bootstrap);
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Missing bootstrap must be regenerated.");
-			builder.Output.AssertTargetIsNotSkipped ("_GeneratePackageManagerJava");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateCoreClrBootstrap");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
 			CollectionAssert.AreEqual (contents, File.ReadAllBytes (bootstrap));
+
+			string stamp = Directory.GetFiles (intermediate, "_AndroidGenerateCoreClrBootstrap.stamp", SearchOption.AllDirectories).Single ();
+			File.Delete (stamp);
+			Assert.IsTrue (builder.Build (proj), "A deleted bootstrap stamp must be recovered.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateCoreClrBootstrap");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+
+			File.Delete (bootstrap);
+			Directory.CreateDirectory (bootstrap);
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "A failed bootstrap write must fail the build.");
+			FileAssert.DoesNotExist (stamp, "Failure must invalidate the previous bootstrap stamp.");
+			Directory.Delete (bootstrap);
+			builder.ThrowOnBuildFailure = true;
+			Assert.IsTrue (builder.Build (proj), "Generation must recover after a failed write.");
+			CollectionAssert.AreEqual (contents, File.ReadAllBytes (bootstrap));
+			Assert.IsTrue (builder.Clean (proj));
+			FileAssert.DoesNotExist (bootstrap);
+			FileAssert.DoesNotExist (stamp);
+		}
+
+		[Test]
+		public void CoreClrBootstrapInputsAreIndependentOfJavaResources ()
+		{
+			string environment = "BOOTSTRAP_INPUT=first";
+			var runtimeOption = new BuildItem ("RuntimeHostConfigurationOption", "Bootstrap.Feature") {
+				Metadata = { { "Value", "first-feature" } },
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidEnvironment ("bootstrap.env") { TextContent = () => environment },
+					runtimeOption,
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifier ("arm64-v8a");
+			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			string bootstrap = Directory.GetFiles (intermediate, "coreclr-bootstrap.bin", SearchOption.AllDirectories).Single ();
+			byte [] contents = File.ReadAllBytes (bootstrap);
+			void AssertBinaryChange ()
+			{
+				Assert.IsTrue (builder.Build (proj));
+				builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateCoreClrBootstrap");
+				builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+				byte [] changed = File.ReadAllBytes (bootstrap);
+				CollectionAssert.AreNotEqual (contents, changed);
+				contents = changed;
+			}
+
+			environment = "BOOTSTRAP_INPUT=second";
+			proj.Touch ("bootstrap.env");
+			AssertBinaryChange ();
+			Assert.AreEqual ("second", EnvironmentHelper.ReadCoreClrBootstrap (intermediate).EnvironmentVariables ["BOOTSTRAP_INPUT"]);
+			runtimeOption.Metadata ["Value"] = "second-feature";
+			AssertBinaryChange ();
+			StringAssert.Contains ("second-feature", Encoding.UTF8.GetString (contents));
+			var library = new AndroidItem.AndroidNativeLibrary ("native/arm64-v8a/libbootstrap.so") {
+				BinaryContent = () => File.ReadAllBytes (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "android-arm64", "libtest-jni-library.so")),
+			};
+			proj.OtherBuildItems.Add (library);
+			AssertBinaryChange ();
+			Assert.IsTrue (EnvironmentHelper.ReadCoreClrBootstrap (intermediate).Preloads.Entries.Any (entry => entry.LibraryName == "libbootstrap.so"));
+			proj.SetProperty ("AndroidIgnoreAllJniPreload", "true");
+			AssertBinaryChange ();
+			Assert.IsFalse (EnvironmentHelper.ReadCoreClrBootstrap (intermediate).Preloads.Entries.Any (entry => entry.LibraryName == "libbootstrap.so"));
+			proj.OtherBuildItems.Remove (library);
+			AssertBinaryChange ();
+			Assert.IsTrue (builder.Build (proj));
+			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateCoreClrBootstrap");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+			proj.SetProperty ("AssemblyName", "RenamedBootstrapApp");
+			Assert.IsTrue (builder.Build (proj));
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePackageManagerJava");
+			StringAssert.Contains ("RenamedBootstrapApp.dll", File.ReadAllText (
+				Directory.GetFiles (intermediate, "MonoPackageManager_Resources.java", SearchOption.AllDirectories).Single ()));
 		}
 
 		[Test]
@@ -475,6 +556,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 				builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+				builder.Output.AssertTargetIsSkipped ("_AndroidGenerateCoreClrBootstrap");
 				AssertDynamicJniRegistrationDisabled (proj, builder);
 			}
 		}
@@ -618,12 +700,10 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
-			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
 			using (var b = CreateApkBuilder ()) {
 				b.Target = "Compile";
 				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
-				var designTimeDesigner = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
+				var designTimeDesigner = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "_Microsoft.Android.Resource.Designer.dll");
 				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 				b.Target = "Build";
 				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
@@ -923,7 +1003,8 @@ namespace Lib2
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
-				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
+				("_GeneratePackageManagerJava", true),
+				("_AndroidGenerateCoreClrBootstrap", true),
 				("_ResolveLibraryProjectImports", false),
 				("_CleanIntermediateIfNeeded", false),
 			};
@@ -1689,7 +1770,7 @@ namespace Lib2
 
 			var targets = new [] {
 				"_GenerateJavaStubs",
-				"_GeneratePackageManagerJava",
+				"_AndroidGenerateCoreClrBootstrap",
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -2246,7 +2327,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void PostTrimmingPipelineIsSkippedOnSecondBuild ()
+		public void PostTrimmingPipelineIsSkippedOnSecondBuild ([Values ("arm64-v8a", "x86_64")] string abi)
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			const bool isRelease = true;
@@ -2257,13 +2338,14 @@ namespace Lib2
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifier ("arm64-v8a");
+			proj.SetRuntimeIdentifier (abi);
 			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("AndroidAddKeepAlives", "true");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_PostTrimmingPipeline");
-				var linkedAssembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked", $"{proj.ProjectName}.dll");
+				var linkedAssembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi), "linked", $"{proj.ProjectName}.dll");
 				FileAssert.Exists (linkedAssembly, "The post-trimming pipeline should operate on the linked application assembly.");
 				var assemblyHash = Files.HashFile (linkedAssembly);
 				var assemblyWriteTime = File.GetLastWriteTimeUtc (linkedAssembly);
@@ -2272,6 +2354,19 @@ namespace Lib2
 				b.Output.AssertTargetIsSkipped ("_PostTrimmingPipeline");
 				Assert.AreEqual (assemblyHash, Files.HashFile (linkedAssembly), "A no-change build should preserve the linked assembly.");
 				Assert.AreEqual (assemblyWriteTime, File.GetLastWriteTimeUtc (linkedAssembly), "A no-change build should not rewrite the linked assembly.");
+
+				foreach (string keepAlives in new [] { "false", "true" }) {
+					var parameters = new [] { $"AndroidAddKeepAlives={keepAlives}" };
+					Assert.IsTrue (b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true, saveProject: false),
+						"Changing a cached Android property should succeed without changing the project or assemblies.");
+					b.Output.AssertTargetIsNotSkipped ("_AndroidInvalidateLinkerCache");
+					b.Output.AssertTargetIsNotSkipped ("_RunILLink");
+
+					Assert.IsTrue (b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true, saveProject: false),
+						"An unchanged build after a property change should succeed.");
+					b.Output.AssertTargetIsSkipped ("_AndroidInvalidateLinkerCache");
+					b.Output.AssertTargetIsSkipped ("_RunILLink");
+				}
 			}
 		}
 	}

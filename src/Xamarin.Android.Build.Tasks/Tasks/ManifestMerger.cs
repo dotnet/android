@@ -30,6 +30,8 @@ namespace Xamarin.Android.Tasks
 
 		public string []? ManifestPlaceholders { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		public string? ExtraArgs { get; set; }
 
 		public bool SkipLenientManifestHandling { get; set; }
@@ -76,7 +78,7 @@ namespace Xamarin.Android.Tasks
 				result = base.Execute ();
 				if (!result)
 					return result;
-				var m = new ManifestDocument (tempFile);
+				var m = new ManifestDocument (tempFile, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths));
 				var ms = MemoryStreamPool.Shared.Rent ();
 				try {
 					m.Save (Log, ms, removeNodes: true);

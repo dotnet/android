@@ -18,6 +18,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? CommandLineToolsVersion { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		[Required]
 		public string AndroidApiLevel { get; set; } = "";
 
@@ -57,6 +59,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var dependencies = new List<ITaskItem> ();
 			var javaDependencies = new List<ITaskItem> ();
+			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
 			if (!MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out var targetVersion)) {
 				Log.LogDebugMessage ($"Failed to parse AndroidApiLevel '{AndroidApiLevel}', defaulting to {DefaultMinSDKVersion}");
 				targetVersion = new Version (DefaultMinSDKVersion, 0);
@@ -64,14 +67,14 @@ namespace Xamarin.Android.Tasks
 			var targetApiLevel = targetVersion.Major;
 			var manifestApiLevel = DefaultMinSDKVersion;
 			if (File.Exists (ManifestFile.ItemSpec)) {
-				var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+				var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, supportedVersions);
 				manifestApiLevel = manifest.TargetSdkVersion ?? manifest.MinSdkVersion ?? DefaultMinSDKVersion;
 			}
 			var sdkVersion = Math.Max (targetApiLevel, manifestApiLevel);
 			// Use the platform Id (e.g. "36.1") for the directory name when the target has a minor version,
 			// since Google ships platforms/android-36.1 as a separate SDK platform from platforms/android-36.
 			var platformId = sdkVersion == targetVersion.Major
-				? (MonoAndroidHelper.SupportedVersions.GetIdFromVersionCodeFull (targetVersion) ?? sdkVersion.ToString ())
+				? (supportedVersions.GetIdFromVersionCodeFull (targetVersion) ?? sdkVersion.ToString ())
 				: sdkVersion.ToString ();
 			dependencies.Add (CreateAndroidDependency ($"platforms/android-{platformId}", ""));
 			dependencies.Add (CreateAndroidDependency ($"build-tools/{BuildToolsVersion}", BuildToolsVersion));

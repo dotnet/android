@@ -14,7 +14,7 @@ namespace xamarin::android {
 	{
 		// An empty input deliberately maps to UINT32_MAX rather than to the standard CRC32 of the
 		// empty string (0). This is a sentinel that must stay in lockstep with the managed generators
-		// (TypeMapHelper.HashNameForCLR / HashBytesForCLR, which likewise special-case a zero-length
+		// (AssemblyStoreGenerator and CoreClrBootstrapBuilder, which likewise special-case a zero-length
 		// input to UInt32.MaxValue); the build-time and runtime hashes must agree, so do not "fix"
 		// this to 0.
 		if (len == 0) [[unlikely]] {
