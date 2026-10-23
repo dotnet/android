@@ -1142,7 +1142,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>Właściwość programu MSBuild "AndroidR8ObfuscationMode" ma nieprawidłową wartość '{0}'. Prawidłowe wartości to "wyłączone" i "prywatne-składowe".</value>
+    <value>Właściwość MSBuild „AndroidR8ObfuscationMode” ma nieprawidłową wartość „{0}”. Prawidłowe wartości to „disabled” i „private-members”.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>
