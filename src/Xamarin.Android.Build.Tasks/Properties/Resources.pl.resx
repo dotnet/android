@@ -1115,6 +1115,10 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>Właściwość MSBuild „RunAOTCompilation” nie jest zgodna ze środowiskiem uruchomieniowym CoreCLR. Nie można kontynuować kompilacji, gdy ta właściwość jest ustawiona na wartość „false”. Usuń właściwość. Począwszy od platformy .NET 11 ustaw opcję „PublishReadyToRun” na wartość „false”, aby wyłączyć kompilację AOT ReadyToRun (R2R).</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
+  </data>
   <data name="XA1045" xml:space="preserve">
     <value>Plik wejściowy `{0}` nie rozpoczyna się od elementu `&lt;replacements/&gt;`.</value>
     <comment>{0} - file path</comment>
@@ -1138,7 +1142,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
-    <value>Właściwość programu MSBuild "AndroidR8ObfuscationMode" ma nieprawidłową wartość '{0}'. Prawidłowe wartości to "wyłączone" i "prywatne-składowe".</value>
+    <value>Właściwość MSBuild „AndroidR8ObfuscationMode” ma nieprawidłową wartość „{0}”. Prawidłowe wartości to „disabled” i „private-members”.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
   </data>

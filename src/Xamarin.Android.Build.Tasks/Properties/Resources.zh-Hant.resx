@@ -1115,6 +1115,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>MSBuild 屬性 'RunAOTCompilation' 與 CoreCLR 執行階段不相容。此屬性設為 'false' 時，建置無法繼續。移除屬性。從 .NET 11 開始，將 'PublishReadyToRun' 設為 'false'，即可停用 ReadyToRun (R2R) AOT 編譯。</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
+  </data>
   <data name="XA1045" xml:space="preserve">
     <value>輸入檔案 `{0}` 不是以 `&lt;replacements/&gt;` 開頭。</value>
     <comment>{0} - file path</comment>

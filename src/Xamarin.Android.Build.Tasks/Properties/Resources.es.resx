@@ -1115,6 +1115,10 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>La propiedad de MSBuild "RunAOTCompilation" no es compatible con el runtime de CoreCLR. La compilación no puede continuar mientras esta propiedad esté establecida en "false". Quite la propiedad. A partir de .NET 11, establezca "PublishReadyToRun" en "false" para deshabilitar la compilación de AOT ReadyToRun (R2R).</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
+  </data>
   <data name="XA1045" xml:space="preserve">
     <value>El archivo de entrada `{0}` no empieza por `&lt;replacements/&gt;`.</value>
     <comment>{0} - file path</comment>

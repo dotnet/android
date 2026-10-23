@@ -1115,6 +1115,10 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>'RunAOTCompilation' MSBuild özelliği CoreCLR çalışma zamanı ile uyumlu değil. Bu özellik 'false' olarak ayarlandığında derleme devam edemez. Özelliği kaldırın. .NET 11'den başlayarak, ReadyToRun (R2R) AOT derlemesini devre dışı bırakmak için 'PublishReadyToRun' öğesini 'false' olarak ayarlayın.</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
+  </data>
   <data name="XA1045" xml:space="preserve">
     <value>Giriş dosyası `{0}`, `&lt;replacements/&gt;` ile başlamıyor.</value>
     <comment>{0} - file path</comment>
