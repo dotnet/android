@@ -355,6 +355,7 @@ static class ModelBuilder
 				JniSignature = mm.JniSignature,
 				CallbackParameterTypeNames = mm.NativeCallbackParameterTypeNames,
 				CallbackReturnTypeName = mm.NativeCallbackReturnTypeName,
+				CallbackOwnsBoundary = mm.NativeCallbackBoundary.IsProtected,
 				// A callback which is already [UnmanagedCallersOnly] is registered directly; a
 				// generated wrapper would have to managed-call it, which is illegal.
 				IsDirectUnmanagedCallersOnlyCallback = mm.IsUnmanagedCallersOnlyCallback && !mm.IsExport && !mm.CallManagedMethodDirectly,
@@ -501,14 +502,20 @@ static class ModelBuilder
 			uco.CallbackType.ManagedTypeName,
 			uco.CallbackType.AssemblyName,
 			uco.CallbackMethodName,
-			uco.JniSignature);
+			uco.JniSignature,
+			uco.CallbackOwnsBoundary,
+			uco.CallbackReturnTypeName,
+			uco.CallbackParameterTypeNames is null ? null : string.Join (",", uco.CallbackParameterTypeNames));
 	}
 
 	readonly record struct UcoWrapperReuseKey (
 		string CallbackTypeName,
 		string CallbackAssemblyName,
 		string CallbackMethodName,
-		string JniSignature);
+		string JniSignature,
+		bool CallbackOwnsBoundary,
+		string? CallbackReturnTypeName,
+		string? CallbackParameterTypes);
 
 	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,
 		string outputAssemblyName, string jniName)

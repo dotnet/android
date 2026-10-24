@@ -22,6 +22,50 @@ The work happens in the `GenerateTrimmableTypeMap` task, invoked from the
 (`*.Trimmable.CoreCLR.targets`, `*.Trimmable.NativeAOT.targets`) extend the
 shared pipeline.
 
+## JNI callback boundary ownership
+
+The scanner reads each resolved `n_*` callback's implementation body and managed
+signature. Neither a package version nor the callback-format assembly attribute
+proves that a managed-callable callback contains an exception boundary.
+
+An exact trusted `Java.Interop.JniMarshal.SafeInvokeAction`/`SafeInvokeFunc` or
+`Mono.Android` `JniMarshalTyped.Invoke_*` thunk owns its boundary. A recognized
+inline boundary must have guarded `BeginMarshalMethod`, matching transition and
+runtime locals, a `System.Exception` catch calling `OnUserUnhandledException`,
+an enclosing `finally` calling `EndMarshalMethod`, and
+`DebuggerDisableUserUnhandledExceptionsAttribute`. Unsupported or incomplete
+shapes remain explicitly unrecognized. Reference assemblies never provide
+implementation-body evidence, including references containing `ldnull; throw`
+stubs.
+
+Protected managed callbacks receive a direct-call forwarding UCO with no second
+catch or transition. Raw, unrecognized, or unavailable callbacks receive a
+compatibility `SafeInvokeAction`/`SafeInvokeFunc` call whose managed function
+pointer exactly matches the captured callback signature. JNI boolean/character
+ABI conversions remain at the forwarding boundary. Signatures outside the
+helpers' finite generic overload set receive the equivalent full guarded
+transition, catch, and finally instead. Existing `UnmanagedCallersOnly`
+callbacks are registered directly and are never called as managed functions.
+Connector factories are not invoked or rooted; normal trimming removes unused
+connectors.
+
+Exception policy runs through virtual `JniRuntime.OnUserUnhandledException`.
+The Android runtime raises `UnhandledExceptionRaiser` and honors `Handled`
+before base policy records the managed exception and debugger notification;
+`EndMarshalMethod` subsequently publishes the JNI exception. Forwarders do not
+call the legacy bridge-wait or immediate exception-reporting APIs. Equivalent
+NativeAOT event policy requires the corresponding `JreRuntime` override.
+Historical LLVM/Cecil wrappers did not universally give all legacy callback
+bodies this modern transition/policy sequence.
+
+Runtime implementations replace compile references for scanning, including
+framework bindings. The per-RID implementation paths are generation inputs, so
+body-only boundary changes rerun the scan. Ownership and managed signature
+decisions participate in deterministic assembly fingerprints and wrapper reuse.
+Different RID assets must agree on those decisions, including legacy callbacks;
+different helper and inline bodies are equivalent when both own their boundary.
+Debug-level build logging reports the classification and reason for each callback.
+
 ## Target pipeline (CoreCLR, non-trimmed Debug build)
 
 ```

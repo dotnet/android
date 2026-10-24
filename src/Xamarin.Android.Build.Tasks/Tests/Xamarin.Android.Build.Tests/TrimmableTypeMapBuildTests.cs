@@ -239,6 +239,50 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void BodyOnlyCallbackBoundaryChangeRegeneratesForwarder ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AllowUnsafeBlocks", "true");
+			const string source = """
+				using System;
+				using Android.Runtime;
+				using Java.Interop;
+
+				public class BoundaryRunnable : Java.Lang.Object, Java.Lang.IRunnable
+				{
+					public BoundaryRunnable () { }
+					public BoundaryRunnable (IntPtr handle, JniHandleOwnership ownership) : base (handle, ownership) { }
+					[Register ("run", "()V", "GetRunHandler:BoundaryRunnable, UnnamedProject")]
+					public void Run () { }
+					static Delegate GetRunHandler () => throw new InvalidOperationException ();
+					static void Body (IntPtr env, IntPtr self) { }
+					static unsafe void n_Run (IntPtr env, IntPtr self) => Body (env, self);
+				}
+				""";
+			var callback = new BuildItem.Source ("BoundaryRunnable.cs") { TextContent = () => source };
+			proj.Sources.Add (callback);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "using var peer = new BoundaryRunnable ();");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			var typemap = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", $"_{proj.ProjectName}.TypeMap.dll"));
+			var initial = File.ReadAllBytes (typemap);
+			Assert.IsTrue (builder.Build (proj));
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+			callback.TextContent = () => source.Replace ("=> Body (env, self);", "=> JniMarshal.SafeInvokeAction (env, self, &Body);");
+			proj.Touch ("BoundaryRunnable.cs");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true));
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			CollectionAssert.AreNotEqual (initial, File.ReadAllBytes (typemap), "Body-only ownership changes must alter emitted forwarding IL.");
+			using var assembly = AssemblyDefinition.ReadAssembly (typemap);
+			var wrapper = assembly.MainModule.Types.SelectMany (t => t.Methods)
+				.Single (m => m.Body?.Instructions.Any (i => i.Operand is MethodReference target && target.Name == "n_Run") == true);
+			Assert.IsEmpty (wrapper.Body.ExceptionHandlers);
+			Assert.IsFalse (wrapper.Body.Instructions.Any (i => i.Operand is MethodReference target && target.Name == "SafeInvokeAction"),
+				"A protected callback must not receive a redundant outer helper.");
+		}
+
+		[Test]
 		public void BindingCallbackFormatSupportsDefaultConsumer ()
 		{
 			var testRoot = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
