@@ -1,12 +1,12 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Serialization;
 using Java.Interop.Tools.JavaCallableWrappers;
-using Xamarin.Tools.Zip;
 
 public struct SampleDesc {
 	public string ID { get; set; }
@@ -28,7 +28,7 @@ public class SampleRepository
 	Dictionary<string, SampleDesc> index = new Dictionary<string, SampleDesc> ();
 	Dictionary<string, string>     updates = new Dictionary<string, string> ();
 
-	public SampleRepository (string name) : this (ZipArchive.Open (name.EndsWith (".zip", StringComparison.OrdinalIgnoreCase) ? name : name + ".zip", FileMode.Open))
+	public SampleRepository (string name) : this (ZipFile.Open (name.EndsWith (".zip", StringComparison.OrdinalIgnoreCase) ? name : name + ".zip", ZipArchiveMode.Update))
 	{
 		
 	}
@@ -36,12 +36,12 @@ public class SampleRepository
 	protected SampleRepository (ZipArchive archive)
 	{
 		this.archive = archive;
-		if (archive.ContainsEntry ("index.xml"))
-			using (var stream = new MemoryStream ()) {
-				archive.First (e => e.FullName.Equals ("index.xml", StringComparison.OrdinalIgnoreCase)).Extract (stream);
-				stream.Position = 0;
+		var entry = archive.Entries.FirstOrDefault (e => e.FullName.Equals ("index.xml", StringComparison.OrdinalIgnoreCase));
+		if (entry != null) {
+			using (var stream = entry.Open ()) {
 				index = ((ICollection<SampleDesc>)IndexSerializer.Deserialize (stream)).ToDictionary (sd => sd.ID, sd => sd);
 			}
+		}
 	}
 
 	// Returns an id that can be used to register the sample position in the documentation flow
@@ -51,9 +51,9 @@ public class SampleRepository
 		validFiles.Add (hash);
 		desc.ID = hash;
 
-		if (!archive.ContainsEntry (hash)) {
+		if (archive.GetEntry (hash) == null) {
 			updates.Add (hash, source);
-			archive.AddEntry (hash, source, Encoding.UTF8);
+			WriteEntry (archive, hash, source);
 			index[hash] = desc;
 		}
 
@@ -62,7 +62,7 @@ public class SampleRepository
 
 	public void OverwriteSample (string hash, string content, SampleDesc newDesc)
 	{
-		if (!archive.ContainsEntry (hash))
+		if (archive.GetEntry (hash) == null)
 			return;
 
 		UpdateEntry (archive, hash, content);
@@ -71,10 +71,17 @@ public class SampleRepository
 
 	void UpdateEntry (ZipArchive archive, string file, string content)
 	{
-		var existing = archive.FirstOrDefault (e => e.FullName == file);
+		var existing = archive.GetEntry (file);
 		if (existing != null)
-			archive.DeleteEntry (existing);
-		archive.AddEntry (file, content, Encoding.UTF8);
+			existing.Delete ();
+		WriteEntry (archive, file, content);
+	}
+
+	static void WriteEntry (ZipArchive archive, string file, string content)
+	{
+		using (var writer = new StreamWriter (archive.CreateEntry (file).Open (), Encoding.UTF8)) {
+			writer.Write (content);
+		}
 	}
 
 	public string GetSampleFromID (string id, out SampleDesc desc)
@@ -85,15 +92,14 @@ public class SampleRepository
 		if (updates.TryGetValue (id, out source))
 			return source;
 
-		var entry = archive.FirstOrDefault (e => e.FullName == id);
+		var entry = archive.GetEntry (id);
 		if (entry == null)
 			return null;
 
 		desc = index[id];
-		using (var stream = new MemoryStream ()) {
-			entry.Extract (stream);
-			stream.Position = 0;
-			return new StreamReader (stream).ReadToEnd ();
+		using (var stream = entry.Open ())
+		using (var reader = new StreamReader (stream)) {
+			return reader.ReadToEnd ();
 		}
 	}
 
@@ -109,7 +115,7 @@ public class SampleRepository
 
 	public static SampleRepository LoadFrom (string file)
 	{
-		using (var archive = ZipArchive.Open (file, FileMode.Open)) {
+		using (var archive = ZipFile.Open (file, ZipArchiveMode.Update)) {
 			var samples = new SampleRepository (archive);
 			return samples;
 		}
@@ -119,10 +125,10 @@ public class SampleRepository
 	{
 		// See if we have any stale file
 		if (removeOldEntries) {
-			var list = new List<ZipEntry> (archive);
+			var list = new List<ZipArchiveEntry> (archive.Entries);
 			foreach (var entry in list) {
 				if (!validFiles.Contains (entry.FullName))
-					archive.DeleteEntry (entry);
+					entry.Delete ();
 			}
 		}
 		// Serialize index
@@ -130,7 +136,7 @@ public class SampleRepository
 		IndexSerializer.Serialize (writer, new List<SampleDesc> (index.Values));
 		UpdateEntry (archive, "index.xml", writer.ToString ());
 
-		archive.Close ();
+		archive.Dispose ();
 	}
 
 	public IEnumerable<string> AllIDs {

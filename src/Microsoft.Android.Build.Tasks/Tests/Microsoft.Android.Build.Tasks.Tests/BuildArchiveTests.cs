@@ -2,36 +2,25 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using Microsoft.Android.Build.Tasks;
+using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests;
 
 [TestFixture]
-public class BuildArchiveTests
+public class BuildArchiveTests : BaseTest
 {
-	string? tempDirectory;
-
-	string TempDirectory => tempDirectory ?? throw new InvalidOperationException ("Setup has not run.");
+	string TempDirectory => Path.Combine (Root, "temp", TestName);
 
 	[SetUp]
 	public void Setup ()
 	{
-		tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
-		Directory.CreateDirectory (tempDirectory);
-	}
-
-	[TearDown]
-	public void TearDown ()
-	{
-		if (!tempDirectory.IsNullOrEmpty () && Directory.Exists (tempDirectory))
-			Directory.Delete (tempDirectory, recursive: true);
+		Directory.CreateDirectory (TempDirectory);
 	}
 
 	[Test]
@@ -43,9 +32,7 @@ public class BuildArchiveTests
 		CreateArchive (apk, ("AndroidManifest.xml", "manifest"), ("commonMain/default/manifest", "existing"), ("stale.txt", "stale"));
 		CreateArchive (jar, ("commonMain/default/manifest", "current"));
 
-		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
-		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var item = JavaArchiveItem (jar, "commonMain/default/manifest");
 		string? previousSnapshot = null;
 
 		for (var build = 1; build <= 3; build++) {
@@ -62,9 +49,9 @@ public class BuildArchiveTests
 				Assert.AreEqual (previousSnapshot, snapshot, $"build {build} should match the previous unchanged build");
 			previousSnapshot = snapshot;
 
-			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
-				archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
-				archive.AssertDoesNotContainEntry (apk, "stale.txt");
+			using (var archive = ZipFile.OpenRead (apk)) {
+				AssertEntryContents (archive, "commonMain/default/manifest", "current");
+				Assert.IsNull (archive.GetEntry ("stale.txt"));
 			}
 		}
 	}
@@ -78,9 +65,7 @@ public class BuildArchiveTests
 		CreateArchive (apk, ("commonMain/default/manifest", "current"));
 		CreateArchive (jar, ("commonMain/default/manifest", "current"));
 
-		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
-		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var item = JavaArchiveItem (jar, "commonMain/default/manifest");
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
@@ -93,8 +78,8 @@ public class BuildArchiveTests
 
 		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Skipping commonMain/default/manifest from {jar} as it is up to date."));
 
-		using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
-			archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
+		using (var archive = ZipFile.OpenRead (apk)) {
+			AssertEntryContents (archive, "commonMain/default/manifest", "current");
 		}
 	}
 
@@ -109,12 +94,8 @@ public class BuildArchiveTests
 		CreateArchive (firstJar, ("commonMain/default/manifest", "first"));
 		CreateArchive (secondJar, ("commonMain/default/manifest", "second"));
 
-		var firstItem = new TaskItem ($"{firstJar}#commonMain/default/manifest");
-		firstItem.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		firstItem.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
-		var secondItem = new TaskItem ($"{secondJar}#commonMain/default/manifest");
-		secondItem.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		secondItem.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var firstItem = JavaArchiveItem (firstJar, "commonMain/default/manifest");
+		var secondItem = JavaArchiveItem (secondJar, "commonMain/default/manifest");
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
@@ -127,9 +108,9 @@ public class BuildArchiveTests
 
 		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ("Failed to add jar entry commonMain/default/manifest from second.jar: the same file already exists in the apk"));
 
-		using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
-			archive.AssertEntryContents (apk, "commonMain/default/manifest", "first");
-			archive.AssertDoesNotContainEntry (apk, "stale.txt");
+		using (var archive = ZipFile.OpenRead (apk)) {
+			AssertEntryContents (archive, "commonMain/default/manifest", "first");
+			Assert.IsNull (archive.GetEntry ("stale.txt"));
 		}
 	}
 
@@ -142,9 +123,7 @@ public class BuildArchiveTests
 		CreateArchive (apk, ("commonMain/default/manifest", "existing"));
 		CreateArchive (jar, ("other-entry.txt", "contents"));
 
-		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
-		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var item = JavaArchiveItem (jar, "commonMain/default/manifest");
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
@@ -159,30 +138,46 @@ public class BuildArchiveTests
 
 		// The entry should be removed. If the APK itself no longer exists, all entries were cleared (also satisfies the assertion).
 		if (File.Exists (apk)) {
-			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
-				archive.AssertDoesNotContainEntry (apk, "commonMain/default/manifest");
+			using (var archive = ZipFile.OpenRead (apk)) {
+				Assert.IsNull (archive.GetEntry ("commonMain/default/manifest"));
 			}
 		}
 	}
 
+	static TaskItem JavaArchiveItem (string path, string entryName)
+	{
+		var item = new TaskItem ($"{path}#{entryName}");
+		item.SetMetadata ("ArchivePath", entryName);
+		item.SetMetadata ("JavaArchiveEntry", entryName);
+		return item;
+	}
+
+	static void AssertEntryContents (ZipArchive archive, string entryName, string expected)
+	{
+		var entry = archive.GetEntry (entryName) ?? throw new InvalidOperationException ($"Missing archive entry '{entryName}'.");
+		using var reader = new StreamReader (entry.Open ());
+		Assert.AreEqual (expected, reader.ReadToEnd (), entryName);
+	}
+
 	static void CreateArchive (string path, params (string name, string contents) [] entries)
 	{
-		using (var stream = File.Create (path))
-		using (var archive = ZipArchive.Create (stream)) {
-			foreach (var entry in entries) {
-				archive.AddEntry (entry.name, entry.contents, encoding: Encoding.UTF8);
-			}
+		using var stream = File.Create (path);
+		using var archive = new ZipArchive (stream, ZipArchiveMode.Create);
+		foreach (var entry in entries) {
+			using var writer = new StreamWriter (archive.CreateEntry (entry.name).Open (), new UTF8Encoding (false));
+			writer.Write (entry.contents);
 		}
 	}
 
 	static string GetArchiveSnapshot (string path)
 	{
-		using var archive = ZipArchive.Open (path, FileMode.Open);
-		return string.Join ("\n", archive
+		using var archive = ZipFile.OpenRead (path);
+		return string.Join ("\n", archive.Entries
 			.OrderBy (entry => entry.FullName, StringComparer.Ordinal)
 			.Select (entry => {
+				using var source = entry.Open ();
 				using var stream = new MemoryStream ();
-				entry.Extract (stream);
+				source.CopyTo (stream);
 				return $"{entry.FullName}:{Convert.ToBase64String (stream.ToArray ())}";
 			}));
 	}
