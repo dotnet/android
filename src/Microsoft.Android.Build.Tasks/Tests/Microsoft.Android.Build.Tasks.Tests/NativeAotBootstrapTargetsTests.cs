@@ -28,7 +28,20 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		var bootstrap = common.Descendants ().Single (element =>
 			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_AndroidGenerateCoreClrBootstrap");
 		StringAssert.Contains ("'$(_AndroidRuntime)' == 'CoreCLR'", (string?)bootstrap.Attribute ("Condition"));
-		Assert.IsTrue (bootstrap.Elements ().Any (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources"));
+		var bootstrapTask = bootstrap.Elements ().Single (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources");
+		Assert.IsNull (bootstrapTask.Attribute ("MSBuildRuntime"));
+		var usingTasks = common.Descendants ().Where (element =>
+			element.Name.LocalName == "UsingTask" &&
+			(string?)element.Attribute ("TaskName") == "Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources").ToArray ();
+		Assert.AreEqual (2, usingTasks.Length);
+		Assert.That (usingTasks.Select (u => (string?)u.Attribute ("AssemblyFile")), Is.All.EqualTo ("$(_MicrosoftAndroidBuildTasksAssembly)"));
+		Assert.That (usingTasks.Select (u => (string?)u.Attribute ("Runtime")), Is.All.EqualTo ("NET"));
+		var fullUsingTask = usingTasks.Single (u => (string?)u.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Full' ");
+		Assert.AreEqual ("TaskHostFactory", (string?)fullUsingTask.Attribute ("TaskFactory"));
+		var coreUsingTask = usingTasks.Single (u => (string?)u.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Core' ");
+		Assert.IsNull (coreUsingTask.Attribute ("TaskFactory"));
+		var taskAssembly = common.Descendants ().Single (element => element.Name.LocalName == "_AndroidCoreClrBootstrapTaskAssembly");
+		StringAssert.Contains ("$(_MicrosoftAndroidBuildTasksAssembly)", taskAssembly.Value);
 		var java = common.Descendants ().Single (element =>
 			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_GeneratePackageManagerJava");
 		Assert.IsFalse (java.Elements ().Any (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources"));
