@@ -1335,11 +1335,13 @@ sealed class TypeMapAssemblyEmitter
 		Action<TrackedInstructionEncoder> emitActivation,
 		Action<BlobBuilder> encodeLocals)
 	{
-		return _pe.EmitBody (wrapperName,
+		var handle = _pe.EmitBody (wrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, emitActivation),
 			encodeLocals);
+		_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
+		return handle;
 	}
 
 	void EmitManagedConstructorActivation (

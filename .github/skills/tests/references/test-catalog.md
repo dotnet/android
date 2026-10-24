@@ -216,7 +216,7 @@ Run these tests with `dotnet test` from each test project directory listed above
 
 The trimmable typemap is exercised by the on-device runtime tests above,
 `TrimmableTypeMapBuildTests` (host-side build integration), and
-`GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`,
+`GenerateTrimmableTypeMapTests`, `GeneratedJniDebuggerBoundaryTests`, `TrimmableTypeMapIncrementalTests`,
 `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, and
 `ExtractTypeMapKeysFromNativeAotObjectTests` (standalone build-task tests).
 The host tests cover incremental typemap invalidation, activity-alias rewriting,
@@ -226,6 +226,16 @@ The object-extraction tests use synthetic metadata, so they need no NDK tools.
 The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
 because the UCO format marker is assembly-wide. The manifest-only Activity
 lives in the library assembly, which is not rooted wholesale by the test app.
+
+`GeneratedJniDebuggerBoundaryTests` checks the emitted debugger attribute and
+inline exception regions for constructor and export/direct-dispatch UCOs.
+On device, `-p:IncludeCategories=GeneratedJniDebuggerBoundary` selects constructor
+activation and export coverage, including throwing calls, subsequent successful
+calls, and handled-exception ABI defaults with exactly-once application-event
+delivery on both CoreCLR and NativeAOT.
+These are no-debugger transport tests, not proof of an attached debugger's
+user-unhandled stop, Continue, or Java evaluation behavior.
+
 To run the on-device typemap tests:
 
 ```bash

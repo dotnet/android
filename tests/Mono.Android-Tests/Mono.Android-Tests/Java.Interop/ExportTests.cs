@@ -16,6 +16,7 @@ namespace Java.InteropTests
 	// Naming: each test is named Export_<Group>_<Feature>_<Behaviour> so the
 	// runner output is greppable.
 	[TestFixture]
+	[Category ("GeneratedJniDebuggerBoundary")]
 	public class ExportTests
 	{
 		// ---------------------------------------------------------------

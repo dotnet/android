@@ -34,6 +34,9 @@ sealed class PEAssemblyBuilder
 	readonly BlobBuilder _codeBlob = new BlobBuilder (256);
 	readonly BlobBuilder _attrBlob = new BlobBuilder (64);
 
+	MemberReferenceHandle _debuggerDisableUserUnhandledExceptionsCtorRef;
+	BlobHandle _debuggerDisableUserUnhandledExceptionsBlob;
+
 	// Holds raw byte data for fields with FieldAttributes.HasFieldRVA (e.g., UTF-8 string literals).
 	// Passed to ManagedPEBuilder as the mappedFieldData section.
 	readonly BlobBuilder _mappedFieldData = new BlobBuilder ();
@@ -585,6 +588,22 @@ sealed class PEAssemblyBuilder
 		writePayload (_attrBlob);
 		_attrBlob.WriteUInt16 (0x0000); // NumNamed
 		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	public void AddDebuggerDisableUserUnhandledExceptionsAttribute (MethodDefinitionHandle method)
+	{
+		if (_debuggerDisableUserUnhandledExceptionsCtorRef.IsNil) {
+			var attributeType = Metadata.AddTypeReference (SystemRuntimeRef,
+				Metadata.GetOrAddString ("System.Diagnostics"),
+				Metadata.GetOrAddString ("DebuggerDisableUserUnhandledExceptionsAttribute"));
+			_debuggerDisableUserUnhandledExceptionsCtorRef = AddMemberRef (attributeType, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+			_debuggerDisableUserUnhandledExceptionsBlob = BuildAttributeBlob (b => { });
+		}
+
+		// The boundary's catch delegates the user-unhandled decision to runtime policy.
+		Metadata.AddCustomAttribute (method, _debuggerDisableUserUnhandledExceptionsCtorRef,
+			_debuggerDisableUserUnhandledExceptionsBlob);
 	}
 
 	public BlobHandle BuildAttributeBlob (string first, string second)
