@@ -74,14 +74,11 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				using var bootstrapSource = bootstrap == null ? null : new MemoryStream (bootstrap, writable: false);
 				using var output = new MemoryStream ();
 				var payloads = new List<(string Name, Stream Data)> ();
-				var expected = new List<(string Name, byte [] Data)> ();
 				if (blob.Length != 0) {
 					payloads.Add ((JniRemappingBinaryBlob.Symbol, source));
-					expected.Add ((JniRemappingBinaryBlob.Symbol, blob));
 				}
 				if (bootstrap != null && bootstrapSource != null) {
 					payloads.Add ((CoreClrBootstrapBlob.Symbol, bootstrapSource));
-					expected.Add ((CoreClrBootstrapBlob.Symbol, bootstrap));
 				}
 				AssemblyStoreElfWriter.Write (payloads, output, arch, "libbinary_blobs.so");
 				byte [] elf = output.ToArray ();

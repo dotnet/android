@@ -74,7 +74,6 @@ Device: No
 | **fsharp** | `--filter "cat=FSharp"` | F# project build tests |
 | **wear** | `--filter "FullyQualifiedName~WearTests"` | Wear OS build tests |
 | **code behind** | `--filter "FullyQualifiedName~CodeBehindTests"` | Layout code-behind generation |
-| **marshal methods** | `--filter "FullyQualifiedName~MarshalMethodTests"` | Marshal method generation tests |
 | **asset packs** | `--filter "FullyQualifiedName~AssetPackTests"` | Play Asset Delivery tests |
 | **gradle** | `--filter "FullyQualifiedName~AndroidGradleProjectTests"` | Gradle project integration |
 | **deferred build** | `--filter "FullyQualifiedName~DeferredBuildTest"` | Deferred build tests |
