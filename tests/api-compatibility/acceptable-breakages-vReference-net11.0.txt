@@ -5596,3 +5596,6 @@ CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatform
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.ExceptionUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.LangUtils' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Org.Apache.Http.Util.VersionInfo' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.LinkerSafeAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.Runtime.PreserveAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Interop.DoNotPackageAttribute' in the contract but not the implementation.
