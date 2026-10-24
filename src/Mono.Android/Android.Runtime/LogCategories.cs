@@ -1,4 +1,3 @@
-#if INSIDE_MONO_ANDROID_RUNTIME
 using System;
 
 namespace Android.Runtime
@@ -18,4 +17,3 @@ namespace Android.Runtime
 		// Bit 9 is reserved for the removed netlink logging category.
 	}
 }
-#endif // INSIDE_MONO_ANDROID_RUNTIME

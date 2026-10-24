@@ -69,6 +69,7 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
+		[DebuggerDisableUserUnhandledExceptions]
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -76,9 +77,7 @@ namespace Android.Runtime {
 
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
-			if (Debugger.IsAttached) {
-				AndroidRuntimeInternal.mono_unhandled_exception?.Invoke (javaException);
-			}
+			Debugger.BreakForUserUnhandledException (javaException);
 
 			try {
 				var jltp = javaException as JavaProxyThrowable;
@@ -101,7 +100,7 @@ namespace Android.Runtime {
 		/// <summary>
 		/// Gets the number of completed CoreCLR or NativeAOT GC bridge processing cycles.
 		/// </summary>
-		public static int BridgeProcessingGeneration => AndroidRuntimeInternal.BridgeProcessingGeneration;
+		public static int BridgeProcessingGeneration => JavaMarshalGCBridge.BridgeProcessingGeneration;
 
 		public static IntPtr AllocObject (string jniClassName)
 		{
