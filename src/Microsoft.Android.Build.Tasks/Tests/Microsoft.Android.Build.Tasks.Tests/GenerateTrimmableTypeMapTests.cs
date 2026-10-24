@@ -13,6 +13,42 @@ namespace Xamarin.Android.Build.Tests {
 	[Parallelizable (ParallelScope.Children)]
 	public class GenerateTrimmableTypeMapTests : BaseTest {
 
+		[TestCase ("GetZzaHandler")]
+		[TestCase ("")]
+		[TestCase (null)]
+		public void RegisteredMethodsDoNotRequireJavaOverrides (string? connector)
+		{
+			var peer = new JavaPeerInfo {
+				JavaName = "example/Listener",
+				CompatJniName = "example/Listener",
+				ManagedTypeName = "Example.Listener",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Listener",
+				AssemblyName = "Example",
+				BaseJavaName = "java/lang/Object",
+				ImplementedInterfaceJavaNames = ["example/ListenerInterface"],
+				MarshalMethods = [new MarshalMethodInfo {
+					JniName = "zza",
+					JniSignature = "(Ljava/lang/String;)V",
+					NativeCallbackName = "n_zza",
+					ManagedMethodName = "Zza",
+					Connector = connector,
+					IsInterfaceImplementation = true,
+				}],
+			};
+
+			using var writer = new StringWriter ();
+			new JcwJavaSourceGenerator ().Generate (peer, writer);
+			var java = writer.ToString ();
+
+			StringAssert.Contains ("example.ListenerInterface", java);
+			StringAssert.Contains ("public void zza (java.lang.String p0)", java);
+			StringAssert.Contains ("n_zza (p0);", java);
+			StringAssert.Contains ("public native void n_zza (java.lang.String p0);", java);
+			StringAssert.DoesNotContain ("@Override", java,
+				"A registered compatibility method can exist only in the managed interface, not its Java counterpart.");
+		}
+
 		[TestCase ("method", true, false)]
 		[TestCase ("method", true, true)]
 		[TestCase ("constructor", true, false)]
