@@ -44,13 +44,13 @@ void AssemblyStore::set_assembly_data_and_size (uint8_t* source_assembly_data, u
 }
 
 [[gnu::always_inline]]
-auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>
+auto AssemblyStore::get_assembly_data (const uint8_t *image_data, uint32_t data_size, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>
 {
 	uint8_t *assembly_data = nullptr;
 	uint32_t assembly_data_size = 0;
 
 #if defined (RELEASE)
-	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
+	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		log_debugf (LOG_ASSEMBLY, "Resolving compressed assembly '%.*s' from the assembly store", static_cast<int>(name.length ()), name.data ());
 
@@ -71,7 +71,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assembly_descriptors[header->descriptor_index];
-		assembly_data_size = e.descriptor->data_size - sizeof(CompressedAssemblyHeader);
+		assembly_data_size = data_size - sizeof(CompressedAssemblyHeader);
 
 		if (cad.buffer_offset >= uncompressed_assemblies_data_size) [[unlikely]] {
 			Helpers::abort_applicationf (
@@ -133,7 +133,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 				cad.uncompressed_file_size = header->uncompressed_length;
 			}
 
-			const char *data_start = pointer_add<const char*>(e.image_data, sizeof(CompressedAssemblyHeader));
+			const char *data_start = pointer_add<const char*>(image_data, sizeof(CompressedAssemblyHeader));
 			log_debugf (LOG_ASSEMBLY, "Decompressing assembly '%.*s' from the assembly store", static_cast<int>(name.length ()), name.data ());
 			size_t ret = ZSTD_decompress (data_buffer, cad.uncompressed_file_size, data_start, assembly_data_size);
 
@@ -182,17 +182,17 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			internal_timing.start_event (TimingEventKind::AssemblyLoad);
 		}
 
-		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
-		memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
+		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (data_size));
+		memcpy (rw_pointer, image_data, data_size);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.end_event (true /* uses more info */);
 			internal_timing.add_more_info (name, " (memcpy to r/w area, part of assembly load time)"sv);
 		}
 
-		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);
+		set_assembly_data_and_size (rw_pointer, data_size, assembly_data, assembly_data_size);
 		// HACK! END
-		// 	set_assembly_data_and_size (e.image_data, e.descriptor->data_size, assembly_data, assembly_data_size);
+		// 	set_assembly_data_and_size (image_data, data_size, assembly_data, assembly_data_size);
 	}
 
 	return {assembly_data, assembly_data_size};
@@ -257,31 +257,35 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	const AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
 	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
 
-	if (assembly_runtime_info.image_data == nullptr) {
-		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
-		// arrive here at the same time, nothing bad will happen.
-		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
-		assembly_runtime_info.descriptor = &store_entry;
-		if (store_entry.debug_data_offset != 0) {
-			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
+	const uint8_t *image_data = assembly_store.data_start + store_entry.data_offset;
+	const uint8_t *debug_info_data = store_entry.debug_data_offset != 0 ? assembly_store.data_start + store_entry.debug_data_offset : nullptr;
+
+	// Several threads can load the same assembly for the first time at once, so all of them may get here and write
+	// the same values to `assembly_runtime_info`. To avoid racing with those writes, this function uses only the
+	// values computed above and never reads the fields back. `image_data` is published last, with release semantics,
+	// so that any other code which sees it set (with an acquire load) also sees the other fields.
+	if (__atomic_load_n (&assembly_runtime_info.image_data, __ATOMIC_ACQUIRE) == nullptr) {
+		__atomic_store_n (&assembly_runtime_info.descriptor, &store_entry, __ATOMIC_RELAXED);
+		if (debug_info_data != nullptr) {
+			__atomic_store_n (&assembly_runtime_info.debug_info_data, debug_info_data, __ATOMIC_RELAXED);
 		}
+		__atomic_store_n (&assembly_runtime_info.image_data, image_data, __ATOMIC_RELEASE);
 
 		log_debugf (
 			LOG_ASSEMBLY,
-			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%.*s'",
-			static_cast<const void*>(assembly_runtime_info.image_data),
-			static_cast<const void*>(assembly_runtime_info.debug_info_data),
-			static_cast<const void*>(assembly_runtime_info.config_data),
-			static_cast<const void*>(assembly_runtime_info.descriptor),
-			assembly_runtime_info.descriptor->data_size,
-			assembly_runtime_info.descriptor->debug_data_size,
-			assembly_runtime_info.descriptor->config_data_size,
+			"Mapped: image_data == %p; debug_info_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%.*s'",
+			static_cast<const void*>(image_data),
+			static_cast<const void*>(debug_info_data),
+			static_cast<const void*>(&store_entry),
+			store_entry.data_size,
+			store_entry.debug_data_size,
+			store_entry.config_data_size,
 			static_cast<int>(name.length ()),
 			name.data ()
 		);
 	}
 
-	auto [assembly_data, assembly_data_size] = get_assembly_data (assembly_runtime_info, name);
+	auto [assembly_data, assembly_data_size] = get_assembly_data (image_data, store_entry.data_size, name);
 	size = assembly_data_size;
 	return assembly_data;
 }

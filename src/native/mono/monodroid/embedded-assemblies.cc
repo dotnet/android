@@ -194,12 +194,6 @@ EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, u
 	get_assembly_data (e.data, e.data_size, e.name, assembly_data, assembly_data_size);
 }
 
-[[gnu::always_inline]] void
-EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
-{
-	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
-}
-
 template<bool LogMapping>
 [[gnu::always_inline]] void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
@@ -439,25 +433,29 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
 	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
 
-	if (assembly_runtime_info.image_data == nullptr) {
-		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
-		// arrive here at the same time, nothing bad will happen.
-		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
-		assembly_runtime_info.descriptor = &store_entry;
-		if (store_entry.debug_data_offset != 0) {
-			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
+	uint8_t *image_data = assembly_store.data_start + store_entry.data_offset;
+	uint8_t *debug_info_data = store_entry.debug_data_offset != 0 ? assembly_store.data_start + store_entry.debug_data_offset : nullptr;
+
+	// Several threads can load the same assembly for the first time at once, so all of them may get here and write
+	// the same values to `assembly_runtime_info`. To avoid racing with those writes, this function uses only the
+	// values computed above and never reads the fields back. `image_data` is published last, with release semantics,
+	// so that any other code which sees it set (with an acquire load) also sees the other fields.
+	if (__atomic_load_n (&assembly_runtime_info.image_data, __ATOMIC_ACQUIRE) == nullptr) {
+		__atomic_store_n (&assembly_runtime_info.descriptor, &store_entry, __ATOMIC_RELAXED);
+		if (debug_info_data != nullptr) {
+			__atomic_store_n (&assembly_runtime_info.debug_info_data, debug_info_data, __ATOMIC_RELAXED);
 		}
+		__atomic_store_n (&assembly_runtime_info.image_data, image_data, __ATOMIC_RELEASE);
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'",
-			static_cast<void*>(assembly_runtime_info.image_data),
-			static_cast<void*>(assembly_runtime_info.debug_info_data),
-			static_cast<void*>(assembly_runtime_info.config_data),
-			static_cast<void*>(assembly_runtime_info.descriptor),
-			assembly_runtime_info.descriptor->data_size,
-			assembly_runtime_info.descriptor->debug_data_size,
-			assembly_runtime_info.descriptor->config_data_size,
+			"Mapped: image_data == {:p}; debug_info_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'",
+			static_cast<void*>(image_data),
+			static_cast<void*>(debug_info_data),
+			static_cast<void*>(&store_entry),
+			store_entry.data_size,
+			store_entry.debug_data_size,
+			store_entry.config_data_size,
 			optional_string (name.get ())
 		);
 	}
@@ -465,15 +463,15 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	uint8_t *assembly_data;
 	uint32_t assembly_data_size;
 
-	get_assembly_data (assembly_runtime_info, assembly_data, assembly_data_size);
+	get_assembly_data (image_data, store_entry.data_size, "<assembly_store>", assembly_data, assembly_data_size);
 	MonoImage *image = MonoImageLoader::load (name, loader_data, name_hash, assembly_data, assembly_data_size);
 	if (image == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Failed to load MonoImage of '{}'", optional_string (name.get ()));
 		return nullptr;
 	}
 
-	if (have_and_want_debug_symbols && assembly_runtime_info.debug_info_data != nullptr) {
-		mono_debug_open_image_from_memory (image, reinterpret_cast<const mono_byte*> (assembly_runtime_info.debug_info_data), static_cast<int>(assembly_runtime_info.descriptor->debug_data_size));
+	if (have_and_want_debug_symbols && debug_info_data != nullptr) {
+		mono_debug_open_image_from_memory (image, reinterpret_cast<const mono_byte*> (debug_info_data), static_cast<int>(store_entry.debug_data_size));
 	}
 
 	MonoImageOpenStatus status;
