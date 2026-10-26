@@ -252,6 +252,34 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
 	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
+	// Initialize these pointers before assembly loads can run concurrently.
+	for (uint32_t i = 0; i < assembly_store.assembly_count; i++) {
+		AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[i];
+		if (store_entry.data_offset == 0) {
+			continue;
+		}
+
+		AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
+		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
+		assembly_runtime_info.descriptor = &store_entry;
+		if (store_entry.debug_data_offset != 0) {
+			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
+		}
+
+		log_debug (
+			LOG_ASSEMBLY,
+			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; mapping index == {}",
+			static_cast<void*>(assembly_runtime_info.image_data),
+			static_cast<void*>(assembly_runtime_info.debug_info_data),
+			static_cast<void*>(assembly_runtime_info.config_data),
+			static_cast<void*>(assembly_runtime_info.descriptor),
+			assembly_runtime_info.descriptor->data_size,
+			assembly_runtime_info.descriptor->debug_data_size,
+			assembly_runtime_info.descriptor->config_data_size,
+			store_entry.mapping_index
+		);
+	}
+
 	number_of_found_assemblies += assembly_store.assembly_count;
 	number_of_mapped_assembly_stores++;
 	have_and_want_debug_symbols = register_debug_symbols;
