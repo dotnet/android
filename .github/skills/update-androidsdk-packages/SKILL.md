@@ -86,19 +86,33 @@ families and API levels already exist. You are only ever refreshing what's alrea
 
 ### 2. Look up what Google currently publishes
 
-Google's canonical SDK manifest is `https://dl.google.com/android/repository/repository2-3.xml`
-(historically referenced via `dl-ssl.google.com` — same content, prefer `dl.google.com`). System
-images live in a separate manifest per API level tree, e.g.
-`https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml`. Use the bundled helper
-to query it instead of hand-parsing XML in your head:
+Google's main SDK manifest is `https://dl.google.com/android/repository/repository2-3.xml`
+(historically referenced via `dl-ssl.google.com` — same content, prefer `dl.google.com`).
+It does not list every package in the catalog. Query Android Support Repository in
+`https://dl.google.com/android/repository/addon2-3.xml`, documentation in the legacy
+`https://dl.google.com/android/repository/repository-12.xml`, and system images in
+`https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml`.
+Use the bundled helper with the correct manifest for each family:
 
 ```bash
 dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path build-tools
 dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "platforms;android-37" --archives
 dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path emulator --archives
+dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
+dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
+dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
 ```
 
 (These are C# file-based apps, matching the `ci_failures.cs` convention used by the `ci-status` skill — first run restores/builds, so allow a few extra seconds.)
+
+Run helper queries sequentially. Concurrent runs of the same file-based app can contend for
+its build output.
+
+The helper reads legacy `<doc>` entries as path `docs`, including their scalar revision and
+archive metadata. That manifest has no channel metadata: compare the listed revision and
+archive with the existing docs pin, and keep it unchanged when they match. Do not infer a
+new stable release from an absent channel. A no-match result remains an error; check the
+family's manifest mapping rather than skipping the package or treating the scan as complete.
 
 The script sorts matches by revision (newest first) and reports each package's channel. Require
 `channel-0` for emulator updates and reject version/display names containing `alpha`, `beta`,
