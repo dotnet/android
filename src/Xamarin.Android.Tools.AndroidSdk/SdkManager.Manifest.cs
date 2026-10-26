@@ -55,12 +55,12 @@ public partial class SdkManager
 
 			var elementName = reader.LocalName;
 			var revision = reader.GetAttribute ("revision");
-			if (string.IsNullOrEmpty (revision))
+			if (revision is null || revision.Length == 0)
 				continue;
 
 			var component = new SdkManifestComponent {
 				ElementName = elementName,
-				Revision = revision!,
+				Revision = revision,
 				Path = reader.GetAttribute ("path"),
 				FilesystemPath = reader.GetAttribute ("filesystem-path"),
 				Description = reader.GetAttribute ("description"),
