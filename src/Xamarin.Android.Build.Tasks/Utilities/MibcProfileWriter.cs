@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Hashing;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Xamarin.Android.Tasks;
@@ -557,22 +557,8 @@ class MibcProfileWriter
 	/// </param>
 	static BlobContentId ContentId (string fingerprint)
 	{
-		// This is only a content fingerprint, so a non cryptographic hash is fine, and unlike
-		// System.Security.Cryptography the System.IO.Hashing APIs are span based on netstandard2.0.
-		int byteCount = Encoding.UTF8.GetByteCount (fingerprint);
-		Span<byte> bytes = byteCount <= TypeMapHelper.StackallocThresholdBytes
-			? stackalloc byte [byteCount]
-			: new byte [byteCount];
-		TypeMapHelper.GetBytes (fingerprint, Encoding.UTF8, bytes);
-
-		// BlobContentId.FromHash turns hash bytes into an MVID and timestamp for us, including the
-		// RFC 4122 version and variant bits and the byte order of the Guid fields.  It reads 20
-		// bytes: 0..16 become the MVID and 16..20 become the timestamp.  XxHash128 only produces
-		// 16, so the timestamp slot repeats the first four rather than hashing the input again.
-		// This cannot be a stackalloc: FromHash only overloads on byte[] and ImmutableArray<byte>.
-		var hash = new byte [20];
-		XxHash128.Hash (bytes, hash.AsSpan (0, 16));
-		hash.AsSpan (0, 4).CopyTo (hash.AsSpan (16));
+		using var sha256 = SHA256.Create ();
+		byte[] hash = sha256.ComputeHash (Encoding.UTF8.GetBytes (fingerprint));
 		return BlobContentId.FromHash (hash);
 	}
 }

@@ -11,17 +11,16 @@ implication, estoppel or otherwise.
 
 1.  Android API documentation (https://developer.android.com/license)
 2.  android/platform/tools/base (https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE)
-3.  brutaldev/StrongNameSigner (https://github.com/brutaldev/StrongNameSigner/)
-4.  dotnet/java-interop (https://github.com/dotnet/java-interop/)
-5.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
-6.  google/bundletool (https://github.com/google/bundletool)
-7.  google/r8 (https://r8.googlesource.com/r8/)
-8.  IronyProject/Irony (https://github.com/IronyProject/Irony)
-9.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
-10.  MiloszKrajewski/K4os.Compression.LZ4 (https://github.com/MiloszKrajewski/K4os.Compression.LZ4/)
-11.  mono/cecil (https://github.com/mono/cecil/)
-12.  mono/linker (https://github.com/mono/linker/)
-13.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
+3.  dotnet/java-interop (https://github.com/dotnet/java-interop/)
+4.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
+5.  google/bundletool (https://github.com/google/bundletool)
+6.  google/r8 (https://r8.googlesource.com/r8/)
+7.  IronyProject/Irony (https://github.com/IronyProject/Irony)
+8.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
+9.  MiloszKrajewski/K4os.Compression.LZ4 (https://github.com/MiloszKrajewski/K4os.Compression.LZ4/)
+10.  mono/cecil (https://github.com/mono/cecil/)
+11.  mono/linker (https://github.com/mono/linker/)
+12.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
 
 %% Android API documentation NOTICES AND INFORMATION BEGIN HERE
 ================================================================
@@ -620,27 +619,6 @@ END OF Android API documentation NOTICES AND INFORMATION
 
 =================================================================
 END OF android/platform/tools/base NOTICES AND INFORMATION
-
-
-%% brutaldev/StrongNameSigner NOTICES AND INFORMATION BEGIN HERE
-================================================================
-Copyright (c) Werner van Deventer (werner@brutaldev.com).  All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the 'License'); you
-may not use this file except in compliance with the License. You may
-obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an 'AS IS' BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-implied. See the License for the specific language governing permissions
-and limitations under the License.
-
-
-================================================================
-END OF brutaldev/StrongNameSigner NOTICES AND INFORMATION
 
 
 %% dotnet/java-interop NOTICES AND INFORMATION BEGIN HERE

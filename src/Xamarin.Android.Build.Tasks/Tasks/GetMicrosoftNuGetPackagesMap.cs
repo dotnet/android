@@ -20,7 +20,7 @@ public class GetMicrosoftNuGetPackagesMap : AsyncTask
 	/// The cache directory to use for Maven artifacts.
 	/// </summary>
 	[Required]
-	public string MavenCacheDirectory { get; set; } = null!; // NRT enforced by [Required]
+	public string MavenCacheDirectory { get; set; } = "";
 
 	[Output]
 	public string? ResolvedPackageMap { get; set; }

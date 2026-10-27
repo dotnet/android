@@ -1,9 +1,13 @@
 <!-- Retained typemap keys supply managed-peer class roots on the shrinking CoreCLR/NativeAOT path. -->
 <Project>
-  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromNativeAotObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapMemberProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromNativeAotObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromNativeAotObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapMemberProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapMemberProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
   <PropertyGroup>
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_AndroidGenerateCoreClrProguardConfigurationInputs;_AndroidGenerateTypeMapProguardConfiguration;_AndroidGenerateTypeMapMemberProguardConfiguration</_CompileToDalvikDependsOnTargets>

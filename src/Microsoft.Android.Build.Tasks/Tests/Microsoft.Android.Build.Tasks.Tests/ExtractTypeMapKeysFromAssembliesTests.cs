@@ -366,7 +366,6 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 		// weakening the linker's unresolved-reference checks.
 		EmitStub ("Mono.Android");
 		EmitStub ("Java.Interop");
-		EmitStub ("Mono.Android.Runtime");
 		EmitStub ("System.Configuration.ConfigurationManager");
 		EmitStub ("System.Drawing.Common");
 		EmitStub ("System.Security.Permissions");

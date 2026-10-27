@@ -38,7 +38,7 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Discovers SDK paths and refreshes MonoAndroidHelper.SupportedVersions.
+	/// Discovers SDK paths and returns them to MSBuild.
 	/// </summary>
 	public class ResolveSdks : AndroidTask
 	{
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks
 
 			JavaSdkPath         = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion)?.HomePath;
 
-			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
+			MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
 
 			AndroidSdkInfo androidSdk;
 			try {

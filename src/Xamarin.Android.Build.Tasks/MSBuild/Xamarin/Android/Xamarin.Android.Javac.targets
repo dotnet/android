@@ -14,7 +14,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.AdjustJavacVersionArguments" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.CreateJavaArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.CreateJavaArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.CreateJavaArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
   <PropertyGroup>
     <_AndroidIntermediateBindingJavaClassDirectory>$(IntermediateOutputPath)binding\bin\classes\</_AndroidIntermediateBindingJavaClassDirectory>
@@ -129,7 +130,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
     <CreateJavaArchive
-        MSBuildRuntime="NET"
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
         SourceDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
         OutputFile="$(_AndroidIntermediateBindingClassesZip)"

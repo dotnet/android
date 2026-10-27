@@ -318,6 +318,16 @@ namespace Xamarin.ProjectTools
 
 		public static bool ContainsClassWithMethod (string className, string method, string type, IEnumerable<string> dexDump)
 		{
+			return ContainsClassWithMember (className, method, type, dexDump);
+		}
+
+		public static bool ContainsClassWithField (string className, string field, string type, IEnumerable<string> dexDump)
+		{
+			return ContainsClassWithMember (className, field, type, dexDump);
+		}
+
+		static bool ContainsClassWithMember (string className, string member, string type, IEnumerable<string> dexDump)
+		{
 			bool inClass = false;
 			bool hasName = false;
 			foreach (var line in dexDump) {
@@ -325,7 +335,7 @@ namespace Xamarin.ProjectTools
 					inClass = ContainsDexDumpValue (line, "Class descriptor", className);
 					hasName = false;
 				} else if (inClass && HasDexDumpName (line, "name")) {
-					hasName = ContainsDexDumpValue (line, "name", method);
+					hasName = ContainsDexDumpValue (line, "name", member);
 				} else if (hasName) {
 					if (ContainsDexDumpValue (line, "type", type)) {
 						return true;

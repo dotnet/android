@@ -40,9 +40,21 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public string[]? ManifestFiles { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		string? main_r_txt;
 		string? output_directory;
 		Dictionary<string, string>? r_txt_mapping;
+		AndroidVersions? supportedVersions;
+
+		public override bool RunTask ()
+		{
+			if (LibraryTextFiles?.Length > 0 && ManifestFiles != null) {
+				var paths = ReferenceAssemblyPaths?.Select (path => Path.GetFullPath (Path.Combine (WorkingDirectory, path))).ToArray ();
+				supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, paths);
+			}
+			return base.RunTask ();
+		}
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
@@ -50,6 +62,8 @@ namespace Xamarin.Android.Tasks
 				return;
 			if (ManifestFiles == null)
 				return;
+
+			var versions = supportedVersions ?? throw new InvalidOperationException ("API metadata must be resolved before generating library resources.");
 
 			// Load the "main" R.txt file into a dictionary
 			main_r_txt = Path.GetFullPath (ResourceSymbolsTextFile);
@@ -73,7 +87,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				var manifest = AndroidAppManifest.Load (Path.GetFullPath (manifestFile), MonoAndroidHelper.SupportedVersions);
+				var manifest = AndroidAppManifest.Load (Path.GetFullPath (manifestFile), versions);
 				var packageName = manifest.PackageName;
 				if (packageName.IsNullOrEmpty ()) {
 					LogDebugMessage ($"Skipping, AndroidManifest.xml does not have a packageName: {manifestFile}");

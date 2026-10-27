@@ -26,10 +26,6 @@ namespace Xamarin.Android.Tasks
 	{
 		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
 
-		// Set in ResolveSdks.Execute();
-		// Requires that ResolveSdks.Execute() run before anything else
-		public static AndroidVersions   SupportedVersions;
-
 		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
 		{
 			var readerParams = new ReaderParameters ();
@@ -510,13 +506,13 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
+		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			if (string.IsNullOrEmpty (androidSdkDirectory)) {
 				log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
 				return null;
 			}
-			var platformPath = AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (androidSdkDirectory, platform, MonoAndroidHelper.SupportedVersions);
+			var platformPath = AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (androidSdkDirectory, platform, supportedVersions);
 			if (platformPath == null) {
 				var expectedPath = Path.Combine (androidSdkDirectory, "platforms", "android-" + platform, "android.jar");
 				var sdkManagerMenuPath = buildingInsideVisualStudio ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_CLI;
@@ -628,38 +624,6 @@ namespace Xamarin.Android.Tasks
 		}
 #endif // MSBUILD
 
-		public static string? GetAssemblyCulture (ITaskItem assembly)
-		{
-			// The best option
-			string? culture = assembly.GetMetadata ("Culture");
-			if (!String.IsNullOrEmpty (culture)) {
-				return TrimSlashes (culture);
-			}
-
-			// ...slightly worse
-			culture = assembly.GetMetadata ("RelativePath");
-			if (!String.IsNullOrEmpty (culture)) {
-				return TrimSlashes (Path.GetDirectoryName (culture));
-			}
-
-			// ...not ideal
-			culture = assembly.GetMetadata ("DestinationSubDirectory");
-			if (!String.IsNullOrEmpty (culture)) {
-				return TrimSlashes (culture);
-			}
-
-			return null;
-
-			string? TrimSlashes (string? s)
-			{
-				if (String.IsNullOrEmpty (s)) {
-					return null;
-				}
-
-				return s.TrimEnd ('/').TrimEnd ('\\');
-			}
-		}
-
 		public static uint ZipAlignmentToPageSize (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: false);
 
 		static uint ZipAlignmentToMaskOrPageSize (int alignment, bool needMask)
@@ -681,16 +645,6 @@ namespace Xamarin.Android.Tasks
 			var builder = new CommandLineBuilder ();
 			builder.AppendFileNameIfNotNull (fileName);
 			return builder.ToString ();
-		}
-
-		public static AndroidRuntime ParseAndroidRuntime (string androidRuntime)
-		{
-			if (string.Equals (androidRuntime, "CoreCLR", StringComparison.OrdinalIgnoreCase))
-				return AndroidRuntime.CoreCLR;
-			if (string.Equals (androidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase))
-				return AndroidRuntime.NativeAOT;
-
-			return AndroidRuntime.CoreCLR;
 		}
 
 		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
@@ -715,30 +669,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return minValue;
-		}
-
-		/// <summary>
-		/// Takes `libItem.ItemSpec` and transforms it to a file name of a native library. It will
-		/// remove any paths from `ItemSpec` and will make sure that the file ends with the `.so`
-		/// extension. Empty string is returned if there's nothing to process. String comparisons
-		/// are ordinal and case-insensitive.
-		/// </summary>
-		public static string GetNormalizedNativeLibraryName (ITaskItem libItem)
-		{
-			if (String.IsNullOrEmpty (libItem.ItemSpec)) {
-				return String.Empty;
-			}
-
-			string ret = Path.GetFileName (libItem.ItemSpec);
-			if (String.IsNullOrEmpty (ret)) {
-				return String.Empty;
-			}
-
-			if (!String.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
-				return $"{ret}.so";
-			}
-
-			return ret;
 		}
 	}
 }

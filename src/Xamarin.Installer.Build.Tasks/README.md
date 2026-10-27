@@ -7,8 +7,53 @@ Xamarin.Installer.Build.Tasks contains the build tasks and targets that support 
 
 ### Testing
 
-The Xamarin.Installer.Build.Tests project contains a test project that is used to test the 
-`InstallAndroidDependencies` task via a mock MSBuild environment.
+`OpenJdkSignatureTests` in `Xamarin.Android.Build.Tests` covers signature
+verification and task diagnostics. Build the local SDK and test assembly first,
+then run the focused tests from the repository root:
+
+```text
+dotnet-local.cmd test bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter FullyQualifiedName~OpenJdkSignatureTests
+```
+
+The explicit integration tests download a Microsoft JDK archive, verify its
+signature, reject changed archive contents, and install the JDK through the
+production dependency task:
+
+```text
+dotnet-local.cmd test bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~OpenJdkSignatureTests.PublishedMicrosoftArchive|FullyQualifiedName~OpenJdkSignatureTests.InstallMicrosoftJdk"
+```
+
+### OpenJDK signing-key maintenance
+
+Before a downloaded JDK archive is extracted, the task downloads its `.sig` file
+and the public key linked by [Microsoft's OpenJDK download documentation][1].
+By default, `OpenJdkSignatureVerifier` accepts that key only if the SHA-256 hash
+of its decoded OpenPGP packets matches `PublicKeySha256`. The repository stores
+the hash, not the public key. No keys from the archive or user key stores are
+trusted.
+
+The private `_AndroidOpenJdkPublicKeyUrl` property is blank by default. A blank
+value uses the published URL fixed in the task. An override changes only the
+download location; the downloaded key must still match the configured trusted hash.
+
+The private `_AndroidOpenJdkPublicKeySha256` property is also blank by default,
+which selects the built-in hash. An explicit value replaces the trusted key hash
+and must contain exactly 64 hexadecimal characters; letter case does not matter.
+Changing this value changes which signing key is trusted. Obtain it from a
+verified source, not automatically from an unexpected key download.
+
+To update the key, confirm the replacement key and its URL with the Microsoft
+OpenJDK publisher, decode the ASCII armor, and compute SHA-256 over the complete
+decoded key ring. Review changes to `PublicKeyUrl` and `PublicKeySha256` together
+and run the explicit published-archive test. Do not automatically replace the
+trusted hash with the hash of an unexpected download.
+
+The format reader supports only version 4 binary-document RSA signatures with
+SHA-256, SHA-384, or SHA-512. .NET performs RSA PKCS#1 signature verification.
+Unsupported signature formats, missing files, and key-hash mismatches stop
+installation.
+
+### Testing the full target
 
 The following steps can be used to test the `InstallAndroidDependencies` target directly
 _without_ building dotnet/android, though it does require a dotnet/android checkout and some setup.
@@ -51,3 +96,4 @@ After setting up this sandbox environment, you can drag over your custom Xamarin
 
 
 [0]: https://devdiv.visualstudio.com/DevDiv/_build?definitionId=11410&_a=summary
+[1]: https://learn.microsoft.com/java/openjdk/download#public-key-to-verify-signature-files

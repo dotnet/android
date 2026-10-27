@@ -13,6 +13,7 @@ namespace Xamarin.Android.Build.Tests {
 		List<BuildErrorEventArgs> errors;
 		List<BuildWarningEventArgs> warnings;
 		MockBuildEngine engine;
+		string [] referenceAssemblyPaths;
 
 		[SetUp]
 		public void Setup ()
@@ -23,9 +24,9 @@ namespace Xamarin.Android.Build.Tests {
 				new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true },
 				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0",  Stable = true },
 			});
-			MonoAndroidHelper.RefreshSupportedVersions (new [] {
+			referenceAssemblyPaths = new [] {
 				Path.Combine (referencePath, "MonoAndroid"),
-			});
+			};
 		}
 
 		[TearDown]
@@ -49,6 +50,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
+				ReferenceAssemblyPaths = referenceAssemblyPaths,
 				AndroidApiLevel = "28",
 				ManifestFile = CreateManiestFile (10, 28),
 			};
@@ -62,6 +64,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
+				ReferenceAssemblyPaths = referenceAssemblyPaths,
 				AndroidApiLevel = "28",
 				ManifestFile = CreateManiestFile (10, 27),
 			};

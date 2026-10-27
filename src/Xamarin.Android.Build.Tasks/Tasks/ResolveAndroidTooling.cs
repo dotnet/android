@@ -28,6 +28,10 @@ namespace Xamarin.Android.Tasks
 
 		public string? CommandLineToolsVersion { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
+		AndroidVersions SupportedVersions => MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+
 		[Output]
 		public string? AndroidApiLevel { get; set; }
 
@@ -173,7 +177,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
+			AndroidApiLevelName = SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -224,7 +228,7 @@ namespace Xamarin.Android.Tasks
 
 		int GetMaxStableApiLevel ()
 		{
-			var stableVersion = MonoAndroidHelper.SupportedVersions.MaxStableVersion;
+			var stableVersion = SupportedVersions.MaxStableVersion;
 			if (stableVersion is null)
 				throw new ArgumentNullException ("MaxStableVersion");
 			return stableVersion.ApiLevel;

@@ -118,6 +118,62 @@ namespace Xamarin.Android.Build.Tests
 			public Aapt2CompileWithProcessorCount (int processorCount) => ProcessorCount = processorCount;
 		}
 
+		class ApiMetadataBuildEngine : MockBuildEngine, IBuildEngine4
+		{
+			readonly IBuildEngine4 cache = new MockBuildEngine (TextWriter.Null);
+			readonly int taskThread = Environment.CurrentManagedThreadId;
+			bool yielded;
+			int metadataLookups;
+
+			public int MetadataLookups => metadataLookups;
+			public bool MetadataAccessBeforeYield { get; private set; } = true;
+			public bool Yielded => yielded;
+			public AndroidVersions Versions { get; private set; }
+
+			public ApiMetadataBuildEngine (IList<BuildErrorEventArgs> errors, IList<BuildWarningEventArgs> warnings)
+				: base (TestContext.Out, errors, warnings)
+			{
+			}
+
+			static bool IsApiMetadataKey (object key) =>
+				key is ValueTuple<string, object> localKey &&
+				localKey.Item2 is ValueTuple<string, string, string> metadataKey &&
+				metadataKey.Item2 == nameof (AndroidVersions);
+
+			void CheckMetadataThread ()
+			{
+				if (yielded || Environment.CurrentManagedThreadId != taskThread)
+					MetadataAccessBeforeYield = false;
+			}
+
+			object IBuildEngine4.GetRegisteredTaskObject (object key, RegisteredTaskObjectLifetime lifetime)
+			{
+				if (IsApiMetadataKey (key)) {
+					Assert.AreEqual (RegisteredTaskObjectLifetime.Build, lifetime);
+					System.Threading.Interlocked.Increment (ref metadataLookups);
+					CheckMetadataThread ();
+				}
+				return cache.GetRegisteredTaskObject (key, lifetime);
+			}
+
+			void IBuildEngine4.RegisterTaskObject (object key, object value, RegisteredTaskObjectLifetime lifetime, bool allowEarlyCollection)
+			{
+				if (value is AndroidVersions versions) {
+					Assert.AreEqual (RegisteredTaskObjectLifetime.Build, lifetime);
+					Versions = versions;
+					CheckMetadataThread ();
+				}
+				cache.RegisterTaskObject (key, value, lifetime, allowEarlyCollection);
+			}
+
+			object IBuildEngine4.UnregisterTaskObject (object key, RegisteredTaskObjectLifetime lifetime) =>
+				cache.UnregisterTaskObject (key, lifetime);
+
+			void IBuildEngine3.Yield () => yielded = true;
+
+			void IBuildEngine3.Reacquire () { }
+		}
+
 		[Test]
 		public void Aapt2Link ([Values (true, false)] bool compilePerFile)
 		{
@@ -143,7 +199,7 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
 			var errors = new List<BuildErrorEventArgs> ();
 			var warnings = new List<BuildWarningEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors, warnings);
+			var engine = new ApiMetadataBuildEngine (errors, warnings);
 			var archives = new List<ITaskItem>();
 			if (compilePerFile) {
 				foreach (var file in Directory.EnumerateFiles (resPath, "*.*", SearchOption.AllDirectories)) {
@@ -163,11 +219,20 @@ namespace Xamarin.Android.Build.Tests
 			}
 			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var outputFile = Path.Combine (path, "resources.apk");
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine ("temp", TestName, "references"), new [] {
+				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0", Stable = true },
+			});
+			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
+				YieldDuringToolExecution = true,
+				ReferenceAssemblyPaths = [Path.GetRelativePath (Directory.GetCurrentDirectory (), Path.Combine (referencePath, "MonoAndroid"))],
+				CreatePackagePerAbi = true,
+				SupportedAbis = ["arm64-v8a", "x86_64"],
+				AndroidManifestFile = new TaskItem (manifestFile),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
-				ManifestFiles = new ITaskItem [] { new TaskItem (Path.Combine (path, "AndroidManifest.xml")) },
+				ManifestFiles = new ITaskItem [] { new TaskItem (manifestFile) },
 				AdditionalResourceArchives = !compilePerFile ? archives.ToArray () : null,
 				CompiledResourceFlatArchive = !compilePerFile ? new TaskItem (Path.Combine (archivePath, "compiled.flata")) : null,
 				CompiledResourceFlatFiles = compilePerFile ? items.ToArray () : null,
@@ -176,6 +241,13 @@ namespace Xamarin.Android.Build.Tests
 				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
+			Assert.AreEqual (1, engine.MetadataLookups, "All ABI links must share one API metadata lookup.");
+			Assert.IsTrue (engine.MetadataAccessBeforeYield, "Resolve API metadata on the calling thread before yielding.");
+			Assert.IsTrue (engine.Yielded);
+			Assert.IsNotNull (engine.Versions);
+			CollectionAssert.Contains (engine.Versions.FrameworkDirectories, Path.Combine (referencePath, "MonoAndroid"));
+			FileAssert.Exists (outputFile + "-arm64-v8a");
+			FileAssert.Exists (outputFile + "-x86_64");
 			Assert.AreEqual (0, errors.Count, "There should be no errors.");
 			Assert.LessOrEqual (0, warnings.Count, "There should be 0 warnings.");
 			Assert.True (File.Exists (outputFile), $"{outputFile} should have been created.");
@@ -531,13 +603,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new [] {
-				new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true },
-				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0",  Stable = true },
-			});
-			MonoAndroidHelper.RefreshSupportedVersions (new [] {
-				Path.Combine (referencePath, "MonoAndroid"),
-			});
 			var resPath = Path.Combine (path, "res");
 			var archivePath = Path.Combine (path, "flata");
 			var flatFilePath = Path.Combine(path, "flat");

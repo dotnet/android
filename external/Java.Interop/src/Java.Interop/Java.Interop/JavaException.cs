@@ -18,16 +18,28 @@ namespace Java.Interop
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
 
-		public unsafe JavaException ()
-			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		public JavaException ()
+			: this (JniObjectReferenceOptions.None)
 		{
 			if (PeerReference.IsValid)
 				return;
 
-			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
-			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
+			unsafe {
+				// SAFETY: ()V takes no arguments, so the argument pointer is null.
+				// The current-thread local peer is copied/disposed before synchronous initialization uses this peer.
+				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
+				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
+			}
 			SetJavaStackTrace ();
+		}
+
+		JavaException (JniObjectReferenceOptions options)
+		{
+			JniObjectReference reference = default;
+			Construct (ref reference, options);
+			if (PeerReference.IsValid)
+				SetJavaStackTrace ();
 		}
 
 		public unsafe JavaException (string message)
@@ -87,7 +99,8 @@ namespace Java.Interop
 			: base (details.Message, details.Cause)
 		{
 			try {
-				Construct (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None);
+				JniObjectReference reference = default;
+				Construct (ref reference, JniObjectReferenceOptions.None);
 				SetJavaStackTrace (throwableOverride);
 			} catch {
 				JniObjectReference.Dispose (ref throwableOverride, disposeThrowableOnException);

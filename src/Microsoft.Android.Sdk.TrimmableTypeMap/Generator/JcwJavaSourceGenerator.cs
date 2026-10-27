@@ -31,7 +31,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     }
 ///     private native void nctor_0 (android.content.Context p0);
 ///
-///     @Override
 ///     public void onCreate (android.os.Bundle p0)
 ///     {
 ///         n_onCreate (p0);
@@ -266,8 +265,9 @@ public sealed class JcwJavaSourceGenerator
 			if (method.Connector != null && !method.IsExport) {
 				writer.WriteLine ();
 				WriteAnnotations (method.Annotations, writer);
+				// [Register] can describe managed compatibility methods absent from the Java
+				// supertype, so it does not imply that @Override is valid.
 				writer.Write ($$"""
-	@Override
 	public {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
 {{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});

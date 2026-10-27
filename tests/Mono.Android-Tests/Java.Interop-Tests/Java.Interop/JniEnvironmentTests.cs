@@ -12,6 +12,16 @@ namespace Java.InteropTests
 	public class JniEnvironmentTests
 	{
 		[Test]
+		[Category ("ManagedConstruction")]
+		public void Transition_RejectsNullEnvironmentPointer ()
+		{
+			var environmentPointer = JniEnvironment.EnvironmentPointer;
+			// SAFETY: Zero is rejected before JNI dispatch; do not substitute a fabricated nonzero address.
+			Assert.Throws<ArgumentNullException> (() => new JniTransition (IntPtr.Zero));
+			Assert.AreEqual (environmentPointer, JniEnvironment.EnvironmentPointer);
+		}
+
+		[Test]
 		public unsafe void Types_IsSameObject ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {

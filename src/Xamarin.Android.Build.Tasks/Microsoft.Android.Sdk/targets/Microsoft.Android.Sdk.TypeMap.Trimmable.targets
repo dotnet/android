@@ -125,7 +125,19 @@
       Inputs="$(ProjectAssetsFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TypeMapOutputDirectory)framework-implementation-assemblies.txt;$(_TypeMapOutputDirectory)reference-implementation-assemblies.txt">
     <PropertyGroup>
-      <_TrimmableTypeMapResolveProperties>_ComputeFilesToPublishForRuntimeIdentifiers=true;SelfContained=true;DesignTimeBuild=$(DesignTimeBuild);AppendRuntimeIdentifierToOutputPath=true;ResolveAssemblyReferencesFindRelatedSatellites=false;SkipCompilerExecution=true;_OuterIntermediateAssembly=@(IntermediateAssembly);_OuterOutputPath=$(OutputPath);_OuterIntermediateOutputPath=$(IntermediateOutputPath);_AndroidNdkDirectory=$(_AndroidNdkDirectory)</_TrimmableTypeMapResolveProperties>
+      <_TrimmableTypeMapResolveProperties>
+        _ComputeFilesToPublishForRuntimeIdentifiers=true
+        ;SelfContained=true
+        ;DesignTimeBuild=$(DesignTimeBuild)
+        ;AppendRuntimeIdentifierToOutputPath=true
+        ;ResolveAssemblyReferencesFindRelatedSatellites=false
+        ;SkipCompilerExecution=true
+        ;_OuterIntermediateAssembly=@(IntermediateAssembly)
+        ;_OuterOutputPath=$(OutputPath)
+        ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
+        ;_AndroidNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))
+        ;$(_AndroidResolvedToolingProperties)
+      </_TrimmableTypeMapResolveProperties>
     </PropertyGroup>
     <ItemGroup>
       <_TrimmableTypeMapResolveRid Include="$(_TrimmableTypeMapEffectiveRuntimeIdentifiers)" />

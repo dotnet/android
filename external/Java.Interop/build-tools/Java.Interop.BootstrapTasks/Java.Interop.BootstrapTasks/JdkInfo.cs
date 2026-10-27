@@ -178,7 +178,6 @@ namespace Java.Interop.BootstrapTasks
 			var jarPath     = jdk.JarPath;
 			var javacPath   = jdk.JavacPath;
 			var javaPath    = jdk.JavaPath;
-			var jdkJvmPath  = jdk.JdkJvmPath;
 			var includes    = jdk.IncludePath;
 
 			using (var o = new StreamWriter (MakeFragmentFile.ItemSpec)) {
@@ -186,7 +185,6 @@ namespace Java.Interop.BootstrapTasks
 				o.WriteLine ($"export  JI_JAVA_PATH         := {javaPath}");
 				o.WriteLine ($"export  JI_JAVAC_PATH        := {javacPath}");
 				o.WriteLine ($"export  JI_JDK_INCLUDE_PATHS := {string.Join (" ", includes)}");
-				o.WriteLine ($"export  JI_JVM_PATH          := {jdkJvmPath}");
 				o.WriteLine ($"export  JI_RT_JAR_PATH       := {rtJarPath}");
 			}
 		}

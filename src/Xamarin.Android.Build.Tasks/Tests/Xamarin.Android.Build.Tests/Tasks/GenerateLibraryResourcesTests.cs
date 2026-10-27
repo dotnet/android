@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using Microsoft.Build.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,6 +17,7 @@ namespace Xamarin.Android.Build.Tests
 		string r_txt;
 		string manifest;
 		string output_dir;
+		string [] referenceAssemblyPaths;
 
 		const string app_r_txt_contents =
 @"int anim foo_anim 0x7f010000
@@ -61,9 +64,9 @@ int styleable Foo_styleable_baz 1";
 			var references = CreateFauxReferencesDirectory (Path.Combine (tempDirectoryName, "references"), new [] {
 				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0",  Stable = true },
 			});
-			MonoAndroidHelper.RefreshSupportedVersions (new [] {
+			referenceAssemblyPaths = new [] {
 				Path.Combine (references, "MonoAndroid"),
-			});
+			};
 		}
 
 		[TearDown]
@@ -76,16 +79,55 @@ int styleable Foo_styleable_baz 1";
 
 		string ReplaceLineEndings (string s) => s.Replace ("\r\n", "\n");
 
+		class ApiMetadataBuildEngine : MockBuildEngine, IBuildEngine4, IBuildEngine3
+		{
+			readonly int taskThread = Environment.CurrentManagedThreadId;
+			bool yielded;
+
+			public int MetadataLookups { get; private set; }
+			public bool Yielded => yielded;
+
+			public ApiMetadataBuildEngine () : base (TestContext.Out)
+			{
+			}
+
+			void CheckMetadataAccess (RegisteredTaskObjectLifetime lifetime)
+			{
+				Assert.AreEqual (taskThread, Environment.CurrentManagedThreadId, "Resolve API metadata on the calling thread.");
+				Assert.IsFalse (yielded, "Resolve API metadata before yielding.");
+				Assert.AreEqual (RegisteredTaskObjectLifetime.Build, lifetime);
+			}
+
+			object IBuildEngine4.GetRegisteredTaskObject (object key, RegisteredTaskObjectLifetime lifetime)
+			{
+				CheckMetadataAccess (lifetime);
+				MetadataLookups++;
+				return null;
+			}
+
+			void IBuildEngine4.RegisterTaskObject (object key, object value, RegisteredTaskObjectLifetime lifetime, bool allowEarlyCollection) =>
+				CheckMetadataAccess (lifetime);
+
+			void IBuildEngine3.Yield () => yielded = true;
+
+			void IBuildEngine3.Reacquire () { }
+		}
+
 		void RunTask (string expected = null, bool fileExists = true, string[] libraryTextFiles = null, string[] manifestFiles = null)
 		{
+			var engine = new ApiMetadataBuildEngine ();
 			var task = new GenerateLibraryResources {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ReferenceAssemblyPaths = referenceAssemblyPaths.Select (path => Path.GetRelativePath (Environment.CurrentDirectory, path)).ToArray (),
+				BuildEngine = engine,
+				YieldDuringToolExecution = true,
 				ResourceSymbolsTextFile = main_r_txt,
 				OutputDirectory = output_dir,
 				LibraryTextFiles = libraryTextFiles ?? new [] { r_txt },
 				ManifestFiles = manifestFiles ?? new [] { manifest },
 			};
 			Assert.IsTrue (task.Execute (), "Execute() failed!");
+			Assert.AreEqual (1, engine.MetadataLookups);
+			Assert.IsTrue (engine.Yielded);
 
 			var r_java = Path.Combine (output_dir, "com", "mycompanyname", "foo", "R.java");
 			if (fileExists) {

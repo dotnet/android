@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ApkToSign { get; set; } = "";
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		[Required]
 		public ITaskItem ManifestFile { get; set; } = null!;
 
@@ -78,9 +80,10 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch (javaOptions);
 			}
 
-			var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
-			int? minSdk = MonoAndroidHelper.SupportedVersions.MinStableVersion?.ApiLevel;
-			int? maxSdk = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel;
+			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+			var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, supportedVersions);
+			int? minSdk = supportedVersions.MinStableVersion?.ApiLevel;
+			int? maxSdk = supportedVersions.MaxStableVersion?.ApiLevel;
 			if (manifest.MinSdkVersion.HasValue)
 				minSdk = manifest.MinSdkVersion.Value;
 

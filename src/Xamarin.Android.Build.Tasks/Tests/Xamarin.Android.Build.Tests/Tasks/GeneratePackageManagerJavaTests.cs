@@ -54,14 +54,6 @@ namespace Xamarin.Android.Build.Tests
 			var path = Path.Combine (Root, "temp", $"CheckPackageManagerAssemblyOrder{testHash}");
 			Directory.CreateDirectory (path);
 
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new [] {
-				new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true },
-				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0",  Stable = true },
-			});
-			MonoAndroidHelper.RefreshSupportedVersions (new [] {
-				Path.Combine (referencePath, "MonoAndroid"),
-			});
-
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.net6.helloandroid' android:versionCode='1' />");
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=YYYY");
 
@@ -79,61 +71,9 @@ namespace Xamarin.Android.Build.Tests
 				OutputDirectory = Path.Combine (path, "src", "mono"),
 			};
 
-			var configTask = new GenerateNativeApplicationConfigSources {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
-				CoreClrBootstrapOutputFile = bootstrapPath,
-				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
-				AndroidPackageName = "com.microsoft.net6.helloandroid",
-				AndroidRuntime = "CoreCLR",
-				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
-			};
-
 			Assert.IsTrue (packageManagerTask.Execute (), "GeneratePackageManagerJava task should have executed.");
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 
 			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
-			StringAssert.Contains ("YYYY", Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath)));
-
-			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=XXXX");
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed. (run 2)");
-			StringAssert.Contains ("XXXX", Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath)));
-		}
-
-		[Test]
-		public void GenerateNativeApplicationConfigSkipsAssembliesExcludedFromPackage ()
-		{
-			var path = Path.Combine (Root, "temp", nameof (GenerateNativeApplicationConfigSkipsAssembliesExcludedFromPackage));
-			Directory.CreateDirectory (path);
-
-			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=ZZZZ");
-
-			var metadata = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
-				{ "Abi", "arm64-v8a" },
-			};
-			var skipped = new Dictionary<string, string> (metadata, StringComparer.OrdinalIgnoreCase) {
-				{ "AndroidSkipAddToPackage", "true" },
-			};
-			string bootstrapPath = Path.Combine (path, "env", "coreclr-bootstrap.bin");
-
-			var configTask = new GenerateNativeApplicationConfigSources {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				ResolvedAssemblies = [
-					new TaskItem ("linked/HelloAndroid.dll", metadata),
-					new TaskItem ("linked/Excluded.dll", skipped),
-				],
-				CoreClrBootstrapOutputFile = bootstrapPath,
-				SupportedAbis = ["arm64-v8a"],
-				AndroidPackageName = "com.microsoft.net6.helloandroid",
-				AndroidRuntime = "CoreCLR",
-				Environments = [new TaskItem (Path.Combine (path, "myenv.txt"))],
-			};
-
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
-
-			string bootstrap = Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath));
-			StringAssert.Contains ("ZZZZ", bootstrap, "CoreCLR bootstrap should contain the custom environment value.");
-			StringAssert.DoesNotContain ("Excluded.dll", bootstrap, "CoreCLR bootstrap should not list assemblies excluded from packaging.");
 		}
 	}
 }

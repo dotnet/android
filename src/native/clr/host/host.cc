@@ -45,7 +45,7 @@ void Host::clr_error_writer (const char *message) noexcept
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
 	// TODO: `path` might be a full path, make sure it isn't
-	log_debugf (LOG_DEFAULT, "clr_external_assembly_probe (\"%s\"...)", optional_string (path));
+	log_debugf (LOG_ASSEMBLY, "clr_external_assembly_probe (\"%s\"...)", optional_string (path));
 	if (data_start == nullptr || size == nullptr) {
 		return false; // TODO: abort instead?
 	}

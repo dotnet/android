@@ -480,7 +480,7 @@ namespace Xamarin.Android.Tools.Aidl
 					if (type.ArrayDimension > 0) // ParcelableCreator
 						return String.Format ("{0} = global::System.Array.ConvertAll<global::Java.Lang.Object,{2}> ({1}.CreateTypedArray ({2}.Creator), __input => ({2}) __input);", arg, parcel, ToOutputTypeName (csname.Substring (0, csname.Length - 3)));
 					else
-						return String.Format ("{0} = {1}.ReadInt () != 0 ? ({2}) global::Android.OS.Bundle.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
+						return String.Format ("{0} = {1}.ReadInt () != 0 ? ({2}) {2}.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
 				}
 				else if (type.ArrayDimension > 0)
 					throw new NotSupportedException (String.Format ("AIDL does not support creating this array type: {0}", type));

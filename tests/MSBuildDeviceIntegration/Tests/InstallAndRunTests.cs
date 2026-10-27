@@ -633,7 +633,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			process.BeginErrorReadLine ();
 
 			// Wait for the expected message or timeout
-			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (60));
+			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
 			// Kill the process (simulating Ctrl+C)
 			if (!process.HasExited) {
@@ -811,7 +811,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			process.BeginErrorReadLine ();
 
 			// Wait for the expected message or timeout
-			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (60));
+			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
 			// Kill the process (simulating Ctrl+C)
 			if (!process.HasExited) {

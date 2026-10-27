@@ -6,8 +6,9 @@ using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Places all embedded assemblies in a single assembly store file per target architecture.

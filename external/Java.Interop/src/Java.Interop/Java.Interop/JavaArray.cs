@@ -25,6 +25,11 @@ namespace Java.Interop
 		{
 		}
 
+		internal JavaArray (JniObjectReferenceOptions transfer)
+			: base (transfer)
+		{
+		}
+
 		public int Length {
 			get {return JniEnvironment.Arrays.GetArrayLength (PeerReference);}
 		}
@@ -375,6 +380,11 @@ namespace Java.Interop
 
 		internal JavaPrimitiveArray (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (ref reference, transfer)
+		{
+		}
+
+		internal JavaPrimitiveArray (JniObjectReferenceOptions transfer)
+			: base (transfer)
 		{
 		}
 

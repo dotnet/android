@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
+using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
@@ -30,7 +31,10 @@ static unsafe class JavaMarshalGCBridge
 {
 	static readonly object initializeLock = new ();
 	static bool initialized;
+	static int bridgeProcessingGeneration;
 	static readonly Lazy<JavaMarshalGCBridgeJni> jni = new (CreateJni);
+
+	internal static int BridgeProcessingGeneration => Volatile.Read (ref bridgeProcessingGeneration);
 
 	static JavaMarshalGCBridgeJni BridgeJni
 		=> jni.Value;
@@ -82,7 +86,7 @@ static unsafe class JavaMarshalGCBridge
 
 			JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
 
-			AndroidRuntimeInternal.NotifyBridgeProcessingFinished ();
+			Interlocked.Increment (ref bridgeProcessingGeneration);
 			// Keep the switch here so ILLink removes the EventSource when it is disabled.
 			if (RuntimeFeature.EventSourceSupport) {
 				if (gcBridgeEventEnabled) {

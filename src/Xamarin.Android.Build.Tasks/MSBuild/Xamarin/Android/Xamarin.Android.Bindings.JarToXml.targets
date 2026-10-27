@@ -17,6 +17,7 @@ This file is only used by binding projects.
       Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);@(_AndroidMSBuildAllProjects)"
       Outputs="$(ApiOutputFile)">
     <JarToXml
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
         JavaOptions="$(JavaOptions)"
         AndroidSdkDirectory="$(_AndroidSdkDirectory)"
