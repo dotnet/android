@@ -314,21 +314,37 @@ namespace Java.Interop
 
 	public abstract class JniArrayElements : IDisposable {
 
-		IntPtr elements;
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
+		unsafe void* elements;
 		int elementCount;
 		int sizeOfElement;
 
-		internal JniArrayElements (IntPtr elements, int elementCount, int sizeOfElement)
+		/// <safety>
+		/// Supply a live JNI acquisition with a non-negative count within its extent and the matching
+		/// primitive element size; only null is checked. Keep its Java reference valid through release,
+		/// use this owner for release, and exclude conflicting alias access or concurrent disposal.
+		/// JNI operations require a thread attached to the same JVM. On construction failure,
+		/// the caller remains responsible for the acquisition.
+		/// </safety>
+		internal unsafe JniArrayElements (void* elements, int elementCount, int sizeOfElement)
 		{
-			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", nameof (elements));
-			this.elements = elements;
+			unsafe {
+				// SAFETY: The caller supplies the JNI extent and ABI; only the address is checked and stored.
+				if (elements == null)
+					throw new ArgumentException ("'elements' must not be null.", nameof (elements));
+				this.elements = elements;
+			}
 			this.elementCount = elementCount;
 			this.sizeOfElement = sizeOfElement;
 		}
 
 		internal bool IsDisposed {
-			get {return elements == IntPtr.Zero;}
+			get {
+				unsafe {
+					// SAFETY: Sentinel comparison does not read the buffer.
+					return elements == null;
+				}
+			}
 		}
 
 		internal int ElementCount {
@@ -337,9 +353,22 @@ namespace Java.Interop
 
 		public  IntPtr  Elements {
 			get {
+				unsafe {
+					// SAFETY: Expose the checked address without dereferencing or extending its lifetime.
+					return (IntPtr) ElementsPointer;
+				}
+			}
+		}
+
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
+		internal unsafe void* ElementsPointer {
+			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				return elements;
+				unsafe {
+					// SAFETY: Read only the address; this does not synchronize with release.
+					return elements;
+				}
 			}
 		}
 
@@ -363,7 +392,10 @@ namespace Java.Interop
 			if (IsDisposed)
 				throw new ObjectDisposedException (GetType ().FullName);
 			Synchronize (releaseMode);
-			elements = IntPtr.Zero;
+			unsafe {
+				// SAFETY: Synchronize succeeded; clearing the sentinel does not access the buffer.
+				elements = null;
+			}
 		}
 
 		public void Dispose ()

@@ -31,31 +31,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Boolean array and its unreleased, aligned GetBooleanArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Boolean))
+			: base (elements, elementCount, sizeof (Boolean))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe Boolean* Elements {
-			get {return (Boolean*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (Boolean*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref Boolean this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref Boolean this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -94,17 +119,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniBooleanArrayElements GetElements ()
+		public new JniBooleanArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
-			return new JniBooleanArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
+				return new JniBooleanArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (Boolean item)
+		public override int IndexOf (Boolean item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -115,24 +143,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (Boolean);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (Boolean);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Boolean[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, Boolean[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -140,11 +174,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Boolean* b = destinationArray)
-				JniEnvironment.Arrays.GetBooleanArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (Boolean* b = destinationArray)
+					JniEnvironment.Arrays.GetBooleanArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (Boolean[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (Boolean[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -152,8 +189,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Boolean* b = sourceArray)
-				JniEnvironment.Arrays.SetBooleanArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (Boolean* b = sourceArray)
+					JniEnvironment.Arrays.SetBooleanArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -225,31 +265,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Byte array and its unreleased, aligned GetByteArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (SByte))
+			: base (elements, elementCount, sizeof (SByte))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe SByte* Elements {
-			get {return (SByte*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (SByte*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref SByte this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref SByte this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -288,17 +353,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniSByteArrayElements GetElements ()
+		public new JniSByteArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
-			return new JniSByteArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
+				return new JniSByteArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (SByte item)
+		public override int IndexOf (SByte item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -309,24 +377,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (SByte);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (SByte);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, SByte[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, SByte[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -334,11 +408,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (SByte* b = destinationArray)
-				JniEnvironment.Arrays.GetByteArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (SByte* b = destinationArray)
+					JniEnvironment.Arrays.GetByteArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (SByte[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (SByte[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -346,8 +423,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (SByte* b = sourceArray)
-				JniEnvironment.Arrays.SetByteArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (SByte* b = sourceArray)
+					JniEnvironment.Arrays.SetByteArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -419,31 +499,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Char array and its unreleased, aligned GetCharArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Char))
+			: base (elements, elementCount, sizeof (Char))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe Char* Elements {
-			get {return (Char*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (Char*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref Char this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref Char this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -482,17 +587,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniCharArrayElements GetElements ()
+		public new JniCharArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
-			return new JniCharArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
+				return new JniCharArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (Char item)
+		public override int IndexOf (Char item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -503,24 +611,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (Char);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (Char);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Char[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, Char[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -528,11 +642,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Char* b = destinationArray)
-				JniEnvironment.Arrays.GetCharArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (Char* b = destinationArray)
+					JniEnvironment.Arrays.GetCharArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (Char[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (Char[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -540,8 +657,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Char* b = sourceArray)
-				JniEnvironment.Arrays.SetCharArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (Char* b = sourceArray)
+					JniEnvironment.Arrays.SetCharArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -613,31 +733,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Short array and its unreleased, aligned GetShortArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int16))
+			: base (elements, elementCount, sizeof (Int16))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe Int16* Elements {
-			get {return (Int16*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (Int16*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref Int16 this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref Int16 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -676,17 +821,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniInt16ArrayElements GetElements ()
+		public new JniInt16ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
-			return new JniInt16ArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
+				return new JniInt16ArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (Int16 item)
+		public override int IndexOf (Int16 item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -697,24 +845,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (Int16);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (Int16);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Int16[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, Int16[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -722,11 +876,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Int16* b = destinationArray)
-				JniEnvironment.Arrays.GetShortArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (Int16* b = destinationArray)
+					JniEnvironment.Arrays.GetShortArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (Int16[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (Int16[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -734,8 +891,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Int16* b = sourceArray)
-				JniEnvironment.Arrays.SetShortArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (Int16* b = sourceArray)
+					JniEnvironment.Arrays.SetShortArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -807,31 +967,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Int array and its unreleased, aligned GetIntArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int32))
+			: base (elements, elementCount, sizeof (Int32))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe Int32* Elements {
-			get {return (Int32*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (Int32*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref Int32 this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref Int32 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -870,17 +1055,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniInt32ArrayElements GetElements ()
+		public new JniInt32ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
-			return new JniInt32ArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
+				return new JniInt32ArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (Int32 item)
+		public override int IndexOf (Int32 item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -891,24 +1079,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (Int32);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (Int32);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Int32[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, Int32[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -916,11 +1110,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Int32* b = destinationArray)
-				JniEnvironment.Arrays.GetIntArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (Int32* b = destinationArray)
+					JniEnvironment.Arrays.GetIntArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (Int32[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (Int32[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -928,8 +1125,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Int32* b = sourceArray)
-				JniEnvironment.Arrays.SetIntArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (Int32* b = sourceArray)
+					JniEnvironment.Arrays.SetIntArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -1001,31 +1201,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Long array and its unreleased, aligned GetLongArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Int64))
+			: base (elements, elementCount, sizeof (Int64))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe Int64* Elements {
-			get {return (Int64*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (Int64*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref Int64 this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref Int64 this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -1064,17 +1289,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniInt64ArrayElements GetElements ()
+		public new JniInt64ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
-			return new JniInt64ArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
+				return new JniInt64ArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (Int64 item)
+		public override int IndexOf (Int64 item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -1085,24 +1313,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (Int64);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (Int64);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Int64[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, Int64[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -1110,11 +1344,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Int64* b = destinationArray)
-				JniEnvironment.Arrays.GetLongArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (Int64* b = destinationArray)
+					JniEnvironment.Arrays.GetLongArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (Int64[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (Int64[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -1122,8 +1359,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Int64* b = sourceArray)
-				JniEnvironment.Arrays.SetLongArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (Int64* b = sourceArray)
+					JniEnvironment.Arrays.SetLongArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -1195,31 +1435,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Float array and its unreleased, aligned GetFloatArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Single))
+			: base (elements, elementCount, sizeof (Single))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe Single* Elements {
-			get {return (Single*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (Single*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref Single this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref Single this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -1258,17 +1523,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniSingleArrayElements GetElements ()
+		public new JniSingleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
-			return new JniSingleArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
+				return new JniSingleArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (Single item)
+		public override int IndexOf (Single item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -1279,24 +1547,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (Single);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (Single);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Single[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, Single[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -1304,11 +1578,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Single* b = destinationArray)
-				JniEnvironment.Arrays.GetFloatArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (Single* b = destinationArray)
+					JniEnvironment.Arrays.GetFloatArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (Single[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (Single[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -1316,8 +1593,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Single* b = sourceArray)
-				JniEnvironment.Arrays.SetFloatArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (Single* b = sourceArray)
+					JniEnvironment.Arrays.SetFloatArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -1389,31 +1669,56 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
+		/// <safety>
+		/// Supply a live JNI Double array and its unreleased, aligned GetDoubleArrayElements
+		/// result in the current thread's JVM, with a non-negative count within the array length.
+		/// Keep the array reference valid through owner release and exclude conflicting aliases or
+		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
+		/// the caller remains responsible for release.
+		/// </safety>
 		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount)
-			: base ((IntPtr) elements, elementCount, sizeof (Double))
+			: base (elements, elementCount, sizeof (Double))
 		{
+			// SAFETY: Retain the caller's matching JNI array handle for release.
 			this.arrayHandle = arrayHandle;
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public new unsafe Double* Elements {
-			get {return (Double*) base.Elements;}
+			get {
+				unsafe {
+					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+					return (Double*) ElementsPointer;
+				}
+			}
 		}
 
-		public ref Double this [int index] {
+		/// <safety>
+		/// Keep the Java array reference and acquisition alive and unreleased for this call and
+		/// every escaped-ref use. Exclude release/disposal and conflicting alias access throughout;
+		/// never use the ref after Release, Dispose, or the acquisition's using scope.
+		/// Bounds/disposed checks do not synchronize release or validate escaped refs.
+		/// A throwing call returns no ref and leaves the acquisition unreleased.
+		/// </safety>
+		public unsafe ref Double this [int index] {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
 				unsafe {
+					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
 					return ref Elements [index];
 				}
 			}
 		}
 
-		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, Elements, releaseMode);
+			unsafe {
+				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, Elements, releaseMode);
+			}
 		}
 	}
 
@@ -1452,17 +1757,20 @@ namespace Java.Interop {
 			return GetElements ();
 		}
 
-		public new unsafe JniDoubleArrayElements GetElements ()
+		public new JniDoubleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
-			var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
-			if (elements == null)
-				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");
-			return new JniDoubleArrayElements (PeerReference, elements, Length);
+			unsafe {
+				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
+				var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
+				if (elements == null)
+					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");
+				return new JniDoubleArrayElements (PeerReference, elements, Length);
+			}
 		}
 
-		public override unsafe int IndexOf (Double item)
+		public override int IndexOf (Double item)
 		{
 			int len = Length;
 			if (len == 0)
@@ -1473,24 +1781,30 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e [i] == item)
-						return i;
+					unsafe {
+						// SAFETY: The private acquisition covers this index and is not released until the using scope ends.
+						if (e [i] == item)
+							return i;
+					}
 				}
 			}
 			return -1;
 		}
 
-		public override unsafe void Clear ()
+		public override void Clear ()
 		{
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e [i] = default (Double);
+					unsafe {
+						// SAFETY: This index is in the private acquisition; no borrowed reference escapes before disposal.
+						e [i] = default (Double);
+					}
 				}
 			}
 		}
 
-		public override unsafe void CopyTo (int sourceIndex, Double[] destinationArray, int destinationIndex, int length)
+		public override void CopyTo (int sourceIndex, Double[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
 				throw new ArgumentNullException (nameof (destinationArray));
@@ -1498,11 +1812,14 @@ namespace Java.Interop {
 			if (destinationArray.Length == 0)
 				return;
 
-			fixed (Double* b = destinationArray)
-				JniEnvironment.Arrays.GetDoubleArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the destination stays pinned for this synchronous JNI copy.
+				fixed (Double* b = destinationArray)
+					JniEnvironment.Arrays.GetDoubleArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+			}
 		}
 
-		public override unsafe void CopyFrom (Double[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		public override void CopyFrom (Double[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
 				throw new ArgumentNullException (nameof (sourceArray));
@@ -1510,8 +1827,11 @@ namespace Java.Interop {
 			if (sourceArray.Length == 0)
 				return;
 
-			fixed (Double* b = sourceArray)
-				JniEnvironment.Arrays.SetDoubleArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			unsafe {
+				// SAFETY: Ranges were checked; the source stays pinned for this synchronous JNI copy.
+				fixed (Double* b = sourceArray)
+					JniEnvironment.Arrays.SetDoubleArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+			}
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
