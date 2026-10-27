@@ -112,7 +112,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	);
 
 	if (!Util::file_exists (override_dir_fd, name)) {
-		log_warnf (LOG_ASSEMBLY, "FastDev assembly '%.*s' not found.", static_cast<int>(name.length ()), name.data ());
+		log_debugf (LOG_ASSEMBLY, "FastDev assembly '%.*s' not found.", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
 	log_debugf (LOG_ASSEMBLY, "Found FastDev assembly '%.*s'", static_cast<int>(name.length ()), name.data ());
@@ -271,9 +271,8 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 	// CoreCLR's `.r2r.dll` probes aren't compatible with our TPA path.
 	if (count > 0 && found_corelib && !found_r2r) {
 		tpa_in_use = true;
-		log_writef (
+		log_infof (
 			LOG_ASSEMBLY,
-			LogLevel::Info,
 			"FastDev: Found %zu assemblies in '%s'. Loading assemblies from disk is normal during Fast Deployment.",
 			count,
 			override_dir_path

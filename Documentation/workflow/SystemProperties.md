@@ -61,6 +61,15 @@ CoreCLR and NativeAOT equivalent of [`debug.mono.log`](#debugmonolog).
 NativeAOT also uses the `gref`, `gref=FILE`, `lref`, `lref=FILE`, and `all`
 values to configure managed JNI reference logging.
 
+The `assembly` category logs assembly lookup and loading, including unsuccessful
+probes. These diagnostics are disabled by default; `default` alone does not
+enable them. Warnings about actual I/O failures and runtime errors remain visible
+without opting in.
+
+To enable only assembly-loading diagnostics, set
+`adb shell setprop debug.dotnet.log assembly` and restart the application.
+The `all` category also enables these diagnostics.
+
 ### debug.dotnet.max_grefc
 
 CoreCLR and NativeAOT equivalent of
