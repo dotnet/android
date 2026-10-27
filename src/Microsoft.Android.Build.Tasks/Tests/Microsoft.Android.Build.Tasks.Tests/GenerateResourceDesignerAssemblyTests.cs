@@ -90,7 +90,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 	[TestCase (true, false)]
 	[TestCase (false, true)]
 	[TestCase (false, false)]
-	public void DeterministicImage (bool deterministic, bool isApplication)
+	public void ResourceDesignerAssemblyDeterministic (bool deterministic, bool isApplication)
 	{
 		var start = DateTimeOffset.UtcNow.ToUnixTimeSeconds ();
 		Assert.IsTrue (CreateTask (deterministic, isApplication).Execute ());
