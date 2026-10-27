@@ -52,6 +52,14 @@ insert_final_newline = true
 ###############################
 
 [*.{cs,vb}]
+# Enforce safety rules for tasks that opt into multithreaded execution.
+dotnet_diagnostic.MSBuildTask0002.severity = error
+dotnet_diagnostic.MSBuildTask0003.severity = error
+dotnet_diagnostic.MSBuildTask0004.severity = error
+dotnet_diagnostic.MSBuildTask0005.severity = error
+dotnet_diagnostic.MSBuildTask0012.severity = error
+dotnet_diagnostic.MSBuildTask0014.severity = error
+
 # Organize usings
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false

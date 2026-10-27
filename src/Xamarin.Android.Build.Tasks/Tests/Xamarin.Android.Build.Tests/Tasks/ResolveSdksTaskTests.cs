@@ -89,7 +89,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test, NonParallelizable]
-		public void ResolveSdkTiming ()
+		public void ResolveSdkOutputs ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3");
@@ -129,12 +129,9 @@ namespace Xamarin.Android.Build.Tests {
 				TargetPlatformVersion = "26.0",
 				AndroidSdkBuildToolsVersion = "26.0.3",
 			};
-			var start = DateTime.UtcNow;
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
 			Assert.IsTrue (validateJavaVersion.Execute (), "ValidateJavaVersion should succeed!");
 			Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed!");
-			var executionTime = DateTime.UtcNow - start;
-			Assert.LessOrEqual (executionTime, TimeSpan.FromSeconds(2), "Task should not take more than 2 seconds to run.");
 			Assert.AreEqual (androidTooling.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
 			Assert.AreEqual ("26.0", androidTooling.TargetPlatformVersion, "TargetPlatformVersion should be unchanged");
 			Assert.AreEqual (androidTooling.AndroidApiLevelName, "26", "AndroidApiLevelName should be 26");

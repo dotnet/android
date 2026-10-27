@@ -112,6 +112,44 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[TestCase ("disabled")]
+		[TestCase ("private-members")]
+		public void R8PreservesAccessibilityActionField (string obfuscationMode)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.Core", Version = "1.19.0.1" },
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
+			proj.SetProperty ("TrimMode", "full");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${FIELDS}", """
+					private static readonly int s_actionCollapseId =
+						AndroidX.Core.View.Accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ActionCollapse?.Id ?? 0;
+					""")
+				.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (s_actionCollapseId);");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
+
+			const string className = "Landroidx/core/view/accessibility/AccessibilityNodeInfoCompat$AccessibilityActionCompat;";
+			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
+			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
+			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
+				className, "ACTION_COLLAPSE", className, DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
+				"R8 must preserve ACTION_COLLAPSE with its original name and type for managed JNI access.");
+		}
+
 		[Test]
 		public void CheckR8MetadataFilesExist (
 			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
@@ -179,6 +217,76 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
 			}
+		}
+
+		[Test]
+		public void R8PreservesInstanceIntFieldType ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var path = Path.Combine ("temp", TestName);
+			var binding = new XamarinAndroidBindingProject {
+				ProjectName = "FieldBinding",
+				IsRelease = true,
+				AndroidJavaSources = {
+					new AndroidItem.AndroidJavaSource ("PlaybackError.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => """
+							package example;
+
+							public class PlaybackError {
+								public final int type;
+
+								public PlaybackError(boolean source, boolean renderer) {
+									type = source ? 0 : renderer ? 1 : 2;
+								}
+
+								public String describe() {
+									switch (type) {
+										case 0: return "source";
+										case 1: return "renderer";
+										default: return "unexpected";
+									}
+								}
+							}
+							""",
+						Metadata = { { "Bind", "true" } },
+					},
+				},
+			};
+			binding.SetRuntime (AndroidRuntime.CoreCLR);
+
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				IsRelease = true,
+				References = {
+					new BuildItem.ProjectReference ($"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj", binding.ProjectName, binding.ProjectGuid),
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, "private-members");
+			proj.SetProperty ("TrimMode", "full");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				using var error = new Example.PlaybackError (Intent.GetBooleanExtra ("source", false), Intent.GetBooleanExtra ("renderer", false));
+				System.Console.WriteLine (error.Describe ());
+				System.Console.WriteLine (error.Type);
+				""");
+
+			using var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName));
+			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+			Assert.IsTrue (bindingBuilder.Build (binding), "The binding build should succeed.");
+			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
+
+			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
+			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
+			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
+				"Lexample/PlaybackError;", "type", "I", DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
+				"R8 must preserve the instance field as int, not narrow it to byte, for managed JNI access.");
 		}
 
 		[TestCase ("", true)]
@@ -314,7 +422,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			var expectedFiles = new HashSet<string> {
 				"Java.Interop.dll",
 				"Mono.Android.dll",
-				"Mono.Android.Runtime.dll",
 				"System.Console.dll",
 				"System.Private.CoreLib.dll",
 				"System.Runtime.dll",
@@ -343,6 +450,8 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 				// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
 				CollectionAssert.DoesNotContain (existingFiles, "_Java.Interop.TypeMap.dll");
+				Assert.IsFalse (helper.Exists ("assemblies/Mono.Android.Runtime.dll"),
+					"Runtime helpers must be included in Mono.Android.dll, not a separate assembly.");
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));

@@ -41,6 +41,33 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void RuntimeFeatureSwitchesAreDefinedInMonoAndroid ()
+		{
+			Assert.AreEqual (typeof (AndroidEnvironment).Assembly, typeof (RuntimeFeature).Assembly);
+		}
+
+		[Test]
+		public void JavaToManagedCallback_RaisesUnhandledExceptionFromMonoAndroid ()
+		{
+			using var peer = new TrimmableRuntimeThrowingPeer ();
+			var method = JNIEnv.GetMethodID (peer.Class.Handle, "run", "()V");
+			Exception exception = null;
+			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+				exception = args.Exception;
+				args.Handled = true;
+			};
+
+			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			try {
+				JNIEnv.CallVoidMethod (peer.Handle, method);
+				Assert.IsInstanceOf<InvalidOperationException> (exception);
+				Assert.AreEqual ("Callback failure", exception.Message);
+			} finally {
+				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
+			}
+		}
+
+		[Test]
 		public void JavaToManagedTextWatcherCallback_MarshalsStringAndPrimitiveParameters ()
 		{
 			TrimmableRuntimeTextWatcher.Reset ();
@@ -306,6 +333,20 @@ namespace Java.InteropTests
 			var peer = Java.Lang.Object.GetObject<LegacyConnectorPeer> (jnienv, nativeThis, JniHandleOwnership.DoNotTransfer)
 				?? throw new InvalidOperationException ("The legacy callback peer was not found.");
 			return peer.GetHashCode ();
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRuntimeThrowingPeer")]
+	class TrimmableRuntimeThrowingPeer : Java.Lang.Object, Java.Lang.IRunnable
+	{
+		[Register ("run", "()V", "n_ThrowCallback:Java.InteropTests.TrimmableRuntimeThrowingPeer, Mono.Android.NET-Tests")]
+		public void Run ()
+		{
+		}
+
+		static void n_ThrowCallback (IntPtr jnienv, IntPtr nativeThis)
+		{
+			throw new InvalidOperationException ("Callback failure");
 		}
 	}
 

@@ -43,11 +43,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
 ///     {
-///         AndroidRuntimeInternal.WaitForBridgeProcessing();
 ///         try {
 ///             Activity.n_OnCreate(jnienv, self, p0);
 ///         } catch (Exception e) {
-///             AndroidEnvironmentInternal.UnhandledException(e);
+///             AndroidEnvironment.UnhandledException(e);
 ///         }
 ///     }
 ///
@@ -110,7 +109,6 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getActivationPeerRef;
 	MemberReferenceHandle _setActivationPeerReferenceRef;
 	MemberReferenceHandle _markActivationPeerReplaceableRef;
-	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
@@ -126,8 +124,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTransitionRef;
 	TypeReferenceHandle _jniRuntimeRef;
 	TypeReferenceHandle _exceptionRef;
-	TypeReferenceHandle _androidRuntimeInternalRef;
-	TypeReferenceHandle _androidEnvironmentInternalRef;
+	TypeReferenceHandle _androidEnvironmentRef;
 
 	MemberReferenceHandle _beginMarshalMethodRef;
 	MemberReferenceHandle _endMarshalMethodRef;
@@ -377,11 +374,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniRuntime"));
 		_exceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Exception"));
-		var monoAndroidRuntimeRef = _pe.AddAssemblyRef ("Mono.Android.Runtime", new Version (0, 0, 0, 0));
-		_androidRuntimeInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidRuntimeInternal"));
-		_androidEnvironmentInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironmentInternal"));
+		_androidEnvironmentRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironment"));
 
 		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -508,10 +502,7 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().IntPtr ()));
 
-		_waitForBridgeProcessingRef = _pe.AddMemberRef (_androidRuntimeInternalRef, "WaitForBridgeProcessing",
-			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
-
-		_androidEnvironmentUnhandledExceptionRef = _pe.AddMemberRef (_androidEnvironmentInternalRef, "UnhandledException",
+		_androidEnvironmentUnhandledExceptionRef = _pe.AddMemberRef (_androidEnvironmentRef, "UnhandledException",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().Type (_exceptionRef, false)));
@@ -1140,7 +1131,6 @@ sealed class TypeMapAssemblyEmitter
 		var catchStart = encoder.DefineLabel ();
 		var afterAll = encoder.DefineLabel ();
 
-		encoder.Call (_waitForBridgeProcessingRef, parameterCount: 0);
 		encoder.MarkLabel (tryStart);
 		emitCallback (encoder);
 		if (!isVoid) {

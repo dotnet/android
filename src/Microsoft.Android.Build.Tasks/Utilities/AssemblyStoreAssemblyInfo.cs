@@ -3,9 +3,10 @@ using System;
 using System.IO;
 
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 class AssemblyStoreAssemblyInfo
 {

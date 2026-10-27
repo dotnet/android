@@ -8,7 +8,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 class AssemblyStoreBuilder
 {

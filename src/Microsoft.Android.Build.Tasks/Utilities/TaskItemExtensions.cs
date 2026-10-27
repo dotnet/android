@@ -20,6 +20,12 @@ static class TaskItemExtensions
 		return string.IsNullOrWhiteSpace (value) ? defaultValue : bool.Parse (value);
 	}
 
+	public static string GetMetadataOrDefault (this ITaskItem item, string name, string defaultValue)
+	{
+		string value = item.GetMetadata (name);
+		return string.IsNullOrWhiteSpace (value) ? defaultValue : value;
+	}
+
 	public static bool TryGetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log, out string value)
 	{
 		value = item.GetMetadata (name);

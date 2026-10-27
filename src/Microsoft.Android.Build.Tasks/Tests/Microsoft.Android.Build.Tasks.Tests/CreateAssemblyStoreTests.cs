@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
@@ -17,7 +17,7 @@ public class CreateAssemblyStoreTests : BaseTest
 	[TestCase ("Example.ni.dll.zst")]
 	public void CoreCLRStoreUsesVersionThreeHeader (string assemblyFileName)
 	{
-		string testDirectory = Path.Combine (Root, "temp", $"{nameof (CoreCLRStoreUsesVersionThreeHeader)}-{assemblyFileName}");
+		string testDirectory = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (testDirectory);
 
 		string assemblyPath = Path.Combine (testDirectory, assemblyFileName);
