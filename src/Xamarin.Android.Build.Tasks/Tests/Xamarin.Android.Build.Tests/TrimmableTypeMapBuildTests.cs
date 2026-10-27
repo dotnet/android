@@ -199,6 +199,71 @@ namespace Xamarin.Android.Build.Tests {
 
 		[TestCase (AndroidRuntime.CoreCLR)]
 		[TestCase (AndroidRuntime.NativeAOT)]
+		public void TypeLevelManifestAttributeLookalikesAreIgnored (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				proj.SetProperty ("_SkipNdkResolution", "false");
+			}
+			string [] componentAttributes = ["Activity", "Service", "BroadcastReceiver", "ContentProvider", "Application", "Instrumentation"];
+			var lookalikes = string.Join ("\n", componentAttributes.Select (name => $$"""
+				public sealed class {{name}}Attribute : System.Attribute, Java.Interop.IJniNameProviderAttribute
+				{
+					public string? Name { get; set; }
+				}
+
+				[{{name}}]
+				public class Fake{{name}} : Java.Lang.Object {}
+
+				[{{name}} (Name = "parity.FakeNamed{{name}}")]
+				public class FakeNamed{{name}} : Java.Lang.Object {}
+				"""));
+			proj.Sources.Add (new BuildItem.Source ("LookalikeAttributes.cs") {
+				TextContent = () => $$"""
+					namespace UserAttributes;
+
+					{{lookalikes}}
+
+					public sealed class IntentFilterAttribute : System.Attribute {}
+					public sealed class LayoutAttribute : System.Attribute {}
+					public sealed class RegisterAttribute : System.Attribute {}
+					public sealed class JniTypeSignatureAttribute : System.Attribute {}
+
+					[Activity (Name = "parity.FakeNamedActivity")]
+					[IntentFilter]
+					[Layout]
+					[Register]
+					[JniTypeSignature]
+					[Android.App.Activity (Name = "parity.RealActivity", Exported = true)]
+					[Android.App.IntentFilter (new [] { "parity.REAL" })]
+					public class RealActivity : Android.App.Activity {}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} should ignore non-Android attribute lookalikes.");
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+			Assert.IsFalse (manifest.Descendants ().Attributes ()
+				.Any (attribute => attribute.Value.Contains ("Fake", StringComparison.Ordinal)),
+				"Lookalike component attributes must not create manifest declarations.");
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+			var activity = manifest.Descendants ("activity")
+				.Single (element => (string) element.Attribute (android + "name") == "parity.RealActivity");
+			Assert.IsNull (activity.Element ("layout"));
+			var filter = activity.Elements ("intent-filter").Single ();
+			Assert.AreEqual ("parity.REAL", (string) filter.Element ("action")?.Attribute (android + "name"));
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
 		public void ManifestAttributesAreGeneratedForTrimmableComponents (AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -592,6 +657,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.CoreCLR, "TypeApplicationConflict")]
 		[TestCase (AndroidRuntime.CoreCLR, "MixedApplicationConflict")]
 		[TestCase (AndroidRuntime.CoreCLR, "InstrumentationProperty")]
+		[TestCase (AndroidRuntime.CoreCLR, "InstrumentationIntentFilter")]
 		[TestCase (AndroidRuntime.CoreCLR, "ApplicationBaseType")]
 		[TestCase (AndroidRuntime.CoreCLR, "ApplicationMetadataConflict")]
 		[TestCase (AndroidRuntime.CoreCLR, "ApplicationPropertyConflict")]
@@ -604,6 +670,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.NativeAOT, "TypeApplicationConflict")]
 		[TestCase (AndroidRuntime.NativeAOT, "MixedApplicationConflict")]
 		[TestCase (AndroidRuntime.NativeAOT, "InstrumentationProperty")]
+		[TestCase (AndroidRuntime.NativeAOT, "InstrumentationIntentFilter")]
 		[TestCase (AndroidRuntime.NativeAOT, "ApplicationBaseType")]
 		[TestCase (AndroidRuntime.NativeAOT, "ApplicationMetadataConflict")]
 		[TestCase (AndroidRuntime.NativeAOT, "ApplicationPropertyConflict")]
@@ -649,13 +716,19 @@ namespace Xamarin.Android.Build.Tests {
 					public class AdditionalApplication : Application {}
 					"""
 				: "";
-			var additionalInstrumentation = invalidProperty == "InstrumentationProperty"
-				? """
+			var additionalInstrumentation = invalidProperty switch {
+				"InstrumentationProperty" => """
 					[Instrumentation]
 					[Property ("instrumentation.property", Value = "instrumentation-property")]
 					public class InvalidInstrumentation : Instrumentation {}
-					"""
-				: "";
+					""",
+				"InstrumentationIntentFilter" => """
+					[Instrumentation]
+					[IntentFilter (new [] { "parity.INSTRUMENT" })]
+					public class InvalidInstrumentation : Instrumentation {}
+					""",
+				_ => "",
+			};
 			var invalidApplicationType = invalidProperty == "ApplicationBaseType"
 				? """
 					[Application]
@@ -708,6 +781,7 @@ namespace Xamarin.Android.Build.Tests {
 				"TypeApplicationConflict" => "There can be only one type with an [Application] attribute",
 				"MixedApplicationConflict" => "Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.",
 				"InstrumentationProperty" => "unexpected element <property> found in <manifest><instrumentation>",
+				"InstrumentationIntentFilter" => "unexpected element <intent-filter> found in <manifest><instrumentation>",
 				"ApplicationBaseType" => "[Application] can only be used on subclasses of Application.",
 				"ApplicationMetadataConflict" => "Element meta-data#duplicate.metadata",
 				"ApplicationPropertyConflict" => "Element property#duplicate.property",
@@ -715,6 +789,14 @@ namespace Xamarin.Android.Build.Tests {
 				_ => $"Unsupported {invalidProperty} value '99'",
 			};
 			Assert.IsTrue (builder.LastBuildOutput.ContainsText (expectedError), $"Build output should contain '{expectedError}'.");
+			if (invalidProperty == "InstrumentationIntentFilter") {
+				var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+				var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
+				var filter = manifest.Root?.Element ("instrumentation")?.Element ("intent-filter");
+				Assert.IsNotNull (filter);
+				XNamespace android = "http://schemas.android.com/apk/res/android";
+				Assert.AreEqual ("parity.INSTRUMENT", (string) filter.Element ("action")?.Attribute (android + "name"));
+			}
 		}
 
 		[Test]

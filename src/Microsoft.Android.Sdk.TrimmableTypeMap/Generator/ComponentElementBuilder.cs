@@ -302,6 +302,9 @@ static class ComponentElementBuilder
 		foreach (var meta in component.MetaData) {
 			element.Add (CreateMetaDataElement (meta));
 		}
+		foreach (var intentFilter in component.IntentFilters) {
+			element.Add (CreateIntentFilterElement (intentFilter));
+		}
 		foreach (var property in component.ManifestProperties) {
 			element.Add (CreatePropertyElement (property));
 		}

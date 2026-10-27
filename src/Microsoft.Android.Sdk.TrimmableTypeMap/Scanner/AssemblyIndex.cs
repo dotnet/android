@@ -187,13 +187,20 @@ sealed class AssemblyIndex : IDisposable
 				continue;
 			}
 
-			if (attrName == "RegisterAttribute") {
+			if (IsCustomAttributeMatch (ca, Reader, "Android.Runtime", "RegisterAttribute")) {
 				registerInfo = ParseRegisterAttribute (ca);
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
-			} else if (attrName == "JniTypeSignatureAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Java.Interop", "JniTypeSignatureAttribute")) {
 				registerInfo = ParseJniTypeSignatureAttribute (ca);
-			} else if (IsKnownComponentAttribute (attrName)) {
-				attrInfo ??= CreateTypeAttributeInfo (attrName);
+			} else if (IsKnownComponentAttribute (attrName) &&
+			           IsCustomAttributeMatch (ca, Reader,
+			               attrName is "BroadcastReceiverAttribute" or "ContentProviderAttribute" ? "Android.Content" : "Android.App",
+			               attrName)) {
+				if (attrInfo is null || !attrInfo.IsComponentAttribute) {
+					var jniName = attrInfo?.JniName;
+					attrInfo = CreateTypeAttributeInfo (attrName);
+					attrInfo.JniName = jniName;
+				}
 				var value = DecodeAttribute (ca);
 
 				if (attrName == "ContentProviderAttribute") {
@@ -219,7 +226,7 @@ sealed class AssemblyIndex : IDisposable
 						applicationAttributeInfo.ManageSpaceActivity = manageSpace;
 					}
 				}
-			} else if (attrName == "IntentFilterAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "IntentFilterAttribute")) {
 				intentFilters ??= new List<IntentFilterInfo> ();
 				intentFilters.Add (ParseIntentFilterAttribute (ca));
 			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "MetaDataAttribute")) {
@@ -242,14 +249,16 @@ sealed class AssemblyIndex : IDisposable
 					PathPattern = grantProps.TryGetValue ("PathPattern", out var pattern) && pattern is string patternValue ? patternValue : null,
 					PathPrefix = grantProps.TryGetValue ("PathPrefix", out var prefix) && prefix is string prefixValue ? prefixValue : null,
 				});
-			} else if (attrName == "LayoutAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "LayoutAttribute")) {
 				layoutProperties = ParseLayoutAttribute (ca);
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
 				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
 				var name = TryGetNameProperty (ca);
 				if (name is not null) {
-					attrInfo = new TypeAttributeInfo (attrName);
-					attrInfo.JniName = name.Replace ('.', '/');
+					attrInfo = new TypeAttributeInfo (attrName) {
+						IsComponentAttribute = false,
+						JniName = name.Replace ('.', '/'),
+					};
 				}
 			}
 		}
@@ -1112,6 +1121,7 @@ sealed record ExportInfo
 class TypeAttributeInfo (string attributeName)
 {
 	public string AttributeName { get; } = attributeName;
+	public bool IsComponentAttribute { get; init; } = true;
 	public string? JniName { get; set; }
 
 	/// <summary>

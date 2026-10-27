@@ -111,6 +111,47 @@ public class TrimmableTypeMapManifestAliasTests
 	}
 
 	[Test]
+	public void InstrumentationEmitsIntentFilters ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "myapp/TestInstrumentation",
+			CompatJniName = "myapp/TestInstrumentation",
+			ManagedTypeName = "MyApp.TestInstrumentation",
+			ManagedTypeNamespace = "MyApp",
+			ManagedTypeShortName = "TestInstrumentation",
+			AssemblyName = "MyApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Instrumentation,
+				MetaData = [new MetaDataInfo { Name = "instrumentation.metadata", Value = "present" }],
+				IntentFilters = [new IntentFilterInfo {
+					Actions = ["my.app.INSTRUMENT"],
+					Categories = ["my.app.TEST"],
+					Properties = new Dictionary<string, object?> { ["Priority"] = 7 },
+				}],
+				ManifestProperties = [new PropertyInfo { Name = "instrumentation.property", Value = "present" }],
+			},
+		};
+		var manifestGenerator = new ManifestGenerator {
+			PackageName = "my.app",
+			MinSdkVersion = "24",
+			TargetSdkVersion = "35",
+			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+		};
+
+		var (document, _) = manifestGenerator.Generate (null, [peer], new AssemblyManifestInfo ());
+		var instrumentation = document.Root?.Element ("instrumentation");
+		Assert.IsNotNull (instrumentation);
+		CollectionAssert.AreEqual (new [] { "meta-data", "intent-filter", "property" },
+			instrumentation.Elements ().Select (element => element.Name.LocalName));
+		var filter = instrumentation.Element ("intent-filter");
+		Assert.IsNotNull (filter);
+		XNamespace android = "http://schemas.android.com/apk/res/android";
+		Assert.AreEqual ("7", (string) filter.Attribute (android + "priority"));
+		Assert.AreEqual ("my.app.INSTRUMENT", (string) filter.Element ("action")?.Attribute (android + "name"));
+		Assert.AreEqual ("my.app.TEST", (string) filter.Element ("category")?.Attribute (android + "name"));
+	}
+
+	[Test]
 	public void MultipleAssemblyApplicationAttributesAreRejected ()
 	{
 		var manifestGenerator = new ManifestGenerator {

@@ -3327,7 +3327,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo)
 	{
-		if (attrInfo is null) {
+		if (attrInfo is null || !attrInfo.IsComponentAttribute) {
 			return null;
 		}
 
