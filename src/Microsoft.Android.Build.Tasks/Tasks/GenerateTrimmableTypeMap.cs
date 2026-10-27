@@ -21,7 +21,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	static readonly string [] DefaultFrameworkAssemblyNames = [
 		"Java.Interop",
 		"Mono.Android",
-		"Mono.Android.Runtime",
 	];
 
 	sealed class MSBuildTrimmableTypeMapLogger (TaskLoggingHelper log) : ITrimmableTypeMapLogger

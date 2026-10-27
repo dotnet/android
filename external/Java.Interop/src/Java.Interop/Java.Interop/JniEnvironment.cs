@@ -159,9 +159,21 @@ namespace Java.Interop {
 
 		partial class References {
 
+			/// <safety>
+			/// <paramref name="jnienv"/> must be a live JNI environment for the calling thread,
+			/// with a valid GetJavaVM function-table entry, for the entire synchronous call.
+			/// Rejecting zero does not validate other addresses. The returned VM pointer is borrowed;
+			/// use it only when the returned JNI status is zero and while that VM remains alive.
+			/// No usable VM pointer is promised on failure.
+			/// </safety>
 			internal static unsafe int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
+				if (jnienv == IntPtr.Zero)
+					throw new ArgumentNullException (nameof (jnienv));
+
 				IntPtr _vm;
+				// SAFETY: The caller supplies the live current-thread JNI environment.
+				// GetJavaVM writes one pointer-sized stack slot synchronously; &_vm is not retained.
 				int r       = JniNativeMethods.GetJavaVM (jnienv, &_vm);
 				vm          = _vm;
 				return r;
@@ -196,11 +208,15 @@ namespace Java.Interop {
 			set {
 				if (disposed)
 					throw new ObjectDisposedException (nameof (JniEnvironmentInfo));
+				if (value == IntPtr.Zero)
+					throw new ArgumentNullException (nameof (value));
 				if (environmentPointer == value)
 					return;
 
 				environmentPointer  = value;
 				IntPtr  vmh = IntPtr.Zero;
+				// SAFETY: The supplying JNI transition/runtime must keep this thread's environment alive.
+				// The zero guard does not validate nonzero pointers or roll back this assignment on failure.
 				int     r   = JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh);
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString ());

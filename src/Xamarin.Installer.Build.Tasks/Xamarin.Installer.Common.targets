@@ -26,6 +26,10 @@
 				ManifestSource="$(AndroidManifestSource)"
 				TimeoutInMinutes="$(AndroidDependencyInstallationTimeout)"
 				InstallJavaDependencies="$(AndroidInstallJavaDependencies)"
+				IgnoreSdkArchiveChecksumErrors="$(_AndroidIgnoreSdkArchiveChecksumErrors)"
+				SkipSignCheck="$(_SkipSignCheck)"
+				OpenJdkPublicKeyUrl="$(_AndroidOpenJdkPublicKeyUrl)"
+				OpenJdkPublicKeySha256="$(_AndroidOpenJdkPublicKeySha256)"
 			>
 		</InstallAndroidDependencies>
 	</Target>

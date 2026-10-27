@@ -1,5 +1,5 @@
 #nullable enable
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 partial class AssemblyStoreGenerator
 {

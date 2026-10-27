@@ -50,6 +50,75 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("expected.Agent", (string?)application.Attribute (android + "backupAgent"));
 		}
 
+		[TestCase ("method", true, false)]
+		[TestCase ("method", true, true)]
+		[TestCase ("constructor", true, false)]
+		[TestCase ("constructor", true, true)]
+		[TestCase ("register", false, false)]
+		[TestCase ("register", false, true)]
+		[TestCase ("binding", false, false)]
+		[TestCase ("binding", false, true)]
+		[TestCase ("interface", false, false)]
+		[TestCase ("interface", false, true)]
+		public void ExplicitExportsAreUnconditionalEntries (string shape, bool unconditional, bool alias)
+		{
+			var peer = new JavaPeerInfo {
+				JavaName = "example/Peer",
+				CompatJniName = "example/Peer",
+				ManagedTypeName = "Example.Peer",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Peer",
+				AssemblyName = "Example",
+				BaseJavaName = "java/lang/Object",
+				DoNotGenerateAcw = shape == "binding",
+				IsInterface = shape == "interface",
+				ActivationCtor = new ActivationCtorInfo {
+					DeclaringTypeName = "Example.Peer",
+					DeclaringAssemblyName = "Example",
+					DeclaringType = new TypeRefData { ManagedTypeName = "Example.Peer", AssemblyName = "Example" },
+					Style = ActivationCtorStyle.XamarinAndroid,
+				},
+				JavaConstructors = [new JavaConstructorInfo { JniSignature = "()V", ConstructorIndex = 0 }],
+				MarshalMethods = [new MarshalMethodInfo {
+					JniName = shape == "constructor" ? ".ctor" : "call",
+					JniSignature = "()V",
+					NativeCallbackName = "n_call",
+					ManagedMethodName = shape == "constructor" ? ".ctor" : "Call",
+					IsConstructor = shape == "constructor",
+					IsExport = shape != "register",
+				}],
+			};
+			var peers = new List<JavaPeerInfo> { peer };
+			if (alias) {
+				peers.Add (peer with {
+					ManagedTypeName = "Example.OtherPeer",
+					ManagedTypeShortName = "OtherPeer",
+					MarshalMethods = [],
+				});
+			}
+
+			var generator = new TypeMapAssemblyGenerator (new Version (11, 0));
+			var model = generator.CreateModel (peers, "_Example.TypeMap");
+			var entry = model.Entries.Single (entry => entry.MapKey == (alias ? "example/Peer[1]" : "example/Peer"));
+			Assert.AreEqual (unconditional, entry.TargetTypeReference is null);
+			if (alias) {
+				Assert.AreEqual (unconditional, model.Entries.Single (entry => entry.MapKey == "example/Peer").TargetTypeReference is null,
+					"The alias holder must survive when an explicitly exporting alias survives.");
+				Assert.IsNotNull (model.Entries.Single (entry => entry.MapKey == "example/Peer[0]").TargetTypeReference,
+					"An export on one alias must not unconditionally retain another alias.");
+			}
+
+			using var stream = new MemoryStream ();
+			generator.Generate (model, stream, useSharedTypemapUniverse: true);
+			stream.Position = 0;
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
+			var attribute = assembly.CustomAttributes.Single (attribute =>
+				attribute.AttributeType.Name == "TypeMapAttribute`1" &&
+				(string) attribute.ConstructorArguments [0].Value == entry.MapKey);
+			Assert.AreEqual (unconditional ? 2 : 3, attribute.ConstructorArguments.Count,
+				"Only unconditional entries should use the rooting two-argument TypeMap attribute.");
+		}
+
 		[TestCase (false, false, false)]
 		[TestCase (false, false, true)]
 		[TestCase (false, true, false)]
@@ -128,6 +197,15 @@ namespace Xamarin.Android.Build.Tests {
 			var emittedProxy = assembly.MainModule.Types.Single (type => type.Name == proxy.TypeName);
 			Assert.AreEqual (hasNativeConstructor, emittedProxy.Methods.Any (method => method.Name == "nctor_0_uco"));
 			Assert.IsTrue (emittedProxy.Methods.Any (method => method.Name == "CreateInstance"));
+			foreach (var uco in proxy.UcoMethods) {
+				var wrapper = emittedProxy.Methods.Single (method => method.Name == uco.WrapperName);
+				var handler = wrapper.Body.ExceptionHandlers.Single ();
+				Assert.AreEqual (wrapper.Body.Instructions [0], handler.TryStart, "No bridge wait is needed before the callback.");
+				var unhandledException = wrapper.Body.Instructions.Select (instruction => instruction.Operand)
+					.OfType<Mono.Cecil.MethodReference> ().Single (method => method.Name == "UnhandledException");
+				Assert.AreEqual ("Android.Runtime.AndroidEnvironment", unhandledException.DeclaringType.FullName);
+				Assert.AreEqual ("Mono.Android", unhandledException.DeclaringType.Scope.Name);
+			}
 			TestContext.Out.WriteLine ($"abstract={isAbstract}, deferred={deferred}, callback={hasCallback}: Java nctor={hasNativeConstructor}, native registrations=[{string.Join (", ", proxy.NativeRegistrations.Select (registration => registration.JniMethodName))}]");
 		}
 

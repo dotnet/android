@@ -33,10 +33,6 @@
       Project="$(_OutputPath)JdkInfo-11.props"
       Condition="Exists('$(_OutputPath)JdkInfo-11.props')"
   />
-  <Import
-      Project="$(_OutputPath)PackagePaths.props"
-      Condition="Exists('$(_OutputPath)PackagePaths.props')"
-  />
   <PropertyGroup>
     <!-- Workaround: https://github.com/dotnet/sdk/issues/19050 -->
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
@@ -53,7 +49,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <DotnetToolPath Condition=" '$(DotnetToolPath)' == '' ">dotnet</DotnetToolPath>
-    <CmakePath Condition=" '$(CmakePath)' == '' ">cmake</CmakePath>
     <GradleHome Condition=" '$(GradleHome)' == '' ">$(MSBuildThisFileDirectory)..\..\build-tools\gradle</GradleHome>
     <GradleWPath Condition=" '$(GradleWPath)' == '' ">$(GradleHome)\gradlew</GradleWPath>
     <GradleArgs Condition=" '$(GradleArgs)' == '' ">--stacktrace --no-daemon</GradleArgs>

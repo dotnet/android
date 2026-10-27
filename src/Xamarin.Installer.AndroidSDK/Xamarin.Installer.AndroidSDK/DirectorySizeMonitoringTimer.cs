@@ -80,8 +80,6 @@ namespace Xamarin.Installer.AndroidSDK
 
 		async Task<ulong> GetDirectorySizeAsync (string directory)
 		{
-			// TODO: DirectoryInfo.GetFiles is throwing IO exceptions because of simultaneous access - find another way
-			// maybe this: https://docs.microsoft.com/en-us/sysinternals/downloads/du - update: its EULA disallows their binaries distribution
 			if (!Platform.IsMac)
 				return 0;
 
