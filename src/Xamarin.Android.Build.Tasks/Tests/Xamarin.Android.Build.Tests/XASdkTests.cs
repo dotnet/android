@@ -290,7 +290,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
 			var projectNuGetConfig = Path.Combine (dotnet.ProjectDirectory, "NuGet.config");
-			File.Copy (repoNuGetConfig, projectNuGetConfig);
 			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
 
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
