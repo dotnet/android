@@ -7,7 +7,6 @@ namespace Android.Content.Res
 {
 	public partial interface IXmlResourceParser : Android.Util.IAttributeSet, IXmlPullParser
 	{
-		#region These members are dare defined here to avoid conflicts between IAttributeSet and IXmlPullParser.
 
 		new int AttributeCount { get; }
 		
@@ -16,7 +15,6 @@ namespace Android.Content.Res
 		new string GetAttributeName (int pos);
 		new string GetAttributeValue (int pos);
 		new string? GetAttributeValue (string? ns, string? name);
-		#endregion
 	}
 }
 

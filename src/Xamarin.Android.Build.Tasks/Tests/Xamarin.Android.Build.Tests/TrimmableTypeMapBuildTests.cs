@@ -2804,6 +2804,131 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void FullTrim_PreservesExplicitExportsWithoutManagedCallers (AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				ProjectName = "JavaOnlyExports",
+			};
+			app.SetRuntime (runtime);
+			app.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			app.SetProperty ("TrimMode", "full");
+			app.SetProperty ("PublishReadyToRun", "false");
+			app.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			app.SetProperty ("AndroidR8ObfuscationMode", "disabled");
+			app.SetProperty ("_AndroidEnableTypemapR8Trimming", "true");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				app.SetProperty ("_SkipNdkResolution", "false");
+			}
+			app.Sources.Add (new BuildItem.Source ("Exports.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace JavaOnlyExports;
+
+					[Register ("example.MethodPeer")]
+					public class MethodPeer : Java.Lang.Object
+					{
+						int value;
+						public MethodPeer () { value = 42; }
+						public MethodPeer (int value) { this.value = value; }
+						[Export ("getValue")]
+						public int GetValue () => value;
+						[Export ("echo")]
+						public string Echo (string text) => text + "!";
+						public int UnusedMethod () => -1;
+					}
+
+					[Register ("example.FieldPeer")]
+					public class FieldPeer : Java.Lang.Object
+					{
+						[ExportField ("VALUE")]
+						public static int InitialValue ()
+						{
+							System.Console.WriteLine ("Initializing exported field");
+							return 43;
+						}
+						public int UnusedMethod () => -1;
+					}
+
+					[Register ("example.ConstructorPeer")]
+					public class ConstructorPeer : Java.Lang.Object
+					{
+						[Export (".ctor", SuperArgumentsString = "")]
+						public ConstructorPeer (int value) { }
+					}
+
+					[Register ("example.UnusedPeer")]
+					public class UnusedPeer : Java.Lang.Object { }
+
+					[Register ("example.InheritedPeer")]
+					public class InheritedPeer : MethodPeer { }
+					""",
+			});
+			app.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("example/JavaCaller.java") {
+				Encoding = Encoding.ASCII,
+				Metadata = { { "Bind", "False" } },
+				TextContent = () => """
+					package example;
+					public class JavaCaller {
+					    public static int run() {
+					        new ConstructorPeer(42);
+					        return new MethodPeer().getValue() + new MethodPeer(41).getValue() + FieldPeer.VALUE;
+					    }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (app), "Java-only exports should survive full trimming.");
+
+			var keys = File.ReadAllLines (builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap.keys.txt")));
+			CollectionAssert.IsSubsetOf (new [] { "example/MethodPeer", "example/FieldPeer", "example/ConstructorPeer" }, keys,
+				"Exported peers must have surviving typemap entries, including in the NativeAOT object.");
+			CollectionAssert.DoesNotContain (keys, "example/UnusedPeer");
+			CollectionAssert.DoesNotContain (keys, "example/InheritedPeer");
+			var dex = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin", "classes.dex"));
+			Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/MethodPeer;", "getValue", "()I", dex, AndroidSdkPath));
+			Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/MethodPeer;", "echo", "(Ljava/lang/String;)Ljava/lang/String;", dex, AndroidSdkPath));
+			Assert.IsTrue (DexUtils.ContainsClass ("Lexample/FieldPeer;", dex, AndroidSdkPath));
+			Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/ConstructorPeer;", "<init>", "(I)V", dex, AndroidSdkPath));
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				var linkedApp = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", $"{app.ProjectName}.dll"));
+				using var assembly = AssemblyDefinition.ReadAssembly (linkedApp);
+				var methodPeer = assembly.MainModule.GetType ("JavaOnlyExports.MethodPeer");
+				Assert.IsNotNull (methodPeer);
+				CollectionAssert.IsSubsetOf (new [] { "GetValue", "Echo" }, methodPeer.Methods.Select (method => method.Name));
+				Assert.AreEqual (2, methodPeer.Methods.Count (method => method.IsConstructor && !method.IsStatic),
+					"Both Java-visible constructors should survive.");
+				Assert.IsFalse (methodPeer.Methods.Any (method => method.Name == "UnusedMethod"));
+				var fieldPeer = assembly.MainModule.GetType ("JavaOnlyExports.FieldPeer");
+				Assert.IsNotNull (fieldPeer);
+				Assert.IsTrue (fieldPeer.Methods.Any (method => method.Name == "InitialValue"));
+				Assert.IsFalse (fieldPeer.Methods.Any (method => method.Name == "UnusedMethod"));
+				Assert.IsNotNull (assembly.MainModule.GetType ("JavaOnlyExports.ConstructorPeer"));
+				Assert.IsNull (assembly.MainModule.GetType ("JavaOnlyExports.UnusedPeer"), "[Register] alone must not root a peer.");
+				Assert.IsNull (assembly.MainModule.GetType ("JavaOnlyExports.InheritedPeer"), "Inherited exports must not root a derived peer.");
+
+				var linkedJava = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "linked-java", "example"));
+				foreach (var name in new [] { "MethodPeer", "FieldPeer", "ConstructorPeer" }) {
+					FileAssert.Exists (Path.Combine (linkedJava, name + ".java"));
+				}
+				var fieldJava = File.ReadAllText (Path.Combine (linkedJava, "FieldPeer.java"));
+				StringAssert.Contains ("VALUE", fieldJava);
+				StringAssert.Contains ("InitialValue", fieldJava);
+				FileAssert.DoesNotExist (Path.Combine (linkedJava, "UnusedPeer.java"));
+				FileAssert.DoesNotExist (Path.Combine (linkedJava, "InheritedPeer.java"));
+			}
+		}
+
 		// T1: end-to-end build coverage for [Export] and [ExportField] under trimmable.
 		// The trimmable typemap path emits a per-assembly typemap DLL and JCW Java
 		// sources for user peer types. This test confirms that, for a project that

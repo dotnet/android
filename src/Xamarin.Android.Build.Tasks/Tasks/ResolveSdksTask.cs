@@ -29,14 +29,16 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// ResolveSdks' job is to call RefreshAndroidSdk and setup static members of MonoAndroidHelper
+	/// Discovers SDK paths and returns them to MSBuild.
 	/// </summary>
 	public class ResolveSdks : AndroidTask
 	{
@@ -92,26 +94,27 @@ namespace Xamarin.Android.Tasks
 
 			JavaSdkPath         = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion)?.HomePath;
 
-			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
+			MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
 
+			AndroidSdkInfo androidSdk;
 			try {
-				MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath, Log);
-			}
-			catch (InvalidOperationException e) {
+				androidSdk = new AndroidSdkInfo (LogSdkMessage, AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
+			} catch (InvalidOperationException e) {
 				if (e.Message.Contains (" Android ")) {
 					Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
-				}
-				if (e.Message.Contains (" Java ")) {
+				} else if (e.Message.Contains (" Java ")) {
 					Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Java_SDK);
+				} else {
+					Log.LogCodedError ("XA5300", "{0}", e.Message);
 				}
 				return false;
 			}
 
-			AndroidNdkPath = MonoAndroidHelper.AndroidSdk.AndroidNdkPath;
-			AndroidSdkPath = MonoAndroidHelper.AndroidSdk.AndroidSdkPath;
-			JavaSdkPath    = MonoAndroidHelper.AndroidSdk.JavaSdkPath;
+			AndroidNdkPath = androidSdk.AndroidNdkPath is { Length: > 0 } ndkPath ? Path.GetFullPath (ndkPath) : androidSdk.AndroidNdkPath;
+			AndroidSdkPath = Path.GetFullPath (androidSdk.AndroidSdkPath);
+			JavaSdkPath    = Path.GetFullPath (androidSdk.JavaSdkPath);
 
-			CommandLineToolsPath    = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
+			CommandLineToolsPath    = AndroidSdkInfo.GetCommandLineToolsPaths (AndroidSdkPath, CommandLineToolsVersion ?? "")
 				.FirstOrDefault () ??
 				Path.Combine (AndroidSdkPath, "tools");
 
@@ -126,6 +129,21 @@ namespace Xamarin.Android.Tasks
 
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
+		}
+
+		void LogSdkMessage (TraceLevel level, string value)
+		{
+			switch (level) {
+			case TraceLevel.Error:
+				Log.LogCodedError ("XA5300", "{0}", value);
+				break;
+			case TraceLevel.Warning:
+				Log.LogCodedWarning ("XA5300", "{0}", value);
+				break;
+			default:
+				Log.LogDebugMessage ("{0}", value);
+				break;
+			}
 		}
 	}
 }

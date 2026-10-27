@@ -96,47 +96,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0000_API_for_TargetFrameworkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine API level for $(TargetFrameworkVersion) of '{0}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Não foi possível determinar o nível da API da $(TargetFrameworkVersion) de '{0}'.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0000_API_or_TargetFrameworkVersion_Fail" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Não foi possível determinar o $(AndroidApiLevel) ou a $(TargetFrameworkVersion). Isso não deveria ter ocorrido.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0000_Exception" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unhandled exception: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Exceção sem tratamento: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0000_TargetFrameworkVersion_for_API" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine $(TargetFrameworkVersion) for API level '{0}.']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Não foi possível determinar a $(TargetFrameworkVersion) para o nível '{0}' da API.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Valor da $(TargetFrameworkVersion) '{0}' inválido ou sem suporte. Atualize as Opções do Projeto.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -168,29 +132,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0031" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Java SDK {0} or above is required when using {1}.]D;]A;Download the latest JDK at: https://aka.ms/msopenjdk]D;]A;Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O SDK do Java {0} ou superior é necessário ao usar {1}.]D;]A;Baixe o JDK mais recente em: https://aka.ms/msopenjdk]D;]A;Observação: o Android Designer é incompatível com o SDK do Java 11.0: https://aka.ms/vs2019-and-jdk-11]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0031_NET" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[O SDK do Java {0} ou superior é necessário ao usar o .NET 6 ou superior. Baixe o JDK mais recente em: https://aka.ms/msopenjdk]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0032" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Java SDK {0} or above is required when using Android SDK Build-Tools {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O SDK do Java {0} ou superior é necessário ao usar as Ferramentas de Build do SDK do Android {1}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -227,15 +173,6 @@
           <Val><![CDATA[The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Não há mais suporte para a propriedade 'AndroidSupportedAbis' do MSBuild. Edite o arquivo de projeto em um editor de texto, remova todas as ocorrências de 'AndroidSupportedAbis' e use a propriedade 'RuntimeIdentifiers' MSBuild em seu lugar.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unknown mode: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Modo desconhecido: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -303,29 +240,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0113" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Google Play requires that new applications and updates must use a TargetFrameworkVersion of {0} (API level {1}) or above. You are currently targeting {2} (API level {3}).]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O Google Play exige que novos aplicativos e atualizações usem a TargetFrameworkVersion {0} (nível {1} da API) ou superior. No momento, você está fazendo o direcionamento à {2} (nível {3} da API).]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0116" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find `EmbeddedResource` named `{0}`.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Não é possível encontrar 'EmbeddedResource' com o nome '{0}'.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0117" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[A TargetFrameworkVersion {0} foi preterida. Atualize para a v5.0 ou superior.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -819,15 +738,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1040" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O {0} tempo de execução no Android é um recurso experimental e ainda não é adequado para uso em produção. Relatar problemas em: [https://github.com/dotnet/android/issues]5D;(https://github.com/dotnet/android/issues)]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1041" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The MSBuild property '{0}' has an invalid value of '{1}'. The value is expected to be a directory path representing the relative location of your Assets or Resources.]]></Val>
@@ -872,33 +782,6 @@
           <Val><![CDATA[The MSBuild property 'RunAOTCompilation' is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to 'false'. Remove the property. Starting with .NET 11, set 'PublishReadyToRun' to 'false' to disable ReadyToRun (R2R) AOT compilation.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[A propriedade 'RunAOTCompilation' do MSBuild não é compatível com o tempo de execução CoreCLR. A compilação não pode continuar enquanto esta propriedade estiver definida como 'false'. Remova a propriedade. A partir do .NET 11, defina 'PublishReadyToRun' como 'false' para desabilitar a compilação AOT ReadyToRun (R2R).]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1045" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Input file `{0}` does not start with `<replacements/>`.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O arquivo de entrada `{0}` não começa com `<replacements/>`.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1046" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Atributo '{0}' no elemento '{1}' tem o valor '{2}' que não pode ser analisado como booleano; {3} linha {4}.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1047" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Required attribute '{0}' missing from element '{1}'; {2} line {3}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Atributo obrigatório '{0}' faltando do elemento '{1}'; {2} linha {3}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1032,18 +915,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA3006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not compile native assembly file: {0}{1}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Não foi possível compilar o arquivo do assembly nativo: {0}{1}]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Could not compile native assembly file: {0}]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA3007" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not link native shared library: {0}{1}]]></Val>
@@ -1070,15 +941,6 @@
           <Val><![CDATA[Failed to generate Java type for class: {0} due to {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Falha ao gerar o tipo Java para a classe: {0} devido a {1}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4210" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Adicione uma referência a Mono.Android.Export.dll ao usar ExportAttribute ou ExportFieldAttribute.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1874,10 +1736,13 @@
       </Item>
       <Item ItemId=";XA4325" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Failed to generate the R8 JNI remapping data. {0}]]></Val>
+          <Val><![CDATA[Failed to generate the JNI remapping data. {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Falha ao gerar os dados de remapeamento JNI do R8. {0}]]></Val>
+            <Val><![CDATA[Falha ao gerar os dados de remapeamento JNI. {0}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Failed to generate the R8 JNI remapping data. {0}]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2088,6 +1953,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4330" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[A biblioteca nativa '{0}' usa o nome reservado 'libbinary_blobs.so' (caminho de arquivo '{1}' ou ELF SONAME). Este nome é reservado para dados binários do .NET para Android.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4331" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to process bundle config file '{0}', split config files will be ignored at run time.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Falha ao processar o arquivo de configuração do pacote '{0}', os arquivos de configuração divididos serão ignorados em tempo de execução.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA5101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.]]></Val>
@@ -2097,20 +1980,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA5101_C_Compiler" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA5101_ClangRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[C compiler for target {0} was not found. Tried paths: "{1}"]]></Val>
+          <Val><![CDATA[Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O compilador C do {0} de destino não foi encontrado. Caminhos tentados: "{1}"]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA5101_Toolchain" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Toolchain directory for target {0} was not found.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O diretório de cadeia ferramentas do {0} de destino não foi encontrado.]]></Val>
+            <Val><![CDATA[Não foi possível localizar as bibliotecas de tempo de execução do Android NDK Clang. Pesquisado em: {0}. Instale um Android NDK completo.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2276,6 +2150,15 @@
           <Val><![CDATA[Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Não foi possível encontrar o recurso Android '{0}'. Atualize @(AndroidResource) para adicionar o recurso ausente.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XAGCA7009_UnsupportedRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GenerateNativeApplicationConfigSources dá suporte somente à configuração de inicialização do CoreCLR. O valor fornecido de AndroidRuntime foi '{0}'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

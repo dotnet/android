@@ -124,13 +124,11 @@ then following type will be generated:
 namespace Binding {
   sealed class Main : global::Xamarin.Android.Design.LayoutBinding {
 
-    [global::Android.Runtime.PreserveAttribute (Conditional=true)]
     public Main (
       global::Android.App.Activity client,
       global::Xamarin.Android.Design.OnLayoutItemNotFoundHandler itemNotFoundHandler = null)
         : base (client, itemNotFoundHandler) {}
 
-    [global::Android.Runtime.PreserveAttribute (Conditional=true)]
     public Main (
       global::Android.Views.View client,
       global::Xamarin.Android.Design.OnLayoutItemNotFoundHandler itemNotFoundHandler = null)

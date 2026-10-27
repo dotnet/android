@@ -118,7 +118,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
 | **export** | `--filter "FullyQualifiedName~ExportAttributeBuildTest"` | `[Export]` attribute tests |
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
-| **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
+| **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Java exception handling and fatal managed main-thread process termination on CoreCLR and NativeAOT |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
 | **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
 

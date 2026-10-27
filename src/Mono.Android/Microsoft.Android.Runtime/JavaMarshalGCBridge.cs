@@ -4,14 +4,37 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
+using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
+/// <summary>
+/// Processes GC bridges between managed and Java peers.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <see cref="Initialize"/> performs process-global, one-shot GC-bridge initialization
+/// through the native initializer supplied in <c>JNIEnvInit.JnienvInitializeArgs</c>.
+/// The native bridge starts a detached processing thread and aborts the process if it is
+/// initialized more than once. <see cref="Initialize"/> is idempotent: subsequent calls
+/// return immediately. It must be called after the <c>JniRuntime</c> has been created and
+/// published, because bridge processing uses its JNI reference manager.
+/// </para>
+/// <para>
+/// The GC-bridge registration lives for the entire lifetime of the process and is never torn
+/// down: stopping the detached bridge-processing thread is not supported by the runtime.
+/// </para>
+/// </remarks>
 static unsafe class JavaMarshalGCBridge
 {
+	static readonly object initializeLock = new ();
+	static bool initialized;
+	static int bridgeProcessingGeneration;
 	static readonly Lazy<JavaMarshalGCBridgeJni> jni = new (CreateJni);
+
+	internal static int BridgeProcessingGeneration => Volatile.Read (ref bridgeProcessingGeneration);
 
 	static JavaMarshalGCBridgeJni BridgeJni
 		=> jni.Value;
@@ -26,9 +49,26 @@ static unsafe class JavaMarshalGCBridge
 		}
 	}
 
-	internal static delegate* unmanaged<MarkCrossReferencesArgs*, void> Initialize ()
+	internal static void Initialize (JNIEnvInit.JnienvInitializeArgs args)
 	{
-		return RuntimeNativeMethods.clr_initialize_gc_bridge (&ProcessBridge);
+		lock (initializeLock) {
+			if (initialized)
+				return;
+
+			var initializeGCBridge = args.initializeGCBridge;
+			ArgumentNullException.ThrowIfNull (initializeGCBridge);
+
+			if (RuntimeFeature.EventSourceSupport) {
+				RuntimeEventSource.Initialize ();
+			}
+
+			var mark_cross_references_ftn = initializeGCBridge (&ProcessBridge);
+			if (mark_cross_references_ftn == null)
+				throw new InvalidOperationException ("The native GC bridge initializer did not return a bridge callback.");
+			JavaMarshal.Initialize (mark_cross_references_ftn);
+
+			initialized = true;
+		}
 	}
 
 	internal static bool RequiresTemporaryPeer (nuint componentCount)
@@ -46,7 +86,7 @@ static unsafe class JavaMarshalGCBridge
 
 			JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
 
-			AndroidRuntimeInternal.NotifyBridgeProcessingFinished ();
+			Interlocked.Increment (ref bridgeProcessingGeneration);
 			// Keep the switch here so ILLink removes the EventSource when it is disabled.
 			if (RuntimeFeature.EventSourceSupport) {
 				if (gcBridgeEventEnabled) {

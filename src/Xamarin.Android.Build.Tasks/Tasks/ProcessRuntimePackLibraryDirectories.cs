@@ -9,7 +9,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks;
 
-public class ProcessRuntimePackLibraryDirectories : AndroidTask
+[MSBuildMultiThreadableTask]
+public class ProcessRuntimePackLibraryDirectories : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "FRPLD";
 

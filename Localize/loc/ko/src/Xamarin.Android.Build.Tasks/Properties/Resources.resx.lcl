@@ -96,47 +96,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0000_API_for_TargetFrameworkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine API level for $(TargetFrameworkVersion) of '{0}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}'의 $(TargetFrameworkVersion)에 대한 API 레벨을 확인할 수 없습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0000_API_or_TargetFrameworkVersion_Fail" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[$(AndroidApiLevel) 또는 $(TargetFrameworkVersion)을 확인할 수 없습니다. 이 오류 메시지가 표시되면 안 됩니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0000_Exception" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unhandled exception: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[처리되지 않은 예외: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0000_TargetFrameworkVersion_for_API" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine $(TargetFrameworkVersion) for API level '{0}.']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[API 레벨 '{0}'의 $(TargetFrameworkVersion)을 확인할 수 없습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}'의 $(TargetFrameworkVersion) 값이 지원되지 않거나 잘못되었습니다. 프로젝트 옵션을 업데이트하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -168,29 +132,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0031" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Java SDK {0} or above is required when using {1}.]D;]A;Download the latest JDK at: https://aka.ms/msopenjdk]D;]A;Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{1}을(를) 사용하는 경우 Java SDK {0} 이상이 필요합니다.]D;]A;최신 JDK 다운로드: https://aka.ms/msopenjdk]D;]A;참고: Android Designer는 Java SDK 11.0과 호환되지 않습니다. https://aka.ms/vs2019-and-jdk-11]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0031_NET" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.NET 6 이상을 사용하는 경우 Java SDK {0} 이상이 필요합니다. https://aka.ms/msopenjdk에서 최신 JDK를 다운로드하세요.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0032" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Java SDK {0} or above is required when using Android SDK Build-Tools {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android SDK 빌드-도구 {1}을(를) 사용하는 경우 Java SDK {0} 이상이 필요합니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -227,15 +173,6 @@
           <Val><![CDATA[The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['AndroidSupportedAbis' MSBuild 속성은 더 이상 지원되지 않습니다. 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidSupportedAbis' 사용을 모두 제거한 후 대신 'RuntimeIdentifiers' MSBuild 속성을 사용하세요.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unknown mode: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[알 수 없는 모드: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -303,29 +240,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0113" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Google Play requires that new applications and updates must use a TargetFrameworkVersion of {0} (API level {1}) or above. You are currently targeting {2} (API level {3}).]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Google Play에서는 새 애플리케이션 및 업데이트가 {0}(API 레벨 {1}) 이상의 TargetFrameworkVersion을 사용하도록 요구합니다. 현재 {2}(API 레벨 {3})을(를) 대상으로 하고 있습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0116" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find `EmbeddedResource` named `{0}`.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[이름이 '{0}'인 'EmbeddedResource'를 찾을 수 없습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0117" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[TargetFrameworkVersion {0}은(는) 사용되지 않습니다. v5.0 이상으로 업데이트하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -819,15 +738,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1040" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android의 {0} 런타임은 실험적 기능이며 프로덕션 용도에 아직 적합하지 않습니다. 파일 문제: https://github.com/dotnet/android/issues]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1041" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The MSBuild property '{0}' has an invalid value of '{1}'. The value is expected to be a directory path representing the relative location of your Assets or Resources.]]></Val>
@@ -872,33 +782,6 @@
           <Val><![CDATA[The MSBuild property 'RunAOTCompilation' is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to 'false'. Remove the property. Starting with .NET 11, set 'PublishReadyToRun' to 'false' to disable ReadyToRun (R2R) AOT compilation.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[MSBuild 속성 'RunAOTCompilation'은 CoreCLR 런타임과 호환되지 않습니다. 이 속성이 'false'로 설정된 상태에서는 빌드를 계속할 수 없습니다. 속성을 제거합니다. .NET 11부터는 R2R(ReadyToRun) AOT 컴파일을 사용하지 않으려면 'PublishReadyToRun'을 'false'로 설정하세요.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1045" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Input file `{0}` does not start with `<replacements/>`.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[입력 파일 `{0}`이(가) `<replacements/>`로 시작하지 않습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1046" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[요소 '{1}'의 특성 '{0}'에는 부울로 구문 분석할 수 없는 값 '{2}'이 있습니다. {3} 줄 {4}.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1047" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Required attribute '{0}' missing from element '{1}'; {2} line {3}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[필수 특성 '{0}'이(가) 요소 '{1}'에 없습니다. {2} 줄 {3}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1032,18 +915,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA3006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not compile native assembly file: {0}{1}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[네이티브 어셈블리 파일을 컴파일할 수 없음: {0}{1}]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Could not compile native assembly file: {0}]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA3007" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not link native shared library: {0}{1}]]></Val>
@@ -1070,15 +941,6 @@
           <Val><![CDATA[Failed to generate Java type for class: {0} due to {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[클래스의 Java 형식({0})을 생성하지 못했습니다(원인: {1}).]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4210" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ExportAttribute 또는 ExportFieldAttribute를 사용할 때 Mono.Android.Export.dll에 대한 참조를 추가하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1874,10 +1736,13 @@
       </Item>
       <Item ItemId=";XA4325" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Failed to generate the R8 JNI remapping data. {0}]]></Val>
+          <Val><![CDATA[Failed to generate the JNI remapping data. {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[R8 JNI 다시 매핑 데이터를 생성하지 못했습니다. {0}]]></Val>
+            <Val><![CDATA[JNI 다시 매핑 데이터를 생성하지 못했습니다. {0}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Failed to generate the R8 JNI remapping data. {0}]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2088,6 +1953,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4330" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[네이티브 라이브러리 '{0}'에서 예약된 이름 'libbinary_blobs.so'를 사용합니다(보관 계층 경로 '{1}' 또는 ELF SONAME). 이 이름은 .NET for Android 이진 데이터용으로 예약되어 있습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4331" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to process bundle config file '{0}', split config files will be ignored at run time.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[번들 구성 파일 '{0}' 처리하지 못했습니다. 런타임에 분할 구성 파일이 무시됩니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA5101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.]]></Val>
@@ -2097,20 +1980,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA5101_C_Compiler" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA5101_ClangRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[C compiler for target {0} was not found. Tried paths: "{1}"]]></Val>
+          <Val><![CDATA[Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[대상 {0}용 C 컴파일러를 찾을 수 없습니다. 시도한 경로: "{1}"]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA5101_Toolchain" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Toolchain directory for target {0} was not found.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[대상 {0}용 도구 체인 디렉터리를 찾을 수 없습니다.]]></Val>
+            <Val><![CDATA[Android NDK Clang 런타임 라이브러리를 찾을 수 없습니다. 다음 위치에서 검색했습니다. {0}. 전체 Android NDK를 설치하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2276,6 +2150,15 @@
           <Val><![CDATA[Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Android 리소스 '{0}'을(를) 찾을 수 없습니다. @(AndroidResource)를 업데이트하여 누락된 리소스를 추가하세요.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XAGCA7009_UnsupportedRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GenerateNativeApplicationConfigSources는 CoreCLR 부트스트랩 구성만 지원합니다. 제공된 AndroidRuntime 값이 '{0}'되었습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

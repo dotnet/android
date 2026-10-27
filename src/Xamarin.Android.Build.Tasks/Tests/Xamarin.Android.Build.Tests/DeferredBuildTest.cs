@@ -23,7 +23,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			app.SetRuntime (runtime);
-			app.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
@@ -75,7 +74,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			app.SetRuntime (runtime);
-			app.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {

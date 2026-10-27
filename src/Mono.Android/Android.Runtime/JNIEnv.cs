@@ -51,17 +51,17 @@ namespace Android.Runtime {
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
 		{
 			if (t == null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn,
-				               LogCategories.Default,
+				Logger.Log (LogLevel.Warn,
+				               "monodroid",
 				               $"ShouldWrapJavaException was not passed a valid `Java.Lang.Throwable` instance. Called from method `{caller}`");
 				return false;
 			}
 
 			bool wrap = JNIEnvInit.BoundExceptionType == BoundExceptionType.System;
 			if (!wrap) {
-				RuntimeNativeMethods.monodroid_log (
+				Logger.Log (
 					LogLevel.Warn,
-					LogCategories.Default,
+					"monodroid",
 					$"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release."
 				);
 			}
@@ -69,6 +69,7 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
+		[DebuggerDisableUserUnhandledExceptions]
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -76,9 +77,7 @@ namespace Android.Runtime {
 
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
-			if (Debugger.IsAttached) {
-				AndroidRuntimeInternal.mono_unhandled_exception?.Invoke (javaException);
-			}
+			Debugger.BreakForUserUnhandledException (javaException);
 
 			try {
 				var jltp = javaException as JavaProxyThrowable;
@@ -101,7 +100,7 @@ namespace Android.Runtime {
 		/// <summary>
 		/// Gets the number of completed CoreCLR or NativeAOT GC bridge processing cycles.
 		/// </summary>
-		public static int BridgeProcessingGeneration => AndroidRuntimeInternal.BridgeProcessingGeneration;
+		public static int BridgeProcessingGeneration => JavaMarshalGCBridge.BridgeProcessingGeneration;
 
 		public static IntPtr AllocObject (string jniClassName)
 		{
@@ -263,7 +262,7 @@ namespace Android.Runtime {
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
+				Logger.Log (LogLevel.Warn, "monodroid", $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
 				var jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();

@@ -5,7 +5,6 @@ using System.IO.Hashing;
 using System.Text;
 
 using ELFSharp.ELF.Sections;
-using Xamarin.Android.Tasks;
 
 namespace tmt;
 
@@ -353,7 +352,7 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 
 			ret.Add (name ?? String.Empty);
 
-			ulong hash = TypeMapHelper.HashJavaName (name ?? String.Empty, Is64Bit);
+			ulong hash = HashJavaName (name ?? String.Empty, Is64Bit);
 			int javaTypeIndex = javaTypeNameHashes!.IndexOf (hash);
 
 			if (javaTypeIndex < 0) {
@@ -537,4 +536,24 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 	}
 
 	string HashToHexString (ulong hash) => Is64Bit ? $"{hash:X16}" : $"{hash:X8}";
+
+	static ulong HashJavaName (string name, bool is64Bit)
+	{
+		if (name.Length == 0) {
+			return UInt64.MaxValue;
+		}
+
+		const int StackallocThresholdBytes = 256;
+		int byteCount = Encoding.Unicode.GetByteCount (name);
+		Span<byte> buffer = byteCount <= StackallocThresholdBytes
+			? stackalloc byte [byteCount]
+			: new byte [byteCount];
+		Encoding.Unicode.GetBytes (name.AsSpan (), buffer);
+
+		if (is64Bit) {
+			return XxHash3.HashToUInt64 (buffer);
+		}
+
+		return (ulong)XxHash32.HashToUInt32 (buffer);
+	}
 }

@@ -534,6 +534,8 @@ stages:
       displayName: Install .NET
       retryCountOnTaskFailure: 3
       workingDirectory: $(Build.SourcesDirectory)/maui
+      env:
+        _SkipUpdateBuildNumber: 'true'
 
     - task: NodeTool@0
       displayName: Install Node.js
@@ -573,6 +575,7 @@ stages:
       displayName: Pack .NET Maui
       workingDirectory: $(Build.SourcesDirectory)/maui
       env:
+        _SkipUpdateBuildNumber: 'true'
         NoWarn: CS0618
 
     - task: DotNetCoreCLI@2

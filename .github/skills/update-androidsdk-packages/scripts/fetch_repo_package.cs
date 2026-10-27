@@ -4,14 +4,17 @@
 // Fetches Google's Android SDK repository manifests and prints the
 // <remotePackage>/<localPackage> entries whose `path` contains a given
 // substring, sorted by revision (newest first) so the current stable
-// release is easy to spot. Read-only research tooling: it never edits repo
-// files. Use it to answer "what is the current stable revision/URL/SHA-256
+// release is easy to spot. Also reads legacy <doc> entries as path "docs".
+// Read-only research tooling: it never edits repo files.
+// Use it to answer "what is the current stable revision/URL/SHA-256
 // for package X" before hand-editing Configuration.props / androidsdk.targets.
 //
 // Usage:
 //   dotnet run fetch_repo_package.cs -- --path build-tools
 //   dotnet run fetch_repo_package.cs -- --path "platforms;android-37" --archives
-//   dotnet run fetch_repo_package.cs -- --path emulator --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
+//   dotnet run fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
+//   dotnet run fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
+//   dotnet run fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
 //
 // Notes:
 // - Google's channelRef in repository2-3.xml is NOT a reliable stable/preview
@@ -70,8 +73,9 @@ try {
 }
 
 var matches = new List<PackageMatch>();
-foreach (var pkg in doc.Descendants().Where(e => e.Name.LocalName is "remotePackage" or "localPackage")) {
-	var pkgPath = (string?)pkg.Attribute("path") ?? "";
+foreach (var pkg in doc.Descendants().Where(e => e.Name.LocalName is "remotePackage" or "localPackage" or "doc")) {
+	bool legacyDoc = pkg.Name.LocalName == "doc";
+	var pkgPath = legacyDoc ? "docs" : (string?)pkg.Attribute("path") ?? "";
 	if (!pkgPath.Contains(path, StringComparison.Ordinal))
 		continue;
 
@@ -79,7 +83,8 @@ foreach (var pkg in doc.Descendants().Where(e => e.Name.LocalName is "remotePack
 	var (revisionText, revisionKey) = ParseRevision(revisionElem);
 	bool hasPreviewRevision = revisionElem?.Elements().FirstOrDefault(e => e.Name.LocalName == "preview") is { } previewElem
 		&& int.TryParse(previewElem.Value, out var previewNum0) && previewNum0 != 0;
-	var displayName = pkg.Elements().FirstOrDefault(e => e.Name.LocalName == "display-name")?.Value ?? "";
+	var displayName = pkg.Elements().FirstOrDefault(e => e.Name.LocalName == "display-name")?.Value
+		?? (legacyDoc ? "Android SDK Documentation" : "");
 	// <channelRef> is a direct child of <remotePackage>/<localPackage>, not of <type-details>.
 	var channelRef = pkg.Elements().FirstOrDefault(e => e.Name.LocalName == "channelRef")?.Attribute("ref")?.Value ?? "";
 	bool preview = hasPreviewRevision || previewMarkers.IsMatch($"{pkgPath} {displayName}");
@@ -116,7 +121,7 @@ static void PrintUsage()
 {
 	Console.Error.WriteLine("usage: dotnet run fetch_repo_package.cs -- --path <substring> [--manifest <url>] [--all] [--archives]");
 	Console.Error.WriteLine($"  --path      required substring to match against each package's `path` attribute (e.g. 'build-tools', 'platforms;android-37', 'emulator')");
-	Console.Error.WriteLine($"  --manifest  manifest URL (default: {DefaultManifest}); use a sys-img*.xml URL for system images");
+	Console.Error.WriteLine($"  --manifest  manifest URL (default: {DefaultManifest}); use addon2-3.xml for extras, repository-12.xml for docs, or a sys-img*.xml URL for system images");
 	Console.Error.WriteLine("  --all       show every match, including ones that look like previews (default: stable-looking only)");
 	Console.Error.WriteLine("  --archives  print archive URLs + SHA-1 + size for each match (SHA-1 only; recompute SHA-256 from the actual download)");
 }
@@ -134,6 +139,8 @@ static (string Text, (int, int, int, int) Key) ParseRevision(XElement? revisionE
 	string? Str(string name) => revisionElem.Elements().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
 
 	int major = Int("major");
+	if (!revisionElem.HasElements)
+		int.TryParse(revisionElem.Value, out major);
 	string? minor = Str("minor");
 	string? micro = Str("micro");
 	string? preview = Str("preview");
@@ -155,7 +162,9 @@ static List<ArchiveInfo> CollectArchives(XElement pkg, string manifestUrl)
 	Uri? baseUri = Uri.TryCreate(manifestUrl, UriKind.Absolute, out var u) ? u : null;
 	foreach (var archivesElem in pkg.Elements().Where(e => e.Name.LocalName == "archives")) {
 		foreach (var archive in archivesElem.Elements().Where(e => e.Name.LocalName == "archive")) {
-			var complete = archive.Elements().FirstOrDefault(e => e.Name.LocalName == "complete");
+			var complete = pkg.Name.LocalName == "doc"
+				? archive
+				: archive.Elements().FirstOrDefault(e => e.Name.LocalName == "complete");
 			if (complete is null)
 				continue;
 			string hostOs = archive.Elements().FirstOrDefault(e => e.Name.LocalName == "host-os")?.Value ?? "";

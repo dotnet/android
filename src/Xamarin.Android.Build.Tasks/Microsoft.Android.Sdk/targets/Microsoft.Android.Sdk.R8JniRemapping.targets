@@ -6,10 +6,11 @@
 
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
-  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateJniRemappingBinaryBlobs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateJniRemappingBinaryBlobs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateJniRemappingBinaryBlobs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
   <Target Name="_AndroidGenerateBinaryBlobsInputs"
-      DependsOnTargets="_GeneratePackageManagerJava;_AndroidR8JniRemappingInputs;_ConvertAndroidMamMappingFileToXml;_CollectAndroidRemapMembers">
+      DependsOnTargets="_AndroidGenerateCoreClrBootstrap;_AndroidR8JniRemappingInputs;_ConvertAndroidMamMappingFileToXml;_CollectAndroidRemapMembers">
     <PropertyGroup>
       <_AndroidBinaryBlobsDirectory>$(IntermediateOutputPath)binary-blobs/</_AndroidBinaryBlobsDirectory>
       <_AndroidBinaryBlobsStamp>$(_AndroidBinaryBlobsDirectory)binary-blobs.stamp</_AndroidBinaryBlobsStamp>
@@ -37,7 +38,6 @@
       Inputs="@(_AndroidRemapMembers);$(_AndroidCoreClrBootstrapFile);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="@(_AndroidRegularBinaryBlobOutput)">
     <GenerateJniRemappingBinaryBlobs
-        MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidBinaryBlobXml)"
         BootstrapFilePath="$(_AndroidCoreClrBootstrapFile)"
         OutputDirectory="$(_AndroidBinaryBlobsDirectory)"
@@ -86,7 +86,7 @@
   </Target>
 
   <Target Name="_AndroidGenerateR8BinaryBlobsInputs"
-      DependsOnTargets="_GeneratePackageManagerJava;_AndroidGenerateR8JniRemapping">
+      DependsOnTargets="_AndroidGenerateCoreClrBootstrap;_AndroidGenerateR8JniRemapping">
     <PropertyGroup>
       <_AndroidR8BinaryBlobsDirectory>$(IntermediateOutputPath)binary-blobs/</_AndroidR8BinaryBlobsDirectory>
       <_AndroidR8BinaryBlobsStamp>$(_AndroidR8BinaryBlobsDirectory)binary-blobs.stamp</_AndroidR8BinaryBlobsStamp>
@@ -112,7 +112,6 @@
       Inputs="$(_AndroidR8JniRemappingXml);$(_AndroidCoreClrBootstrapFile);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
       Outputs="@(_AndroidCoreClrBinaryBlobOutput)">
     <GenerateJniRemappingBinaryBlobs
-        MSBuildRuntime="NET"
         RemappingXmlFilePath="$(_AndroidR8JniRemappingXml)"
         BootstrapFilePath="$(_AndroidCoreClrBootstrapFile)"
         OutputDirectory="$(_AndroidR8BinaryBlobsDirectory)"
@@ -197,7 +196,6 @@
       Inputs="$(_AndroidNativeAotRemappingInputs);$(_AndroidNativeAotSelectedRemappingXml);$(_AndroidR8JniTaskAssembly);$(MSBuildThisFileFullPath)"
       Outputs="@(_AndroidNativeAotRemappingOutput)">
     <GenerateNativeAotDataObject
-        MSBuildRuntime="NET"
         Remapping="true" RemappingXmlFilePath="$(_AndroidNativeAotSelectedRemappingXml)"
         OutputFile="$(_AndroidNativeAotRemappingObject)" Abi="@(_PrivateBuildTargetAbi)"
         CompletionStamp="$(_AndroidNativeAotRemappingStamp)" />

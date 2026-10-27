@@ -333,8 +333,8 @@ and measure the complete logical CoreCLR/NativeAOT GC bridge round. Start is
 emitted after validating the native callback argument and before managed
 pre-processing validates every reference-tracking context. Stop is emitted
 only after managed collected-context processing,
-`JavaMarshal.FinishCrossReferenceProcessing`, and
-`AndroidRuntimeInternal.NotifyBridgeProcessingFinished` have completed. The
+`JavaMarshal.FinishCrossReferenceProcessing`, and the increment of
+`JNIEnv.BridgeProcessingGeneration` have completed. The
 native cross-reference processing runs between these managed callbacks.
 Enablement is checked once at Start and latched on the dedicated serialized
 bridge-processing thread, so a listener attaching during a round cannot

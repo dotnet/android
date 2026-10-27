@@ -34,16 +34,26 @@ CoreCompile
           • touches typemap/_GenerateTrimmableTypeMap.stamp
    ...
 _ReadGeneratedTrimmableTypeMapAssemblies    (reads typemap-assemblies.txt)
-_PrepareTrimmableNativeConfigAssemblies     (feeds _GeneratePackageManagerJava)
+_PrepareTrimmableNativeConfigAssemblies     (feeds _AndroidGenerateCoreClrBootstrapInputs)
 _PrepareTrimmableTypeMapAssemblies          (feeds packaging / assembly store)
-_GenerateJavaStubs                          (prepares manifest and native config)
+_GenerateJavaStubs                          (prepares manifest and runtime providers)
    └─► _CompileJava ─► _CompileToDalvik ─► packaging
+_AndroidGenerateCoreClrBootstrap            (writes binary CoreCLR configuration)
+   └─► _AndroidGenerateBinaryBlobs / _AndroidGenerateR8BinaryBlobs
 ```
 
 `_GenerateJavaStubs` **overrides** the legacy target of the same name from
 `BuildOrder.targets`; in the trimmable path the JCWs already exist and are
 compiled in place from the generator output directory. This target wires up
-the manifest and native config.
+the manifest and runtime providers.
+
+CoreCLR bootstrap generation has its own inputs fingerprint and completion stamp,
+independent of `_GeneratePackageManagerJava`, which writes only the entry assembly's
+`MonoPackageManager_Resources.java`. The bootstrap fingerprint tracks environment,
+runtime configuration, assembly and native library membership, and JNI preload
+settings. Missing bootstrap data invalidates its stamp; unchanged payload bytes
+retain their timestamps. NativeAOT continues to generate its linked data objects
+and minimal Java providers independently.
 
 For `CoreCLR` + `PublishTrimmed=true`, a second pass
 (`_GeneratePostTrimTrimmableTypeMapJavaSources`, in the CoreCLR targets)

@@ -45,14 +45,14 @@ ms.date: 04/11/2024
 
 ## XA0xxx: Environment issue or missing tooling
 
-+ [XA0000](xa0000.md): Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion).
-+ [XA0001](xa0001.md): Invalid or unsupported `$(TargetFrameworkVersion)` value.
++ [XA0000](xa0000.md): Unhandled exception or error in an MSBuild task.
++ [XA0001](xa0001.md): Legacy `$(TargetFrameworkVersion)` validation; no longer emitted by current SDKs.
 + [XA0002](xa0002.md): Could not find mono.android.jar
 + [XA0003](xa0003.md): Invalid \`android:versionCode\` value \`{code}\` in \`AndroidManifest.xml\`. It must be an integer value.
 + [XA0004](xa0004.md): Invalid \`android:versionCode\` value \`{code}\` in \`AndroidManifest.xml\`. The value must be in the range of 0 to {maxVersionCode}.
 + [XA0030](xa0030.md): Building with JDK version `{versionNumber}` is not supported.
-+ [XA0031](xa0031.md): Java SDK {requiredJavaForFrameworkVersion} or above is required when when using $(TargetFrameworkVersion) {targetFrameworkVersion}.
-+ [XA0032](xa0032.md): Java SDK {requiredJavaForBuildTools} or above is required when using Android SDK Build-Tools {buildToolsVersion}.
++ [XA0031](xa0031.md): Java SDK {minimumSupportedJavaVersion} or above is required by the .NET for Android SDK.
++ [XA0032](xa0032.md): Legacy Android Build-Tools Java requirement; no longer emitted by current SDKs.
 + [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
@@ -68,10 +68,10 @@ ms.date: 04/11/2024
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
 + [XA0111](xa0111.md): Could not get the `aapt2` version. Please check it is installed correctly.
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
-+ [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v11.0 (API level 30) or above.
++ [XA0113](xa0113.md): Legacy Google Play target API warning; no longer emitted by current SDKs.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
-+ [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
++ [XA0117](xa0117.md): Legacy deprecated `TargetFrameworkVersion` warning; no longer emitted by current SDKs.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
@@ -284,6 +284,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5302](xa5302.md): Two processes may be building this project at once. Lock file exists at path: {path}
 + [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
 + [XA5304](xa5304.md): Invalid AssemblyStore compression level '{level}'. The value must be between {min} and {max}.
++ [XA5305](xa5305.md): Could not verify the Microsoft OpenJDK archive signature.
 
 ## XA6xxx: Internal tools
 

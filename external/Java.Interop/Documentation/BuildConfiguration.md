@@ -1,32 +1,35 @@
 # Build Configuration
 
-The Java.Interop build can be configured by specifying MSBuild properties to control
-behavior or by overriding **make**(1) variables on the command line.
+The standalone Java.Interop tooling build uses `dotnet` and MSBuild properties.
+See the [README](../README.md#building) for preparation and build commands.
+Android runtime integration is built as part of the enclosing dotnet/android
+[SDK build](../../../Documentation/README.md#building-from-source).
 
 ## MSBuild Properties
 
-MSbuild properties may be placed into the file `Configuration.Override.props`,
+MSBuild properties may be placed into `external/Java.Interop/Configuration.Override.props`,
 which can be copied from
-[`Configuration.Override.props.in`](Configuration.Override.props.in).
+[`Configuration.Override.props.in`](../Configuration.Override.props.in).
 The `Configuration.Override.props` file is `<Import/>`ed by
-[`Directory.Build.props`](Directory.Build.props); there is no need to
+[`Directory.Build.props`](../Directory.Build.props); there is no need to
 `<Import/>` it within other project files.
 
 Overridable MSBuild properties include:
 
-* `$(CecilSourceDirectory)`: If the empty string, Cecil will be obtained from
-    NuGet packages.  Otherwise, `$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll`
-    will be used to reference Cecil.
-* `$(JdkJvmPath)`: Full path name to the JVM native library to use for
-    tests which require a desktop JVM. By default this is probed from the
-    configured JDK.
-* `$(JavaCPath)`: Path to the `javac` command-line tool, by default set to `javac`.
-* `$(JarPath)`: Path to the `jar` command-line tool, by default set to `jar`.
-  * It may be desirable to override these on Windows, depending on your `PATH`.
-* `$(UtilityOutputFullPath)`: Directory to place various utilities such as
-    [`class-parse`](tools/class-parse) and [`generator`](tools/generator).
-    This value should be a full path.
-    By default this is `$(MSBuildThisFileDirectory)bin/$(Configuration)`.
+* `$(Configuration)`: Build configuration, normally `Debug` or `Release`.
+* `$(JdksRoot)`: JDK location used during preparation. Preparation also checks
+    `JAVA_HOME` and installed JDKs, and writes the selected Java tool paths to
+    `bin/Build$(Configuration)/JdkInfo.props`.
+* `$(JavaSdkDirectory)`, `$(JavaCPath)`, and `$(JarPath)`: JDK directory and paths
+    to `javac` and `jar`, normally loaded from the generated `JdkInfo.props`.
+    These are used for Java tooling and test fixtures, not a desktop JNI test host.
+* `$(UtilityOutputFullPathCoreApps)`: Full output directory for utilities such as
+    [`class-parse`](../tools/class-parse) and [`generator`](../tools/generator).
+    The enclosing repository sets this to the Android SDK pack's `tools`
+    directory in [`Java.Interop.override.props`](../../Java.Interop.override.props).
+    Without that override, tools use `bin/$(Configuration)-net10.0/` under
+    `external/Java.Interop/`, as defined by
+    [`TargetFrameworkDependentValues.props`](../TargetFrameworkDependentValues.props).
 
 ## Native registration
 
@@ -50,26 +53,15 @@ This preserves the original managed exception when it returns through JNI or
 appears as a Java throwable's cause. Java.Interop no longer supplies a separate
 proxy implementation or `java-interop.jar`.
 
-## **make**(1) variables
+## Tests
 
-The following **make**(1) variables may be specified:
+Tooling tests remain under `external/Java.Interop/tests/` and run with
+`dotnet test` on the individual test `.csproj` files. They do not require a
+locally built Android SDK; Java/Gradle fixtures still require the configured JDK.
 
-* `$(CONFIGURATION)`: The product configuration to build, and corresponds
-    to the `$(Configuration)` MSBuild property when running `$(MSBUILD)`.
-    Valid values are `Debug` and `Release`. Default value is `Debug`.
-* `$(RUNTIME)`: The managed runtime to use to execute utilities, tests.
-    Default value is `mono64` if present in `$PATH`, otherwise `mono`.
-* `$(TESTS)`: Which unit tests to execute. Useful in conjunction with the
-    `make run-tests` target:
-
-        make run-tests TESTS=bin/Debug/generator-Tests.dll
-
-    Core JNI interop sources and Java fixtures live in
-    `tests/Mono.Android-Tests/Java.Interop-Tests/` and run on Android through
-    `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj`
-    in the enclosing dotnet/android repository.
-
-* `$(V)`: If set to a non-empty string, adds `/v:diag` to `$(MSBUILD_FLAGS)`
-    invocations.
-* `$(MSBUILD)`: The MSBuild build tool to execute for builds.
-    Default value is `xbuild`.
+Core JNI interop sources and Java fixtures live in
+[`tests/Mono.Android-Tests/Java.Interop-Tests/`](../../../tests/Mono.Android-Tests/Java.Interop-Tests/)
+and run on Android through
+[`Mono.Android.NET-Tests.csproj`](../../../tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj).
+These tests require a locally built Android SDK and a device or emulator.
+There is no standalone core host-JVM harness or `make run-tests` workflow.

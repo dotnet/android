@@ -67,9 +67,8 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | Directory | Name | License Source |
 |-----------|------|---------------|
 | `android-platform-tools-base/` | android/platform/tools/base | https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE (Apache 2.0) |
-| `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
 
-Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
+Note: `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
 
 #### NuGet Packages
 Search `.csproj` files for `<PackageReference>` elements. Current third-party NuGet packages needing TPNs:

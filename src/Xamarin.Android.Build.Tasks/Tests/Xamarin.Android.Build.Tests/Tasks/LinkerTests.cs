@@ -250,15 +250,15 @@ namespace Xamarin.Android.Build.Tests
 			var bridgeType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalGCBridge");
 			Assert.IsNotNull (registeredPeersType);
 			Assert.IsNotNull (bridgeType);
-			var initializeIfNeeded = registeredPeersType.Methods.Single (method => method.Name == "InitializeIfNeeded");
+			var initializeBridge = bridgeType.Methods.Single (method => method.Name == "Initialize");
 			var jniEnvInitType = assembly.MainModule.GetType ("Android.Runtime.JNIEnvInit");
 			Assert.IsNotNull (jniEnvInitType);
 			var initialize = jniEnvInitType.Methods.Single (method => method.Name == "Initialize");
 			Assert.IsTrue (
 				initialize.HasBody && initialize.Body.Instructions.Any (instruction =>
 					instruction.Operand is MethodReference reference &&
-					reference.DeclaringType.FullName == registeredPeersType.FullName &&
-					reference.Name == "InitializeIfNeeded"),
+					reference.DeclaringType.FullName == bridgeType.FullName &&
+					reference.Name == "Initialize"),
 				"runtime startup should initialize the GC bridge regardless of EventSourceSupport");
 			var processBridge = bridgeType.Methods.Single (method => method.Name == "ProcessBridge");
 			var trimmableTypeMapType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.TrimmableTypeMap");
@@ -273,7 +273,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotNull (eventSourceType, "the enabled synthetic call path should retain the runtime EventSource facade");
 				var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
 				Assert.IsNotNull (implementationType, "the enabled runtime EventSource implementation should remain in the linked assembly");
-				Assert.IsTrue (CallsRuntimeEventSource (initializeIfNeeded, "Initialize"), "the enabled build should initialize the runtime EventSource before GC bridge processing");
+				Assert.IsTrue (CallsRuntimeEventSource (initializeBridge, "Initialize"), "the enabled build should initialize the runtime EventSource before GC bridge processing");
 				Assert.IsTrue (CallsRuntimeEventSource (processBridge, "GCBridgeStart"), "the enabled build should retain the GC bridge Start call site");
 				Assert.IsTrue (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the enabled build should retain the GC bridge Stop call site");
 				Assert.IsTrue (CallsRuntimeEventSource (createJniProxyCacheEntry), "the enabled build should retain the Java-to-managed type-map timing call sites");
@@ -282,7 +282,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (CallsRuntimeEventSource (createLocalReference), "the enabled build should retain local reference instrumentation");
 			} else {
 				Assert.IsNull (eventSourceType, "the disabled synthetic call path and runtime EventSource should be removed from the linked assembly");
-				Assert.IsFalse (CallsRuntimeEventSource (initializeIfNeeded, "Initialize"), "the disabled build should remove runtime EventSource initialization");
+				Assert.IsFalse (CallsRuntimeEventSource (initializeBridge, "Initialize"), "the disabled build should remove runtime EventSource initialization");
 				Assert.IsFalse (CallsRuntimeEventSource (processBridge, "GCBridgeStart"), "the disabled build should remove the GC bridge Start call site");
 				Assert.IsFalse (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the disabled build should remove the GC bridge Stop call site");
 				Assert.IsFalse (CallsRuntimeEventSource (createJniProxyCacheEntry), "the disabled build should remove the Java-to-managed type-map timing call sites");
@@ -1232,18 +1232,34 @@ public abstract class MyRunner {
 		}
 
 		[Test]
-		public void WarnWithReferenceToPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void WarnWithReferenceToLegacyPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject { IsRelease = isRelease, ProjectName = "Lib1" };
+			lib.SetRuntime (runtime);
+			lib.Sources.Add (new BuildItem.Source ("PreserveAttribute.cs") {
+				TextContent = () => """
+					using System;
+					namespace Android.Runtime;
+					[AttributeUsage (AttributeTargets.Method)]
+					public sealed class PreserveAttribute : Attribute {}
+					""",
+			});
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease, ProjectName = "App1" };
 			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
-			proj.MainActivity = proj.DefaultMainActivity.Replace (
+			var legacyAttributeReference = new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1");
+			legacyAttributeReference.Metadata.Add ("Aliases", "global,LegacyPreserve");
+			proj.References.Add (legacyAttributeReference);
+			proj.MainActivity = "extern alias LegacyPreserve;\n" + proj.DefaultMainActivity.Replace (
 				"protected override void OnCreate",
-				"[Android.Runtime.PreserveAttribute]\n\t\tprotected override void OnCreate"
+				"[LegacyPreserve::Android.Runtime.PreserveAttribute]\n\t\tprotected override void OnCreate"
 			);
 
-			using (var b = CreateApkBuilder ()) {
+			using (var lb = CreateDllBuilder (Path.Combine (path, "Lib1")))
+			using (var b = CreateApkBuilder (Path.Combine (path, "App1"))) {
+				Assert.IsTrue (lb.Build (lib), "Library build should have succeeded.");
 				var bo = proj.CreateBuildOutput (b);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 

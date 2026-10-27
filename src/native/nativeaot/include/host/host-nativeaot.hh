@@ -12,5 +12,8 @@ namespace xamarin::android {
 	{
 	public:
 		static void OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstring_wrapper &cache_dir, JnienvInitializeArgs *initArgs) noexcept;
+
+	private:
+		static auto create_igc_user_peer_global_ref (JNIEnv *env) noexcept -> jobject;
 	};
 }

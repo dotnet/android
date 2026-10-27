@@ -19,13 +19,58 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
     <PropertyGroup>
       <_AndroidUseJavaExeVersion Condition=" '$(_AndroidUseJavaExeVersion)' == '' ">false</_AndroidUseJavaExeVersion>
     </PropertyGroup>
+    <ItemGroup>
+      <_AndroidToolingInput Include="AndroidApiLevel" />
+      <_AndroidToolingInput Include="AndroidApplication" />
+      <_AndroidToolingInput Include="AndroidSdkBuildToolsVersion" />
+      <_AndroidToolingInput Include="AndroidCommandLineToolsVersion" />
+      <_AndroidToolingInput Include="AndroidSdkBuildToolsPath" />
+      <_AndroidToolingInput Include="AndroidSdkBuildToolsBinPath" />
+      <_AndroidToolingInput Include="Aapt2ToolPath" />
+      <_AndroidToolingInput Include="ZipAlignToolPath" />
+      <_AndroidToolingInput Include="LintToolPath" />
+      <_AndroidToolingInput Include="ApkSignerJar" />
+      <_AndroidToolingInput Include="AndroidUseApkSigner" />
+      <_AndroidToolingInput Include="JavaToolExe" />
+      <_AndroidToolingInput Include="JavacToolExe" />
+      <_AndroidToolingInput Include="MinimumSupportedJavaVersion" />
+      <_AndroidToolingInput Include="LatestSupportedJavaVersion" />
+      <_AndroidToolingInput Include="UseJavaExeVersion" PropertyName="_AndroidUseJavaExeVersion" />
+      <_AndroidToolingInput Update="@(_AndroidToolingInput)">
+        <PropertyName Condition=" '%(_AndroidToolingInput.PropertyName)' == '' ">%(_AndroidToolingInput.Identity)</PropertyName>
+      </_AndroidToolingInput>
+      <_AndroidToolingInput Update="@(_AndroidToolingInput)">
+        <EscapedValue>$([MSBuild]::Escape('$(%(_AndroidToolingInput.PropertyName))'))</EscapedValue>
+        <EscapedOuterValue>$([MSBuild]::Escape('$(_AndroidOuterToolingInput%(_AndroidToolingInput.Identity))'))</EscapedOuterValue>
+      </_AndroidToolingInput>
+    </ItemGroup>
+    <ItemGroup Condition=" '$(_AndroidUseResolvedSdk)' == 'true' ">
+      <_AndroidChangedToolingInput Include="@(_AndroidToolingInput)"
+          Condition=" !$([System.String]::Copy('%(_AndroidToolingInput.EscapedValue)').Equals('%(_AndroidToolingInput.EscapedOuterValue)')) " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_AndroidUseResolvedTooling Condition=" '$(_AndroidUseResolvedSdk)' == 'true' and '@(_AndroidChangedToolingInput->Count())' == '0' and '$(_AndroidOuterJdkVersion)' != '' and '$(_AndroidOuterDefaultJdkVersion)' != '' and '$(_AndroidOuterAapt2Version)' != '' ">true</_AndroidUseResolvedTooling>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(_AndroidUseResolvedTooling)' == 'true' ">
+      <_JdkVersion>$(_AndroidOuterJdkVersion)</_JdkVersion>
+      <_DefaultJdkVersion>$(_AndroidOuterDefaultJdkVersion)</_DefaultJdkVersion>
+      <_AndroidApiLevel Condition=" '$(_AndroidApiLevel)' == '' ">$(_AndroidOuterApiLevel)</_AndroidApiLevel>
+      <_AndroidApiLevelName>$(_AndroidOuterApiLevelName)</_AndroidApiLevelName>
+      <AndroidSdkBuildToolsPath Condition=" '$(AndroidSdkBuildToolsPath)' == '' ">$(_AndroidOuterBuildToolsPath)</AndroidSdkBuildToolsPath>
+      <AndroidSdkBuildToolsBinPath Condition=" '$(AndroidSdkBuildToolsBinPath)' == '' ">$(_AndroidOuterBuildToolsBinPath)</AndroidSdkBuildToolsBinPath>
+      <ZipAlignToolPath Condition=" '$(ZipAlignToolPath)' == '' ">$(_AndroidOuterZipAlignToolPath)</ZipAlignToolPath>
+      <LintToolPath Condition=" '$(LintToolPath)' == '' ">$(_AndroidOuterLintToolPath)</LintToolPath>
+      <ApkSignerJar Condition=" '$(ApkSignerJar)' == '' ">$(_AndroidOuterApkSignerJar)</ApkSignerJar>
+      <AndroidUseApkSigner Condition=" '$(AndroidUseApkSigner)' == '' ">$(_AndroidOuterUseApkSigner)</AndroidUseApkSigner>
+      <_Aapt2Version>$(_AndroidOuterAapt2Version)</_Aapt2Version>
+      <Aapt2ToolPath Condition=" '$(Aapt2ToolPath)' == '' ">$(_AndroidOuterAapt2ToolPath)</Aapt2ToolPath>
+    </PropertyGroup>
     <ValidateJavaVersion
-        Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
+        Condition=" '$(_AndroidUseResolvedTooling)' != 'true' and '$(DesignTimeBuild)' != 'true' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         JavaSdkPath="$(_JavaSdkDirectory)"
         JavaToolExe="$(JavaToolExe)"
         JavacToolExe="$(JavacToolExe)"
-        TargetPlatformVersion="$(TargetPlatformVersion)"
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
         UseJavaExeVersion="$(_AndroidUseJavaExeVersion)">
@@ -33,15 +78,15 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
       <Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
     </ValidateJavaVersion>
     <ResolveAndroidTooling
+        Condition=" '$(_AndroidUseResolvedTooling)' != 'true' "
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         TargetPlatformVersion="$(TargetPlatformVersion)"
         AndroidApiLevel="$(AndroidApiLevel)"
-        AndroidApplication="$(AndroidApplication)"
         AndroidSdkPath="$(_AndroidSdkDirectory)"
         AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
         Aapt2ToolPath="$(Aapt2ToolPath)"
         CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
-        ProjectFilePath="$(MSBuildProjectFullPath)"			
         LintToolPath="$(LintToolPath)"
         ZipAlignPath="$(ZipAlignToolPath)">
       <Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
@@ -62,11 +107,30 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
         SupportedAbis="$(AndroidSupportedAbis)">
       <Output TaskParameter="SupportedAbis" PropertyName="AndroidSupportedAbis" />
     </RuntimeIdentifierToAbi>
+    <PropertyGroup Condition=" '$(_AndroidResolvedSdkProperties)' != '' and '$(_JdkVersion)' != '' and '$(_DefaultJdkVersion)' != '' and '$(_Aapt2Version)' != '' ">
+      <_AndroidResolvedToolingProperties>
+        $(_AndroidResolvedSdkProperties)
+        ;@(_AndroidToolingInput->'_AndroidOuterToolingInput%(Identity)=%(EscapedValue)')
+        ;_AndroidOuterJdkVersion=$(_JdkVersion)
+        ;_AndroidOuterDefaultJdkVersion=$(_DefaultJdkVersion)
+        ;_AndroidOuterApiLevel=$(_AndroidApiLevel)
+        ;_AndroidOuterApiLevelName=$(_AndroidApiLevelName)
+        ;_AndroidOuterBuildToolsPath=$([MSBuild]::Escape('$(AndroidSdkBuildToolsPath)'))
+        ;_AndroidOuterBuildToolsBinPath=$([MSBuild]::Escape('$(AndroidSdkBuildToolsBinPath)'))
+        ;_AndroidOuterZipAlignToolPath=$([MSBuild]::Escape('$(ZipAlignToolPath)'))
+        ;_AndroidOuterLintToolPath=$([MSBuild]::Escape('$(LintToolPath)'))
+        ;_AndroidOuterApkSignerJar=$([MSBuild]::Escape('$(ApkSignerJar)'))
+        ;_AndroidOuterUseApkSigner=$(AndroidUseApkSigner)
+        ;_AndroidOuterAapt2Version=$(_Aapt2Version)
+        ;_AndroidOuterAapt2ToolPath=$([MSBuild]::Escape('$(Aapt2ToolPath)'))
+      </_AndroidResolvedToolingProperties>
+    </PropertyGroup>
   </Target>
 
   <Target Name="_CheckGoogleSdkRequirements"
       Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
     <CheckGoogleSdkRequirements
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         AndroidApiLevel="$(_AndroidApiLevel)"
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     />
