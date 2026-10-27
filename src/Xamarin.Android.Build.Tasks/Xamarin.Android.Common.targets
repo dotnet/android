@@ -68,7 +68,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1232,7 +1233,6 @@ because xbuild doesn't support framework reference assemblies.
 	<!-- Generate the final Resource Assembly if we need to. -->
 	<GenerateResourceDesignerAssembly
 			Condition="'$(AndroidUseDesignerAssembly)' == 'True' "
-			MSBuildRuntime="NET"
 			ContinueOnError="$(DesignTimeBuild)"
 			RTxtFile="$(IntermediateOutputPath)R.txt"
 			IsApplication="$(AndroidApplication)"
