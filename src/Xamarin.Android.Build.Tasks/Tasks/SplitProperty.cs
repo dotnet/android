@@ -11,7 +11,8 @@ namespace Xamarin.Android.Tasks
 	/// ; - MSBuild default
 	/// , - Historically supported by Xamarin.Android
 	/// </summary>
-	public class SplitProperty : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class SplitProperty : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "SPL";
 
