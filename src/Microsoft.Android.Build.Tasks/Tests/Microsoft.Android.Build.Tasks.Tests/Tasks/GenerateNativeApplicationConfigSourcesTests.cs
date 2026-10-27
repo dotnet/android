@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+using ELFSharp.ELF;
+using ELFSharp.ELF.Sections;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -16,14 +18,30 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 [TestFixture]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
-	static void WriteTestJniLibrary (string path, string libraryName)
+	static void WriteTestJniLibrary (string path, string libraryName, AndroidTargetArch arch = AndroidTargetArch.Arm64)
 	{
 		using var payload = new MemoryStream ([0]);
 		using var elf = new MemoryStream ();
-		AssemblyStoreElfWriter.Write ([("JNI_OnLoad", payload)], elf, AndroidTargetArch.Arm64, libraryName);
+		AssemblyStoreElfWriter.Write ([("JNI_OnLoad", payload)], elf, arch, libraryName);
 		byte [] image = elf.ToArray ();
-		// Patch Symbol 1's st_info from STB_GLOBAL | STT_OBJECT (0x11) to STB_GLOBAL | STT_FUNC (0x12).
-		image [316] = 0x12;
+		elf.Position = 0;
+		using (IELF parsed = ELFReader.Load (elf, shouldOwnStream: false)) {
+			ISection dynsym = parsed.GetSection (".dynsym");
+			// Symbol 0 is STN_UNDEF; Symbol 1 is JNI_OnLoad.
+			// st_info is at +4 in Elf64_Sym (after 4-byte st_name) and +12 in Elf32_Sym
+			// (after 4-byte st_name, 4-byte st_value, and 4-byte st_size).
+			const int Elf64SymInfoOffset = 4;
+			const int Elf32SymInfoOffset = 12;
+			int stInfoOffset = dynsym switch {
+				Section<ulong> section64 => checked ((int)(section64.Offset + section64.EntrySize + Elf64SymInfoOffset)),
+				Section<uint> section32 => checked ((int)(section32.Offset + section32.EntrySize + Elf32SymInfoOffset)),
+				_ => throw new InvalidDataException ("Unsupported .dynsym section type."),
+			};
+			const byte StbGlobalSttObject = 0x11;
+			const byte StbGlobalSttFunc = 0x12;
+			Assert.AreEqual (StbGlobalSttObject, image [stInfoOffset]);
+			image [stInfoOffset] = StbGlobalSttFunc;
+		}
 		File.WriteAllBytes (path, image);
 	}
 
@@ -108,9 +126,13 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			""");
 		File.WriteAllText (environmentPath, "BOOTSTRAP_VALUE=\u00e9\u65e5\nBOOTSTRAP_EMPTY=\nDOTNET_MODIFIABLE_ASSEMBLIES=Debug\ndebug.dotnet.log=gref\n");
 		var libraries = new List<ITaskItem> ();
-		foreach (string name in new [] { "plain.so", "libprefixed.so", "libmanaged.dll.so" }) {
+		foreach ((string name, AndroidTargetArch arch) in new [] {
+			("plain.so", AndroidTargetArch.Arm64),
+			("libprefixed.so", AndroidTargetArch.Arm),
+			("libmanaged.dll.so", AndroidTargetArch.Arm64),
+		}) {
 			string libraryPath = Path.Combine (outputRoot, name);
-			WriteTestJniLibrary (libraryPath, name);
+			WriteTestJniLibrary (libraryPath, name, arch);
 			libraries.Add (new TaskItem (libraryPath));
 		}
 		var task = new GenerateNativeApplicationConfigSources {
