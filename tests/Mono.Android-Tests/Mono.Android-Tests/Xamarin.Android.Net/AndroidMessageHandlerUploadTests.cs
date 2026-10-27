@@ -248,7 +248,7 @@ public class AndroidMessageHandlerUploadTests
 		using var requestCts = new CancellationTokenSource ();
 		using var handler = new AndroidMessageHandler { UseProxy = false };
 		using var client = new HttpClient (handler) { Timeout = TimeSpan.FromSeconds (30) };
-		using var body = new MemoryStream (new byte [16 * 1024 * 1024]);
+		using var body = new BoundedCopyMemoryStream (new byte [16 * 1024 * 1024]);
 		using var request = new HttpRequestMessage (HttpMethod.Put,
 			$"http://127.0.0.1:{((IPEndPoint) listener.LocalEndpoint).Port}/upload") {
 			Content = new StreamContent (body),
@@ -293,6 +293,18 @@ public class AndroidMessageHandlerUploadTests
 			await stream.ReadExactlyAsync (buffer, serverCts.Token);
 			bodyReceived = true;
 			connection.Client.LingerState = new LingerOption (true, 0);
+		}
+	}
+
+	sealed class BoundedCopyMemoryStream (byte[] contents) : MemoryStream (contents)
+	{
+		public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
+		{
+			// MemoryStream copies its entire backing array in one write, which exceeds small Java heaps.
+			byte[] buffer = new byte [bufferSize];
+			int count;
+			while ((count = await ReadAsync (buffer, 0, buffer.Length, cancellationToken)) != 0)
+				await destination.WriteAsync (buffer, 0, count, cancellationToken);
 		}
 	}
 }
