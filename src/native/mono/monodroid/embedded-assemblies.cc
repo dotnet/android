@@ -437,30 +437,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	}
 
 	AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
-	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
-
-	if (assembly_runtime_info.image_data == nullptr) {
-		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
-		// arrive here at the same time, nothing bad will happen.
-		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
-		assembly_runtime_info.descriptor = &store_entry;
-		if (store_entry.debug_data_offset != 0) {
-			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
-		}
-
-		log_debug (
-			LOG_ASSEMBLY,
-			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'",
-			static_cast<void*>(assembly_runtime_info.image_data),
-			static_cast<void*>(assembly_runtime_info.debug_info_data),
-			static_cast<void*>(assembly_runtime_info.config_data),
-			static_cast<void*>(assembly_runtime_info.descriptor),
-			assembly_runtime_info.descriptor->data_size,
-			assembly_runtime_info.descriptor->debug_data_size,
-			assembly_runtime_info.descriptor->config_data_size,
-			optional_string (name.get ())
-		);
-	}
+	AssemblyStoreSingleAssemblyRuntimeData const& assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
 
 	uint8_t *assembly_data;
 	uint32_t assembly_data_size;

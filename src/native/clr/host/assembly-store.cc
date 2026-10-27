@@ -255,31 +255,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	}
 
 	const AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
-	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
-
-	if (assembly_runtime_info.image_data == nullptr) {
-		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
-		// arrive here at the same time, nothing bad will happen.
-		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
-		assembly_runtime_info.descriptor = &store_entry;
-		if (store_entry.debug_data_offset != 0) {
-			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
-		}
-
-		log_debugf (
-			LOG_ASSEMBLY,
-			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%.*s'",
-			static_cast<const void*>(assembly_runtime_info.image_data),
-			static_cast<const void*>(assembly_runtime_info.debug_info_data),
-			static_cast<const void*>(assembly_runtime_info.config_data),
-			static_cast<const void*>(assembly_runtime_info.descriptor),
-			assembly_runtime_info.descriptor->data_size,
-			assembly_runtime_info.descriptor->debug_data_size,
-			assembly_runtime_info.descriptor->config_data_size,
-			static_cast<int>(name.length ()),
-			name.data ()
-		);
-	}
+	AssemblyStoreSingleAssemblyRuntimeData const& assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
 
 	auto [assembly_data, assembly_data_size] = get_assembly_data (assembly_runtime_info, name);
 	size = assembly_data_size;
@@ -317,6 +293,34 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const cha
 	assembly_store.index_entry_count = header->index_entry_count;
 	assembly_store.assemblies = reinterpret_cast<const AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
 	assembly_store_hashes = reinterpret_cast<const AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
+
+	// Initialize these pointers before assembly loads can run concurrently.
+	for (uint32_t i = 0; i < assembly_store.assembly_count; i++) {
+		const AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[i];
+		if (store_entry.data_offset == 0) {
+			continue;
+		}
+
+		AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
+		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
+		assembly_runtime_info.descriptor = &store_entry;
+		if (store_entry.debug_data_offset != 0) {
+			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
+		}
+
+		log_debugf (
+			LOG_ASSEMBLY,
+			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; mapping index == %u",
+			static_cast<const void*>(assembly_runtime_info.image_data),
+			static_cast<const void*>(assembly_runtime_info.debug_info_data),
+			static_cast<const void*>(assembly_runtime_info.config_data),
+			static_cast<const void*>(assembly_runtime_info.descriptor),
+			assembly_runtime_info.descriptor->data_size,
+			assembly_runtime_info.descriptor->debug_data_size,
+			assembly_runtime_info.descriptor->config_data_size,
+			store_entry.mapping_index
+		);
+	}
 
 	// Build a lookup of assembly names indexed by descriptor index, used to disambiguate CRC32 hash
 	// collisions during lookup. The names section follows the descriptor table and consists of
