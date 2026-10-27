@@ -78,7 +78,8 @@ namespace Xamarin.Android.Build.Tests
 				string response = File.ReadAllText (responseFile);
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
 				StringAssert.Contains ("nativeaot-bootstrap.o", response, responseFile);
-				StringAssert.Contains ("-init=Host_NativeAOT_InitializeEnvironment", response, responseFile);
+				StringAssert.Contains ("--undefined=NativeAOT_InitializeEnvironment", response, responseFile);
+				StringAssert.Contains ("-init=NativeAOT_InitializeEnvironment", response, responseFile);
 				StringAssert.DoesNotContain ("jni_init_funcs.", response, responseFile);
 				StringAssert.DoesNotContain ("environment.", response, responseFile);
 				foreach (string archiveName in CPlusPlusArchiveNames) {
@@ -100,6 +101,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("(INIT)", dynamic, "The fixed environment hook must survive as DT_INIT.");
 			StringAssert.Contains ("(INIT_ARRAY)", dynamic, "NativeAOT's initialization array must remain intact.");
 			StringAssert.DoesNotContain ("libbinary_blobs.so", dynamic, "NativeAOT data must not introduce a dynamic library dependency.");
+			StringAssert.DoesNotContain ("libnaot-android", dynamic, "The NativeAOT host must be linked statically.");
 			using var elf = NativeToolTestHelper.ReadElf (applicationLibrary);
 			var exports = elf.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
 				.Select (entry => entry.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
@@ -107,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap_size");
 			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data");
 			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data_size");
-			CollectionAssert.DoesNotContain (exports, "Host_NativeAOT_InitializeEnvironment");
+			CollectionAssert.DoesNotContain (exports, "NativeAOT_InitializeEnvironment");
 			string definitions = NativeToolTestHelper.Run ("llvm-nm", "--demangle", "--defined-only",
 				Path.ChangeExtension (applicationLibrary, ".dbg.so"));
 			StringAssert.Contains ("BinaryBlobLoader::read_uncompressed(", definitions);
@@ -564,11 +566,17 @@ namespace Xamarin.Android.Build.Tests
 				string archivePath = $"runtimes/android-arm64/native/{archiveName}";
 				package.AssertDoesNotContainEntry (packagePath, archivePath);
 			}
+			if (runtime == AndroidRuntime.NativeAOT) {
+				foreach (string configuration in new [] { "debug", "release" }) {
+					package.AssertContainsEntry (packagePath, $"runtimes/android-arm64/native/libnaot-android.{configuration}-static-{configuration}.a");
+					package.AssertDoesNotContainEntry (packagePath, $"runtimes/android-arm64/native/libnaot-android.{configuration}.so");
+				}
+			}
 		}
 
 		[TestCase (AndroidRuntime.NativeAOT)]
 		[TestCase (AndroidRuntime.CoreCLR)]
-		public void CopyRuntimePackRemovesStaleCPlusPlusArchives (AndroidRuntime runtime)
+		public void CopyRuntimePackRemovesStaleNativeLibraries (AndroidRuntime runtime)
 		{
 			string outputDirectory = Path.Combine (Root, TestName);
 			if (Directory.Exists (outputDirectory)) {
@@ -594,6 +602,24 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			string runtimeOutputPath = Path.Combine (outputDirectory, "runtime-output");
+			string runtimeOutputDirectory = Path.Combine (runtimeOutputPath, "android-arm64");
+			Directory.CreateDirectory (runtimeOutputDirectory);
+			string [] obsoleteSharedLibraries = runtime == AndroidRuntime.NativeAOT ? [
+				"libnaot-android.debug.so",
+				"libnaot-android.release.so",
+				"libnaot-android-checked+asan.debug.so",
+			] : [];
+			foreach (string libraryName in obsoleteSharedLibraries) {
+				File.Create (Path.Combine (runtimeOutputDirectory, libraryName)).Dispose ();
+				File.Create (Path.Combine (nativeDirectory, libraryName)).Dispose ();
+			}
+			string [] retainedLibraries = runtime == AndroidRuntime.NativeAOT ? [
+				"libnaot-android.debug-static-debug.a",
+				"libnaot-android.release-static-release.a",
+			] : ["libnet-android.release.so"];
+			foreach (string libraryName in retainedLibraries) {
+				File.Create (Path.Combine (runtimeOutputDirectory, libraryName)).Dispose ();
+			}
 
 			string nativeProjectName = runtime == AndroidRuntime.NativeAOT ? "native-nativeaot.csproj" : "native-clr.csproj";
 			string nativeProject = Path.Combine (XABuildPaths.TopDirectory, "src", "native", nativeProjectName);
@@ -618,6 +644,14 @@ namespace Xamarin.Android.Build.Tests
 
 			foreach (string archiveName in CPlusPlusArchiveNames) {
 				FileAssert.DoesNotExist (Path.Combine (nativeDirectory, archiveName));
+			}
+			foreach (string libraryName in obsoleteSharedLibraries) {
+				FileAssert.DoesNotExist (Path.Combine (runtimeOutputDirectory, libraryName));
+				FileAssert.DoesNotExist (Path.Combine (nativeDirectory, libraryName));
+			}
+			foreach (string libraryName in retainedLibraries) {
+				FileAssert.Exists (Path.Combine (runtimeOutputDirectory, libraryName));
+				FileAssert.Exists (Path.Combine (nativeDirectory, libraryName));
 			}
 			FileAssert.Exists (Path.Combine (nativeDirectory, "libc.so"));
 			FileAssert.Exists (Path.Combine (nativeDirectory, "libclang_rt.builtins-aarch64-android.a"));

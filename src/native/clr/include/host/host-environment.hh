@@ -12,8 +12,6 @@ namespace xamarin::android {
 	class HostEnvironment
 	{
 	public:
-		static void init () noexcept;
-
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_variable (const char *name, const char *value) noexcept
 		{

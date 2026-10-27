@@ -8,8 +8,6 @@
 #include <runtime-base/binary-blob-loader.hh>
 
 namespace xamarin::android {
-	auto load_nativeaot_remapping () noexcept -> BinaryBlobPayload;
-
 	class AppSystemProperties
 	{
 	public:
