@@ -422,7 +422,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			var expectedFiles = new HashSet<string> {
 				"Java.Interop.dll",
 				"Mono.Android.dll",
-				"Mono.Android.Runtime.dll",
 				"System.Console.dll",
 				"System.Private.CoreLib.dll",
 				"System.Runtime.dll",
@@ -451,6 +450,8 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 				// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
 				CollectionAssert.DoesNotContain (existingFiles, "_Java.Interop.TypeMap.dll");
+				Assert.IsFalse (helper.Exists ("assemblies/Mono.Android.Runtime.dll"),
+					"Runtime helpers must be included in Mono.Android.dll, not a separate assembly.");
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));
