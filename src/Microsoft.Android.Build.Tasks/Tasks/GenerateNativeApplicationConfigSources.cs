@@ -5,13 +5,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Microsoft.Build.Framework;
-
-using Java.Interop.Tools.TypeNameMappings;
-using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	using PackageNamingPolicyEnum   = PackageNamingPolicy;
 
@@ -56,7 +55,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime) != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Properties.Resources.XAGCA7009_UnsupportedRuntime, AndroidRuntime));
+				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Xamarin.Android.Tasks.Properties.Resources.XAGCA7009_UnsupportedRuntime, AndroidRuntime));
 			}
 			string? bootstrapPath = CoreClrBootstrapOutputFile;
 			if (bootstrapPath.IsNullOrWhiteSpace ()) {

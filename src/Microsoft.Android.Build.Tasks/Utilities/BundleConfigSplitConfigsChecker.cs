@@ -10,6 +10,8 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tasks.Properties;
 
+namespace Microsoft.Android.Tasks;
+
 /// <para>
 /// When bundle configuration uses standard settings for split configs, the per-ABI library
 /// directory (which contains all of our DSOs/assemblies/blobs etc) will be placed in a per-ABI
@@ -143,7 +145,7 @@ static class BundleConfigSplitConfigsChecker
 			if (reader.ValueTextEquals (strings.ValuePropertyName)) {
 				reader.Read ();
 				string? v = reader.GetString ();
-				valueIsAbi = Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals ("ABI", v);
+				valueIsAbi = MonoAndroidHelper.StringEquals ("ABI", v);
 				return;
 			}
 		}
@@ -185,7 +187,7 @@ static class BundleConfigSplitConfigsChecker
 			_                                 => throw new InvalidOperationException ($"Internal error: unsupported state transition to '{need}'")
 		};
 
-		if (!objectName.IsNullOrEmpty () && Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals (needName, objectName)) {
+		if (!objectName.IsNullOrEmpty () && MonoAndroidHelper.StringEquals (needName, objectName)) {
 			state.Push (need);
 		} else {
 			state.Push (BundleConfigObject.Other);
