@@ -8,6 +8,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -15,6 +16,40 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class MultiThreadedMigrationTests
 	{
+		[Test]
+		public void ReadLibraryProjectImportsCacheUsesProjectDirectory ()
+		{
+			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			Directory.CreateDirectory (directory);
+			try {
+				var cacheFile = Path.GetRandomFileName ();
+				File.WriteAllText (Path.Combine (directory, cacheFile), "<Paths><Jars><Jar>a.jar</Jar></Jars></Paths>");
+				var task = new ReadLibraryProjectImportsCache {
+					BuildEngine = new MockBuildEngine (TextWriter.Null),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
+					CacheFile = cacheFile,
+				};
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual ("a.jar", task.Jars?.Single ().ItemSpec);
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[TestCase ("")]
+		[TestCase ("missing.xml")]
+		public void ReadLibraryProjectImportsCacheMissingFile (string cacheFile)
+		{
+			var task = new ReadLibraryProjectImportsCache {
+				BuildEngine = new MockBuildEngine (TextWriter.Null),
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+					Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ()), new Dictionary<string, string> ()),
+				CacheFile = cacheFile,
+			};
+			Assert.IsTrue (task.Execute ());
+			Assert.IsNull (task.Jars);
+		}
+
 		[Test]
 		public void MigratedTasksHaveDirectAttribute ()
 		{
