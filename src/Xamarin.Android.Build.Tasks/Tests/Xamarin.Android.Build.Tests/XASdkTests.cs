@@ -31,16 +31,17 @@ namespace Xamarin.Android.Build.Tests
 
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
 			var dotnet = new DotNetCLI (Path.Combine (templatePath, $"{templateName}.csproj"));
-			Assert.IsTrue (dotnet.New (template, noRestore: true), $"`dotnet new {template} --no-restore` should succeed");
+			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
 
 			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
 			var projectNuGetConfig = Path.Combine (dotnet.ProjectDirectory, "NuGet.config");
-			File.Copy (repoNuGetConfig, projectNuGetConfig);
 			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
 
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
+			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
+			FileAssert.DoesNotExist (Path.Combine (dotnet.ProjectDirectory, "Resources", "layout", "NuGet.config"));
 
 			// Debug build
 			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Debug")), "`dotnet build` should succeed");
