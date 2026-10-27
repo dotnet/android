@@ -1,5 +1,7 @@
 using NUnit.Framework;
 using System.IO;
+using System.Linq;
+using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -7,6 +9,44 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class InvalidConfigTests : BaseTest
 	{
+		[TestCase (0)]
+		[TestCase (2)]
+		public void EmbeddedLibraries (int count)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			var files = Enumerable.Range (0, count).Select (i => $"libtest{i}.so").ToArray ();
+			foreach (string file in files) {
+				proj.OtherBuildItems.Add (new AndroidItem.EmbeddedNativeLibrary (file));
+			}
+			proj.Imports.Add (new Import ("CheckProjectItems.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="CheckProjectItemsForTest" DependsOnTargets="_CheckProjectItems">
+					    <Message Text="Project item check completed." Importance="high" />
+					  </Target>
+					</Project>
+					""",
+			});
+			using var builder = CreateApkBuilder ();
+			builder.Target = "CheckProjectItemsForTest";
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			builder.ThrowOnBuildFailure = false;
+			bool invalid = count > 0;
+			Assert.AreEqual (!invalid, builder.Build (proj), "Applications with embedded native libraries should fail.");
+			Assert.AreEqual (!invalid, builder.LastBuildOutput.ContainsText ("Project item check completed."),
+				"Invalid embedded libraries must prevent dependent build targets from running.");
+			if (!invalid) {
+				StringAssertEx.DoesNotContain ("XA0100", builder.LastBuildOutput);
+				StringAssertEx.DoesNotContain ("Task \"AndroidError\"", builder.LastBuildOutput);
+				return;
+			}
+
+			foreach (string file in files) {
+				StringAssertEx.Contains ($"{file} : error XA0100: EmbeddedNativeLibrary '{file}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.", builder.LastBuildOutput);
+			}
+			StringAssertEx.Contains ($" {count} Error(s)", builder.LastBuildOutput);
+		}
+
 		[Test]
 		public void EolFrameworks ([Values ("net6.0-android", "net7.0-android")] string targetFramework)
 		{
