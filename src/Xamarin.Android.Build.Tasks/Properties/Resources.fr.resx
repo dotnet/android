@@ -1115,6 +1115,10 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>La propriété MSBuild « RunAOTCompilation » n’est pas compatible avec le runtime CoreCLR. La génération ne peut pas continuer tant que cette propriété est définie sur la valeur « false ». Supprimez la propriété. Depuis .NET 11, définissez « PublishReadyToRun » sur la valeur « false » pour désactiver la compilation AOT ReadyToRun (R2R).</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
+  </data>
   <data name="XA1045" xml:space="preserve">
     <value>Le fichier d’entrée `{0}` ne commence pas par `&lt;replacements/&gt;`.</value>
     <comment>{0} - file path</comment>
