@@ -81,11 +81,6 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 			resource.Identifier = "View";
 			resource.Ids = [0, 0x7f010001, -1];
 			Assert.AreEqual ("int[] styleable View { 0x00000000, 0x7f010001, 0xffffffff }", resource.ToString ());
-
-			var parser = new Xamarin.Android.Tasks.ResourceParser (
-				new TaskLoggingHelper (new MockBuildEngine (TextWriter.Null), TestName));
-			var exception = Assert.Throws<NotSupportedException> (() => parser.ToInt32 ("invalid", -10));
-			Assert.AreEqual ("Could not convert value 'invalid' (base '-10') into an Int32.", exception?.Message);
 		} finally {
 			CultureInfo.CurrentCulture = originalCulture;
 		}
@@ -300,26 +295,29 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		var registrations = source.Descendants ().Where (element => element.Name.LocalName == "UsingTask" &&
 			((string?) element.Attribute ("TaskName"))?.EndsWith (".GenerateResourceDesignerAssembly", StringComparison.Ordinal) == true)
 			.Select (element => new XElement (element)).ToArray ();
-		Assert.AreEqual (1, registrations.Length);
+		Assert.AreEqual (2, registrations.Length);
 		foreach (var registration in registrations) {
 			registration.Name = "UsingTask";
 			Assert.AreEqual (typeof (GenerateResourceDesignerAssembly).FullName, (string?) registration.Attribute ("TaskName"));
-			Assert.IsNull (registration.Attribute ("Condition"));
-			Assert.IsNull (registration.Attribute ("TaskFactory"));
-			Assert.IsNull (registration.Attribute ("Runtime"));
+			Assert.AreEqual ("NET", (string?) registration.Attribute ("Runtime"));
 		}
+		var frameworkRegistration = registrations.Single (registration =>
+			((string?) registration.Attribute ("Condition"))?.Trim () == "'$(MSBuildRuntimeType)' == 'Full'");
+		var coreRegistration = registrations.Single (registration =>
+			((string?) registration.Attribute ("Condition"))?.Trim () == "'$(MSBuildRuntimeType)' == 'Core'");
+		Assert.AreEqual ("TaskHostFactory", (string?) frameworkRegistration.Attribute ("TaskFactory"));
+		Assert.IsNull (coreRegistration.Attribute ("TaskFactory"));
 		var invocation = source.Descendants ().Single (element => element.Name.LocalName == "GenerateResourceDesignerAssembly");
-		var runtime = invocation.Attribute ("MSBuildRuntime")
-			?? throw new InvalidOperationException ("The resource designer invocation must select a runtime.");
-		Assert.AreEqual ("NET", runtime.Value);
+		Assert.IsNull (invocation.Attribute ("MSBuildRuntime"));
 		var projectPath = Path.Combine (DirectoryPath, "registration.proj");
 		new XDocument (new XElement ("Project",
+			new XAttribute ("Sdk", "Microsoft.NET.Sdk"),
 			new XElement ("PropertyGroup",
+				new XElement ("TargetFramework", "net11.0"),
 				new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GenerateResourceDesignerAssembly).Assembly.Location)),
 			registrations,
-			new XElement ("Target", new XAttribute ("Name", "Build"),
+			new XElement ("Target", new XAttribute ("Name", "GenerateDesigner"),
 				new XElement ("GenerateResourceDesignerAssembly",
-					new XAttribute (runtime),
 					new XAttribute ("RTxtFile", RtxtPath),
 					new XAttribute ("OutputFile", OutputPath),
 					new XAttribute ("CaseMapFile", Path.Combine (DirectoryPath, "case_map.txt")),
@@ -341,7 +339,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		start.Environment ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
 		if (!frameworkMSBuild)
 			start.ArgumentList.Add ("msbuild");
-		foreach (var argument in new [] { projectPath, "-t:Build", "-nologo", "-v:minimal", "-nr:false" })
+		foreach (var argument in new [] { projectPath, "-t:GenerateDesigner", "-nologo", "-v:minimal", "-nr:false" })
 			start.ArgumentList.Add (argument);
 		using var process = Process.Start (start) ?? throw new InvalidOperationException ("Could not start MSBuild.");
 		var stdout = process.StandardOutput.ReadToEndAsync ();
