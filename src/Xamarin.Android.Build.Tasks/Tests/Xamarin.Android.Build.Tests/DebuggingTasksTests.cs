@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -401,6 +402,47 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
+		// https://github.com/dotnet/android/issues/12878
+		[TestCase (137, "Killed")]
+		[TestCase (1, "")]
+		[TestCase (1, "error: closed")]
+		[TestCase (1, "adb: error: device offline")]
+		[TestCase (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0/lib': Permission denied")]
+		public void FastDeployRejectsFailedStagingFileListing (int exitCode, string output)
+		{
+			using var device = new FakeAdbDevice (exitCode, output);
+
+			Assert.IsFalse (device.RunFastDeploy (), "A failed listing must fail the task.");
+
+			Assert.AreEqual (1, device.Errors.Count);
+			Assert.AreEqual ("XA0129", device.Errors [0].Code);
+			Assert.That (device.Errors [0].Message, Does.Contain (FakeAdbDevice.StagingRoot));
+			Assert.That (device.Commands.Last (), Does.Contain ($"find '{FakeAdbDevice.StagingRoot}'"),
+				"Nothing may be changed on the device after the staging listing failed.");
+		}
+
+		[TestCase (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0': No such file or directory")]
+		[TestCase (0, "")]
+		public void FastDeployTreatsMissingOrEmptyStagingDirectoryAsEmpty (int exitCode, string output)
+		{
+			using var device = new FakeAdbDevice (exitCode, output);
+
+			Assert.IsTrue (device.RunFastDeploy ());
+
+			Assert.AreEqual (0, device.Errors.Count);
+		}
+
+		[Test]
+		public void FastDeployCopiesFilesFromSuccessfulStagingFileListing ()
+		{
+			using var device = new FakeAdbDevice (0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000");
+
+			Assert.IsTrue (device.RunFastDeploy ());
+
+			Assert.AreEqual (0, device.Errors.Count);
+			Assert.That (device.Commands, Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"));
+		}
+
 		static FastDeploy.AdbCommandResult CreateAdbResult (int exitCode, string output)
 		{
 			return new FastDeploy.AdbCommandResult {
@@ -448,6 +490,83 @@ namespace Xamarin.Android.Build.Tests
 			{
 				RecoveryAttempts++;
 				return recoveryException == null ? Task.CompletedTask : Task.FromException (recoveryException);
+			}
+		}
+
+		// Runs the real FastDeploy task in Copy mode against a fake `adb` script, so the tests depend
+		// only on the task's public properties and on the adb command lines it issues. The script
+		// answers `adb devices` and the staging file listing with canned output, records every command
+		// line, and succeeds silently for everything else. It is a bash script, so the tests that use
+		// it are not supported on Windows.
+		sealed class FakeAdbDevice : IDisposable
+		{
+			public const string PackageName = "com.example.app";
+			public const string StagingRoot = "/data/local/tmp/fastdeploy/" + PackageName + "/0";
+
+			const string AdbScript = """
+				#!/bin/bash
+				dir="$(dirname "$0")"
+				printf '%s\n' "$*" >> "$dir/adb.log"
+				case "$*" in
+					"devices -l")
+						echo "List of devices attached"
+						echo "emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1"
+						;;
+					*"pwd; pidof"*)
+						echo "/data/user/0/com.example.app"
+						;;
+					*"shell find "*"-exec stat"*)
+						cat "$dir/staging-listing.out"
+						exit "$(cat "$dir/staging-listing.exit")"
+						;;
+				esac
+				exit 0
+				""";
+
+			readonly string directory = Path.Combine (Path.GetTempPath (), "fake-adb-" + Guid.NewGuid ().ToString ("N"));
+			readonly List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
+
+			public FakeAdbDevice (int stagingListingExitCode, string stagingListing)
+			{
+				if (TestEnvironment.IsWindows) {
+					Assert.Ignore ("The fake adb is a bash script, which is not supported on Windows.");
+				} else {
+					Directory.CreateDirectory (Path.Combine (directory, "obj"));
+					File.WriteAllText (Path.Combine (directory, "Foo.dll"), "foo");
+					File.WriteAllText (Path.Combine (directory, "staging-listing.out"), stagingListing);
+					File.WriteAllText (Path.Combine (directory, "staging-listing.exit"), stagingListingExitCode.ToString ());
+
+					var adb = Path.Combine (directory, "adb");
+					File.WriteAllText (adb, AdbScript);
+					File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				}
+			}
+
+			public IReadOnlyList<BuildErrorEventArgs> Errors => errors;
+
+			// One entry per adb invocation, without the adb executable itself.
+			public IReadOnlyList<string> Commands => File.ReadAllLines (Path.Combine (directory, "adb.log"));
+
+			public bool RunFastDeploy ()
+			{
+				var foo = new TaskItem (Path.Combine (directory, "Foo.dll"));
+				foo.SetMetadata ("TargetPath", "arm64-v8a/Foo.dll");
+				var task = new FastDeploy {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					AdbToolPath = directory,
+					AppFileTransferMode = "Copy",
+					FastDevFiles = new ITaskItem [] { foo },
+					IntermediateOutputPath = Path.Combine (directory, "obj") + Path.DirectorySeparatorChar,
+					PackageName = PackageName,
+					PrimaryCpuAbi = "arm64-v8a",
+					UploadFlagFile = Path.Combine (directory, "obj", "upload.flag"),
+				};
+				return task.Execute ();
+			}
+
+			public void Dispose ()
+			{
+				Directory.Delete (directory, recursive: true);
 			}
 		}
 

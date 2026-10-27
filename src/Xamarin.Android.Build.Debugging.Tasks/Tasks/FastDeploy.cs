@@ -539,6 +539,7 @@ namespace Xamarin.Android.Tasks
 			// `|` characters as pipes. Building a single, explicitly quoted command string avoids it.
 			string findCommand = $"find {QuoteShellArgument (rootPath)} -type f -exec stat -c '%n|%s|%Y' {{}} +";
 			string output;
+			int exitCode = 0;
 			if (runAs) {
 				output = await RunAsShell (findCommand);
 				if (RaiseRunAsError (output)) {
@@ -547,12 +548,16 @@ namespace Xamarin.Android.Tasks
 			} else {
 				var result = await RunAdbShellCommand (findCommand);
 				output = result.Output;
+				exitCode = result.ExitCode;
 			}
 
 			if (IsMissingDirectoryError (output)) {
 				return new Dictionary<string, RemoteFileInfo> (StringComparer.Ordinal);
 			}
-			if (IsShellError (output, "find") || IsShellError (output, "stat")) {
+			// A failed listing (for example a killed `find` or a dropped adb connection) can produce
+			// output that IsShellError does not recognize. Treating it as an empty directory would
+			// make the caller delete override files that are still wanted.
+			if (exitCode != 0 || IsShellError (output, "find") || IsShellError (output, "stat")) {
 				LogFastDeployError ("XA0129", output, rootPath);
 				return null;
 			}
