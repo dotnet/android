@@ -207,6 +207,60 @@ public class ModelBuilderTests : FixtureTestBase
 	public class ConditionalAttributes
 	{
 		[Theory]
+		[InlineData ("method", true, false)]
+		[InlineData ("method", true, true)]
+		[InlineData ("constructor", true, false)]
+		[InlineData ("constructor", true, true)]
+		[InlineData ("register", false, false)]
+		[InlineData ("register", false, true)]
+		[InlineData ("binding", false, false)]
+		[InlineData ("binding", false, true)]
+		[InlineData ("interface", false, false)]
+		[InlineData ("interface", false, true)]
+		public void ExplicitExportsAreUnconditionalEntries (string shape, bool unconditional, bool alias)
+		{
+			var peer = MakeAcwPeer ("example/Peer", "Example.Peer", "Example") with {
+				DoNotGenerateAcw = shape == "binding",
+				IsInterface = shape == "interface",
+				MarshalMethods = [new MarshalMethodInfo {
+					JniName = shape == "constructor" ? ".ctor" : "call",
+					JniSignature = "()V",
+					NativeCallbackName = "n_call",
+					ManagedMethodName = shape == "constructor" ? ".ctor" : "Call",
+					IsConstructor = shape == "constructor",
+					IsExport = shape != "register",
+				}],
+			};
+			var peers = new List<JavaPeerInfo> { peer };
+			if (alias) {
+				peers.Add (peer with {
+					ManagedTypeName = "Example.OtherPeer",
+					ManagedTypeShortName = "OtherPeer",
+					MarshalMethods = [],
+				});
+			}
+
+			var generator = new TypeMapAssemblyGenerator (new Version (11, 0));
+			var model = generator.CreateModel (peers, "_Example.TypeMap");
+			var entry = model.Entries.Single (entry => entry.MapKey == (alias ? "example/Peer[1]" : "example/Peer"));
+			Assert.Equal (unconditional, entry.TargetTypeReference is null);
+			if (alias) {
+				Assert.Equal (unconditional, model.Entries.Single (entry => entry.MapKey == "example/Peer").TargetTypeReference is null);
+				Assert.NotNull (model.Entries.Single (entry => entry.MapKey == "example/Peer[0]").TargetTypeReference);
+			}
+
+			using var stream = new MemoryStream ();
+			generator.Generate (model, stream, useSharedTypemapUniverse: true);
+			stream.Position = 0;
+			using var pe = new PEReader (stream);
+			var attributes = ReadAllTypeMapAttributeBlobs (pe.GetMetadataReader ());
+			foreach (var modelEntry in model.Entries) {
+				var attribute = Assert.Single (attributes, attribute => attribute.mapKey == modelEntry.MapKey);
+				Assert.Equal (modelEntry.TargetTypeReference, attribute.targetRef);
+			}
+		}
+
+		[Theory]
 		[InlineData ("java/lang/Object")]
 		[InlineData ("java/lang/Throwable")]
 		[InlineData ("java/lang/Exception")]

@@ -244,7 +244,10 @@ static class ModelBuilder
 			return true;
 		}
 
-		return false;
+		// Explicit exports are Java entry points even without a managed caller.
+		// Root the proxy, whose callback and constructor references preserve only
+		// the Java-facing surface, rather than all members of the declaring type.
+		return !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Any (method => method.IsExport);
 	}
 
 	static void AddIfCrossAssembly (SortedSet<string> set, string? asmName, string outputAssemblyName)
