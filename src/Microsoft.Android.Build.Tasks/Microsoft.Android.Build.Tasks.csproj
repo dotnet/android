@@ -42,6 +42,7 @@
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
+    <PackageReference Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="$(MSBuildTaskAuthoringAnalyzerVersion)" PrivateAssets="all" IncludeAssets="analyzers" />
     <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
