@@ -318,7 +318,7 @@ namespace Xamarin.Android.Build.Tests {
 						AndroidManifest = "AndroidManifest.xml",
 						AndroidSdkDirectory = "sdk",
 						ReferenceAssemblyPaths = ["references"],
-						AndroidApiLevel = "Z",
+						AndroidApiLevel = "36",
 						TargetFramework = "net11.0-android",
 						SupportedOSPlatformVersion = "24.0",
 					};
@@ -328,6 +328,24 @@ namespace Xamarin.Android.Build.Tests {
 				});
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		[Platform ("Win")]
+		public void SupportedVersionsPreserveDriveRelativePaths ()
+		{
+			var path = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			try {
+				var references = CreateFauxReferencesDirectory (path, apiInfoSelection);
+				var drive = Path.GetPathRoot (references).Substring (0, 2);
+				var relativePath = drive + Path.GetRelativePath (Path.GetFullPath (drive), references);
+				var engine = new MockBuildEngine (TestContext.Out);
+				Assert.AreSame (
+					MonoAndroidHelper.GetSupportedVersions (engine, [references]),
+					MonoAndroidHelper.GetSupportedVersions (engine, [relativePath]));
+			} finally {
+				Directory.Delete (path, recursive: true);
 			}
 		}
 

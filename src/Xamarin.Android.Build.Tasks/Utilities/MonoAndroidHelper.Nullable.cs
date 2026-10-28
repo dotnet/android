@@ -53,7 +53,7 @@ public partial class MonoAndroidHelper
 
 #if MSBUILD
 	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths)
-		=> GetSupportedVersions (engine, referenceAssemblyPaths, TaskEnvironment.Fallback);
+		=> GetSupportedVersions (engine, referenceAssemblyPaths?.Select (Path.GetFullPath).ToArray (), TaskEnvironment.Fallback);
 
 	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths, TaskEnvironment taskEnvironment)
 	{
