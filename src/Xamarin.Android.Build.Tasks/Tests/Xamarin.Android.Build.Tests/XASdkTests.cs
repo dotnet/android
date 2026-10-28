@@ -35,12 +35,13 @@ namespace Xamarin.Android.Build.Tests
 
 			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
 			var projectNuGetConfig = Path.Combine (dotnet.ProjectDirectory, "NuGet.config");
-			File.Copy (repoNuGetConfig, projectNuGetConfig);
 			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
 
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
+			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
+			FileAssert.DoesNotExist (Path.Combine (dotnet.ProjectDirectory, "Resources", "layout", "NuGet.config"));
 
 			// Debug build
 			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Debug")), "`dotnet build` should succeed");
