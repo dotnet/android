@@ -122,6 +122,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
+				ProjectName = "Test Me",
+				RootNamespace = "Test.Me",
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 			string [] abis = ["arm64-v8a", "x86_64"];
