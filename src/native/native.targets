@@ -129,6 +129,7 @@
       <_RuntimeSources Include="clr\include\constants.hh" />
       <_RuntimeSources Include="clr\include\host\host-common.hh" />
       <_RuntimeSources Include="clr\include\runtime-base\android-system.hh" />
+      <_RuntimeSources Include="clr\include\shared\log_types.hh" />
       <_RuntimeSources Include="clr\host\host-shared.cc" />
       <_RuntimeSources Include="clr\runtime-base\android-system-shared.cc" />
       <_RuntimeSources Include="clr\runtime-base\binary-blob-loader.cc" />
@@ -153,7 +154,8 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.debug-static-debug.a')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release-static-release.a')" />
     </ItemGroup>
 
   </Target>
@@ -220,7 +222,7 @@
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
-    <!-- Remove archives left behind by builds that linked libc++ or native Java.Interop. -->
+    <!-- Remove obsolete native libraries from previous builds. -->
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' Or '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
       <_ObsoleteRuntimePackDirectory Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.$(_RuntimePackName).$(AndroidApiLevel).%(AndroidRID)\$(AndroidPackVersion)\runtimes\%(AndroidRID)\native')" />
       <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++_static.a')" />
@@ -230,6 +232,11 @@
       <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-java-interop-release.a')" />
       <_ObsoleteRuntimePackFile Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libxa-java-interop-debug.a')" />
       <_ObsoleteRuntimePackFile Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libxa-java-interop-release.a')" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_ObsoleteRuntimePackFile Include="%(_ObsoleteRuntimePackDirectory.Identity)\libnaot-android*.so" />
+      <_ObsoleteRuntimePackFile Include="$(OutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)\libnaot-android*.so" />
     </ItemGroup>
 
     <Delete Files="@(_ObsoleteRuntimePackFile)" />

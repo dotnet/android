@@ -3,8 +3,6 @@
 include(CheckIncludeFile)
 include(CheckCXXSymbolExists)
 
-set(BUILD_STATIC_LIBRARY ON)
-
 if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
   # will force a -O0 on us and our "debug" build is not really for debugging of our native code but
@@ -21,28 +19,20 @@ set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
 
 # Sources
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NAOT_ANDROID_SUFFIX)
-set(XAMARIN_NAOT_ANDROID_LIB "naot-android${CHECKED_BUILD_INFIX}.${XAMARIN_NAOT_ANDROID_SUFFIX}")
-set(XAMARIN_NAOT_ANDROID_STATIC_LIB "${XAMARIN_NAOT_ANDROID_LIB}-static")
+set(XAMARIN_NAOT_ANDROID_STATIC_LIB "naot-android${CHECKED_BUILD_INFIX}.${XAMARIN_NAOT_ANDROID_SUFFIX}-static")
 
 set(CLR_SOURCES_PATH "../../clr")
 
 set(XAMARIN_MONODROID_SOURCES
   host.cc
-  host-environment.cc
-  host-jni.cc
-  host-bootstrap.cc
-
-  ../runtime-base/android-system.cc
   ../runtime-base/app-system-properties.cc
 
   # Sources shared with the CoreCLR host
   ${CLR_SOURCES_PATH}/host/host-shared.cc
   ${CLR_SOURCES_PATH}/host/gc-bridge.cc
   ${CLR_SOURCES_PATH}/host/os-bridge.cc
-  ${CLR_SOURCES_PATH}/host/runtime-util.cc
   ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
   ${CLR_SOURCES_PATH}/runtime-base/binary-blob-loader.cc
-  ${CLR_SOURCES_PATH}/runtime-base/cpu-arch-detect.cc
   ${CLR_SOURCES_PATH}/runtime-base/util.cc
   ${CLR_SOURCES_PATH}/shared/helpers.cc
   ${CLR_SOURCES_PATH}/shared/log_functions.cc
@@ -56,24 +46,10 @@ add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
 
 # Build
 add_library(
-  ${XAMARIN_NAOT_ANDROID_LIB}
-  SHARED ${XAMARIN_MONODROID_SOURCES}
+  ${XAMARIN_NAOT_ANDROID_STATIC_LIB}
+  STATIC ${XAMARIN_MONODROID_SOURCES}
 )
-strip_unneeded_elf_sections(${XAMARIN_NAOT_ANDROID_LIB})
-
-if(BUILD_STATIC_LIBRARY)
-  add_library(
-    ${XAMARIN_NAOT_ANDROID_STATIC_LIB}
-    STATIC
-    ${XAMARIN_MONODROID_SOURCES}
-  )
-  set_static_library_suffix(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
-  target_compile_definitions(
-    ${XAMARIN_NAOT_ANDROID_STATIC_LIB}
-    PRIVATE
-    DYNAMIC_RUNTIME_LINKING
-  )
-endif()
+set_static_library_suffix(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
 
 macro(lib_target_options TARGET_NAME)
   if(DONT_INLINE)
@@ -110,33 +86,8 @@ macro(lib_target_options TARGET_NAME)
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
   )
-
-  target_link_options(
-    ${TARGET_NAME}
-    PRIVATE
-    ${XA_DEFAULT_SYMBOL_VISIBILITY}
-    ${XA_COMMON_CXX_LINKER_ARGS}
-    ${XA_CXX_DSO_LINKER_ARGS}
-  )
-
-  target_link_libraries(
-    ${TARGET_NAME}
-    -llog
-  )
 endmacro ()
 
-lib_target_options(${XAMARIN_NAOT_ANDROID_LIB})
-xa_add_compile_definitions(${XAMARIN_NAOT_ANDROID_LIB})
-xa_add_include_directories(${XAMARIN_NAOT_ANDROID_LIB})
-
-target_link_options(${XAMARIN_NAOT_ANDROID_LIB}
-  PRIVATE
-  -Wl,--version-script,${CMAKE_SOURCE_DIR}/nativeaot/libnaot-android.map.txt
-  -Wl,--no-undefined-version
-)
-
-if(BUILD_STATIC_LIBRARY)
-  lib_target_options(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
-  xa_add_compile_definitions(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
-  xa_add_include_directories(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
-endif()
+lib_target_options(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
+xa_add_compile_definitions(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
+xa_add_include_directories(${XAMARIN_NAOT_ANDROID_STATIC_LIB})
