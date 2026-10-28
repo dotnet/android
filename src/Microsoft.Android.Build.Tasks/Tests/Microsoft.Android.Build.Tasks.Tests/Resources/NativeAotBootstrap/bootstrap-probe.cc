@@ -36,8 +36,12 @@ void Helpers::abort_applicationf (LogCategories, std::source_location, const cha
 
 int main (int argc, char **argv)
 {
-	if (argc != 5) {
-		Helpers::abort_application ("Expected object path, envelope offset, envelope size and property name");
+	if (argc != 6) {
+		Helpers::abort_application ("Expected object path, envelope offset, envelope size, entry name and table");
+	}
+	bool environment = std::strcmp (argv[5], "environment") == 0;
+	if (!environment && std::strcmp (argv[5], "property") != 0) {
+		Helpers::abort_application ("Expected environment or property table");
 	}
 	size_t offset = 0;
 	uint32_t size = 0;
@@ -90,7 +94,18 @@ int main (int argc, char **argv)
 	check_entries (AppSystemProperties::entries ());
 
 	size_t value_length = 0;
-	const char *value = AppSystemProperties::lookup (argv[4], value_length);
+	const char *value = nullptr;
+	if (environment) {
+		for (const auto &entry : AppSystemProperties::environment ()) {
+			if (std::strcmp (entry.name, argv[4]) == 0) {
+				value = entry.value;
+				value_length = std::strlen (value);
+				break;
+			}
+		}
+	} else {
+		value = AppSystemProperties::lookup (argv[4], value_length);
+	}
 	if (value == nullptr) {
 		if (value_length != 0) {
 			Helpers::abort_application ("Missing property must reset its length");

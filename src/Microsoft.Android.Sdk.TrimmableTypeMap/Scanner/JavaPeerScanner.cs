@@ -423,8 +423,8 @@ public sealed class JavaPeerScanner : IDisposable
 				} else {
 					// A managed class that implements Android.Runtime.IJavaObject but does not
 					// derive from a Java peer (Java.Lang.Object / Java.Lang.Throwable) cannot be
-					// marshaled to Java. Mirror the legacy XAJavaTypeScanner XA4212 diagnostic,
-					// which the managed/llvm-ir typemap paths raise via GenerateJavaStubs.
+					// marshaled to Java. Preserve the XA4212 diagnostic from the former
+					// XAJavaTypeScanner / GenerateJavaStubs pipeline.
 					if (IsCustomJavaObject (typeHandle, typeDef, index)) {
 						if (errorOnCustomJavaObject) {
 							logger?.LogCustomJavaObjectError (fullName);

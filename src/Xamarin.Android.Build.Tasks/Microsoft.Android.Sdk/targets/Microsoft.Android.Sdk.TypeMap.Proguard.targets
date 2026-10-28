@@ -13,8 +13,8 @@
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_AndroidGenerateCoreClrProguardConfigurationInputs;_AndroidGenerateTypeMapProguardConfiguration;_AndroidGenerateTypeMapMemberProguardConfiguration</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
 
-  <!-- NativeAOT is opt-in until llvm-readobj ships with the workload: the default workload
-       linker must remain usable without an NDK. CoreCLR adapters need no native tools. -->
+  <!-- Retained-key extraction remains opt-in for NativeAOT and uses its resolved NDK.
+       CoreCLR extraction reads linked managed assemblies without native tools. -->
   <Target Name="_AndroidConfigureTypeMapProguard"
       BeforeTargets="_CalculateProguardConfigurationFiles"
       Condition=" '$(ProguardConfigFiles)' == '' and '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and (('$(_AndroidRuntime)' == 'CoreCLR' and '$(RunILLink)' != 'false') or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) ">

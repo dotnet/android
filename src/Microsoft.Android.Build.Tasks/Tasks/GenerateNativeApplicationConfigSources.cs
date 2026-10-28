@@ -87,7 +87,6 @@ namespace Microsoft.Android.Tasks
 
 			int assemblyCount = 0;
 			HashSet<string>? archAssemblyNames = null;
-			HashSet<string> uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
 				string? culture = MonoAndroidHelper.GetAssemblyCulture (assembly);
 				string fileName = Path.GetFileName (assembly.ItemSpec);
@@ -97,10 +96,6 @@ namespace Microsoft.Android.Tasks
 					assemblyName = fileName;
 				} else {
 					assemblyName = $"{culture}/{fileName}";
-				}
-
-				if (!uniqueAssemblyNames.Contains (assemblyName)) {
-					uniqueAssemblyNames.Add (assemblyName);
 				}
 
 				archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
