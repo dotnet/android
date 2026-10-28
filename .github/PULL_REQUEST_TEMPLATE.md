@@ -1,11 +1,11 @@
-----
+<!--
+Follow the title and description guidance:
+https://github.com/dotnet/android/blob/main/Documentation/workflow/commit-messages.md
 
-Pull Request
-[title](https://github.com/dotnet/android/blob/main/Documentation/workflow/commit-messages.md#commit-summary) and
-[description](https://github.com/dotnet/android/blob/main/Documentation/workflow/commit-messages.md#commit-body)
-should follow the
-[`commit-messages.md` workflow documentation](https://github.com/dotnet/android/blob/main/Documentation/workflow/commit-messages.md), and in particular should include:
+Explain the problem, why the change is needed, and how it fixes the problem.
+Link to issues fixed, if applicable.
+State what you tested and the results. If tests were not run, say why.
 
-- [ ] Useful description of *why the change is necessary*.
-- [ ] Links to issues fixed
-- [ ] Unit tests
+Keep the description concise. Do not copy these instructions into the
+visible description or add a checklist that repeats them.
+-->
