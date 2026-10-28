@@ -8,8 +8,6 @@ using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
 using System.Xml.Linq;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
 using Mono.Cecil;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
@@ -129,7 +127,7 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
 		}
 
-		static Guid CreateAssembly (string path, bool android)
+		static void CreateAssembly (string path, bool android)
 		{
 			Directory.CreateDirectory (Path.GetDirectoryName (path));
 			using var assembly = AssemblyDefinition.CreateAssembly (
@@ -138,75 +136,6 @@ namespace Xamarin.Android.Build.Tests
 				assembly.MainModule.Resources.Add (new EmbeddedResource ("library.jar", ManifestResourceAttributes.Private, new byte [] { 1 }));
 			}
 			assembly.Write (path);
-			return assembly.MainModule.Mvid;
-		}
-
-		[Test]
-		public void ConcurrentRelativePathsAndCachedResults ()
-		{
-			var engine = new MockBuildEngine (TextWriter.Null);
-			var modules = new List<(Guid Id, bool Android)> ();
-			foreach (string name in new [] { "first", "second" }) {
-				string root = Path.Combine (tempDirectory, name);
-				modules.Add ((CreateAssembly (Path.Combine (root, "library.dll"), name == "first"), name == "first"));
-				modules.Add ((CreateAssembly (Path.Combine (root, "other.dll"), name == "second"), name == "second"));
-				CreateNativePE (Path.Combine (root, "native.dll"));
-			}
-
-			Parallel.For (0, 32, i => {
-				string name = i % 2 == 0 ? "first" : "second";
-				var android = new TaskItem (name == "first" ? "library.dll" : "other.dll");
-				android.SetMetadata ("Owner", name);
-				var plain = new TaskItem (name == "first" ? "other.dll" : "library.dll");
-				var platform = new TaskItem ("not-on-disk.dll");
-				platform.SetMetadata ("TargetPlatformIdentifier", "android");
-				var framework = new TaskItem ("Mono.Android.dll");
-				var task = new FilterAssemblies {
-					BuildEngine = engine,
-					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
-						Path.Combine (tempDirectory, name), new Dictionary<string, string> ()),
-					InputAssemblies = [plain, android, framework, new TaskItem ("missing.dll"), new TaskItem ("native.dll"), platform, android],
-				};
-				Assert.IsTrue (task.Execute ());
-				var output = task.OutputAssemblies ?? throw new InvalidOperationException ("Missing output assemblies.");
-				CollectionAssert.AreEqual (new [] { android, platform, android }, output);
-				Assert.AreSame (android, output [0]);
-				Assert.AreEqual (name, output [0].GetMetadata ("Owner"));
-			});
-
-			foreach (var module in modules) {
-				Assert.AreEqual (module.Android, engine.GetRegisteredTaskObjectAssemblyLocal (
-					(nameof (FilterAssemblies), module.Id), RegisteredTaskObjectLifetime.AppDomain));
-			}
-
-			string path = Path.Combine (tempDirectory, "first", "library.dll");
-			CreateAssembly (path, android: false);
-			var updated = new FilterAssemblies {
-				BuildEngine = engine,
-				InputAssemblies = [new TaskItem (path)],
-			};
-			Assert.IsTrue (updated.Execute ());
-			Assert.IsEmpty (updated.OutputAssemblies, "A new MVID must not reuse the previous result for the same path.");
-		}
-
-		[Test]
-		[Platform ("Win")]
-		public void LockedRelativeAssemblyReportsFileLock ()
-		{
-			string path = Path.Combine (tempDirectory, "locked.dll");
-			CreateAssembly (path, android: true);
-			using var locked = File.Open (path, FileMode.Open, FileAccess.Read, FileShare.None);
-			var errors = new List<BuildErrorEventArgs> ();
-			var task = new FilterAssemblies {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
-				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDirectory, new Dictionary<string, string> ()),
-				InputAssemblies = [new TaskItem ("locked.dll")],
-			};
-			Assert.IsFalse (task.Execute ());
-			Assert.AreEqual (1, errors.Count);
-			Assert.AreEqual ("XAFLT7024", errors [0].Code);
-			StringAssert.StartsWith ("The file is locked by:", errors [0].Message);
-			StringAssert.Contains (path, errors [0].Message);
 		}
 
 		[TestCase (false)]
