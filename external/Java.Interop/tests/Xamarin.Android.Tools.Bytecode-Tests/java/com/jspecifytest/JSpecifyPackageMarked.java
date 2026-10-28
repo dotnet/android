@@ -60,4 +60,70 @@ public class JSpecifyPackageMarked {
 	// annotation has a non-empty `type_path` and must be ignored
 	// at the top level.
 	public List<@org.jspecify.annotations.Nullable String> nestedNullableField;
+
+	public class Inner {
+		public class Deeper {
+		}
+	}
+
+	public class GenericInner<T> {
+	}
+
+	public JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner nullableMemberField;
+
+	public JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner nullableMemberReturn (JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner value) {
+		return value;
+	}
+
+	public JSpecifyPackageMarked.Inner.@org.jspecify.annotations.Nullable Deeper nullableDeepMemberField;
+
+	public JSpecifyPackageMarked.Inner.@org.jspecify.annotations.Nullable Deeper nullableDeepMemberReturn (JSpecifyPackageMarked.Inner.@org.jspecify.annotations.Nullable Deeper value) {
+		return value;
+	}
+
+	public List<JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner> nullableMemberArgumentField;
+
+	public List<JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner> nullableMemberArgumentReturn (List<JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner> value) {
+		return value;
+	}
+
+	public JSpecifyPackageMarked.GenericInner<@org.jspecify.annotations.Nullable String> nullableMemberTypeArgumentField;
+
+	public JSpecifyPackageMarked.GenericInner<@org.jspecify.annotations.Nullable String> nullableMemberTypeArgumentReturn (JSpecifyPackageMarked.GenericInner<@org.jspecify.annotations.Nullable String> value) {
+		return value;
+	}
+
+	public String @org.jspecify.annotations.Nullable [] nullableArrayField;
+
+	public String @org.jspecify.annotations.Nullable [] nullableArrayReturn (String @org.jspecify.annotations.Nullable [] value) {
+		return value;
+	}
+
+	public @org.jspecify.annotations.Nullable String [] nullableArrayElementField;
+
+	public @org.jspecify.annotations.Nullable String [] nullableArrayElementReturn (@org.jspecify.annotations.Nullable String [] value) {
+		return value;
+	}
+
+	public JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner [] nullableMemberArrayElementField;
+
+	public JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner [] nullableMemberArrayElementReturn (JSpecifyPackageMarked.@org.jspecify.annotations.Nullable Inner [] value) {
+		return value;
+	}
+
+	@javax.annotation.CheckForNull
+	public String javaxCheckForNullField;
+
+	@javax.annotation.CheckForNull
+	public String javaxCheckForNullReturn (@javax.annotation.CheckForNull String value) {
+		return value;
+	}
+
+	@edu.umd.cs.findbugs.annotations.CheckForNull
+	public String findbugsCheckForNullField;
+
+	@edu.umd.cs.findbugs.annotations.CheckForNull
+	public String findbugsCheckForNullReturn (@edu.umd.cs.findbugs.annotations.CheckForNull String value) {
+		return value;
+	}
 }

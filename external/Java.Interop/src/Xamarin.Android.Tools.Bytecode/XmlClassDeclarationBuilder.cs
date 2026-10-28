@@ -684,11 +684,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return false;
 		}
 
-		// Look in `RuntimeInvisibleTypeAnnotations` and `RuntimeVisibleTypeAnnotations`
-		// for entries matching `predicate` (e.g. METHOD_RETURN, FIELD, or
-		// a specific METHOD_FORMAL_PARAMETER index) at the top of the type
-		// (no `type_path`). Returns true for `@NonNull`, false for
-		// `@Nullable`, null for no match.
+		// Returns true for @NonNull, false for @Nullable, or null if no matching
+		// annotation applies to the reference itself.
 		static bool? GetTypeUseNullness (AttributeCollection? attributes, Func<TypeAnnotation, bool> predicate)
 		{
 			if (attributes == null)
@@ -725,8 +722,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case "Landroidx/annotation/Nullable;":
 			case "Landroidx/annotation/RecentlyNullable;":
 			case "Lcom/android/annotations/Nullable;":
+			case "Ledu/umd/cs/findbugs/annotations/CheckForNull;":
 			case "Ledu/umd/cs/findbugs/annotations/Nullable;":
 			case "Ljakarta/annotation/Nullable;":
+			case "Ljavax/annotation/CheckForNull;":
 			case "Ljavax/annotation/Nullable;":
 			case "Lorg/checkerframework/checker/nullness/compatqual/NullableDecl;":
 			case "Lorg/checkerframework/checker/nullness/qual/Nullable;":
