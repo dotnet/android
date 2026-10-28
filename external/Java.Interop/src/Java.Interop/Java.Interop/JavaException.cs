@@ -14,6 +14,7 @@ namespace Java.Interop
 		public int                      JniIdentityHashCode { get; private set; }
 		public JniManagedPeerStates     JniManagedPeerState { get; private set; }
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		unsafe  JniObjectReferenceControlBlock* jniObjectReferenceControlBlock;
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;

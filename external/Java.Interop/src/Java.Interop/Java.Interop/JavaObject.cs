@@ -21,6 +21,7 @@ namespace Java.Interop
 
 		public JniManagedPeerStates JniManagedPeerState => managedPeerState;
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		[NonSerialized] unsafe  JniObjectReferenceControlBlock* jniObjectReferenceControlBlock;
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference  = null;

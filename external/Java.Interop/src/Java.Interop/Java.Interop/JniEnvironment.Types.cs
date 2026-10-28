@@ -78,18 +78,15 @@ namespace Java.Interop
 				result = default;
 
 				if (Class_forName.IsValid) {
-					Span<JniArgumentValue> args = stackalloc JniArgumentValue [3];
-					args [0] = new JniArgumentValue (classNameJavaString);
-					args [1] = new JniArgumentValue (true);  // initialize the class
-					args [2] = new JniArgumentValue (info.Runtime.ClassLoader);
-
 					IntPtr c;
 					IntPtr forNameThrown;
 					unsafe {
-						// SAFETY: Three initialized stack slots match Class.forName(String, boolean, ClassLoader).
-						// Their storage and the local/global references stay live until the synchronous call returns.
-						fixed (JniArgumentValue* argsPtr = args)
-							c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out forNameThrown, Class_reference.Handle, Class_forName.ID, (IntPtr) argsPtr);
+						// SAFETY: Three initialized stack slots match Class.forName; references stay live through the call.
+						var __args  = stackalloc JniArgumentValue [3];
+						__args [0]  = new JniArgumentValue (classNameJavaString);
+						__args [1]  = new JniArgumentValue (true);  // initialize the class
+						__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
+						c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out forNameThrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
 					}
 					if (forNameThrown == IntPtr.Zero) {
 						// Class.forName() succeeded; discard the FindClass throwable.
@@ -156,7 +153,10 @@ namespace Java.Interop
 					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
 					thrown  = JniNativeMethods.ExceptionOccurred (env);
 				}
-				Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
+				unsafe {
+					// SAFETY: Release only this call's CoTaskMemUTF8 allocation after JNI has finished reading it.
+					Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
+				}
 				if (thrown == IntPtr.Zero) {
 					return true;
 				}

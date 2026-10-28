@@ -89,7 +89,7 @@ operations remain inside their implementations; local scopes do not transfer
 buffer ownership to callers or change JNI reference cleanup.
 
 `JniNativeMethod` preserves the sequential layout of JNI's `JNINativeMethod`.
-It stores heterogeneous callbacks as `void*`. Construction only copies addresses;
+It stores opaque callback addresses as `IntPtr`. Construction only copies addresses;
 its legacy `unsafe` modifier is syntax context, not a pointee-lifetime contract.
 Registration requires readable NUL-terminated names/signatures and a
 descriptor-compatible callback rooted until successful unregistration

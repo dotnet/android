@@ -13,13 +13,12 @@ namespace Java.Interop
 		static JniMethodInfo? _identityHashCode;
 		internal static int IdentityHashCode (JniObjectReference value)
 		{
-			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
-			args [0] = new JniArgumentValue (value);
-			TypeRef.GetCachedStaticMethod (ref _identityHashCode, "identityHashCode", "(Ljava/lang/Object;)I");
 			unsafe {
 				// SAFETY: The single initialized slot matches identityHashCode(Object); JNI reads it before scope exit.
-				fixed (JniArgumentValue* argsPtr = args)
-					return JniEnvironment.StaticMethods.CallStaticIntMethod (TypeRef.PeerReference, _identityHashCode, argsPtr);
+				var args = stackalloc JniArgumentValue [1];
+				args [0] = new JniArgumentValue (value);
+				TypeRef.GetCachedStaticMethod (ref _identityHashCode, "identityHashCode", "(Ljava/lang/Object;)I");
+				return JniEnvironment.StaticMethods.CallStaticIntMethod (TypeRef.PeerReference, _identityHashCode, args);
 			}
 		}
 	}

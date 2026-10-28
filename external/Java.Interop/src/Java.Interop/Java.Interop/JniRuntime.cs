@@ -34,7 +34,7 @@ namespace Java.Interop
 		}
 
 		/// <safety>
-		/// A non-null args.name must be readable NUL-terminated storage in the VM's expected encoding
+		/// A nonzero args.name must address readable NUL-terminated storage in the VM's expected encoding
 		/// until attachment returns, including failure. Keep args.group's global reference live.
 		/// The arguments and writable output must not be concurrently mutated or released through aliases.
 		/// This vtable and javavm must refer to the same live VM.
@@ -69,7 +69,7 @@ namespace Java.Interop
 
 	struct JavaVMThreadAttachArgs {
 		public  JniVersion 	        version;    /*		 must be >= JNI_VERSION_1_2 */
-		public  byte*               name;       /*		 NULL or name of thread as modified UTF-8 str */
+		public  IntPtr              name;       /*		 NULL or name of thread as modified UTF-8 str */
 		public  IntPtr              group;      /*		 global ref of a ThreadGroup object, or NULL */
 	}
 
@@ -373,11 +373,8 @@ namespace Java.Interop
 				version = JniVersion,
 			};
 			try {
-				unsafe {
-					// SAFETY: Own the optional HGlobal string until attachment finishes; preserve the existing encoding.
-					if (name != null)
-						threadArgs.name = (byte*) Marshal.StringToHGlobalAnsi (name);
-				}
+				if (name != null)
+					threadArgs.name = Marshal.StringToHGlobalAnsi (name);
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
 				IntPtr jnienv;
@@ -392,7 +389,7 @@ namespace Java.Interop
 			} finally {
 				unsafe {
 					// SAFETY: Free only the HGlobal allocated above, after attachment returns or throws; zero is permitted.
-					Marshal.FreeHGlobal ((IntPtr) threadArgs.name);
+					Marshal.FreeHGlobal (threadArgs.name);
 				}
 			}
 		}

@@ -269,12 +269,17 @@ namespace Java.Interop {
 			if (nameBuffer == null)
 				nameBuffer = new char [NameBufferLength];
 
-			var javaName = nameBuffer.AsSpan (0, length);
-			jniTypeName.AsSpan ().Replace (javaName, '/', '.');
-
 			unsafe {
-				// SAFETY: The thread-local name buffer bounds javaName to length; pin it through the UTF-16 copy.
-				fixed (char* dst = javaName) {
+				// SAFETY: Pin both buffers; length is within nameBuffer and bounds every source/destination access.
+				fixed (char* src = jniTypeName, dst = nameBuffer) {
+					char* src_ptr = src;
+					char* dst_ptr = dst;
+					char* end_ptr = src + length;
+					while (src_ptr < end_ptr) {
+						*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
+						src_ptr++;
+						dst_ptr++;
+					}
 					return JniEnvironment.Strings.NewString (dst, length);
 				}
 			}

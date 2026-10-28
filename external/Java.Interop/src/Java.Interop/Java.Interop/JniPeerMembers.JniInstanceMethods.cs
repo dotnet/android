@@ -161,6 +161,7 @@ namespace Java.Interop
 			return JniPeerType.GetInstanceMethod (method, signature);
 		}
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
 			// SAFETY: parameters is not read or retained; this phase only allocates the peer selected by declaringType.

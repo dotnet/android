@@ -79,6 +79,29 @@ and [exception-handling guide](../../Documentation/project-docs/exception-handli
 - Use `JniEnvironment.EnvironmentPointer` to access the current thread's JNI environment.
 - Never cache a `JNIEnv*` across threads.
 
+### Memory-safety audits
+
+- Audit caller contracts independently of implementation context. A caller-unsafe
+  declaration does not replace a local `unsafe` block around unchecked operations.
+- Keep managed-owned allocation, pinning and copying wrappers safe-callable. Mere
+  address storage or return does not imply a caller obligation. If legacy pointer
+  syntax still requires `unsafe`, add a removal note for the memory-safety opt-in.
+- Give genuine caller-unsafe APIs precise `<safety>` contracts for ABI, bounds,
+  lifetime, aliasing and thread requirements, including failure paths. Each local
+  unchecked block needs a brief `// SAFETY:` explanation grounded in actual code.
+- Preserve released signatures, virtual dispatch, opaque JNI handles, accepted
+  calls, allocation choices and cleanup ordering. Do not redesign ownership or
+  add guards, helpers, copies or unrelated algorithm changes just for an audit.
+- Describe actual retention and failure behavior, not stronger guarantees than
+  the implementation provides. Preserve explicitly deferred ownership work.
+- Keep changes small and minimize indentation churn using normal formatting.
+  Update canonical templates and generated outputs together when they change.
+- Preserve existing base-branch tests. Add new tests for demonstrated bugs fixed
+  by the change, not annotation-only matrices; do not restore explicitly deferred
+  coverage or invoke invalid pointers to manufacture a failing baseline.
+- Attribute validation to the exact source and mode tested. Compilation, metadata
+  checks, runtime tests and combined-stack results are different evidence.
+
 ## Build system
 
 The Java.Interop projects build as part of the outer dotnet/android SDK build.
