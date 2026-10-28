@@ -257,7 +257,10 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>", signature);
+			unsafe {
+				// SAFETY: Lookup marshals its managed strings and retains neither native buffer.
+				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>", signature);
+			}
 		}
 
 		public JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, string signature)
@@ -335,7 +338,10 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
+			unsafe {
+				// SAFETY: Lookup owns the terminated name/signature buffers for this call.
+				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
+			}
 		}
 
 		internal bool TryGetInstanceMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)
@@ -398,7 +404,10 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
+			unsafe {
+				// SAFETY: Lookup owns the terminated name/signature buffers for this call.
+				return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
+			}
 		}
 
 		internal bool TryGetStaticMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)

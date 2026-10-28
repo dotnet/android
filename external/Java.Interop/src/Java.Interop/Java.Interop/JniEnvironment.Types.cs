@@ -143,8 +143,7 @@ namespace Java.Interop
 					? stackalloc byte [classname.Length + 1]
 					: new byte [classname.Length + 1];
 
-				for (int i = 0; i < classname.Length; ++i)
-					javaName [i] = classname [i] == (byte) '/' ? (byte) '.' : classname [i];
+				classname.Replace (javaName, (byte) '/', (byte) '.');
 				javaName [classname.Length] = 0;
 
 				IntPtr s;
@@ -365,7 +364,7 @@ namespace Java.Interop
 					}
 				} finally {
 					unsafe {
-						// SAFETY: Only allocations recorded in unmanagedStrings are freed, after JNI finishes reading their names/signatures; delegate KeepAlive follows this loop.
+						// SAFETY: Free recorded allocations on paths entering this finally; keep delegates alive through cleanup.
 						for (int i = 0; i < unmanagedStrings.Length; ++i) {
 							if (unmanagedStrings [i] != IntPtr.Zero)
 								Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);

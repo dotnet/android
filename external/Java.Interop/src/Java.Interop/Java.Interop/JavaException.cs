@@ -251,7 +251,11 @@ namespace Java.Interop
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getMessage.()Ljava/lang/String;");
-			var s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
+			JniObjectReference s;
+			unsafe {
+				// SAFETY: m resolves getMessage()String; the borrowed throwable stays valid through the call.
+				s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
+			}
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -268,7 +272,11 @@ namespace Java.Interop
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause.()Ljava/lang/Throwable;");
-			var e = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
+			JniObjectReference e;
+			unsafe {
+				// SAFETY: m resolves getCause()Throwable; the borrowed throwable stays valid through the call.
+				e = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
+			}
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 

@@ -18,13 +18,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (Boolean value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (Z)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(Z)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(Z)V");
+			unsafe {
+				// SAFETY: Pin the initialized (Z)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 
@@ -145,13 +146,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (SByte value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (B)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(B)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(B)V");
+			unsafe {
+				// SAFETY: Pin the initialized (B)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 
@@ -303,13 +305,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (Char value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (C)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(C)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(C)V");
+			unsafe {
+				// SAFETY: Pin the initialized (C)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 
@@ -430,13 +433,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (Int16 value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (S)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(S)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(S)V");
+			unsafe {
+				// SAFETY: Pin the initialized (S)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 
@@ -557,13 +561,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (Int32 value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (I)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(I)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(I)V");
+			unsafe {
+				// SAFETY: Pin the initialized (I)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 
@@ -684,13 +689,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (Int64 value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (J)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(J)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(J)V");
+			unsafe {
+				// SAFETY: Pin the initialized (J)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 
@@ -811,13 +817,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (Single value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (F)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(F)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(F)V");
+			unsafe {
+				// SAFETY: Pin the initialized (F)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 
@@ -938,13 +945,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (Double value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (D)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(D)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(D)V");
+			unsafe {
+				// SAFETY: Pin the initialized (D)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 

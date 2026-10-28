@@ -38,13 +38,14 @@ namespace Java.Interop {
 		static JniMethodInfo? init;
 		internal static JniObjectReference CreateLocalRef (<#= type.Type #> value)
 		{
-			unsafe {
-				// SAFETY: The sole jvalue is initialized for the (<#= type.JniType #>)V constructor and its stack storage survives the synchronous JNI call.
-				var args    = stackalloc JniArgumentValue [1];
-				args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
-				TypeRef.GetCachedConstructor (ref init, "(<#= type.JniType #>)V");
-				return TypeRef.NewObject (init, args);
+			TypeRef.GetCachedConstructor (ref init, "(<#= type.JniType #>)V");
+			unsafe {
+				// SAFETY: Pin the initialized (<#= type.JniType #>)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
 			}
 		}
 

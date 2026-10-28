@@ -236,7 +236,10 @@ namespace Xamarin.Java.Interop
 
 				o.WriteLine ();
 				WriteCallerSafetyRequirements (o, entry);
-				bool requiresUnsafe = entry.CallerSafetyRequirements.Length > 0 || entry.GetManagedReturnType ().IndexOf ('*') >= 0 ||
+				// Nonzero IDs do not validate invocation signatures, including constructors.
+				bool requiresUnsafe = type == InstanceMethodsCategory || type == StaticMethodsCategory ||
+					entry.Name == "NewObject" ||
+					entry.CallerSafetyRequirements.Length > 0 ||
 					entry.Parameters.Any (p => p.Type.GetManagedType (isReturn: false).IndexOf ('*') >= 0);
 				o.Write ("\t\t{2} static {3}{0} {1} (", entry.GetManagedReturnType (), entry.ApiName, entry.Visibility, requiresUnsafe ? "unsafe " : "");
 				switch (entry.ApiName) {
@@ -257,7 +260,7 @@ namespace Xamarin.Java.Interop
 					if (entry.Throws)
 						o.WriteLine ("\t\t\tIntPtr thrown;");
 					o.WriteLine ("\t\t\tunsafe {");
-					o.WriteLine ("\t\t\t\t// SAFETY: {0} uses this thread's JNIEnv; owned strings and caller-validated buffers survive the call.", entry.Name);
+					o.WriteLine ("\t\t\t\t// SAFETY: {0} uses this thread's JNIEnv; owned buffers and caller-provided JNI arguments remain valid through this call.", entry.Name);
 					o.Write ("\t\t\t\t");
 					if (!is_void)
 						o.Write ("tmp = ");
@@ -296,6 +299,12 @@ namespace Xamarin.Java.Interop
 			var requirements = entry.CallerSafetyRequirements.ToList ();
 			if (isRaw) {
 				requirements.Insert (0, "<paramref name=\"env\"/> must be a live JNIEnv for the calling attached thread with the JNI vtable ABI; it must not be used on another thread or after detachment.");
+			}
+			if (entry.Parameters.Any (p => p.Name == "method") &&
+					(entry.Name.StartsWith ("Call", StringComparison.Ordinal) || entry.Name.StartsWith ("NewObject", StringComparison.Ordinal))) {
+				requirements.Add ("<paramref name=\"method\"/> must identify the constructor or method selected by this JNI call, with the matching static/instance dispatch, receiver or declaring class, parameter descriptor and return type. A nonzero method ID alone does not establish compatibility.");
+				if (!entry.Parameters.Any (p => p.Type.JniType == "jvalue*"))
+					requirements.Add ("The method descriptor must take zero arguments; this overload supplies no argument slots.");
 			}
 			foreach (var parameter in entry.Parameters) {
 				switch (parameter.Type.JniType) {
@@ -826,7 +835,7 @@ namespace Xamarin.Java.Interop
 		{
 			return new[]{
 				"unsafe {",
-				$"\t// SAFETY: _{variable}_ptr is this wrapper's StringToCoTaskMemUTF8 allocation; JNI has finished reading it and it is freed once here.",
+				$"\t// SAFETY: _{variable}_ptr is owned here and freed after its last native use; earlier failures do not reach this cleanup.",
 				$"\tMarshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
 				"}",
 			};

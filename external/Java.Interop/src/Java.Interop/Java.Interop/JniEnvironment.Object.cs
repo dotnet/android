@@ -17,11 +17,20 @@ namespace Java.Interop {
 				}
 			}
 
-			public static JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method)
+			/// <safety>
+			/// <paramref name="method"/> must identify a zero-argument constructor for
+			/// <paramref name="type"/> with descriptor <c>()V</c>. Keep the class reference
+			/// and constructor ID valid through return or failure; any local reference
+			/// must belong to the calling attached JNI thread.
+			/// </safety>
+			public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method)
 			{
 				JniEnvironment.WithinNewObjectScope = true;
 				try {
-					return _NewObject (type, method);
+					unsafe {
+						// SAFETY: Caller supplies a live class and matching ()V constructor; JNI reads no argument slots.
+						return _NewObject (type, method);
+					}
 				}
 				finally {
 					JniEnvironment.WithinNewObjectScope = false;
@@ -50,7 +59,10 @@ namespace Java.Interop {
 
 			public static JniObjectReference    ToString (JniObjectReference value)
 			{
-				return JniEnvironment.InstanceMethods.CallObjectMethod (value, Object_toString);
+				unsafe {
+					// SAFETY: Object_toString is the cached zero-argument Object.toString()String method.
+					return JniEnvironment.InstanceMethods.CallObjectMethod (value, Object_toString);
+				}
 			}
 		}
 	}

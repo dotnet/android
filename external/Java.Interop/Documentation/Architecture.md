@@ -115,6 +115,11 @@ extent, ABI, or lifetime it relies on. The raw `JniNativeMethods` boundary
 requires a live `JNIEnv*` on its attached thread; that obligation is not
 implied merely by using opaque object, field, or method handles.
 
+`JniEnvironment.InstanceMethods` and `StaticMethods` retain their existing
+caller-unsafe classification. A nonzero method ID does not verify its
+descriptor or make a parameterless invocation safe. Managed wrappers with
+known descriptors discharge that obligation in local implementation blocks.
+
 For UTF-8 span lookups, callers must provide readable NUL-terminated backing
 storage throughout the call. Complete C# UTF-8 literals supply a trailing NUL
 outside the span length; copying or slicing a span does not preserve that
