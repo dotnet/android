@@ -42,6 +42,7 @@ namespace Java.Interop {
 			/// For a redirect, <paramref name="parameters"/> must contain initialized jvalues
 			/// matching the descriptor after its receiver. Keep storage stable and peers live
 			/// through failure or return; exclude concurrent mutation or release.
+			/// The redirected method's return descriptor must match JNI's <c><#= returnType.JniCallType #></c> return kind.
 			/// </safety>
 			static unsafe bool TryInvoke<#= returnType.ManagedType #>StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters<#= byRefParamDecl #>)
 			{
@@ -69,6 +70,7 @@ namespace Java.Interop {
 			/// <safety>
 			/// <paramref name="parameters"/> must contain initialized jvalues matching
 			/// <paramref name="encodedMember"/>; null is valid only for zero arguments.
+			/// The return descriptor in <paramref name="encodedMember"/> must match JNI's <c><#= returnType.JniCallType #></c> return kind.
 			/// Keep storage readable, stable (pinned when managed), and peers live on this
 			/// JNI thread through failure or return; exclude mutation/release through aliases.
 			/// </safety>
@@ -96,6 +98,7 @@ namespace Java.Interop {
 			/// <safety>
 			/// <paramref name="parameters"/> must contain initialized jvalues matching
 			/// <paramref name="encodedMember"/>; null is valid only for zero arguments.
+			/// The return descriptor in <paramref name="encodedMember"/> must match JNI's <c><#= returnType.JniCallType #></c> return kind.
 			/// Keep storage readable, stable (pinned when managed), and peers live on this
 			/// JNI thread through failure or return; exclude mutation/release through aliases.
 			/// </safety>
@@ -137,6 +140,7 @@ namespace Java.Interop {
 			/// <safety>
 			/// <paramref name="parameters"/> must contain initialized jvalues matching
 			/// <paramref name="encodedMember"/>; null is valid only for zero arguments.
+			/// The return descriptor in <paramref name="encodedMember"/> must match JNI's <c><#= returnType.JniCallType #></c> return kind.
 			/// Keep storage readable, stable (pinned when managed), and peers live on this
 			/// JNI thread through failure or return; exclude mutation/release through aliases.
 			/// </safety>
