@@ -128,7 +128,9 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.IsTrue (CreateTask ().Execute ());
 		var context = new AssemblyLoadContext (TestName, isCollectible: true);
 		try {
-			var assembly = context.LoadFromAssemblyPath (OutputPath);
+			using var image = new MemoryStream (File.ReadAllBytes (OutputPath));
+			var assembly = context.LoadFromStream (image);
+			File.Delete (OutputPath);
 			Assert.AreEqual (new Version (1, 0, 0, 0), assembly.GetName ().Version);
 			CollectionAssert.AreEqual (Convert.FromHexString ("1e9360d6629057ee"), assembly.GetName ().GetPublicKeyToken ());
 			var propertyType = assembly.GetType ($"{DesignerNamespace}.Resource+String", throwOnError: true)
@@ -246,7 +248,9 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		var parsed = new Xamarin.Android.Tasks.RtxtParser ().Parse (RtxtPath, task.Log, new System.Collections.Generic.Dictionary<string, string> ());
 		var context = new AssemblyLoadContext (TestName, isCollectible: true);
 		try {
-			var assembly = context.LoadFromAssemblyPath (OutputPath);
+			using var image = new MemoryStream (File.ReadAllBytes (OutputPath));
+			var assembly = context.LoadFromStream (image);
+			File.Delete (OutputPath);
 			int count = 0;
 			foreach (var resource in parsed) {
 				if (resource.ResourceTypeName == null || resource.Identifier == null)
@@ -283,9 +287,6 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true)]
 	public void MetadataTaskRegistration (string relativePath, bool frameworkMSBuild)
 	{
-		if (frameworkMSBuild && !OperatingSystem.IsWindows ())
-			Assert.Ignore ("MSBuild.exe requires Windows.");
-
 		var repository = new DirectoryInfo (AppContext.BaseDirectory);
 		while (repository != null && !File.Exists (Path.Combine (repository.FullName, "Configuration.props")))
 			repository = repository.Parent;
@@ -309,6 +310,9 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.IsNull (coreRegistration.Attribute ("TaskFactory"));
 		var invocation = source.Descendants ().Single (element => element.Name.LocalName == "GenerateResourceDesignerAssembly");
 		Assert.IsNull (invocation.Attribute ("MSBuildRuntime"));
+		if (frameworkMSBuild && !OperatingSystem.IsWindows ())
+			Assert.Ignore ("MSBuild.exe requires Windows.");
+
 		var projectPath = Path.Combine (DirectoryPath, "registration.proj");
 		new XDocument (new XElement ("Project",
 			new XAttribute ("Sdk", "Microsoft.NET.Sdk"),
@@ -330,16 +334,32 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 					new XAttribute ("DesignTimeBuild", "false"),
 					new XAttribute ("Deterministic", "true")))))
 			.Save (projectPath);
-		var start = new ProcessStartInfo (frameworkMSBuild ? MSBuildLocator.QueryLatest ().MSBuildPath : "dotnet") {
+
+		var sdkDirectory = RunMSBuild ("dotnet", "msbuild", projectPath, "-nologo", "-getProperty:MSBuildBinPath").Trim ();
+		var minimumVersion = Version.Parse (File.ReadAllText (Path.Combine (sdkDirectory, "minimumMSBuildVersion")).Trim ());
+		var executable = "dotnet";
+		if (frameworkMSBuild) {
+			executable = MSBuildLocator.QueryLatest ().MSBuildPath;
+			var fileVersion = FileVersionInfo.GetVersionInfo (executable);
+			var version = new Version (fileVersion.FileMajorPart, fileVersion.FileMinorPart, fileVersion.FileBuildPart);
+			if (version.Major < 18 || version < minimumVersion)
+				Assert.Ignore ($"'{executable}' is MSBuild {version}; Runtime=\"NET\" requires MSBuild 18.0 or newer, and SDK '{sdkDirectory}' requires {minimumVersion} or newer.");
+		}
+		var arguments = new [] { projectPath, "-t:GenerateDesigner", "-nologo", "-v:minimal", "-nr:false" };
+		RunMSBuild (executable, frameworkMSBuild ? arguments : ["msbuild", .. arguments]);
+		Assert.IsTrue (File.Exists (OutputPath));
+	}
+
+	string RunMSBuild (string executable, params string [] arguments)
+	{
+		var start = new ProcessStartInfo (executable) {
 			WorkingDirectory = DirectoryPath,
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
 		};
 		start.Environment ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
-		if (!frameworkMSBuild)
-			start.ArgumentList.Add ("msbuild");
-		foreach (var argument in new [] { projectPath, "-t:GenerateDesigner", "-nologo", "-v:minimal", "-nr:false" })
+		foreach (var argument in arguments)
 			start.ArgumentList.Add (argument);
 		using var process = Process.Start (start) ?? throw new InvalidOperationException ("Could not start MSBuild.");
 		var stdout = process.StandardOutput.ReadToEndAsync ();
@@ -352,7 +372,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		var output = stdout.GetAwaiter ().GetResult () + stderr.GetAwaiter ().GetResult ();
 		Assert.IsTrue (completed, output);
 		Assert.AreEqual (0, process.ExitCode, output);
-		Assert.IsTrue (File.Exists (OutputPath));
+		return output;
 	}
 
 	[Test]
