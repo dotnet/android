@@ -233,6 +233,10 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
+  <data name="XA0101" xml:space="preserve">
+    <value>@(Content) build action is not supported</value>
+    <comment>@(Content) is an MSBuild item name and should not be translated.</comment>
+  </data>
   <data name="XA0104" xml:space="preserve">
     <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
     <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
