@@ -5,13 +5,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Microsoft.Build.Framework;
-
-using Java.Interop.Tools.TypeNameMappings;
-using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	using PackageNamingPolicyEnum   = PackageNamingPolicy;
 
@@ -56,7 +55,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime) != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Properties.Resources.XAGCA7009_UnsupportedRuntime, AndroidRuntime));
+				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Xamarin.Android.Tasks.Properties.Resources.XAGCA7009_UnsupportedRuntime, AndroidRuntime));
 			}
 			string? bootstrapPath = CoreClrBootstrapOutputFile;
 			if (bootstrapPath.IsNullOrWhiteSpace ()) {
@@ -88,7 +87,6 @@ namespace Xamarin.Android.Tasks
 
 			int assemblyCount = 0;
 			HashSet<string>? archAssemblyNames = null;
-			HashSet<string> uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
 				string? culture = MonoAndroidHelper.GetAssemblyCulture (assembly);
 				string fileName = Path.GetFileName (assembly.ItemSpec);
@@ -98,10 +96,6 @@ namespace Xamarin.Android.Tasks
 					assemblyName = fileName;
 				} else {
 					assemblyName = $"{culture}/{fileName}";
-				}
-
-				if (!uniqueAssemblyNames.Contains (assemblyName)) {
-					uniqueAssemblyNames.Add (assemblyName);
 				}
 
 				archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);

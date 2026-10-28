@@ -14,7 +14,7 @@ namespace Java.Interop
 	[SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Fields preserve the unmanaged JavaVM vtable layout.")]
 	// These fields are populated from native memory and some are only present to preserve the JavaVM vtable layout.
 #pragma warning disable CS0169, CS0649
-	unsafe struct JavaVMInterface {
+	struct JavaVMInterface {
 		IntPtr reserved0;
 		IntPtr reserved1;
 		IntPtr reserved2;
@@ -27,20 +27,35 @@ namespace Java.Interop
 
 		public int DestroyJavaVM (IntPtr javavm)
 		{
-			return destroyJavaVM (javavm);
+			unsafe {
+				// SAFETY: Runtime initialization binds this vtable to javavm; disposal controls when that VM is destroyed.
+				return destroyJavaVM (javavm);
+			}
 		}
 
-		public int AttachCurrentThread (IntPtr javavm, out IntPtr env, ref JavaVMThreadAttachArgs args)
+		/// <safety>
+		/// A nonzero args.name must address readable NUL-terminated storage in the VM's expected encoding
+		/// until attachment returns, including failure. Keep args.group's global reference live.
+		/// The arguments and writable output must not be concurrently mutated or released through aliases.
+		/// This vtable and javavm must refer to the same live VM.
+		/// </safety>
+		public unsafe int AttachCurrentThread (IntPtr javavm, out IntPtr env, ref JavaVMThreadAttachArgs args)
 		{
-			fixed (IntPtr* envp = &env)
-			fixed (JavaVMThreadAttachArgs* argsp = &args)
-				return attachCurrentThread (javavm, envp, argsp);
+			unsafe {
+				// SAFETY: Pin both writable ref slots; caller supplies the VM and live name/group storage.
+				fixed (IntPtr* envp = &env)
+				fixed (JavaVMThreadAttachArgs* argsp = &args)
+					return attachCurrentThread (javavm, envp, argsp);
+			}
 		}
 
 		public int GetEnv (IntPtr javavm, out IntPtr envptr, int version)
 		{
-			fixed (IntPtr* envp = &envptr)
-				return getEnv (javavm, envp, version);
+			unsafe {
+				// SAFETY: Pin one address-sized output slot for the vtable bound to this live VM.
+				fixed (IntPtr* envp = &envptr)
+					return getEnv (javavm, envp, version);
+			}
 		}
 	}
 #pragma warning restore CS0169, CS0649
@@ -187,11 +202,16 @@ namespace Java.Interop
 			JniVersion          = options.JniVersion;
 
 			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer != IntPtr.Zero) {
-				InvocationPointer   = GetInvocationPointerFromEnvironmentPointer (options.EnvironmentPointer);
+				unsafe {
+					// SAFETY: The supplying runtime keeps options.EnvironmentPointer live on this JNI thread through lookup.
+					InvocationPointer   = GetInvocationPointerFromEnvironmentPointer (options.EnvironmentPointer);
+				}
 			} else {
 				InvocationPointer   = options.InvocationPointer;
 			}
 			unsafe {
+				// SAFETY: CreationOptions must identify a live JavaVM with a readable invocation table; nonzero checks alone
+				// do not validate that external storage. Copy the table while that runtime remains alive.
 				Invoker = *(JavaVMInterface*) Marshal.ReadIntPtr (InvocationPointer);
 			}
 
@@ -243,10 +263,13 @@ namespace Java.Interop
 				throw new ArgumentNullException (nameof (envp));
 
 			IntPtr vm   = IntPtr.Zero;
-			// SAFETY: The caller owns the current-thread JNI environment's validity.
-			// JNI writes only the synchronous pointer-sized output slot; &vm does not escape.
-			if (JniNativeMethods.GetJavaVM (envp, &vm) is int r &&
-					r != JNI_OK) {
+			int r;
+			unsafe {
+				// SAFETY: The caller owns the current-thread JNI environment's validity.
+				// JNI writes only the synchronous pointer-sized output slot; &vm does not escape.
+				r = JniNativeMethods.GetJavaVM (envp, &vm);
+			}
+			if (r != JNI_OK) {
 				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
 			}
 			return vm;
@@ -355,12 +378,19 @@ namespace Java.Interop
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
 				IntPtr jnienv;
-				int r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
+				int r;
+				unsafe {
+					// SAFETY: threadArgs is local; its optional name allocation and supplied group stay live through attachment.
+					r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
+				}
 				if (r != JNI_OK)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;
 			} finally {
-				Marshal.FreeHGlobal (threadArgs.name);
+				unsafe {
+					// SAFETY: Free only the HGlobal allocated above, after attachment returns or throws; zero is permitted.
+					Marshal.FreeHGlobal (threadArgs.name);
+				}
 			}
 		}
 

@@ -321,7 +321,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12879")]
 		public void BasicApplicationRepetitiveReleaseBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -330,31 +329,47 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			string compilationTarget = runtime == AndroidRuntime.NativeAOT ? "IlcCompile" : KnownTargets.LinkAssembliesShrink;
 			using (var b = CreateApkBuilder ()) {
-				var foo = new BuildItem.Source ("Foo.cs") {
-					TextContent = () => @"using System;
-	namespace UnnamedProject {
-		public class Foo {
-		}
-	}"
-				};
-
-				proj.SetRuntime (runtime);
-				proj.Sources.Add (foo);
 				Assert.IsTrue (b.Build (proj), "first build failed");
-				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				Assert.IsTrue (
-					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-					b.LastBuildTime, firstBuildTime
-				);
+				string outputDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				string [] packages = [
+					Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.aab"),
+					Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.apk"),
+				];
+				var packageHashes = packages.Select (Files.HashFile).ToArray ();
+				var packageWriteTimes = packages.Select (File.GetLastWriteTimeUtc).ToArray ();
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
+				b.Output.AssertTargetIsSkipped ("CoreCompile");
 				b.Output.AssertTargetIsSkipped ("_Sign");
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
-				proj.Touch ("Foo.cs");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
+				b.Output.AssertTargetIsSkipped (compilationTarget);
+				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile), "An unchanged build should preserve package contents.");
+				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc), "An unchanged build should not rewrite packages.");
+
+				// A timestamp-only touch can produce identical binaries and legitimately skip signing.
+				proj.MainActivity = proj.DefaultMainActivity.Replace ("count = 1;", "count = 2;");
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build failed");
 				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+				b.Output.AssertTargetIsNotSkipped (compilationTarget);
 				b.Output.AssertTargetIsNotSkipped ("_Sign");
-				b.Output.AssertTargetIsPartiallyBuilt ("_CompressAssemblies");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					b.Output.AssertTargetIsPartiallyBuilt ("_CompressAssemblies");
+				}
+				for (int i = 0; i < packages.Length; i++) {
+					Assert.AreNotEqual (packageHashes [i], Files.HashFile (packages [i]), $"Changing reachable code should update {packages [i]}.");
+				}
+				packageHashes = packages.Select (Files.HashFile).ToArray ();
+				packageWriteTimes = packages.Select (File.GetLastWriteTimeUtc).ToArray ();
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "fourth build failed");
+				b.Output.AssertTargetIsSkipped ("CoreCompile");
+				b.Output.AssertTargetIsSkipped (compilationTarget);
+				b.Output.AssertTargetIsSkipped ("_Sign");
+				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile), "An unchanged build after a code change should preserve package contents.");
+				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc), "An unchanged build after a code change should not rewrite packages.");
 			}
 		}
 

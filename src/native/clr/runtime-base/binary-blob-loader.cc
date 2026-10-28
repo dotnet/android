@@ -7,7 +7,6 @@
 #include <runtime-base/binary-blob-loader.hh>
 #include <shared/helpers.hh>
 #include <shared/log_functions.hh>
-#include <shared/log_types.hh>
 
 #if !defined (XA_HOST_NATIVEAOT)
 #include <dlfcn.h>

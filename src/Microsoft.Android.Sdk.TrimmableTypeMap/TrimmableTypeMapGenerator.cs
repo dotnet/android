@@ -344,7 +344,9 @@ public class TrimmableTypeMapGenerator
 				continue;
 			}
 
-			var javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			var javaName = peer.DoNotGenerateAcw
+				? JniSignatureHelper.JniNameToJavaName (peer.JavaName)
+				: JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName);
 			if (seen.Add (javaName)) {
 				appRegTypes.Add (javaName);
 			}

@@ -257,6 +257,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to @(Content) build action is not supported.
+        /// </summary>
+        public static string XA0101 {
+            get {
+                return ResourceManager.GetString("XA0101", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project..
         /// </summary>
         public static string XA0105 {

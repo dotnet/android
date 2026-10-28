@@ -5,7 +5,7 @@ using System;
 namespace Java.Interop
 {
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
-	unsafe public partial class JavaException : Exception, IJavaPeerable
+	public partial class JavaException : Exception, IJavaPeerable
 	{
 		internal    const   string          JniTypeName = "java/lang/Throwable";
 		readonly    static  JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (JavaException));
@@ -14,6 +14,7 @@ namespace Java.Interop
 		public int                      JniIdentityHashCode { get; private set; }
 		public JniManagedPeerStates     JniManagedPeerState { get; private set; }
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		unsafe  JniObjectReferenceControlBlock* jniObjectReferenceControlBlock;
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
@@ -42,34 +43,40 @@ namespace Java.Interop
 				SetJavaStackTrace ();
 		}
 
-		public unsafe JavaException (string message)
+		public JavaException (string message)
 			: base (message)
 		{
 			const string signature  = "(Ljava/lang/String;)V";
 			var native_message = JniEnvironment.Strings.NewString (message);
 			try {
-				var args = stackalloc JniArgumentValue [1];
-				args [0] = new JniArgumentValue (native_message);
-				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
-				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
+				unsafe {
+					// SAFETY: One initialized slot matches the String parameter; its reference survives both calls.
+					var args = stackalloc JniArgumentValue [1];
+					args [0] = new JniArgumentValue (native_message);
+					var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
+					Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			SetJavaStackTrace ();
 		}
 
-		public unsafe JavaException (string message, Exception innerException)
+		public JavaException (string message, Exception innerException)
 			: base (message, innerException)
 		{
 			const string signature  = "(Ljava/lang/String;)V";
 			var native_message  = JniEnvironment.Strings.NewString (message);
 			try {
-				var args = stackalloc JniArgumentValue [1];
-				args [0] = new JniArgumentValue (native_message);
-				var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
-				Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-				JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
+				unsafe {
+					// SAFETY: One initialized String slot stays live through both calls; finally releases it on failure.
+					var args = stackalloc JniArgumentValue [1];
+					args [0] = new JniArgumentValue (native_message);
+					var peer = JniPeerMembers.InstanceMethods.StartCreateInstance (signature, GetType (), args);
+					Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+					JniPeerMembers.InstanceMethods.FinishCreateInstance (signature, this, args);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
@@ -139,11 +146,14 @@ namespace Java.Interop
 
 		public          JniObjectReference          PeerReference {
 			get {
-				var c = jniObjectReferenceControlBlock;
-				if (c == null) {
-					return default;
+				unsafe {
+					// SAFETY: Read this peer's control block only while its reference-manager lifetime permits access.
+					var c = jniObjectReferenceControlBlock;
+					if (c == null) {
+						return default;
+					}
+					return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
 				}
-				return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
 			}
 		}
 
@@ -169,15 +179,17 @@ namespace Java.Interop
 				return;
 			}
 
-			var c   = jniObjectReferenceControlBlock;
-			if (c == null) {
-				c   = jniObjectReferenceControlBlock    =
-					Java.Interop.JniObjectReferenceControlBlock.Alloc (reference);
-			} else {
-				c->handle       = reference.Handle;
-				c->handle_type  = (int) reference.Type;
+			unsafe {
+				// SAFETY: This peer owns the block; reference-manager writes must not race its release or finalization.
+				var c   = jniObjectReferenceControlBlock;
+				if (c == null) {
+					c   = jniObjectReferenceControlBlock    =
+						Java.Interop.JniObjectReferenceControlBlock.Alloc (reference);
+				} else {
+					c->handle       = reference.Handle;
+					c->handle_type  = (int) reference.Type;
+				}
 			}
-
 			JniObjectReference.Dispose (ref reference, options);
 		}
 
@@ -218,9 +230,12 @@ namespace Java.Interop
 			return false;
 		}
 
-		public override unsafe int GetHashCode ()
+		public override int GetHashCode ()
 		{
-			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			unsafe {
+				// SAFETY: hashCode.()I has no parameters; virtual dispatch does not read the null argument buffer.
+				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			}
 		}
 
 		static string? GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -268,22 +283,33 @@ namespace Java.Interop
 			JavaStackTrace  = GetJavaStack (peerReferenceOverride);
 		}
 
-		unsafe string? GetJavaStack (JniObjectReference handle)
+		string? GetJavaStack (JniObjectReference handle)
 		{
 			using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
 			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {
 				var StringWriter_init       = StringWriter_class.GetConstructor ("()V");
 				var PrintWriter_init        = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V");
-				var swriter                 = StringWriter_class.NewObject (StringWriter_init, null);
+				JniObjectReference swriter;
+				unsafe {
+					// SAFETY: StringWriter's ()V constructor reads no argument slots.
+					swriter = StringWriter_class.NewObject (StringWriter_init, null);
+				}
 				try {
-					var pwriter_args = stackalloc JniArgumentValue [1];
-					pwriter_args [0] = new JniArgumentValue (swriter);
-					var pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
+					JniObjectReference pwriter;
+					unsafe {
+						// SAFETY: One Writer slot matches the descriptor; swriter stays live until the outer finally.
+						var pwriter_args = stackalloc JniArgumentValue [1];
+						pwriter_args [0] = new JniArgumentValue (swriter);
+						pwriter = PrintWriter_class.NewObject (PrintWriter_init, pwriter_args);
+					}
 					try {
 						var pst = _members.InstanceMethods.GetMethodInfo ("printStackTrace.(Ljava/io/PrintWriter;)V");
-						var pst_args = stackalloc JniArgumentValue [1];
-						pst_args [0] = new JniArgumentValue (pwriter);
-						JniEnvironment.InstanceMethods.CallVoidMethod (handle, pst, pst_args);
+						unsafe {
+							// SAFETY: The one PrintWriter slot stays live until JNI returns, before the inner finally.
+							var pst_args = stackalloc JniArgumentValue [1];
+							pst_args [0] = new JniArgumentValue (pwriter);
+							JniEnvironment.InstanceMethods.CallVoidMethod (handle, pst, pst_args);
+						}
 						var s = JniEnvironment.Object.ToString (swriter);
 						return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 					} finally {
@@ -307,7 +333,10 @@ namespace Java.Interop
 			try {
 				Dispose (disposing: false);
 			} finally {
-				Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
+				unsafe {
+					// SAFETY: Finalization has detached tracking; a valid callback-reattached reference keeps its block.
+					Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
+				}
 			}
 		}
 
@@ -325,11 +354,20 @@ namespace Java.Interop
 		{
 			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
 			if (!reference.IsValid && JniManagedPeerState.HasFlag (Disposed)) {
-				Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+				unsafe {
+					// SAFETY: This disposed peer owns the block; Free clears the owner slot after releasing it.
+					Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+				}
 			}
 		}
 
-		IntPtr IJavaPeerable.JniObjectReferenceControlBlock =>
-			(IntPtr) jniObjectReferenceControlBlock;
+		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
+			get {
+				unsafe {
+					// SAFETY: Only copy the address; no memory access or lifetime extension occurs in this getter.
+					return (IntPtr) jniObjectReferenceControlBlock;
+				}
+			}
+		}
 	}
 }

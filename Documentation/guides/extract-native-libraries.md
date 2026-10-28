@@ -35,7 +35,7 @@ attribute within `AndroidManifest.xml` must be set to `false.`
 
 When `AndroidManifest.xml` contains an XML attribute matching
 `//application[@android:extractNativeLibs='false']`, the
-Xamarin.Android build system will do the following:
+.NET for Android build system will do the following:
 
  1. The `$(AndroidStoreUncompressedFileExtensions)` MSBuild property
     will be automatically updated to contain the `.so` file

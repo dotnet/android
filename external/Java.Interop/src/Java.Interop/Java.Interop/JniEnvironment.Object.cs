@@ -28,11 +28,20 @@ namespace Java.Interop {
 				}
 			}
 
+			/// <safety>
+			/// The method must be a constructor for type. args must address initialized, readable JNI argument
+			/// slots matching that constructor's descriptor, or be null only for a zero-argument constructor.
+			/// Keep the buffer and any referenced Java objects live through the call, including failure;
+			/// exclude writes or release through aliases while JNI reads it. The buffer is not retained.
+			/// </safety>
 			public static unsafe JniObjectReference NewObject (JniObjectReference type, JniMethodInfo method, JniArgumentValue* args)
 			{
 				JniEnvironment.WithinNewObjectScope = true;
 				try {
-					return _NewObject (type, method, args);
+					unsafe {
+						// SAFETY: The caller supplies constructor-compatible slots and keeps their storage/references live.
+						return _NewObject (type, method, args);
+					}
 				}
 				finally {
 					JniEnvironment.WithinNewObjectScope = false;
@@ -46,4 +55,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

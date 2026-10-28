@@ -11,7 +11,7 @@ static partial class JavaInteropRuntime
 
 	[LibraryImport ("xa-internal-api")]
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved, ref JNIEnvInit.JnienvInitializeArgs initArgs);
+	private static partial int NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	[LibraryImport ("System.Security.Cryptography.Native.Android", EntryPoint = "AndroidCryptoNative_InitLibraryOnLoad")]
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
@@ -23,7 +23,7 @@ static partial class JavaInteropRuntime
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
-			int hostVersion = XA_Host_NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs);
+			int hostVersion = NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs);
 			if (hostVersion < 0) {
 				return hostVersion;
 			}
@@ -52,7 +52,7 @@ static partial class JavaInteropRuntime
 
 	[LibraryImport ("xa-internal-api")]
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-	private static partial void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
+	private static partial void NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
@@ -63,7 +63,7 @@ static partial class JavaInteropRuntime
 			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
 
 			// This needs to be called first, since it sets up locations, environment variables, logging etc
-			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
+			NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
 			JNIEnvInit.InitializeBeforeRuntimeCreation (initArgs);
 
 			var options = new NativeAotRuntimeOptions {

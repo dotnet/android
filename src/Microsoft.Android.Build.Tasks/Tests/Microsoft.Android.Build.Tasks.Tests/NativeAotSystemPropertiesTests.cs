@@ -49,26 +49,32 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		}
 	}
 
-	[TestCase ("armeabi-v7a")]
-	[TestCase ("arm64-v8a")]
-	[TestCase ("x86_64")]
-	public void ReadsPropertiesFromMappedDataObjectAsTrueUtf8 (string abi)
+	[TestCase ("armeabi-v7a", false)]
+	[TestCase ("armeabi-v7a", true)]
+	[TestCase ("arm64-v8a", false)]
+	[TestCase ("arm64-v8a", true)]
+	[TestCase ("x86_64", false)]
+	[TestCase ("x86_64", true)]
+	public void ReadsPropertiesFromMappedDataObjectAsTrueUtf8 (string abi, bool environment)
 	{
 		string value = "\"C:\\quoted\"\t\u00e9\u4e2d\ud83d\ude80";
 		string key = "debug.bootstrap.\ud83d\ude80";
 		string contents = string.Join ("\n", Enumerable.Range (0, 1000).Select (i => $"debug.property.{i}=value-{i}"));
-		var result = RunProbe ($"DOTNET_BOOTSTRAP_TEST={value}\nDOTNET_BOOTSTRAP_EMPTY=\n{key}=old\n{contents}\n{key}={value}\n", key, abi: abi);
+		var result = RunProbe ($"DOTNET_BOOTSTRAP_TEST=old\nDOTNET_BOOTSTRAP_EMPTY=\n{key}=old\n{contents}\n{key}={value}\nDOTNET_BOOTSTRAP_TEST={value}\n",
+			environment ? "DOTNET_BOOTSTRAP_TEST" : key, abi: abi, environment: environment);
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 		Assert.AreEqual (value, result.Output);
 	}
 
-	[Test]
-	public void EmptyConfigurationAndMissingPropertiesResetLength ()
+	[TestCase (false)]
+	[TestCase (true)]
+	public void EmptyConfigurationAndMissingPropertiesResetLength (bool environment)
 	{
-		var result = RunProbe ("", "debug.missing");
+		string key = environment ? "DOTNET_BOOTSTRAP_EMPTY" : "debug.empty";
+		var result = RunProbe ("", key, environment: environment);
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 		Assert.AreEqual ("missing", result.Output);
-		var emptyValue = RunProbe ("debug.empty=\n", "debug.empty");
+		var emptyValue = RunProbe ($"{key}=\n", key, environment: environment);
 		Assert.AreEqual (0, emptyValue.ExitCode, emptyValue.Output + emptyValue.Error);
 		Assert.AreEqual ("", emptyValue.Output);
 	}
@@ -125,7 +131,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 
 	(int ExitCode, string Output, string Error) RunProbe (
 		string contents, string key, Action<byte []>? corrupt = null, string abi = "arm64-v8a",
-		bool markCompressed = false, uint? envelopeLengthOverride = null, bool misalignEnvelope = false)
+		bool markCompressed = false, uint? envelopeLengthOverride = null, bool misalignEnvelope = false, bool environment = false)
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
@@ -181,6 +187,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 			File.WriteAllBytes (objectFile, image);
 		}
 		return NativeAotBootstrapTestTools.Run (nativeProbe, objectFile,
-			envelopeOffset.ToString (CultureInfo.InvariantCulture), (envelopeLengthOverride ?? envelopeLength).ToString (CultureInfo.InvariantCulture), key);
+			envelopeOffset.ToString (CultureInfo.InvariantCulture), (envelopeLengthOverride ?? envelopeLength).ToString (CultureInfo.InvariantCulture),
+			key, environment ? "environment" : "property");
 	}
 }

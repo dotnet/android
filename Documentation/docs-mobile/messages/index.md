@@ -328,7 +328,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
-* `CPI` - `CheckProjectItems`
 * `CPR` - `CopyResource`
 * `CPT` - `ComputeHash`
 * `CRC` - `ConvertResourcesCases`
@@ -368,7 +367,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
-* `LWF` - `LogWarningsForFiles`
 * `MDC` - `MDoc`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`

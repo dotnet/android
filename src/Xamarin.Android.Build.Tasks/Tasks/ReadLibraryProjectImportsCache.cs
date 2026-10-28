@@ -24,17 +24,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 #nullable enable
-using System;
 using System.IO;
-using System.Linq;
 using System.Xml.Linq;
-using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ReadLibraryProjectImportsCache : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ReadLibraryProjectImportsCache : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "RLC";
 
@@ -66,11 +64,11 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ("Task ReadLibraryProjectImportsCache");
 			Log.LogDebugMessage ("  CacheFile: {0}", CacheFile);
-			if (!File.Exists (CacheFile)) {
+			if (CacheFile.IsNullOrEmpty () || !File.Exists (TaskEnvironment.GetAbsolutePath (CacheFile))) {
 				Log.LogDebugMessage ("{0} does not exist. No Project Library Imports found", CacheFile);
 				return !Log.HasLoggedErrors;
 			}
-			var doc = XDocument.Load (CacheFile);
+			var doc = XDocument.Load (TaskEnvironment.GetAbsolutePath (CacheFile));
 			Jars = doc.GetPathsAsTaskItems ("Jars", "Jar");
 			ResolvedAssetDirectories = doc.GetPathsAsTaskItems ("ResolvedAssetDirectories", "ResolvedAssetDirectory");
 			ResolvedResourceDirectories = doc.GetPathsAsTaskItems ("ResolvedResourceDirectories", "ResolvedResourceDirectory");
@@ -84,4 +82,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-

@@ -43,7 +43,7 @@ namespace Java.Interop
 				return TryFindClass (classname, throwOnError: true);
 			}
 
-			static unsafe JniObjectReference TryFindClass (string classname, bool throwOnError)
+			static JniObjectReference TryFindClass (string classname, bool throwOnError)
 			{
 				if (classname == null)
 					throw new ArgumentNullException (nameof (classname));
@@ -73,17 +73,21 @@ namespace Java.Interop
 				throw new InvalidOperationException ($"Could not find Java class '{classname}'.");
 			}
 
-			static unsafe bool TryLoadClassWithFallback (JniEnvironmentInfo info, IntPtr thrown, JniObjectReference classNameJavaString, bool throwOnError, out JniObjectReference result)
+			static bool TryLoadClassWithFallback (JniEnvironmentInfo info, IntPtr thrown, JniObjectReference classNameJavaString, bool throwOnError, out JniObjectReference result)
 			{
 				result = default;
 
 				if (Class_forName.IsValid) {
-					var __args  = stackalloc JniArgumentValue [3];
-					__args [0]  = new JniArgumentValue (classNameJavaString);
-					__args [1]  = new JniArgumentValue (true);  // initialize the class
-					__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
-
-					var c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out var forNameThrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
+					IntPtr c;
+					IntPtr forNameThrown;
+					unsafe {
+						// SAFETY: Three initialized stack slots match Class.forName; references stay live through the call.
+						var __args  = stackalloc JniArgumentValue [3];
+						__args [0]  = new JniArgumentValue (classNameJavaString);
+						__args [1]  = new JniArgumentValue (true);  // initialize the class
+						__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
+						c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out forNameThrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
+					}
 					if (forNameThrown == IntPtr.Zero) {
 						// Class.forName() succeeded; discard the FindClass throwable.
 						JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
@@ -110,7 +114,7 @@ namespace Java.Interop
 				return false;
 			}
 
-			static unsafe JniObjectReference NewJavaNameFromUtf8 (IntPtr env, ReadOnlySpan<byte> classname)
+			static JniObjectReference NewJavaNameFromUtf8 (IntPtr env, ReadOnlySpan<byte> classname)
 			{
 				var terminator = classname.IndexOf ((byte) 0);
 				if (terminator >= 0)
@@ -126,24 +130,33 @@ namespace Java.Interop
 					javaName [i] = classname [i] == (byte) '/' ? (byte) '.' : classname [i];
 				javaName [classname.Length] = 0;
 
-				fixed (byte* pJavaName = javaName) {
-					var s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
-					var e = JniEnvironment.GetExceptionForLastThrowable ();
-					if (e != null)
-						ExceptionDispatchInfo.Capture (e).Throw ();
-
-					var r = new JniObjectReference (s, JniObjectReferenceType.Local);
-					JniEnvironment.LogCreateLocalRef (r);
-					return r;
+				IntPtr s;
+				unsafe {
+					// SAFETY: Pin the NUL-terminated name through NewStringUTF on this thread's live JNI environment.
+					fixed (byte* pJavaName = javaName)
+						s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
 				}
+				var e = JniEnvironment.GetExceptionForLastThrowable ();
+				if (e != null)
+					ExceptionDispatchInfo.Capture (e).Throw ();
+
+				var r = new JniObjectReference (s, JniObjectReferenceType.Local);
+				JniEnvironment.LogCreateLocalRef (r);
+				return r;
 			}
 
 			static bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
 			{
 				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
-				klass   = JniNativeMethods.FindClass (env, _classname_ptr);
-				thrown  = JniNativeMethods.ExceptionOccurred (env);
-				Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
+				unsafe {
+					// SAFETY: StringToCoTaskMemUTF8 supplies terminated storage alive through FindClass and exception capture.
+					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
+					thrown  = JniNativeMethods.ExceptionOccurred (env);
+				}
+				unsafe {
+					// SAFETY: Release only this call's CoTaskMemUTF8 allocation after JNI has finished reading it.
+					Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
+				}
 				if (thrown == IntPtr.Zero) {
 					return true;
 				}
@@ -152,13 +165,26 @@ namespace Java.Interop
 
 			static void RawExceptionClear (IntPtr env)
 			{
-				JniNativeMethods.ExceptionClear (env);
+				unsafe {
+					// SAFETY: env is the current lookup thread's JNI environment; only its pending exception is cleared.
+					JniNativeMethods.ExceptionClear (env);
+				}
 			}
 
-			static IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
+			/// <safety>
+			/// env must belong to the current attached thread and clazz/jmethodID must identify the static
+			/// method being invoked. args must address readable initialized slots matching its descriptor,
+			/// or be zero for no arguments. Keep storage and object references live and unchanged through
+			/// the call and exception capture, including failure. No argument storage is retained.
+			/// </safety>
+			static unsafe IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
 			{
-				var r   = JniNativeMethods.CallStaticObjectMethodA (env, clazz, jmethodID, args);
-				thrown  = JniNativeMethods.ExceptionOccurred (env);
+				IntPtr r;
+				unsafe {
+					// SAFETY: The caller supplies a descriptor-matched live argument buffer for this JNI thread.
+					r       = JniNativeMethods.CallStaticObjectMethodA (env, clazz, jmethodID, args);
+					thrown  = JniNativeMethods.ExceptionOccurred (env);
+				}
 				return r;
 			}
 

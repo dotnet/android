@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			public string SourceFile;
 		}
 
-		public static (ApplicationConfig Config, JniPreloads Preloads, Dictionary<string, string> EnvironmentVariables) ReadCoreClrBootstrap (string intermediateDirectory)
+		public static (ApplicationConfig Config, JniPreloads Preloads, Dictionary<string, string> EnvironmentVariables, Dictionary<string, string> SystemProperties) ReadCoreClrBootstrap (string intermediateDirectory)
 		{
 			string [] files = Directory.GetFiles (intermediateDirectory, "coreclr-bootstrap.bin", SearchOption.AllDirectories);
 			Assert.AreEqual (1, files.Length, "Expected one shared CoreCLR bootstrap intermediate.");
@@ -98,14 +98,18 @@ namespace Xamarin.Android.Build.Tests
 					LibraryName = ReadString (Read (dsoOffset + index * 12 + 8)),
 				});
 			}
-			var environment = new Dictionary<string, string> (StringComparer.Ordinal);
-			for (uint i = 0; i < environmentCount; i++) {
-				uint offset = checked (environmentOffset + i * 8);
-				string name = ReadString (Read (offset));
-				Assert.IsNotEmpty (name, "Environment variable names must not be empty.");
-				environment.Add (name, ReadString (Read (offset + 4), allowEmpty: true));
+			Dictionary<string, string> ReadPairs (uint count, uint tableOffset)
+			{
+				var pairs = new Dictionary<string, string> (StringComparer.Ordinal);
+				for (uint i = 0; i < count; i++) {
+					uint offset = checked (tableOffset + i * 8);
+					string name = ReadString (Read (offset));
+					Assert.IsNotEmpty (name, "Environment variable and system property names must not be empty.");
+					pairs.Add (name, ReadString (Read (offset + 4), allowEmpty: true));
+				}
+				return pairs;
 			}
-			return (config, preloads, environment);
+			return (config, preloads, ReadPairs (environmentCount, environmentOffset), ReadPairs (config.system_property_count, Read (44)));
 		}
 
 		public static Dictionary<string, string> ReadNativeAotEnvironmentVariables (string outputDirectoryRoot, bool required = true, bool systemProperties = false)

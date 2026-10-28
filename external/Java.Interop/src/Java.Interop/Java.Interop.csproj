@@ -12,6 +12,9 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(ProductSnkPath)</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Required for safe explicit-layout fields and relaxed pointer declarations.
+         Remove when the baseline language version supports this syntax without preview. -->
+    <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>

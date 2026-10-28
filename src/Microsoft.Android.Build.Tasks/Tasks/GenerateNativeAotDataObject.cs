@@ -45,7 +45,7 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 				blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, compress: false);
 			} else {
 				symbol = NativeAotBootstrapBlob.Symbol;
-				var environment = new EnvironmentBuilder (escapeValues: false);
+				var environment = new EnvironmentBuilder ();
 				environment.Read (Environments);
 				blob = JniRemappingBinaryBlob.Wrap (
 					NativeAotBootstrapBlob.Create (environment.EnvironmentVariables, environment.SystemProperties), compress: false);

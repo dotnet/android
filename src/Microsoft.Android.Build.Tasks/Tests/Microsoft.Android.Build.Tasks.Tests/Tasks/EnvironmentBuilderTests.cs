@@ -27,7 +27,12 @@ public class EnvironmentBuilderTests : BaseTest
 		string secondEnvironmentFile = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 		try {
 			File.WriteAllText (firstEnvironmentFile, "FOO=BAR");
-			File.WriteAllText (secondEnvironmentFile, "BAZ=QUX");
+			string path = """C:\app\"quoted"\settings.json""";
+			File.WriteAllLines (secondEnvironmentFile, [
+				"BAZ=QUX",
+				$"PATH_VALUE={path}",
+				$"debug.path={path}",
+			]);
 
 			var builder = new EnvironmentBuilder ();
 			builder.Read ([
@@ -35,10 +40,12 @@ public class EnvironmentBuilderTests : BaseTest
 				new TaskItem (secondEnvironmentFile),
 			]);
 
-			Assert.AreEqual (2, builder.EnvironmentVariables.Count);
+			Assert.AreEqual (3, builder.EnvironmentVariables.Count);
 			Assert.AreEqual ("BAR", builder.EnvironmentVariables ["FOO"]);
 			Assert.AreEqual ("QUX", builder.EnvironmentVariables ["BAZ"]);
-			Assert.AreEqual (0, builder.SystemProperties.Count);
+			Assert.AreEqual (path, builder.EnvironmentVariables ["PATH_VALUE"]);
+			Assert.AreEqual (1, builder.SystemProperties.Count);
+			Assert.AreEqual (path, builder.SystemProperties ["debug.path"]);
 		} finally {
 			File.Delete (firstEnvironmentFile);
 			File.Delete (secondEnvironmentFile);

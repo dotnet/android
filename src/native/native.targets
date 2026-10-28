@@ -129,6 +129,7 @@
       <_RuntimeSources Include="clr\include\constants.hh" />
       <_RuntimeSources Include="clr\include\host\host-common.hh" />
       <_RuntimeSources Include="clr\include\runtime-base\android-system.hh" />
+      <_RuntimeSources Include="clr\include\shared\log_types.hh" />
       <_RuntimeSources Include="clr\host\host-shared.cc" />
       <_RuntimeSources Include="clr\runtime-base\android-system-shared.cc" />
       <_RuntimeSources Include="clr\runtime-base\binary-blob-loader.cc" />
@@ -153,7 +154,8 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.debug-static-debug.a')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release-static-release.a')" />
     </ItemGroup>
 
   </Target>
@@ -220,7 +222,7 @@
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
-    <!-- Remove archives left behind by builds that linked libc++ or native Java.Interop. -->
+    <!-- Remove obsolete native libraries from previous builds. -->
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' Or '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
       <_ObsoleteRuntimePackDirectory Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.$(_RuntimePackName).$(AndroidApiLevel).%(AndroidRID)\$(AndroidPackVersion)\runtimes\%(AndroidRID)\native')" />
       <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++_static.a')" />
@@ -232,19 +234,32 @@
       <_ObsoleteRuntimePackFile Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libxa-java-interop-release.a')" />
     </ItemGroup>
 
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_ObsoleteRuntimePackFile Include="%(_ObsoleteRuntimePackDirectory.Identity)\libnaot-android*.so" />
+      <_ObsoleteRuntimePackFile Include="$(OutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)\libnaot-android*.so" />
+    </ItemGroup>
+
     <Delete Files="@(_ObsoleteRuntimePackFile)" />
     <ItemGroup>
       <_RuntimePackFiles Remove="@(_ObsoleteRuntimePackFile)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-      <_RuntimePackFiles Remove="@(_RuntimePackFiles)"
-          Condition=" '%(_RuntimePackFiles.Filename)%(_RuntimePackFiles.Extension)' == 'libnet-android.debug-static-debug.a' Or '%(_RuntimePackFiles.Filename)%(_RuntimePackFiles.Extension)' == 'libnet-android.release-static-release.a' Or '%(_RuntimePackFiles.Filename)%(_RuntimePackFiles.Extension)' == 'libarchive-dso-stub.so' " />
       <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.debug-static-debug.a')" />
       <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.release-static-release.a')" />
       <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libarchive-dso-stub.so')" />
+      <!-- Keep fixed-host build intermediates and stale application-link archives out of runtime packs. -->
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libruntime-base-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libruntime-base-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-lz4-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-lz4-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-shared-bits-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-shared-bits-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxamarin-startup-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxamarin-startup-release.a')" />
       <_ObsoleteCoreClrArchive Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
       <_ObsoleteCoreClrArchive Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
+      <_RuntimePackFiles Remove="@(_ObsoleteCoreClrArchive)" MatchOnMetadata="Filename;Extension" MatchOnMetadataOptions="CaseInsensitive" />
     </ItemGroup>
     <Delete Files="@(_ObsoleteCoreClrArchive)" />
 

@@ -11,6 +11,9 @@ packaged as data-only ELF libraries written directly by managed code. No
 assembler, native linker, or objcopy executable is needed to create them.
 NativeAOT compilation and optional native-library stripping use the official
 Android NDK; ordinary CoreCLR packaging does not require the NDK.
+CoreCLR's fixed host is built using static support archives, but those archives
+are build intermediates, not runtime-pack assets for application linking.
+NativeAOT's static host archives remain part of its runtime packs.
 
 ## Assembly store payload library
 
