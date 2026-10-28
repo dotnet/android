@@ -13,7 +13,7 @@ namespace Java.InteropTests {
 
 	[TestFixture]
 	[Category ("PeerControlBlock")]
-	public class JavaPeerControlBlockTests {
+	public class JavaPeerControlBlockTests : JavaVMFixture {
 
 		public enum ReferenceState {
 			Global,
@@ -244,7 +244,12 @@ namespace Java.InteropTests {
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
 			var local = invalid ? default : type.NewObject (type.GetConstructor ("()V"), null);
 			try {
+#if __ANDROID__
 				var options = invalid ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy;
+#else   // __ANDROID__
+				// The host value manager retains registered peers and disposes them without finalization.
+				var options = invalid ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.CopyAndDoNotRegister;
+#endif  // __ANDROID__
 				try {
 					CreatePeer (exception, ref local, options, observation, throwingConstructor);
 					Assert.IsFalse (throwingConstructor, "Constructor must throw after acquiring its peer.");
