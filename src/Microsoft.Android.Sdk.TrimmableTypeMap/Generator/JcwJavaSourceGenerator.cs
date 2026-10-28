@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -49,10 +50,12 @@ public sealed class JcwJavaSourceGenerator
 	{
 		if (types is null) throw new ArgumentNullException (nameof (types));
 		var results = new List<GeneratedJavaSource> ();
+		var generatedPeerNames = types.Where (type => !type.DoNotGenerateAcw && !type.IsInterface)
+			.Select (type => type.JavaName).ToHashSet (StringComparer.Ordinal);
 		foreach (var type in types) {
 			if (type.DoNotGenerateAcw || type.IsInterface) continue;
 			using var writer = new StringWriter ();
-			Generate (type, writer, applicationJavaClass);
+			Generate (type, writer, applicationJavaClass, generatedPeerNames);
 			results.Add (new GeneratedJavaSource (GetRelativePath (type), writer.ToString ()));
 		}
 		return results;
@@ -63,14 +66,19 @@ public sealed class JcwJavaSourceGenerator
 	/// </summary>
 	public void Generate (JavaPeerInfo type, TextWriter writer, string? applicationJavaClass = null)
 	{
+		Generate (type, writer, applicationJavaClass, new HashSet<string> (StringComparer.Ordinal) { type.JavaName });
+	}
+
+	static void Generate (JavaPeerInfo type, TextWriter writer, string? applicationJavaClass, IReadOnlySet<string> generatedPeerNames)
+	{
 		writer.NewLine = "\n";
 		WritePackageDeclaration (type, writer);
 		WriteAnnotations (type.Annotations, writer);
-		WriteClassDeclaration (type, writer, applicationJavaClass);
+		WriteClassDeclaration (type, writer, applicationJavaClass, generatedPeerNames);
 		WriteStaticInitializer (type, writer);
-		WriteConstructors (type, writer);
-		WriteFields (type, writer);
-		WriteMethods (type, writer);
+		WriteConstructors (type, writer, generatedPeerNames);
+		WriteFields (type, writer, generatedPeerNames);
+		WriteMethods (type, writer, generatedPeerNames);
 		WriteGCUserPeerMethods (writer);
 		WriteClassClose (writer);
 	}
@@ -98,7 +106,7 @@ public sealed class JcwJavaSourceGenerator
 		}
 	}
 
-	static void WriteClassDeclaration (JavaPeerInfo type, TextWriter writer, string? applicationJavaClass)
+	static void WriteClassDeclaration (JavaPeerInfo type, TextWriter writer, string? applicationJavaClass, IReadOnlySet<string> generatedPeerNames)
 	{
 		string abstractModifier = type.IsAbstract && !type.IsInterface ? "abstract " : "";
 		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
@@ -107,7 +115,7 @@ public sealed class JcwJavaSourceGenerator
 
 		// extends clause
 		if (type.BaseJavaName != null) {
-			string baseName = JniSignatureHelper.JniNameToJavaName (type.BaseJavaName);
+			string baseName = JniSignatureHelper.JniNameToJavaName (type.BaseJavaName, generatedPeerNames);
 			// A user Application subclass normally extends android.app.Application, but when
 			// $(AndroidApplicationJavaClass) is set (e.g. android.support.multidex.MultiDexApplication
 			// when $(AndroidEnableMultiDex) is true) it must extend that class instead.
@@ -121,7 +129,7 @@ public sealed class JcwJavaSourceGenerator
 		writer.Write ("\timplements\n\t\tmono.android.IGCUserPeer");
 
 		foreach (var iface in type.JavaCallableWrapperInterfaceJavaNames ?? type.ImplementedInterfaceJavaNames) {
-			writer.Write ($",\n\t\t{JniSignatureHelper.JniNameToJavaName (iface)}");
+			writer.Write ($",\n\t\t{JniSignatureHelper.JniNameToJavaName (iface, generatedPeerNames)}");
 		}
 
 		writer.WriteLine ();
@@ -167,16 +175,16 @@ public sealed class JcwJavaSourceGenerator
 """);
 	}
 
-	static void WriteConstructors (JavaPeerInfo type, TextWriter writer)
+	static void WriteConstructors (JavaPeerInfo type, TextWriter writer, IReadOnlySet<string> generatedPeerNames)
 	{
 		string simpleClassName = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
 
 		foreach (var ctor in type.JavaConstructors) {
 			var ctorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
-			string parameters = FormatParameterList (ctorParams);
+			string parameters = FormatParameterList (ctorParams, generatedPeerNames);
 			string superArgs = ctor.SuperArgumentsString ?? FormatArgumentList (ctorParams);
 			string args = FormatArgumentList (ctorParams);
-			string throwsClause = FormatThrowsClause (ctor.ThrownNames);
+			string throwsClause = FormatThrowsClause (ctor.ThrownNames, generatedPeerNames);
 
 			WriteAnnotations (ctor.Annotations, writer);
 			writer.Write ($$"""
@@ -203,7 +211,7 @@ public sealed class JcwJavaSourceGenerator
 		// Write native constructor declarations
 		foreach (var ctor in type.JavaConstructors) {
 			var nativeCtorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
-			string parameters = FormatParameterList (nativeCtorParams);
+			string parameters = FormatParameterList (nativeCtorParams, generatedPeerNames);
 			writer.WriteLine ($"\tprivate native void nctor_{ctor.ConstructorIndex} ({parameters});");
 		}
 
@@ -212,7 +220,7 @@ public sealed class JcwJavaSourceGenerator
 		}
 	}
 
-	static void WriteFields (JavaPeerInfo type, TextWriter writer)
+	static void WriteFields (JavaPeerInfo type, TextWriter writer, IReadOnlySet<string> generatedPeerNames)
 	{
 		foreach (var field in type.JavaFields) {
 			WriteAnnotations (field.Annotations, writer);
@@ -222,7 +230,9 @@ public sealed class JcwJavaSourceGenerator
 			if (field.IsStatic) {
 				writer.Write ("static ");
 			}
-			writer.Write (field.JavaTypeName);
+			writer.Write (field.JniTypeName is not null
+				? JniSignatureHelper.JniTypeToJava (field.JniTypeName, generatedPeerNames)
+				: field.JavaTypeName);
 			writer.Write (' ');
 			writer.Write (field.FieldName);
 			writer.Write (" = ");
@@ -235,7 +245,7 @@ public sealed class JcwJavaSourceGenerator
 		}
 	}
 
-	static void WriteMethods (JavaPeerInfo type, TextWriter writer)
+	static void WriteMethods (JavaPeerInfo type, TextWriter writer, IReadOnlySet<string> generatedPeerNames)
 	{
 		string registerNativesLine = type.CannotRegisterInStaticConstructor
 			? "\t\t__md_registerNatives ();\n"
@@ -247,15 +257,15 @@ public sealed class JcwJavaSourceGenerator
 			}
 
 			string jniReturnType = JniSignatureHelper.ParseReturnTypeString (method.JniSignature);
-			string javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
+			string javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType, generatedPeerNames);
 			bool isVoid = jniReturnType == "V";
 			var methodParams = JniSignatureHelper.ParseParameters (method.JniSignature);
-			string parameters = FormatParameterList (methodParams);
+			string parameters = FormatParameterList (methodParams, generatedPeerNames);
 			string args = FormatArgumentList (methodParams);
 			string returnPrefix = isVoid ? "" : "return ";
 
 			// throws clause for [Export] methods
-			string throwsClause = FormatThrowsClause (method.ThrownNames);
+			string throwsClause = FormatThrowsClause (method.ThrownNames, generatedPeerNames);
 
 			if (method.Connector != null && !method.IsExport) {
 				writer.WriteLine ();
@@ -335,7 +345,7 @@ public sealed class JcwJavaSourceGenerator
 		writer.WriteLine ('}');
 	}
 
-	static string FormatThrowsClause (IReadOnlyList<string>? thrownNames)
+	static string FormatThrowsClause (IReadOnlyList<string>? thrownNames, IReadOnlySet<string> generatedPeerNames)
 	{
 		if (thrownNames == null || thrownNames.Count == 0) {
 			return "";
@@ -343,12 +353,12 @@ public sealed class JcwJavaSourceGenerator
 
 		var javaNames = new string [thrownNames.Count];
 		for (int i = 0; i < thrownNames.Count; i++) {
-			javaNames [i] = JniSignatureHelper.JniNameToJavaName (thrownNames [i]);
+			javaNames [i] = JniSignatureHelper.JniNameToJavaName (thrownNames [i], generatedPeerNames);
 		}
 		return $"\n\t\tthrows {string.Join (", ", javaNames)}";
 	}
 
-	static string FormatParameterList (IReadOnlyList<JniParameterInfo> parameters)
+	static string FormatParameterList (IReadOnlyList<JniParameterInfo> parameters, IReadOnlySet<string> generatedPeerNames)
 	{
 		if (parameters.Count == 0) {
 			return "";
@@ -359,7 +369,7 @@ public sealed class JcwJavaSourceGenerator
 			if (i > 0) {
 				sb.Append (", ");
 			}
-			sb.Append (JniSignatureHelper.JniTypeToJava (parameters [i].JniType));
+			sb.Append (JniSignatureHelper.JniTypeToJava (parameters [i].JniType, generatedPeerNames));
 			sb.Append (" p");
 			sb.Append (i);
 		}
