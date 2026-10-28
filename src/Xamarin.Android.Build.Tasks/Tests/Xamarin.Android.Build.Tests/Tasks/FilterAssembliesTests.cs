@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
+using System.Xml.Linq;
+using Mono.Cecil;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
@@ -123,6 +125,67 @@ namespace Xamarin.Android.Build.Tests
 			CreateNativePE (nativeDll);
 			var actual = Run (nativeDll);
 			CollectionAssert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
+		}
+
+		static void CreateAssembly (string path, bool android)
+		{
+			Directory.CreateDirectory (Path.GetDirectoryName (path));
+			using var assembly = AssemblyDefinition.CreateAssembly (
+				new AssemblyNameDefinition ("Library", new Version (1, 0)), "Library", ModuleKind.Dll);
+			if (android) {
+				assembly.MainModule.Resources.Add (new EmbeddedResource ("library.jar", ManifestResourceAttributes.Private, new byte [] { 1 }));
+			}
+			assembly.Write (path);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ConcurrentProjectsPreserveRelativeItems (bool multithreaded)
+		{
+			string assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll");
+			var resources = new List<ProjectResource> ();
+			foreach (string name in new [] { "first", "second" }) {
+				string root = Path.Combine (tempDirectory, name);
+				CreateAssembly (Path.Combine (root, "library.dll"), name == "first");
+				CreateAssembly (Path.Combine (root, "other.dll"), name == "second");
+				var project = new XElement ("Project",
+					new XElement ("UsingTask", new XAttribute ("TaskName", "Xamarin.Android.Tasks.FilterAssemblies"), new XAttribute ("AssemblyFile", assembly)),
+					new XElement ("ItemGroup",
+						new XElement ("Input", new XAttribute ("Include", "library.dll;other.dll;library.dll"),
+							new XElement ("Owner", name))),
+					new XElement ("Target", new XAttribute ("Name", "Build"),
+						new XElement ("FilterAssemblies", new XAttribute ("InputAssemblies", "@(Input)"),
+							new XElement ("Output", new XAttribute ("TaskParameter", "OutputAssemblies"), new XAttribute ("ItemName", "_Filtered"))),
+						new XElement ("FilterAssemblies", new XAttribute ("InputAssemblies", "@(Input)"),
+							new XElement ("Output", new XAttribute ("TaskParameter", "OutputAssemblies"), new XAttribute ("ItemName", "_Cached"))),
+						new XElement ("WriteLinesToFile",
+							new XAttribute ("File", "$(MSBuildProjectDirectory)/output.txt"),
+							new XAttribute ("Overwrite", "true"),
+							new XAttribute ("Lines", "@(_Filtered->'%(Identity)|%(FullPath)|%(Owner)');@(_Cached->'%(Identity)|%(FullPath)|%(Owner)')"))));
+				resources.Add (new ProjectResource { Path = Path.Combine (name, "filter.proj"), Content = project.ToString () });
+			}
+			var driver = new XElement ("Project",
+				new XElement ("ItemGroup",
+					new XElement ("Reader", new XAttribute ("Include", "first/filter.proj;second/filter.proj"))),
+				new XElement ("Target", new XAttribute ("Name", "Build"),
+					new XElement ("MSBuild", new XAttribute ("Projects", "@(Reader)"), new XAttribute ("BuildInParallel", "true"), new XAttribute ("Targets", "Build"))));
+			resources.Add (new ProjectResource { Path = "driver.proj", Content = driver.ToString () });
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (tempDirectory, resources, doNotCleanup: true);
+			var dotnet = new DotNetCLI (Path.Combine (tempDirectory, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+
+			foreach (string name in new [] { "first", "second" }) {
+				string file = name == "first" ? "library.dll" : "other.dll";
+				string line = $"{file}|{Path.Combine (tempDirectory, name, file)}|{name}";
+				CollectionAssert.AreEqual (Enumerable.Repeat (line, name == "first" ? 4 : 2),
+					File.ReadAllLines (Path.Combine (tempDirectory, name, "output.txt")));
+			}
 		}
 
 		/// <summary>
