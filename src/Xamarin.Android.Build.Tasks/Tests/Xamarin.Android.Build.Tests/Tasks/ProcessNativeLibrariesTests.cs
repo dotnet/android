@@ -15,7 +15,7 @@ public class ProcessNativeLibrariesTests : BaseTest
 	[Test]
 	public void ConcurrentProjectDirectories ()
 	{
-		Parallel.ForEach (new [] { "arm64-v8a", "x86_64" }, abi => {
+		Parallel.ForEach (new [] { "arm64-v8a", "unknown" }, abi => {
 			var task = new ProcessNativeLibraries {
 				BuildEngine = new MockBuildEngine (TextWriter.Null),
 				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
@@ -29,7 +29,11 @@ public class ProcessNativeLibrariesTests : BaseTest
 			};
 
 			Assert.IsTrue (task.Execute ());
-			CollectionAssert.AreEqual (task.InputLibraries, task.OutputLibraries);
+			if (abi == "unknown") {
+				Assert.IsEmpty (task.OutputLibraries);
+			} else {
+				CollectionAssert.AreEqual (task.InputLibraries, task.OutputLibraries);
+			}
 		});
 	}
 
