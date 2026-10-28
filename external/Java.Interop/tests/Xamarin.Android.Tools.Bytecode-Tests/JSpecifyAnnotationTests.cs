@@ -213,6 +213,27 @@ namespace Xamarin.Android.Tools.BytecodeTests
 					+ "the field's List type is non-null in a @NullMarked scope");
 		}
 
+		[TestCase ("nullableMember", null)]
+		[TestCase ("nullableDeepMember", null)]
+		[TestCase ("nullableMemberArgument", "true")]
+		[TestCase ("nullableMemberTypeArgument", "true")]
+		[TestCase ("nullableArray", null)]
+		[TestCase ("nullableArrayElement", "true")]
+		[TestCase ("nullableMemberArrayElement", "true")]
+		[TestCase ("javaxCheckForNull", null)]
+		[TestCase ("findbugsCheckForNull", null)]
+		public void PackageMarked_ReferenceNullness (string memberPrefix, string? expected)
+		{
+			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
+			var method = Method (xml, memberPrefix + "Return");
+
+			Assert.Multiple (() => {
+				Assert.AreEqual (expected, Attr (Field (xml, memberPrefix + "Field"), "not-null"), "field");
+				Assert.AreEqual (expected, Attr (method, "return-not-null"), "return");
+				Assert.AreEqual (expected, Attr (FirstParameter (method), "not-null"), "parameter");
+			});
+		}
+
 		[Test]
 		public void TypeAnnotationsAttribute_IsParsed ()
 		{

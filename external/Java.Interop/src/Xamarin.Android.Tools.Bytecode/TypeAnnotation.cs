@@ -38,17 +38,14 @@ namespace Xamarin.Android.Tools.Bytecode
 		// `formal_parameter_index` for MethodFormalParameter; otherwise 0.
 		public  int                         FormalParameterIndex    { get; }
 
-		// `path_length` from `type_path`; we don't retain the individual
-		// path entries — see AppliesToTopLevelType.
+		// `path_length` from `type_path`.
 		public  int                         TypePathLength      { get; }
 
 		public  Annotation                  Annotation          { get; }
 
-		// JSpecify-style nullness annotations only apply to the top-level
-		// type when there is no `type_path`. Annotations with a non-empty
-		// path describe inner types (e.g. `Map<@Nullable K, V>`) which the
-		// API XML schema cannot currently represent.
-		public  bool                        AppliesToTopLevelType => TypePathLength == 0;
+		// INNER_TYPE steps stay on the reference itself; array elements,
+		// wildcard bounds, and type arguments do not.
+		public  bool                        AppliesToTopLevelType { get; }
 
 		public TypeAnnotation (ConstantPool constantPool, Stream stream)
 		{
@@ -112,8 +109,11 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			// type_path: u1 path_length, then path_length * { u1 type_path_kind; u1 type_argument_index; }
 			TypePathLength = stream.ReadNetworkByte ();
+			AppliesToTopLevelType = true;
 			for (int i = 0; i < TypePathLength; ++i) {
-				stream.ReadNetworkByte ();              // type_path_kind
+				var pathKind = stream.ReadNetworkByte ();
+				if (pathKind != 1)                      // INNER_TYPE
+					AppliesToTopLevelType = false;
 				stream.ReadNetworkByte ();              // type_argument_index
 			}
 
