@@ -62,6 +62,9 @@ This file contains targets specific for Android application projects.
   The BeforeTargets="_GetPrimaryCpuAbi" entry is kept for commercial builds where
   _GetPrimaryCpuAbi needs AdbTarget resolved before it runs.
 
+  Publish-only RID inner builds skip the device ABI query and must not repeat the
+  outer build's device boot check.
+
   Note: this target CANNOT use DependsOnTargets="_ResolveMonoAndroidSdks" because in commercial
   builds _GetPrimaryCpuAbi is in $(_ResolveMonoAndroidSdksDependsOn), which would create a cycle:
     _ResolveMonoAndroidSdks -> _GetPrimaryCpuAbi -> _EnsureDeviceBooted -> _ResolveMonoAndroidSdks
@@ -71,7 +74,7 @@ This file contains targets specific for Android application projects.
   -->
   <Target Name="_EnsureDeviceBooted"
       BeforeTargets="_GetPrimaryCpuAbi"
-      Condition=" '$(Device)' != '' ">
+      Condition=" '$(Device)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
     <BootAndroidEmulator
         Device="$(Device)"
         AndroidSdkDirectory="$(AndroidSdkDirectory)"
