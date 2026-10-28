@@ -232,6 +232,22 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (input));
 		}
 
+		[TestCase ("arm64-v8a", "android-x64", "x86/libfoo.so", "arm64-v8a")]
+		[TestCase ("", "android-x64", "x86/libfoo.so", "x86_64")]
+		[TestCase ("", "", "x86/libfoo.so", "x86")]
+		[TestCase ("", "invalid", "x86/libfoo.so", "armeabi-v7a")]
+		[TestCase ("", "", "unknown/libfoo.so", "armeabi-v7a")]
+		[TestCase ("", "", "", "armeabi-v7a")]
+		public void MetadataPrecedence (string abi, string rid, string link, string expected)
+		{
+			var library = new TaskItem (Path.Combine ("armeabi-v7a", "libfoo.so"));
+			library.SetMetadata ("Abi", abi);
+			library.SetMetadata ("RuntimeIdentifier", rid);
+			library.SetMetadata ("Link", link);
+
+			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (library));
+		}
+
 		[TestCase ("libfoo.so", "arm64-v8a")]
 		[TestCase ("./libfoo.so", "arm64-v8a")]
 		[TestCase ("../x86/libfoo.so", "x86")]

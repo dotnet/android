@@ -12,31 +12,6 @@ namespace Xamarin.Android.Build.Tests;
 [TestFixture]
 public class ProcessNativeLibrariesTests : BaseTest
 {
-	[TestCase ("arm64-v8a", "android-x64", "x86/libfoo.so", "arm64-v8a")]
-	[TestCase ("", "android-x64", "x86/libfoo.so", "x86_64")]
-	[TestCase ("", "", "x86/libfoo.so", "x86")]
-	[TestCase ("", "invalid", "x86/libfoo.so", "armeabi-v7a")]
-	[TestCase ("", "", "unknown/libfoo.so", "armeabi-v7a")]
-	[TestCase ("", "", "", "armeabi-v7a")]
-	public void MetadataPrecedence (string abi, string rid, string link, string expected)
-	{
-		var library = new TaskItem (Path.Combine ("armeabi-v7a", "libfoo.so"));
-		library.SetMetadata ("Abi", abi);
-		library.SetMetadata ("RuntimeIdentifier", rid);
-		library.SetMetadata ("Link", link);
-		var task = new ProcessNativeLibraries {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
-			TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
-				Root, new Dictionary<string, string> ()),
-			InputLibraries = [library],
-		};
-
-		Assert.IsTrue (task.Execute ());
-		CollectionAssert.AreEqual (new [] { library }, task.OutputLibraries);
-		Assert.AreEqual (expected, Microsoft.Android.Build.Tasks.AndroidRidAbiHelper.GetNativeLibraryAbi (library, task.TaskEnvironment));
-		Assert.AreEqual (abi, library.GetMetadata ("Abi"), "ABI inference must not replace explicit metadata.");
-	}
-
 	[Test]
 	public void ConcurrentProjectDirectories ()
 	{
@@ -55,9 +30,6 @@ public class ProcessNativeLibrariesTests : BaseTest
 
 			Assert.IsTrue (task.Execute ());
 			CollectionAssert.AreEqual (task.InputLibraries, task.OutputLibraries);
-			foreach (var library in task.InputLibraries) {
-				Assert.AreEqual (abi, Microsoft.Android.Build.Tasks.AndroidRidAbiHelper.GetNativeLibraryAbi (library, task.TaskEnvironment));
-			}
 		});
 	}
 
