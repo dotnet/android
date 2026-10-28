@@ -19,13 +19,16 @@ namespace Microsoft.Android.Build.Tasks
 		};
 
 		public static string? GetNativeLibraryAbi (string lib)
+			=> GetNativeLibraryAbi (lib, TaskEnvironment.Fallback);
+
+		public static string? GetNativeLibraryAbi (string lib, TaskEnvironment taskEnvironment)
 		{
 			if (string.IsNullOrEmpty (lib))
 				return null;
 			lib = lib.Replace ('\\', Path.DirectorySeparatorChar);
 
 			// The topmost directory the .so file is contained within
-			var dir = Directory.GetParent (lib);
+			var dir = Directory.GetParent (taskEnvironment.GetAbsolutePath (lib));
 			if (dir == null)
 				return null;
 
@@ -55,6 +58,9 @@ namespace Microsoft.Android.Build.Tasks
 		}
 
 		public static string? GetNativeLibraryAbi (ITaskItem lib)
+			=> GetNativeLibraryAbi (lib, TaskEnvironment.Fallback);
+
+		public static string? GetNativeLibraryAbi (ITaskItem lib, TaskEnvironment taskEnvironment)
 		{
 			// If Abi is explicitly specified, simply return it.
 			var lib_abi = lib.GetMetadata ("Abi");
@@ -66,7 +72,7 @@ namespace Microsoft.Android.Build.Tasks
 			// First, try nominal "Link" path.
 			var link = lib.GetMetadata ("Link");
 			if (!string.IsNullOrWhiteSpace (link)) {
-				lib_abi = GetNativeLibraryAbi (link);
+				lib_abi = GetNativeLibraryAbi (link, taskEnvironment);
 			}
 
 			// Check for a RuntimeIdentifier
@@ -79,7 +85,7 @@ namespace Microsoft.Android.Build.Tasks
 				return lib_abi;
 
 			// If not resolved, use ItemSpec
-			return GetNativeLibraryAbi (lib.ItemSpec);
+			return GetNativeLibraryAbi (lib.ItemSpec, taskEnvironment);
 		}
 
 		/// <summary>

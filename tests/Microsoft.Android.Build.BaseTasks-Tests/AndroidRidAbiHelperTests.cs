@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -229,6 +230,25 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		public void ITaskItemValue (ITaskItem input, string expected)
 		{
 			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (input));
+		}
+
+		[TestCase ("libfoo.so", "arm64-v8a")]
+		[TestCase ("./libfoo.so", "arm64-v8a")]
+		[TestCase ("../x86/libfoo.so", "x86")]
+		[TestCase ("../android-x64/native/libfoo.so", "x86_64")]
+		[TestCase ("../interpreter-armeabi-v7a/libfoo.so", "armeabi-v7a")]
+		[TestCase ("../unknown/libfoo.so", null)]
+		public void ProjectRelativePath (string path, string expected)
+		{
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+				Path.Combine (Path.GetTempPath (), "AndroidRidAbiHelperTests", "arm64-v8a"),
+				new Dictionary<string, string> ());
+
+			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (path, environment));
+			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (new TaskItem (path), environment));
+			var linked = new TaskItem (Path.Combine (Path.GetTempPath (), "unknown", "libfoo.so"));
+			linked.SetMetadata ("Link", path);
+			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (linked, environment));
 		}
 	}
 }
