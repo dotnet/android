@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
+using System.Xml.Linq;
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
+using Mono.Cecil;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
@@ -123,6 +127,136 @@ namespace Xamarin.Android.Build.Tests
 			CreateNativePE (nativeDll);
 			var actual = Run (nativeDll);
 			CollectionAssert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
+		}
+
+		static Guid CreateAssembly (string path, bool android)
+		{
+			Directory.CreateDirectory (Path.GetDirectoryName (path));
+			using var assembly = AssemblyDefinition.CreateAssembly (
+				new AssemblyNameDefinition ("Library", new Version (1, 0)), "Library", ModuleKind.Dll);
+			if (android) {
+				assembly.MainModule.Resources.Add (new EmbeddedResource ("library.jar", ManifestResourceAttributes.Private, new byte [] { 1 }));
+			}
+			assembly.Write (path);
+			return assembly.MainModule.Mvid;
+		}
+
+		[Test]
+		public void ConcurrentRelativePathsAndCachedResults ()
+		{
+			var engine = new MockBuildEngine (TextWriter.Null);
+			var modules = new List<(Guid Id, bool Android)> ();
+			foreach (string name in new [] { "first", "second" }) {
+				string root = Path.Combine (tempDirectory, name);
+				modules.Add ((CreateAssembly (Path.Combine (root, "library.dll"), name == "first"), name == "first"));
+				modules.Add ((CreateAssembly (Path.Combine (root, "other.dll"), name == "second"), name == "second"));
+				CreateNativePE (Path.Combine (root, "native.dll"));
+			}
+
+			Parallel.For (0, 32, i => {
+				string name = i % 2 == 0 ? "first" : "second";
+				var android = new TaskItem (name == "first" ? "library.dll" : "other.dll");
+				android.SetMetadata ("Owner", name);
+				var plain = new TaskItem (name == "first" ? "other.dll" : "library.dll");
+				var platform = new TaskItem ("not-on-disk.dll");
+				platform.SetMetadata ("TargetPlatformIdentifier", "android");
+				var framework = new TaskItem ("Mono.Android.dll");
+				var task = new FilterAssemblies {
+					BuildEngine = engine,
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+						Path.Combine (tempDirectory, name), new Dictionary<string, string> ()),
+					InputAssemblies = [plain, android, framework, new TaskItem ("missing.dll"), new TaskItem ("native.dll"), platform, android],
+				};
+				Assert.IsTrue (task.Execute ());
+				var output = task.OutputAssemblies ?? throw new InvalidOperationException ("Missing output assemblies.");
+				CollectionAssert.AreEqual (new [] { android, platform, android }, output);
+				Assert.AreSame (android, output [0]);
+				Assert.AreEqual (name, output [0].GetMetadata ("Owner"));
+			});
+
+			foreach (var module in modules) {
+				Assert.AreEqual (module.Android, engine.GetRegisteredTaskObjectAssemblyLocal (
+					(nameof (FilterAssemblies), module.Id), RegisteredTaskObjectLifetime.AppDomain));
+			}
+
+			string path = Path.Combine (tempDirectory, "first", "library.dll");
+			CreateAssembly (path, android: false);
+			var updated = new FilterAssemblies {
+				BuildEngine = engine,
+				InputAssemblies = [new TaskItem (path)],
+			};
+			Assert.IsTrue (updated.Execute ());
+			Assert.IsEmpty (updated.OutputAssemblies, "A new MVID must not reuse the previous result for the same path.");
+		}
+
+		[Test]
+		[Platform ("Win")]
+		public void LockedRelativeAssemblyReportsFileLock ()
+		{
+			string path = Path.Combine (tempDirectory, "locked.dll");
+			CreateAssembly (path, android: true);
+			using var locked = File.Open (path, FileMode.Open, FileAccess.Read, FileShare.None);
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new FilterAssemblies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDirectory, new Dictionary<string, string> ()),
+				InputAssemblies = [new TaskItem ("locked.dll")],
+			};
+			Assert.IsFalse (task.Execute ());
+			Assert.AreEqual (1, errors.Count);
+			Assert.AreEqual ("XAFLT7024", errors [0].Code);
+			StringAssert.StartsWith ("The file is locked by:", errors [0].Message);
+			StringAssert.Contains (path, errors [0].Message);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ConcurrentProjectsPreserveRelativeItems (bool multithreaded)
+		{
+			string assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll");
+			var resources = new List<ProjectResource> ();
+			foreach (string name in new [] { "first", "second" }) {
+				string root = Path.Combine (tempDirectory, name);
+				CreateAssembly (Path.Combine (root, "library.dll"), name == "first");
+				CreateAssembly (Path.Combine (root, "other.dll"), name == "second");
+				var project = new XElement ("Project",
+					new XElement ("UsingTask", new XAttribute ("TaskName", "Xamarin.Android.Tasks.FilterAssemblies"), new XAttribute ("AssemblyFile", assembly)),
+					new XElement ("ItemGroup",
+						new XElement ("Input", new XAttribute ("Include", "library.dll;other.dll;library.dll"),
+							new XElement ("Owner", name))),
+					new XElement ("Target", new XAttribute ("Name", "Build"),
+						new XElement ("FilterAssemblies", new XAttribute ("InputAssemblies", "@(Input)"),
+							new XElement ("Output", new XAttribute ("TaskParameter", "OutputAssemblies"), new XAttribute ("ItemName", "_Filtered"))),
+						new XElement ("FilterAssemblies", new XAttribute ("InputAssemblies", "@(Input)"),
+							new XElement ("Output", new XAttribute ("TaskParameter", "OutputAssemblies"), new XAttribute ("ItemName", "_Cached"))),
+						new XElement ("WriteLinesToFile",
+							new XAttribute ("File", "$(MSBuildProjectDirectory)/output.txt"),
+							new XAttribute ("Overwrite", "true"),
+							new XAttribute ("Lines", "@(_Filtered->'%(Identity)|%(FullPath)|%(Owner)');@(_Cached->'%(Identity)|%(FullPath)|%(Owner)')"))));
+				resources.Add (new ProjectResource { Path = Path.Combine (name, "filter.proj"), Content = project.ToString () });
+			}
+			var driver = new XElement ("Project",
+				new XElement ("ItemGroup",
+					new XElement ("Reader", new XAttribute ("Include", "first/filter.proj;second/filter.proj"))),
+				new XElement ("Target", new XAttribute ("Name", "Build"),
+					new XElement ("MSBuild", new XAttribute ("Projects", "@(Reader)"), new XAttribute ("BuildInParallel", "true"), new XAttribute ("Targets", "Build"))));
+			resources.Add (new ProjectResource { Path = "driver.proj", Content = driver.ToString () });
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (tempDirectory, resources, doNotCleanup: true);
+			var dotnet = new DotNetCLI (Path.Combine (tempDirectory, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+
+			foreach (string name in new [] { "first", "second" }) {
+				string file = name == "first" ? "library.dll" : "other.dll";
+				string line = $"{file}|{Path.Combine (tempDirectory, name, file)}|{name}";
+				CollectionAssert.AreEqual (Enumerable.Repeat (line, name == "first" ? 4 : 2),
+					File.ReadAllLines (Path.Combine (tempDirectory, name, "output.txt")));
+			}
 		}
 
 		/// <summary>
