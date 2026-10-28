@@ -36,13 +36,17 @@ namespace Java.Interop {
 		}
 
 		static JniMethodInfo? init;
-		internal static unsafe JniObjectReference CreateLocalRef (<#= type.Type #> value)
+		internal static JniObjectReference CreateLocalRef (<#= type.Type #> value)
 		{
-			var args    = stackalloc JniArgumentValue [1];
-			args [0]    = new JniArgumentValue (value);
+			Span<JniArgumentValue> args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (value);
 
 			TypeRef.GetCachedConstructor (ref init, "(<#= type.JniType #>)V");
-			return TypeRef.NewObject (init, args);
+			unsafe {
+				// SAFETY: Pin the initialized (<#= type.JniType #>)V argument through the synchronous constructor call.
+				fixed (JniArgumentValue* p = args)
+					return TypeRef.NewObject (init, p);
+			}
 		}
 
 		static JniMethodInfo? <#= type.GetValue #>;
@@ -51,7 +55,10 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (<#= type.Type #>), "Expected targetType==typeof(<#= type.Type #>); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
 			try {
-				return JniEnvironment.InstanceMethods.Call<#= type.JniCallType #>Method (self, <#= type.GetValue #>);
+				unsafe {
+					// SAFETY: The cached <#= type.GetValue #> ID has no arguments and the peer reference is retained until the enclosing finally.
+					return JniEnvironment.InstanceMethods.Call<#= type.JniCallType #>Method (self, <#= type.GetValue #>);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}

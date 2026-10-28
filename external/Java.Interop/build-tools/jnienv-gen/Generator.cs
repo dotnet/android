@@ -119,7 +119,7 @@ namespace Xamarin.Java.Interop
 			int maxName = JNIEnvEntries.Max (e => e.Name.Length);
 
 			o.WriteLine ("\t[StructLayout (LayoutKind.Sequential)]");
-			o.WriteLine ("\tunsafe partial struct JNIEnv {");
+			o.WriteLine ("\tpartial struct JNIEnv {");
 
 			for (int i = 0; i < 4; i++)
 				o.WriteLine ("\t\tprivate IntPtr  reserved{0};                      // void*", i);
@@ -180,6 +180,13 @@ namespace Xamarin.Java.Interop
 
 		static void GenerateJniNativeMethods (TextWriter o)
 		{
+			o.WriteLine ("\t/// <safety>");
+			o.WriteLine ("\t/// Supply the calling attached thread's live JNIEnv with the JNI vtable ABI.");
+			o.WriteLine ("\t/// Handles and IDs must match the selected JNI operation. Borrowed pointers must have");
+			o.WriteLine ("\t/// the required bounds, access and termination, with stable storage and live references");
+			o.WriteLine ("\t/// through return or failure. Pin managed storage and prevent conflicting alias access.");
+			o.WriteLine ("\t/// Individual operations may require a longer lifetime, as documented on their methods.");
+			o.WriteLine ("\t/// </safety>");
 			o.WriteLine ("\tstatic partial class JniNativeMethods {");
 			o.WriteLine ();
 			foreach (var entry in JNIEnvEntries) {
@@ -189,8 +196,8 @@ namespace Xamarin.Java.Interop
 					continue;
 
 				var returnType = entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true);
-
 				o.WriteLine ();
+				WriteCallerSafetyRequirements (o, entry, isRaw: true);
 				o.WriteLine ("\t\t[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
 				o.Write ("\t\tinternal static unsafe ");
 				o.Write (entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true));
@@ -202,7 +209,9 @@ namespace Xamarin.Java.Interop
 				}
 				o.WriteLine (")");
 				o.WriteLine ("\t\t{");
-				o.Write ("\t\t\t");
+				o.WriteLine ("\t\t\tunsafe {");
+				o.WriteLine ("\t\t\t\t// SAFETY: The caller supplies this thread's live JNIEnv and arguments matching the {0} JNI slot.", entry.Name);
+				o.Write ("\t\t\t\t");
 				if (returnType != "void") {
 					o.Write ("return ");
 				}
@@ -212,6 +221,7 @@ namespace Xamarin.Java.Interop
 					o.Write (Escape (p.Name));
 				}
 				o.WriteLine (");");
+				o.WriteLine ("\t\t\t}");
 				o.WriteLine ("\t\t}");
 			}
 			o.WriteLine ("\t}");
@@ -232,7 +242,12 @@ namespace Xamarin.Java.Interop
 					continue;
 
 				o.WriteLine ();
-				o.Write ("\t\t{2} static unsafe {0} {1} (", entry.GetManagedReturnType (), entry.ApiName, entry.Visibility);
+				WriteCallerSafetyRequirements (o, entry);
+				// Nonzero IDs do not validate invocation signatures, including constructors.
+				bool requiresUnsafe = type == InstanceMethodsCategory || type == StaticMethodsCategory ||
+					entry.RequiresUnsafe ||
+					entry.Parameters.Any (p => p.Type.GetManagedType (isReturn: false).IndexOf ('*') >= 0);
+				o.Write ("\t\t{2} static {3}{0} {1} (", entry.GetManagedReturnType (), entry.ApiName, entry.Visibility, requiresUnsafe ? "unsafe " : "");
 				switch (entry.ApiName) {
 				default:
 					bool is_void = entry.ReturnType.JniType == "void";
@@ -246,9 +261,15 @@ namespace Xamarin.Java.Interop
 					NullCheckParameters (o, entry.Parameters);
 					PrepareParameters (o, entry.Parameters);
 					o.WriteLine ($"\t\t\tIntPtr __env = JniEnvironment.EnvironmentPointer;");
-					o.Write ("\t\t\t");
 					if (!is_void)
-						o.Write ("var tmp = ");
+						o.WriteLine ($"\t\t\t{entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true)} tmp;");
+					if (entry.Throws)
+						o.WriteLine ("\t\t\tIntPtr thrown;");
+					o.WriteLine ("\t\t\tunsafe {");
+					o.WriteLine ("\t\t\t\t// SAFETY: {0} uses this thread's JNIEnv; owned buffers and caller-provided JNI arguments remain valid through this call.", entry.Name);
+					o.Write ("\t\t\t\t");
+					if (!is_void)
+						o.Write ("tmp = ");
 					o.Write ($"JniNativeMethods.{entry.Name} (__env");
 					for (int i = 0; i < entry.Parameters.Length; i++) {
 						var p = entry.Parameters [i];
@@ -260,7 +281,8 @@ namespace Xamarin.Java.Interop
 					}
 					o.WriteLine (");");
 					if (entry.Throws)
-						o.WriteLine ("\t\t\tIntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);");
+						o.WriteLine ("\t\t\t\tthrown = JniNativeMethods.ExceptionOccurred (__env);");
+					o.WriteLine ("\t\t\t}");
 					CleanupParameters (o, entry.Parameters);
 					RaiseException (o, entry);
 					if (is_void) {
@@ -276,6 +298,19 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ("\t\t}");
 			}
 			o.WriteLine ("\t}");
+		}
+
+		static void WriteCallerSafetyRequirements (TextWriter o, JniFunction entry, bool isRaw = false)
+		{
+			if (!isRaw && entry.CallerSafetyRequirements.Length == 0)
+				return;
+
+			o.WriteLine ("\t\t/// <safety>");
+			if (isRaw)
+				o.WriteLine ("\t\t/// The raw JNI caller contract on <see cref=\"JniNativeMethods\"/> applies.");
+			foreach (var requirement in entry.CallerSafetyRequirements)
+				o.WriteLine ("\t\t/// {0}", requirement);
+			o.WriteLine ("\t\t/// </safety>");
 		}
 
 		static string GetPinvokeName (string name)
@@ -463,6 +498,9 @@ namespace Xamarin.Java.Interop
 		
 		public TypeInfo ReturnType;
 		public ParamInfo [] Parameters;
+
+		public bool RequiresUnsafe;
+		public string[] CallerSafetyRequirements = [];
 
 		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
 		public bool CustomWrapper = false;
@@ -762,7 +800,10 @@ namespace Xamarin.Java.Interop
 		public override string[] GetManagedToMarshalCleanupStatements (string variable)
 		{
 			return new[]{
-				$"Marshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
+				"unsafe {",
+				$"\t// SAFETY: _{variable}_ptr is owned here and freed after its last native use; earlier failures do not reach this cleanup.",
+				$"\tMarshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
+				"}",
 			};
 		}
 	}

@@ -101,6 +101,50 @@ updated C# memory-safety rules. Object-reference control blocks and JavaVM
 arguments retain their allocation, encoding, and release behavior. JNI object
 handles and method/field IDs remain opaque `IntPtr` values.
 
+## Native caller contracts
+
+JNI declarations distinguish caller-owned raw memory from implementation-owned
+buffers. Their `<safety>` documentation describes buffer bounds, pinning, and
+lifetimes. Managed alternatives such as `JniType.DefineClass` with a `byte[]` and
+`JniEnvironment.Strings.NewString` with a `string` own their pinning and keep
+unsafe operations inside their implementations.
+
+Caller annotations and implementation regions are audited independently.
+JNI descriptors select caller-unsafe declarations independently of their
+documentation. Method-level safety contracts are authored in those descriptors,
+not inferred from parameter names; raw forwarders reference a shared JNI contract.
+Each audited `unsafe` body has a `// SAFETY:` explanation naming the storage,
+extent, ABI, or lifetime it relies on. The raw `JniNativeMethods` boundary
+requires a live `JNIEnv*` on its attached thread; that obligation is not
+implied merely by using opaque object, field, or method handles.
+
+`JniEnvironment.InstanceMethods` and `StaticMethods` retain their existing
+caller-unsafe classification. A nonzero method ID does not verify its
+descriptor or make a parameterless invocation safe. Managed wrappers with
+known descriptors discharge that obligation in local implementation blocks.
+
+For UTF-8 span lookups, callers must provide readable NUL-terminated backing
+storage throughout the call. Complete C# UTF-8 literals supply a trailing NUL
+outside the span length; copying or slicing a span does not preserve that
+guarantee. These APIs do not add terminators or retain their input spans.
+
+Native registration names and signatures must survive registration. Callbacks
+must match their JNI descriptors and remain callable and rooted until successful
+unregistration **and completion of all in-flight callbacks**, including after
+failed or partial registration. Declaration-level contracts do not validate
+callback ABIs or change registration ownership.
+
+An address-only `JniNativeMethod` constructor stores descriptor addresses; it
+does not read their contents or invoke a callback. Registration, not address
+storage, owns the ABI, provenance, and lifetime obligations described above.
+
+The project uses preview syntax for pointer declarations outside unsafe type
+contexts. It does **not** opt into the
+updated C# memory-safety rules. Caller-unsafe declaration intent is preparation
+for that later opt-in; it is not enforced for pointer-free signatures under
+legacy rules. Generated JNI wrappers and T4 inputs keep implementation unsafe
+blocks local without changing marshaling, dispatch, or cleanup.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java

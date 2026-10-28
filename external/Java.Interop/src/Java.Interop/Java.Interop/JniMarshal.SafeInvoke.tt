@@ -25,6 +25,11 @@ namespace Java.Interop {
 		string invokeParams   = i == 0 ? "" : ", " + string.Join (", ", parameters);
 #>
 
+		/// <safety>
+		/// <paramref name="action"/> must be a non-null managed entry point with this exact ABI,
+		/// executable through return or failure. <paramref name="jnienv"/> must be this attached
+		/// JNI thread's live environment; handles must stay valid for the action's uses.
+		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe void SafeInvokeAction<#= typeParams #> (IntPtr jnienv, IntPtr self<#= methodParams #>, delegate* managed<IntPtr, IntPtr<#= delegateParams #>, void> action)
 		{
@@ -32,7 +37,10 @@ namespace Java.Interop {
 				return;
 
 			try {
-				action (jnienv, self<#= invokeParams #>);
+				unsafe {
+					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+					action (jnienv, self<#= invokeParams #>);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 			} finally {
@@ -40,6 +48,11 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="action"/> must be a non-null managed entry point with this exact ABI,
+		/// executable through return or failure. <paramref name="jnienv"/> must be this attached
+		/// JNI thread's live environment; handles must stay valid for the action's uses.
+		/// </safety>
 		[return: MaybeNull]
 		[DebuggerDisableUserUnhandledExceptions]
 		public static unsafe TResult SafeInvokeFunc<#= funcTypeParams #> (IntPtr jnienv, IntPtr self<#= methodParams #>, delegate* managed<IntPtr, IntPtr<#= delegateParams #>, TResult> action)
@@ -48,7 +61,10 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				return action (jnienv, self<#= invokeParams #>);
+				unsafe {
+					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+					return action (jnienv, self<#= invokeParams #>);
+				}
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
