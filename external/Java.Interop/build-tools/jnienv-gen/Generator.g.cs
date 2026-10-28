@@ -19,6 +19,33 @@ namespace Xamarin.Java.Interop
 		const   string          ReflectionSupportCategory       = "Reflection";
 		const   string          JavaVMCategory                  = "References";
 
+		static readonly string[] MethodInvocationSafety = [
+			"Use a live method or constructor ID matching the receiver/type, dispatch, argument descriptor and return type.",
+			"Supply the complete argument list; an overload without an argument buffer requires zero arguments.",
+			"Keep initialized argument storage readable, stable and pinned when managed, and JNI references live through return or failure.",
+			"Prevent concurrent mutation or release through aliases. Null argument storage is valid only when no arguments are read.",
+		];
+
+		static readonly string[] GetArrayElementsSafety = [
+			"A non-null isCopy must address one writable JNI boolean, stable and pinned when managed through the call, without concurrent access.",
+			"Keep each successful acquisition and its array alive until the matching element-type release.",
+		];
+
+		static readonly string[] ReleaseArrayElementsSafety = [
+			"Release only the active acquisition for this array and element type, using a valid JNI release mode.",
+			"Prevent concurrent access or release through aliases. Never use storage after final release; JNI_COMMIT does not end the acquisition.",
+		];
+
+		static readonly string[] GetArrayRegionSafety = [
+			"The buffer must have writable space for length elements of the matching JNI primitive type; length must be nonnegative.",
+			"Keep it stable and pinned when managed through return or failure, without conflicting alias access. The native extent is not checked.",
+		];
+
+		static readonly string[] SetArrayRegionSafety = [
+			"The buffer must contain length readable, initialized elements of the matching JNI primitive type; length must be nonnegative.",
+			"Keep it stable and pinned when managed through return or failure, without concurrent mutation or release. The native extent is not checked.",
+		];
+
 		static readonly JniFunction[] JNIEnvEntries    = new JniFunction[]{
 			new JniFunction {
 				DeclaringType = VersionsCategory,
@@ -33,6 +60,7 @@ namespace Xamarin.Java.Interop
 				Name          = "DefineClass",
 				Visibility    = "public",
 				Throws        = true,
+				RequiresUnsafe = true,
 				CallerSafetyRequirements = [
 					"The caller must ensure <paramref name=\"buffer\"/> addresses at least <paramref name=\"bufferLength\"/> initialized bytes that JNI may read.",
 					"The backing storage must remain alive and at a stable address, pinned when managed, for the duration of the call.",
@@ -242,6 +270,8 @@ namespace Xamarin.Java.Interop
 				ApiName       = "_NewObject",
 				Visibility    = "internal",
 				Throws        = true,
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Prototype     = "jobject     (*NewObject)(JNIEnv*, jclass, jmethodID, ...);",
 				ReturnType    = "jobject",
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "type"), new ParamInfo ("jmethodID", "method")},
@@ -261,6 +291,7 @@ namespace Xamarin.Java.Interop
 				ApiName       = "_NewObject",
 				Visibility    = "internal",
 				Throws        = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Prototype     = "jobject     (*NewObjectA)(JNIEnv*, jclass, jmethodID, jvalue*);",
 				ReturnType    = "jobject",
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "type"), new ParamInfo ("jmethodID", "method"), new ParamInfo ("jvalue*", "args", true)},
@@ -293,6 +324,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallObjectMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jobject     (*CallObjectMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -311,6 +343,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallObjectMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallObjectMethod",
 				Throws        = true,
 				Visibility    = "public",
@@ -321,6 +354,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallBooleanMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jboolean    (*CallBooleanMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -339,6 +373,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallBooleanMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallBooleanMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -349,6 +384,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallByteMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jbyte       (*CallByteMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -367,6 +403,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallByteMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallByteMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -377,6 +414,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallCharMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jchar       (*CallCharMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -395,6 +433,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallCharMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallCharMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -405,6 +444,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallShortMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jshort      (*CallShortMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -423,6 +463,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallShortMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallShortMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -433,6 +474,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallIntMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jint        (*CallIntMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -451,6 +493,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallIntMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallIntMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -461,6 +504,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallLongMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jlong       (*CallLongMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -479,6 +523,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallLongMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallLongMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -489,6 +534,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallFloatMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jfloat      (*CallFloatMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -507,6 +553,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallFloatMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallFloatMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -517,6 +564,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallDoubleMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jdouble     (*CallDoubleMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -535,6 +583,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallDoubleMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallDoubleMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -545,6 +594,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallVoidMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*CallVoidMethod)(JNIEnv*, jobject, jmethodID, ...);",
@@ -563,6 +613,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallVoidMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallVoidMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -573,6 +624,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualObjectMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jobject     (*CallNonvirtualObjectMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -591,6 +643,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualObjectMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualObjectMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -601,6 +654,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualBooleanMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jboolean    (*CallNonvirtualBooleanMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -619,6 +673,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualBooleanMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualBooleanMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -629,6 +684,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualByteMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jbyte       (*CallNonvirtualByteMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -647,6 +703,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualByteMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualByteMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -657,6 +714,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualCharMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jchar       (*CallNonvirtualCharMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -675,6 +733,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualCharMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualCharMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -685,6 +744,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualShortMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jshort      (*CallNonvirtualShortMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -703,6 +763,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualShortMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualShortMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -713,6 +774,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualIntMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jint        (*CallNonvirtualIntMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -731,6 +793,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualIntMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualIntMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -741,6 +804,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualLongMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jlong       (*CallNonvirtualLongMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -759,6 +823,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualLongMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualLongMethod",
 				Throws        = true,
 				Visibility    = "public",
@@ -769,6 +834,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualFloatMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jfloat      (*CallNonvirtualFloatMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -787,6 +853,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualFloatMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualFloatMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -797,6 +864,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualDoubleMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jdouble     (*CallNonvirtualDoubleMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -815,6 +883,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualDoubleMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualDoubleMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -825,6 +894,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualVoidMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*CallNonvirtualVoidMethod)(JNIEnv*, jobject, jclass, jmethodID, ...);",
@@ -843,6 +913,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualVoidMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualVoidMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1015,6 +1086,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticObjectMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jobject     (*CallStaticObjectMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1033,6 +1105,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticObjectMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticObjectMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1043,6 +1116,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticBooleanMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jboolean    (*CallStaticBooleanMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1061,6 +1135,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticBooleanMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticBooleanMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1071,6 +1146,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticByteMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jbyte       (*CallStaticByteMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1089,6 +1165,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticByteMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticByteMethod",
 				Throws        = true,
 				Visibility    = "public",
@@ -1099,6 +1176,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticCharMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jchar       (*CallStaticCharMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1117,6 +1195,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticCharMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticCharMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1127,6 +1206,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticShortMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jshort      (*CallStaticShortMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1145,6 +1225,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticShortMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticShortMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1155,6 +1236,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticIntMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jint        (*CallStaticIntMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1173,6 +1255,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticIntMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticIntMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1183,6 +1266,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticLongMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jlong       (*CallStaticLongMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1201,6 +1285,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticLongMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticLongMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1211,6 +1296,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticFloatMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jfloat      (*CallStaticFloatMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1229,6 +1315,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticFloatMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticFloatMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1239,6 +1326,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticDoubleMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "jdouble     (*CallStaticDoubleMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1257,6 +1345,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticDoubleMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticDoubleMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1267,6 +1356,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticVoidMethod",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*CallStaticVoidMethod)(JNIEnv*, jclass, jmethodID, ...);",
@@ -1285,6 +1375,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticVoidMethodA",
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticVoidMethod",
 				Visibility    = "public",
 				Throws        = true,
@@ -1451,6 +1542,10 @@ namespace Xamarin.Java.Interop
 				// CustomWrapper = true,
 				Visibility    = "public",
 				Throws        = true,
+				CallerSafetyRequirements = [
+					"unicodeChars must contain length readable, initialized UTF-16 code units; length must be nonnegative.",
+					"Keep the buffer stable and pinned when managed through return or failure, without concurrent mutation or release.",
+				],
 				Prototype     = "jstring     (*NewString)(JNIEnv*, const jchar*, jsize);",
 				ReturnType    = "jstring",
 				Parameters    = new ParamInfo [] {new ParamInfo ("jchar*", "unicodeChars"), new ParamInfo ("jsize", "length")},
@@ -1467,6 +1562,10 @@ namespace Xamarin.Java.Interop
 				DeclaringType = StringOperationsCategory,
 				Name          = "GetStringChars",
 				Visibility    = "public",
+				CallerSafetyRequirements = [
+					"A non-null isCopy must address one writable JNI boolean, stable and pinned when managed through the call, without concurrent access.",
+					"Keep any successful acquisition and its string alive until the matching ReleaseStringChars call.",
+				],
 				Prototype     = "const jchar* (*GetStringChars)(JNIEnv*, jstring, jboolean*);",
 				ReturnType    = TypeInfo.Create ("const jchar*", "char*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
@@ -1475,6 +1574,10 @@ namespace Xamarin.Java.Interop
 				DeclaringType = StringOperationsCategory,
 				Name          = "ReleaseStringChars",
 				Visibility    = "public",
+				CallerSafetyRequirements = [
+					"Release only a still-active GetStringChars acquisition for stringInstance.",
+					"Prevent concurrent access or release through aliases, and never use the chars after release.",
+				],
 				Prototype     = "void        (*ReleaseStringChars)(JNIEnv*, jstring, const jchar*);",
 				ReturnType    = "void",
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "stringInstance"), new ParamInfo ("jchar*", "chars")},
@@ -1617,6 +1720,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetBooleanArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jboolean*   (*GetBooleanArrayElements)(JNIEnv*, jbooleanArray, jboolean*);",
 				ReturnType    = "jboolean*",
@@ -1625,6 +1729,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetByteArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jbyte*      (*GetByteArrayElements)(JNIEnv*, jbyteArray, jboolean*);",
 				ReturnType    = "jbyte*",
@@ -1633,6 +1738,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetCharArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jchar*      (*GetCharArrayElements)(JNIEnv*, jcharArray, jboolean*);",
 				ReturnType    = "jchar*",
@@ -1641,6 +1747,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetShortArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jshort*     (*GetShortArrayElements)(JNIEnv*, jshortArray, jboolean*);",
 				ReturnType    = "jshort*",
@@ -1649,6 +1756,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetIntArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jint*       (*GetIntArrayElements)(JNIEnv*, jintArray, jboolean*);",
 				ReturnType    = "jint*",
@@ -1657,6 +1765,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetLongArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jlong*      (*GetLongArrayElements)(JNIEnv*, jlongArray, jboolean*);",
 				ReturnType    = "jlong*",
@@ -1665,6 +1774,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetFloatArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jfloat*     (*GetFloatArrayElements)(JNIEnv*, jfloatArray, jboolean*);",
 				ReturnType    = "jfloat*",
@@ -1673,6 +1783,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetDoubleArrayElements",
+				CallerSafetyRequirements = GetArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "jdouble*    (*GetDoubleArrayElements)(JNIEnv*, jdoubleArray, jboolean*);",
 				ReturnType    = "jdouble*",
@@ -1681,6 +1792,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseBooleanArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseBooleanArrayElements)(JNIEnv*, jbooleanArray, jboolean*, jint);",
 				ReturnType    = "void",
@@ -1689,6 +1801,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseByteArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseByteArrayElements)(JNIEnv*, jbyteArray, jbyte*, jint);",
 				ReturnType    = "void",
@@ -1697,6 +1810,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseCharArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseCharArrayElements)(JNIEnv*, jcharArray, jchar*, jint);",
 				ReturnType    = "void",
@@ -1705,6 +1819,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseShortArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseShortArrayElements)(JNIEnv*, jshortArray, jshort*, jint);",
 				ReturnType    = "void",
@@ -1713,6 +1828,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseIntArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseIntArrayElements)(JNIEnv*, jintArray, jint*, jint);",
 				ReturnType    = "void",
@@ -1721,6 +1837,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseLongArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseLongArrayElements)(JNIEnv*, jlongArray, jlong*, jint);",
 				ReturnType    = "void",
@@ -1729,6 +1846,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseFloatArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseFloatArrayElements)(JNIEnv*, jfloatArray, jfloat*, jint);",
 				ReturnType    = "void",
@@ -1737,6 +1855,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleaseDoubleArrayElements",
+				CallerSafetyRequirements = ReleaseArrayElementsSafety,
 				Visibility    = "public",
 				Prototype     = "void        (*ReleaseDoubleArrayElements)(JNIEnv*, jdoubleArray, jdouble*, jint);",
 				ReturnType    = "void",
@@ -1745,6 +1864,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetBooleanArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetBooleanArrayRegion)(JNIEnv*, jbooleanArray, jsize, jsize, jboolean*);",
@@ -1754,6 +1874,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetByteArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetByteArrayRegion)(JNIEnv*, jbyteArray, jsize, jsize, jbyte*);",
@@ -1763,6 +1884,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetCharArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetCharArrayRegion)(JNIEnv*, jcharArray, jsize, jsize, jchar*);",
@@ -1772,6 +1894,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetShortArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetShortArrayRegion)(JNIEnv*, jshortArray, jsize, jsize, jshort*);",
@@ -1781,6 +1904,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetIntArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetIntArrayRegion)(JNIEnv*, jintArray, jsize, jsize, jint*);",
@@ -1790,6 +1914,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetLongArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetLongArrayRegion)(JNIEnv*, jlongArray, jsize, jsize, jlong*);",
@@ -1799,6 +1924,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetFloatArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetFloatArrayRegion)(JNIEnv*, jfloatArray, jsize, jsize, jfloat*);",
@@ -1808,6 +1934,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetDoubleArrayRegion",
+				CallerSafetyRequirements = GetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*GetDoubleArrayRegion)(JNIEnv*, jdoubleArray, jsize, jsize, jdouble*);",
@@ -1817,6 +1944,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetBooleanArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetBooleanArrayRegion)(JNIEnv*, jbooleanArray, jsize, jsize, const jboolean*);",
@@ -1826,6 +1954,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetByteArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetByteArrayRegion)(JNIEnv*, jbyteArray, jsize, jsize, const jbyte*);",
@@ -1835,6 +1964,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetCharArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetCharArrayRegion)(JNIEnv*, jcharArray, jsize, jsize, const jchar*);",
@@ -1844,6 +1974,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetShortArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetShortArrayRegion)(JNIEnv*, jshortArray, jsize, jsize, const jshort*);",
@@ -1853,6 +1984,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetIntArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetIntArrayRegion)(JNIEnv*, jintArray, jsize, jsize, const jint*);",
@@ -1862,6 +1994,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetLongArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetLongArrayRegion)(JNIEnv*, jlongArray, jsize, jsize, const jlong*);",
@@ -1871,6 +2004,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetFloatArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetFloatArrayRegion)(JNIEnv*, jfloatArray, jsize, jsize, const jfloat*);",
@@ -1880,6 +2014,7 @@ namespace Xamarin.Java.Interop
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetDoubleArrayRegion",
+				CallerSafetyRequirements = SetArrayRegionSafety,
 				Visibility    = "public",
 				Throws        = true,
 				Prototype     = "void        (*SetDoubleArrayRegion)(JNIEnv*, jdoubleArray, jsize, jsize, const jdouble*);",
@@ -1891,6 +2026,7 @@ namespace Xamarin.Java.Interop
 				Name          = "RegisterNatives",
 				ApiName       = "_RegisterNatives",
 				Visibility    = "internal",
+				RequiresUnsafe = true,
 				CallerSafetyRequirements = [
 					"Registered delegates must have the JNI ABI for their descriptors, including JNIEnv and receiver/class arguments.",
 					"Keep registered callbacks callable and rooted while JNI may invoke them, including after failed or partial registration; quiesce callers before unregistration and release roots only after successful unregistration and all in-flight callbacks complete.",
@@ -1958,6 +2094,10 @@ namespace Xamarin.Java.Interop
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetPrimitiveArrayCritical",
 				Visibility    = "public",
+				CallerSafetyRequirements = [
+					"A non-null isCopy must address one writable JNI boolean, stable and pinned when managed through the call, without concurrent access.",
+					"Obey JNI critical-region restrictions until the matching final release; keep the acquisition and array alive.",
+				],
 				Prototype     = "void*       (*GetPrimitiveArrayCritical)(JNIEnv*, jarray, jboolean*);",
 				ReturnType    = "void*",
 				Parameters    = new ParamInfo [] {new ParamInfo ("jarray", "array"), new ParamInfo (TypeInfo.Create ("jboolean*", "bool*"), "isCopy", Modifier.CanBeNull)},
@@ -1966,6 +2106,7 @@ namespace Xamarin.Java.Interop
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "ReleasePrimitiveArrayCritical",
 				Visibility    = "public",
+				RequiresUnsafe = true,
 				CallerSafetyRequirements = [
 					"The caller must ensure <paramref name=\"carray\"/> comes from a matching, still-active GetPrimitiveArrayCritical acquisition for <paramref name=\"array\"/>.",
 					"The caller must obey JNI critical-region restrictions and use a valid release mode.",
@@ -2021,6 +2162,7 @@ namespace Xamarin.Java.Interop
 				Name          = "NewDirectByteBuffer",
 				Visibility    = "public",
 				Throws        = true,
+				RequiresUnsafe = true,
 				CallerSafetyRequirements = [
 					"The caller must ensure <paramref name=\"address\"/> refers to a valid memory region covering <paramref name=\"capacity\"/> bytes.",
 					"The region must remain alive and accessible at a stable address, pinned when managed, for all reads and writes performed by the returned buffer or any Java aliases.",

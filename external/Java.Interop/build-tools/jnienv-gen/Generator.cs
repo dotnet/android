@@ -180,6 +180,13 @@ namespace Xamarin.Java.Interop
 
 		static void GenerateJniNativeMethods (TextWriter o)
 		{
+			o.WriteLine ("\t/// <safety>");
+			o.WriteLine ("\t/// Supply the calling attached thread's live JNIEnv with the JNI vtable ABI.");
+			o.WriteLine ("\t/// Handles and IDs must match the selected JNI operation. Borrowed pointers must have");
+			o.WriteLine ("\t/// the required bounds, access and termination, with stable storage and live references");
+			o.WriteLine ("\t/// through return or failure. Pin managed storage and prevent conflicting alias access.");
+			o.WriteLine ("\t/// Individual operations may require a longer lifetime, as documented on their methods.");
+			o.WriteLine ("\t/// </safety>");
 			o.WriteLine ("\tstatic partial class JniNativeMethods {");
 			o.WriteLine ();
 			foreach (var entry in JNIEnvEntries) {
@@ -238,8 +245,7 @@ namespace Xamarin.Java.Interop
 				WriteCallerSafetyRequirements (o, entry);
 				// Nonzero IDs do not validate invocation signatures, including constructors.
 				bool requiresUnsafe = type == InstanceMethodsCategory || type == StaticMethodsCategory ||
-					entry.Name == "NewObject" ||
-					entry.CallerSafetyRequirements.Length > 0 ||
+					entry.RequiresUnsafe ||
 					entry.Parameters.Any (p => p.Type.GetManagedType (isReturn: false).IndexOf ('*') >= 0);
 				o.Write ("\t\t{2} static {3}{0} {1} (", entry.GetManagedReturnType (), entry.ApiName, entry.Visibility, requiresUnsafe ? "unsafe " : "");
 				switch (entry.ApiName) {
@@ -296,54 +302,13 @@ namespace Xamarin.Java.Interop
 
 		static void WriteCallerSafetyRequirements (TextWriter o, JniFunction entry, bool isRaw = false)
 		{
-			var requirements = entry.CallerSafetyRequirements.ToList ();
-			if (isRaw) {
-				requirements.Insert (0, "<paramref name=\"env\"/> must be a live JNIEnv for the calling attached thread with the JNI vtable ABI; it must not be used on another thread or after detachment.");
-			}
-			if (entry.Parameters.Any (p => p.Name == "method") &&
-					(entry.Name.StartsWith ("Call", StringComparison.Ordinal) || entry.Name.StartsWith ("NewObject", StringComparison.Ordinal))) {
-				requirements.Add ("<paramref name=\"method\"/> must identify the constructor or method selected by this JNI call, with the matching static/instance dispatch, receiver or declaring class, parameter descriptor and return type. A nonzero method ID alone does not establish compatibility.");
-				if (!entry.Parameters.Any (p => p.Type.JniType == "jvalue*"))
-					requirements.Add ("The method descriptor must take zero arguments; this overload supplies no argument slots.");
-			}
-			foreach (var parameter in entry.Parameters) {
-				switch (parameter.Type.JniType) {
-				case "jvalue*":
-					requirements.Add ($"<paramref name=\"{parameter.Name}\"/> must contain the initialized jvalue entries required by the method descriptor, with matching JNI types and live object references. Null is allowed only when no arguments are read.");
-					requirements.Add ("Keep the argument storage readable, stable, and pinned when managed through the call, including exceptional completion; do not mutate or release it concurrently.");
-					break;
-				case "const char*":
-					if (isRaw)
-						requirements.Add ($"<paramref name=\"{parameter.Name}\"/> must address readable, unchanged NUL-terminated JNI UTF-8 storage through the call, including exceptional completion.");
-					break;
-				case "jboolean*":
-					if (parameter.Name == "isCopy")
-						requirements.Add ("A non-null <paramref name=\"isCopy\"/> must address writable storage for one JNI boolean, stable and pinned when managed through this call, without concurrent access.");
-					goto default;
-				case "JavaVM**":
-					if (isRaw)
-						requirements.Add ("<paramref name=\"vm\"/> must address writable storage for one JavaVM pointer for this call.");
-					break;
-				default:
-					if (parameter.Name == "elements") {
-						requirements.Add ("<paramref name=\"elements\"/> must be the still-active acquisition for <paramref name=\"array\"/> and the matching element type. Use a valid JNI release mode; prevent access or release through aliases during release and never use the storage after final release.");
-					} else if (parameter.Name == "buffer" && entry.Name.EndsWith ("ArrayRegion", StringComparison.Ordinal)) {
-						var access = entry.Name.StartsWith ("Get", StringComparison.Ordinal) ? "writable" : "readable and initialized";
-						requirements.Add ($"<paramref name=\"buffer\"/> must address at least <paramref name=\"length\"/> {access} elements of the matching JNI primitive type. Keep it stable and pinned when managed through the call, including exceptional completion, without conflicting alias access.");
-						requirements.Add ("<paramref name=\"length\"/> must be nonnegative; the buffer extent is not checked by this wrapper.");
-					} else if (parameter.Name == "unicodeChars") {
-						requirements.Add ("<paramref name=\"unicodeChars\"/> must address at least <paramref name=\"length\"/> readable initialized UTF-16 code units, stable and pinned when managed through the call, including exceptional completion. The length must be nonnegative and no alias may modify the buffer during the read.");
-					} else if (parameter.Name == "chars") {
-						requirements.Add ("<paramref name=\"chars\"/> must come from a still-active GetStringChars acquisition for <paramref name=\"stringInstance\"/>. Prevent concurrent access or release and do not use any alias after release.");
-					}
-					break;
-				}
-			}
-			if (requirements.Count == 0)
+			if (!isRaw && entry.CallerSafetyRequirements.Length == 0)
 				return;
 
 			o.WriteLine ("\t\t/// <safety>");
-			foreach (var requirement in requirements)
+			if (isRaw)
+				o.WriteLine ("\t\t/// The raw JNI caller contract on <see cref=\"JniNativeMethods\"/> applies.");
+			foreach (var requirement in entry.CallerSafetyRequirements)
 				o.WriteLine ("\t\t/// {0}", requirement);
 			o.WriteLine ("\t\t/// </safety>");
 		}
@@ -534,6 +499,7 @@ namespace Xamarin.Java.Interop
 		public TypeInfo ReturnType;
 		public ParamInfo [] Parameters;
 
+		public bool RequiresUnsafe;
 		public string[] CallerSafetyRequirements = [];
 
 		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)

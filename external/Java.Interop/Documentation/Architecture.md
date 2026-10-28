@@ -110,6 +110,9 @@ lifetimes. Managed alternatives such as `JniType.DefineClass` with a `byte[]` an
 unsafe operations inside their implementations.
 
 Caller annotations and implementation regions are audited independently.
+JNI descriptors select caller-unsafe declarations independently of their
+documentation. Method-level safety contracts are authored in those descriptors,
+not inferred from parameter names; raw forwarders reference a shared JNI contract.
 Each audited `unsafe` body has a `// SAFETY:` explanation naming the storage,
 extent, ABI, or lifetime it relies on. The raw `JniNativeMethods` boundary
 requires a live `JNIEnv*` on its attached thread; that obligation is not
