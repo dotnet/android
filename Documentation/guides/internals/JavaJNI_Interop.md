@@ -213,6 +213,18 @@ public bool HandleClick (Android.Views.View view, int action)
 
 The [application build tests](../../../src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/TrimmableTypeMapBuildTests.cs) exercise generated `[Export]` methods. The Java wrapper has a `native` declaration with its calculated JNI signature; the generated managed dispatcher, not the developer's C# method directly, is the unmanaged entrypoint.
 
+`[Export]` derives its JNI signature from the managed signature, unlike
+`[Register]`, which supplies it explicitly. Scalar `Android.Graphics.Color`
+parameters and return values have a built-in mapping to Java `int` (JNI `I`).
+For example, `[Export] Color Echo(Color value)` has JNI signature `(I)I`.
+The dispatcher constructs incoming colors with `new Color (argb)` and converts
+returned colors using the implicit `Color`-to-`int` operator. This is an explicit
+Android type mapping, not constructor/operator inference for arbitrary structs.
+Color arrays map recursively to Java primitive arrays: `Color[]` uses `[I`,
+`Color[][]` uses `[[I`, and deeper jagged arrays add another `[` at each level.
+Array elements are converted between `Color` and `int`; unrelated lookalike
+types remain unsupported.
+
 JNI signatures are **not** CLR method signatures. JNI `Z` is an eight-bit `jboolean`, `C` a 16-bit `jchar`, `I` a 32-bit `jint`, and `Landroid/os/Bundle;` a Java object reference. The emitted entrypoint uses JNI ABI types (a `byte` for a boolean); conversions such as `jniValue != 0` and `managedResult ? (byte) 1 : (byte) 0` bridge C# `bool`. For normal registered callbacks the generator uses the captured original callback signature where available: older bindings may declare `bool`/`char` while newer ones can use `sbyte`/`ushort`. It must not assume that the callback signature is identical to the Java descriptor; see the scanner's [callback signature handling](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Scanner/JavaPeerScanner.cs). No assembly rewriter is needed to insert separate `_mm_wrapper` methods.
 
 The generated entrypoint handles exceptions differently depending on the callback. A normal `[Register]` forwarder calls the bound `n_*` callback in a `try` and sends caught exceptions directly to `AndroidEnvironment.UnhandledException` in `Mono.Android.dll`. It does not wait for GC bridge processing, because the trimmable typemap's value manager does not require that wait. [`EmitUcoForwarderBody`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs) does **not** create a `BeginMarshalMethod`/`EndMarshalMethod` frame. Modern bound callbacks can establish that JNI transition inside [`JniMarshal.SafeInvoke`](../../../external/Java.Interop/src/Java.Interop/Java.Interop/JniMarshal.SafeInvoke.cs) or [`JniMarshalTyped`](../../../src/Mono.Android/Java.Interop/JniMarshalTyped.cs). Generated direct `[Export]` dispatchers and constructor entrypoints instead call `BeginMarshalMethod`, pass caught exceptions to `JniRuntime.OnUserUnhandledException`, and call `EndMarshalMethod` in `finally`; see [`ExportMethodDispatchEmitter`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/ExportMethodDispatchEmitter.cs) and the generated constructor body in [`TypeMapAssemblyEmitter`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs). Inspect the callback kind to find the owner of JNI transition and exception handling.

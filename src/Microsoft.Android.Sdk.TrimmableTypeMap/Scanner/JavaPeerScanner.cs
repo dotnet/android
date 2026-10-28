@@ -2257,6 +2257,11 @@ public sealed class JavaPeerScanner : IDisposable
 			return false;
 		}
 
+		if (IsAndroidGraphicsColor (managedType)) {
+			descriptor = "I";
+			return true;
+		}
+
 		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
 		if (primitive is not null &&
 		    IsSpecialManagedType (
@@ -2368,6 +2373,9 @@ public sealed class JavaPeerScanner : IDisposable
 		return TryResolveType (managedTypeName, managedType.AssemblyName, out _, out var resolvedIndex) &&
 			assemblyNames.Contains (resolvedIndex.MetadataAssemblyName, StringComparer.Ordinal);
 	}
+
+	bool IsAndroidGraphicsColor (TypeRefData managedType)
+		=> IsSpecialManagedType (managedType, "Android.Graphics.Color", "Mono.Android");
 
 	/// <summary>
 	/// Returns the JNI descriptor for primitive types and System.String.
@@ -3124,6 +3132,10 @@ public sealed class JavaPeerScanner : IDisposable
 			};
 			var elementDescriptor = TryGetConstructorJniDescriptor (elementType);
 			return elementDescriptor is null ? null : $"[{elementDescriptor}";
+		}
+
+		if (IsAndroidGraphicsColor (parameterType)) {
+			return "I";
 		}
 
 		var primitiveDescriptor = TryGetPrimitiveJniDescriptor (parameterType);
