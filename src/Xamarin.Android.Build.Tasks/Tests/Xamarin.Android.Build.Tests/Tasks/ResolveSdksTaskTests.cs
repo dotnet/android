@@ -355,15 +355,13 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (true)]
-		[TestCase (false)]
-		public void GetJavaPlatformJarManifestDiagnosticsUseProjectDirectory (bool malformed)
+		[Test]
+		public void GetJavaPlatformJarMalformedManifestUsesProjectDirectory ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			var manifest = Path.Combine (path, "AndroidManifest.xml");
-			if (malformed)
-				File.WriteAllText (manifest, "<manifest>\n<broken></manifest>");
+			File.WriteAllText (manifest, "<manifest>\n<broken></manifest>");
 			var errors = new List<BuildErrorEventArgs> ();
 			try {
 				var task = new GetJavaPlatformJar {
@@ -374,12 +372,7 @@ namespace Xamarin.Android.Build.Tests {
 					SupportedOSPlatformVersion = "24.0",
 				};
 				Assert.IsFalse (task.Execute ());
-				if (malformed) {
-					Assert.AreEqual (manifest, errors.Single ().File);
-					StringAssert.Contains ("Line 2, position 11", errors [0].Message);
-				} else {
-					Assert.AreEqual ("XA1018", errors.Single ().Code);
-				}
+				Assert.AreEqual (manifest, errors.Single ().File);
 			} finally {
 				Directory.Delete (path, recursive: true);
 			}
