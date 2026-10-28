@@ -77,7 +77,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogErrorsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.LogWarningsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -87,7 +86,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
@@ -794,12 +792,26 @@ because xbuild doesn't support framework reference assemblies.
 <!-- project item consistency check -->
 <Target Name="_CheckProjectItems"
     DependsOnTargets="_SetLatestTargetFrameworkVersion">
-  <CheckProjectItems
-      IsApplication="$(AndroidApplication)"
-      JavaSourceFiles="@(AndroidJavaSource)"
-      JavaLibraries="@(AndroidJavaLibrary)"
-      NativeLibraries="@(AndroidNativeLibrary)"
-      EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)" />
+  <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
+    <_AndroidLastEmbeddedNativeLibrary>%(EmbeddedNativeLibrary.Identity)</_AndroidLastEmbeddedNativeLibrary>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(AndroidApplication)' == 'true' ">
+    <_AndroidOtherEmbeddedNativeLibrary Include="@(EmbeddedNativeLibrary)" Exclude="$(_AndroidLastEmbeddedNativeLibrary)" />
+  </ItemGroup>
+  <!-- Report every file, then stop on the last error to prevent downstream build work. -->
+  <AndroidError
+      Condition=" '@(_AndroidOtherEmbeddedNativeLibrary->Count())' != '0' "
+      Code="XA0100"
+      ResourceName="XA0100"
+      FormatArguments="%(_AndroidOtherEmbeddedNativeLibrary.Identity)"
+      File="%(_AndroidOtherEmbeddedNativeLibrary.Identity)"
+      ContinueOnError="ErrorAndContinue" />
+  <AndroidError
+      Condition=" '$(AndroidApplication)' == 'true' and '@(EmbeddedNativeLibrary->Count())' != '0' "
+      Code="XA0100"
+      ResourceName="XA0100"
+      FormatArguments="$(_AndroidLastEmbeddedNativeLibrary)"
+      File="$(_AndroidLastEmbeddedNativeLibrary)" />
 </Target>
 
 <Target Name="_CheckForContent">
@@ -810,10 +822,10 @@ because xbuild doesn't support framework reference assemblies.
       Condition="'%(Content.ExcludeFromContentCheck)' != 'true' and '%(Content.ExcludeFromSingleFile)' != 'true'" />
   </ItemGroup>
 
-  <LogWarningsForFiles
-      Files="@(_ContentIncludedForCheck)"
+  <AndroidWarning
       Code="XA0101"
-      Text="%40(Content) build action is not supported"
+      ResourceName="XA0101"
+      File="%(_ContentIncludedForCheck.Identity)"
       Condition=" '@(_ContentIncludedForCheck->Count())' != '0' "
   />
 </Target>
