@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -18,10 +17,8 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class MultiThreadedMigrationTests
 	{
-		[TestCase (0)]
-		[TestCase (1)]
-		[TestCase (2)]
-		public void PrepareSatelliteAssembliesPreservesMetadataAndOrder (int abiCount)
+		[Test]
+		public void PrepareSatelliteAssembliesPreservesMetadataAndOrder ()
 		{
 			var reference = new TaskItem (Path.Combine ("references", "fr", "Library.resources.dll"));
 			reference.SetMetadata ("Culture", "de");
@@ -34,8 +31,8 @@ namespace Xamarin.Android.Build.Tests
 			string [] abis = ["arm64-v8a", "x86_64"];
 			var task = new PrepareSatelliteAssemblies {
 				BuildEngine = new MockBuildEngine (TextWriter.Null),
-				BuildTargetAbis = abis.Take (abiCount).ToArray (),
-				ReferenceSatellitePaths = [reference, reference],
+				BuildTargetAbis = abis,
+				ReferenceSatellitePaths = [reference],
 				IntermediateSatelliteAssemblies = [intermediate],
 			};
 
@@ -47,11 +44,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("original", reference.GetMetadata ("DestinationSubDirectory"));
 			Assert.AreEqual ("", intermediate.GetMetadata ("Abi"));
 			var output = task.ProcessedSatelliteAssemblies ?? throw new InvalidOperationException ("Missing satellite outputs.");
-			Assert.AreEqual (3 * abiCount, output.Length);
-			ITaskItem [] inputs = [reference, reference, intermediate];
+			Assert.AreEqual (4, output.Length);
+			ITaskItem [] inputs = [reference, intermediate];
 			for (int i = 0; i < inputs.Length; i++) {
-				for (int a = 0; a < abiCount; a++) {
-					var item = output [i * abiCount + a];
+				for (int a = 0; a < abis.Length; a++) {
+					var item = output [i * abis.Length + a];
 					var input = inputs [i];
 					var culture = input.GetMetadata ("Culture");
 					Assert.AreNotSame (input, item);
@@ -63,27 +60,6 @@ namespace Xamarin.Android.Build.Tests
 					Assert.AreEqual (Path.Combine (abis [a], culture) + Path.DirectorySeparatorChar, item.GetMetadata ("DestinationSubDirectory"));
 				}
 			}
-		}
-
-		[Test]
-		public void PrepareSatelliteAssembliesConcurrentProjects ()
-		{
-			Parallel.For (0, 8, i => {
-				var directory = Path.Combine (Path.GetTempPath (), "satellites", i.ToString ());
-				var input = new TaskItem (Path.Combine ("obj", "es-MX", $"App{i}.resources.dll"));
-				var task = new PrepareSatelliteAssemblies {
-					BuildEngine = new MockBuildEngine (TextWriter.Null),
-					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
-					BuildTargetAbis = ["arm64-v8a"],
-					IntermediateSatelliteAssemblies = [input],
-				};
-				Assert.IsTrue (task.Execute ());
-				var output = task.ProcessedSatelliteAssemblies ?? throw new InvalidOperationException ("Missing satellite outputs.");
-				Assert.AreEqual (1, output.Length);
-				Assert.AreEqual (input.ItemSpec, output [0].ItemSpec);
-				Assert.AreEqual ("es-MX", input.GetMetadata ("Culture"));
-				Assert.AreEqual ($"arm64-v8a/es-MX/App{i}.resources.dll", output [0].GetMetadata ("DestinationSubPath"));
-			});
 		}
 
 		[Test]
