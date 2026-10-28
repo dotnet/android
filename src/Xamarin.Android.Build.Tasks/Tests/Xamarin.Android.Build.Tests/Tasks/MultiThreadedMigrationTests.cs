@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -16,6 +17,67 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class MultiThreadedMigrationTests
 	{
+		[Test]
+		public void PrepareSatelliteAssembliesPreservesMetadataAndOrder ()
+		{
+			var reference = new TaskItem (Path.Combine ("references", "fr", "Library.resources.dll"));
+			reference.SetMetadata ("Culture", "de");
+			reference.SetMetadata ("Owner", "reference");
+			reference.SetMetadata ("Abi", "original");
+			reference.SetMetadata ("DestinationSubPath", "original");
+			reference.SetMetadata ("DestinationSubDirectory", "original");
+			var intermediate = new TaskItem (Path.Combine ("obj", "fr-CA", "App.resources.dll"));
+			intermediate.SetMetadata ("Owner", "intermediate");
+			string [] abis = ["arm64-v8a", "x86_64"];
+			var task = new PrepareSatelliteAssemblies {
+				BuildEngine = new MockBuildEngine (TextWriter.Null),
+				BuildTargetAbis = abis,
+				ReferenceSatellitePaths = [reference],
+				IntermediateSatelliteAssemblies = [intermediate],
+			};
+
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual ("de", reference.GetMetadata ("Culture"));
+			Assert.AreEqual ("fr-CA", intermediate.GetMetadata ("Culture"));
+			Assert.AreEqual ("original", reference.GetMetadata ("Abi"));
+			Assert.AreEqual ("original", reference.GetMetadata ("DestinationSubPath"));
+			Assert.AreEqual ("original", reference.GetMetadata ("DestinationSubDirectory"));
+			Assert.AreEqual ("", intermediate.GetMetadata ("Abi"));
+			var output = task.ProcessedSatelliteAssemblies ?? throw new InvalidOperationException ("Missing satellite outputs.");
+			Assert.AreEqual (4, output.Length);
+			ITaskItem [] inputs = [reference, intermediate];
+			for (int i = 0; i < inputs.Length; i++) {
+				for (int a = 0; a < abis.Length; a++) {
+					var item = output [i * abis.Length + a];
+					var input = inputs [i];
+					var culture = input.GetMetadata ("Culture");
+					Assert.AreNotSame (input, item);
+					Assert.AreEqual (input.ItemSpec, item.ItemSpec);
+					Assert.AreEqual (input.GetMetadata ("Owner"), item.GetMetadata ("Owner"));
+					Assert.AreEqual (culture, item.GetMetadata ("Culture"));
+					Assert.AreEqual (abis [a], item.GetMetadata ("Abi"));
+					Assert.AreEqual ($"{abis [a]}/{culture}/{Path.GetFileName (input.ItemSpec)}", item.GetMetadata ("DestinationSubPath"));
+					Assert.AreEqual (Path.Combine (abis [a], culture) + Path.DirectorySeparatorChar, item.GetMetadata ("DestinationSubDirectory"));
+				}
+			}
+		}
+
+		[Test]
+		public void PrepareSatelliteAssembliesMissingCulture ()
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new PrepareSatelliteAssemblies {
+				BuildEngine = new MockBuildEngine (TextWriter.Null, errors: errors),
+				BuildTargetAbis = ["arm64-v8a"],
+				ReferenceSatellitePaths = [new TaskItem ("Library.resources.dll")],
+			};
+			Assert.IsFalse (task.Execute ());
+			Assert.IsNull (task.ProcessedSatelliteAssemblies);
+			Assert.AreEqual (1, errors.Count);
+			Assert.AreEqual ("XAPSA7009", errors [0].Code);
+			StringAssert.Contains ("missing the 'Culture' metadata", errors [0].Message);
+		}
+
 		[Test]
 		public void ReadLibraryProjectImportsCacheUsesProjectDirectory ()
 		{
