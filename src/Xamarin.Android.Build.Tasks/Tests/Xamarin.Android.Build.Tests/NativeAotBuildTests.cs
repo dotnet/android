@@ -540,6 +540,18 @@ namespace Xamarin.Android.Build.Tests
 			// The pack target requires a PDB, but its contents are unrelated to native asset composition.
 			File.Create (Path.Combine (managedOutputDirectory, "Microsoft.Android.Runtime.NativeAOT.pdb")).Dispose ();
 
+			string nativeOutputRoot = Path.Combine (outputDirectory, "runtime-output");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// CI test jobs have installed packs, but not the native build's output tree.
+				string nativeOutputDirectory = Path.Combine (nativeOutputRoot, "nativeaot", "android-arm64");
+				Directory.CreateDirectory (nativeOutputDirectory);
+				foreach (string configuration in new [] { "debug", "release" }) {
+					string archiveName = $"libnaot-android.{configuration}-static-{configuration}.a";
+					string archive = Directory.GetFiles (installedRuntimePack, archiveName, SearchOption.AllDirectories).Single ();
+					File.Copy (archive, Path.Combine (nativeOutputDirectory, archiveName));
+				}
+			}
+
 			string runtimePackProject = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "create-packs", "Microsoft.Android.Runtime.proj");
 			var dotnet = new DotNetCLI (runtimePackProject) {
 				ProjectDirectory = outputDirectory,
@@ -553,6 +565,7 @@ namespace Xamarin.Android.Build.Tests
 					$"AndroidRuntime={runtime}",
 					"AndroidRID=android-arm64",
 					$"_MonoAndroidNETOutputRoot={managedOutputRoot}{Path.DirectorySeparatorChar}",
+					$"NativeRuntimeOutputRootDir={nativeOutputRoot}{Path.DirectorySeparatorChar}",
 					$"BaseIntermediateOutputPath={Path.Combine (outputDirectory, "obj")}{Path.DirectorySeparatorChar}",
 					$"PackageOutputPath={outputDirectory}",
 				]),
