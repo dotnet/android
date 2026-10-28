@@ -27,7 +27,7 @@ namespace Java.Interop {
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe struct JniNativeMethod
+	public struct JniNativeMethod
 	{
 		byte* name;
 		byte* signature;
@@ -43,8 +43,10 @@ namespace Java.Interop {
 		/// native methods before unregistration. Release callback storage only after
 		/// unregistration succeeds and all callbacks already running have finished.
 		/// </remarks>
-		public JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
+		public unsafe JniNativeMethod (byte* name, byte* signature, IntPtr functionPointer)
 		{
+			// SAFETY: Only store pointer-sized values; no pointee is read and no callback is invoked here.
 			this.name = name;
 			this.signature = signature;
 			this.functionPointer = functionPointer;

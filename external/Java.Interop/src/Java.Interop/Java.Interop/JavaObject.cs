@@ -8,7 +8,7 @@ namespace Java.Interop
 {
 	[JniTypeSignature ("java/lang/Object", GenerateJavaPeer=false)]
 	[Serializable]
-	unsafe public partial class JavaObject : IJavaPeerable
+	public partial class JavaObject : IJavaPeerable
 	{
 		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -21,6 +21,7 @@ namespace Java.Interop
 
 		public JniManagedPeerStates JniManagedPeerState => managedPeerState;
 
+		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		[NonSerialized] unsafe  JniObjectReferenceControlBlock* jniObjectReferenceControlBlock;
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference  = null;
@@ -30,13 +31,16 @@ namespace Java.Interop
 			JniEnvironment.Runtime.ValueManager.FinalizePeer (this);
 		}
 
-		public  unsafe  JniObjectReference          PeerReference {
+		public          JniObjectReference          PeerReference {
 			get {
-				var c = jniObjectReferenceControlBlock;
-				if (c == null) {
-					return default;
+				unsafe {
+					// SAFETY: Read this peer's control block only while its reference-manager lifetime permits access.
+					var c = jniObjectReferenceControlBlock;
+					if (c == null) {
+						return default;
+					}
+					return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
 				}
-				return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
 			}
 		}
 
@@ -86,15 +90,17 @@ namespace Java.Interop
 				return;
 			}
 
-			var c   = jniObjectReferenceControlBlock;
-			if (c == null) {
-				c   = jniObjectReferenceControlBlock    =
-					Java.Interop.JniObjectReferenceControlBlock.Alloc (reference);
-			} else {
-				c->handle       = reference.Handle;
-				c->handle_type  = (int) reference.Type;
+			unsafe {
+				// SAFETY: This peer owns the allocated block; reference-manager updates must not race its release.
+				var c   = jniObjectReferenceControlBlock;
+				if (c == null) {
+					c   = jniObjectReferenceControlBlock    =
+						Java.Interop.JniObjectReferenceControlBlock.Alloc (reference);
+				} else {
+					c->handle       = reference.Handle;
+					c->handle_type  = (int) reference.Type;
+				}
 			}
-
 			JniObjectReference.Dispose (ref reference, options);
 		}
 
@@ -131,17 +137,24 @@ namespace Java.Interop
 			return false;
 		}
 
-		public override unsafe int GetHashCode ()
+		public override int GetHashCode ()
 		{
-			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			unsafe {
+				// SAFETY: hashCode.()I has no arguments, so the virtual call does not read the null buffer.
+				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
+			}
 		}
 
-		public override unsafe string? ToString ()
+		public override string? ToString ()
 		{
-			var lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
-					"toString.()Ljava/lang/String;",
-					this,
-					null);
+			JniObjectReference lref;
+			unsafe {
+				// SAFETY: toString takes no arguments; its returned local reference is consumed below.
+				lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
+						"toString.()Ljava/lang/String;",
+						this,
+						null);
+			}
 			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -157,7 +170,10 @@ namespace Java.Interop
 			try {
 				Dispose (disposing: false);
 			} finally {
-				Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
+				unsafe {
+					// SAFETY: Finalization has detached tracking; FreeIfInvalid preserves a callback-reattached reference.
+					Java.Interop.JniObjectReferenceControlBlock.FreeIfInvalid (ref jniObjectReferenceControlBlock);
+				}
 			}
 		}
 
@@ -176,11 +192,20 @@ namespace Java.Interop
 			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
 
 			if (!reference.IsValid && managedPeerState.HasFlag (Disposed)) {
-				Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+				unsafe {
+					// SAFETY: Disposed-reference clearing releases this peer's block once and clears its owner slot.
+					Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+				}
 			}
 		}
 
-		IntPtr IJavaPeerable.JniObjectReferenceControlBlock =>
-			(IntPtr) jniObjectReferenceControlBlock;
+		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
+			get {
+				unsafe {
+					// SAFETY: Return only the address; this getter neither dereferences it nor extends the block's lifetime.
+					return (IntPtr) jniObjectReferenceControlBlock;
+				}
+			}
+		}
 	}
 }

@@ -20,13 +20,16 @@ namespace Java.Interop {
 	public sealed class JniType : IDisposable {
 
 		[return: NotNullIfNotNull ("classFileData")]
-		public static unsafe JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
+		public static JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
 			if (classFileData == null)
 				return null;
-			fixed (byte* buf = classFileData) {
-				var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
-				return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+			unsafe {
+				// SAFETY: Pin the complete managed class-file array through JNI's synchronous read of its exact length.
+				fixed (byte* buf = classFileData) {
+					var lref = JniEnvironment.Types.DefineClass (name, loader, (IntPtr) buf, classFileData.Length);
+					return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+				}
 			}
 		}
 
@@ -266,11 +269,21 @@ namespace Java.Interop {
 			return JniEnvironment.Object.AllocObject (PeerReference);
 		}
 
+		/// <safety>
+		/// constructor must describe a constructor for this type. parameters must address readable,
+		/// initialized JNI slots matching its descriptor, or be null only for no arguments.
+		/// Keep the storage and referenced Java objects live until return or failure; local references
+		/// must belong to the invoking thread. Exclude concurrent writes or release through aliases.
+		/// The argument buffer is not retained.
+		/// </safety>
 		public unsafe JniObjectReference NewObject (JniMethodInfo constructor, JniArgumentValue* @parameters)
 		{
 			AssertValid ();
 
-			return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			unsafe {
+				// SAFETY: The caller keeps constructor-compatible argument slots and their Java references live.
+				return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
+			}
 		}
 
 		public JniFieldInfo GetInstanceField (string name, string signature)
@@ -347,13 +360,19 @@ namespace Java.Interop {
 			var _name = Marshal.StringToCoTaskMemUTF8 (name);
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
-				var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
-				thrown      = JniNativeMethods.ExceptionOccurred (env);
-				return id;
+				unsafe {
+					// SAFETY: Both terminated buffers are allocated above and remain owned until the matching finally.
+					var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
+					thrown      = JniNativeMethods.ExceptionOccurred (env);
+					return id;
+				}
 			}
 			finally {
-				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				unsafe {
+					// SAFETY: Free the two CoTaskMemUTF8 allocations once, after native lookup and exception capture.
+					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
+					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				}
 			}
 		}
 
@@ -404,13 +423,19 @@ namespace Java.Interop {
 			var _name = Marshal.StringToCoTaskMemUTF8 (name);
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
-				var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
-				thrown      = JniNativeMethods.ExceptionOccurred (env);
-				return id;
+				unsafe {
+					// SAFETY: This call owns both terminated CoTaskMem buffers through static lookup and exception capture.
+					var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
+					thrown      = JniNativeMethods.ExceptionOccurred (env);
+					return id;
+				}
 			}
 			finally {
-				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				unsafe {
+					// SAFETY: Release only the CoTaskMemUTF8 allocations created above, in their existing failure-safe order.
+					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
+					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+				}
 			}
 		}
 

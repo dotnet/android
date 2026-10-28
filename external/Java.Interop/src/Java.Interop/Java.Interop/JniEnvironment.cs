@@ -172,16 +172,22 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (jnienv));
 
 				IntPtr _vm;
-				// SAFETY: The caller supplies the live current-thread JNI environment.
-				// GetJavaVM writes one pointer-sized stack slot synchronously; &_vm is not retained.
-				int r       = JniNativeMethods.GetJavaVM (jnienv, &_vm);
+				int r;
+				unsafe {
+					// SAFETY: The caller supplies the live current-thread JNI environment.
+					// GetJavaVM writes one pointer-sized stack slot synchronously; &_vm is not retained.
+					r = JniNativeMethods.GetJavaVM (jnienv, &_vm);
+				}
 				vm          = _vm;
 				return r;
 			}
 
 			internal static void RawDeleteLocalRef (IntPtr env, IntPtr localRef)
 			{
-				JniNativeMethods.DeleteLocalRef (env, localRef);
+				unsafe {
+					// SAFETY: The lookup supplies an owned local reference from this attached thread's environment.
+					JniNativeMethods.DeleteLocalRef (env, localRef);
+				}
 			}
 		}
 
@@ -215,9 +221,12 @@ namespace Java.Interop {
 
 				environmentPointer  = value;
 				IntPtr  vmh = IntPtr.Zero;
-				// SAFETY: The supplying JNI transition/runtime must keep this thread's environment alive.
-				// The zero guard does not validate nonzero pointers or roll back this assignment on failure.
-				int     r   = JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh);
+				int r;
+				unsafe {
+					// SAFETY: The supplying JNI transition/runtime must keep this thread's environment alive.
+					// The zero guard does not validate nonzero pointers or roll back this assignment on failure.
+					r = JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh);
+				}
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString ());
 
@@ -246,7 +255,7 @@ namespace Java.Interop {
 			Runtime             = runtime;
 		}
 
-		internal unsafe JniObjectReference ToJavaName (string jniTypeName)
+		internal JniObjectReference ToJavaName (string jniTypeName)
 		{
 			int index = jniTypeName.IndexOf ("/", StringComparison.Ordinal);
 
@@ -260,16 +269,19 @@ namespace Java.Interop {
 			if (nameBuffer == null)
 				nameBuffer = new char [NameBufferLength];
 
-			fixed (char* src = jniTypeName, dst = nameBuffer) {
-				char* src_ptr = src;
-				char* dst_ptr = dst;
-				char* end_ptr = src + length;
-				while (src_ptr < end_ptr) {
-					*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
-					src_ptr++;
-					dst_ptr++;
+			unsafe {
+				// SAFETY: Pin both buffers; length is within nameBuffer and bounds every source/destination access.
+				fixed (char* src = jniTypeName, dst = nameBuffer) {
+					char* src_ptr = src;
+					char* dst_ptr = dst;
+					char* end_ptr = src + length;
+					while (src_ptr < end_ptr) {
+						*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
+						src_ptr++;
+						dst_ptr++;
+					}
+					return JniEnvironment.Strings.NewString (dst, length);
 				}
-				return JniEnvironment.Strings.NewString (dst, length);
 			}
 		}
 
