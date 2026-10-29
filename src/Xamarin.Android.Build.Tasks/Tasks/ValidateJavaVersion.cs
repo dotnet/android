@@ -1,10 +1,10 @@
 #nullable enable
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
-using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -12,7 +12,8 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Validates the detected JDK against the SDK's configured supported version range.
 	/// </summary>
-	public class ValidateJavaVersion : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ValidateJavaVersion : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "VJV";
 
@@ -60,8 +61,8 @@ namespace Xamarin.Android.Tasks
 
 		bool ValidateJava ()
 		{
-			var java = JavaToolExe ?? (OS.IsWindows ? "java.exe" : "java");
-			var javac = JavacToolExe ?? (OS.IsWindows ? "javac.exe" : "javac");
+			var java = JavaToolExe ?? (RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "java.exe" : "java");
+			var javac = JavacToolExe ?? (RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "javac.exe" : "javac");
 
 			return ValidateJava (java, JavaVersionRegex) &&
 				(!UseJavaExeVersion || ValidateJava (javac, JavacVersionRegex));
@@ -95,8 +96,10 @@ namespace Xamarin.Android.Tasks
 
 		protected Version? GetVersionFromTool (string javaExe, Regex versionRegex)
 		{
+			var javaTool = new FileInfo (TaskEnvironment.GetAbsolutePath (JavaSdkPath.IsNullOrEmpty () ?
+				javaExe : Path.Combine (JavaSdkPath, "bin", javaExe))).FullName;
 			// New code path, reads directly from `release` text file
-			if (!UseJavaExeVersion && GetVersionFromFile (javaExe, out var version)) {
+			if (!UseJavaExeVersion && GetVersionFromFile (javaTool, out var version)) {
 				JdkVersion = version.ToString ();
 				return version;
 			}
@@ -107,10 +110,11 @@ namespace Xamarin.Android.Tasks
 				return null;
 			}
 
-			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
-			// because the path to java/javac is the key and the value is a System.Version.
-			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
-			var key = new Tuple<string, string> (nameof (ValidateJavaVersion), javaTool);
+			// The cached Version is immutable and does not depend on the task assembly.
+			var key = Tuple.Create (nameof (ValidateJavaVersion), javaTool, TaskEnvironment.ProjectDirectory,
+				TaskEnvironment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS"),
+				TaskEnvironment.GetEnvironmentVariable ("_JAVA_OPTIONS"),
+				TaskEnvironment.GetEnvironmentVariable ("JDK_JAVA_OPTIONS"));
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as Version;
 			if (cached != null) {
 				Log.LogDebugMessage ($"Using cached value for `{javaTool} -version`: {cached}");
@@ -118,15 +122,20 @@ namespace Xamarin.Android.Tasks
 				return cached;
 			}
 
-			var sb = new StringBuilder ();
-			MonoAndroidHelper.RunProcess (javaTool, "-version", (s, e) => {
-				if (!e.Data.IsNullOrEmpty ())
-					sb.AppendLine (e.Data);
-			}, (s, e) => {
-				if (!e.Data.IsNullOrEmpty ())
-					sb.AppendLine (e.Data);
-			});
-			var versionInfo = sb.ToString ();
+			var startInfo = TaskEnvironment.GetProcessStartInfo ();
+			startInfo.FileName = javaTool;
+			startInfo.Arguments = "-version";
+			startInfo.UseShellExecute = false;
+			startInfo.RedirectStandardOutput = true;
+			startInfo.RedirectStandardError = true;
+			startInfo.CreateNoWindow = true;
+			startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+			using var process = new Process { StartInfo = startInfo };
+			process.Start ();
+			var stdout = process.StandardOutput.ReadToEndAsync ();
+			var stderr = process.StandardError.ReadToEndAsync ();
+			process.WaitForExit ();
+			var versionInfo = stdout.GetAwaiter ().GetResult () + Environment.NewLine + stderr.GetAwaiter ().GetResult ();
 			var versionNumberMatch = versionRegex.Match (versionInfo);
 			Version? versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
@@ -141,9 +150,9 @@ namespace Xamarin.Android.Tasks
 
 		bool GetVersionFromFile (string javaExe, out Version version)
 		{
-			var path = Path.Combine (Path.GetDirectoryName (javaExe), "..", "release");
+			var path = TaskEnvironment.GetAbsolutePath (Path.Combine (Path.GetDirectoryName (javaExe), "..", "release"));
 			if (!File.Exists (path) && !JavaSdkPath.IsNullOrEmpty ()) {
-				path = Path.Combine (JavaSdkPath, "release");
+				path = TaskEnvironment.GetAbsolutePath (Path.Combine (JavaSdkPath, "release"));
 			}
 			if (!File.Exists (path)) {
 				Log.LogDebugMessage ($"{path} does not exist, falling back to `java -version`");
