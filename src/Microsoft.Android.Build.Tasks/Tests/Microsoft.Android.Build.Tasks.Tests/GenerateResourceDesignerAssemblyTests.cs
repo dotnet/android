@@ -53,6 +53,8 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		CaseMapFile = Path.Combine (DirectoryPath, "case_map.txt"),
 		ProjectDir = DirectoryPath,
 		ResourceDirectory = Path.Combine (DirectoryPath, "res"),
+		TargetFrameworkIdentifier = ".NETCoreApp",
+		TargetFrameworkVersion = "v11.0",
 		Deterministic = deterministic,
 		IsApplication = isApplication,
 		AssemblyName = "TestApp",
@@ -165,10 +167,58 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 			Assert.AreEqual (nameof (GenerateResourceDesignerAssembly),
 				resource.GetCustomAttribute<System.CodeDom.Compiler.GeneratedCodeAttribute> ()?.Tool);
 			Assert.AreEqual ("TestApp", assembly.GetCustomAttribute<System.Runtime.CompilerServices.InternalsVisibleToAttribute> ()?.AssemblyName);
-			Assert.AreEqual (".NETStandard,Version=v2.1", assembly.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute> ()?.FrameworkName);
+			Assert.AreEqual (".NETCoreApp,Version=v11.0", assembly.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute> ()?.FrameworkName);
 		} finally {
 			context.Unload ();
 		}
+	}
+
+	[TestCase (10, true)]
+	[TestCase (10, false)]
+	[TestCase (11, true)]
+	[TestCase (11, false)]
+	[TestCase (12, true)]
+	[TestCase (12, false)]
+	public void DesignerUsesProjectTargetFramework (int version, bool isApplication)
+	{
+		var task = CreateTask (isApplication: isApplication);
+		task.TargetFrameworkVersion = $"v{version}.0";
+		Assert.IsTrue (task.Execute ());
+		AssertTargetFramework (version);
+	}
+
+	[Test]
+	public void RetargetingRegeneratesDesigner ()
+	{
+		var task = CreateTask ();
+		task.TargetFrameworkVersion = "v10.0";
+		Assert.IsTrue (task.Execute ());
+		AssertTargetFramework (10);
+		File.SetLastWriteTimeUtc (RtxtPath, File.GetLastWriteTimeUtc (OutputPath).AddMinutes (-1));
+		task.TargetFrameworkVersion = "v11.0";
+		Assert.IsTrue (task.Execute ());
+		AssertTargetFramework (11);
+	}
+
+	void AssertTargetFramework (int version)
+	{
+		using var stream = File.OpenRead (OutputPath);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var referenceHandle = reader.AssemblyReferences.Single ();
+		var reference = reader.GetAssemblyReference (referenceHandle);
+		Assert.AreEqual ("System.Runtime", reader.GetString (reference.Name));
+		Assert.AreEqual (new Version (version, 0, 0, 0), reference.Version);
+		CollectionAssert.AreEqual (Convert.FromHexString ("b03f5f7f11d50a3a"), reader.GetBlobBytes (reference.PublicKeyOrToken));
+		foreach (var handle in reader.TypeReferences)
+			Assert.AreEqual ((EntityHandle) referenceHandle, reader.GetTypeReference (handle).ResolutionScope);
+		var frameworkAttribute = reader.GetAssemblyDefinition ().GetCustomAttributes ().Single (handle => {
+			var constructor = reader.GetMemberReference ((MemberReferenceHandle) reader.GetCustomAttribute (handle).Constructor);
+			return reader.GetString (reader.GetTypeReference ((TypeReferenceHandle) constructor.Parent).Name) == "TargetFrameworkAttribute";
+		});
+		var blob = reader.GetBlobReader (reader.GetCustomAttribute (frameworkAttribute).Value);
+		Assert.AreEqual (1, blob.ReadUInt16 ());
+		Assert.AreEqual ($".NETCoreApp,Version=v{version}.0", blob.ReadSerializedString ());
 	}
 
 	[Test]
@@ -198,7 +248,6 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		var original = File.ReadAllBytes (OutputPath);
 		var originalMvid = ReadMvid ();
 		var lastWrite = File.GetLastWriteTimeUtc (OutputPath);
-		// Force emission rather than the task's timestamp fast path.
 		File.SetLastWriteTimeUtc (RtxtPath, lastWrite.AddSeconds (1));
 		Assert.IsTrue (CreateTask ().Execute ());
 		CollectionAssert.AreEqual (original, File.ReadAllBytes (OutputPath));
@@ -244,6 +293,8 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 				CaseMapFile = "case_map.txt",
 				ProjectDir = ".",
 				ResourceDirectory = "res",
+				TargetFrameworkIdentifier = ".NETCoreApp",
+				TargetFrameworkVersion = "v11.0",
 				Deterministic = true,
 				IsApplication = true,
 				AssemblyName = "TestApp",
@@ -365,8 +416,8 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 					new XAttribute ("CaseMapFile", "case_map.txt"),
 					new XAttribute ("ResourceDirectory", "res"),
 					new XAttribute ("ProjectDir", "."),
-					new XAttribute ("TargetFrameworkVersion", "v11.0"),
-					new XAttribute ("TargetFrameworkIdentifier", ".NETCoreApp"),
+					new XAttribute ("TargetFrameworkVersion", "$(TargetFrameworkVersion)"),
+					new XAttribute ("TargetFrameworkIdentifier", "$(TargetFrameworkIdentifier)"),
 					new XAttribute ("Resources", "R.txt"),
 					new XAttribute ("IsApplication", "true"),
 					new XAttribute ("DesignTimeBuild", "false"),

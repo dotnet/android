@@ -875,6 +875,12 @@ namespace UnnamedProject
 				Assert.AreEqual (new Version (1, 0, 0, 0), designer.Name.Version, "The designer version should remain compatible.");
 				CollectionAssert.AreEqual (Convert.FromHexString ("1e9360d6629057ee"), designer.Name.PublicKeyToken, "The historical public-key token should be retained.");
 				Assert.IsFalse ((designer.MainModule.Attributes & ModuleAttributes.StrongNameSigned) != 0, "The designer should not have a strong-name signature.");
+				var frameworkVersion = Version.Parse (project.TargetFramework.Split ('-') [0].Substring (3));
+				var frameworkAttribute = designer.CustomAttributes.Single (attribute => attribute.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute");
+				Assert.AreEqual ($".NETCoreApp,Version=v{frameworkVersion}", frameworkAttribute.ConstructorArguments [0].Value, "The designer should target the project's framework.");
+				var frameworkReference = designer.MainModule.AssemblyReferences.Single ();
+				Assert.AreEqual ("System.Runtime", frameworkReference.Name);
+				Assert.AreEqual (new Version (frameworkVersion.Major, frameworkVersion.Minor, 0, 0), frameworkReference.Version);
 			}
 		}
 

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using Xamarin.Android.Tasks;
 
@@ -20,7 +21,7 @@ sealed class ResourceDesignerAssemblyEmitter
 	readonly BlobBuilder code = new ();
 	readonly BlobBuilder attribute = new ();
 	readonly MethodBodyStreamEncoder bodies;
-	AssemblyReferenceHandle netstandard;
+	AssemblyReferenceHandle systemRuntime;
 	TypeReferenceHandle objectType;
 	TypeReferenceHandle intType;
 	MemberReferenceHandle objectConstructor;
@@ -39,7 +40,7 @@ sealed class ResourceDesignerAssemblyEmitter
 
 	public ResourceDesignerAssemblyEmitter () => bodies = new MethodBodyStreamEncoder (il);
 
-	public BlobBuilder Emit (string assemblyName, IEnumerable<R> resources, bool isApplication, string? applicationAssemblyName, bool deterministic)
+	public BlobBuilder Emit (string assemblyName, FrameworkName targetFramework, IEnumerable<R> resources, bool isApplication, string? applicationAssemblyName, bool deterministic)
 	{
 		var mvid = metadata.ReserveGuid ();
 		if (!deterministic)
@@ -47,9 +48,9 @@ sealed class ResourceDesignerAssemblyEmitter
 		metadata.AddModule (0, metadata.GetOrAddString (assemblyName), mvid.Handle, default, default);
 		var assembly = metadata.AddAssembly (metadata.GetOrAddString (assemblyName), new Version (1, 0, 0, 0),
 			default, metadata.GetOrAddBlob (PublicKey.Value), AssemblyFlags.PublicKey, AssemblyHashAlgorithm.Sha1);
-		// Preserve the legacy designer's framework contract independently of the consuming project's TFM.
-		netstandard = metadata.AddAssemblyReference (metadata.GetOrAddString ("netstandard"), new Version (2, 1, 0, 0),
-			default, metadata.GetOrAddBlob (new byte [] { 0xcc, 0x7b, 0x13, 0xff, 0xcd, 0x2d, 0xdd, 0x51 }), 0, default);
+		systemRuntime = metadata.AddAssemblyReference (metadata.GetOrAddString ("System.Runtime"),
+			new Version (targetFramework.Version.Major, targetFramework.Version.Minor, 0, 0),
+			default, metadata.GetOrAddBlob (new byte [] { 0xb0, 0x3f, 0x5f, 0x7f, 0x11, 0xd5, 0x0a, 0x3a }), 0, default);
 		objectType = AddTypeReference ("System", "Object");
 		intType = AddTypeReference ("System", "Int32");
 		instanceConstructorSignature = MethodSignature (isInstance: true);
@@ -66,7 +67,7 @@ sealed class ResourceDesignerAssemblyEmitter
 			AddTypeReference ("System.Runtime.Versioning", "TargetFrameworkAttribute"), MethodSignature (true, stringParameters: 1));
 		attribute.Clear ();
 		attribute.WriteUInt16 (1);
-		attribute.WriteSerializedString (".NETStandard,Version=v2.1");
+		attribute.WriteSerializedString (targetFramework.FullName);
 		attribute.WriteUInt16 (1);
 		attribute.WriteByte (0x54); // Named property.
 		attribute.WriteByte ((byte) SignatureTypeCode.String);
@@ -163,7 +164,7 @@ sealed class ResourceDesignerAssemblyEmitter
 	}
 
 	TypeReferenceHandle AddTypeReference (string ns, string name) =>
-		metadata.AddTypeReference (netstandard, metadata.GetOrAddString (ns), metadata.GetOrAddString (name));
+		metadata.AddTypeReference (systemRuntime, metadata.GetOrAddString (ns), metadata.GetOrAddString (name));
 
 	MemberReferenceHandle AddConstructor (TypeReferenceHandle type, BlobHandle blob) =>
 		metadata.AddMemberReference (type, metadata.GetOrAddString (".ctor"), blob);
