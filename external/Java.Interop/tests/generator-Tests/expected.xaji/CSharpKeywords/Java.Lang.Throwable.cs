@@ -30,7 +30,12 @@ namespace Java.Lang {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe IntPtr n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -38,7 +43,11 @@ namespace Java.Lang {
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetMessage);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe IntPtr __n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {

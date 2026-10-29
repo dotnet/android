@@ -26,8 +26,17 @@ namespace Java.IO {
 			get { return _members; }
 		}
 
-		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+		/// <safety>
+		/// javaReference must be zero or a live compatible JNI object. Use an attached thread
+		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+		/// transfer must match ownership; transferred references cannot be used again,
+		/// even if construction throws.
+		/// </safety>
+		/// <remarks>
+		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+		/// obligations still apply.
+		/// </remarks>
 		protected OutputStream (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -59,7 +68,12 @@ namespace Java.IO {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -67,7 +81,11 @@ namespace Java.IO {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Close);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -99,7 +117,12 @@ namespace Java.IO {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_Flush (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -107,7 +130,11 @@ namespace Java.IO {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Flush);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_Flush (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -139,7 +166,12 @@ namespace Java.IO {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
 			unsafe {
@@ -147,7 +179,11 @@ namespace Java.IO {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_buffer, &__n_Write_arrayB);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
 			unsafe {
@@ -193,7 +229,12 @@ namespace Java.IO {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
 		{
 			unsafe {
@@ -201,7 +242,11 @@ namespace Java.IO {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_buffer, offset, count, &__n_Write_arrayBII);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
 		{
 			unsafe {
@@ -249,7 +294,12 @@ namespace Java.IO {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
 			unsafe {
@@ -257,7 +307,11 @@ namespace Java.IO {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, oneByte, &__n_Write_I);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
 			unsafe {
@@ -276,8 +330,17 @@ namespace Java.IO {
 
 	[global::Android.Runtime.Register ("java/io/OutputStream", DoNotGenerateAcw=true)]
 	internal partial class OutputStreamInvoker : OutputStream {
-		/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+		/// <safety>
+		/// handle must be zero or a live compatible JNI object. Use an attached thread
+		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+		/// transfer must match ownership; transferred references cannot be used again,
+		/// even if construction throws.
+		/// </safety>
+		/// <remarks>
+		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+		/// obligations still apply.
+		/// </remarks>
 		public OutputStreamInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

@@ -26,8 +26,17 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+		/// <safety>
+		/// javaReference must be zero or a live compatible JNI object. Use an attached thread
+		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+		/// transfer must match ownership; transferred references cannot be used again,
+		/// even if construction throws.
+		/// </safety>
+		/// <remarks>
+		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+		/// obligations still apply.
+		/// </remarks>
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -42,7 +51,12 @@ namespace Xamarin.Test {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe int n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -50,7 +64,11 @@ namespace Xamarin.Test {
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeInteger);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe int __n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -71,7 +89,12 @@ namespace Xamarin.Test {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
 		{
 			unsafe {
@@ -79,7 +102,11 @@ namespace Xamarin.Test {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, newvalue, &__n_SetSomeInteger_I);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
 		{
 			unsafe {
@@ -110,7 +137,12 @@ namespace Xamarin.Test {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe IntPtr n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -118,7 +150,11 @@ namespace Xamarin.Test {
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeObjectProperty);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe IntPtr __n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -139,7 +175,12 @@ namespace Xamarin.Test {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
@@ -147,7 +188,11 @@ namespace Xamarin.Test {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_newvalue, &__n_SetSomeObjectProperty_Ljava_lang_Object_);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
@@ -179,7 +224,12 @@ namespace Xamarin.Test {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe IntPtr n_GetSomeString (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -187,7 +237,11 @@ namespace Xamarin.Test {
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeString);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe IntPtr __n_GetSomeString (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
@@ -208,7 +262,12 @@ namespace Xamarin.Test {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
@@ -216,7 +275,11 @@ namespace Xamarin.Test {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_newvalue, &__n_SetSomeString_Ljava_lang_String_);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
 			unsafe {
@@ -242,8 +305,17 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	internal partial class SomeObjectInvoker : SomeObject {
-		/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+		/// <safety>
+		/// handle must be zero or a live compatible JNI object. Use an attached thread
+		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+		/// transfer must match ownership; transferred references cannot be used again,
+		/// even if construction throws.
+		/// </safety>
+		/// <remarks>
+		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+		/// obligations still apply.
+		/// </remarks>
 		public SomeObjectInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

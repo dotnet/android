@@ -37,8 +37,17 @@ namespace Android.Views {
 
 			static readonly JniPeerMembers _members_android_view_View_OnClickListener = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
 
-			/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-			/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+			/// <safety>
+			/// handle must be zero or a live JNI object implementing this interface. Use an attached
+			/// thread (locals: creating thread), with no concurrent deletion through aliases during
+			/// construction. transfer must match ownership; transferred references cannot be used again,
+			/// even if construction throws.
+			/// </safety>
+			/// <remarks>
+			/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+			/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+			/// obligations still apply.
+			/// </remarks>
 			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
 			}
@@ -53,7 +62,12 @@ namespace Android.Views {
 				}
 			}
 
-			/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+			/// <safety>
+			/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+			/// must match the registered types and stay live without concurrent deletion for this call;
+			/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+			/// failures and may return default; invalid addresses are not validated.
+			/// </safety>
 			static unsafe void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
 			{
 				unsafe {
@@ -61,7 +75,11 @@ namespace Android.Views {
 					global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_v, &__n_OnClick_Landroid_view_View_);
 				}
 			}
-			/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+			/// <safety>
+			/// Requires the entry point's live, type-correct borrowed references in its active JNI
+			/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+			/// failures propagate to the marshal helper.
+			/// </safety>
 			private static unsafe void __n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
 			{
 				unsafe {
@@ -128,8 +146,17 @@ namespace Android.Views {
 			get { return _members; }
 		}
 
-		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+		/// <safety>
+		/// javaReference must be zero or a live compatible JNI object. Use an attached thread
+		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+		/// transfer must match ownership; transferred references cannot be used again,
+		/// even if construction throws.
+		/// </safety>
+		/// <remarks>
+		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+		/// obligations still apply.
+		/// </remarks>
 		protected View (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -144,7 +171,12 @@ namespace Android.Views {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
 			unsafe {
@@ -152,7 +184,11 @@ namespace Android.Views {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_l, &__n_SetOnClickListener_Landroid_view_View_OnClickListener_);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
 			unsafe {
@@ -188,7 +224,12 @@ namespace Android.Views {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
 			unsafe {
@@ -196,7 +237,11 @@ namespace Android.Views {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_l, &__n_SetOn123Listener_Landroid_view_View_OnClickListener_);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
 			unsafe {
@@ -232,7 +277,12 @@ namespace Android.Views {
 			}
 		}
 
-		/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
 		static unsafe void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
 		{
 			unsafe {
@@ -240,7 +290,11 @@ namespace Android.Views {
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_views, &__n_AddTouchables_Ljava_util_ArrayList_);
 			}
 		}
-		/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
 		private static unsafe void __n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
 		{
 			unsafe {

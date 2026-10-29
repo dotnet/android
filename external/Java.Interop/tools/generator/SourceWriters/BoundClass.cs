@@ -125,12 +125,18 @@ namespace generator.SourceWriters
 						throw new InvalidOperationException ($"The deferred throwable constructor for '{klass.FullName}' conflicts with a bound Java constructor.");
 					var deferred = new ConstructorWriter {
 						Name = klass.Name,
+						IsInternal = true,
 						BaseCall = "base (options)",
 					};
-					deferred.SetVisibility (klass.IsFinal ? "internal" : "protected");
 					deferred.Comments.Add ("// Initializes an empty peer; the Java constructor is invoked by the derived binding.");
-					deferred.Comments.Add ("/// <param name=\"options\">Must be JniObjectReferenceOptions.None; other values throw before a peer is constructed.</param>");
-					deferred.Comments.Add ("/// <remarks>No JNI reference is accepted or transferred. The forwarding chain preserves peer-constructor partial hooks; JNI-dependent members require the derived binding to complete peer construction.</remarks>");
+					deferred.Comments.Add ("/// <param name=\"options\">");
+					deferred.Comments.Add ("/// Must be JniObjectReferenceOptions.None; other values throw before a peer is constructed.");
+					deferred.Comments.Add ("/// </param>");
+					deferred.Comments.Add ("/// <remarks>");
+					deferred.Comments.Add ("/// No JNI reference is accepted or transferred. The forwarding chain preserves");
+					deferred.Comments.Add ("/// peer-constructor partial hooks; JNI-dependent members require the derived binding");
+					deferred.Comments.Add ("/// to complete peer construction.");
+					deferred.Comments.Add ("/// </remarks>");
 					deferred.Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("global::Java.Interop.JniObjectReferenceOptions")));
 					if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod))
 						deferred.Body.Add ($"{klass.PeerConstructorPartialMethod} ();");

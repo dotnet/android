@@ -40,8 +40,17 @@ namespace Xamarin.Test {
 
 				static readonly JniPeerMembers _members_xamarin_test_NotificationCompatBase_Action_Factory = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
 
-				/// <safety>handle must be zero or a live JNI object implementing this interface. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-				/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+				/// <safety>
+				/// handle must be zero or a live JNI object implementing this interface. Use an attached
+				/// thread (locals: creating thread), with no concurrent deletion through aliases during
+				/// construction. transfer must match ownership; transferred references cannot be used again,
+				/// even if construction throws.
+				/// </safety>
+				/// <remarks>
+				/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+				/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+				/// obligations still apply.
+				/// </remarks>
 				public IFactoryInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 				{
 				}
@@ -56,7 +65,12 @@ namespace Xamarin.Test {
 					}
 				}
 
-				/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>
+				/// <safety>
+				/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+				/// must match the registered types and stay live without concurrent deletion for this call;
+				/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+				/// failures and may return default; invalid addresses are not validated.
+				/// </safety>
 				static unsafe IntPtr n_Build_I (IntPtr jnienv, IntPtr native__this, int p0)
 				{
 					unsafe {
@@ -64,7 +78,11 @@ namespace Xamarin.Test {
 						return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, p0, &__n_Build_I);
 					}
 				}
-				/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>
+				/// <safety>
+				/// Requires the entry point's live, type-correct borrowed references in its active JNI
+				/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+				/// failures propagate to the marshal helper.
+				/// </safety>
 				private static unsafe IntPtr __n_Build_I (IntPtr jnienv, IntPtr native__this, int p0)
 				{
 					unsafe {
@@ -97,8 +115,17 @@ namespace Xamarin.Test {
 				get { return _members; }
 			}
 
-			/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-			/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+			/// <safety>
+			/// javaReference must be zero or a live compatible JNI object. Use an attached thread
+			/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+			/// transfer must match ownership; transferred references cannot be used again,
+			/// even if construction throws.
+			/// </safety>
+			/// <remarks>
+			/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+			/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+			/// obligations still apply.
+			/// </remarks>
 			protected Action (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 			{
 			}
@@ -107,8 +134,17 @@ namespace Xamarin.Test {
 
 		[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$Action", DoNotGenerateAcw=true)]
 		internal partial class ActionInvoker : Action {
-			/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-			/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+			/// <safety>
+			/// handle must be zero or a live compatible JNI object. Use an attached thread
+			/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+			/// transfer must match ownership; transferred references cannot be used again,
+			/// even if construction throws.
+			/// </safety>
+			/// <remarks>
+			/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+			/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+			/// obligations still apply.
+			/// </remarks>
 			public ActionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
 			}
@@ -134,8 +170,17 @@ namespace Xamarin.Test {
 				get { return _members; }
 			}
 
-			/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-			/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+			/// <safety>
+			/// javaReference must be zero or a live compatible JNI object. Use an attached thread
+			/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+			/// transfer must match ownership; transferred references cannot be used again,
+			/// even if construction throws.
+			/// </safety>
+			/// <remarks>
+			/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+			/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+			/// obligations still apply.
+			/// </remarks>
 			protected InstanceInner (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 			{
 			}
@@ -164,8 +209,17 @@ namespace Xamarin.Test {
 
 		[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$InstanceInner", DoNotGenerateAcw=true)]
 		internal partial class InstanceInnerInvoker : InstanceInner {
-			/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-			/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+			/// <safety>
+			/// handle must be zero or a live compatible JNI object. Use an attached thread
+			/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+			/// transfer must match ownership; transferred references cannot be used again,
+			/// even if construction throws.
+			/// </safety>
+			/// <remarks>
+			/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+			/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+			/// obligations still apply.
+			/// </remarks>
 			public InstanceInnerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
 			}
@@ -188,8 +242,17 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		/// <safety>javaReference must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>
-		/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>
+		/// <safety>
+		/// javaReference must be zero or a live compatible JNI object. Use an attached thread
+		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
+		/// transfer must match ownership; transferred references cannot be used again,
+		/// even if construction throws.
+		/// </safety>
+		/// <remarks>
+		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
+		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
+		/// obligations still apply.
+		/// </remarks>
 		protected NotificationCompatBase (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}

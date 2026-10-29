@@ -41,9 +41,19 @@ namespace generator.SourceWriters
 					new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
 				},
 			};
-			ctor.Comments.Add ("/// <safety>handle must be zero or a live compatible JNI object. Use an attached thread (locals: creating thread), with no concurrent deletion through aliases during construction. transfer must match ownership; transferred references cannot be used again, even if construction throws.</safety>");
-			if (!ctor.IsUnsafe)
-				ctor.Comments.Add ("/// <remarks>This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference obligations still apply.</remarks>");
+			ctor.Comments.Add ("/// <safety>");
+			ctor.Comments.Add ("/// handle must be zero or a live compatible JNI object. Use an attached thread");
+			ctor.Comments.Add ("/// (locals: creating thread), with no concurrent deletion through aliases during construction.");
+			ctor.Comments.Add ("/// transfer must match ownership; transferred references cannot be used again,");
+			ctor.Comments.Add ("/// even if construction throws.");
+			ctor.Comments.Add ("/// </safety>");
+			if (!ctor.IsUnsafe) {
+				ctor.Comments.Add ("/// <remarks>");
+				ctor.Comments.Add ("/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement");
+				ctor.Comments.Add ("/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference");
+				ctor.Comments.Add ("/// obligations still apply.");
+				ctor.Comments.Add ("/// </remarks>");
+			}
 
 			Constructors.Add (ctor);
 

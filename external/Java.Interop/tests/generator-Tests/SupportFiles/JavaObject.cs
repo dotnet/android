@@ -130,7 +130,7 @@ namespace Java.Lang {
 			throw new NotImplementedException ();
 		}
 
-		protected Throwable (global::Java.Interop.JniObjectReferenceOptions options)
+		internal Throwable (global::Java.Interop.JniObjectReferenceOptions options)
 		{
 		}
 

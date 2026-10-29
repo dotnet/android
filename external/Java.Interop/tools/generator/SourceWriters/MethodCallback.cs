@@ -60,7 +60,12 @@ namespace generator.SourceWriters
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
 			IsUnsafe = true;
-			Comments.Add ("/// <safety>Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments must match the registered types and stay live without concurrent deletion for this call; permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed failures and may return default; invalid addresses are not validated.</safety>");
+			Comments.Add ("/// <safety>");
+			Comments.Add ("/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments");
+			Comments.Add ("/// must match the registered types and stay live without concurrent deletion for this call;");
+			Comments.Add ("/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed");
+			Comments.Add ("/// failures and may return default; invalid addresses are not validated.");
+			Comments.Add ("/// </safety>");
 
 			if (kind != UnmanagedCallbackKind.Legacy)
 				Attributes.Add (new CustomAttr ("[global::System.Runtime.InteropServices.UnmanagedCallersOnly]"));
@@ -97,8 +102,13 @@ namespace generator.SourceWriters
 
 		void WriteMarshalBody (CodeWriter writer)
 		{
-			if (typed_shape == null)
-				writer.WriteLine ("/// <safety>Requires the entry point's live, type-correct borrowed references in its active JNI frame/thread, without concurrent deletion. Copy-back occurs on normal return only; failures propagate to the marshal helper.</safety>");
+			if (typed_shape == null) {
+				writer.WriteLine ("/// <safety>");
+				writer.WriteLine ("/// Requires the entry point's live, type-correct borrowed references in its active JNI");
+				writer.WriteLine ("/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;");
+				writer.WriteLine ("/// failures propagate to the marshal helper.");
+				writer.WriteLine ("/// </safety>");
+			}
 			var attributes = new List<AttributeWriter> ();
 			SourceWriterExtensions.AddObsolete (attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
 			SourceWriterExtensions.AddSupportedOSPlatform (attributes, method, opt);

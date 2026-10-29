@@ -257,13 +257,9 @@ namespace Xamarin.Android.Tasks
 						}
 						// embedded jars (EmbeddedJar, EmbeddedReferenceJar)
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
-							Stream stream;
-							unsafe {
-								// SAFETY: resource comes from this local reader. The synchronous copy and
-								// stream disposal finish before pe's enclosing using exits, also on failure.
-								stream = pe.GetEmbeddedResourceStream (resource);
-							}
-							using (stream) {
+							// SAFETY: resource comes from this local reader. The synchronous copy and
+							// stream disposal finish before pe's enclosing using exits, also on failure.
+							using (var stream = unsafe(pe.GetEmbeddedResourceStream (resource))) {
 								AddJar (jars, importsDir, name, assemblyPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 								updated |= Files.CopyIfStreamChanged (stream, Files.GetArchiveExtractionPath (importsDir, name));
 							}
@@ -271,13 +267,9 @@ namespace Xamarin.Android.Tasks
 						// embedded native libraries
 						else if (name == "__AndroidNativeLibraries__.zip") {
 							List<string> files = new List<string> ();
-							Stream stream;
-							unsafe {
-								// SAFETY: resource comes from this local reader. Extraction and both nested
-								// disposals complete before pe is disposed, including exceptions and early returns.
-								stream = pe.GetEmbeddedResourceStream (resource);
-							}
-							using (stream)
+							// SAFETY: resource comes from this local reader. Extraction and both nested
+							// disposals complete before pe is disposed, including exceptions and early returns.
+							using (var stream = unsafe(pe.GetEmbeddedResourceStream (resource)))
 							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, nativeimportsDir, modifyCallback: (entryFullName) => {
@@ -301,13 +293,9 @@ namespace Xamarin.Android.Tasks
 						else if (name == "__AndroidLibraryProjects__.zip") {
 							// temporarily extracted directory will look like:
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
-							Stream stream;
-							unsafe {
-								// SAFETY: resource comes from this local reader. Extraction and both nested
-								// disposals complete before pe is disposed, including exceptions and early returns.
-								stream = pe.GetEmbeddedResourceStream (resource);
-							}
-							using (stream)
+							// SAFETY: resource comes from this local reader. Extraction and both nested
+							// disposals complete before pe is disposed, including exceptions and early returns.
+							using (var stream = unsafe(pe.GetEmbeddedResourceStream (resource)))
 							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
