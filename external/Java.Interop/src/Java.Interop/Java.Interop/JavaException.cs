@@ -232,10 +232,8 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			unsafe {
-				// SAFETY: hashCode.()I has no parameters; virtual dispatch does not read the null argument buffer.
-				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
-			}
+			// SAFETY: hashCode.()I has no parameters; virtual dispatch does not read the null argument buffer.
+			return unsafe (_members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null));
 		}
 
 		static string? GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -251,11 +249,8 @@ namespace Java.Interop
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getMessage.()Ljava/lang/String;");
-			JniObjectReference s;
-			unsafe {
-				// SAFETY: m resolves getMessage()String; the borrowed throwable stays valid through the call.
-				s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
-			}
+			// SAFETY: m resolves getMessage()String; the borrowed throwable stays valid through the call.
+			JniObjectReference s = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (reference, m));
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -272,11 +267,8 @@ namespace Java.Interop
 				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause.()Ljava/lang/Throwable;");
-			JniObjectReference e;
-			unsafe {
-				// SAFETY: m resolves getCause()Throwable; the borrowed throwable stays valid through the call.
-				e = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
-			}
+			// SAFETY: m resolves getCause()Throwable; the borrowed throwable stays valid through the call.
+			JniObjectReference e = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (reference, m));
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -297,11 +289,8 @@ namespace Java.Interop
 			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {
 				var StringWriter_init       = StringWriter_class.GetConstructor ("()V");
 				var PrintWriter_init        = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V");
-				JniObjectReference swriter;
-				unsafe {
-					// SAFETY: StringWriter's ()V constructor reads no argument slots.
-					swriter = StringWriter_class.NewObject (StringWriter_init, null);
-				}
+				// SAFETY: StringWriter's ()V constructor reads no argument slots.
+				JniObjectReference swriter = unsafe (StringWriter_class.NewObject (StringWriter_init, null));
 				try {
 					JniObjectReference pwriter;
 					unsafe {
@@ -371,10 +360,8 @@ namespace Java.Interop
 
 		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
 			get {
-				unsafe {
-					// SAFETY: Only copy the address; no memory access or lifetime extension occurs in this getter.
-					return (IntPtr) jniObjectReferenceControlBlock;
-				}
+				// SAFETY: Only copy the address; no memory access or lifetime extension occurs in this getter.
+				return unsafe ((IntPtr) jniObjectReferenceControlBlock);
 			}
 		}
 	}

@@ -340,10 +340,8 @@ namespace Java.Interop
 
 		internal bool IsDisposed {
 			get {
-				unsafe {
-					// SAFETY: Sentinel comparison does not read the buffer.
-					return elements == null;
-				}
+				// SAFETY: Sentinel comparison does not read the buffer.
+				return unsafe (elements == null);
 			}
 		}
 
@@ -353,10 +351,8 @@ namespace Java.Interop
 
 		public  IntPtr  Elements {
 			get {
-				unsafe {
-					// SAFETY: Expose the checked address without dereferencing or extending its lifetime.
-					return (IntPtr) ElementsPointer;
-				}
+				// SAFETY: Expose the checked address without dereferencing or extending its lifetime.
+				return unsafe ((IntPtr) ElementsPointer);
 			}
 		}
 
@@ -365,10 +361,8 @@ namespace Java.Interop
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				unsafe {
-					// SAFETY: Read only the address; this does not synchronize with release.
-					return elements;
-				}
+				// SAFETY: Read only the address; this does not synchronize with release.
+				return unsafe (elements);
 			}
 		}
 

@@ -56,11 +56,8 @@ namespace Java.Interop
 				var jniClassName = classname.Contains ('.') ? classname.Replace ('.', '/') : classname;
 				IntPtr c;
 				IntPtr thrown;
-				bool found;
-				unsafe {
-					// SAFETY: info supplies this attached thread's live environment; the helper owns marshaling of the managed class name.
-					found = TryRawFindClass (info.EnvironmentPointer, jniClassName, out c, out thrown);
-				}
+				// SAFETY: info supplies this attached thread's live environment; the helper owns marshaling of the managed class name.
+				bool found = unsafe (TryRawFindClass (info.EnvironmentPointer, jniClassName, out c, out thrown));
 				if (found) {
 					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
@@ -252,11 +249,8 @@ namespace Java.Interop
 				if (!type.IsValid)
 					return null;
 
-				JniObjectReference s;
-				unsafe {
-					// SAFETY: Class_getName was resolved as Class.getName()String; it reads no argument buffer and type remains the lookup's live class reference.
-					s = JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName);
-				}
+				// SAFETY: Class_getName was resolved as Class.getName()String; it reads no argument buffer and type remains the lookup's live class reference.
+				JniObjectReference s = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName));
 				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose)!);
 			}
 
@@ -353,10 +347,8 @@ namespace Java.Interop
 						unmanagedStrings [i * 2] = name;
 						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
-						unsafe {
-							// SAFETY: Descriptor stores tracked addresses; registration owns callback validity.
-							natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
-						}
+						// SAFETY: Descriptor stores tracked addresses; registration owns callback validity.
+						natives [i] = unsafe (new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler)));
 					}
 					unsafe {
 						// SAFETY: Strings remain allocated until finally; caller guarantees callback ABI and lifetime.
@@ -444,10 +436,8 @@ namespace Java.Interop
 			/// </safety>
 			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
 			{
-				unsafe {
-					// SAFETY: The caller guarantees the terminator and byte lifetime; lookup pins the span only for JNI's synchronous read.
-					return TryFindClass (classname, throwOnError: true);
-				}
+				// SAFETY: The caller guarantees the terminator and byte lifetime; lookup pins the span only for JNI's synchronous read.
+				return unsafe (TryFindClass (classname, throwOnError: true));
 			}
 
 			/// <summary>
@@ -464,10 +454,8 @@ namespace Java.Interop
 			/// </safety>
 			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
 			{
-				unsafe {
-					// SAFETY: The caller supplies readable terminated bytes through failed or successful lookup; the helper owns JNI pinning.
-					instance = TryFindClass (classname, throwOnError: false);
-				}
+				// SAFETY: The caller supplies readable terminated bytes through failed or successful lookup; the helper owns JNI pinning.
+				instance = unsafe (TryFindClass (classname, throwOnError: false));
 				return instance.IsValid;
 			}
 
@@ -489,10 +477,8 @@ namespace Java.Interop
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
 				if (!hasDots) {
-					unsafe {
-						// SAFETY: No copy is made; the caller's termination guarantee applies to the pinned classname storage.
-						return TryFindClassFromPtr (info, classname, classname, terminator, throwOnError);
-					}
+					// SAFETY: No copy is made; the caller's termination guarantee applies to the pinned classname storage.
+					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
 				}
 
 				Span<byte> jniClassName = nameLength + 1 <= 256
@@ -502,10 +488,8 @@ namespace Java.Interop
 					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
 				jniClassName [nameLength] = 0;
 
-				unsafe {
-					// SAFETY: jniClassName owns its appended NUL; the original caller-owned span remains readable for bounded fallback conversion.
-					return TryFindClassFromPtr (info, classname, jniClassName, terminator, throwOnError);
-				}
+				// SAFETY: jniClassName owns its appended NUL; the original caller-owned span remains readable for bounded fallback conversion.
+				return unsafe (TryFindClassFromPtr (info, classname, jniClassName, terminator, throwOnError));
 			}
 
 			/// <safety>
@@ -521,11 +505,8 @@ namespace Java.Interop
 						c = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
 					}
 				}
-				IntPtr thrown;
-				unsafe {
-					// SAFETY: info is the current lookup's attached-thread environment, queried immediately after FindClass before fallback clears its exception.
-					thrown = JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer);
-				}
+				// SAFETY: info is the current lookup's attached-thread environment, queried immediately after FindClass before fallback clears its exception.
+				IntPtr thrown = unsafe (JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer));
 				if (thrown == IntPtr.Zero) {
 					var r = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);

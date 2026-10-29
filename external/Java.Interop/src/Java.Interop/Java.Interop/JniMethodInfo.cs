@@ -26,10 +26,8 @@ namespace Java.Interop
 		public      string  Name {
 #if DEBUG
 			get {
-				unsafe {
-					// SAFETY: the borrowed constructor's owner keeps the name readable and immutable through this lazy read.
-					return name ??= GetUtf8String (nameUtf8);
-				}
+				// SAFETY: the borrowed constructor's owner keeps the name readable and immutable through this lazy read.
+				return name ??= unsafe (GetUtf8String (nameUtf8));
 			}
 #else   // !DEBUG
 			get => throw new NotSupportedException ();
@@ -39,10 +37,8 @@ namespace Java.Interop
 		public      string  Signature {
 #if DEBUG
 			get {
-				unsafe {
-					// SAFETY: the borrowed constructor's owner keeps the signature readable and immutable through this lazy read.
-					return signature ??= GetUtf8String (signatureUtf8);
-				}
+				// SAFETY: the borrowed constructor's owner keeps the signature readable and immutable through this lazy read.
+				return signature ??= unsafe (GetUtf8String (signatureUtf8));
 			}
 #else   // !DEBUG
 			get => throw new NotSupportedException ();
@@ -134,10 +130,8 @@ namespace Java.Interop
 			if (value == null)
 				throw new NotSupportedException ();
 
-			unsafe {
-				// SAFETY: the caller supplies readable immutable bytes through the terminator for this synchronous copy.
-				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
-			}
+			// SAFETY: the caller supplies readable immutable bytes through the terminator for this synchronous copy.
+			return unsafe (System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)));
 		}
 #endif  // DEBUG
 

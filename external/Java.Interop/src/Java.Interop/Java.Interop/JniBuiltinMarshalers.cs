@@ -35,10 +35,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Boolean), "Expected targetType==typeof(Boolean); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref booleanValue, "booleanValue", "()Z");
 			try {
-				unsafe {
-					// SAFETY: The cached booleanValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallBooleanMethod (self, booleanValue);
-				}
+				// SAFETY: The cached booleanValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallBooleanMethod (self, booleanValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -163,10 +161,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (SByte), "Expected targetType==typeof(SByte); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref byteValue, "byteValue", "()B");
 			try {
-				unsafe {
-					// SAFETY: The cached byteValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallByteMethod (self, byteValue);
-				}
+				// SAFETY: The cached byteValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallByteMethod (self, byteValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -322,10 +318,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Char), "Expected targetType==typeof(Char); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref charValue, "charValue", "()C");
 			try {
-				unsafe {
-					// SAFETY: The cached charValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallCharMethod (self, charValue);
-				}
+				// SAFETY: The cached charValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallCharMethod (self, charValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -450,10 +444,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int16), "Expected targetType==typeof(Int16); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref shortValue, "shortValue", "()S");
 			try {
-				unsafe {
-					// SAFETY: The cached shortValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallShortMethod (self, shortValue);
-				}
+				// SAFETY: The cached shortValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallShortMethod (self, shortValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -578,10 +570,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int32), "Expected targetType==typeof(Int32); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
 			try {
-				unsafe {
-					// SAFETY: The cached intValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallIntMethod (self, intValue);
-				}
+				// SAFETY: The cached intValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallIntMethod (self, intValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -706,10 +696,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Int64), "Expected targetType==typeof(Int64); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref longValue, "longValue", "()J");
 			try {
-				unsafe {
-					// SAFETY: The cached longValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallLongMethod (self, longValue);
-				}
+				// SAFETY: The cached longValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallLongMethod (self, longValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -834,10 +822,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Single), "Expected targetType==typeof(Single); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref floatValue, "floatValue", "()F");
 			try {
-				unsafe {
-					// SAFETY: The cached floatValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallFloatMethod (self, floatValue);
-				}
+				// SAFETY: The cached floatValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallFloatMethod (self, floatValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}
@@ -962,10 +948,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (Double), "Expected targetType==typeof(Double); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref doubleValue, "doubleValue", "()D");
 			try {
-				unsafe {
-					// SAFETY: The cached doubleValue ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.CallDoubleMethod (self, doubleValue);
-				}
+				// SAFETY: The cached doubleValue ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.CallDoubleMethod (self, doubleValue));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}

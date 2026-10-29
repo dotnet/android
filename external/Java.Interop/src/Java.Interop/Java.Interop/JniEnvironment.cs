@@ -172,12 +172,9 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (jnienv));
 
 				IntPtr _vm;
-				int r;
-				unsafe {
-					// SAFETY: The caller supplies the live current-thread JNI environment.
-					// GetJavaVM writes one pointer-sized stack slot synchronously; &_vm is not retained.
-					r = JniNativeMethods.GetJavaVM (jnienv, &_vm);
-				}
+				// SAFETY: The caller supplies the live current-thread JNI environment.
+				// GetJavaVM writes one pointer-sized stack slot synchronously; &_vm is not retained.
+				int r = unsafe (JniNativeMethods.GetJavaVM (jnienv, &_vm));
 				vm          = _vm;
 				return r;
 			}
@@ -221,12 +218,9 @@ namespace Java.Interop {
 
 				environmentPointer  = value;
 				IntPtr  vmh = IntPtr.Zero;
-				int r;
-				unsafe {
-					// SAFETY: The supplying JNI transition/runtime must keep this thread's environment alive.
-					// The zero guard does not validate nonzero pointers or roll back this assignment on failure.
-					r = JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh);
-				}
+				// SAFETY: The supplying JNI transition/runtime must keep this thread's environment alive.
+				// The zero guard does not validate nonzero pointers or roll back this assignment on failure.
+				int r = unsafe (JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh));
 				if (r < 0)
 					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString ());
 

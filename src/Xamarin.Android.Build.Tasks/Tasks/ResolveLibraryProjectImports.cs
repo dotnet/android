@@ -259,7 +259,7 @@ namespace Xamarin.Android.Tasks
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
 							// SAFETY: resource comes from this local reader. The synchronous copy and
 							// stream disposal finish before pe's enclosing using exits, also on failure.
-							using (var stream = unsafe(pe.GetEmbeddedResourceStream (resource))) {
+							using (var stream = unsafe (pe.GetEmbeddedResourceStream (resource))) {
 								AddJar (jars, importsDir, name, assemblyPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 								updated |= Files.CopyIfStreamChanged (stream, Files.GetArchiveExtractionPath (importsDir, name));
 							}
@@ -269,7 +269,7 @@ namespace Xamarin.Android.Tasks
 							List<string> files = new List<string> ();
 							// SAFETY: resource comes from this local reader. Extraction and both nested
 							// disposals complete before pe is disposed, including exceptions and early returns.
-							using (var stream = unsafe(pe.GetEmbeddedResourceStream (resource)))
+							using (var stream = unsafe (pe.GetEmbeddedResourceStream (resource)))
 							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, nativeimportsDir, modifyCallback: (entryFullName) => {
@@ -295,7 +295,7 @@ namespace Xamarin.Android.Tasks
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
 							// SAFETY: resource comes from this local reader. Extraction and both nested
 							// disposals complete before pe is disposed, including exceptions and early returns.
-							using (var stream = unsafe(pe.GetEmbeddedResourceStream (resource)))
+							using (var stream = unsafe (pe.GetEmbeddedResourceStream (resource)))
 							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {

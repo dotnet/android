@@ -25,10 +25,8 @@ namespace Java.Interop {
 			if (value == null)
 				return "";
 
-			unsafe {
-				// SAFETY: the caller supplies immutable readable bytes through the terminator for this synchronous copy.
-				return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
-			}
+			// SAFETY: the caller supplies immutable readable bytes through the terminator for this synchronous copy.
+			return unsafe (Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)));
 		}
 
 		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",
@@ -51,10 +49,8 @@ namespace Java.Interop {
 			[Obsolete ("Use TargetJniTypeUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
 			public IntPtr TargetJniTypeUtf8 {
 				get {
-					unsafe {
-						// SAFETY: the legacy getter copies an address only; it never reads the pointed-to bytes.
-						return (IntPtr) TargetJniTypeUtf8Pointer;
-					}
+					// SAFETY: the legacy getter copies an address only; it never reads the pointed-to bytes.
+					return unsafe ((IntPtr) TargetJniTypeUtf8Pointer);
 				}
 				set {
 					unsafe {
@@ -74,10 +70,8 @@ namespace Java.Interop {
 			[Obsolete ("Use TargetJniMethodNameUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
 			public IntPtr TargetJniMethodNameUtf8 {
 				get {
-					unsafe {
-						// SAFETY: the legacy getter returns the address without scanning borrowed method-name storage.
-						return (IntPtr) TargetJniMethodNameUtf8Pointer;
-					}
+					// SAFETY: the legacy getter returns the address without scanning borrowed method-name storage.
+					return unsafe ((IntPtr) TargetJniMethodNameUtf8Pointer);
 				}
 				set {
 					unsafe {
@@ -97,10 +91,8 @@ namespace Java.Interop {
 			[Obsolete ("Use TargetJniMethodSignatureUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
 			public IntPtr TargetJniMethodSignatureUtf8 {
 				get {
-					unsafe {
-						// SAFETY: return only the stored signature address; no borrowed bytes are read.
-						return (IntPtr) TargetJniMethodSignatureUtf8Pointer;
-					}
+					// SAFETY: return only the stored signature address; no borrowed bytes are read.
+					return unsafe ((IntPtr) TargetJniMethodSignatureUtf8Pointer);
 				}
 				set {
 					unsafe {
@@ -149,62 +141,56 @@ namespace Java.Interop {
 
 			public bool Equals (ReplacementMethodInfo other)
 			{
-				unsafe {
-					// SAFETY: equality compares pointer values only; neither operand's borrowed storage is accessed.
-					return string.Equals (SourceJniType, other.SourceJniType) &&
-						string.Equals (SourceJniMethodName, other.SourceJniMethodName) &&
-						string.Equals (SourceJniMethodSignature, other.SourceJniMethodSignature) &&
-						string.Equals (TargetJniType, other.TargetJniType) &&
-						string.Equals (TargetJniMethodName, other.TargetJniMethodName) &&
-						string.Equals (TargetJniMethodSignature, other.TargetJniMethodSignature) &&
-						TargetJniTypeUtf8Pointer == other.TargetJniTypeUtf8Pointer &&
-						TargetJniMethodNameUtf8Pointer == other.TargetJniMethodNameUtf8Pointer &&
-						TargetJniMethodSignatureUtf8Pointer == other.TargetJniMethodSignatureUtf8Pointer &&
-						TargetJniMethodParameterCount == other.TargetJniMethodParameterCount &&
-						TargetJniMethodInstanceToStatic == other.TargetJniMethodInstanceToStatic;
-				}
+				// SAFETY: equality compares pointer values only; neither operand's borrowed storage is accessed.
+				return unsafe (string.Equals (SourceJniType, other.SourceJniType) &&
+					string.Equals (SourceJniMethodName, other.SourceJniMethodName) &&
+					string.Equals (SourceJniMethodSignature, other.SourceJniMethodSignature) &&
+					string.Equals (TargetJniType, other.TargetJniType) &&
+					string.Equals (TargetJniMethodName, other.TargetJniMethodName) &&
+					string.Equals (TargetJniMethodSignature, other.TargetJniMethodSignature) &&
+					TargetJniTypeUtf8Pointer == other.TargetJniTypeUtf8Pointer &&
+					TargetJniMethodNameUtf8Pointer == other.TargetJniMethodNameUtf8Pointer &&
+					TargetJniMethodSignatureUtf8Pointer == other.TargetJniMethodSignatureUtf8Pointer &&
+					TargetJniMethodParameterCount == other.TargetJniMethodParameterCount &&
+					TargetJniMethodInstanceToStatic == other.TargetJniMethodInstanceToStatic);
 			}
 
 			public override int GetHashCode ()
 			{
-				unsafe {
-					// SAFETY: hashing converts addresses to native integers without reading the addressed memory.
-					return HashCode.Combine (
-						SourceJniType,
-						SourceJniMethodName,
-						SourceJniMethodSignature,
-						TargetJniType,
-						TargetJniMethodName,
-						TargetJniMethodSignature,
-						HashCode.Combine (
-							(IntPtr) TargetJniTypeUtf8Pointer,
-							(IntPtr) TargetJniMethodNameUtf8Pointer,
-							(IntPtr) TargetJniMethodSignatureUtf8Pointer,
-							TargetJniMethodParameterCount,
-							TargetJniMethodInstanceToStatic
-						)
-					);
-				}
+				// SAFETY: hashing converts addresses to native integers without reading the addressed memory.
+				return unsafe (HashCode.Combine (
+					SourceJniType,
+					SourceJniMethodName,
+					SourceJniMethodSignature,
+					TargetJniType,
+					TargetJniMethodName,
+					TargetJniMethodSignature,
+					HashCode.Combine (
+						(IntPtr) TargetJniTypeUtf8Pointer,
+						(IntPtr) TargetJniMethodNameUtf8Pointer,
+						(IntPtr) TargetJniMethodSignatureUtf8Pointer,
+						TargetJniMethodParameterCount,
+						TargetJniMethodInstanceToStatic
+					)
+				));
 			}
 
 			public override string ToString ()
 			{
-				unsafe {
-					// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
-					return $"{nameof (ReplacementMethodInfo)} {{ " +
-						$"{nameof (SourceJniType)} = \"{SourceJniType}\"" +
-						$", {nameof (SourceJniMethodName)} = \"{SourceJniMethodName}\"" +
-						$", {nameof (SourceJniMethodSignature)} = \"{SourceJniMethodSignature}\"" +
-						$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
-						$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
-						$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
-						$", TargetJniTypeUtf8 = \"0x{(IntPtr) TargetJniTypeUtf8Pointer:x}\"" +
-						$", TargetJniMethodNameUtf8 = \"0x{(IntPtr) TargetJniMethodNameUtf8Pointer:x}\"" +
-						$", TargetJniMethodSignatureUtf8 = \"0x{(IntPtr) TargetJniMethodSignatureUtf8Pointer:x}\"" +
-						$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
-						$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
-						$"}}";
-				}
+				// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
+				return unsafe ($"{nameof (ReplacementMethodInfo)} {{ " +
+					$"{nameof (SourceJniType)} = \"{SourceJniType}\"" +
+					$", {nameof (SourceJniMethodName)} = \"{SourceJniMethodName}\"" +
+					$", {nameof (SourceJniMethodSignature)} = \"{SourceJniMethodSignature}\"" +
+					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
+					$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
+					$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
+					$", TargetJniTypeUtf8 = \"0x{(IntPtr) TargetJniTypeUtf8Pointer:x}\"" +
+					$", TargetJniMethodNameUtf8 = \"0x{(IntPtr) TargetJniMethodNameUtf8Pointer:x}\"" +
+					$", TargetJniMethodSignatureUtf8 = \"0x{(IntPtr) TargetJniMethodSignatureUtf8Pointer:x}\"" +
+					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
+					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
+					$"}}");
 			}
 
 			public static bool operator==(ReplacementMethodInfo a, ReplacementMethodInfo b) => a.Equals (b);
@@ -541,10 +527,8 @@ namespace Java.Interop {
 				if (!RuntimeFeature.JniRemapping)
 					return null;
 
-				unsafe {
-					// SAFETY: the caller retains the source bytes through dispatch; returned targets have the producer's cache lifetime.
-					return GetReplacementMethodInfoUnsafe (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
-				}
+				// SAFETY: the caller retains the source bytes through dispatch; returned targets have the producer's cache lifetime.
+				return unsafe (GetReplacementMethodInfoUnsafe (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature));
 			}
 
 			/// <summary>
@@ -581,10 +565,8 @@ namespace Java.Interop {
 			[Obsolete ("Use GetReplacementMethodInfoUnsafe and explicitly audit the borrowed storage lifetime.")]
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 			{
-				unsafe {
-					// SAFETY: the released hook's caller retains source bytes while they are copied; virtual string dispatch is preserved.
-					return GetReplacementMethodInfoCore (GetUtf8String ((byte*) jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
-				}
+				// SAFETY: the released hook's caller retains source bytes while they are copied; virtual string dispatch is preserved.
+				return unsafe (GetReplacementMethodInfoCore (GetUtf8String ((byte*) jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature));
 			}
 
 			public ReplacementFieldInfo? GetReplacementFieldInfo (string jniSimpleReference, string jniFieldName, string jniFieldSignature)
