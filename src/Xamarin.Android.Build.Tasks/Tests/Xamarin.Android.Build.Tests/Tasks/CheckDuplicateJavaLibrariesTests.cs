@@ -54,10 +54,11 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ("library.jar", error.Message);
 		}
 
-		[TestCase ("same", true)]
-		[TestCase ("diff", false)]
-		[TestCase ("different size", false)]
-		public void RelativeJarContents (string content, bool expected)
+		[TestCase ("same", true, null)]
+		[TestCase ("diff", false, null)]
+		[TestCase ("different size", false, null)]
+		[TestCase ("diff", true, "LIBRARY.JAR")]
+		public void RelativeJarContents (string content, bool expected, string? excludedFile)
 		{
 			Directory.CreateDirectory (Path.Combine (path, "imports"));
 			File.WriteAllText (Path.Combine (path, "library.jar"), "same");
@@ -68,6 +69,7 @@ namespace Xamarin.Android.Build.Tests {
 				JavaSourceFiles = [new TaskItem ("missing.java"), new TaskItem ("library.jar")],
 				JavaLibraries = [new TaskItem (Path.Combine ("imports", "library.jar"))],
 				LibraryProjectJars = [new TaskItem ("library.jar")],
+				ExcludedFiles = excludedFile == null ? null : [excludedFile],
 			};
 
 			Assert.AreEqual (expected, task.Execute ());
@@ -139,8 +141,7 @@ namespace Xamarin.Android.Build.Tests {
 					new XElement ("UsingTask", new XAttribute ("TaskName", "Xamarin.Android.Tasks.CheckDuplicateJavaLibraries"), new XAttribute ("AssemblyFile", assembly)),
 					new XElement ("Target", new XAttribute ("Name", "Build"),
 						new XElement ("CheckDuplicateJavaLibraries",
-							new XAttribute ("JavaLibraries", $"library.jar;{Path.Combine ("imports", "library.jar")}"),
-							new XAttribute ("ExcludedFiles", name == "second" ? "LIBRARY.JAR" : "")),
+							new XAttribute ("JavaLibraries", $"library.jar;{Path.Combine ("imports", "library.jar")}")),
 						new XElement ("WriteLinesToFile",
 							new XAttribute ("File", "$(MSBuildProjectDirectory)/checked.txt"),
 							new XAttribute ("Lines", name), new XAttribute ("Overwrite", "true"))));
@@ -156,11 +157,17 @@ namespace Xamarin.Android.Build.Tests {
 			var dotnet = new DotNetCLI (Path.Combine (path, "driver.proj")) { Verbosity = "diagnostic" };
 			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
 			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
-			Assert.IsTrue (dotnet.Build (msbuildArguments:
+			Assert.IsFalse (dotnet.Build (msbuildArguments:
 				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"]),
 				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
-			foreach (string name in new [] { "first", "second" })
-				Assert.AreEqual (name, File.ReadAllText (Path.Combine (path, name, "checked.txt")).Trim ());
+			var errorLines = dotnet.LastBuildOutput.Where (line => line.Contains (": error ")).ToArray ();
+			Assert.IsNotEmpty (errorLines);
+			foreach (string line in errorLines) {
+				StringAssert.Contains (": error XA1014:", line);
+				StringAssert.Contains (Path.Combine (path, "second", "check.proj"), line);
+			}
+			Assert.AreEqual ("first", File.ReadAllText (Path.Combine (path, "first", "checked.txt")).Trim ());
+			Assert.IsFalse (File.Exists (Path.Combine (path, "second", "checked.txt")));
 		}
 	}
 }
