@@ -1452,8 +1452,13 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="ApplicationLabel"    PropertyName="_ApplicationArtifactApplicationTitle" />
     <Output TaskParameter="VersionName"         PropertyName="_ApplicationArtifactApplicationDisplayVersion" />
     <Output TaskParameter="VersionCode"         PropertyName="_ApplicationArtifactApplicationVersion" />
+    <Output TaskParameter="CompileSdkVersion"   PropertyName="_AndroidManifestCompileSdkVersion" />
+    <Output TaskParameter="MinimumSdkVersion"   PropertyName="_AndroidManifestMinimumSdkVersion" />
+    <Output TaskParameter="TargetSdkVersion"    PropertyName="_AndroidManifestTargetSdkVersion" />
   </ReadAndroidManifest>
   <PropertyGroup>
+    <_AndroidSdkRequirementsManifest>$(IntermediateOutputPath)android\AndroidManifest.xml</_AndroidSdkRequirementsManifest>
+    <_AndroidSdkRequirementsApiLevel>$(_AndroidApiLevel)</_AndroidSdkRequirementsApiLevel>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_UseEmbeddedDex)' == 'True' ">.dex;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_AndroidUseAssemblyStore)' == 'True' ">.blob;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>

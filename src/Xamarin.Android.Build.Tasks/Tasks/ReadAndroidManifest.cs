@@ -3,6 +3,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
@@ -18,13 +19,23 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ManifestFile { get; set; } = "";
 
-		[Required]
-		public string AndroidSdkDirectory { get; set; } = "";
+		public string? AndroidSdkDirectory { get; set; }
 
 		[Required]
 		public string AndroidApiLevel { get; set; } = "";
 
 		public string []? ReferenceAssemblyPaths { get; set; }
+
+		public bool ReadSdkVersionsOnly { get; set; }
+
+		[Output]
+		public string CompileSdkVersion { get; set; } = "";
+
+		[Output]
+		public int MinimumSdkVersion { get; set; }
+
+		[Output]
+		public int TargetSdkVersion { get; set; }
 
 		/// <summary>
 		/// True if //manifest/application/[@android:extractNativeLibs='false']. False otherwise.
@@ -56,8 +67,25 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
+			var document = XDocument.Load (ManifestFile);
+			var usesSdk = document.Root?.Element ("uses-sdk");
+			int? compileSdk = MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out var version) ? version.Major : null;
+			CompileSdkVersion = compileSdk?.ToString () ?? "";
+			var minSdkValue = usesSdk?.Attribute (androidNs + "minSdkVersion")?.Value
+				?? XABuildConfig.AndroidMinimumDotNetApiLevel.Major.ToString ();
+			MinimumSdkVersion = int.TryParse (minSdkValue, out var minSdk) ? minSdk : 1;
+			TargetSdkVersion = int.TryParse (usesSdk?.Attribute (androidNs + "targetSdkVersion")?.Value, out var targetSdk)
+				? targetSdk : compileSdk ?? 21;
+
+			if (ReadSdkVersionsOnly) {
+				return true;
+			}
+
+			if (AndroidSdkDirectory.IsNullOrEmpty ()) {
+				throw new System.ArgumentException ("An Android SDK directory is required to read application attributes.", nameof (AndroidSdkDirectory));
+			}
 			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
-			var manifest = AndroidAppManifest.Load (ManifestFile, supportedVersions);
+			var manifest = AndroidAppManifest.Load (document, supportedVersions);
 			var root = manifest.Document.Element ("manifest");
 			var app = root?.Element ("application");
 
