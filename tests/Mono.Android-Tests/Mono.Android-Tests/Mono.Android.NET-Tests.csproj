@@ -164,6 +164,7 @@
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />
     <Compile Include="System\AssemblyInformationalVersionAttributeTest.cs" />
+    <Compile Include="System\AssemblyStoreTests.cs" />
     <Compile Include="System\ExceptionTest.cs" />
     <Compile Include="System\StartupHookTest.cs" />
     <Compile Include="System\TimeZoneTest.cs" />

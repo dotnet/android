@@ -43,6 +43,13 @@ It uses the production raw-only envelope reader and checks compressed/truncated 
 On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 
+`AssemblyStoreImageCacheTests` in the same suite compiles the production CoreCLR
+assembly-store loader in Debug and Release modes with AddressSanitizer and UBSan.
+It checks writable-image reuse, name aliases, concurrent first access, and image
+lifetime across reconfiguration, including mixed raw/Zstd stores. It requires a
+C++23 compiler (`clang++`, or `CXX`) on macOS/Linux and uses the running .NET
+runtime's native compression library, without an Android device or local Android SDK.
+
 ---
 
 The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
@@ -135,6 +142,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
+| **assembly store** | Same project, `-p:IncludeCategories=AssemblyStore` | Rejected version probes followed by successful bundled assembly loads on CoreCLR; use `-p:EmbedAssembliesIntoApk=true` to exercise the store in Debug |
 | **trimmable type map** | Same project | Java-driven activation, direct UCO callbacks, exports, manifest-only rooting, and typemap lookups (`TrimmableTypeMapRuntimeCoverageTests`, `TrimmableTypeMapDirectCallbackTests`, `TrimmableTypeMapExportTests`, `TrimmableTypeMapManifestTests`, `ExportTests`, `ConstructorActivationTests`, `JavaConvertTest`) |
 | **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
