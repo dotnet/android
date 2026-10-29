@@ -17,6 +17,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		public void DetermineJavaLibrariesInSeparateProjects (bool multithreaded)
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
 			Directory.CreateDirectory (directory);
 			string assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll");
 			string nestedJar = Path.Combine ("libs", "__reference__nested.jar");

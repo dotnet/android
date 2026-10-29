@@ -284,11 +284,6 @@ namespace Xamarin.Android.Tasks
 			return filePaths.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer (taskEnvironment));
 		}
 
-		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths, TaskEnvironment taskEnvironment)
-		{
-			return filePaths.Select (p => new FileInfo (taskEnvironment.GetAbsolutePath (p))).ToArray ()
-				.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
-		}
 #endif
 
 		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths)
