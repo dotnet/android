@@ -8,6 +8,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Xamarin.Android.Tools;
@@ -209,8 +210,10 @@ namespace Xamarin.Android.Tasks
 		// Path which contains OS-specific binaries; formerly known as $prefix/bin
 		internal static string GetOSBinPath ()
 		{
-			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
-			return Path.Combine (toolsDir, uname.Value);
+			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
+			var os = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
+				RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
+			return Path.Combine (toolsDir, os);
 		}
 
 		internal static string GetOSLibPath ()

@@ -174,24 +174,44 @@ namespace Xamarin.Android.Build.Tests {
 		public void ResolveAndroidToolingCachesAapt2Version ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "36.0.0");
 			var messages = new List<BuildMessageEventArgs> ();
 			var engine = new MockBuildEngine (TestContext.Out, messages: messages);
 			try {
-				string version = "";
-				for (int i = 0; i < 2; i++) {
-					messages.Clear ();
-					var tooling = new ResolveAndroidTooling {
-						BuildEngine = engine,
-						AndroidSdkPath = sdkPath,
-						TargetPlatformVersion = "36.0",
-					};
-					Assert.IsTrue (tooling.Execute ());
-					Assert.IsNotEmpty (tooling.Aapt2Version);
-					if (i == 0)
-						version = tooling.Aapt2Version;
-					Assert.AreEqual (version, tooling.Aapt2Version);
-					Assert.AreEqual (i == 1, messages.Any (m => m.Message == $"Using cached value for Aapt2Version: {version}"));
+				for (int project = 0; project < 2; project++) {
+					var projectPath = Path.Combine (path, $"project-{project}");
+					var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (projectPath, "sdk"), "36.0.0");
+					CreateFauxReferencesDirectory (Path.Combine (projectPath, "references"), [
+						new ApiInfo { Id = $"Project{project}", Level = 100 + project, Name = "Preview", FrameworkVersion = "v100.0", Stable = true },
+					]);
+					var toolPath = Path.Combine (Root, projectPath, "aapt2");
+					Directory.CreateDirectory (toolPath);
+					var executable = IsWindows ? "aapt2.exe" : "aapt2";
+					File.Copy (Path.Combine (TestEnvironment.OSBinDirectory, executable), Path.Combine (toolPath, executable));
+					var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+						Path.Combine (Root, projectPath), new Dictionary<string, string> { ["PATHEXT"] = $".MT{project}{Path.PathSeparator}.CMD" });
+					File.WriteAllText (Path.Combine (toolPath, $"probe.MT{project}"), "");
+					Assert.AreEqual ($"probe.MT{project}", MonoAndroidHelper.GetExecutablePath ("aapt2", "probe.exe", environment));
+					string version = "";
+					for (int run = 0; run < 2; run++) {
+						messages.Clear ();
+						var tooling = new ResolveAndroidTooling {
+							BuildEngine = engine,
+							TaskEnvironment = environment,
+							AndroidSdkPath = "sdk",
+							ReferenceAssemblyPaths = ["references"],
+							Aapt2ToolPath = run == 0 ? "aapt2" : Path.Combine ("aapt2", "..", "aapt2"),
+							ZipAlignPath = Path.Combine ("sdk", "build-tools", "36.0.0"),
+						};
+						Assert.IsTrue (tooling.Execute ());
+						if (run == 0)
+							version = tooling.Aapt2Version;
+						Assert.AreEqual (version, tooling.Aapt2Version);
+						Assert.AreEqual ((100 + project).ToString (), tooling.AndroidApiLevel);
+						Assert.AreEqual ($"Project{project}", tooling.AndroidApiLevelName);
+						Assert.AreEqual (Path.Combine (sdkPath, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
+						Assert.AreEqual (Path.Combine (sdkPath, "build-tools", "36.0.0"), tooling.ZipAlignPath);
+						Assert.AreEqual (run == 1, messages.Any (m => m.Message.StartsWith ("Using cached value for Aapt2Version:", StringComparison.Ordinal)));
+					}
 				}
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
