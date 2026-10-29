@@ -192,6 +192,10 @@
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
+  <data name="XA0101" xml:space="preserve">
+    <value>@(Content) build action is not supported</value>
+    <comment>@(Content) is an MSBuild item name and should not be translated.</comment>
+  </data>
   <data name="XA0105" xml:space="preserve">
     <value>$(TargetFrameworkVersion) для {0} ({1}) выше $(TargetFrameworkVersion) для проекта приложения ({2}). Используйте более новую версию $(TargetFrameworkVersion) для проекта приложения.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
