@@ -142,11 +142,16 @@ namespace Java.InteropTests
 		{
 			ConstructorActivationThrowing.Reset ();
 
-			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
-			Assert.IsNotNull (exception);
-			Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
-			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
-			Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+			// A user-code catch avoids another debugger stop when JNI rethrows into NUnit's external Assert.Catch.
+			try {
+				CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V");
+			} catch (Exception exception) {
+				Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
+				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+				Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+				return;
+			}
+			Assert.Fail ("Expected the original constructor exception.");
 		}
 
 		[Test]

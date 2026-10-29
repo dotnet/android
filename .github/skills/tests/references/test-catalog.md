@@ -232,8 +232,15 @@ On device, `-p:IncludeCategories=GeneratedJniDebuggerBoundary` selects construct
 activation and export coverage, including throwing calls, subsequent successful
 calls, and handled-exception ABI defaults with exactly-once application-event
 delivery on both CoreCLR and NativeAOT.
-These are no-debugger transport tests, not proof of an attached debugger's
-user-unhandled stop, Continue, or Java evaluation behavior.
+Ordinary device runs are no-debugger transport tests, not proof of an attached
+debugger's user-unhandled stop, Continue, or Java evaluation behavior.
+For attached CoreCLR acceptance, build with `Optimize=false` and use
+`JavaSideThrowingConstructorPropagatesException` and
+`Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException`: their catches
+remain in user code so JNI's managed rethrow does not add another user-unhandled
+stop inside NUnit's external `Assert.Catch`. Each should stop once at the original
+throw, then pass after Continue. The handled-policy tests above should not stop.
+Java evaluation while stopped must be checked separately.
 
 To run the on-device typemap tests:
 
