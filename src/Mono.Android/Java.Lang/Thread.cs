@@ -12,8 +12,8 @@ namespace Java.Lang {
 		[Register ("mono/java/lang/RunnableImplementor")]
 		internal sealed class RunnableImplementor : Java.Lang.Object, IRunnable {
 
-			public Action Handler;
-			bool removable;
+			Action? handler;
+			readonly bool removable;
 
 			public RunnableImplementor (Action handler) : this (handler, false) {}
 
@@ -24,34 +24,57 @@ namespace Java.Lang {
 			{
 				JNIEnv.FinishCreateInstance (Handle, "()V");
 
-				Handler = handler;
+				this.handler = handler;
 				this.removable = removable;
-				if (removable)
-					lock (instances)
-						instances.AddOrUpdate (handler, this);
+				if (removable) {
+					lock (instances) {
+						var runnables = instances.GetOrCreateValue (handler);
+						runnables.RemoveAll (r => !r.TryGetTarget (out _));
+						// Java queues own these peers. A live Action must not keep a cleared queue alive.
+						runnables.Add (new WeakReference<RunnableImplementor> (this, trackResurrection: true));
+					}
+				}
 			}
 
 			public void Run ()
 			{
-				if (Handler != null)
-					Handler ();
-				if (removable)
-					lock (instances)
-						if (Handler != null)
-							instances.Remove (Handler);
-				Dispose ();
+				try {
+					handler?.Invoke ();
+				} finally {
+					Dispose ();
+				}
 			}
 
-			static ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
+			static readonly ConditionalWeakTable<Action, List<WeakReference<RunnableImplementor>>> instances = new ();
 
-			public static RunnableImplementor Remove (Action handler)
+			protected override void Dispose (bool disposing)
 			{
-				RunnableImplementor result;
 				lock (instances) {
-					instances.TryGetValue (handler, out result!);
-					instances.Remove (handler);
+					if (handler != null && removable && instances.TryGetValue (handler, out var runnables)) {
+						runnables.RemoveAll (r => !r.TryGetTarget (out var target) || ReferenceEquals (target, this));
+						if (runnables.Count == 0)
+							instances.Remove (handler);
+					}
+					handler = null;
+					base.Dispose (disposing);
 				}
-				return result;
+			}
+
+			public static void Remove (Action handler, Action<RunnableImplementor> remove)
+			{
+				WeakReference<RunnableImplementor> [] references;
+				lock (instances) {
+					if (!instances.TryGetValue (handler, out var runnables))
+						return;
+					runnables.RemoveAll (r => !r.TryGetTarget (out _));
+					references = runnables.ToArray ();
+				}
+				// Native removal filters by queue owner/token and can be a no-op.
+				// Let the queue release the peer instead of disposing a possibly queued runnable.
+				foreach (var reference in references) {
+					if (reference.TryGetTarget (out var runnable) && runnable.Handle != IntPtr.Zero)
+						remove (runnable);
+				}
 			}
 		}
 
