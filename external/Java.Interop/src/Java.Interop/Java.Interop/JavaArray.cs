@@ -338,12 +338,8 @@ namespace Java.Interop
 			this.sizeOfElement = sizeOfElement;
 		}
 
-		internal bool IsDisposed {
-			get {
-				// SAFETY: Sentinel comparison does not read the buffer.
-				return unsafe (elements == null);
-			}
-		}
+		// SAFETY: Sentinel comparison does not read the buffer.
+		internal bool IsDisposed => unsafe (elements == null);
 
 		internal int ElementCount {
 			get {return elementCount;}
