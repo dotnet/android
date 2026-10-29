@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -56,15 +57,10 @@ public class GenerateResourceDesignerAssembly : MultithreadedAndroidTask
 		var map = (BuildEngine as IBuildEngine4)?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (Path.GetFullPath (mapFile.Value), RegisteredTaskObjectLifetime.Build)
 			?? MonoAndroidHelper.LoadMapFile (File.Exists (mapFile) ? File.ReadLines (mapFile) : [], StringComparer.OrdinalIgnoreCase);
 
-		if (File.Exists (outputFile) && File.Exists (rtxtFile) &&
-			File.GetLastWriteTimeUtc (rtxtFile) < File.GetLastWriteTimeUtc (outputFile)) {
-			Log.LogDebugMessage ($"{RTxtFile.ItemSpec} has not changed since {OutputFile.ItemSpec} was generated.");
-			return !Log.HasLoggedErrors;
-		}
-
+		var targetFramework = new FrameworkName ($"{TargetFrameworkIdentifier},Version={TargetFrameworkVersion}");
 		var resources = new RtxtParser ().Parse (File.Exists (rtxtFile) ? File.ReadLines (rtxtFile) : [], rtxtFile, Log, map);
 		var emitter = new ResourceDesignerAssemblyEmitter ();
-		var image = emitter.Emit (Path.GetFileNameWithoutExtension (outputFile), resources,
+		var image = emitter.Emit (Path.GetFileNameWithoutExtension (outputFile), targetFramework, resources,
 			IsApplication, AssemblyName, Deterministic);
 		var stream = MemoryStreamPool.Shared.Rent ();
 		try {
