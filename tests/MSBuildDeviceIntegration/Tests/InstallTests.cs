@@ -574,7 +574,7 @@ namespace Xamarin.Android.Build.Tests
 
 			// Change $(AdbTarget) to not be blank
 			var serial = GetAttachedDeviceSerial ();
-			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-e {serial}\"" }), "second build should have succeeded.");
+			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-s {serial}\"" }), "second build should have succeeded.");
 
 			FileAssert.Exists (apkset);
 			var after = File.GetLastWriteTimeUtc (apkset);
