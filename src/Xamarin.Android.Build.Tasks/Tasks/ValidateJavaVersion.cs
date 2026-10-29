@@ -1,10 +1,10 @@
 #nullable enable
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -61,8 +61,8 @@ namespace Xamarin.Android.Tasks
 
 		bool ValidateJava ()
 		{
-			var java = JavaToolExe ?? (RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "java.exe" : "java");
-			var javac = JavacToolExe ?? (RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "javac.exe" : "javac");
+			var java = JavaToolExe ?? (OS.IsWindows ? "java.exe" : "java");
+			var javac = JavacToolExe ?? (OS.IsWindows ? "javac.exe" : "javac");
 
 			return ValidateJava (java, JavaVersionRegex) &&
 				(!UseJavaExeVersion || ValidateJava (javac, JavacVersionRegex));
