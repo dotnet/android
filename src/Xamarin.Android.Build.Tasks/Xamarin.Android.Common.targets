@@ -2722,8 +2722,19 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_DeployAppBundle"
     Condition=" '$(AndroidPackageFormat)' == 'aab' "
     DependsOnTargets="_BuildApkSet">
-  <AndroidAdb
+  <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
+      Command="&quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(AdbTarget) shell pm list packages $(_AndroidPackage)"
+      ConsoleToMSBuild="True"
+      StandardOutputImportance="Low"
+  >
+    <Output TaskParameter="ConsoleOutput" ItemName="_AndroidInstalledPackages" />
+  </Exec>
+  <ItemGroup>
+    <_AndroidInstalledPackage Include="@(_AndroidInstalledPackages->WithMetadataValue('Identity', 'package:$(_AndroidPackage)'))" />
+  </ItemGroup>
+  <AndroidAdb
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '@(_AndroidInstalledPackage->Count())' != '0' "
       ContinueOnError="True"
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
@@ -2734,7 +2745,7 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="Result" PropertyName="_UninstallResult" />
   </AndroidAdb>
    <AndroidAdb
-      Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '$(_UninstallResult)' == 'false' "
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '@(_AndroidInstalledPackage->Count())' != '0' And '$(_UninstallResult)' == 'false' "
       ContinueOnError="True"
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
