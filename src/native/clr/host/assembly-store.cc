@@ -7,11 +7,10 @@
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
 #include <runtime-base/crc32.hh>
+#include <runtime-base/util.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/zstd.hh>
-#include <shared/helpers.hh>
-#include <shared/log_functions.hh>
 
 using namespace xamarin::android;
 
@@ -209,15 +208,13 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 {
 	hash_t name_hash = crc32_hash (name);
 
-#if !defined (RELEASE)
-	{
+	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.
 		if (assembly_store_hashes == nullptr) {
 			log_debugf (LOG_ASSEMBLY, "Skipping assembly store lookup for '%.*s': no assembly store is registered (normal with FastDev)", static_cast<int>(name.length ()), name.data ());
 			return nullptr;
 		}
 	}
-#endif
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name, name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) [[unlikely]] {
