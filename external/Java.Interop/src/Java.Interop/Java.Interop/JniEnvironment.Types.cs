@@ -54,10 +54,8 @@ namespace Java.Interop
 				// Convert dot-separated names (e.g. "java.lang.Object") to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				var jniClassName = classname.Contains ('.') ? classname.Replace ('.', '/') : classname;
-				IntPtr c;
-				IntPtr thrown;
 				// SAFETY: info supplies this attached thread's live environment; the helper owns marshaling of the managed class name.
-				bool found = unsafe (TryRawFindClass (info.EnvironmentPointer, jniClassName, out c, out thrown));
+				var found = unsafe (TryRawFindClass (info.EnvironmentPointer, jniClassName, out var c, out var thrown));
 				if (found) {
 					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
@@ -250,7 +248,7 @@ namespace Java.Interop
 					return null;
 
 				// SAFETY: Class_getName was resolved as Class.getName()String; it reads no argument buffer and type remains the lookup's live class reference.
-				JniObjectReference s = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName));
+				var s = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName));
 				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose)!);
 			}
 

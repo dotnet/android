@@ -125,18 +125,14 @@ namespace Java.Interop {
 		JniStaticFields     staticFields;
 
 		public      Type        ManagedPeerType {get; private set;}
-		public      string      JniPeerTypeName {
-			get {
-				// SAFETY: the descriptor's producer retains NUL-terminated storage; only the managed conversion is cached here.
-				return unsafe (jniPeerTypeNameUtf8 == null
-					? jniPeerTypeName ?? sourceJniPeerTypeName
-					: jniPeerTypeName ??= GetStringFromNullTerminated (jniPeerTypeNameUtf8));
-			}
-		}
+		// SAFETY: the descriptor's producer retains NUL-terminated storage; only the managed conversion is cached here.
+		public      string      JniPeerTypeName => unsafe (jniPeerTypeNameUtf8 == null
+			? jniPeerTypeName ?? sourceJniPeerTypeName
+			: jniPeerTypeName ??= GetStringFromNullTerminated (jniPeerTypeNameUtf8));
 		public      JniType     JniPeerType {
 			get {
 				// SAFETY: the peer-name borrow outlives lookup, and GetCachedJniType does not retain the name pointer.
-				JniType t = unsafe (jniPeerTypeNameUtf8 == null
+				var t = unsafe (jniPeerTypeNameUtf8 == null
 					? JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeName ?? sourceJniPeerTypeName)
 					: JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeNameUtf8));
 				t.RegisterWithRuntime ();

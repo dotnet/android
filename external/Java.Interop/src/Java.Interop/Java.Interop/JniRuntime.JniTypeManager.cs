@@ -48,10 +48,8 @@ namespace Java.Interop {
 			/// </safety>
 			[Obsolete ("Use TargetJniTypeUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
 			public IntPtr TargetJniTypeUtf8 {
-				get {
-					// SAFETY: the legacy getter copies an address only; it never reads the pointed-to bytes.
-					return unsafe ((IntPtr) TargetJniTypeUtf8Pointer);
-				}
+				// SAFETY: the legacy getter copies an address only; it never reads the pointed-to bytes.
+				get => unsafe ((IntPtr) TargetJniTypeUtf8Pointer);
 				set {
 					unsafe {
 						// SAFETY: this released compatibility shim stores an address only; callers still owe the typed setter's lifetime.
@@ -69,10 +67,8 @@ namespace Java.Interop {
 			/// </safety>
 			[Obsolete ("Use TargetJniMethodNameUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
 			public IntPtr TargetJniMethodNameUtf8 {
-				get {
-					// SAFETY: the legacy getter returns the address without scanning borrowed method-name storage.
-					return unsafe ((IntPtr) TargetJniMethodNameUtf8Pointer);
-				}
+				// SAFETY: the legacy getter returns the address without scanning borrowed method-name storage.
+				get => unsafe ((IntPtr) TargetJniMethodNameUtf8Pointer);
 				set {
 					unsafe {
 						// SAFETY: the released setter preserves the address; it neither validates nor takes ownership of the buffer.
@@ -90,10 +86,8 @@ namespace Java.Interop {
 			/// </safety>
 			[Obsolete ("Use TargetJniMethodSignatureUtf8Pointer and explicitly audit the borrowed storage lifetime.")]
 			public IntPtr TargetJniMethodSignatureUtf8 {
-				get {
-					// SAFETY: return only the stored signature address; no borrowed bytes are read.
-					return unsafe ((IntPtr) TargetJniMethodSignatureUtf8Pointer);
-				}
+				// SAFETY: return only the stored signature address; no borrowed bytes are read.
+				get => unsafe ((IntPtr) TargetJniMethodSignatureUtf8Pointer);
 				set {
 					unsafe {
 						// SAFETY: the released safe-call shim retains no ownership; its caller must satisfy the typed buffer contract.

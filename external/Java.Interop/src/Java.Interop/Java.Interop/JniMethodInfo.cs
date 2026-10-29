@@ -25,10 +25,8 @@ namespace Java.Interop
 
 		public      string  Name {
 #if DEBUG
-			get {
-				// SAFETY: the borrowed constructor's owner keeps the name readable and immutable through this lazy read.
-				return name ??= unsafe (GetUtf8String (nameUtf8));
-			}
+			// SAFETY: the borrowed constructor's owner keeps the name readable and immutable through this lazy read.
+			get => name ??= unsafe (GetUtf8String (nameUtf8));
 #else   // !DEBUG
 			get => throw new NotSupportedException ();
 #endif  // !DEBUG
@@ -36,10 +34,8 @@ namespace Java.Interop
 
 		public      string  Signature {
 #if DEBUG
-			get {
-				// SAFETY: the borrowed constructor's owner keeps the signature readable and immutable through this lazy read.
-				return signature ??= unsafe (GetUtf8String (signatureUtf8));
-			}
+			// SAFETY: the borrowed constructor's owner keeps the signature readable and immutable through this lazy read.
+			get => signature ??= unsafe (GetUtf8String (signatureUtf8));
 #else   // !DEBUG
 			get => throw new NotSupportedException ();
 #endif  // !DEBUG

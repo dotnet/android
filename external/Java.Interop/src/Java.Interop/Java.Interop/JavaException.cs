@@ -250,7 +250,7 @@ namespace Java.Interop
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getMessage.()Ljava/lang/String;");
 			// SAFETY: m resolves getMessage()String; the borrowed throwable stays valid through the call.
-			JniObjectReference s = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (reference, m));
+			var s = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (reference, m));
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -268,7 +268,7 @@ namespace Java.Interop
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause.()Ljava/lang/Throwable;");
 			// SAFETY: m resolves getCause()Throwable; the borrowed throwable stays valid through the call.
-			JniObjectReference e = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (reference, m));
+			var e = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (reference, m));
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -290,7 +290,7 @@ namespace Java.Interop
 				var StringWriter_init       = StringWriter_class.GetConstructor ("()V");
 				var PrintWriter_init        = PrintWriter_class.GetConstructor ("(Ljava/io/Writer;)V");
 				// SAFETY: StringWriter's ()V constructor reads no argument slots.
-				JniObjectReference swriter = unsafe (StringWriter_class.NewObject (StringWriter_init, null));
+				var swriter = unsafe (StringWriter_class.NewObject (StringWriter_init, null));
 				try {
 					JniObjectReference pwriter;
 					unsafe {
@@ -358,11 +358,7 @@ namespace Java.Interop
 			}
 		}
 
-		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
-			get {
-				// SAFETY: Only copy the address; no memory access or lifetime extension occurs in this getter.
-				return unsafe ((IntPtr) jniObjectReferenceControlBlock);
-			}
-		}
+		// SAFETY: Only copy the address; no memory access or lifetime extension occurs in this getter.
+		IntPtr IJavaPeerable.JniObjectReferenceControlBlock => unsafe ((IntPtr) jniObjectReferenceControlBlock);
 	}
 }

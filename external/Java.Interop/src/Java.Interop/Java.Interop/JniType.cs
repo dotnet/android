@@ -147,7 +147,7 @@ namespace Java.Interop {
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
 			// SAFETY: the caller retains the class name during construction; only the resulting JNI type is cached.
-			JniType t = unsafe (new JniType (classname));
+			var t = unsafe (new JniType (classname));
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
@@ -469,7 +469,7 @@ namespace Java.Interop {
 		public unsafe JniType (ReadOnlySpan<byte> classname)
 		{
 			// SAFETY: The caller supplies a readable terminated name; FindClass pins it for JNI and returns an owned local reference for Initialize.
-			JniObjectReference peer = unsafe (JniEnvironment.Types.FindClass (classname));
+			var peer = unsafe (JniEnvironment.Types.FindClass (classname));
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -484,7 +484,7 @@ namespace Java.Interop {
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
 			// SAFETY: On a cache miss the caller's terminated bytes remain readable through construction; the constructor owns JNI pinning.
-			JniType t = unsafe (new JniType (classname));
+			var t = unsafe (new JniType (classname));
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
@@ -546,7 +546,7 @@ namespace Java.Interop {
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
 			// SAFETY: On a cache miss the same terminated caller bytes are consumed synchronously; only field metadata, not their addresses, is cached.
-			JniFieldInfo m = unsafe (GetInstanceField (name, signature));
+			var m = unsafe (GetInstanceField (name, signature));
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -580,7 +580,7 @@ namespace Java.Interop {
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
 			// SAFETY: The caller maintains both terminated byte sequences until the cache-miss lookup completes, including JNI exception handling.
-			JniFieldInfo m = unsafe (GetStaticField (name, signature));
+			var m = unsafe (GetStaticField (name, signature));
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -614,7 +614,7 @@ namespace Java.Interop {
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
 			// SAFETY: The cache miss forwards the caller's still-live terminated spans; the result caches an opaque method ID rather than borrowed bytes.
-			JniMethodInfo m = unsafe (GetInstanceMethod (name, signature));
+			var m = unsafe (GetInstanceMethod (name, signature));
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -648,7 +648,7 @@ namespace Java.Interop {
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
 			// SAFETY: A cache miss consumes the caller's terminated bytes only through lookup completion; published metadata retains no byte-buffer alias.
-			JniMethodInfo m = unsafe (GetStaticMethod (name, signature));
+			var m = unsafe (GetStaticMethod (name, signature));
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}

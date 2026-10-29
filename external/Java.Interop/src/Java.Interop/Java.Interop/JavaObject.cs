@@ -146,7 +146,7 @@ namespace Java.Interop
 		public override string? ToString ()
 		{
 			// SAFETY: toString takes no arguments; its returned local reference is consumed below.
-			JniObjectReference lref = unsafe (_members.InstanceMethods.InvokeVirtualObjectMethod (
+			var lref = unsafe (_members.InstanceMethods.InvokeVirtualObjectMethod (
 					"toString.()Ljava/lang/String;",
 					this,
 					null));
@@ -194,11 +194,7 @@ namespace Java.Interop
 			}
 		}
 
-		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
-			get {
-				// SAFETY: Return only the address; this getter neither dereferences it nor extends the block's lifetime.
-				return unsafe ((IntPtr) jniObjectReferenceControlBlock);
-			}
-		}
+		// SAFETY: Return only the address; this getter neither dereferences it nor extends the block's lifetime.
+		IntPtr IJavaPeerable.JniObjectReferenceControlBlock => unsafe ((IntPtr) jniObjectReferenceControlBlock);
 	}
 }

@@ -239,7 +239,7 @@ namespace Java.Interop
 				using (var t = new JniType ("java/lang/ClassLoader")) {
 					var m       = t.GetStaticMethod ("getSystemClassLoader", "()Ljava/lang/ClassLoader;");
 					// SAFETY: m resolves ClassLoader.getSystemClassLoader()ClassLoader with no arguments.
-					JniObjectReference loader = unsafe (JniEnvironment.StaticMethods.CallStaticObjectMethod (t.PeerReference, m));
+					var loader = unsafe (JniEnvironment.StaticMethods.CallStaticObjectMethod (t.PeerReference, m));
 					ClassLoader = loader.NewGlobalRef ();
 					JniObjectReference.Dispose (ref loader);
 				}

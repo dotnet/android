@@ -345,12 +345,8 @@ namespace Java.Interop
 			get {return elementCount;}
 		}
 
-		public  IntPtr  Elements {
-			get {
-				// SAFETY: Expose the checked address without dereferencing or extending its lifetime.
-				return unsafe ((IntPtr) ElementsPointer);
-			}
-		}
+		// SAFETY: Expose the checked address without dereferencing or extending its lifetime.
+		public  IntPtr  Elements => unsafe ((IntPtr) ElementsPointer);
 
 		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		internal unsafe void* ElementsPointer {
