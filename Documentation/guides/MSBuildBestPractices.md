@@ -87,6 +87,8 @@ unsafe environment APIs, relative file access, unsafe source helper calls,
 and invalid task declarations are build errors. The analyzer follows source
 calls within one compilation.
 Review helpers in referenced assemblies separately.
+For example, pass `TaskEnvironment` to `AndroidRidAbiHelper.GetNativeLibraryAbi`
+so relative `Link` metadata and item paths use the project's directory.
 Do not enable all-task migration checks across legacy tasks just to opt in a
 small set of tasks.
 
