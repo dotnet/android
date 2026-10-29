@@ -13,7 +13,7 @@ namespace Android.OS {
 
 		public bool Post (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (Post (runnable)) {
 				return true;
 			}
@@ -23,7 +23,7 @@ namespace Android.OS {
 
 		public bool PostAtFrontOfQueue (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostAtFrontOfQueue (runnable)) {
 				return true;
 			}
@@ -33,7 +33,7 @@ namespace Android.OS {
 
 		public bool PostAtTime (Action action, long uptimeMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostAtTime (runnable, uptimeMillis)) {
 				return true;
 			}
@@ -43,7 +43,7 @@ namespace Android.OS {
 
 		public bool PostAtTime (Action action, Java.Lang.Object token, long uptimeMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostAtTime (runnable, token, uptimeMillis)) {
 				return true;
 			}
@@ -53,7 +53,7 @@ namespace Android.OS {
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostDelayed (runnable, delayMillis)) {
 				return true;
 			}
@@ -63,12 +63,12 @@ namespace Android.OS {
 
 		public void RemoveCallbacks (Action action)
 		{
-			Java.Lang.Thread.RunnableImplementor.Remove (action, runnable => RemoveCallbacks (runnable));
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable));
 		}
 
 		public void RemoveCallbacks (Action action, Java.Lang.Object token)
 		{
-			Java.Lang.Thread.RunnableImplementor.Remove (action, runnable => RemoveCallbacks (runnable, token));
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable, token));
 		}
 	}
 

@@ -159,6 +159,42 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (0, callback.Runnables.Count);
 		}
 
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void NestedDrawableCancellationPreservesSiblings (bool scheduleThroughParent, bool cancelThroughAlias)
+		{
+			using var first = new ColorDrawable ();
+			using var second = new ColorDrawable ();
+			using var parent = new LayerDrawable ([first, second]);
+			using var alias = new ColorDrawableAlias (first.Handle);
+			using var callback = new DrawableCallback ();
+			parent.Callback = callback;
+			Action action = () => {};
+			if (scheduleThroughParent) {
+				parent.ScheduleDrawable (first, action, 0);
+				parent.ScheduleDrawable (first, action, 0);
+				parent.ScheduleDrawable (second, action, 0);
+			} else {
+				first.ScheduleSelf (action, 0);
+				first.ScheduleSelf (action, 0);
+				second.ScheduleSelf (action, 0);
+			}
+			Assert.AreEqual (3, callback.Runnables.Count);
+			var canceledChild = cancelThroughAlias ? alias : first;
+			if (scheduleThroughParent)
+				parent.UnscheduleDrawable (canceledChild, action);
+			else
+				canceledChild.UnscheduleSelf (action);
+			Assert.AreEqual (1, callback.Runnables.Count, "Forwarding under a shared parent must not cancel a sibling's callback.");
+			if (scheduleThroughParent)
+				parent.UnscheduleDrawable (second, action);
+			else
+				second.UnscheduleSelf (action);
+			Assert.AreEqual (0, callback.Runnables.Count);
+		}
+
 		[Test]
 		public void ThrowingCallbackIsDisposedWithoutForgettingOtherPosts ()
 		{
@@ -331,6 +367,11 @@ namespace Xamarin.Android.RuntimeTests {
 				thread.Quit ();
 				thread.Join ();
 			}
+		}
+
+		sealed class ColorDrawableAlias : ColorDrawable {
+			public ColorDrawableAlias (IntPtr handle)
+				: base (handle, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister) {}
 		}
 
 		sealed class CaptureHandler : Handler {
