@@ -212,26 +212,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			try {
-				var startInfo = TaskEnvironment.GetProcessStartInfo ();
-				startInfo.FileName = aapt2Tool;
-				startInfo.Arguments = "version";
-				startInfo.UseShellExecute = false;
-				startInfo.RedirectStandardOutput = true;
-				startInfo.RedirectStandardError = true;
-				startInfo.CreateNoWindow = true;
-				using var process = new Process { StartInfo = startInfo };
 				DataReceivedEventHandler appendOutput = (s, e) => {
 					if (!e.Data.IsNullOrEmpty ()) {
 						lock (sb)
 							sb.AppendLine (e.Data);
 					}
 				};
-				process.OutputDataReceived += appendOutput;
-				process.ErrorDataReceived += appendOutput;
-				process.Start ();
-				process.BeginOutputReadLine ();
-				process.BeginErrorReadLine ();
-				process.WaitForExit ();
+				MonoAndroidHelper.RunProcess (TaskEnvironment, aapt2Tool, "version", appendOutput, appendOutput);
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
 				return false;
