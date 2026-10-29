@@ -192,6 +192,10 @@ Cette erreur est probablement due à un problème avec le fichier AndroidManifes
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
+  <data name="XA0101" xml:space="preserve">
+    <value>@(Content) build action is not supported</value>
+    <comment>@(Content) is an MSBuild item name and should not be translated.</comment>
+  </data>
   <data name="XA0105" xml:space="preserve">
     <value>Le $(TargetFrameworkVersion) de {0} ({1}) est supérieur au $(TargetFrameworkVersion) du projet d'application ({2}). Augmentez le $(TargetFrameworkVersion) du projet d'application.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
