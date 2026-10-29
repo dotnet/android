@@ -15,6 +15,7 @@ namespace Android.OS {
 		{
 			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (Post (runnable)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -25,6 +26,7 @@ namespace Android.OS {
 		{
 			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostAtFrontOfQueue (runnable)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -35,6 +37,7 @@ namespace Android.OS {
 		{
 			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostAtTime (runnable, uptimeMillis)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -43,8 +46,9 @@ namespace Android.OS {
 
 		public bool PostAtTime (Action action, Java.Lang.Object token, long uptimeMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this, token: token);
 			if (PostAtTime (runnable, token, uptimeMillis)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -55,6 +59,7 @@ namespace Android.OS {
 		{
 			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostDelayed (runnable, delayMillis)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -63,12 +68,12 @@ namespace Android.OS {
 
 		public void RemoveCallbacks (Action action)
 		{
-			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable));
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable), retire: true);
 		}
 
 		public void RemoveCallbacks (Action action, Java.Lang.Object token)
 		{
-			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable, token));
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable, token), token: token, retire: true);
 		}
 	}
 
