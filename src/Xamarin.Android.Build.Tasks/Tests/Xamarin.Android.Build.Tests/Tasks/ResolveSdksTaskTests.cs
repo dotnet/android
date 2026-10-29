@@ -183,29 +183,36 @@ namespace Xamarin.Android.Build.Tests {
 					CreateFauxReferencesDirectory (Path.Combine (projectPath, "references"), [
 						new ApiInfo { Id = $"Project{project}", Level = 100 + project, Name = "Preview", FrameworkVersion = "v100.0", Stable = true },
 					]);
-					var toolPath = Path.Combine (Root, projectPath, "aapt2");
-					Directory.CreateDirectory (toolPath);
-					var executable = IsWindows ? "aapt2.exe" : "aapt2";
-					File.Copy (Path.Combine (TestEnvironment.OSBinDirectory, executable), Path.Combine (toolPath, executable));
+					var toolPath = Path.Combine (sdkPath, "build-tools", "36.0.0");
+					File.WriteAllText (Path.Combine (toolPath, IsWindows ? "aapt2.cmd" : "aapt2"), IsWindows ? """
+						@echo off
+						if not exist tooling-version.txt exit /b 1
+						set /p minor=<tooling-version.txt
+						echo Android Asset Packaging Tool (aapt) %ANDROID_TOOLING_TEST_VERSION%.%minor%
+						""" : """
+						#!/bin/sh
+						read -r minor < tooling-version.txt || exit 1
+						printf 'Android Asset Packaging Tool (aapt) %s.%s\n' "$ANDROID_TOOLING_TEST_VERSION" "$minor"
+						""");
+					File.WriteAllText (Path.Combine (Root, projectPath, "tooling-version.txt"), $"{10 + project}\n");
 					var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
-						Path.Combine (Root, projectPath), new Dictionary<string, string> { ["PATHEXT"] = $".MT{project}{Path.PathSeparator}.CMD" });
+						Path.Combine (Root, projectPath), new Dictionary<string, string> {
+							["PATHEXT"] = $".MT{project}{Path.PathSeparator}.CMD",
+							["ANDROID_TOOLING_TEST_VERSION"] = (2 + project).ToString (),
+						});
 					File.WriteAllText (Path.Combine (toolPath, $"probe.MT{project}"), "");
-					Assert.AreEqual ($"probe.MT{project}", MonoAndroidHelper.GetExecutablePath ("aapt2", "probe.exe", environment));
-					string version = "";
+					Assert.AreEqual ($"probe.MT{project}", MonoAndroidHelper.GetExecutablePath (Path.Combine ("sdk", "build-tools", "36.0.0"), "probe.exe", environment));
 					for (int run = 0; run < 2; run++) {
 						messages.Clear ();
 						var tooling = new ResolveAndroidTooling {
 							BuildEngine = engine,
 							TaskEnvironment = environment,
-							AndroidSdkPath = "sdk",
+							AndroidSdkPath = run == 0 ? "sdk" : Path.Combine ("sdk", "..", "sdk"),
 							ReferenceAssemblyPaths = ["references"],
-							Aapt2ToolPath = run == 0 ? "aapt2" : Path.Combine ("aapt2", "..", "aapt2"),
 							ZipAlignPath = Path.Combine ("sdk", "build-tools", "36.0.0"),
 						};
 						Assert.IsTrue (tooling.Execute ());
-						if (run == 0)
-							version = tooling.Aapt2Version;
-						Assert.AreEqual (version, tooling.Aapt2Version);
+						Assert.AreEqual ($"{2 + project}.{10 + project}", tooling.Aapt2Version);
 						Assert.AreEqual ((100 + project).ToString (), tooling.AndroidApiLevel);
 						Assert.AreEqual ($"Project{project}", tooling.AndroidApiLevelName);
 						Assert.AreEqual (Path.Combine (sdkPath, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
