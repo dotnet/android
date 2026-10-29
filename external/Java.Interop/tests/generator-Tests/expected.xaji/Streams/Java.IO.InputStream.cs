@@ -26,17 +26,6 @@ namespace Java.IO {
 			get { return _members; }
 		}
 
-		/// <safety>
-		/// javaReference must be zero or a live compatible JNI object. Use an attached thread
-		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
-		/// transfer must match ownership; transferred references cannot be used again,
-		/// even if construction throws.
-		/// </safety>
-		/// <remarks>
-		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-		/// obligations still apply.
-		/// </remarks>
 		protected InputStream (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -537,17 +526,6 @@ namespace Java.IO {
 
 	[global::Android.Runtime.Register ("java/io/InputStream", DoNotGenerateAcw=true)]
 	internal partial class InputStreamInvoker : InputStream {
-		/// <safety>
-		/// handle must be zero or a live compatible JNI object. Use an attached thread
-		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
-		/// transfer must match ownership; transferred references cannot be used again,
-		/// even if construction throws.
-		/// </safety>
-		/// <remarks>
-		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-		/// obligations still apply.
-		/// </remarks>
 		public InputStreamInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

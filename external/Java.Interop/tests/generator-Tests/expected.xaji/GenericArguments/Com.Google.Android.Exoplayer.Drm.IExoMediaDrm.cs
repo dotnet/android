@@ -25,17 +25,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener = new JniPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", typeof (IExoMediaDrmOnEventListenerInvoker));
 
-		/// <safety>
-		/// handle must be zero or a live JNI object implementing this interface. Use an attached
-		/// thread (locals: creating thread), with no concurrent deletion through aliases during
-		/// construction. transfer must match ownership; transferred references cannot be used again,
-		/// even if construction throws.
-		/// </safety>
-		/// <remarks>
-		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-		/// obligations still apply.
-		/// </remarks>
 		public IExoMediaDrmOnEventListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
@@ -218,17 +207,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm = new JniPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm", typeof (IExoMediaDrmInvoker));
 
-		/// <safety>
-		/// handle must be zero or a live JNI object implementing this interface. Use an attached
-		/// thread (locals: creating thread), with no concurrent deletion through aliases during
-		/// construction. transfer must match ownership; transferred references cannot be used again,
-		/// even if construction throws.
-		/// </safety>
-		/// <remarks>
-		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-		/// obligations still apply.
-		/// </remarks>
 		public IExoMediaDrmInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

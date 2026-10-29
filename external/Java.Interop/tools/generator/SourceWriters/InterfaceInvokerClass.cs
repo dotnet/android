@@ -110,17 +110,6 @@ namespace generator.SourceWriters
 			Name = iface.Name + "Invoker";
 
 			IsPublic = true;
-			Comments.Add ("/// <safety>");
-			Comments.Add ("/// handle must be zero or a live JNI object implementing this interface. Use an attached");
-			Comments.Add ("/// thread (locals: creating thread), with no concurrent deletion through aliases during");
-			Comments.Add ("/// construction. transfer must match ownership; transferred references cannot be used again,");
-			Comments.Add ("/// even if construction throws.");
-			Comments.Add ("/// </safety>");
-			Comments.Add ("/// <remarks>");
-			Comments.Add ("/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement");
-			Comments.Add ("/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference");
-			Comments.Add ("/// obligations still apply.");
-			Comments.Add ("/// </remarks>");
 
 			Parameters.Add (new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr));
 			Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));

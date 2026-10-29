@@ -22,17 +22,6 @@ internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Obj
 
 	static readonly JniPeerMembers _members__InterfaceWithoutNamespace = new JniPeerMembers ("InterfaceWithoutNamespace", typeof (IInterfaceWithoutNamespaceInvoker));
 
-	/// <safety>
-	/// handle must be zero or a live JNI object implementing this interface. Use an attached
-	/// thread (locals: creating thread), with no concurrent deletion through aliases during
-	/// construction. transfer must match ownership; transferred references cannot be used again,
-	/// even if construction throws.
-	/// </safety>
-	/// <remarks>
-	/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-	/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-	/// obligations still apply.
-	/// </remarks>
 	public IInterfaceWithoutNamespaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
 	}

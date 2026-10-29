@@ -21,17 +21,6 @@ namespace Java.Util {
 
 		static readonly JniPeerMembers _members_java_util_List = new JniPeerMembers ("java/util/List", typeof (IListInvoker));
 
-		/// <safety>
-		/// handle must be zero or a live JNI object implementing this interface. Use an attached
-		/// thread (locals: creating thread), with no concurrent deletion through aliases during
-		/// construction. transfer must match ownership; transferred references cannot be used again,
-		/// even if construction throws.
-		/// </safety>
-		/// <remarks>
-		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-		/// obligations still apply.
-		/// </remarks>
 		public IListInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

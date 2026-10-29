@@ -27,17 +27,6 @@ namespace Java.Lang {
 			get { return _members; }
 		}
 
-		/// <safety>
-		/// javaReference must be zero or a live compatible JNI object. Use an attached thread
-		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
-		/// transfer must match ownership; transferred references cannot be used again,
-		/// even if construction throws.
-		/// </safety>
-		/// <remarks>
-		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-		/// obligations still apply.
-		/// </remarks>
 		protected Enum (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -66,17 +55,6 @@ namespace Java.Lang {
 
 	[global::Android.Runtime.Register ("java/lang/Enum", DoNotGenerateAcw=true)]
 	internal partial class EnumInvoker : Enum, global::Java.Lang.IComparable {
-		/// <safety>
-		/// handle must be zero or a live compatible JNI object. Use an attached thread
-		/// (locals: creating thread), with no concurrent deletion through aliases during construction.
-		/// transfer must match ownership; transferred references cannot be used again,
-		/// even if construction throws.
-		/// </safety>
-		/// <remarks>
-		/// This constructs a JNI peer, not an opaque-address container. RequiresUnsafe enforcement
-		/// is deferred to preserve safe zero/DoNotTransfer base initializers; the raw-reference
-		/// obligations still apply.
-		/// </remarks>
 		public EnumInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
