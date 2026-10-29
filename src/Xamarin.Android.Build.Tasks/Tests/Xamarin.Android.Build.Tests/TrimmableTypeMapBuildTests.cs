@@ -257,9 +257,9 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var component in components) {
 				foreach (var runtime in new [] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 					foreach (bool separateAssemblies in new [] { false, true }) {
-						foreach (bool dollarName in new [] { false, true }) {
-							yield return new TestCaseData (runtime, separateAssemblies, component.Source, dollarName)
-								.SetName ($"Build_ComponentNameIsUsedInSignatures({component.Attribute},{runtime},{separateAssemblies},{(dollarName ? "DollarName" : "SimpleName")})");
+						foreach (string componentSimpleName in new [] { "NamedComponent", "Outer$NamedComponent", "Outer$for" }) {
+							yield return new TestCaseData (runtime, separateAssemblies, component.Source, componentSimpleName)
+								.SetName ($"Build_ComponentNameIsUsedInSignatures({component.Attribute},{runtime},{separateAssemblies},{componentSimpleName})");
 						}
 					}
 				}
@@ -267,12 +267,11 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[TestCaseSource (nameof (ComponentNameSignatureCases))]
-		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies, string componentSource, bool dollarName)
+		public void Build_ComponentNameIsUsedInSignatures (AndroidRuntime runtime, bool separateAssemblies, string componentSource, string componentSimpleName)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
-			string componentSimpleName = dollarName ? "Outer$NamedComponent" : "NamedComponent";
 			string componentJavaName = $"example.components.{componentSimpleName}";
 			var component = new BuildItem.Source ("NamedComponent.cs") {
 				TextContent = () => """
