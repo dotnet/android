@@ -144,6 +144,7 @@ stages:
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Run-Tests/Microsoft.Android.Run-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:

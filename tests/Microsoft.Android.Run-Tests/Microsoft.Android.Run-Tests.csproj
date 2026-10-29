@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <OutputPath>$(TestOutputDirectory)</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RollForward>Major</RollForward>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\src\Microsoft.Android.Run\AdbHelper.cs" Link="AdbHelper.cs" />
+    <Compile Include="..\..\src\Microsoft.Android.Run\AndroidTestAdapter.cs" Link="AndroidTestAdapter.cs" />
+    <Compile Include="..\..\src\Microsoft.Android.Run\InstrumentationProtocol.cs" Link="InstrumentationProtocol.cs" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+  </ItemGroup>
+</Project>
