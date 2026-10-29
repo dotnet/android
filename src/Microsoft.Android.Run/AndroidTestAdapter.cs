@@ -70,7 +70,7 @@ class AndroidTestAdapter(
 					Console.WriteLine ($"[AndroidTestAdapter] TRX path on device: {bundleResults.ResultsPath}");
 			}
 
-			if (bundleResults.Crashed) {
+			if (bundleResults.Crashed || state.HasUnfinishedTests) {
 				await PublishCrashAsync (context, sessionUid, bundleResults, state);
 				return;
 			}
