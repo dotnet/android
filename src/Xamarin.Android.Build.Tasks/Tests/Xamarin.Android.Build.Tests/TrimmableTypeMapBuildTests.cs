@@ -325,6 +325,9 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
 			proj.SetProperty ("TrimMode", "full");
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"<application ",
+				"""<application android:taskAffinity="template.affinity" android:permission="template.permission" """);
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
@@ -421,9 +424,9 @@ namespace Xamarin.Android.Build.Tests {
 
 					[Application (
 						Description = "@string/application_description",
-						Permission = "application-permission",
 						Process = "application-process",
-						TaskAffinity = "application-affinity",
+						TaskAffinity = "",
+						Permission = "",
 						Banner = "@drawable/application_banner",
 						Logo = "@drawable/application_logo",
 						RestoreAnyVersion = true,
@@ -545,9 +548,9 @@ namespace Xamarin.Android.Build.Tests {
 			XNamespace android = "http://schemas.android.com/apk/res/android";
 
 			Assert.AreEqual ("@string/application_description", (string) application.Attribute (android + "description"));
-			Assert.AreEqual ("application-permission", (string) application.Attribute (android + "permission"));
+			Assert.AreEqual ("", (string) application.Attribute (android + "permission"));
 			Assert.AreEqual ("application-process", (string) application.Attribute (android + "process"));
-			Assert.AreEqual ("application-affinity", (string) application.Attribute (android + "taskAffinity"));
+			Assert.AreEqual ("", (string) application.Attribute (android + "taskAffinity"));
 			Assert.AreEqual ("@drawable/application_banner", (string) application.Attribute (android + "banner"));
 			Assert.AreEqual ("@drawable/application_logo", (string) application.Attribute (android + "logo"));
 			Assert.AreEqual ("true", (string) application.Attribute (android + "restoreAnyVersion"));
@@ -641,20 +644,31 @@ namespace Xamarin.Android.Build.Tests {
 				"""<application android:description="@string/template_description" android:backupAgent="template.BackupAgent" android:manageSpaceActivity="template.ManageSpaceActivity" """);
 			proj.Sources.Add (new BuildItem.Source ("AssemblyApplication.cs") {
 				TextContent = () => """
+					using System;
 					using Android.App;
 					using Android.App.Backup;
 					using Android.OS;
 
 					[assembly: Application (
-						Name = "assembly.application",
+						Name = "UnnamedProject.AssemblyNamedApplication",
 						Description = "@string/assembly_description",
 						BackupAgent = typeof (UnnamedProject.ParityBackupAgent),
 						ManageSpaceActivity = typeof (UnnamedProject.ParityManageActivity))]
+					[assembly: Instrumentation (Name = "UnnamedProject.AssemblyNamedInstrumentation")]
 
 					namespace UnnamedProject;
 
 					[Activity]
 					public class ParityActivity : Activity {}
+
+					[Android.Runtime.Register ("UnnamedProject.AssemblyNamedApplication")]
+					public class AssemblyNamedApplication : Application
+					{
+						public AssemblyNamedApplication (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) {}
+					}
+
+					[Android.Runtime.Register ("UnnamedProject.AssemblyNamedInstrumentation")]
+					public class AssemblyNamedInstrumentation : Instrumentation {}
 
 					public class ParityManageActivity : Activity {}
 
@@ -680,10 +694,14 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
 			var manifest = XDocument.Load (Path.Combine (intermediate, "android", "AndroidManifest.xml"));
-			var application = manifest.Root?.Element ("application");
+			var root = manifest.Root;
+			Assert.IsNotNull (root);
+			var application = root.Element ("application");
 			Assert.IsNotNull (application);
 			XNamespace android = "http://schemas.android.com/apk/res/android";
-			Assert.AreEqual ("assembly.application", (string) application.Attribute (android + "name"));
+			Assert.AreEqual ("UnnamedProject.AssemblyNamedApplication", (string) application.Attribute (android + "name"));
+			Assert.IsTrue (root.Elements ("instrumentation")
+				.Any (element => (string) element.Attribute (android + "name") == "UnnamedProject.AssemblyNamedInstrumentation"));
 			Assert.AreEqual ("@string/assembly_description", (string) application.Attribute (android + "description"));
 			StringAssert.EndsWith (".ParityBackupAgent", (string) application.Attribute (android + "backupAgent"));
 			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));
@@ -697,6 +715,10 @@ namespace Xamarin.Android.Build.Tests {
 				"Assembly-level Application.BackupAgent should preserve the referenced type through trimming.");
 			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.ParityManageActivity"),
 				"Assembly-level Application.ManageSpaceActivity should preserve the referenced type through trimming.");
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.AssemblyNamedApplication"),
+				"Assembly-level Application.Name should preserve the referenced type through trimming.");
+			Assert.IsNotNull (assembly.MainModule.GetType ("UnnamedProject.AssemblyNamedInstrumentation"),
+				"Assembly-level Instrumentation.Name should preserve the referenced type through trimming.");
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, "BackupAgent")]

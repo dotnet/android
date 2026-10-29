@@ -72,7 +72,17 @@ public class TrimmableTypeMapGenerator
 		bool validConstructors = ValidateConstructors (allPeers);
 
 		RootCustomViewTypes (allPeers, customViewTypeNames);
-		RootManifestReferencedTypes (allPeers, manifestForRooting, manifestConfig?.ApplicationJavaClass);
+		var assemblyManifestComponentNames = new List<string> ();
+		if (assemblyManifestInfo.ApplicationProperties?.TryGetValue ("Name", out var applicationName) == true &&
+		    applicationName is string applicationNameString) {
+			assemblyManifestComponentNames.Add (applicationNameString);
+		}
+		assemblyManifestComponentNames.AddRange (assemblyManifestInfo.Instrumentations.Select (instrumentation => instrumentation.Name));
+		RootManifestReferencedTypes (
+			allPeers,
+			manifestForRooting,
+			manifestConfig?.ApplicationJavaClass,
+			assemblyManifestComponentNames);
 		RootAssemblyApplicationTypeReferences (allPeers, assemblyManifestInfo.ApplicationProperties);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
@@ -585,7 +595,11 @@ public class TrimmableTypeMapGenerator
 		return sources.ToList ();
 	}
 
-	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc, string? applicationJavaClass = null)
+	internal void RootManifestReferencedTypes (
+		List<JavaPeerInfo> allPeers,
+		XDocument? doc,
+		string? applicationJavaClass = null,
+		IReadOnlyCollection<string>? generatedComponentNames = null)
 	{
 		if (doc?.Root is not { } root) {
 			return;
@@ -597,6 +611,7 @@ public class TrimmableTypeMapGenerator
 
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
+		var generatedNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
 			switch (element.Name.LocalName) {
 			case "application":
@@ -621,6 +636,18 @@ public class TrimmableTypeMapGenerator
 					componentNames.Add (ManifestNameResolver.Resolve (targetActivity, packageName));
 				}
 				break;
+			}
+		}
+
+		if (generatedComponentNames is not null) {
+			foreach (var name in generatedComponentNames) {
+				if (name.IsNullOrEmpty ()) {
+					continue;
+				}
+				var resolvedName = ManifestNameResolver.Resolve (name, packageName);
+				componentNames.Add (resolvedName);
+				deferredRegistrationNames.Add (resolvedName);
+				generatedNames.Add (resolvedName);
 			}
 		}
 
@@ -651,6 +678,9 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 			} else {
+				if (generatedNames.Contains (name)) {
+					continue;
+				}
 				// $(AndroidApplicationJavaClass) (e.g. android.support.multidex.MultiDexApplication
 				// when $(AndroidEnableMultiDex) is true) is a Java framework type with no managed
 				// peer, so it is expected to be absent from the scanned assemblies — don't warn.

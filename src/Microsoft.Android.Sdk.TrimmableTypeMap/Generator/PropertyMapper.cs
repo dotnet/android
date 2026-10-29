@@ -189,7 +189,7 @@ static class PropertyMapper
 				continue;
 			}
 			switch (m.Kind) {
-			case MappingKind.String when value is string s && !string.IsNullOrEmpty (s):
+			case MappingKind.String when value is string s:
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, s);
 				AddWrittenAttribute (element, m.XmlAttributeName, writtenAttributes);
 				break;
