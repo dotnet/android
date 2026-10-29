@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -7,7 +8,8 @@ using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Tasks;
 
-public class GenerateResourceDesignerAssembly : AndroidTask
+[MSBuildMultiThreadableTask]
+public class GenerateResourceDesignerAssembly : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GRDA";
 
@@ -48,26 +50,27 @@ public class GenerateResourceDesignerAssembly : AndroidTask
 
 	public override bool RunTask ()
 	{
-		ResourceDirectory = Path.GetFullPath (ResourceDirectory);
-		var map = MonoAndroidHelper.LoadMapFile (BuildEngine as IBuildEngine4,
-			Path.GetFullPath (CaseMapFile ?? throw new ArgumentNullException (nameof (CaseMapFile))),
-			StringComparer.OrdinalIgnoreCase);
+		var rtxtFile = TaskEnvironment.GetAbsolutePath (RTxtFile.ItemSpec);
+		var outputFile = TaskEnvironment.GetAbsolutePath (OutputFile.ItemSpec);
+		var mapFile = TaskEnvironment.GetAbsolutePath (CaseMapFile ?? throw new ArgumentNullException (nameof (CaseMapFile)));
+		var map = (BuildEngine as IBuildEngine4)?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (Path.GetFullPath (mapFile.Value), RegisteredTaskObjectLifetime.Build)
+			?? MonoAndroidHelper.LoadMapFile (File.Exists (mapFile) ? File.ReadLines (mapFile) : [], StringComparer.OrdinalIgnoreCase);
 
-		if (File.Exists (OutputFile.ItemSpec) && File.Exists (RTxtFile.ItemSpec) &&
-			File.GetLastWriteTimeUtc (RTxtFile.ItemSpec) < File.GetLastWriteTimeUtc (OutputFile.ItemSpec)) {
+		if (File.Exists (outputFile) && File.Exists (rtxtFile) &&
+			File.GetLastWriteTimeUtc (rtxtFile) < File.GetLastWriteTimeUtc (outputFile)) {
 			Log.LogDebugMessage ($"{RTxtFile.ItemSpec} has not changed since {OutputFile.ItemSpec} was generated.");
 			return !Log.HasLoggedErrors;
 		}
 
-		var resources = new RtxtParser ().Parse (RTxtFile.ItemSpec, Log, map);
+		var resources = new RtxtParser ().Parse (File.Exists (rtxtFile) ? File.ReadLines (rtxtFile) : [], rtxtFile, Log, map);
 		var emitter = new ResourceDesignerAssemblyEmitter ();
-		var image = emitter.Emit (Path.GetFileNameWithoutExtension (OutputFile.ItemSpec), resources,
+		var image = emitter.Emit (Path.GetFileNameWithoutExtension (outputFile), resources,
 			IsApplication, AssemblyName, Deterministic);
 		var stream = MemoryStreamPool.Shared.Rent ();
 		try {
 			image.WriteContentTo (stream);
 			stream.Position = 0;
-			if (Files.CopyIfStreamChanged (stream, OutputFile.ItemSpec))
+			if (Files.CopyIfStreamChanged (stream, outputFile, TaskEnvironment))
 				Log.LogDebugMessage ($"Updated '{OutputFile.ItemSpec}'.");
 			else
 				Log.LogDebugMessage ($"'{OutputFile.ItemSpec}' was up to date.");

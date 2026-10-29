@@ -9,6 +9,7 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.Loader;
 using System.Xml.Linq;
 using Microsoft.Android.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tools.VSWhere;
@@ -226,6 +227,42 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 	}
 
 	[Test]
+	public void RelativePathsUseProjectDirectories ()
+	{
+		Assert.IsNotNull (typeof (GenerateResourceDesignerAssembly).GetCustomAttribute<MSBuildMultiThreadableTaskAttribute> ());
+		var directories = new [] { Path.Combine (DirectoryPath, "first"), Path.Combine (DirectoryPath, "second") };
+		var tasks = directories.Select ((directory, index) => {
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (Path.Combine (directory, "R.txt"), Resources);
+			File.WriteAllText (Path.Combine (directory, "case_map.txt"),
+				$"string{Path.DirectorySeparatorChar}app_name;string{Path.DirectorySeparatorChar}AppName{index}\n");
+			return new GenerateResourceDesignerAssembly {
+				BuildEngine = new MockBuildEngine (TextWriter.Null),
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new System.Collections.Generic.Dictionary<string, string> ()),
+				RTxtFile = new TaskItem ("R.txt"),
+				OutputFile = new TaskItem ("_Microsoft.Android.Resource.Designer.dll"),
+				CaseMapFile = "case_map.txt",
+				ProjectDir = ".",
+				ResourceDirectory = "res",
+				Deterministic = true,
+				IsApplication = true,
+				AssemblyName = "TestApp",
+			};
+		}).ToArray ();
+		System.Threading.Tasks.Parallel.ForEach (tasks, task => Assert.IsTrue (task.Execute ()));
+		for (int i = 0; i < directories.Length; i++) {
+			using var stream = File.OpenRead (Path.Combine (directories [i], "_Microsoft.Android.Resource.Designer.dll"));
+			using var pe = new PEReader (stream);
+			var reader = pe.GetMetadataReader ();
+			var properties = reader.PropertyDefinitions.Select (handle => reader.GetString (reader.GetPropertyDefinition (handle).Name)).ToArray ();
+			Assert.Contains ($"AppName{i}", properties);
+			Assert.IsFalse (properties.Contains ($"AppName{1 - i}"));
+			Assert.AreEqual ("R.txt", tasks [i].RTxtFile.ItemSpec);
+			Assert.AreEqual ("_Microsoft.Android.Resource.Designer.dll", tasks [i].OutputFile.ItemSpec);
+		}
+	}
+
+	[Test]
 	public void MissingRtxtProducesEmptyDesigner ()
 	{
 		File.Delete (RtxtPath);
@@ -281,11 +318,13 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		}
 	}
 
-	[TestCase ("Xamarin.Android.Common.targets", false)]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false)]
-	[TestCase ("Xamarin.Android.Common.targets", true)]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true)]
-	public void MetadataTaskRegistration (string relativePath, bool frameworkMSBuild)
+	[TestCase ("Xamarin.Android.Common.targets", false, false)]
+	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false, false)]
+	[TestCase ("Xamarin.Android.Common.targets", false, true)]
+	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false, true)]
+	[TestCase ("Xamarin.Android.Common.targets", true, false)]
+	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true, false)]
+	public void MetadataTaskRegistration (string relativePath, bool frameworkMSBuild, bool multithreaded)
 	{
 		var repository = new DirectoryInfo (AppContext.BaseDirectory);
 		while (repository != null && !File.Exists (Path.Combine (repository.FullName, "Configuration.props")))
@@ -313,8 +352,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		if (frameworkMSBuild && !OperatingSystem.IsWindows ())
 			Assert.Ignore ("MSBuild.exe requires Windows.");
 
-		var projectPath = Path.Combine (DirectoryPath, "registration.proj");
-		new XDocument (new XElement ("Project",
+		var designerProject = new XDocument (new XElement ("Project",
 			new XAttribute ("Sdk", "Microsoft.NET.Sdk"),
 			new XElement ("PropertyGroup",
 				new XElement ("TargetFramework", "net11.0"),
@@ -322,20 +360,36 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 			registrations,
 			new XElement ("Target", new XAttribute ("Name", "GenerateDesigner"),
 				new XElement ("GenerateResourceDesignerAssembly",
-					new XAttribute ("RTxtFile", RtxtPath),
-					new XAttribute ("OutputFile", OutputPath),
-					new XAttribute ("CaseMapFile", Path.Combine (DirectoryPath, "case_map.txt")),
-					new XAttribute ("ResourceDirectory", DirectoryPath),
-					new XAttribute ("ProjectDir", DirectoryPath),
+					new XAttribute ("RTxtFile", "R.txt"),
+					new XAttribute ("OutputFile", Path.GetFileName (OutputPath)),
+					new XAttribute ("CaseMapFile", "case_map.txt"),
+					new XAttribute ("ResourceDirectory", "res"),
+					new XAttribute ("ProjectDir", "."),
 					new XAttribute ("TargetFrameworkVersion", "v11.0"),
 					new XAttribute ("TargetFrameworkIdentifier", ".NETCoreApp"),
-					new XAttribute ("Resources", RtxtPath),
+					new XAttribute ("Resources", "R.txt"),
 					new XAttribute ("IsApplication", "true"),
 					new XAttribute ("DesignTimeBuild", "false"),
-					new XAttribute ("Deterministic", "true")))))
+					new XAttribute ("Deterministic", "true")))));
+		var projectPaths = new [] { "first", "second" }.Select (name => Path.Combine (DirectoryPath, name, "designer.proj")).ToArray ();
+		foreach (var childProjectPath in projectPaths) {
+			var directory = Path.GetDirectoryName (childProjectPath) ?? throw new InvalidOperationException ();
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (Path.Combine (directory, "R.txt"), Resources);
+			File.WriteAllText (Path.Combine (directory, "case_map.txt"),
+				$"string{Path.DirectorySeparatorChar}app_name;string{Path.DirectorySeparatorChar}{Path.GetFileName (directory)}\n");
+			designerProject.Save (childProjectPath);
+		}
+		var projectPath = Path.Combine (DirectoryPath, "registration.proj");
+		new XDocument (new XElement ("Project",
+			new XElement ("Target", new XAttribute ("Name", "GenerateDesigner"),
+				new XElement ("MSBuild",
+					new XAttribute ("Projects", string.Join (";", projectPaths)),
+					new XAttribute ("Targets", "GenerateDesigner"),
+					new XAttribute ("BuildInParallel", "true")))))
 			.Save (projectPath);
 
-		var sdkDirectory = RunMSBuild ("dotnet", "msbuild", projectPath, "-nologo", "-getProperty:MSBuildBinPath").Trim ();
+		var sdkDirectory = RunMSBuild ("dotnet", "msbuild", projectPaths [0], "-nologo", "-getProperty:MSBuildBinPath").Trim ();
 		var minimumVersion = Version.Parse (File.ReadAllText (Path.Combine (sdkDirectory, "minimumMSBuildVersion")).Trim ());
 		var executable = "dotnet";
 		if (frameworkMSBuild) {
@@ -345,9 +399,19 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 			if (version.Major < 18 || version < minimumVersion)
 				Assert.Ignore ($"'{executable}' is MSBuild {version}; Runtime=\"NET\" requires MSBuild 18.0 or newer, and SDK '{sdkDirectory}' requires {minimumVersion} or newer.");
 		}
-		var arguments = new [] { projectPath, "-t:GenerateDesigner", "-nologo", "-v:minimal", "-nr:false" };
+		var arguments = new [] { projectPath, "-t:GenerateDesigner", "-nologo", "-v:minimal", "-m", "-nr:false" };
+		if (multithreaded)
+			arguments = [.. arguments, "-mt", "-warnaserror:MSB4286,MSB4287,MSB4288"];
 		RunMSBuild (executable, frameworkMSBuild ? arguments : ["msbuild", .. arguments]);
-		Assert.IsTrue (File.Exists (OutputPath));
+		foreach (var childProjectPath in projectPaths) {
+			var directory = Path.GetDirectoryName (childProjectPath) ?? throw new InvalidOperationException ();
+			using var stream = File.OpenRead (Path.Combine (directory, Path.GetFileName (OutputPath)));
+			using var pe = new PEReader (stream);
+			var reader = pe.GetMetadataReader ();
+			Assert.IsTrue (reader.PropertyDefinitions.Any (handle =>
+				reader.GetString (reader.GetPropertyDefinition (handle).Name) == Path.GetFileName (directory)));
+		}
+		Assert.IsFalse (File.Exists (OutputPath));
 	}
 
 	string RunMSBuild (string executable, params string [] arguments)
