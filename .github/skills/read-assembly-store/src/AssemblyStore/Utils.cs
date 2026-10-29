@@ -1,10 +1,10 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Buffers;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.AssemblyStore;
 
@@ -224,7 +224,7 @@ static class Utils
 
 	static FileFormat DetectAndroidArchive (FileInfo info, FileFormat defaultFormat)
 	{
-		using var zip = ZipArchive.Open (info.FullName, FileMode.Open);
+		using var zip = ZipFile.OpenRead (info.FullName);
 
 		if (HasAllEntries (zip, aabZipEntries)) {
 			return FileFormat.Aab;
@@ -244,7 +244,7 @@ static class Utils
 	static bool HasAllEntries (ZipArchive zip, string[] entries)
 	{
 		foreach (string entry in entries) {
-			if (!zip.ContainsEntry (entry, caseSensitive: true)) {
+			if (zip.GetEntry (entry) == null) {
 				return false;
 			}
 		}

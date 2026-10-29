@@ -61,6 +61,15 @@ namespace Microsoft.Android.Build.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Archive entry '{0}' cannot be extracted safely beneath destination directory '{1}'.
+        /// </summary>
+        internal static string UnsafeArchiveEntry {
+            get {
+                return ResourceManager.GetString("UnsafeArchiveEntry", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unhandled exception: {0}.
         /// </summary>
         internal static string XA0000_Exception {

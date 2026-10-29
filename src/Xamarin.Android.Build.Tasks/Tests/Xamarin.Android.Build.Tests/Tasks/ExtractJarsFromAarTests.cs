@@ -46,8 +46,8 @@ namespace Xamarin.Android.Build.Tests
 				Libraries = [aarPath],
 			};
 
-			Assert.IsTrue (task.Execute (), "Task should succeed, skipping the traversal entry.");
-			Assert.IsEmpty (errors, "No errors should be logged.");
+			Assert.IsFalse (task.Execute (), "Task should reject the traversal entry.");
+			Assert.AreEqual (1, errors?.Count, "The invalid archive should be reported as a build error.");
 
 			// Verify no file was written outside the target directory
 			var escapedPath = Path.GetFullPath (Path.Combine (path, "relative.jar"));
@@ -72,8 +72,8 @@ namespace Xamarin.Android.Build.Tests
 				Libraries = [aarPath],
 			};
 
-			Assert.IsTrue (task.Execute (), "Task should succeed, skipping the traversal entry.");
-			Assert.IsEmpty (errors, "No errors should be logged.");
+			Assert.IsFalse (task.Execute (), "Task should reject the traversal entry.");
+			Assert.AreEqual (1, errors?.Count, "The invalid archive should be reported as a build error.");
 		}
 
 		[Test]

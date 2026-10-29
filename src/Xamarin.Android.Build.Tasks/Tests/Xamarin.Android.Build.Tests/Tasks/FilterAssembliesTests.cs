@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
@@ -21,7 +21,7 @@ namespace Xamarin.Android.Build.Tests
 		[SetUp]
 		public void Setup ()
 		{
-			tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			tempDirectory = Path.Combine (Root, "temp", TestName, "nuget");
 			Directory.CreateDirectory (tempDirectory);
 		}
 
@@ -52,15 +52,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var assemblies = new List<string> ();
 			var nuget = await DownloadFromNuGet (url, filename);
-			using (var zip = ZipArchive.Open (nuget, FileMode.Open)) {
-				foreach (var entry in zip) {
+			using (var zip = ZipFile.OpenRead (nuget)) {
+				foreach (var entry in zip.Entries) {
 					if (entry.FullName.StartsWith (path, StringComparison.OrdinalIgnoreCase) &&
 						entry.FullName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
-						var temp = Path.Combine (tempDirectory, Path.GetFileName (entry.NativeFullName));
+						var temp = Path.Combine (tempDirectory, entry.Name);
 						assemblies.Add (temp);
-						using (var fileStream = File.Create (temp)) {
-							entry.Extract (fileStream);
-						}
+						entry.ExtractToFile (temp, overwrite: true);
 					}
 				}
 			}

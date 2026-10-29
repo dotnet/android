@@ -1,10 +1,11 @@
 ﻿using Microsoft.Build.Framework;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Collections.Generic;
-using Xamarin.Tools.Zip;
 using MTask = Microsoft.Build.Utilities.Task;
 using TTask = System.Threading.Tasks.Task;
+using Files = Microsoft.Android.Build.Tasks.Files;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
@@ -70,22 +71,31 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			relativeDestDir = relativeDestDir?.Replace ('\\', Path.DirectorySeparatorChar);
 
-			using (var zip = ZipArchive.Open (sourceFile, FileMode.Open)) {
-				foreach (var entry in zip) {
-					if (!entry.IsDirectory) {
-						if (filesToExtract.Count > 0 && !filesToExtract.Contains (Path.GetFileName (entry.FullName)))
+			using (var zip = ZipFile.Open (sourceFile, ZipArchiveMode.Read, encoding)) {
+				var entries = new List<(ZipArchiveEntry Entry, string Path)> ();
+				foreach (var entry in zip.Entries) {
+					var entryPath = entry.FullName.Replace ('/', Path.DirectorySeparatorChar).Replace ('\\', Path.DirectorySeparatorChar);
+					var isDirectory = entryPath.EndsWith (Path.DirectorySeparatorChar);
+					Files.GetArchiveExtractionPath (destinationFolder, entryPath, isDirectory);
+					if (!isDirectory) {
+						if (filesToExtract.Count > 0 && !filesToExtract.Contains (Path.GetFileName (entryPath)))
 							continue;
-						var entryPath = entry.NativeFullName;
 						if (!NoSubdirectory) {
 							entryPath = entryPath.Substring (entryPath.IndexOf (Path.DirectorySeparatorChar) + 1);
 						}
-						var destinationPath = Path.Combine (destinationFolder, relativeDestDir, entryPath);
-						Log.LogMessage (MessageImportance.Low, $"Extracting {entry.NativeFullName} to {destinationPath}");
-						entry.Extract (Path.GetDirectoryName (destinationPath), Path.GetFileName (destinationPath));
+						var relativePath = Path.Combine (relativeDestDir ?? "", entryPath);
+						Files.GetArchiveExtractionPath (destinationFolder, relativePath);
+						entries.Add ((entry, relativePath));
 					}
+				}
+				foreach (var (entry, relativePath) in entries) {
+					var destinationPath = Files.GetArchiveExtractionPath (destinationFolder, relativePath);
+					Log.LogMessage (MessageImportance.Low, $"Extracting {entry.FullName} to {destinationPath}");
+					Directory.CreateDirectory (Path.GetDirectoryName (destinationPath));
+					File.Delete (destinationPath);
+					entry.ExtractToFile (destinationPath);
 				}
 			}
 		}
 	}
 }
-

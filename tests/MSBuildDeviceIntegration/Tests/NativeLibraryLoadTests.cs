@@ -132,7 +132,7 @@ public class NativeLibraryLoadTests : DeviceTest
 		string[] apks = Directory.GetFiles (outputDirectory, $"{proj.PackageName}-Signed.apk", SearchOption.AllDirectories);
 		Assert.IsNotEmpty (apks, "The signed APK should exist.");
 		using (var apk = ZipHelper.OpenZip (apks [0])) {
-			Assert.IsFalse (apk.ContainsEntry ($"lib/{DeviceAbi}/{libraryName}"),
+			Assert.IsNull (apk.GetEntry ($"lib/{DeviceAbi}/{libraryName}"),
 				$"{libraryName} should have been removed from the APK.");
 		}
 
