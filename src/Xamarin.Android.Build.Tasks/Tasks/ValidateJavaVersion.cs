@@ -1,8 +1,8 @@
 #nullable enable
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// The cached Version is immutable and does not depend on the task assembly.
-			var key = Tuple.Create (nameof (ValidateJavaVersion), javaTool, TaskEnvironment.ProjectDirectory,
+			var key = Tuple.Create (nameof (ValidateJavaVersion), javaTool,
 				TaskEnvironment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS"),
 				TaskEnvironment.GetEnvironmentVariable ("_JAVA_OPTIONS"),
 				TaskEnvironment.GetEnvironmentVariable ("JDK_JAVA_OPTIONS"));
@@ -122,20 +122,19 @@ namespace Xamarin.Android.Tasks
 				return cached;
 			}
 
-			var startInfo = TaskEnvironment.GetProcessStartInfo ();
-			startInfo.FileName = javaTool;
-			startInfo.Arguments = "-version";
-			startInfo.UseShellExecute = false;
-			startInfo.RedirectStandardOutput = true;
-			startInfo.RedirectStandardError = true;
-			startInfo.CreateNoWindow = true;
-			startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-			using var process = new Process { StartInfo = startInfo };
-			process.Start ();
-			var stdout = process.StandardOutput.ReadToEndAsync ();
-			var stderr = process.StandardError.ReadToEndAsync ();
-			process.WaitForExit ();
-			var versionInfo = stdout.GetAwaiter ().GetResult () + Environment.NewLine + stderr.GetAwaiter ().GetResult ();
+			var sb = new StringBuilder ();
+			MonoAndroidHelper.RunProcess (TaskEnvironment, javaTool, "-version", (s, e) => {
+				if (!e.Data.IsNullOrEmpty ()) {
+					lock (sb)
+						sb.AppendLine (e.Data);
+				}
+			}, (s, e) => {
+				if (!e.Data.IsNullOrEmpty ()) {
+					lock (sb)
+						sb.AppendLine (e.Data);
+				}
+			});
+			var versionInfo = sb.ToString ();
 			var versionNumberMatch = versionRegex.Match (versionInfo);
 			Version? versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
