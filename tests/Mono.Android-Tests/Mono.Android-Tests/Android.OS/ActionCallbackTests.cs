@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -195,6 +196,51 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (0, callback.Runnables.Count);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void CallbackBookkeepingDoesNotScaleQuadratically (bool measureExecution)
+		{
+			MeasureCallbackBatch (256, measureExecution);
+			var small = new double [3];
+			var large = new double [3];
+			for (int i = 0; i < small.Length; i++) {
+				small [i] = MeasureCallbackBatch (4_000, measureExecution);
+				large [i] = MeasureCallbackBatch (16_000, measureExecution);
+			}
+			Array.Sort (small);
+			Array.Sort (large);
+			double smallMedian = small [1];
+			double largeMedian = large [1];
+			string operation = measureExecution ? "Execution cleanup" : "Posting";
+			global::Android.Util.Log.Info ("ActionCallbacks", $"{operation}: 4000={smallMedian:F2}ms; 16000={largeMedian:F2}ms");
+			// Four times the callbacks should not approach quadratic (16x) cost.
+			// Medians and an additive allowance tolerate timer noise and scheduling pauses.
+			Assert.Less (largeMedian, smallMedian * 10 + 100, $"{operation} must not scan every registration for each callback.");
+		}
+
+		static double MeasureCallbackBatch (int count, bool measureExecution)
+		{
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
+			using var drawable = new ColorDrawable ();
+			using var callback = new CallbackBatch ();
+			drawable.Callback = callback;
+			callback.Runnables.Capacity = count;
+			int calls = 0;
+			Action action = () => calls++;
+			var watch = Stopwatch.StartNew ();
+			for (int i = 0; i < count; i++)
+				drawable.ScheduleSelf (action, 0);
+			double posting = watch.Elapsed.TotalMilliseconds;
+			watch.Restart ();
+			foreach (var runnable in callback.Runnables)
+				runnable.Run ();
+			double execution = watch.Elapsed.TotalMilliseconds;
+			Assert.AreEqual (count, calls);
+			Assert.IsTrue (callback.Runnables.TrueForAll (runnable => runnable.Handle == IntPtr.Zero), "Execution must dispose every callback.");
+			return measureExecution ? execution : posting;
+		}
+
 		[Test]
 		public void ThrowingCallbackIsDisposedWithoutForgettingOtherPosts ()
 		{
@@ -383,6 +429,22 @@ namespace Xamarin.Android.RuntimeTests {
 			{
 				References.Add (new WeakReference (message.Callback, trackResurrection: true));
 				return base.SendMessageAtTime (message, uptimeMillis);
+			}
+		}
+
+		sealed class CallbackBatch : Java.Lang.Object, Drawable.ICallback {
+			public List<Java.Lang.IRunnable> Runnables { get; } = new ();
+
+			public void InvalidateDrawable (Drawable who) {}
+
+			public void ScheduleDrawable (Drawable who, Java.Lang.IRunnable what, long when)
+			{
+				Runnables.Add (what);
+			}
+
+			public void UnscheduleDrawable (Drawable who, Java.Lang.IRunnable what)
+			{
+				Assert.Fail ("The scaling test must execute its callbacks, not cancel them.");
 			}
 		}
 
