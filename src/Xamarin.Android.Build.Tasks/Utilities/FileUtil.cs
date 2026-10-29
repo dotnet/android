@@ -52,8 +52,9 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
+		// SAFETY: The platform C ABI matches this import; the marshaller supplies NUL-terminated
+		// path strings valid for the synchronous call, and libc retains neither pointer on success or failure.
 		[DllImport ("libc", SetLastError=true)]
-		static extern int rename (string old, string @new);
+		static safe extern int rename (string old, string @new);
 	}
 }
-
