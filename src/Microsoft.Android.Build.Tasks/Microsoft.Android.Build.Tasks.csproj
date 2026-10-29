@@ -69,7 +69,6 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.ResourceMap.cs" Link="Utilities\MonoAndroidHelper.ResourceMap.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceParser.cs" Link="Utilities\ResourceParser.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceIdentifier.cs" Link="Utilities\ResourceIdentifier.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\RtxtParser.cs" Link="Utilities\RtxtParser.cs" />

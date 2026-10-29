@@ -89,6 +89,10 @@ calls within one compilation.
 Review helpers in referenced assemblies separately.
 For example, pass `TaskEnvironment` to `AndroidRidAbiHelper.GetNativeLibraryAbi`
 so relative `Link` metadata and item paths use the project's directory.
+For generated files, use `Files.CopyIfStreamChanged` with a resolved
+`AbsolutePath` and the task's `TaskEnvironment`. This keeps unchanged timestamps
+and reads file-write retry settings from the project-scoped environment rather
+than the process-wide cache.
 Do not enable all-task migration checks across legacy tasks just to opt in a
 small set of tasks.
 

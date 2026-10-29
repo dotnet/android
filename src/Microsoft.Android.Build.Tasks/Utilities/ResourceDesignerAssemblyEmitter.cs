@@ -47,6 +47,7 @@ sealed class ResourceDesignerAssemblyEmitter
 		metadata.AddModule (0, metadata.GetOrAddString (assemblyName), mvid.Handle, default, default);
 		var assembly = metadata.AddAssembly (metadata.GetOrAddString (assemblyName), new Version (1, 0, 0, 0),
 			default, metadata.GetOrAddBlob (PublicKey.Value), AssemblyFlags.PublicKey, AssemblyHashAlgorithm.Sha1);
+		// Preserve the legacy designer's framework contract independently of the consuming project's TFM.
 		netstandard = metadata.AddAssemblyReference (metadata.GetOrAddString ("netstandard"), new Version (2, 1, 0, 0),
 			default, metadata.GetOrAddBlob (new byte [] { 0xcc, 0x7b, 0x13, 0xff, 0xcd, 0x2d, 0xdd, 0x51 }), 0, default);
 		objectType = AddTypeReference ("System", "Object");

@@ -99,16 +99,20 @@ namespace Xamarin.Android.Tasks
 
 		public IEnumerable<R> Parse (string file, TaskLoggingHelper logger, Dictionary<string, string> mapping)
 		{
+			return Parse (File.Exists (file) ? File.ReadLines (file) : [], file, logger, mapping);
+		}
+
+		public IEnumerable<R> Parse (IEnumerable<string> lines, string file, TaskLoggingHelper logger, Dictionary<string, string> mapping)
+		{
 			var result = new List<R> (DefaultCapacity);
-			if (File.Exists (file))
-				ProcessRtxtFile (file, result, logger, mapping);
+			ProcessRtxtFile (lines, file, result, logger, mapping);
 			return result;
 		}
 
-		void ProcessRtxtFile (string file, List<R> result, TaskLoggingHelper log, Dictionary<string, string> map)
+		void ProcessRtxtFile (IEnumerable<string> lines, string file, List<R> result, TaskLoggingHelper log, Dictionary<string, string> map)
 		{
 			int lineNumber = 0;
-			foreach (var line in File.ReadLines (file) ) {
+			foreach (var line in lines) {
 				lineNumber++;
 				var items = line.Split (EmptyChar, 4);
 				if (items.Length < 4) {
