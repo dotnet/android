@@ -40,12 +40,17 @@ namespace Java.InteropTests
 				var doubleMethod = GetRequiredMethodID (peer.Class.Handle, "throwDouble", "()D");
 				var objectMethod = GetRequiredMethodID (peer.Class.Handle, "throwString", "()Ljava/lang/String;");
 				Assert.IsFalse (JNIEnv.CallBooleanMethod (peer.Handle, boolMethod));
+				Assert.AreEqual (1, notifications, "The boolean export must deliver policy once.");
 				Assert.AreEqual (0, JNIEnv.CallIntMethod (peer.Handle, intMethod));
+				Assert.AreEqual (2, notifications, "The int export must deliver policy once.");
 				Assert.AreEqual (0L, JNIEnv.CallLongMethod (peer.Handle, longMethod));
+				Assert.AreEqual (3, notifications, "The long export must deliver policy once.");
 				Assert.AreEqual (0f, JNIEnv.CallFloatMethod (peer.Handle, floatMethod));
+				Assert.AreEqual (4, notifications, "The float export must deliver policy once.");
 				Assert.AreEqual (0d, JNIEnv.CallDoubleMethod (peer.Handle, doubleMethod));
+				Assert.AreEqual (5, notifications, "The double export must deliver policy once.");
 				Assert.AreEqual (IntPtr.Zero, JNIEnv.CallObjectMethod (peer.Handle, objectMethod));
-				Assert.AreEqual (6, notifications, "Each throwing generated export delivers policy once.");
+				Assert.AreEqual (6, notifications, "The object export must deliver policy once.");
 				Assert.AreEqual (0, unexpectedExceptions, "Policy must receive the original managed exception.");
 			} finally {
 				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
