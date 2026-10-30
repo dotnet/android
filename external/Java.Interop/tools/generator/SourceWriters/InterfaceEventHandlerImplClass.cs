@@ -43,15 +43,17 @@ namespace generator.SourceWriters
 			if (iface.NeedsSender)
 				ctor.Parameters.Add (new MethodParameterWriter ("sender", TypeReferenceWriter.Object));
 
-			ctor.IsUnsafe = true;
 			ctor.BaseCall = "base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
 
 			ctor.Body.Add ("const string __id = \"()V\";");
 			ctor.Body.Add ("if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)");
 			ctor.Body.Add ("\treturn;");
-			ctor.Body.Add ("var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);");
-			ctor.Body.Add ("SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);");
-			ctor.Body.Add ("JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);");
+			ctor.Body.Add ("unsafe {");
+			ctor.Body.Add ("\t// SAFETY: ()V needs no arguments; SetHandle takes the new local peer before FinishCreateInstance.");
+			ctor.Body.Add ("\tvar h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);");
+			ctor.Body.Add ("\tSetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);");
+			ctor.Body.Add ("\tJniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);");
+			ctor.Body.Add ("}");
 
 			if (iface.NeedsSender)
 				ctor.Body.Add ("this.sender = sender;");

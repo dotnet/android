@@ -28,7 +28,18 @@ namespace Xamarin.SourceWriter
 		public bool IsAutoProperty { get; set; }
 		public bool IsAbstract { get; set; }
 		public bool IsVirtual { get; set; }
+		/// <summary>
+		/// Marks the property declaration as requiring an unsafe caller under updated memory-safety rules.
+		/// </summary>
 		public bool IsUnsafe { get; set; }
+		/// <summary>
+		/// Emits a getter implementation block independently of the property caller contract.
+		/// </summary>
+		public bool HasUnsafeGetterBody { get; set; }
+		/// <summary>
+		/// Emits a setter implementation block independently of the property caller contract.
+		/// </summary>
+		public bool HasUnsafeSetterBody { get; set; }
 		public List<string> GetterComments { get; } = new List<string> ();
 		public List<string> SetterComments { get; } = new List<string> ();
 		public List<AttributeWriter> GetterAttributes { get; } = new List<AttributeWriter> ();
@@ -215,13 +226,23 @@ namespace Xamarin.SourceWriter
 				WriteGetterComments (writer);
 				WriteGetterAttributes (writer);
 
-				if (GetBody.Count == 1)
+				if (GetBody.Count == 1 && !HasUnsafeGetterBody)
 					writer.WriteLine ("get { " + GetBody [0] + " }");
 				else {
 					writer.WriteLine ("get {");
 					writer.Indent ();
 
+					if (HasUnsafeGetterBody) {
+						writer.WriteLine ("unsafe {");
+						writer.Indent ();
+					}
+
 					WriteGetterBody (writer);
+
+					if (HasUnsafeGetterBody) {
+						writer.Unindent ();
+						writer.WriteLine ("}");
+					}
 
 					writer.Unindent ();
 					writer.WriteLine ("}");
@@ -241,13 +262,23 @@ namespace Xamarin.SourceWriter
 				WriteSetterComments (writer);
 				WriteSetterAttributes (writer);
 
-				if (SetBody.Count == 1)
+				if (SetBody.Count == 1 && !HasUnsafeSetterBody)
 					writer.WriteLine ("set { " + SetBody [0] + " }");
 				else {
 					writer.WriteLine ("set {");
 					writer.Indent ();
 
+					if (HasUnsafeSetterBody) {
+						writer.WriteLine ("unsafe {");
+						writer.Indent ();
+					}
+
 					WriteSetterBody (writer);
+
+					if (HasUnsafeSetterBody) {
+						writer.Unindent ();
+						writer.WriteLine ("}");
+					}
 
 					writer.Unindent ();
 					writer.WriteLine ("}");
