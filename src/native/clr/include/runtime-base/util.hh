@@ -1,8 +1,6 @@
 #pragma once
 
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include <cerrno>
 #include <cstdint>
@@ -20,21 +18,8 @@
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
-	namespace detail {
-		struct mmap_info
-		{
-			void   *area;
-			size_t	size;
-		};
-	}
-
 	class Util
 	{
-		static constexpr inline char hex_map [16] {
-			'0', '1', '2', '3', '4', '5', '6', '7',
-			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
-		};
-
 	public:
 		static constexpr size_t LocalPathBufferSize = Constants::SENSIBLE_PATH_MAX;
 
@@ -61,22 +46,6 @@ namespace xamarin::android {
 		}
 
 		static void create_public_directory (const char *dir);
-		static auto monodroid_fopen (const char *filename, const char *mode) noexcept -> FILE*;
-		static void set_world_accessable (const char *path);
-		static auto set_world_accessible (int fd) noexcept -> bool;
-
-		// Puts higher half of the `value` byte as a hexadecimal character in `high_half` and
-		// the lower half in `low_half`
-		static void to_hex (uint8_t value, char &high_half, char &low_half) noexcept
-		{
-			high_half = hex_map[(value & 0xf0) >> 4];
-			low_half = hex_map[value & 0x0f];
-		}
-
-		static auto should_log (LogCategories category) noexcept -> bool
-		{
-			return (log_categories & category) != 0;
-		}
 
 	private:
 		static auto fs_entry_is_mode (struct stat const& s, mode_t mode) noexcept -> bool
@@ -213,56 +182,6 @@ namespace xamarin::android {
 		static void set_environment_variable_for_directory (std::string_view const& name, jstring_wrapper &value) noexcept
 		{
 			set_environment_variable_for_directory (name, value, true, Constants::DEFAULT_DIRECTORY_MODE);
-		}
-
-		static int monodroid_getpagesize () noexcept
-		{
-			return page_size;
-		}
-
-		static detail::mmap_info mmap_file (int fd, uint32_t offset, size_t size, std::string_view const& filename) noexcept
-		{
-			detail::mmap_info file_info;
-			detail::mmap_info mmap_info;
-
-			size_t pageSize       = static_cast<size_t>(Util::monodroid_getpagesize ());
-			size_t offsetFromPage = offset % pageSize;
-			size_t offsetPage     = offset - offsetFromPage;
-			size_t offsetSize     = size + offsetFromPage;
-
-			mmap_info.area		  = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
-
-			if (mmap_info.area == MAP_FAILED) {
-				Helpers::abort_applicationf (
-					LOG_ASSEMBLY,
-					std::source_location::current (),
-					"Could not mmap APK fd %d: %s; File=%.*s",
-					fd,
-					strerror (errno),
-					static_cast<int>(filename.length ()),
-					filename.data ()
-				);
-			}
-
-			mmap_info.size = offsetSize;
-			file_info.area = pointer_add (mmap_info.area, offsetFromPage);
-			file_info.size = size;
-
-			log_infof (
-				LOG_ASSEMBLY,
-				"  mmap_start: %-8p; mmap_end: %-8p\t mmap_len: %-12zu  file_start: %-8p  file_end: %-8p\t file_len: %-12zu\t  apk descriptor: %d  file: %.*s",
-				mmap_info.area,
-				pointer_add (mmap_info.area, mmap_info.size),
-				mmap_info.size,
-				file_info.area,
-				pointer_add (file_info.area, file_info.size),
-				file_info.size,
-				fd,
-				static_cast<int>(filename.length ()),
-				filename.data ()
-			);
-
-			return file_info;
 		}
 
 		static auto is_path_rooted (const char *path) noexcept -> bool
@@ -434,8 +353,5 @@ namespace xamarin::android {
 			abort_unless (result >= 0, "Failed to format DSO name using the required capacity");
 			return heap_buffer;
 		}
-
-	private:
-		static inline int page_size = getpagesize ();
 	};
 }
