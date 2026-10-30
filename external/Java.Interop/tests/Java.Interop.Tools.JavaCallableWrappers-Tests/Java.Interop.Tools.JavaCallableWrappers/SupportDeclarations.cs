@@ -56,8 +56,9 @@ namespace Android.App {
 	[Register ("android/app/Instrumentation", DoNotGenerateAcw = true)]
 	class Instrumentation : Java.Lang.Object
 	{
-		[Register ("onCreate", "(Ljava/lang/Object;)V", "Instrumentation.OnCreate")]
-		public virtual void OnCreate (Java.Lang.Object arguments)
+		// https://developer.android.com/reference/android/app/Instrumentation#onCreate(android.os.Bundle)
+		[Register ("onCreate", "(Landroid/os/Bundle;)V", "Instrumentation.OnCreate")]
+		public virtual void OnCreate (global::Android.OS.Bundle arguments)
 		{
 		}
 	}
