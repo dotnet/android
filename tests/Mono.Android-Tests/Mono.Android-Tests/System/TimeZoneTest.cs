@@ -11,6 +11,24 @@ namespace Xamarin.Android.RuntimeTests
 	[TestFixture]
 	public class TimeZoneTest
 	{
+		[Test]
+		[Category ("NativeAOTTimeZone")]
+		public void NativeAotStartupOffsetMatchesDevice ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
+				Assert.Ignore ("NativeAOT startup initialization regression.");
+			}
+
+			using (var timeZone = Java.Util.TimeZone.Default) {
+				int expectedSeconds = timeZone.GetOffset (Java.Lang.JavaSystem.CurrentTimeMillis ()) / 1000;
+				var startupOffset = AppContext.GetData ("System.TimeZoneInfo.LocalDateTimeOffset");
+				Console.WriteLine ($"Device time zone: {timeZone.ID}; offset seconds: {expectedSeconds}; startup offset: {startupOffset}");
+				Assert.AreEqual (expectedSeconds.ToString (CultureInfo.InvariantCulture), startupOffset,
+					"The startup offset must come from the device, including a zero UTC offset.");
+				Assert.AreEqual (TimeSpan.FromSeconds (expectedSeconds), DateTimeOffset.Now.Offset);
+			}
+		}
+
 #pragma warning disable CS0618 // Compare legacy TimeZone and Java Date behavior with TimeZoneInfo.
 		[Test]
 		public void TestDaylightSavingsTime ()

@@ -1,5 +1,6 @@
 using Android.Runtime;
 using Java.Interop;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -56,7 +57,7 @@ static partial class JavaInteropRuntime
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
-	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader, IntPtr language, IntPtr filesDir, IntPtr cacheDir)
+	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader, IntPtr language, IntPtr filesDir, IntPtr cacheDir, int localDateTimeOffset)
 	{
 		JniTransition   transition  = default;
 		try {
@@ -64,6 +65,8 @@ static partial class JavaInteropRuntime
 
 			// This needs to be called first, since it sets up locations, environment variables, logging etc
 			NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
+			// Seed DateTimeOffset.Now's fast path before managed runtime initialization or application code.
+			AppContext.SetData ("System.TimeZoneInfo.LocalDateTimeOffset", localDateTimeOffset.ToString (CultureInfo.InvariantCulture));
 			JNIEnvInit.InitializeBeforeRuntimeCreation (initArgs);
 
 			var options = new NativeAotRuntimeOptions {
