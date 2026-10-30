@@ -15,6 +15,7 @@ public class Runtime {
 		String lang,
 		String[] runtimeApks,
 		String[] appDirs,
+		int localDateTimeOffset,
 		ClassLoader loader,
 		boolean isEmulator,
 		boolean haveSplitApks

@@ -6,16 +6,16 @@ extern "C" {
 	/*
 	 * Class:     mono_android_Runtime
 	 * Method:    initInternal
-	 * Signature: (Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;Ljava/lang/ClassLoader;ZZ)V
+	 * Signature: (Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;ILjava/lang/ClassLoader;ZZ)V
 	 */
-	JNIEXPORT void JNICALL Java_mono_android_Runtime_initInternal(JNIEnv *, jclass, jstring, jobjectArray, jobjectArray, jobject, jboolean, jboolean);
+	JNIEXPORT void JNICALL Java_mono_android_Runtime_initInternal(JNIEnv *, jclass, jstring, jobjectArray, jobjectArray, jint, jobject, jboolean, jboolean);
 
 	/*
 	 * Class:     mono_android_Runtime
 	 * Method:    initInternal
-	 * Signature: (Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;Ljava/lang/ClassLoader;ZZ)V
+	 * Signature: (Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;ILjava/lang/ClassLoader;ZZ)V
 	 */
-	JNIEXPORT void JNICALL Java_mono_android_Runtime_initInternal (JNIEnv *, jclass, jstring, jobjectArray, jobjectArray, jobject, jboolean, jboolean);
+	JNIEXPORT void JNICALL Java_mono_android_Runtime_initInternal (JNIEnv *, jclass, jstring, jobjectArray, jobjectArray, jint, jobject, jboolean, jboolean);
 
 	/*
 	 * Class:     mono_android_Runtime

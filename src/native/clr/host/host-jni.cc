@@ -12,7 +12,7 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-	jobjectArray appDirs, jobject loader, jboolean isEmulator, jboolean haveSplitApks)
+	jobjectArray appDirs, jint localDateTimeOffset, jobject loader, jboolean isEmulator, jboolean haveSplitApks)
 {
 	Host::Java_mono_android_Runtime_initInternal (
 		env,
@@ -20,6 +20,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		lang,
 		runtimeApksJava,
 		appDirs,
+		localDateTimeOffset,
 		loader,
 		isEmulator,
 		haveSplitApks

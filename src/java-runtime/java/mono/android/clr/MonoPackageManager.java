@@ -2,6 +2,8 @@ package mono;
 
 import java.io.*;
 import java.lang.String;
+import java.time.OffsetDateTime;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.HashSet;
 import java.util.zip.*;
@@ -44,6 +46,13 @@ public class MonoPackageManager {
 				String cacheDir     = context.getCacheDir ().getAbsolutePath ();
 				String dataDir      = getNativeLibraryPath (context);
 				ClassLoader loader  = context.getClassLoader ();
+				int localDateTimeOffset;
+
+				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+					localDateTimeOffset = OffsetDateTime.now().getOffset().getTotalSeconds();
+				} else {
+					localDateTimeOffset = (Calendar.getInstance ().get (Calendar.ZONE_OFFSET) + Calendar.getInstance ().get (Calendar.DST_OFFSET)) / 1000;
+				}
 
 				//
 				// Should the order change here, src/native/clr/include/constants.hh must be updated accordingly
@@ -57,6 +66,7 @@ public class MonoPackageManager {
 					language,
 					apks,
 					appDirs,
+					localDateTimeOffset,
 					loader,
 					isEmulator (),
 					haveSplitApks
