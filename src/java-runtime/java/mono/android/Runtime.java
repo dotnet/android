@@ -14,11 +14,8 @@ public class Runtime {
 	public static native void initInternal (
 		String lang,
 		String[] runtimeApks,
-		String runtimeDataDir,
 		String[] appDirs,
-		int localDateTimeOffset,
 		ClassLoader loader,
-		String[] assemblies,
 		boolean isEmulator,
 		boolean haveSplitApks
 	);

@@ -274,17 +274,7 @@ void Host::preload_jni_libraries () noexcept
 
 void Host::Java_mono_android_Runtime_initInternal (
 	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
-
-	// TODO: MonoVM used this to load the profiler, probably won't be needed anymore
-	[[maybe_unused]] jstring runtimeNativeLibDir,
-	jobjectArray appDirs,
-
-	jint localDateTimeOffset,
-	jobject loader,
-
-	// TODO: was used in the past to pre-load assemblies (some versions of Xamarin.Forms needed that).
-	// Might not be needed anymore.
-	[[maybe_unused]] jobjectArray assembliesJava,
+	jobjectArray appDirs, jobject loader,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
 	HostCommon::init_logging_categories ();
