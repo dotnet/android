@@ -13,6 +13,25 @@ namespace Java.LangTests {
 	public class ObjectArrayMarshaling {
 
 		[Test]
+		public void ToArrayRejectsNonArrayBeforeNativeArrayAccess ()
+		{
+			using var value = new Java.Lang.String ("not an array");
+			Assert.Throws<InvalidCastException> (() => value.ToArray<string> ());
+			Assert.Throws<InvalidCastException> (() => value.ToArray<Java.Lang.Object> ());
+		}
+
+		[TestCase (0)]
+		[TestCase (2)]
+		public void ToArrayRejectsWrongReferenceArrayKind (int length)
+		{
+			using var primitiveArray = new Java.Lang.Object (
+				JNIEnv.NewArray (new int [length]), JniHandleOwnership.TransferLocalRef);
+			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<string> ());
+			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<Java.Lang.Object> ());
+			CollectionAssert.AreEqual (new int [length], primitiveArray.ToArray<int> ());
+		}
+
+		[Test]
 		public void CastJavaLangObjectArrayToByteArrayThrows ()
 		{
 			using (var objectArray = new Java.Lang.Object (JNIEnv.NewArray (

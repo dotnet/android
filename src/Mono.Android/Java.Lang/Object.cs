@@ -191,7 +191,11 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public T[]? ToArray<T>()
 		{
-			return JNIEnv.GetArray<T>(Handle);
+			try {
+				return JNIEnv.GetArray<T>(Handle);
+			} finally {
+				GC.KeepAlive (this);
+			}
 		}
 
 		public static Java.Lang.Object? FromArray<T>(T[] value)
