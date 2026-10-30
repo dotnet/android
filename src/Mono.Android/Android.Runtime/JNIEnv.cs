@@ -540,6 +540,9 @@ namespace Android.Runtime {
 				return JniEnvironment.Types.FindClass (builtInArrayJniClassName);
 
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
+			// Managed-only destinations use object references at each jagged array level.
+			if (elementType == typeof (IJavaObject) || elementType == typeof (Array))
+				elementType = typeof (Java.Lang.Object);
 			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
 			return JniEnvironment.Types.FindClass (typeSignature.Name);
 		}
