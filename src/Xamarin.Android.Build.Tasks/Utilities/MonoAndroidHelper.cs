@@ -146,13 +146,22 @@ namespace Xamarin.Android.Tasks
 
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
-			var psi = new ProcessStartInfo (name, args) {
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
+			return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError, environmentVariables);
+		}
+
+		public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
+		{
+			if (taskEnvironment == null)
+				throw new ArgumentNullException (nameof (taskEnvironment));
+
+			var psi = taskEnvironment.GetProcessStartInfo ();
+			psi.FileName = name;
+			psi.Arguments = args;
+			psi.UseShellExecute = false;
+			psi.RedirectStandardOutput = true;
+			psi.RedirectStandardError = true;
+			psi.CreateNoWindow = true;
+			psi.WindowStyle = ProcessWindowStyle.Hidden;
 			if (environmentVariables != null) {
 				foreach (var pair in environmentVariables) {
 					psi.EnvironmentVariables [pair.Key] = pair.Value;
@@ -284,6 +293,11 @@ namespace Xamarin.Android.Tasks
 			return filePaths.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer (taskEnvironment));
 		}
 
+		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Select (p => new FileInfo (taskEnvironment.GetAbsolutePath (p))).ToArray ()
+				.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
+		}
 #endif
 
 		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths)

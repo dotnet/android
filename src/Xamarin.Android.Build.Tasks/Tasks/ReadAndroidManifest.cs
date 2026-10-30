@@ -3,6 +3,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
@@ -11,20 +12,31 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Since GenerateJavaStubs can get skipped on incremental builds, this task parses the merged AndroidManifest.xml for values needed later in the build.
 	/// </summary>
-	public class ReadAndroidManifest : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ReadAndroidManifest : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "RAM";
 
 		[Required]
 		public string ManifestFile { get; set; } = "";
 
-		[Required]
-		public string AndroidSdkDirectory { get; set; } = "";
+		public string? AndroidSdkDirectory { get; set; }
 
 		[Required]
 		public string AndroidApiLevel { get; set; } = "";
 
 		public string []? ReferenceAssemblyPaths { get; set; }
+
+		public bool ReadSdkVersionsOnly { get; set; }
+
+		[Output]
+		public string CompileSdkVersion { get; set; } = "";
+
+		[Output]
+		public int MinimumSdkVersion { get; set; }
+
+		[Output]
+		public int TargetSdkVersion { get; set; }
 
 		/// <summary>
 		/// True if //manifest/application/[@android:extractNativeLibs='false']. False otherwise.
@@ -56,8 +68,25 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
-			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
-			var manifest = AndroidAppManifest.Load (ManifestFile, supportedVersions);
+			var document = XDocument.Load (TaskEnvironment.GetAbsolutePath (ManifestFile));
+			var usesSdk = document.Root?.Element ("uses-sdk");
+			int? compileSdk = MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out var version) ? version.Major : null;
+			CompileSdkVersion = compileSdk?.ToString () ?? "";
+			var minSdkValue = usesSdk?.Attribute (androidNs + "minSdkVersion")?.Value
+				?? XABuildConfig.AndroidMinimumDotNetApiLevel.Major.ToString ();
+			MinimumSdkVersion = int.TryParse (minSdkValue, out var minSdk) ? minSdk : 1;
+			TargetSdkVersion = int.TryParse (usesSdk?.Attribute (androidNs + "targetSdkVersion")?.Value, out var targetSdk)
+				? targetSdk : compileSdk ?? 21;
+
+			if (ReadSdkVersionsOnly) {
+				return true;
+			}
+
+			if (AndroidSdkDirectory.IsNullOrEmpty ()) {
+				throw new System.ArgumentException ("An Android SDK directory is required to read application attributes.", nameof (AndroidSdkDirectory));
+			}
+			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
+			var manifest = AndroidAppManifest.Load (document, supportedVersions);
 			var root = manifest.Document.Element ("manifest");
 			var app = root?.Element ("application");
 
@@ -83,7 +112,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				var libraries = new List<ITaskItem> ();
-				var platformPath = AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (AndroidSdkDirectory, AndroidApiLevel, supportedVersions);
+				var platformPath = AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (TaskEnvironment.GetAbsolutePath (AndroidSdkDirectory), AndroidApiLevel, supportedVersions);
 				if (platformPath == null) {
 					Log.LogDebugMessage ($"Could not find platform directory for API level '{AndroidApiLevel}'");
 				}
@@ -93,7 +122,7 @@ namespace Xamarin.Android.Tasks
 						if (platformPath == null)
 							continue;
 						var required = uses_library.Attribute (androidNs + "required")?.Value;
-						var path = Path.Combine (platformPath, "optional", $"{attribute.Value}.jar");
+						var path = TaskEnvironment.GetAbsolutePath (Path.Combine (platformPath, "optional", $"{attribute.Value}.jar"));
 						if (File.Exists (path)) {
 							libraries.Add (new TaskItem (path));
 						} else {

@@ -331,6 +331,56 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void GetAndroidActivityNameUsesProjectPaths (bool multithreaded)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var resources = new List<ProjectResource> ();
+			foreach (var name in new [] { "first", "second" }) {
+				CreateFauxReferencesDirectory (Path.Combine ("temp", TestName, name, "references"), apiInfoSelection);
+				resources.Add (new ProjectResource {
+					Path = Path.Combine (name, "obj", "AndroidManifest.xml"),
+					Content = $"""
+						<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+						  <application>
+						    <activity android:name=".{name}">
+						      <intent-filter><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+						    </activity>
+						  </application>
+						</manifest>
+						""",
+				});
+				var project = new XElement ("Project",
+					new XElement ("UsingTask",
+						new XAttribute ("TaskName", "Xamarin.Android.Tasks.GetAndroidActivityName"),
+						new XAttribute ("AssemblyFile", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"))),
+					new XElement ("Target", new XAttribute ("Name", "Build"),
+						new XElement ("GetAndroidActivityName",
+							new XAttribute ("ManifestFile", Path.Combine ("obj", "AndroidManifest.xml")),
+							new XAttribute ("ReferenceAssemblyPaths", Path.Combine ("references", "..", "references")),
+							new XElement ("Output", new XAttribute ("TaskParameter", "ActivityName"), new XAttribute ("PropertyName", "Launcher"))),
+						new XElement ("Error", new XAttribute ("Condition", $"'$(Launcher)' != '.{name}'"), new XAttribute ("Text", "Wrong launcher: $(Launcher)"))));
+				resources.Add (new ProjectResource { Path = Path.Combine (name, "activity.proj"), Content = project.ToString () });
+			}
+			var driver = new XElement ("Project",
+				new XElement ("ItemGroup",
+					new XElement ("Child", new XAttribute ("Include", "first/activity.proj;second/activity.proj"))),
+				new XElement ("Target", new XAttribute ("Name", "Build"),
+					new XElement ("MSBuild", new XAttribute ("Projects", "@(Child)"), new XAttribute ("BuildInParallel", "true"))));
+			resources.Add (new ProjectResource { Path = "driver.proj", Content = driver.ToString () });
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (directory, resources, doNotCleanup: true);
+			var dotnet = new DotNetCLI (Path.Combine (directory, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+		}
+
 		[Test]
 		[Platform ("Win")]
 		public void SupportedVersionsPreserveDriveRelativePaths ()
@@ -448,6 +498,65 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.AreEqual (ndkPath, resolveSdks.AndroidNdkPath);
 				Assert.AreEqual (javaPath, resolveSdks.JavaSdkPath);
 				Assert.AreEqual (toolsPath, resolveSdks.CommandLineToolsPath);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		public void ReadAndroidManifestUsesProjectDirectories ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var warnings = new List<BuildWarningEventArgs> ();
+			var engine = new MockBuildEngine (TestContext.Out, warnings: warnings);
+			try {
+				for (int i = 0; i < 2; i++) {
+					var projectPath = Path.Combine (path, $"project-{i}");
+					var project = new XamarinAndroidApplicationProject {
+						AndroidManifest = $$"""
+							<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.project{{i}}">
+							  <application>
+							    <uses-library android:name="present" />
+							    <uses-library android:name="missing-optional" android:required="false" />
+							    <uses-library android:name="missing-required" />
+							  </application>
+							</manifest>
+							""",
+					};
+					using var builder = CreateApkBuilder (projectPath);
+					builder.Save (project);
+					var apis = new [] {
+						new ApiInfo { Id = "Z", Level = 127 + i, Name = "Preview", FrameworkVersion = $"v108.{i}", Stable = true },
+					};
+					CreateFauxReferencesDirectory (Path.Combine (projectPath, "references"), apis);
+					var sdk = CreateFauxAndroidSdkDirectory (Path.Combine (projectPath, "sdk"), "36.0.0",
+						[new ApiInfo { Id = (127 + i).ToString () }]);
+					var optionalPath = Path.Combine (sdk, "platforms", $"android-{127 + i}", "optional");
+					Directory.CreateDirectory (optionalPath);
+					File.WriteAllText (Path.Combine (optionalPath, "present.jar"), "");
+					var manifestFile = Path.Combine ("Properties", "AndroidManifest.xml");
+					var task = new ReadAndroidManifest {
+						BuildEngine = engine,
+						TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+							Path.Combine (Root, projectPath), new Dictionary<string, string> ()),
+						ManifestFile = manifestFile,
+						AndroidSdkDirectory = "sdk",
+						ReferenceAssemblyPaths = ["references"],
+						AndroidApiLevel = "Z",
+					};
+					warnings.Clear ();
+					Assert.IsTrue (task.Execute ());
+					Assert.AreEqual ($"com.example.project{i}", task.PackageName);
+					var libraries = task.UsesLibraries;
+					Assert.IsNotNull (libraries);
+					Assert.AreEqual (Path.Combine (optionalPath, "present.jar"), libraries.Single ().ItemSpec);
+					var warning = warnings.Single ();
+					Assert.AreEqual ("XA4218", warning.Code);
+					Assert.AreEqual (manifestFile, warning.File);
+					Assert.AreEqual (0, warning.LineNumber);
+					Assert.AreEqual (0, warning.ColumnNumber);
+					StringAssert.Contains (Path.Combine (optionalPath, "missing-required.jar"), warning.Message);
+				}
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
