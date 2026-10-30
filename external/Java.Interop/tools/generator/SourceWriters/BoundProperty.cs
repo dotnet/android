@@ -22,7 +22,6 @@ namespace generator.SourceWriters
 
 			SetVisibility (gen is InterfaceGen ? string.Empty : property.Getter.IsAbstract && property.Getter.RetVal.IsGeneric ? "protected" : (property.Setter ?? property.Getter).Visibility);
 
-			IsUnsafe = true;
 			HasGet = true;
 
 			var is_virtual = property.Getter.IsVirtual && (property.Setter == null || property.Setter.IsVirtual);

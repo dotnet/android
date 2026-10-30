@@ -30,35 +30,56 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='']/class[@name='ClassWithoutNamespace']/constructor[@name='ClassWithoutNamespace' and count(parameter)=0]"
 	[Register (".ctor", "()V", "")]
-	public unsafe ClassWithoutNamespace () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	public ClassWithoutNamespace () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
 		const string __id = "()V";
 
 		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 			return;
 
-		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+		unsafe {
+			// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+		}
 	}
 
 	static Delegate cb_Foo_Foo_V;
 #pragma warning disable 0169
 	static Delegate GetFooHandler ()
 	{
-		return cb_Foo_Foo_V ??= new _JniMarshal_PP_V (n_Foo);
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_Foo_Foo_V ??= new _JniMarshal_PP_V (n_Foo);
+		}
 	}
 
-	static void n_Foo (IntPtr jnienv, IntPtr native__this)
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe void n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
 		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Foo);
 		}
 	}
-	private static void __n_Foo (IntPtr jnienv, IntPtr native__this)
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe void __n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<ClassWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.Foo ();
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<ClassWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.Foo ();
+		}
 	}
 #pragma warning restore 0169
 
@@ -84,10 +105,13 @@ internal partial class ClassWithoutNamespaceInvoker : ClassWithoutNamespace {
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='']/interface[@name='InterfaceWithoutNamespace']/method[@name='Foo' and count(parameter)=0]"
 	[Register ("Foo", "()V", "GetFooHandler")]
-	public override unsafe void Foo ()
+	public override void Foo ()
 	{
 		const string __id = "Foo.()V";
-		_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		}
 	}
 
 }

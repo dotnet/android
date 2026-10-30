@@ -42,9 +42,10 @@ namespace generator.SourceWriters
 				Attributes.Add (new CustomAttr (constructor.Annotation));
 
 			SetVisibility (constructor.Visibility);
-			IsUnsafe = true;
 
-			BaseCall = $"{(useBase ? "base" : "this")} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
+			BaseCall = SourceWriterExtensions.UsesDeferredThrowableConstructor (klass)
+				? $"{(useBase ? "base" : "this")} (global::Java.Interop.JniObjectReferenceOptions.None)"
+				: $"{(useBase ? "base" : "this")} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
 			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
 
 			this.AddMethodParameters (constructor.Parameters, opt);
@@ -62,6 +63,9 @@ namespace generator.SourceWriters
 			writer.WriteLine ("\treturn;");
 			writer.WriteLine ();
 
+			writer.WriteLine ("unsafe {");
+			writer.Indent ();
+			writer.WriteLine ("// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.");
 			foreach (var prep in constructor.Parameters.GetCallPrep (opt))
 				writer.WriteLine (prep);
 
@@ -91,6 +95,8 @@ namespace generator.SourceWriters
 			} else {
 				SourceWriterExtensions.WriteKeepAlive (writer, constructor.Parameters, opt);
 			}
+			writer.Unindent ();
+			writer.WriteLine ("}");
 		}
 
 		void WriteParamterListCallArgs (CodeWriter writer, ParameterList parameters, bool invoker, CodeGenerationOptions opt)

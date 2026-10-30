@@ -331,6 +331,56 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void GetAndroidActivityNameUsesProjectPaths (bool multithreaded)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var resources = new List<ProjectResource> ();
+			foreach (var name in new [] { "first", "second" }) {
+				CreateFauxReferencesDirectory (Path.Combine ("temp", TestName, name, "references"), apiInfoSelection);
+				resources.Add (new ProjectResource {
+					Path = Path.Combine (name, "obj", "AndroidManifest.xml"),
+					Content = $"""
+						<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+						  <application>
+						    <activity android:name=".{name}">
+						      <intent-filter><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+						    </activity>
+						  </application>
+						</manifest>
+						""",
+				});
+				var project = new XElement ("Project",
+					new XElement ("UsingTask",
+						new XAttribute ("TaskName", "Xamarin.Android.Tasks.GetAndroidActivityName"),
+						new XAttribute ("AssemblyFile", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"))),
+					new XElement ("Target", new XAttribute ("Name", "Build"),
+						new XElement ("GetAndroidActivityName",
+							new XAttribute ("ManifestFile", Path.Combine ("obj", "AndroidManifest.xml")),
+							new XAttribute ("ReferenceAssemblyPaths", Path.Combine ("references", "..", "references")),
+							new XElement ("Output", new XAttribute ("TaskParameter", "ActivityName"), new XAttribute ("PropertyName", "Launcher"))),
+						new XElement ("Error", new XAttribute ("Condition", $"'$(Launcher)' != '.{name}'"), new XAttribute ("Text", "Wrong launcher: $(Launcher)"))));
+				resources.Add (new ProjectResource { Path = Path.Combine (name, "activity.proj"), Content = project.ToString () });
+			}
+			var driver = new XElement ("Project",
+				new XElement ("ItemGroup",
+					new XElement ("Child", new XAttribute ("Include", "first/activity.proj;second/activity.proj"))),
+				new XElement ("Target", new XAttribute ("Name", "Build"),
+					new XElement ("MSBuild", new XAttribute ("Projects", "@(Child)"), new XAttribute ("BuildInParallel", "true"))));
+			resources.Add (new ProjectResource { Path = "driver.proj", Content = driver.ToString () });
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (directory, resources, doNotCleanup: true);
+			var dotnet = new DotNetCLI (Path.Combine (directory, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+		}
+
 		[Test]
 		[Platform ("Win")]
 		public void SupportedVersionsPreserveDriveRelativePaths ()

@@ -371,8 +371,8 @@ namespace Android.Runtime {
 		//
 		public bool Remove (T item)
 		{
+			// https://developer.android.com/reference/java/util/Collection#remove(java.lang.Object)
 			if (id_remove == IntPtr.Zero)
-				// https://developer.android.com/reference/java/util/Collection#remove(java.lang.Object)
 				id_remove = JNIEnv.GetMethodID (collection_class, "remove", "(Ljava/lang/Object;)Z");
 			return JavaConvert.WithLocalJniHandle (item, lref => {
 				try {

@@ -474,7 +474,7 @@ namespace Android.Runtime {
 			return s;
 		}
 
-		public static unsafe IntPtr NewString (string? text)
+		public static IntPtr NewString (string? text)
 		{
 			if (text == null)
 				return IntPtr.Zero;
@@ -1211,15 +1211,18 @@ namespace Android.Runtime {
 			return _GetArrayLength (array_ptr);
 		}
 
-		public static unsafe IntPtr NewArray (bool[]? array)
+		public static IntPtr NewArray (bool[]? array)
 		{
 			if (array == null)
 				return IntPtr.Zero;
 			IntPtr result;
 
 			var r   = JniEnvironment.Arrays.NewBooleanArray (array.Length);
-			fixed (bool* p = array)
-				JniEnvironment.Arrays.SetBooleanArrayRegion (r, 0, array.Length, p);
+			unsafe {
+				// SAFETY: JNI allocated array.Length Boolean slots; pin the managed source for this synchronous copy.
+				fixed (bool* p = array)
+					JniEnvironment.Arrays.SetBooleanArrayRegion (r, 0, array.Length, p);
+			}
 			result  = r.Handle;
 
 			return result;
