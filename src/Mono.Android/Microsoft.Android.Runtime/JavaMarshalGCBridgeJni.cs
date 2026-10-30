@@ -88,12 +88,8 @@ sealed class JavaMarshalGCBridgeJni
 		}
 	}
 
+	// SAFETY: gcUserPeerType retains the class for its cached ()V constructor; the null argument
+	// buffer is valid for zero parameters, and ownership of the new local transfers to TemporaryPeerMap.
 	public JniObjectReference CreateTemporaryPeer ()
-		{
-		unsafe {
-			// SAFETY: gcUserPeerType retains the class for its cached ()V constructor; the null argument
-			// buffer is valid for zero parameters, and ownership of the new local transfers to TemporaryPeerMap.
-			return gcUserPeerType.NewObject (gcUserPeerConstructor, null);
-		}
-	}
+		=> unsafe(gcUserPeerType.NewObject (gcUserPeerConstructor, null));
 }

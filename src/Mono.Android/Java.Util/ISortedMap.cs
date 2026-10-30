@@ -50,11 +50,8 @@ public partial interface ISortedMap
 		const string __id = "reversed.()Ljava/util/SortedMap;";
 		unsafe {
 			// SAFETY: the parameterless SortedMap.reversed call returns a SortedMap implementing SequencedMap; its local reference transfers to the managed peer.
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return global::Java.Lang.Object.GetObject<Java.Util.ISequencedMap> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return global::Java.Lang.Object.GetObject<Java.Util.ISequencedMap> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 		}
 	}
 }

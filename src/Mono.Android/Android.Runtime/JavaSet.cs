@@ -143,17 +143,13 @@ namespace Android.Runtime {
 		//
 		public void Add (object? item)
 		{
-			unsafe {
+			if (id_add == IntPtr.Zero)
 				// SAFETY: add.(Ljava/lang/Object;)Z is resolved from the retained collection class.
-				if (id_add == IntPtr.Zero)
-					id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
-			}
+				id_add = unsafe(JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z"));
 			JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					unsafe {
-						// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
-						return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
-					}
+					// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref)));
 				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new NotSupportedException (ex.Message, ex);
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -181,11 +177,9 @@ namespace Android.Runtime {
 		//
 		public void Clear ()
 		{
-			unsafe {
+			if (id_clear == IntPtr.Zero)
 				// SAFETY: clear.()V is resolved from the retained collection class.
-				if (id_clear == IntPtr.Zero)
-					id_clear = JNIEnv.GetMethodID (set_class, "clear", "()V");
-			}
+				id_clear = unsafe(JNIEnv.GetMethodID (set_class, "clear", "()V"));
 			try {
 				unsafe {
 					// SAFETY: clear.()V matches this peer; marshaling retains each borrowed argument for the call.
@@ -209,17 +203,13 @@ namespace Android.Runtime {
 		//
 		public bool Contains (object? item)
 		{
-			unsafe {
+			if (id_contains == IntPtr.Zero)
 				// SAFETY: contains.(Ljava/lang/Object;)Z is resolved from the retained collection class.
-				if (id_contains == IntPtr.Zero)
-					id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
-			}
+				id_contains = unsafe(JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z"));
 			return JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					unsafe {
-						// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
-						return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
-					}
+					// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new InvalidCastException (ex.Message, ex);
 				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -260,17 +250,13 @@ namespace Android.Runtime {
 		//
 		public void Remove (object? item)
 		{
-			unsafe {
+			if (id_remove == IntPtr.Zero)
 				// SAFETY: remove.(Ljava/lang/Object;)Z is resolved from the retained collection class.
-				if (id_remove == IntPtr.Zero)
-					id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
-			}
+				id_remove = unsafe(JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z"));
 			JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					unsafe {
-						// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
-						return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
-					}
+					// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
 				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new NotSupportedException (ex.Message, ex);
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -392,17 +378,13 @@ namespace Android.Runtime {
 		//
 		public void Add (T item)
 		{
-			unsafe {
+			if (id_add == IntPtr.Zero)
 				// SAFETY: add.(Ljava/lang/Object;)Z is resolved from the retained collection class.
-				if (id_add == IntPtr.Zero)
-					id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
-			}
+				id_add = unsafe(JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z"));
 			JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					unsafe {
-						// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
-						return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
-					}
+					// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref)));
 				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new NotSupportedException (ex.Message, ex);
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -428,17 +410,13 @@ namespace Android.Runtime {
 		//
 		public bool Contains (T item)
 		{
-			unsafe {
+			if (id_contains == IntPtr.Zero)
 				// SAFETY: contains.(Ljava/lang/Object;)Z is resolved from the retained collection class.
-				if (id_contains == IntPtr.Zero)
-					id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
-			}
+				id_contains = unsafe(JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z"));
 			return JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					unsafe {
-						// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
-						return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
-					}
+					// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new InvalidCastException (ex.Message, ex);
 				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -484,17 +462,13 @@ namespace Android.Runtime {
 		//
 		public bool Remove (T item)
 		{
-			unsafe {
+			if (id_remove == IntPtr.Zero)
 				// SAFETY: remove.(Ljava/lang/Object;)Z is resolved from the retained collection class.
-				if (id_remove == IntPtr.Zero)
-					id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
-			}
+				id_remove = unsafe(JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z"));
 			return JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					unsafe {
-						// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
-						return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
-					}
+					// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
 				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new NotSupportedException (ex.Message, ex);
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {

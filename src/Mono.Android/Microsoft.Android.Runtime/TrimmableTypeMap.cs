@@ -527,13 +527,11 @@ public class TrimmableTypeMap
 	static void MarkCreatedPeer (IJavaPeerable peer)
 	{
 		var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
-		unsafe {
-			// SAFETY: this runtime's activation path supplies the newly created typed peer and its JNI
-			// reference for the current-thread type test. The state update below and subsequent AddPeer
-			// still use that managed owner after the call; the borrowed handle is neither retained nor transferred here.
-			if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
-				peerState |= JniManagedPeerStates.Activatable;
-			}
+		// SAFETY: this runtime's activation path supplies the newly created typed peer and its JNI
+		// reference for the current-thread type test. The state update below and subsequent AddPeer
+		// still use that managed owner after the call; the borrowed handle is neither retained nor transferred here.
+		if (unsafe(global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle))) {
+			peerState |= JniManagedPeerStates.Activatable;
 		}
 		peer.SetJniManagedPeerState (peerState);
 	}

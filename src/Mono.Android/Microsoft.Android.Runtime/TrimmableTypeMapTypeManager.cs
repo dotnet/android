@@ -427,15 +427,11 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
 			: null;
 
+	// SAFETY: the managed source name and process-lifetime remapping table retain all borrowed names through lookup.
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-	{
-		unsafe {
-			// SAFETY: the managed source name and process-lifetime remapping table retain all borrowed names through lookup.
-			return RuntimeFeature.JniRemapping
-				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
-				: null;
-		}
-	}
+		=> unsafe(RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+			: null);
 
 	/// <safety>
 	/// Source bytes must be readable through their NUL and unchanged until return or throw,

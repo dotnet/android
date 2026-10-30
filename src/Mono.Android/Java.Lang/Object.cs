@@ -203,10 +203,8 @@ namespace Java.Lang {
 		public T[]? ToArray<T>()
 		{
 			try {
-				unsafe {
-					// SAFETY: this peer owns the JNI object reference; GetArray checks its compatible array kind before native access.
-					return JNIEnv.GetArray<T> (Handle);
-				}
+				// SAFETY: this peer owns the JNI object reference; GetArray checks its compatible array kind before native access.
+				return unsafe(JNIEnv.GetArray<T> (Handle));
 			} finally {
 				GC.KeepAlive (this);
 			}

@@ -19,10 +19,8 @@ namespace Java.Lang {
 			Object = JNIEnv.FindClass ("java/lang/Object");
 			String = JNIEnv.FindClass ("java/lang/String");
 			CharSequence = JNIEnv.FindClass ("java/lang/CharSequence");
-			unsafe {
-				// SAFETY: CharSequence is the retained global class; the member has the zero-argument String-returning ABI.
-				CharSequence_toString = JNIEnv.GetMethodID (CharSequence, "toString", "()Ljava/lang/String;");
-			}
+			// SAFETY: CharSequence is the retained global class; the member has the zero-argument String-returning ABI.
+			CharSequence_toString = unsafe(JNIEnv.GetMethodID (CharSequence, "toString", "()Ljava/lang/String;"));
 		}
 
 		public static Class FromType (System.Type type)

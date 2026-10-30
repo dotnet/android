@@ -41,12 +41,8 @@ namespace Android.Runtime {
 			else if (jlo is Java.Lang.Double)
 				return Dispose ((Java.Lang.Double) jlo, v => v.DoubleValue ());
 			else if (jlo is Java.Lang.String)
-				return Dispose (jlo, v => {
-					unsafe {
-						// SAFETY: v is the typed String peer; Dispose retains its wrapper until GetString returns or throws.
-						return JNIEnv.GetString (v.Handle, JniHandleOwnership.DoNotTransfer);
-					}
-				});
+				// SAFETY: v is the typed String peer; Dispose retains its wrapper until GetString returns or throws.
+				return Dispose (jlo, v => unsafe(JNIEnv.GetString (v.Handle, JniHandleOwnership.DoNotTransfer)));
 			else if (jlo is JavaObject)
 				return ((JavaObject) jlo).inst;
 			else

@@ -42,12 +42,9 @@ namespace Android.Runtime {
 				return base.GetPeerMembers (value);
 			}
 
-			string jniClass;
-			unsafe {
-				// SAFETY: the managed peer's threshold class is the retained JNI class used by its member cache.
-				jniClass = JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (GetThresholdClass (value)))
-					?? throw new InvalidOperationException ("Could not obtain the JNI name of the threshold class.");
-			}
+			// SAFETY: the managed peer's threshold class is the retained JNI class used by its member cache.
+			var jniClass = unsafe(JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (GetThresholdClass (value)))
+				?? throw new InvalidOperationException ("Could not obtain the JNI name of the threshold class."));
 			lock (LegacyPeerMembers) {
 				if (!LegacyPeerMembers.TryGetValue (jniClass, out var members)) {
 					members = new XAPeerMembers (jniClass, peerType);

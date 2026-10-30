@@ -516,7 +516,8 @@ static class JavaMarshalGCBridge
 		public TemporaryPeerMap (MarkCrossReferencesArgs* args)
 		{
 			unsafe {
-				// SAFETY: the CLR owns args/components for ComponentCount entries; checked conversion bounds the managed peers array, and the constructor only counts empty components.
+				// SAFETY: ProcessBridge rejects null args and Process validates the component array/count pair;
+				// the CLR retains that storage through this callback, and checked conversion bounds the managed peers array.
 				int count = checked((int)args->ComponentCount);
 				int temporaryPeerCount = 0;
 				for (nuint i = 0; i < args->ComponentCount; i++) {

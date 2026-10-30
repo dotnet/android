@@ -57,10 +57,8 @@ namespace Android.Runtime {
 			if (value == IntPtr.Zero)
 				return false;
 
-			unsafe {
-				// SAFETY: value is the borrowed peer passed by runtime marshaling; grefIGCUserPeer_class is the host's retained global class, used only for this type test.
-				return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class);
-			}
+			// SAFETY: value is the borrowed peer passed by runtime marshaling; grefIGCUserPeer_class is the host's retained global class, used only for this type test.
+			return unsafe(IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class));
 		}
 
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
@@ -159,10 +157,8 @@ namespace Android.Runtime {
 		/// </safety>
 		public static unsafe IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
 		{
-			unsafe {
-				// SAFETY: only jclass is consumed by AllocObject; constructorId and constructorParameters are deliberately unused in this allocation-only phase.
-				return AllocObject (jclass);
-			}
+			// SAFETY: only jclass is consumed by AllocObject; constructorId and constructorParameters are deliberately unused in this allocation-only phase.
+			return unsafe(AllocObject (jclass));
 		}
 
 		/// <safety>
@@ -781,10 +777,8 @@ namespace Android.Runtime {
 		{
 			var builtInArrayJniClassName = GetBuiltInArrayJniClassNameUtf8 (elementType);
 			if (!builtInArrayJniClassName.IsEmpty) {
-				unsafe {
-					// SAFETY: GetBuiltInArrayJniClassNameUtf8 returns only complete, process-lifetime UTF-8 literals, never slices or copies.
-					return JniEnvironment.Types.FindClass (builtInArrayJniClassName);
-				}
+				// SAFETY: GetBuiltInArrayJniClassNameUtf8 returns only complete, process-lifetime UTF-8 literals, never slices or copies.
+				return unsafe(JniEnvironment.Types.FindClass (builtInArrayJniClassName));
 			}
 
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
@@ -1022,11 +1016,8 @@ namespace Android.Runtime {
 			}
 
 			if (array != IntPtr.Zero) {
-				string? type;
-				unsafe {
-					// SAFETY: the marshaling caller retains array while its class name is read.
-					type = GetClassNameFromInstance (array);
-				}
+				// SAFETY: the marshaling caller retains array while its class name is read.
+				string? type = unsafe(GetClassNameFromInstance (array));
 				if (type == null || type.Length < 1 || type [0] != '[')
 					throw new InvalidOperationException ("Unsupported java array type: " + type);
 
@@ -1384,13 +1375,11 @@ namespace Android.Runtime {
 						}
 						return;
 					}
-					unsafe {
-						// SAFETY: dest is the retained array supplied to this conversion; only its diagnostic class name is read.
-						throw new NotSupportedException ("Don't know how to copy '" +
-								source.GetType ().FullName + "' to '" +
-								GetClassNameFromInstance (dest) +
-								"'.");
-					}
+					// SAFETY: dest is the retained array supplied to this conversion; only its diagnostic class name is read.
+					throw unsafe(new NotSupportedException ("Don't know how to copy '" +
+							source.GetType ().FullName + "' to '" +
+							GetClassNameFromInstance (dest) +
+							"'."));
 				} },
 				{ typeof (IJavaObject), (source, dest) => {
 					unsafe {
@@ -1809,10 +1798,8 @@ namespace Android.Runtime {
 		/// </safety>
 		public static unsafe IntPtr NewObjectArray (int length, IntPtr elementClass)
 		{
-			unsafe {
-				// SAFETY: the caller retains elementClass as a live class; the three-argument overload initializes each new element with the JNI null reference.
-				return NewObjectArray (length, elementClass, IntPtr.Zero);
-			}
+			// SAFETY: the caller retains elementClass as a live class; the three-argument overload initializes each new element with the JNI null reference.
+			return unsafe(NewObjectArray (length, elementClass, IntPtr.Zero));
 		}
 
 		/// <safety>
@@ -2004,10 +1991,8 @@ namespace Android.Runtime {
 		{
 			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassNameUtf8 (elementType);
 			if (!boxedPrimitiveJniClassName.IsEmpty) {
-				unsafe {
-					// SAFETY: GetBoxedPrimitiveJniClassNameUtf8 returns only complete UTF-8 literals with the trailing NUL outside their span length.
-					return FindClass (boxedPrimitiveJniClassName);
-				}
+				// SAFETY: GetBoxedPrimitiveJniClassNameUtf8 returns only complete UTF-8 literals with the trailing NUL outside their span length.
+				return unsafe(FindClass (boxedPrimitiveJniClassName));
 			}
 
 			return FindClass (elementType);
@@ -2433,10 +2418,8 @@ namespace Android.Runtime {
 		/// </safety>
 		internal static unsafe int AndroidBitmap_getInfo (IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info)
 		{
-			unsafe {
-				// SAFETY: Handle is this thread's environment; the caller retains the Bitmap and the stub owns the scalar output.
-				return AndroidBitmap_getInfo (Handle, jbitmap, out info);
-			}
+			// SAFETY: Handle is this thread's environment; the caller retains the Bitmap and the stub owns the scalar output.
+			return unsafe(AndroidBitmap_getInfo (Handle, jbitmap, out info));
 		}
 
 		/// <safety>
@@ -2445,10 +2428,8 @@ namespace Android.Runtime {
 		/// </safety>
 		internal static unsafe int AndroidBitmap_lockPixels (IntPtr jbitmap, out IntPtr addrPtr)
 		{
-			unsafe {
-				// SAFETY: Handle is this thread's environment; the caller retains the Bitmap and owns the resulting lock.
-				return AndroidBitmap_lockPixels (Handle, jbitmap, out addrPtr);
-			}
+			// SAFETY: Handle is this thread's environment; the caller retains the Bitmap and owns the resulting lock.
+			return unsafe(AndroidBitmap_lockPixels (Handle, jbitmap, out addrPtr));
 		}
 
 		/// <safety>
@@ -2457,10 +2438,8 @@ namespace Android.Runtime {
 		/// </safety>
 		internal static unsafe int AndroidBitmap_unlockPixels (IntPtr jbitmap)
 		{
-			unsafe {
-				// SAFETY: Handle is this thread's environment; the caller owns the matching lock and has stopped pixel access.
-				return AndroidBitmap_unlockPixels (Handle, jbitmap);
-			}
+			// SAFETY: Handle is this thread's environment; the caller owns the matching lock and has stopped pixel access.
+			return unsafe(AndroidBitmap_unlockPixels (Handle, jbitmap));
 		}
 #endif  // ANDROID_8
 	}

@@ -72,12 +72,8 @@ namespace Java.Interop {
 				return (h, t) => h == IntPtr.Zero ? null : underlyingConverter (h, t);
 
 			if (target.IsArray)
-				return (h, t) => {
-					unsafe {
-						// SAFETY: conversion supplies h's live array reference and t's owned transfer.
-						return JNIEnv.GetArray (h, t, target.GetElementType ());
-					}
-				};
+				// SAFETY: conversion supplies h's live array reference and t's owned transfer.
+				return (h, t) => unsafe(JNIEnv.GetArray (h, t, target.GetElementType ()));
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
 				if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups ||
@@ -92,26 +88,14 @@ namespace Java.Interop {
 			}
 
 			if (typeof (IDictionary).IsAssignableFrom (target))
-				return (h, t) => {
-					unsafe {
-						// SAFETY: conversion supplies h's live Map reference and t's owned transfer.
-						return JavaDictionary.FromJniHandle (h, t);
-					}
-				};
+				// SAFETY: conversion supplies h's live Map reference and t's owned transfer.
+				return (h, t) => unsafe(JavaDictionary.FromJniHandle (h, t));
 			if (typeof (IList).IsAssignableFrom (target))
-				return (h, t) => {
-					unsafe {
-						// SAFETY: conversion supplies h's live List reference and t's owned transfer.
-						return JavaList.FromJniHandle (h, t);
-					}
-				};
+				// SAFETY: conversion supplies h's live List reference and t's owned transfer.
+				return (h, t) => unsafe(JavaList.FromJniHandle (h, t));
 			if (typeof (ICollection).IsAssignableFrom (target))
-				return (h, t) => {
-					unsafe {
-						// SAFETY: conversion supplies h's live Collection reference and t's owned transfer.
-						return JavaCollection.FromJniHandle (h, t);
-					}
-				};
+				// SAFETY: conversion supplies h's live Collection reference and t's owned transfer.
+				return (h, t) => unsafe(JavaCollection.FromJniHandle (h, t));
 
 			return null;
 

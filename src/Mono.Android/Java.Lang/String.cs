@@ -45,10 +45,8 @@ namespace Java.Lang {
 
 		public override string ToString ()
 		{
-			unsafe {
-				// SAFETY: this String peer supplies the live CharSequence reference during ToString; the JNI result is marshaled synchronously.
-				return JNIEnv.GetCharSequence (Handle, JniHandleOwnership.DoNotTransfer)!;
-			}
+			// SAFETY: this String peer supplies the live CharSequence reference during ToString; the JNI result is marshaled synchronously.
+			return unsafe(JNIEnv.GetCharSequence (Handle, JniHandleOwnership.DoNotTransfer)!);
 		}
 	}
 }

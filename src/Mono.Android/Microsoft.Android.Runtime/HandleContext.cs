@@ -23,10 +23,8 @@ internal struct HandleContext
 			if (controlBlock == IntPtr.Zero)
 				throw new InvalidOperationException ("HandleContext control block is not initialized.");
 
-			unsafe {
-				// SAFETY: the registered peer retains controlBlock while this context is live; the null guard precedes the single handle read, without extending that native allocation's lifetime.
-				return ((JniObjectReferenceControlBlock*) controlBlock)->handle == IntPtr.Zero;
-			}
+			// SAFETY: the registered peer retains controlBlock while this context is live; the null guard precedes the single handle read, without extending that native allocation's lifetime.
+			return unsafe(((JniObjectReferenceControlBlock*) controlBlock)->handle == IntPtr.Zero);
 		}
 	}
 
@@ -51,10 +49,8 @@ internal struct HandleContext
 		{
 			if (controlBlock == IntPtr.Zero)
 				throw new InvalidOperationException ("HandleContext control block is not initialized.");
-			unsafe {
-				// SAFETY: the registered peer retains controlBlock during bridge processing; the null guard precedes this refs_added read.
-				return ((JniObjectReferenceControlBlock*) controlBlock)->refs_added;
-			}
+			// SAFETY: the registered peer retains controlBlock during bridge processing; the null guard precedes this refs_added read.
+			return unsafe(((JniObjectReferenceControlBlock*) controlBlock)->refs_added);
 		}
 		set
 		{

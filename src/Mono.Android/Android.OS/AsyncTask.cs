@@ -20,7 +20,7 @@ namespace Android.OS {
 	> : AsyncTask {
 
 		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		// Accesses the exact managed static field without changing its type or allowing writes.
+		// Returns a typed, GC-tracked byref to the managed static field; readonly prevents replacing its reference.
 		static safe extern ref readonly JniPeerMembers GetPeerMembers (AsyncTask? _);
 
 		protected override IntPtr ThresholdClass {

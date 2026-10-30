@@ -14,14 +14,11 @@ namespace Android.Animation
 			const string __id = "setDuration.(J)Landroid/animation/Animator;";
 			unsafe {
 				// SAFETY: setDuration takes one JNI long and returns Animator; the one-element argument buffer remains live for the call.
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (duration);
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-					var __ret = global::Java.Lang.Object.GetObject<Android.Animation.Animator> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-					return __ret ?? throw new InvalidOperationException ("Unable to marshal the return value to a managed Android.Animation.Animator instance.");
-				} finally {
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (duration);
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+				var __ret = global::Java.Lang.Object.GetObject<Android.Animation.Animator> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				return __ret ?? throw new InvalidOperationException ("Unable to marshal the return value to a managed Android.Animation.Animator instance.");
 			}
 		}
 		

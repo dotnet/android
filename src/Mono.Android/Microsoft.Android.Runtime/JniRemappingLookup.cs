@@ -178,11 +178,8 @@ static class JniRemappingLookup
 				return;
 			}
 
-			NativeBinaryBlobPayload payload;
-			unsafe {
-				// SAFETY: both native hosts pass a process-lifetime descriptor, not a body or temporary stack address.
-				payload = *(NativeBinaryBlobPayload*)data;
-			}
+			// SAFETY: both native hosts pass a process-lifetime descriptor, not a body or temporary stack address.
+			NativeBinaryBlobPayload payload = unsafe(*(NativeBinaryBlobPayload*)data);
 			if (!payload.IsValid ())
 				throw new InvalidDataException ("Invalid native JNI remapping table.");
 
@@ -214,27 +211,21 @@ static class JniRemappingLookup
 		return BitConverter.ToUInt32 (Data.Slice ((int)offset, sizeof (uint)));
 	}
 
+	// SAFETY: Read bounds the string record; Initialize's caller guarantees the target's
+	// pointer/length describe process-lifetime readable UTF-8 data, not these record checks.
 	static NativeJniRemappingString ReadString (uint offset)
-	{
-		unsafe {
-			// SAFETY: Read bounds the string record; Initialize's caller, not these checks, guarantees its relative pointer/length describe process-lifetime readable UTF-8 data.
-			return new () {
-				str = table + Read (offset),
-				length = Read (offset + 4),
-			};
-		}
-	}
+		=> unsafe(new () {
+			str = table + Read (offset),
+			length = Read (offset + 4),
+		});
 
+	// SAFETY: Read bounds this type record; the producer guarantees the target extents/terminators
+	// borrowed through ReadString and CString.
 	static NativeJniRemappingTypeReplacementEntry ReadType (uint offset)
-	{
-		unsafe {
-			// SAFETY: Read bounds this type record; ReadString and CString borrow offsets whose target extents/terminators are guaranteed by the generated-table producer.
-			return new () {
-				name = ReadString (offset),
-				replacement = CString (Read (offset + 8)),
-			};
-		}
-	}
+		=> unsafe(new () {
+			name = ReadString (offset),
+			replacement = CString (Read (offset + 8)),
+		});
 
 	static NativeJniRemappingIndexTypeEntry ReadMethodType (uint offset)
 		=> new () { name = ReadString (offset), method_count = Read (offset + 12), methods = Read (offset + 8) };
@@ -264,17 +255,14 @@ static class JniRemappingLookup
 		}
 	}
 
+	// SAFETY: Read bounds the three field offsets; CString borrows their producer-validated,
+	// process-lifetime NUL-terminated targets.
 	static NativeJniRemappingReplacementField ReadReplacementField (uint offset)
-	{
-		unsafe {
-			// SAFETY: Read bounds the three field offsets; CString borrows their producer-validated process-lifetime NUL-terminated targets.
-			return new () {
-				target_type = CString (Read (offset)),
-				target_name = CString (Read (offset + 4)),
-				target_signature = CString (Read (offset + 8)),
-			};
-		}
-	}
+		=> unsafe(new () {
+			target_type = CString (Read (offset)),
+			target_name = CString (Read (offset + 4)),
+			target_signature = CString (Read (offset + 8)),
+		});
 
 	static uint Entry (int section, uint position, uint stride)
 	{
@@ -287,13 +275,9 @@ static class JniRemappingLookup
 	}
 
 	// The build-time writer validates string offsets, byte lengths, UTF-8 and NUL terminators.
-	static byte* CString (uint offset)
-	{
-		unsafe {
-			// SAFETY: offset is a generated-table string offset or zero; pointer addition alone does not validate its target, whose extent/terminator is the Initialize caller's contract.
-			return offset == 0 ? null : table + offset;
-		}
-	}
+	// SAFETY: offset is a generated-table string offset or zero; Initialize's caller guarantees
+	// the target extent/terminator. Pointer addition does not validate that storage.
+	static byte* CString (uint offset) => unsafe(offset == 0 ? null : table + offset);
 
 	internal static IReadOnlyList<string> GetStaticMethodFallbackTypes (string jniSimpleReference, bool useReplacementTypes)
 	{
@@ -544,11 +528,9 @@ static class JniRemappingLookup
 
 	static bool Equal (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
-		unsafe {
-			// SAFETY: value comes from the generated table and retains its producer-validated byte extent; equality first checks length, then reads exactly key.Length bytes.
-			return value.length == (uint)key.Length &&
-				new ReadOnlySpan<byte> (value.str, key.Length).SequenceEqual (key);
-		}
+		// SAFETY: value comes from the generated table and retains its producer-validated byte extent; equality first checks length, then reads exactly key.Length bytes.
+		return unsafe(value.length == (uint)key.Length &&
+			new ReadOnlySpan<byte> (value.str, key.Length).SequenceEqual (key));
 	}
 
 	static bool Equal (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)
@@ -564,10 +546,8 @@ static class JniRemappingLookup
 
 	static int Compare (NativeJniRemappingString value, ReadOnlySpan<byte> key)
 	{
-		unsafe {
-			// SAFETY: value's generated-table pointer remains readable for value.length bytes during comparison; checked conversion prevents an oversized managed span length.
-			return new ReadOnlySpan<byte> (value.str, checked ((int)value.length)).SequenceCompareTo (key);
-		}
+		// SAFETY: value's generated-table pointer remains readable for value.length bytes during comparison; checked conversion prevents an oversized managed span length.
+		return unsafe(new ReadOnlySpan<byte> (value.str, checked ((int)value.length)).SequenceCompareTo (key));
 	}
 
 	static int Compare (NativeJniRemappingString value, ReadOnlySpan<char> key, bool keyIsAscii)

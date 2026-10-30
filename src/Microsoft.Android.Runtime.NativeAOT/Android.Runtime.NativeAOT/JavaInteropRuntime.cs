@@ -32,20 +32,14 @@ static partial class JavaInteropRuntime
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
-			int hostVersion;
-			unsafe {
-				// SAFETY: the VM invokes JNI_OnLoad with its live JavaVM; the stub pins the matching descriptor.
-				hostVersion = NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs);
-			}
+			// SAFETY: the VM invokes JNI_OnLoad with its live JavaVM; the stub pins the matching descriptor.
+			int hostVersion = unsafe(NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs));
 			if (hostVersion < 0) {
 				return hostVersion;
 			}
 			// The crypto initializer caches Java classes using JNI_OnLoad's application class loader.
-			int cryptoVersion;
-			unsafe {
-				// SAFETY: the same VM-owned JavaVM remains live while the library caches its JNI classes.
-				cryptoVersion = AndroidCryptoNative_InitLibraryOnLoad (vm, reserved);
-			}
+			// SAFETY: the same VM-owned JavaVM remains live while the library caches its JNI classes.
+			int cryptoVersion = unsafe(AndroidCryptoNative_InitLibraryOnLoad (vm, reserved));
 			if (cryptoVersion < 0) {
 				AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", "Cryptography JNI initialization failed");
 				return cryptoVersion;
@@ -103,10 +97,8 @@ static partial class JavaInteropRuntime
 				TypeManager                 = new TrimmableTypeMapTypeManager (),
 				ValueManager                = new TrimmableTypeMapValueManager (),
 			};
-			unsafe {
-				// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation duplicates the loader and the VM outlives the runtime.
-				runtime = options.CreateJreVM ();
-			}
+			// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation duplicates the loader and the VM outlives the runtime.
+			runtime = unsafe(options.CreateJreVM ());
 
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
 			unsafe {

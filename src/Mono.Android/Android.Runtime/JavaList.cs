@@ -29,14 +29,12 @@ namespace Android.Runtime {
 				Type? targetType = null)
 		{
 			var obj = InternalGetReference (location);
-			unsafe {
-				// SAFETY: List.get returned this owned local element reference; conversion consumes that
-				// reference for synchronous use, while the managed location/type inputs add no raw caller obligation.
-				return JavaConvert.FromJniHandle (
-						obj.Handle,
-						JniHandleOwnership.TransferLocalRef,
-						targetType);
-			}
+			// SAFETY: List.get returned this owned local element reference; conversion consumes that
+			// reference for synchronous use, while the managed location/type inputs add no raw caller obligation.
+			return unsafe(JavaConvert.FromJniHandle (
+					obj.Handle,
+					JniHandleOwnership.TransferLocalRef,
+					targetType));
 		}
 
 		internal JniObjectReference InternalGetReference (int location)
@@ -182,10 +180,8 @@ namespace Android.Runtime {
 		public int Count {
 			get {
 				const string id = "size.()I";
-				unsafe {
-					// SAFETY: java.util.List.size.()I matches this peer's JNI ABI.
-					return list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, null);
-				}
+				// SAFETY: java.util.List.size.()I matches this peer's JNI ABI.
+				return unsafe(list_members.InstanceMethods.InvokeAbstractInt32Method (id, this, null));
 			}
 		}
 
@@ -835,13 +831,11 @@ namespace Android.Runtime {
 		internal T? InternalGet (int location)
 		{
 			var obj = InternalGetReference (location);
-			unsafe {
-				// SAFETY: List.get supplies this owned local reference to the synchronous typed conversion;
-				// transfer does not expose a raw input or change the existing conversion/failure cleanup.
-				return JavaConvert.FromJniHandle<T> (
-						obj.Handle,
-						JniHandleOwnership.TransferLocalRef);
-			}
+			// SAFETY: List.get supplies this owned local reference to the synchronous typed conversion;
+			// transfer does not expose a raw input or change the existing conversion/failure cleanup.
+			return unsafe(JavaConvert.FromJniHandle<T> (
+					obj.Handle,
+					JniHandleOwnership.TransferLocalRef));
 		}
 
 		//

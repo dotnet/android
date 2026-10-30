@@ -50,11 +50,8 @@ public partial interface IList
 		const string __id = "reversed.()Ljava/util/List;";
 		unsafe {
 			// SAFETY: the parameterless List.reversed call returns a List implementing SequencedCollection; its local reference transfers to the managed peer.
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return global::Java.Lang.Object.GetObject<Java.Util.ISequencedCollection> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return global::Java.Lang.Object.GetObject<Java.Util.ISequencedCollection> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 		}
 	}
 }

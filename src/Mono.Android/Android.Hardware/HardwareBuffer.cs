@@ -16,18 +16,16 @@ public partial class HardwareBuffer
 	{
 		const string __id = "create.(IIIIJ)Landroid/hardware/HardwareBuffer;";
 		unsafe {
-			// SAFETY: the create/getUsage signatures use JNI long for usage; the five-element argument buffer and peer reference remain live during the call.
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [5];
-				__args [0] = new JniArgumentValue (width);
-				__args [1] = new JniArgumentValue (height);
-				__args [2] = new JniArgumentValue ((int) format);
-				__args [3] = new JniArgumentValue (layers);
-				__args [4] = new JniArgumentValue ((long) usage);
-				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
-				return global::Java.Lang.Object.GetObject<Android.Hardware.HardwareBuffer> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-			} finally {
-			}
+			// SAFETY: the five slots match create.(IIIIJ)Landroid/hardware/HardwareBuffer;, including 64-bit usage.
+			// The cached class is retained, and the result local transfers to the managed peer.
+			JniArgumentValue* __args = stackalloc JniArgumentValue [5];
+			__args [0] = new JniArgumentValue (width);
+			__args [1] = new JniArgumentValue (height);
+			__args [2] = new JniArgumentValue ((int) format);
+			__args [3] = new JniArgumentValue (layers);
+			__args [4] = new JniArgumentValue ((long) usage);
+			var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
+			return global::Java.Lang.Object.GetObject<Android.Hardware.HardwareBuffer> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 		}
 	}
 
@@ -37,14 +35,8 @@ public partial class HardwareBuffer
 		[Register ("getUsage", "()J", "", ApiSince = 26)]
 		get {
 			const string __id = "getUsage.()J";
-			unsafe {
-				// SAFETY: getUsage.()J takes no arguments and returns a JNI long; the existing finally retains this peer through the call.
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractInt64Method (__id, this, null);
-					return (Android.Hardware.HardwareBufferUsage) __rm!;
-				} finally {
-				}
-			}
+			// SAFETY: InvokeAbstractInt64Method retains this peer and reads no arguments for getUsage.()J.
+			return unsafe((Android.Hardware.HardwareBufferUsage) _members.InstanceMethods.InvokeAbstractInt64Method (__id, this, null));
 		}
 	}
 }
