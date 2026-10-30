@@ -135,24 +135,23 @@ namespace Java.Interop {
 
 			public bool Equals (ReplacementMethodInfo other)
 			{
-				// SAFETY: equality compares pointer values only; neither operand's borrowed storage is accessed.
-				return unsafe (string.Equals (SourceJniType, other.SourceJniType) &&
+				return string.Equals (SourceJniType, other.SourceJniType) &&
 					string.Equals (SourceJniMethodName, other.SourceJniMethodName) &&
 					string.Equals (SourceJniMethodSignature, other.SourceJniMethodSignature) &&
 					string.Equals (TargetJniType, other.TargetJniType) &&
 					string.Equals (TargetJniMethodName, other.TargetJniMethodName) &&
 					string.Equals (TargetJniMethodSignature, other.TargetJniMethodSignature) &&
-					TargetJniTypeUtf8Pointer == other.TargetJniTypeUtf8Pointer &&
-					TargetJniMethodNameUtf8Pointer == other.TargetJniMethodNameUtf8Pointer &&
-					TargetJniMethodSignatureUtf8Pointer == other.TargetJniMethodSignatureUtf8Pointer &&
+					// SAFETY: equality compares pointer values only; neither operand's borrowed storage is accessed.
+					unsafe (TargetJniTypeUtf8Pointer == other.TargetJniTypeUtf8Pointer &&
+						TargetJniMethodNameUtf8Pointer == other.TargetJniMethodNameUtf8Pointer &&
+						TargetJniMethodSignatureUtf8Pointer == other.TargetJniMethodSignatureUtf8Pointer) &&
 					TargetJniMethodParameterCount == other.TargetJniMethodParameterCount &&
-					TargetJniMethodInstanceToStatic == other.TargetJniMethodInstanceToStatic);
+					TargetJniMethodInstanceToStatic == other.TargetJniMethodInstanceToStatic;
 			}
 
 			public override int GetHashCode ()
 			{
-				// SAFETY: hashing converts addresses to native integers without reading the addressed memory.
-				return unsafe (HashCode.Combine (
+				return HashCode.Combine (
 					SourceJniType,
 					SourceJniMethodName,
 					SourceJniMethodSignature,
@@ -160,31 +159,36 @@ namespace Java.Interop {
 					TargetJniMethodName,
 					TargetJniMethodSignature,
 					HashCode.Combine (
-						(IntPtr) TargetJniTypeUtf8Pointer,
-						(IntPtr) TargetJniMethodNameUtf8Pointer,
-						(IntPtr) TargetJniMethodSignatureUtf8Pointer,
+						// SAFETY: hashing converts addresses to native integers without reading the addressed memory.
+						unsafe ((IntPtr) TargetJniTypeUtf8Pointer),
+						// SAFETY: hashing converts addresses to native integers without reading the addressed memory.
+						unsafe ((IntPtr) TargetJniMethodNameUtf8Pointer),
+						// SAFETY: hashing converts addresses to native integers without reading the addressed memory.
+						unsafe ((IntPtr) TargetJniMethodSignatureUtf8Pointer),
 						TargetJniMethodParameterCount,
 						TargetJniMethodInstanceToStatic
 					)
-				));
+				);
 			}
 
 			public override string ToString ()
 			{
-				// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
-				return unsafe ($"{nameof (ReplacementMethodInfo)} {{ " +
+				return $"{nameof (ReplacementMethodInfo)} {{ " +
 					$"{nameof (SourceJniType)} = \"{SourceJniType}\"" +
 					$", {nameof (SourceJniMethodName)} = \"{SourceJniMethodName}\"" +
 					$", {nameof (SourceJniMethodSignature)} = \"{SourceJniMethodSignature}\"" +
 					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
 					$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
 					$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
-					$", TargetJniTypeUtf8 = \"0x{(IntPtr) TargetJniTypeUtf8Pointer:x}\"" +
-					$", TargetJniMethodNameUtf8 = \"0x{(IntPtr) TargetJniMethodNameUtf8Pointer:x}\"" +
-					$", TargetJniMethodSignatureUtf8 = \"0x{(IntPtr) TargetJniMethodSignatureUtf8Pointer:x}\"" +
+					// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
+					$", TargetJniTypeUtf8 = \"0x{unsafe ((IntPtr) TargetJniTypeUtf8Pointer):x}\"" +
+					// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
+					$", TargetJniMethodNameUtf8 = \"0x{unsafe ((IntPtr) TargetJniMethodNameUtf8Pointer):x}\"" +
+					// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
+					$", TargetJniMethodSignatureUtf8 = \"0x{unsafe ((IntPtr) TargetJniMethodSignatureUtf8Pointer):x}\"" +
 					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
 					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
-					$"}}");
+					$"}}";
 			}
 
 			public static bool operator==(ReplacementMethodInfo a, ReplacementMethodInfo b) => a.Equals (b);
