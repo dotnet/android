@@ -65,18 +65,11 @@ Reference official Android documentation where helpful:
 
 ## Unsafe C# and Memory Safety
 
-| Article | Read for |
-|---|---|
-| [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/) | Evolving caller contracts vs body contexts, propagation/discharge, safety docs. |
-| [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices) | Hazards, not new contracts: untracked pointers, pinning escapes, GC lifetimes, write barriers, alignment, invalid byrefs. |
+Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices) for affected unsafe code; do not scan the repository unless asked. For caller contracts and safety documentation, see [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/).
 
-- Audit caller obligations, even pointer-free/parameterless JNI: ABI, receiver, argument/return descriptors, extent, aliases, thread, retained/escaped lifetimes. Address-only handling, managed ownership or pinning isn't inherently caller-unsafe; nonzero `IntPtr`, fabricable `JniObjectReference`, `DoNotTransfer` don't validate native storage.
-- Caller-unsafe members need explicit body contexts. Prefer minimal natural `unsafe (expression)` for getters/ref returns/`using` acquisition; exclude managed comparison/hash/formatting. Preserve guards/pinning; blocks for void/multistatement operations.
-- Multiline `/// <safety>`: genuine caller contracts. Expression-adjacent/in-block `// SAFETY:` proofs: actual checks/owners/cleanup, full borrows through disposal/in-flight calls/failures. Never overclaim rooting/rollback; centralize documented enforcement limits.
-- Check producer/consumer compiler/language/TFM, including linked/generated sources. `AllowUnsafeBlocks`, `LangVersion`, `Features` are independent; inline expressions need pinned-compiler preview. Don't raise baselines/enable global preview/model for syntax; keep documented legacy exceptions until compiler permits removal.
-- Preserve accepted calls, dispatch, virtual/base compatibility, evaluation order, allocation, cleanup, ABI, ownership. Establish shipped APIs from released reference packages, not `Unshipped` filenames. No new APIs/helpers/copies/redesign solely for narrower scopes.
-- Update canonical producers/templates and regenerate outputs/goldens together; no bulk golden blessing or unrelated encoding/BOM/format changes.
-- Review affected code unless broader audit requested. Review-only: potential correctness issues vs anti-patterns, no reproductions/fixes unless requested. Evidence must match exact source/compiler mode/artifact/exercised path; compiler/metadata, managed-model, full-product, device checks aren't interchangeable. Revalidate rebases. Retain tests; add focused concrete-bug regressions; report failed attempts/limits.
+- Prefer `unsafe (expression)` for single value-producing operations, including getters, ref returns and `using` acquisition. Keep managed comparisons/hash/formatting outside; retain blocks for pinning, void calls and multiple statements.
+- Under the new rules, caller-unsafe members still need body contexts. Keep `// SAFETY:` proofs adjacent; use multiline `/// <safety>` for caller obligations.
+- Respect producer/consumer language modes, including generated code. Inline expressions need pinned-compiler preview; never enable preview just for syntax. Preserve behavior and lifetimes.
 
 ## Nullable Reference Types
 
