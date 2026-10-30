@@ -1,5 +1,4 @@
-#include <sys/types.h>
-#include <dirent.h>
+#include <sys/stat.h>
 #include <dlfcn.h>
 
 #include <cerrno>
@@ -76,67 +75,35 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 }
 
 [[gnu::always_inline]]
-void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
+void Host::load_assembly_store_from_filesystem () noexcept
 {
+	if (found_assembly_store) {
+		return;
+	}
+
 	const char *native_lib_dir = AndroidSystem::get_native_libraries_dir ();
-	log_debugf (LOG_ASSEMBLY, "Looking for assemblies in '%s'", native_lib_dir);
+	char stack_buffer [Util::LocalPathBufferSize];
+	char *store_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), native_lib_dir, Constants::assembly_store_file_name);
 
-	DIR *lib_dir = opendir (native_lib_dir);
-	if (lib_dir == nullptr) [[unlikely]] {
+	struct stat sbuf;
+	if (::lstat (store_path, &sbuf) == 0) {
+		log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s'", store_path);
+		map_assembly_store_via_dlopen (store_path);
+	} else if (errno != ENOENT || !Util::dir_exists (native_lib_dir)) [[unlikely]] {
 		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
 			std::source_location::current (),
-			"Unable to open native library directory '%s'. %s",
-			native_lib_dir,
+			"Unable to locate assembly store '%s': %s",
+			store_path,
 			std::strerror (errno)
 		);
+	} else {
+		log_debugf (LOG_ASSEMBLY, "Assembly store '%s' not found", store_path);
 	}
 
-	int dir_fd = dirfd (lib_dir);
-	if (dir_fd < 0) [[unlikely]] {
-		Helpers::abort_applicationf (
-			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"Unable to obtain file descriptor for opened directory '%s'. %s",
-			native_lib_dir,
-			std::strerror (errno)
-		);
+	if (store_path != stack_buffer) {
+		std::free (store_path);
 	}
-
-	do {
-		errno = 0;
-		dirent *cur = readdir (lib_dir);
-		if (cur == nullptr) {
-			if (errno != 0) {
-				log_warnf (LOG_ASSEMBLY, "Failed to open a directory entry from '%s': %s", native_lib_dir, std::strerror (errno));
-				continue; // No harm, keep going
-			}
-			break; // we're done
-		}
-
-		// We can ignore the obvious entries
-		if (cur->d_name[0] == '.') {
-			continue;
-		}
-
-		if (!found_assembly_store) {
-			found_assembly_store = Constants::assembly_store_file_name.compare (cur->d_name) == 0;
-			if (!found_assembly_store) {
-				continue;
-			}
-
-			log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s/%s'", native_lib_dir, Constants::assembly_store_file_name.data ());
-
-			char stack_buffer [Util::LocalPathBufferSize];
-			char *store_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), native_lib_dir, cur->d_name);
-			map_assembly_store_via_dlopen (store_path);
-			if (store_path != stack_buffer) {
-				std::free (store_path);
-			}
-			break; // we've found all we need
-		}
-	} while (true);
-	closedir (lib_dir);
 }
 
 void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
@@ -147,7 +114,7 @@ void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapp
 	}
 
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		scan_filesystem_for_assemblies_and_libraries ();
+		load_assembly_store_from_filesystem ();
 		return;
 	}
 
