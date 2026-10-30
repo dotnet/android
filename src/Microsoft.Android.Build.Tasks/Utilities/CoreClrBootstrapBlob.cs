@@ -13,9 +13,11 @@ namespace Microsoft.Android.Tasks;
 internal static class CoreClrBootstrapBlob
 {
 	public const string Symbol = "coreclr_bootstrap";
+	public const string LocalDateTimeOffsetPropertyName = "System.TimeZoneInfo.LocalDateTimeOffset";
 	const uint Magic = 0x47464358; // XCFG
 	const ushort Version = 1;
 	const int HeaderSize = 84;
+	const int HostRuntimePropertyCount = 4;
 	const int MaximumSize = 256 * 1024 * 1024;
 	static readonly UTF8Encoding Utf8 = new (false, true);
 
@@ -70,9 +72,11 @@ internal static class CoreClrBootstrapBlob
 			new ("HOST_RUNTIME_CONTRACT", ""),
 			new ("RUNTIME_IDENTIFIER", ""),
 			new ("APP_CONTEXT_BASE_DIRECTORY", ""),
+			new (LocalDateTimeOffsetPropertyName, ""),
 		};
 		foreach (var pair in runtimeProperties) {
-			if (pair.Key != runtimeNames [0].Key && pair.Key != runtimeNames [1].Key && pair.Key != runtimeNames [2].Key) {
+			if (pair.Key != runtimeNames [0].Key && pair.Key != runtimeNames [1].Key &&
+				pair.Key != runtimeNames [2].Key && pair.Key != runtimeNames [3].Key) {
 				runtimeNames.Add (pair);
 			}
 		}
@@ -120,7 +124,7 @@ internal static class CoreClrBootstrapBlob
 			int index = 0;
 			foreach (var pair in pairs) {
 				writer.Write (Add (pair.Key, required: true));
-				writer.Write (runtime && index < 3 ? 0u : Add (pair.Value));
+				writer.Write (runtime && index < HostRuntimePropertyCount ? 0u : Add (pair.Value));
 				index++;
 			}
 		}
@@ -213,7 +217,7 @@ internal static class CoreClrBootstrapBlob
 			}
 			next += (ulong)counts [i] * entrySizes [i];
 		}
-		if (stride == 0 || counts [4] % stride != 0 || counts [2] < 3 ||
+		if (stride == 0 || counts [4] % stride != 0 || counts [2] < HostRuntimePropertyCount ||
 			offsets [5] != next || next + stringLength != (ulong)length ||
 			stringLength == 0 || raw [(int)next] != 0) {
 			throw new InvalidDataException ("Invalid CoreCLR bootstrap string pool or preload stride.");
@@ -235,13 +239,13 @@ internal static class CoreClrBootstrapBlob
 			}
 		}
 		ReadString (packageOffset, required: true);
-		string [] reserved = ["HOST_RUNTIME_CONTRACT", "RUNTIME_IDENTIFIER", "APP_CONTEXT_BASE_DIRECTORY"];
+		string [] reserved = ["HOST_RUNTIME_CONTRACT", "RUNTIME_IDENTIFIER", "APP_CONTEXT_BASE_DIRECTORY", LocalDateTimeOffsetPropertyName];
 		for (int i = 0; i < 3; i++) {
 			for (uint j = 0; j < counts [i]; j++) {
 				reader.BaseStream.Position = offsets [i] + j * entrySizes [i];
 				string name = ReadString (reader.ReadUInt32 (), required: true);
 				uint valueOffset = reader.ReadUInt32 ();
-				if (i == 2 && j < 3) {
+				if (i == 2 && j < HostRuntimePropertyCount) {
 					if (name != reserved [j] || valueOffset != 0) {
 						throw new InvalidDataException ("Invalid CoreCLR host property slots.");
 					}

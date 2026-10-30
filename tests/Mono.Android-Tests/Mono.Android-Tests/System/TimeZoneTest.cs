@@ -29,6 +29,35 @@ namespace Xamarin.Android.RuntimeTests
 			}
 		}
 
+		[Test]
+		[Category ("CoreClrStartupTimeZone")]
+		public void CoreClrStartupOffsetUsesDeviceTimeZone ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+				Assert.Ignore ("The startup offset is supplied by the CoreCLR host.");
+				return;
+			}
+
+			var value = AppContext.GetData ("System.TimeZoneInfo.LocalDateTimeOffset");
+			if (value is not string text || !int.TryParse (text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int startupOffsetSeconds)) {
+				Assert.Fail ($"Invalid CoreCLR startup time-zone offset: {value}");
+				return;
+			}
+
+			using (var timezone = Java.Util.TimeZone.Default) {
+				long now = Java.Lang.JavaSystem.CurrentTimeMillis ();
+				long processStart = now - (global::Android.OS.SystemClock.ElapsedRealtime () - global::Android.OS.Process.StartElapsedRealtime);
+				int deviceOffsetAtStart = timezone.GetOffset (processStart) / 1000;
+				int deviceOffsetNow = timezone.GetOffset (now) / 1000;
+				if (deviceOffsetAtStart != deviceOffsetNow) {
+					Assert.Ignore ("The device's time-zone offset changed since process startup.");
+					return;
+				}
+				Assert.AreEqual (deviceOffsetAtStart, startupOffsetSeconds, "The startup offset must come from the Android device.");
+				Assert.AreEqual (TimeSpan.FromSeconds (deviceOffsetNow), DateTimeOffset.Now.Offset);
+			}
+		}
+
 #pragma warning disable CS0618 // Compare legacy TimeZone and Java Date behavior with TimeZoneInfo.
 		[Test]
 		public void TestDaylightSavingsTime ()

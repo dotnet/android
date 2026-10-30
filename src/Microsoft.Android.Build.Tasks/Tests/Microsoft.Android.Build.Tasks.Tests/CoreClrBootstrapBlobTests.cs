@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Tasks;
@@ -15,6 +16,36 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 public class CoreClrBootstrapBlobTests : BaseTest
 {
 	string DirectoryPath => Path.Combine (Root, "temp", TestName);
+
+	[Test]
+	public void LocalDateTimeOffsetIsReservedForTheDevice ()
+	{
+		const string name = "System.TimeZoneInfo.LocalDateTimeOffset";
+		byte [] Create (string offset) => CoreClrBootstrapBlob.Create (
+			false, false, 0, 0, 0, 0, "com.example.test",
+			new Dictionary<string, string> (), new Dictionary<string, string> (),
+			new Dictionary<string, string> { [name] = offset, ["other"] = "value" }, [], [], 1);
+
+		byte [] raw = Create ("3600");
+		CollectionAssert.AreEqual (raw, Create ("-18000"), "The build-time value must not be stored in the blob.");
+		using var reader = new BinaryReader (new MemoryStream (raw));
+		reader.BaseStream.Position = 20;
+		Assert.AreEqual (5u, reader.ReadUInt32 ());
+		reader.BaseStream.Position = 48;
+		uint propertiesOffset = reader.ReadUInt32 ();
+		reader.BaseStream.Position = propertiesOffset + 3 * 8;
+		uint nameOffset = reader.ReadUInt32 ();
+		Assert.AreEqual (0u, reader.ReadUInt32 (), "The host must fill the offset value at runtime.");
+		int end = Array.IndexOf (raw, (byte)0, (int)nameOffset);
+		Assert.Greater (end, (int)nameOffset);
+		Assert.AreEqual (name, Encoding.UTF8.GetString (raw, (int)nameOffset, end - (int)nameOffset));
+
+		using var writer = new BinaryWriter (new MemoryStream (raw));
+		writer.BaseStream.Position = propertiesOffset + 3 * 8 + 4;
+		writer.Write (nameOffset);
+		writer.Flush ();
+		Assert.Throws<InvalidDataException> (() => CoreClrBootstrapBlob.Validate (raw));
+	}
 
 	[Test]
 	public void PooledStreamCanBeReusedForSmallerPayloadAfterFailure ()

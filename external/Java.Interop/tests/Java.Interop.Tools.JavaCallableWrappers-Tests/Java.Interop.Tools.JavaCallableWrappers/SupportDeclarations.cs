@@ -47,8 +47,9 @@ namespace Android.App {
 	[Register ("android/app/Activity", DoNotGenerateAcw = true)]
 	class Activity : Java.Lang.Object
 	{
-		[Register ("onCreate", "(Ljava/lang/Object;)V", "Activity.OnCreate")]
-		public virtual void OnCreate (Java.Lang.Object savedInstanceState)
+		// https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)
+		[Register ("onCreate", "(Landroid/os/Bundle;)V", "Activity.OnCreate")]
+		public virtual void OnCreate (global::Android.OS.Bundle savedInstanceState)
 		{
 		}
 	}
