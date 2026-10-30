@@ -82,9 +82,9 @@ sealed class CoreClrBootstrapBuilder
 		}
 		state.Entries.Sort ((a, b) => a.Hash.CompareTo (b.Hash));
 
-		var libraries = new List<(uint Hash, bool Ignore, bool IsJniLibrary, string Name)> ();
+		var libraries = new List<(uint Hash, bool Ignore, bool IsJniLibrary, string Name, string Alias)> ();
 		foreach (var entry in state.Entries) {
-			libraries.Add ((entry.Hash, false, entry.IsJniLibrary, entry.RealName));
+			libraries.Add ((entry.Hash, false, entry.IsJniLibrary, entry.RealName, entry.HashedName));
 		}
 		var preloads = new List<uint> ();
 		foreach (var group in state.JniPreloadGroups) {
@@ -149,7 +149,6 @@ sealed class CoreClrBootstrapBuilder
 
 		void AddNameMutations (string name)
 		{
-			// Keep in sync with MonodroidDl::name_is_mutation_of, which disambiguates CRC32 collisions.
 			nameMutations.Add (name);
 			if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
 				string nameNoExt = Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name));
