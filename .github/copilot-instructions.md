@@ -67,6 +67,8 @@ Reference official Android documentation where helpful:
 
 See [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/) for the caller-unsafe model.
 
+When working with unsafe APIs, consult [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices). Review affected code, not the whole codebase, unless a broader audit is requested. For review-only tasks, group potential findings as correctness issues and anti-patterns; do not create reproductions or fixes unless requested.
+
 - Classify actual caller obligations: JNI ABI, receiver, parameter/return descriptors, memory extent, aliases, thread, and retained/escaped lifetimes, even for pointer-free/parameterless calls. Address storage/return, managed ownership, or pinning alone does not determine caller-unsafety; neither nonzero `IntPtr`, fabricable `JniObjectReference`, nor `DoNotTransfer` validates arbitrary native storage.
 - Caller-unsafe members still need explicit body contexts under the new rules. Prefer the smallest natural `unsafe (expression)`, including expression getters, ref returns, or `using` acquisition; keep managed comparisons, hashing, and formatting outside. Preserve guards/pinning and use blocks for void or multistatement operations.
 - Use multiline `/// <safety>` XML for genuine caller obligations; keep precise `// SAFETY:` proofs adjacent to expressions or inside blocks. Account for actual checks, owners, cleanup, the entire borrow through disposal/in-flight calls, and failure paths. Do not overstate rooting or rollback guarantees; centralize documented enforcement limits instead of inventing guarantees.
