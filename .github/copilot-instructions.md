@@ -65,9 +65,10 @@ Reference official Android documentation where helpful:
 
 ## Unsafe C# and Memory Safety
 
-See [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/) for the caller-unsafe model.
-
-When working with unsafe APIs, consult [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices). Review affected code, not the whole codebase, unless a broader audit is requested. For review-only tasks, group potential findings as correctness issues and anti-patterns; do not create reproductions or fixes unless requested.
+| Article | Distinct purpose |
+|---|---|
+| [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/) | Explains the evolving **language/contract model**: caller-unsafe declarations versus implementation contexts, propagation versus discharge of obligations, and `<safety>`/`// SAFETY:` documentation. |
+| [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices) | Covers **concrete implementation hazards**: untracked pointers, pinning escapes, GC lifetimes, write barriers, alignment, invalid byrefs, and similar pitfalls. It does not currently explain those new contract rules. |
 
 - Classify actual caller obligations: JNI ABI, receiver, parameter/return descriptors, memory extent, aliases, thread, and retained/escaped lifetimes, even for pointer-free/parameterless calls. Address storage/return, managed ownership, or pinning alone does not determine caller-unsafety; neither nonzero `IntPtr`, fabricable `JniObjectReference`, nor `DoNotTransfer` validates arbitrary native storage.
 - Caller-unsafe members still need explicit body contexts under the new rules. Prefer the smallest natural `unsafe (expression)`, including expression getters, ref returns, or `using` acquisition; keep managed comparisons, hashing, and formatting outside. Preserve guards/pinning and use blocks for void or multistatement operations.
@@ -75,7 +76,7 @@ When working with unsafe APIs, consult [Unsafe code best practices](https://lear
 - Check producer and consumer compiler, language mode, and target framework, including linked/generated sources. `AllowUnsafeBlocks`, `LangVersion`, and `Features` are separate controls; do not raise baselines or enable preview/new rules globally just for syntax. Inline unsafe expressions require preview with the pinned compiler. Preserve documented legacy exceptions until that compiler accepts removal.
 - Preserve accepted calls, dispatch, evaluation order, allocation, cleanup, ABI, and ownership. Establish shipped APIs from released reference packages, not `Unshipped` filenames; preserve virtual override/base compatibility. Avoid new APIs, helpers, copies, or redesigns solely to shrink unsafe scopes.
 - Update canonical producers/templates and outputs/goldens together using actual generation, not bulk golden blessing; preserve unrelated encoding, BOMs, and formatting.
-- Tie validation claims to exact source, compiler mode, artifact, and exercised path; compiler/metadata, managed-model, full-product, and device evidence are not interchangeable. Old passes do not validate rebased source. Preserve existing tests, add focused regressions for concrete bugs, and report failed attempts and limitations.
+- Review affected unsafe code, not the whole codebase, unless a broader audit is requested. For review-only tasks, group potential findings as correctness issues and anti-patterns; do not create reproductions or fixes unless requested. Tie validation claims to exact source, compiler mode, artifact, and exercised path; compiler/metadata, managed-model, full-product, and device evidence are not interchangeable. Old passes do not validate rebased source. Preserve existing tests, add focused regressions for concrete bugs, and report failed attempts and limitations.
 
 ## Nullable Reference Types
 
