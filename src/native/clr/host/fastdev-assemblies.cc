@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -13,49 +14,6 @@
 #include <runtime-base/util.hh>
 
 using namespace xamarin::android;
-
-namespace {
-	// A minimal growable NUL-terminated character buffer. The TPA list has no useful upper bound -
-	// it holds one absolute path per assembly in the override directory - so it grows on demand
-	// rather than using a fixed buffer.
-	struct char_buffer final
-	{
-		char   *data = nullptr;
-		size_t  length = 0;
-		size_t  capacity = 0;
-	};
-
-	constexpr size_t CHAR_BUFFER_INITIAL_CAPACITY = 512uz;
-
-	// Appends `text` to `buffer`, growing it if needed. Returns `false` if the buffer could not be
-	// grown, in which case `buffer` is left unchanged and still owns its storage.
-	auto buffer_append (char_buffer &buffer, std::string_view text) noexcept -> bool
-	{
-		size_t required_capacity = Helpers::add_with_overflow_check<size_t> (buffer.length, text.length ());
-		required_capacity = Helpers::add_with_overflow_check<size_t> (required_capacity, 1uz);
-
-		if (required_capacity > buffer.capacity) {
-			size_t new_capacity = buffer.capacity == 0 ? CHAR_BUFFER_INITIAL_CAPACITY : buffer.capacity;
-			while (new_capacity < required_capacity) {
-				new_capacity = Helpers::add_with_overflow_check<size_t> (new_capacity, new_capacity);
-			}
-
-			char *grown = static_cast<char*> (std::realloc (buffer.data, new_capacity));
-			if (grown == nullptr) {
-				return false;
-			}
-
-			buffer.data = grown;
-			buffer.capacity = new_capacity;
-		}
-
-		memcpy (buffer.data + buffer.length, text.data (), text.length ());
-		buffer.length += text.length ();
-		buffer.data [buffer.length] = '\0';
-
-		return true;
-	}
-}
 
 auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
@@ -192,13 +150,21 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 		return nullptr;
 	}
 
+	char *tpa_list = nullptr;
+	size_t tpa_length = 0;
+	FILE *stream = open_memstream (&tpa_list, &tpa_length);
+	if (stream == nullptr) {
+		log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list. %s", std::strerror (errno));
+		closedir (dir);
+		return nullptr;
+	}
+
 	constexpr std::string_view dll_ext { ".dll" };
 	constexpr std::string_view r2r_ext { ".r2r.dll" };
 	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
-	char_buffer tpa_list {};
 	bool found_corelib = false;
 	bool found_r2r = false;
-	bool out_of_memory = false;
+	bool write_failed = false;
 	size_t count = 0;
 	dirent *e;
 	while ((e = readdir (dir)) != nullptr) {
@@ -216,14 +182,9 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 			break;
 		}
 
-		if (tpa_list.length > 0 && !buffer_append (tpa_list, ":"sv)) {
-			out_of_memory = true;
-			break;
-		}
-		if (!buffer_append (tpa_list, override_dir_path) ||
-			!buffer_append (tpa_list, "/"sv) ||
-			!buffer_append (tpa_list, name)) {
-			out_of_memory = true;
+		if (std::fprintf (stream, "%s%s/%s", count > 0 ? ":" : "", override_dir_path, e->d_name) < 0) {
+			log_warnf (LOG_ASSEMBLY, "FastDev: unable to write the TPA list. %s", std::strerror (errno));
+			write_failed = true;
 			break;
 		}
 		if (name == corelib_name) {
@@ -231,13 +192,16 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 		}
 		count++;
 	}
+	if (std::fclose (stream) != 0) {
+		log_warnf (LOG_ASSEMBLY, "FastDev: unable to close the TPA list stream. %s", std::strerror (errno));
+		write_failed = true;
+	}
 	closedir (dir);
 
-	if (out_of_memory) {
+	if (write_failed) {
 		// FastDev is a Debug-only convenience, so fall back to the probe-only path rather than
 		// aborting the application.
-		log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list");
-		std::free (tpa_list.data);
+		std::free (tpa_list);
 		return nullptr;
 	}
 
@@ -265,9 +229,9 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 			count,
 			override_dir_path
 		);
-		return tpa_list.data;
+		return tpa_list;
 	}
-	std::free (tpa_list.data);
+	std::free (tpa_list);
 	return nullptr;
 }
 
