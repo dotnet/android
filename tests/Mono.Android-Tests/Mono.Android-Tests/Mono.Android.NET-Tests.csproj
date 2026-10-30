@@ -137,6 +137,7 @@
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
+    <Compile Include="Java.Util\SpliteratorTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
     <Compile Include="Java.Interop\InvokerActivationTests.cs" />
@@ -204,6 +205,7 @@
   <ItemGroup>
     <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
     <AndroidJavaSource Update="java\net\dot\android\test\InterfaceCollectionFixture.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/HandwrittenSpliterator.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/remap/*.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
