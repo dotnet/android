@@ -12,6 +12,21 @@ namespace Android.RuntimeTests
 	public class JavaCollectionTest
 	{
 		[Test]
+		public void GenericRemoveUsesObjectArgumentAndBooleanResult ()
+		{
+			using var list = new Java.Util.ArrayList ();
+			list.Add (1);
+			list.Add (2);
+			using var collection = new JavaCollection<int> (list.Handle, JniHandleOwnership.DoNotTransfer);
+
+			Assert.IsTrue (collection.Remove (2));
+			Assert.AreEqual (1, collection.Count);
+			Assert.IsFalse (collection.Contains (2));
+			Assert.IsFalse (collection.Remove (3));
+			Assert.AreEqual (1, collection.Count);
+		}
+
+		[Test]
     public void CopyTo ()
     {
       using (var al = new Java.Util.ArrayList ()) {
