@@ -226,6 +226,15 @@ namespace Xamarin.Android.Tasks
 		{
 			public  static  readonly  SizeAndContentFileComparer  DefaultComparer     = new SizeAndContentFileComparer ();
 
+#if MSBUILD
+			readonly TaskEnvironment taskEnvironment;
+
+			public SizeAndContentFileComparer (TaskEnvironment? taskEnvironment = null)
+			{
+				this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
+			}
+#endif
+
 			public bool Equals (FileInfo x, FileInfo y)
 			{
 				if (x.Exists != y.Exists || x.Length != y.Length)
@@ -243,12 +252,12 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 			public bool Equals (ITaskItem x, ITaskItem y)
 			{
-				return Equals (new FileInfo (x.ItemSpec), new FileInfo (y.ItemSpec));
+				return Equals (new FileInfo (taskEnvironment.GetAbsolutePath (x.ItemSpec)), new FileInfo (taskEnvironment.GetAbsolutePath (y.ItemSpec)));
 			}
 
 			public int GetHashCode (ITaskItem obj)
 			{
-				return GetHashCode (new FileInfo (obj.ItemSpec));
+				return GetHashCode (new FileInfo (taskEnvironment.GetAbsolutePath (obj.ItemSpec)));
 			}
 #endif  // MSBUILD
 		}
@@ -277,6 +286,17 @@ namespace Xamarin.Android.Tasks
 		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths)
 		{
 			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
+		}
+
+		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer (taskEnvironment));
+		}
+
+		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Select (p => new FileInfo (taskEnvironment.GetAbsolutePath (p))).ToArray ()
+				.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
 		}
 #endif
 
