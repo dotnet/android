@@ -70,6 +70,7 @@ sealed class CoreClrBootstrapBuilder
 		this.runtimeProperties ["HOST_RUNTIME_CONTRACT"] = "";
 		this.runtimeProperties ["RUNTIME_IDENTIFIER"] = "";
 		this.runtimeProperties ["APP_CONTEXT_BASE_DIRECTORY"] = "";
+		this.runtimeProperties [CoreClrBootstrapBlob.LocalDateTimeOffsetPropertyName] = "";
 		this.runtimeProperties.Remove ("PINVOKE_OVERRIDE");
 		this.runtimeProperties.Remove ("BUNDLE_PROBE");
 	}

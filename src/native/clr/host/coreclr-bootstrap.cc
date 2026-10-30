@@ -16,6 +16,8 @@ using namespace xamarin::android;
 
 namespace
 {
+	constexpr uint32_t HOST_RUNTIME_PROPERTY_COUNT = 4;
+
 	struct BootstrapHeader {
 		uint32_t magic;
 		uint16_t version;
@@ -146,7 +148,7 @@ void CoreClrBootstrap::initialize () noexcept
 	sys_offset = header.sys_offset;
 	preload_offset = header.preload_offset;
 	strings_start = header.strings_offset;
-	if (header.prop_count < 3 || header.prop_count > std::numeric_limits<int>::max ()) {
+	if (header.prop_count < HOST_RUNTIME_PROPERTY_COUNT || header.prop_count > std::numeric_limits<int>::max ()) {
 		invalid ("runtime property count out of range");
 	}
 	config = {
@@ -183,7 +185,7 @@ void CoreClrBootstrap::initialize () noexcept
 		uint64_t offset = static_cast<uint64_t> (header.prop_offset) + static_cast<uint64_t> (i) * 8;
 		property_names [i] = string (read (offset));
 		uint32_t value = read (offset + 4);
-		if (i >= 3) {
+		if (i >= HOST_RUNTIME_PROPERTY_COUNT) {
 			property_values [i] = const_cast<char*> (string (value, false));
 		}
 	}
