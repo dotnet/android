@@ -274,7 +274,7 @@ void Host::preload_jni_libraries () noexcept
 
 void Host::Java_mono_android_Runtime_initInternal (
 	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
-	jobjectArray appDirs, [[maybe_unused]] jint localDateTimeOffset, jobject loader,
+	jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
 	HostCommon::init_logging_categories ();
