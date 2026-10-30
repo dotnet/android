@@ -63,6 +63,16 @@ Reference official Android documentation where helpful:
 
 **Native Code:** Use CMake, handle multiple ABIs (arm64-v8a, armeabi-v7a, x86_64, x86).
 
+## Unsafe C# and Memory Safety
+
+See [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/) for the caller-unsafe model.
+
+- Mark members caller-unsafe only for obligations callers must uphold, not merely pointer use in managed-owned wrappers or address-only handling. Preserve documented compiler-compatibility exceptions. Under the new rules, member `unsafe` does not replace an explicit unsafe context in the body.
+- Prefer `unsafe (expression)` for a single value-producing unsafe operation. Wrap only unsafe subexpressions, not surrounding managed equality, hashing, or formatting. Use blocks for pinning, void calls, multiple statements, or guards where appropriate.
+- Keep precise `// SAFETY:` justifications adjacent to expressions or inside blocks, explaining how bounds, ownership, pinning, and lifetime obligations are met. Document genuine caller obligations in multiline `/// <safety>` XML.
+- Respect each project's compiler and language mode; `unsafe (expression)` requires preview with the pinned compiler. Do not enable preview/features or emit unsupported syntax into consumer-generated sources just to simplify code.
+- Preserve API contracts, evaluation order, cleanup, and lifetimes. Update canonical templates and their generated outputs together.
+
 ## Nullable Reference Types
 
 When opting C# code into nullable reference types:
