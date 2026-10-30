@@ -1,58 +1,60 @@
-#nullable enable
-
 using System;
+using System.Collections.Generic;
 using System.Runtime.Versioning;
 
-using Android.OS;
 using Android.Runtime;
-
+using Java.Util;
+using Java.Util.Functions;
 using NUnit.Framework;
 
 namespace Java.UtilTests;
 
 [TestFixture]
-[Category ("HandwrittenJniBindings")]
+[Category ("Spliterator")]
+[SupportedOSPlatform ("android24.0")]
 public class SpliteratorTests
 {
 	[Test]
-	[SupportedOSPlatform ("android24.0")]
-	public void AbstractSpliteratorTryAdvance ()
+	public void AbstractInvokerTryAdvanceUsesInstanceBooleanAbi ()
 	{
-		if (Build.VERSION.SdkInt < BuildVersionCodes.N) {
-			Assert.Ignore ("Spliterators requires Android 24 or later.");
-			return;
-		}
+		if (!OperatingSystem.IsAndroidVersionAtLeast (24))
+			Assert.Ignore ("Spliterators requires Android API 24.");
 
-		var klass = JNIEnv.FindClass ("net/dot/android/test/HandwrittenSpliterator");
+		IntPtr klass = JNIEnv.FindClass ("net/dot/android/test/JniSpliteratorFixture");
+		Spliterators.AbstractSpliterator iterator;
 		try {
-			var constructor = JNIEnv.GetMethodID (klass, "<init>", "()V");
-			var handle = JNIEnv.NewObject (klass, constructor);
-			using var spliterator = Java.Lang.Object.GetObject<Java.Util.Spliterators.AbstractSpliterator> (
-				handle, JniHandleOwnership.TransferLocalRef) ?? throw new InvalidOperationException ("Could not wrap the Java spliterator.");
-			using var consumer = new TestConsumer ();
-
-			Assert.IsTrue (spliterator.TryAdvance (consumer));
-			Assert.AreEqual ("item", consumer.Value);
-			for (int i = 0; i < 2048; ++i) {
-				Assert.IsFalse (spliterator.TryAdvance (consumer));
-			}
-			Assert.AreEqual (1, consumer.Count);
-			Assert.Throws<Java.Lang.NullPointerException> (() => spliterator.TryAdvance (null));
+			IntPtr constructor = JNIEnv.GetMethodID (klass, "<init>", "()V");
+			iterator = Java.Lang.Object.GetObject<Spliterators.AbstractSpliterator> (
+				JNIEnv.NewObject (klass, constructor), JniHandleOwnership.TransferLocalRef);
 		} finally {
 			JNIEnv.DeleteGlobalRef (klass);
 		}
+		if (iterator is null)
+			throw new InvalidOperationException ("Unable to marshal the Java spliterator.");
+
+		using (iterator)
+		using (var consumer = new RecordingConsumer ()) {
+			Assert.IsTrue (iterator.TryAdvance (consumer));
+			int localReferences = Java.Interop.Runtime.LocalReferenceCount;
+			Assert.IsTrue (iterator.TryAdvance (consumer));
+			for (int i = 0; i < 2048; ++i) {
+				Assert.IsFalse (iterator.TryAdvance (consumer));
+			}
+			Assert.AreEqual (localReferences, Java.Interop.Runtime.LocalReferenceCount,
+				"TryAdvance must release its temporary Consumer local reference.");
+			CollectionAssert.AreEqual (new [] { "first", "second" }, consumer.Values);
+			Assert.Throws<Java.Lang.NullPointerException> (() => iterator.TryAdvance (null));
+		}
 	}
 
-	[SupportedOSPlatform ("android24.0")]
-	sealed class TestConsumer : Java.Lang.Object, Java.Util.Functions.IConsumer
+	[Register ("net/dot/android/test/SpliteratorRecordingConsumer")]
+	sealed class RecordingConsumer : Java.Lang.Object, IConsumer
 	{
-		public string? Value { get; private set; }
-		public int Count { get; private set; }
+		public List<string> Values { get; } = new ();
 
-		public void Accept (Java.Lang.Object? value)
+		public void Accept (Java.Lang.Object value)
 		{
-			Value = value?.ToString ();
-			++Count;
+			Values.Add (value?.ToString () ?? throw new InvalidOperationException ("The fixture must supply a string."));
 		}
 	}
 }

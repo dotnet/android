@@ -23,7 +23,14 @@ namespace Xamarin.SourceWriter
 		public bool IsPrivate { get => visibility == Visibility.Private; set => visibility = value ? Visibility.Private : Visibility.Default; }
 		public bool IsProtected { get => visibility == Visibility.Protected; set => visibility = value ? Visibility.Protected : Visibility.Default; }
 		public bool IsOverride { get; set; }
+		/// <summary>
+		/// Marks the declaration as requiring an unsafe caller under updated memory-safety rules.
+		/// </summary>
 		public bool IsUnsafe { get; set; }
+		/// <summary>
+		/// Emits an implementation-only unsafe block; the body supplies its operation-specific SAFETY rationale.
+		/// </summary>
+		public bool HasUnsafeBody { get; set; }
 		public bool IsVirtual { get; set; }
 		public bool IsShadow { get; set; }
 		public bool IsAbstract { get; set; }
@@ -130,7 +137,17 @@ namespace Xamarin.SourceWriter
 			writer.WriteLine ("{");
 			writer.Indent ();
 
+			if (HasUnsafeBody) {
+				writer.WriteLine ("unsafe {");
+				writer.Indent ();
+			}
+
 			WriteBody (writer);
+
+			if (HasUnsafeBody) {
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			}
 
 			writer.Unindent ();
 

@@ -145,6 +145,47 @@ for that later opt-in; it is not enforced for pointer-free signatures under
 legacy rules. Generated JNI wrappers and T4 inputs keep implementation unsafe
 blocks local without changing marshaling, dispatch, or cleanup.
 
+## Generated managed binding safety
+
+Managed binding methods, properties and ordinary constructors stay caller-safe;
+JNI operations use local `unsafe` blocks with concrete `// SAFETY:` rationale.
+SourceWriter body/accessor flags do not imply `IsUnsafe` on the declaration.
+Constants, guards and managed-only operations stay outside these blocks where
+possible. Interleaved JNI argument preparation, invocation and cleanup remain
+together when their temporary lifetimes require it; success/failure cleanup,
+normal-return copy-back, dispatch and allocations are unchanged.
+
+The same rule applies to hand-written wrappers: `JNIEnv.NewString(string)` owns
+its managed-string conversion, `JNIEnv.NewArray(bool[])` allocates the matching
+Java array and pins its managed source for the synchronous copy, and
+`Throwable.Class` uses a fixed no-argument descriptor and transfers its returned
+local reference. These operations do not pass an unchecked caller-owned buffer
+or descriptor through a safe declaration.
+
+Raw callback entry points and marshal targets require the registered ABI,
+current-thread JNI frame and live compatible borrowed references without
+concurrent deletion. Their `<safety>` contracts do not validate raw addresses.
+Typed managed targets stay safe. Generated syntax and the existing legacy
+compiler test harness are preserved; this does not activate product/customer
+memory-safety rules.
+
+Throwable bindings forward `JniObjectReferenceOptions.None` through internal,
+unregistered empty-peer constructors, preserving partial hooks and normal JNI
+construction without adding externally accessible overloads. This route is
+available only within the assembly that defines the constructors. Imported bases
+are checked for an externally accessible safe constructor; their internal
+constructors do not qualify. Otherwise the generator retains legacy zero-handle
+initialization. An updated-rules external raw base can therefore still reject a
+safe derived initializer; internal forwarding does not solve that separate
+cross-assembly enforcement boundary.
+
+Other generated raw constructors, including class/interface invokers, construct
+JNI peers, not opaque-address containers. Their documented handle type, lifetime,
+thread, aliasing, ownership and failure duties still apply. `RequiresUnsafe`
+enforcement is explicitly deferred to preserve safe zero/`DoNotTransfer` base
+initializers, without adding a general initialization API or weakening the
+approved Throwable path.
+
 ## Naming conventions
 
 Types such as `JavaObject` and `JavaArray<T>` provide managed wrappers for Java

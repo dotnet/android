@@ -59,6 +59,13 @@ namespace generator.SourceWriters
 
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
+			IsUnsafe = true;
+			Comments.Add ("/// <safety>");
+			Comments.Add ("/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments");
+			Comments.Add ("/// must match the registered types and stay live without concurrent deletion for this call;");
+			Comments.Add ("/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed");
+			Comments.Add ("/// failures and may return default; invalid addresses are not validated.");
+			Comments.Add ("/// </safety>");
 
 			if (kind != UnmanagedCallbackKind.Legacy)
 				Attributes.Add (new CustomAttr ("[global::System.Runtime.InteropServices.UnmanagedCallersOnly]"));
@@ -87,6 +94,7 @@ namespace generator.SourceWriters
 
 			writer.WriteLine ("unsafe {");
 			writer.Indent ();
+			writer.WriteLine ("// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.");
 			writer.WriteLine (method.IsVoid ? call + ";" : "return " + call + ";");
 			writer.Unindent ();
 			writer.WriteLine ("}");
@@ -94,6 +102,13 @@ namespace generator.SourceWriters
 
 		void WriteMarshalBody (CodeWriter writer)
 		{
+			if (typed_shape == null) {
+				writer.WriteLine ("/// <safety>");
+				writer.WriteLine ("/// Requires the entry point's live, type-correct borrowed references in its active JNI");
+				writer.WriteLine ("/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;");
+				writer.WriteLine ("/// failures propagate to the marshal helper.");
+				writer.WriteLine ("/// </safety>");
+			}
 			var attributes = new List<AttributeWriter> ();
 			SourceWriterExtensions.AddObsolete (attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
 			SourceWriterExtensions.AddSupportedOSPlatform (attributes, method, opt);
@@ -103,10 +118,15 @@ namespace generator.SourceWriters
 			if (typed_shape != null)
 				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator));
 			else
-				writer.WriteLine ($"private static {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+				writer.WriteLine ($"private static unsafe {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
 			writer.WriteLine ("{");
 
 			writer.Indent ();
+			if (typed_shape == null) {
+				writer.WriteLine ("unsafe {");
+				writer.Indent ();
+				writer.WriteLine ("// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.");
+			}
 			if (typed_shape == null)
 				writer.WriteLine ($"var __this = global::Java.Lang.Object.GetObject<{opt.GetOutputName (type.FullName)}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer){opt.NullForgivingOperator};");
 
@@ -139,6 +159,10 @@ namespace generator.SourceWriters
 			if (!method.IsVoid && useRetTemporary)
 				writer.WriteLine ("return __ret;");
 
+			if (typed_shape == null) {
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			}
 			writer.Unindent ();
 			writer.WriteLine ("}");
 		}
@@ -208,6 +232,7 @@ namespace generator.SourceWriters
 
 			Name = method.ConnectorName;
 			ReturnType = TypeReferenceWriter.Delegate;
+			HasUnsafeBody = true;
 
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
@@ -220,6 +245,7 @@ namespace generator.SourceWriters
 		protected override void WriteBody (CodeWriter writer)
 		{
 			var callback_name = method.EscapedCallbackName;
+			writer.WriteLine ("// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.");
 			writer.WriteLine ($"return {callback_name} ??= new {method.GetDelegateType (opt)} (n_{method.Name + method.IDSignature});");
 		}
 	}

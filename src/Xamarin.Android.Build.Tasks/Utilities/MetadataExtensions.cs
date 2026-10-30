@@ -107,22 +107,17 @@ namespace Xamarin.Android.Tasks
 					throw new BadImageFormatException ("resource offset out of bounds.");
 				}
 
-				int resourceLength;
-				unsafe {
-					// SAFETY: The embedded resource belongs to this image, and the preceding check
-					// bounds its four-byte prefix; the caller prevents invalidation during this read.
-					resourceLength = new BlobReader (resourceStart, sizeof (int)).ReadInt32 ();
-				}
+				// SAFETY: The embedded resource belongs to this image, and the preceding check
+				// bounds its four-byte prefix; the caller prevents invalidation during this read.
+				int resourceLength = unsafe(new BlobReader (resourceStart, sizeof (int)).ReadInt32 ());
 				resourceStart += sizeof (int);
 				if (resourceLength < 0 || resourceStart >= peImageEnd - resourceLength) {
 					throw new BadImageFormatException ("resource offset or length out of bounds.");
 				}
 
-				unsafe {
-					// SAFETY: The checked offset/length bound the read-only stream to this image.
-					// The caller keeps its storage alive and stable until the stream is disposed.
-					return new UnmanagedMemoryStream (resourceStart, resourceLength);
-				}
+				// SAFETY: The checked offset/length bound the read-only stream to this image.
+				// The caller keeps its storage alive and stable until the stream is disposed.
+				return unsafe(new UnmanagedMemoryStream (resourceStart, resourceLength));
 			}
 		}
 	}

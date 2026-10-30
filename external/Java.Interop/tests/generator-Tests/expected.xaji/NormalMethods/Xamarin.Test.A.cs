@@ -38,31 +38,52 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 			static Delegate GetSetCustomDimension_IHandler ()
 			{
-				return cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_A_B_ ??= new _JniMarshal_PPI_L (n_SetCustomDimension_I);
+				unsafe {
+					// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+					return cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_A_B_ ??= new _JniMarshal_PPI_L (n_SetCustomDimension_I);
+				}
 			}
 
-			static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
+			/// <safety>
+			/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+			/// must match the registered types and stay live without concurrent deletion for this call;
+			/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+			/// failures and may return default; invalid addresses are not validated.
+			/// </safety>
+			static unsafe IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 			{
 				unsafe {
+					// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 					return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, index, &__n_SetCustomDimension_I);
 				}
 			}
-			private static IntPtr __n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
+			/// <safety>
+			/// Requires the entry point's live, type-correct borrowed references in its active JNI
+			/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+			/// failures propagate to the marshal helper.
+			/// </safety>
+			private static unsafe IntPtr __n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 			{
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A.B> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
+				unsafe {
+					// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+					var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A.B> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+					return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
+				}
 			}
 #pragma warning restore 0169
 
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='A.B']/method[@name='setCustomDimension' and count(parameter)=1 and parameter[1][@type='int']]"
 			[Register ("setCustomDimension", "(I)Lxamarin/test/A$B;", "GetSetCustomDimension_IHandler")]
-			public virtual unsafe global::Java.Lang.Object SetCustomDimension (int index)
+			public virtual global::Java.Lang.Object SetCustomDimension (int index)
 			{
 				const string __id = "setCustomDimension.(I)Lxamarin/test/A$B;";
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (index);
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				unsafe {
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (index);
+					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				}
 			}
 
 		}
@@ -83,29 +104,50 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetHandleHandler ()
 		{
-			return cb_getHandle_GetHandle_I ??= new _JniMarshal_PP_I (n_GetHandle);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getHandle_GetHandle_I ??= new _JniMarshal_PP_I (n_GetHandle);
+			}
 		}
 
-		static int n_GetHandle (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe int n_GetHandle (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetHandle);
 			}
 		}
-		private static int __n_GetHandle (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe int __n_GetHandle (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.GetHandle ();
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.GetHandle ();
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='A']/method[@name='getHandle' and count(parameter)=0]"
 		[Register ("getHandle", "()I", "GetGetHandleHandler")]
-		public virtual unsafe int GetHandle ()
+		public virtual int GetHandle ()
 		{
 			const string __id = "getHandle.()I";
-			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-			return __rm;
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			}
 		}
 
 	}

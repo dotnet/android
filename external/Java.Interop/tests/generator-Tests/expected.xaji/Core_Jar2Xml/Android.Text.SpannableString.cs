@@ -32,44 +32,50 @@ namespace Android.Text {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='android.text']/class[@name='SpannableString']/constructor[@name='SpannableString' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
 		[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
-		public unsafe SpannableString (global::Java.Lang.ICharSequence source) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public SpannableString (global::Java.Lang.ICharSequence source) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "(Ljava/lang/CharSequence;)V";
 
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			IntPtr native_source = CharSequence.ToLocalJniHandle (source);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_source);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-			} finally {
-				JNIEnv.DeleteLocalRef (native_source);
-				global::System.GC.KeepAlive (source);
+			unsafe {
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
+				IntPtr native_source = CharSequence.ToLocalJniHandle (source);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_source);
+					var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_source);
+					global::System.GC.KeepAlive (source);
+				}
 			}
 		}
 
 		[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
-		public unsafe SpannableString (string source) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public SpannableString (string source) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "(Ljava/lang/CharSequence;)V";
 
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			IntPtr native_source = CharSequence.ToLocalJniHandle (source);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_source);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-			} finally {
-				JNIEnv.DeleteLocalRef (native_source);
-				global::System.GC.KeepAlive (source);
+			unsafe {
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
+				IntPtr native_source = CharSequence.ToLocalJniHandle (source);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_source);
+					var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_source);
+					global::System.GC.KeepAlive (source);
+				}
 			}
 		}
 
@@ -77,35 +83,56 @@ namespace Android.Text {
 #pragma warning disable 0169
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()
 		{
-			return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_);
+			}
 		}
 
-		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_what)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_what)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_what, &__n_GetSpanFlags_Ljava_lang_Object_);
 			}
 		}
-		private static int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_what)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_what)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableString> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var what = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_what, JniHandleOwnership.DoNotTransfer);
-			int __ret = (int) __this.GetSpanFlags (what);
-			return __ret;
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableString> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var what = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_what, JniHandleOwnership.DoNotTransfer);
+				int __ret = (int) __this.GetSpanFlags (what);
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler")]
-		public override unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object what)
+		public override global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object what)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue ((what == null) ? IntPtr.Zero : ((global::Java.Lang.Object) what).Handle);
-			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-			var __result = (global::Android.Text.SpanTypes) __rm;
-			global::System.GC.KeepAlive (what);
-			return __result;
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((what == null) ? IntPtr.Zero : ((global::Java.Lang.Object) what).Handle);
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+				var __result = (global::Android.Text.SpanTypes) __rm;
+				global::System.GC.KeepAlive (what);
+				return __result;
+			}
 		}
 
 	}

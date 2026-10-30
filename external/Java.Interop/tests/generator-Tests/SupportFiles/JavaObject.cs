@@ -130,6 +130,10 @@ namespace Java.Lang {
 			throw new NotImplementedException ();
 		}
 
+		internal Throwable (global::Java.Interop.JniObjectReferenceOptions options)
+		{
+		}
+
 		public Throwable (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotImplementedException ();

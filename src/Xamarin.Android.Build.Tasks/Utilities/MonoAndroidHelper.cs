@@ -146,13 +146,22 @@ namespace Xamarin.Android.Tasks
 
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
-			var psi = new ProcessStartInfo (name, args) {
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
+			return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError, environmentVariables);
+		}
+
+		public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
+		{
+			if (taskEnvironment == null)
+				throw new ArgumentNullException (nameof (taskEnvironment));
+
+			var psi = taskEnvironment.GetProcessStartInfo ();
+			psi.FileName = name;
+			psi.Arguments = args;
+			psi.UseShellExecute = false;
+			psi.RedirectStandardOutput = true;
+			psi.RedirectStandardError = true;
+			psi.CreateNoWindow = true;
+			psi.WindowStyle = ProcessWindowStyle.Hidden;
 			if (environmentVariables != null) {
 				foreach (var pair in environmentVariables) {
 					psi.EnvironmentVariables [pair.Key] = pair.Value;
@@ -217,6 +226,15 @@ namespace Xamarin.Android.Tasks
 		{
 			public  static  readonly  SizeAndContentFileComparer  DefaultComparer     = new SizeAndContentFileComparer ();
 
+#if MSBUILD
+			readonly TaskEnvironment taskEnvironment;
+
+			public SizeAndContentFileComparer (TaskEnvironment? taskEnvironment = null)
+			{
+				this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
+			}
+#endif
+
 			public bool Equals (FileInfo x, FileInfo y)
 			{
 				if (x.Exists != y.Exists || x.Length != y.Length)
@@ -234,12 +252,12 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 			public bool Equals (ITaskItem x, ITaskItem y)
 			{
-				return Equals (new FileInfo (x.ItemSpec), new FileInfo (y.ItemSpec));
+				return Equals (new FileInfo (taskEnvironment.GetAbsolutePath (x.ItemSpec)), new FileInfo (taskEnvironment.GetAbsolutePath (y.ItemSpec)));
 			}
 
 			public int GetHashCode (ITaskItem obj)
 			{
-				return GetHashCode (new FileInfo (obj.ItemSpec));
+				return GetHashCode (new FileInfo (taskEnvironment.GetAbsolutePath (obj.ItemSpec)));
 			}
 #endif  // MSBUILD
 		}
@@ -268,6 +286,17 @@ namespace Xamarin.Android.Tasks
 		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths)
 		{
 			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
+		}
+
+		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer (taskEnvironment));
+		}
+
+		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Select (p => new FileInfo (taskEnvironment.GetAbsolutePath (p))).ToArray ()
+				.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
 		}
 #endif
 

@@ -18,7 +18,6 @@ namespace Java.Util
 		{
 			public override unsafe bool TryAdvance (IConsumer? action)
 			{
-				// https://developer.android.com/reference/java/util/Spliterator#tryAdvance(java.util.function.Consumer<?%20super%20T>)
 				const string __id = "tryAdvance.(Ljava/util/function/Consumer;)Z";
 				IntPtr native_action = JNIEnv.ToLocalJniHandle (action);
 				try {
@@ -28,10 +27,11 @@ namespace Java.Util
 					return __rm;
 				} finally {
 					JNIEnv.DeleteLocalRef (native_action);
+					GC.KeepAlive (action);
+					GC.KeepAlive (this);
 				}
 			}
 		}
 	}
 }
 #endif
-

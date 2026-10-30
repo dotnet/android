@@ -33,54 +33,75 @@ namespace Com.Google.Android.Exoplayer.Drm {
 #pragma warning disable 0169
 		static Delegate GetOnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayBHandler ()
 		{
-			return cb_onEvent_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB_V ??= new _JniMarshal_PPLLIIL_V (n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_onEvent_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB_V ??= new _JniMarshal_PPLLIIL_V (n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB);
+			}
 		}
 
-		static void n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_p0, IntPtr native_p1, int p2, int p3, IntPtr native_p4)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_p0, IntPtr native_p1, int p2, int p3, IntPtr native_p4)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_p0, native_p1, p2, p3, native_p4, &__n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB);
 			}
 		}
-		private static void __n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_p0, IntPtr native_p1, int p2, int p3, IntPtr native_p4)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_p0, IntPtr native_p1, int p2, int p3, IntPtr native_p4)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (native_p0, JniHandleOwnership.DoNotTransfer);
-			var p1 = (byte[]) JNIEnv.GetArray (native_p1, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			var p4 = (byte[]) JNIEnv.GetArray (native_p4, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			__this.OnEvent (p0, p1, p2, p3, p4);
-			if (p1 != null)
-				JNIEnv.CopyArray (p1, native_p1);
-			if (p4 != null)
-				JNIEnv.CopyArray (p4, native_p4);
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (native_p0, JniHandleOwnership.DoNotTransfer);
+				var p1 = (byte[]) JNIEnv.GetArray (native_p1, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				var p4 = (byte[]) JNIEnv.GetArray (native_p4, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				__this.OnEvent (p0, p1, p2, p3, p4);
+				if (p1 != null)
+					JNIEnv.CopyArray (p1, native_p1);
+				if (p4 != null)
+					JNIEnv.CopyArray (p4, native_p4);
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void OnEvent (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4)
+		public void OnEvent (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4)
 		{
 			const string __id = "onEvent.(Lcom/google/android/exoplayer/drm/ExoMediaDrm;[BII[B)V";
-			IntPtr native_p1 = JNIEnv.NewArray (p1);
-			IntPtr native_p4 = JNIEnv.NewArray (p4);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [5];
-				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-				__args [1] = new JniArgumentValue (native_p1);
-				__args [2] = new JniArgumentValue (p2);
-				__args [3] = new JniArgumentValue (p3);
-				__args [4] = new JniArgumentValue (native_p4);
-				_members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-				if (p1 != null) {
-					JNIEnv.CopyArray (native_p1, p1);
-					JNIEnv.DeleteLocalRef (native_p1);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				IntPtr native_p1 = JNIEnv.NewArray (p1);
+				IntPtr native_p4 = JNIEnv.NewArray (p4);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [5];
+					__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+					__args [1] = new JniArgumentValue (native_p1);
+					__args [2] = new JniArgumentValue (p2);
+					__args [3] = new JniArgumentValue (p3);
+					__args [4] = new JniArgumentValue (native_p4);
+					_members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				} finally {
+					if (p1 != null) {
+						JNIEnv.CopyArray (native_p1, p1);
+						JNIEnv.DeleteLocalRef (native_p1);
+					}
+					if (p4 != null) {
+						JNIEnv.CopyArray (native_p4, p4);
+						JNIEnv.DeleteLocalRef (native_p4);
+					}
+					global::System.GC.KeepAlive (p0);
+					global::System.GC.KeepAlive (p1);
+					global::System.GC.KeepAlive (p4);
 				}
-				if (p4 != null) {
-					JNIEnv.CopyArray (native_p4, p4);
-					JNIEnv.DeleteLocalRef (native_p4);
-				}
-				global::System.GC.KeepAlive (p0);
-				global::System.GC.KeepAlive (p1);
-				global::System.GC.KeepAlive (p4);
 			}
 		}
 
@@ -134,14 +155,17 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 		object sender;
 
-		public unsafe IExoMediaDrmOnEventListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public IExoMediaDrmOnEventListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
-			var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
-			JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
+			unsafe {
+				// SAFETY: ()V needs no arguments; SetHandle takes the new local peer before FinishCreateInstance.
+				var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 			this.sender = sender;
 		}
 
@@ -191,30 +215,51 @@ namespace Com.Google.Android.Exoplayer.Drm {
 #pragma warning disable 0169
 		static Delegate GetSetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_Handler ()
 		{
-			return cb_setOnEventListener_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener__V ??= new _JniMarshal_PPL_V (n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setOnEventListener_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener__V ??= new _JniMarshal_PPL_V (n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_);
+			}
 		}
 
-		static void n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_p0, &__n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_);
 			}
 		}
-		private static void __n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (native_p0, JniHandleOwnership.DoNotTransfer);
-			__this.SetOnEventListener (p0);
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (native_p0, JniHandleOwnership.DoNotTransfer);
+				__this.SetOnEventListener (p0);
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void SetOnEventListener (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener p0)
+		public void SetOnEventListener (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener p0)
 		{
 			const string __id = "setOnEventListener.(Lcom/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener;)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-			_members_com_google_android_exoplayer_drm_ExoMediaDrm.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			global::System.GC.KeepAlive (p0);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+				_members_com_google_android_exoplayer_drm_ExoMediaDrm.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (p0);
+			}
 		}
 
 	}

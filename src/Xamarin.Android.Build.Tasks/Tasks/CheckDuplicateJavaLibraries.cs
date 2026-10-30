@@ -9,7 +9,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CheckDuplicateJavaLibraries : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class CheckDuplicateJavaLibraries : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "CDJ";
 
@@ -28,7 +29,7 @@ namespace Xamarin.Android.Tasks
 			var jarFilePaths = (LibraryProjectJars ?? []).Concat (jarFiles ?? []).Select (j => j.ItemSpec);
 
 			// Remove duplicate identical jars by name, size and content, and reject any jars that conflicts by name (i.e. different content).
-			var jars = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths).ToArray ();
+			var jars = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths, TaskEnvironment).ToArray ();
 			var dups = MonoAndroidHelper.GetDuplicateFileNames (jars, ExcludedFiles);
 			if (dups.Any ()) {
 				Log.LogCodedError ("XA1014", Properties.Resources.XA1014, String.Join (", ", dups.ToArray ()));
@@ -39,4 +40,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-
