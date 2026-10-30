@@ -773,6 +773,23 @@ namespace Android.Runtime {
 			}
 		}
 
+		static void AssertArrayConversionType (IntPtr sourceArray, Type? elementType)
+		{
+			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) ||
+					elementType.IsArray || typeof (IJavaObject).IsAssignableFrom (elementType))) {
+				AssertCompatibleArrayTypes (sourceArray,
+					destElementType: elementType.IsValueType ? elementType : typeof (Java.Lang.Object));
+				return;
+			}
+
+			// SAFETY: the conversion caller retains this object reference; class-name lookup does not
+			// use array-specific JNI. GetConverter selects the source's reader for inferred/boxed values.
+			string? sourceType = unsafe(GetClassNameFromInstance (sourceArray));
+			if (sourceType == null || sourceType.Length < 2 || sourceType [0] != '[')
+				throw new InvalidCastException (FormattableString.Invariant (
+					$"Java object of type '{sourceType}' is not an array."));
+		}
+
 		static JniObjectReference FindArrayClassByElementType (Type elementType)
 		{
 			var builtInArrayJniClassName = GetBuiltInArrayJniClassNameUtf8 (elementType);
@@ -1668,9 +1685,7 @@ namespace Android.Runtime {
 			if (array_ptr == IntPtr.Zero)
 				return null;
 
-			if (element_type != null)
-				AssertCompatibleArrayTypes (array_ptr,
-					destElementType: element_type.IsValueType ? element_type : typeof (Java.Lang.Object));
+			AssertArrayConversionType (array_ptr, element_type);
 
 			var converter = GetConverter (NativeArrayToManaged, element_type, array_ptr);
 			int cnt = _GetArrayLength (array_ptr);
@@ -1716,8 +1731,8 @@ namespace Android.Runtime {
 
 		/// <safety>
 		/// <paramref name="array_ptr"/> must be null or a live JNI object reference usable on the current thread for the call.
-		/// Primitive-array compatibility or reference-array kind is checked before native array access.
-		/// Reference elements are converted individually; retain the reference and exclude conflicting
+		/// The source array kind is checked before native array access; primitive readers must match
+		/// that kind, including when their values are boxed. Retain the reference and exclude conflicting
 		/// mutation or release until conversion returns or throws.
 		/// </safety>
 		public static unsafe T[]? GetArray<T> (IntPtr array_ptr)
@@ -1726,10 +1741,9 @@ namespace Android.Runtime {
 				return null;
 
 			unsafe {
-				// SAFETY: the caller retains the array; primitive kinds must match, while reference-array
-				// elements pass through their checked converters before type-specific JNI access.
-				AssertCompatibleArrayTypes (array_ptr,
-					destElementType: typeof (T).IsValueType ? typeof (T) : typeof (Java.Lang.Object));
+				// SAFETY: the caller retains the array; a destination-selected reader requires its matching
+				// array kind, while inferred/boxing readers are selected from the source's JNI signature.
+				AssertArrayConversionType (array_ptr, typeof (T));
 
 				int cnt = _GetArrayLength (array_ptr);
 				T[] ret = new T [cnt];

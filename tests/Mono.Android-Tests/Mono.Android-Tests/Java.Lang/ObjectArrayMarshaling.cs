@@ -12,6 +12,70 @@ namespace Java.LangTests {
 	[TestFixture]
 	public class ObjectArrayMarshaling {
 
+		[TestCase (0, false)]
+		[TestCase (2, false)]
+		[TestCase (0, true)]
+		[TestCase (2, true)]
+		public void GetArrayPreservesPrimitiveArrayConversions (int length, bool generic)
+		{
+			Array[] sources = [
+				length == 0 ? new bool [0] : new [] { true, false },
+				length == 0 ? new byte [0] : new byte [] { 1, 255 },
+				length == 0 ? new char [0] : new [] { 'a', '\uffff' },
+				length == 0 ? new short [0] : new short [] { -1, 32767 },
+				length == 0 ? new int [0] : new [] { -1, int.MaxValue },
+				length == 0 ? new long [0] : new [] { -1L, long.MaxValue },
+				length == 0 ? new float [0] : new [] { -1.5f, 42.5f },
+				length == 0 ? new double [0] : new [] { -1.5, 42.5 },
+			];
+			foreach (var source in sources) {
+				using var array = new Java.Lang.Object (JNIEnv.NewArray (source), JniHandleOwnership.TransferLocalRef);
+				Array converted = generic
+					? array.ToArray<object> ()
+					: JNIEnv.GetArray (array.Handle, JniHandleOwnership.DoNotTransfer, typeof (object));
+				Assert.IsNotNull (converted);
+				Assert.AreEqual (generic ? typeof (object[]) : source.GetType (), converted?.GetType ());
+				CollectionAssert.AreEqual (source, converted);
+			}
+		}
+
+		[TestCase (0)]
+		[TestCase (2)]
+		public void ToArrayBoxesPrimitiveElementsForManagedInterfaces (int length)
+		{
+			var values = new int [length];
+			for (int i = 0; i < length; i++)
+				values [i] = i + 1;
+			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
+			CollectionAssert.AreEqual (values, array.ToArray<IConvertible> ());
+		}
+
+		[Test]
+		public void GetArrayRejectsNonArrayForBoxingDestinations ()
+		{
+			using var value = new Java.Lang.String ("not an array");
+			Assert.Throws<InvalidCastException> (() => value.ToArray<object> ());
+			Assert.Throws<InvalidCastException> (() => value.ToArray<IConvertible> ());
+			Assert.Throws<InvalidCastException> (() => JNIEnv.GetArray (
+				value.Handle, JniHandleOwnership.DoNotTransfer, typeof (object)));
+			Assert.Throws<InvalidCastException> (() => JNIEnv.GetArray (
+				value.Handle, JniHandleOwnership.DoNotTransfer));
+		}
+
+		[TestCase (0)]
+		[TestCase (2)]
+		public void GetArrayKeepsPrimitiveKindChecksForBoxingSources (int length)
+		{
+			using var array = new Java.Lang.Object (
+				JNIEnv.NewArray (new int [length]), JniHandleOwnership.TransferLocalRef);
+			Assert.Throws<InvalidCastException> (() => array.ToArray<long> ());
+			Assert.Throws<InvalidCastException> (() => array.ToArray<string> ());
+			Assert.Throws<InvalidCastException> (() => array.ToArray<Java.Lang.String> ());
+			Assert.Throws<InvalidCastException> (() => array.ToArray<Java.Lang.Object> ());
+			Assert.Throws<InvalidCastException> (() => JNIEnv.GetArray (
+				array.Handle, JniHandleOwnership.DoNotTransfer, typeof (string)));
+		}
+
 		[TestCase (0)]
 		[TestCase (2)]
 		public void ToArrayConvertsObjectArrayToManagedStrings (int length)
