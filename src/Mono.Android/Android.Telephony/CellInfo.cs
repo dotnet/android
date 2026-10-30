@@ -11,14 +11,16 @@ namespace Android.Telephony {
 
 		static Delegate? cb_getCellIdentity;
 #pragma warning disable 0169
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
+		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
 		static Delegate GetGetCellIdentityHandler ()
 		{
 			return cb_getCellIdentity ??= new _JniMarshal_PP_L (n_GetCellIdentity);
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
+		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
 		static IntPtr n_GetCellIdentity (IntPtr jnienv, IntPtr native__this)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
@@ -36,7 +38,8 @@ namespace Android.Telephony {
 		}
 #pragma warning restore 0169
 
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
+		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
 		public unsafe virtual Android.Telephony.CellIdentity CellIdentity {
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]"
 			[Register ("getCellIdentity", "()Landroid/telephony/CellIdentity;", "GetGetCellIdentityHandler", ApiSince = 30)]
@@ -54,12 +57,16 @@ namespace Android.Telephony {
 
 		static Delegate? cb_getCellSignalStrength;
 #pragma warning disable 0169
+		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
 		static Delegate GetGetCellSignalStrengthHandler ()
 		{
 			return cb_getCellSignalStrength ??= new _JniMarshal_PP_L (n_GetCellSignalStrength);
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
+		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
 		static IntPtr n_GetCellSignalStrength (IntPtr jnienv, IntPtr native__this)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
@@ -77,6 +84,8 @@ namespace Android.Telephony {
 		}
 #pragma warning restore 0169
 
+		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
 		public unsafe virtual Android.Telephony.CellSignalStrength CellSignalStrength {
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]"
 			[Register ("getCellSignalStrength", "()Landroid/telephony/CellSignalStrength;", "GetGetCellSignalStrengthHandler", ApiSince = 30)]
