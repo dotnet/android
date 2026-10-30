@@ -67,11 +67,13 @@ Reference official Android documentation where helpful:
 
 See [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/) for the caller-unsafe model.
 
-- Mark members caller-unsafe only for obligations callers must uphold, not merely pointer use in managed-owned wrappers or address-only handling. Preserve documented compiler-compatibility exceptions. Under the new rules, member `unsafe` does not replace an explicit unsafe context in the body.
-- Prefer `unsafe (expression)` for a single value-producing unsafe operation. Wrap only unsafe subexpressions, not surrounding managed equality, hashing, or formatting. Use blocks for pinning, void calls, multiple statements, or guards where appropriate.
-- Keep precise `// SAFETY:` justifications adjacent to expressions or inside blocks, explaining how bounds, ownership, pinning, and lifetime obligations are met. Document genuine caller obligations in multiline `/// <safety>` XML.
-- Respect each project's compiler and language mode; `unsafe (expression)` requires preview with the pinned compiler. Do not enable preview/features or emit unsupported syntax into consumer-generated sources just to simplify code.
-- Preserve API contracts, evaluation order, cleanup, and lifetimes. Update canonical templates and their generated outputs together.
+- Classify actual caller obligations: JNI ABI, receiver, parameter/return descriptors, memory extent, aliases, thread, and retained/escaped lifetimes, even for pointer-free/parameterless calls. Address storage/return, managed ownership, or pinning alone does not determine caller-unsafety; neither nonzero `IntPtr`, fabricable `JniObjectReference`, nor `DoNotTransfer` validates arbitrary native storage.
+- Caller-unsafe members still need explicit body contexts under the new rules. Prefer the smallest natural `unsafe (expression)`, including expression getters, ref returns, or `using` acquisition; keep managed comparisons, hashing, and formatting outside. Preserve guards/pinning and use blocks for void or multistatement operations.
+- Use multiline `/// <safety>` XML for genuine caller obligations; keep precise `// SAFETY:` proofs adjacent to expressions or inside blocks. Account for actual checks, owners, cleanup, the entire borrow through disposal/in-flight calls, and failure paths. Do not overstate rooting or rollback guarantees; centralize documented enforcement limits instead of inventing guarantees.
+- Check producer and consumer compiler, language mode, and target framework, including linked/generated sources. `AllowUnsafeBlocks`, `LangVersion`, and `Features` are separate controls; do not raise baselines or enable preview/new rules globally just for syntax. Inline unsafe expressions require preview with the pinned compiler. Preserve documented legacy exceptions until that compiler accepts removal.
+- Preserve accepted calls, dispatch, evaluation order, allocation, cleanup, ABI, and ownership. Establish shipped APIs from released reference packages, not `Unshipped` filenames; preserve virtual override/base compatibility. Avoid new APIs, helpers, copies, or redesigns solely to shrink unsafe scopes.
+- Update canonical producers/templates and outputs/goldens together using actual generation, not bulk golden blessing; preserve unrelated encoding, BOMs, and formatting.
+- Tie validation claims to exact source, compiler mode, artifact, and exercised path; compiler/metadata, managed-model, full-product, and device evidence are not interchangeable. Old passes do not validate rebased source. Preserve existing tests, add focused regressions for concrete bugs, and report failed attempts and limitations.
 
 ## Nullable Reference Types
 
