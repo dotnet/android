@@ -4,7 +4,7 @@ import java.lang.Thread;
 import java.lang.Throwable;
 
 public class Runtime {
-	static java.lang.Class java_lang_System = java.lang.System.class;
+	static java.lang.Class mono_NativeLibraryHelper = mono.NativeLibraryHelper.class;
 	static java.lang.Class mono_android_IGCUserPeer = mono.android.IGCUserPeer.class;
 
 	static {

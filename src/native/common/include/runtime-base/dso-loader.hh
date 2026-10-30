@@ -2,15 +2,12 @@
 
 #include <jni.h>
 #include <dlfcn.h>
-#include <unistd.h>
 
 #include <android/dlext.h>
-#include <android/looper.h>
 
 #include <string_view>
 
 #include <runtime-base/android-system.hh>
-#include <runtime-base/mainthread-dso-loader.hh>
 #include <runtime-base/runtime-environment.hh>
 #include <runtime-base/system-loadlibrary-wrapper.hh>
 #include <runtime-base/util.hh>
@@ -25,11 +22,9 @@ namespace xamarin::android {
 	{
 	public:
 		[[gnu::flatten]]
-		static void init (JNIEnv *env, jclass systemClass, ALooper *main_looper, pid_t _main_thread_id) noexcept
+		static void init (JNIEnv *env, jclass helperClass) noexcept
 		{
-			SystemLoadLibraryWrapper::init (env, systemClass);
-			MainThreadDsoLoader::init (env, main_looper);
-			main_thread_id = _main_thread_id;
+			SystemLoadLibraryWrapper::init (env, helperClass);
 		}
 
 		// Overload used to load libraries from the file system.
@@ -144,32 +139,11 @@ namespace xamarin::android {
 				return name;
 			};
 
-			// So, we have a rather nasty problem here. If we're on a thread other than the main one (or, to be more
-			// precise - one not created by Java), we will NOT have the special class loader Android uses in JVM and
-			// which knows about the special application-specific .so paths (like the one inside the APK itself). For
-			// that reason, `System.loadLibrary` will not be able to find the requested .so and we can't pass it a full
-			// path to it, since it accepts only the undecorated library name.
-			// We have to call `System.loadLibrary` on the main thread, so that the special class loader is available to
-			// it. At the same time, we have to do it synchronously, because we must be able to get the library handle
-			// **here**. We could call to a Java function here, but then synchronization might be an issue. So, instead,
-			// we use a wrapper around System.loadLibrary that uses the ALooper native Android interface. It's a bit
-			// clunky (as it requires using a fake pipe(2) to force the looper to call us on the main thread) but it
-			// should work across all the Android versions.
-
-			// TODO: implement the above
-			if (gettid () == main_thread_id) {
-				if (!SystemLoadLibraryWrapper::load (RuntimeEnvironment::get_jnienv (), get_undecorated_name (name, name_is_path))) {
-					// We could abort, but let's let the managed land react to this library missing. We cannot continue
-					// with `dlopen` below, because without `JNI_OnLoad` etc invoked, we might have nasty crashes in the
-					// library code if e.g. it assumes that `JNI_OnLoad` initialized all the Java class, method etc
-					// pointers.
-					return nullptr;
-				}
-			} else {
-				MainThreadDsoLoader loader;
-				if (!loader.load (name, get_undecorated_name (name, name_is_path))) {
-					return nullptr;
-				}
+			// The Java helper supplies the application class loader even on an attached native thread.
+			// ART runs JNI_OnLoad synchronously with that loader and handles recursive loads itself.
+			if (!SystemLoadLibraryWrapper::load (RuntimeEnvironment::get_jnienv (), get_undecorated_name (name, name_is_path))) {
+				// Do not return a handle to a library whose JNI initialization failed.
+				return nullptr;
 			}
 
 			// This is unfortunate, but since `System.loadLibrary` doesn't return the class handle, we must get it this
@@ -180,8 +154,5 @@ namespace xamarin::android {
 			log_debugf (LOG_ASSEMBLY, "Attempting to get library %.*s handle after System.loadLibrary. Will try to load using '%.*s'", static_cast<int>(name.length ()), name.data (), static_cast<int>(resolved_file_name.length ()), resolved_file_name.data ());
 			return log_and_return (dlopen (get_file_name (name, name_is_path).data (), RTLD_NOLOAD), name);
 		}
-
-	private:
-		static inline pid_t main_thread_id = 0;
 	};
 }

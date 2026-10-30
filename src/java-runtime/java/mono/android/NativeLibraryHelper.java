@@ -18,6 +18,12 @@ public final class NativeLibraryHelper {
 	{
 	}
 
+	// Called through JNI so System.loadLibrary observes an application-owned Java caller.
+	public static void loadLibrary (String libraryName)
+	{
+		System.loadLibrary (libraryName);
+	}
+
 	public static void loadLibrary (String libraryName, Context context)
 	{
 		ApplicationInfo applicationInfo = context.getApplicationInfo ();
