@@ -848,8 +848,9 @@ namespace Android.Runtime {
 		}
 
 		/// <safety>
-		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
-		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// <paramref name="src"/> must be a live JNI reference array usable on this thread with at least
+		/// <paramref name="dest"/>.Length elements. Retain it and exclude conflicting mutation or release
+		/// until return or throw. Each element is checked for null or java.lang.String before string access.
 		/// </safety>
 		public static unsafe void CopyArray (IntPtr src, string[] dest)
 		{
@@ -857,9 +858,9 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("dest");
 
 			unsafe {
-				// SAFETY: src is the caller-retained String-compatible array; each acquired local transfers to GetString.
-				for (int i = 0; i < dest.Length; i++)
-					dest [i] = GetString (GetObjectArrayElement (src, i), JniHandleOwnership.TransferLocalRef)!;
+				// SAFETY: the caller retains src for dest.Length object slots; the converter checks each
+				// nonnull element before string-specific JNI access and transfers its owned local to conversion.
+				CopyArray<string> (src, dest);
 			}
 		}
 
@@ -961,8 +962,8 @@ namespace Android.Runtime {
 				{ typeof (double?), (type, source, index) => GetNullableArrayElement (source, index, typeof (double?)) },
 				{ typeof (string), (type, source, index) => {
 					unsafe {
-						// SAFETY: source/index supply a live element; its local transfers to the immediate String conversion.
-						IntPtr elem = GetObjectArrayElement (source, index);
+						// SAFETY: the checked local is null or a String before its existing conversion consumes it.
+						IntPtr elem = GetStringArrayElement (source, index);
 						if (type == typeof (Java.Lang.String))
 							return new Java.Lang.String (elem, JniHandleOwnership.TransferLocalRef);
 						return GetString (elem, JniHandleOwnership.TransferLocalRef);
@@ -972,8 +973,11 @@ namespace Android.Runtime {
 					AssertIsJavaObject (type);
 
 					unsafe {
-						// SAFETY: source/index supply a live element; GetObject consumes its local in the same conversion.
-						IntPtr elem = GetObjectArrayElement (source, index);
+						// SAFETY: source/index supply a live element; String targets are checked before
+						// peer lookup, which consumes the local in its existing conversion/failure path.
+						IntPtr elem = type == typeof (Java.Lang.String)
+							? GetStringArrayElement (source, index)
+							: GetObjectArrayElement (source, index);
 						return GetObject (elem, type);
 					}
 
@@ -991,6 +995,25 @@ namespace Android.Runtime {
 					}
 				} },
 			};
+		}
+
+		static IntPtr GetStringArrayElement (IntPtr source, int index)
+		{
+			unsafe {
+				// SAFETY: the copy caller retains this object-array slot; IsInstanceOf guards string-specific
+				// conversion. Hand off the checked local; validation failure releases it before propagating.
+				IntPtr element = GetObjectArrayElement (source, index);
+				try {
+					if (element != IntPtr.Zero && !IsInstanceOf (element, Java.Lang.Class.String))
+						throw new InvalidCastException (FormattableString.Invariant (
+							$"Array element at index {index} is not a java.lang.String."));
+					IntPtr result = element;
+					element = IntPtr.Zero;
+					return result;
+				} finally {
+					DeleteLocalRef (element);
+				}
+			}
 		}
 
 		static object? GetNullableArrayElement (IntPtr source, int index, [DynamicallyAccessedMembers (Constructors)] Type targetType)
@@ -1645,12 +1668,12 @@ namespace Android.Runtime {
 			if (array_ptr == IntPtr.Zero)
 				return null;
 
-			if (element_type != null && element_type.IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, destElementType: element_type);
-
-			int cnt = _GetArrayLength (array_ptr);
+			if (element_type != null)
+				AssertCompatibleArrayTypes (array_ptr,
+					destElementType: element_type.IsValueType ? element_type : typeof (Java.Lang.Object));
 
 			var converter = GetConverter (NativeArrayToManaged, element_type, array_ptr);
+			int cnt = _GetArrayLength (array_ptr);
 
 			return converter (element_type, array_ptr, cnt);
 		}
@@ -1693,8 +1716,9 @@ namespace Android.Runtime {
 
 		/// <safety>
 		/// <paramref name="array_ptr"/> must be null or a live JNI object reference usable on the current thread for the call.
-		/// Array kind and compatibility with <typeparamref name="T"/> are checked before native array access;
-		/// the caller must still guarantee reference provenance and lifetime.
+		/// Primitive-array compatibility or reference-array kind is checked before native array access.
+		/// Reference elements are converted individually; retain the reference and exclude conflicting
+		/// mutation or release until conversion returns or throws.
 		/// </safety>
 		public static unsafe T[]? GetArray<T> (IntPtr array_ptr)
 		{
@@ -1702,8 +1726,10 @@ namespace Android.Runtime {
 				return null;
 
 			unsafe {
-				// SAFETY: the caller retains a live object reference; IsInstanceOf verifies the matching array kind before any array-length or element access.
-				AssertCompatibleArrayTypes (array_ptr, destElementType: typeof (T));
+				// SAFETY: the caller retains the array; primitive kinds must match, while reference-array
+				// elements pass through their checked converters before type-specific JNI access.
+				AssertCompatibleArrayTypes (array_ptr,
+					destElementType: typeof (T).IsValueType ? typeof (T) : typeof (Java.Lang.Object));
 
 				int cnt = _GetArrayLength (array_ptr);
 				T[] ret = new T [cnt];
