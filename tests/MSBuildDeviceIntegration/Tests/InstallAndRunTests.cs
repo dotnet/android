@@ -3301,7 +3301,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 </manifest>";
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj));
+			Assert.IsTrue (builder.Build (proj, environmentVariables: new Dictionary<string, string> {
+				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
+			}));
 			RunProjectAndAssert (proj, builder);
 		}
 
