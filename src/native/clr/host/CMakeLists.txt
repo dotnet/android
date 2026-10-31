@@ -28,7 +28,6 @@ set(XAMARIN_MONODROID_SOURCES
   coreclr-bootstrap.cc
   host-jni.cc
   host-shared.cc
-  host-util.cc
   gc-bridge.cc
   os-bridge.cc
   runtime-environment.cc

@@ -21,7 +21,6 @@
 #include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
-#include <host/host-util.hh>
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
