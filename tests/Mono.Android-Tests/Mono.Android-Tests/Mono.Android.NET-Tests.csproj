@@ -133,6 +133,7 @@
     <Compile Include="Android.Runtime\RuntimeEventSourceTests.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="Android.Util\SparseArrayTests.cs" />
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />

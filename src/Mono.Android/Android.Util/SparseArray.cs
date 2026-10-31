@@ -27,11 +27,12 @@ namespace Android.Util
 		}
 		
 		static IntPtr id_append_ILjava_lang_Object_;
+		// https://developer.android.com/reference/android/util/SparseArray#append(int,%20E)
 		[Register ("append", "(ILjava/lang/Object;)V", "")]
 		public virtual void Append (int key, E value)
 		{
 			if (id_append_ILjava_lang_Object_ == IntPtr.Zero)
-				id_append_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "put", "(ILjava/lang/Object;)V");
+				id_append_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "append", "(ILjava/lang/Object;)V");
 			JavaConvert.WithLocalJniHandle (value, lref => {
 					JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_append_ILjava_lang_Object_, new JValue (key), new JValue (lref));
 					return IntPtr.Zero;
