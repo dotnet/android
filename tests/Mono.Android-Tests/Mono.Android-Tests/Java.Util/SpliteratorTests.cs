@@ -37,10 +37,13 @@ public class SpliteratorTests
 			Assert.IsTrue (iterator.TryAdvance (consumer));
 			int localReferences = Java.Interop.Runtime.LocalReferenceCount;
 			Assert.IsTrue (iterator.TryAdvance (consumer));
-			Assert.IsFalse (iterator.TryAdvance (consumer));
+			for (int i = 0; i < 2048; ++i) {
+				Assert.IsFalse (iterator.TryAdvance (consumer));
+			}
 			Assert.AreEqual (localReferences, Java.Interop.Runtime.LocalReferenceCount,
 				"TryAdvance must release its temporary Consumer local reference.");
 			CollectionAssert.AreEqual (new [] { "first", "second" }, consumer.Values);
+			Assert.Throws<Java.Lang.NullPointerException> (() => iterator.TryAdvance (null));
 		}
 	}
 
