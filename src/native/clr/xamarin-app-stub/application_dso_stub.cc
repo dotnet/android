@@ -51,7 +51,7 @@ const ApplicationConfig application_config = {
 	.jni_add_native_method_registration_attribute_present = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
-	.number_of_runtime_properties = 3,
+	.number_of_runtime_properties = 4,
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
@@ -219,9 +219,11 @@ const char *init_runtime_property_names[] = {
 	"HOST_RUNTIME_CONTRACT",
 	"RUNTIME_IDENTIFIER",
 	"APP_CONTEXT_BASE_DIRECTORY",
+	"System.TimeZoneInfo.LocalDateTimeOffset",
 };
 
 char *init_runtime_property_values[] {
+	nullptr,
 	nullptr,
 	nullptr,
 	nullptr,
