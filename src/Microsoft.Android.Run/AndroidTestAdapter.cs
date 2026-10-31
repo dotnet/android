@@ -60,31 +60,30 @@ class AndroidTestAdapter(
 		// leaving it "in progress").
 		var state = new StreamingState ();
 
-		// 1. Run instrumentation on device, publishing each test to MTP live as
-		//    its INSTRUMENTATION_STATUS block arrives.
-		var bundleResults = await RunInstrumentationOnDeviceAsync (context, sessionUid, state, context.CancellationToken);
+		bool finished = false;
+		try {
+			var bundleResults = await RunInstrumentationOnDeviceAsync (context, sessionUid, state, context.CancellationToken);
 
-		if (verbose) {
-			Console.WriteLine ($"[AndroidTestAdapter] Instrumentation results: passed={bundleResults.Passed}, failed={bundleResults.Failed}, skipped={bundleResults.Skipped}, streamed={state.ReportedFinal.Count}");
-			if (bundleResults.ResultsPath != null)
-				Console.WriteLine ($"[AndroidTestAdapter] TRX path on device: {bundleResults.ResultsPath}");
+			if (verbose) {
+				Console.WriteLine ($"[AndroidTestAdapter] Instrumentation results: passed={bundleResults.Passed}, failed={bundleResults.Failed}, skipped={bundleResults.Skipped}, streamed={state.ReportedFinal.Count}");
+				if (bundleResults.ResultsPath != null)
+					Console.WriteLine ($"[AndroidTestAdapter] TRX path on device: {bundleResults.ResultsPath}");
+			}
+
+			if (bundleResults.Crashed || state.HasUnfinishedTests) {
+				await PublishCrashAsync (context, sessionUid, bundleResults, state);
+				return;
+			}
+
+			// Older instrumentation may not stream results; retain its TRX fallback.
+			if (state.ReportedFinal.Count == 0)
+				await ReportFromTrxAsync (context, sessionUid, bundleResults);
+			finished = bundleResults.InstrumentationCode == -1 && bundleResults.Error == null &&
+				bundleResults.ResultsPath != null && !state.HasUnfinishedTests;
+		} finally {
+			if (!finished)
+				state.WritePartialResults ();
 		}
-
-		// 2. If the run did not finish cleanly (the app process crashed before
-		//    writing the final results bundle), surface the crash. This resolves an
-		//    in-flight streamed test to a terminal state, or publishes a synthetic
-		//    crash node when nothing streamed, instead of falling through to the TRX
-		//    path — which has no results file to read after a crash and would throw.
-		if (bundleResults.Crashed) {
-			await PublishCrashAsync (context, sessionUid, bundleResults, state);
-			return;
-		}
-
-		// 3. No crash: if we streamed at least one completed test, streaming is
-		//    authoritative and we're done. Otherwise fall back to the TRX (e.g. an
-		//    older on-device instrumentation that didn't stream results).
-		if (state.ReportedFinal.Count == 0)
-			await ReportFromTrxAsync (context, sessionUid, bundleResults);
 	}
 
 	/// <summary>
@@ -127,7 +126,11 @@ class AndroidTestAdapter(
 			}
 		});
 
-		var parser = new StatusStreamParser (channel.Writer, fullOutput, verbose);
+		var parser = new StatusStreamParser (status => {
+			// Retain observations independently of asynchronous MTP publication.
+			state.Observe (status);
+			channel.Writer.TryWrite (status);
+		}, fullOutput, verbose);
 		using var stdout = new LineWriter (parser.OnLine);
 
 		int exitCode = 0;
@@ -153,7 +156,7 @@ class AndroidTestAdapter(
 
 		// The final bundle (with resultsPath) is only emitted if Finish() ran to
 		// completion. Its absence — or a non-zero exit / an explicit crash marker —
-		// means the app process died mid-run.
+		// means execution did not complete, not necessarily that the app crashed.
 		result.Crashed =
 			exitCode != 0 ||
 			output.Contains ("INSTRUMENTATION_FAILED", StringComparison.Ordinal) ||
@@ -161,7 +164,7 @@ class AndroidTestAdapter(
 			(state.ReportedFinal.Count > 0 && result.ResultsPath == null);
 
 		if (result.Crashed && result.Error == null)
-			result.Error = ExtractCrashMessage (output) ?? (exitCode != 0 ? $"Instrumentation exited with code {exitCode}." : "The test process terminated before reporting a result (likely a native crash).");
+			result.Error = ExtractCrashMessage (output) ?? (exitCode != 0 ? $"Instrumentation exited with code {exitCode}." : "Instrumentation ended without a final result bundle.");
 
 		return result;
 	}
@@ -194,6 +197,7 @@ class AndroidTestAdapter(
 			// state instead of leaving a dangling "in progress" node.
 			state.InFlightUid = fullyQualifiedName;
 			state.InFlightName = displayName;
+			state.InFlightClassName = className;
 			var startNode = new TestNode {
 				Uid = new TestNodeUid (fullyQualifiedName),
 				DisplayName = displayName ?? fullyQualifiedName,
@@ -211,6 +215,7 @@ class AndroidTestAdapter(
 		if (state.InFlightUid == fullyQualifiedName) {
 			state.InFlightUid = null;
 			state.InFlightName = null;
+			state.InFlightClassName = null;
 		}
 
 		var errorMessage = DecodeOrNull (status.Values, InstrumentationProtocol.KeyMessageBase64);
@@ -246,33 +251,36 @@ class AndroidTestAdapter(
 	}
 
 	/// <summary>
-	/// Reports a mid-run process crash. If a test was executing when the process
-	/// died, that test is resolved from "in progress" to an <see cref="ErrorTestNodeStateProperty"/>
+	/// Reports abnormal termination. The last active test is resolved from
+	/// "in progress" to an <see cref="ErrorTestNodeStateProperty"/>
 	/// (an infrastructure error, not an assertion failure) so it isn't left
-	/// dangling and the crash is attributed to it. Otherwise a synthetic error
+	/// dangling. The last active test is context, not a proven cause. Otherwise a synthetic error
 	/// node is published so the overall run is still clearly marked failed.
 	/// </summary>
 	async Task PublishCrashAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationBundleResult bundleResults, StreamingState state)
 	{
-		var message = bundleResults.Error ?? "The test process terminated before all tests completed (likely a native crash).";
+		var message = bundleResults.Error ?? "The test run ended before all tests completed.";
 		Console.Error.WriteLine ($"[AndroidTestAdapter] {message}");
 
 		TestNode crashNode;
 		if (state.InFlightUid != null) {
+			var incompleteMessage = $"This was the last observed active test, not necessarily the cause of the incomplete run.\n{message}";
 			crashNode = new TestNode {
 				Uid = new TestNodeUid (state.InFlightUid),
 				DisplayName = state.InFlightName ?? state.InFlightUid,
 				Properties = new PropertyBag (
-					new ErrorTestNodeStateProperty ($"The test process crashed while running this test.\n{message}"),
-					new TrxExceptionProperty (message, null)),
+					new ErrorTestNodeStateProperty (incompleteMessage),
+					new TrxFullyQualifiedTypeNameProperty (string.IsNullOrEmpty (state.InFlightClassName) ? instrumentation : state.InFlightClassName),
+					new TrxExceptionProperty (incompleteMessage, null)),
 			};
 			state.ReportedFinal.Add (state.InFlightUid);
 			state.InFlightUid = null;
 			state.InFlightName = null;
+			state.InFlightClassName = null;
 		} else {
 			crashNode = new TestNode {
 				Uid = new TestNodeUid ($"{instrumentation}.ProcessCrashed"),
-				DisplayName = "Test process crashed before completion",
+				DisplayName = "Test run ended before completion",
 				Properties = new PropertyBag (
 					new ErrorTestNodeStateProperty (message),
 					new TrxFullyQualifiedTypeNameProperty (instrumentation),
@@ -528,9 +536,48 @@ class InstrumentationBundleResult
 /// </summary>
 sealed class StreamingState
 {
+	readonly Dictionary<string, string> observedResults = new (StringComparer.Ordinal);
+	readonly HashSet<string> activeTests = new (StringComparer.Ordinal);
+
 	public HashSet<string> ReportedFinal { get; } = new (StringComparer.Ordinal);
 	public string? InFlightUid { get; set; }
 	public string? InFlightName { get; set; }
+	public string? InFlightClassName { get; set; }
+	public bool HasUnfinishedTests => activeTests.Count > 0;
+
+	public void Observe (InstrumentationStatus status)
+	{
+		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyTest, out var test) || string.IsNullOrEmpty (test) ||
+			!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var kind))
+			return;
+		if (kind == InstrumentationProtocol.EventStart) {
+			activeTests.Add (test);
+		} else if (kind == InstrumentationProtocol.EventFinish &&
+			status.Values.TryGetValue (InstrumentationProtocol.KeyOutcome, out var outcome) && !string.IsNullOrEmpty (outcome)) {
+			activeTests.Remove (test);
+			observedResults [test] = outcome;
+		}
+	}
+
+	public void WritePartialResults ()
+	{
+		int passed = 0, failed = 0, skipped = 0, unknown = 0;
+		foreach (var outcome in observedResults.Values) {
+			switch (outcome) {
+			case InstrumentationProtocol.OutcomePassed: passed++; break;
+			case InstrumentationProtocol.OutcomeFailed: failed++; break;
+			case InstrumentationProtocol.OutcomeSkipped: skipped++; break;
+			default: unknown++; break;
+			}
+		}
+		Console.Error.WriteLine ($"[AndroidTestAdapter] Incomplete test run. Observed completed results: passed={passed}, failed={failed}, skipped={skipped}, unknown={unknown}. These are partial counts, not a complete test result.");
+		foreach (var result in observedResults)
+			Console.Error.WriteLine ($"[AndroidTestAdapter] [{result.Value}] {result.Key}");
+		foreach (var test in activeTests)
+			Console.Error.WriteLine ($"[AndroidTestAdapter] [unfinished] {test} (last observed active; not necessarily the cause)");
+		if (activeTests.Count == 0)
+			Console.Error.WriteLine ("[AndroidTestAdapter] No unfinished test was observed.");
+	}
 }
 
 /// <summary>
@@ -590,10 +637,10 @@ sealed class LineWriter (Action<string> onLine) : TextWriter
 /// <summary>
 /// Incrementally parses streamed <c>am instrument -r</c> output. Each completed
 /// <c>INSTRUMENTATION_STATUS</c> block (terminated by <c>INSTRUMENTATION_STATUS_CODE</c>)
-/// is written to <paramref name="writer"/> for the consumer to publish, while the
+/// is passed to <paramref name="onStatus"/> for the consumer to publish, while the
 /// raw text is also accumulated for the final results-bundle parse.
 /// </summary>
-sealed class StatusStreamParser (ChannelWriter<InstrumentationStatus> writer, StringBuilder fullOutput, bool verbose)
+sealed class StatusStreamParser (Action<InstrumentationStatus> onStatus, StringBuilder fullOutput, bool verbose)
 {
 	const string StatusPrefix = "INSTRUMENTATION_STATUS: ";
 	const string StatusCodePrefix = "INSTRUMENTATION_STATUS_CODE: ";
@@ -611,7 +658,7 @@ sealed class StatusStreamParser (ChannelWriter<InstrumentationStatus> writer, St
 			var codeStr = line.Substring (StatusCodePrefix.Length).Trim ();
 			int.TryParse (codeStr, out int code);
 			if (current != null) {
-				writer.TryWrite (new InstrumentationStatus { Values = current, Code = code });
+				onStatus (new InstrumentationStatus { Values = current, Code = code });
 				current = null;
 				lastKey = null;
 			}
