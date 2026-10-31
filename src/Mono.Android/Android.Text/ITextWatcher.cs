@@ -99,12 +99,13 @@ namespace Android.Text {
 
 		public TextWatcherImplementor (object inst, EventHandler<TextChangedEventArgs>? changed_handler, EventHandler<TextChangedEventArgs>? before_handler, EventHandler<AfterTextChangedEventArgs>? after_handler)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/text/TextWatcherImplementor", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/text/TextWatcherImplementor"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 
 				this.inst = inst;
 				AfterTextChanged = after_handler;

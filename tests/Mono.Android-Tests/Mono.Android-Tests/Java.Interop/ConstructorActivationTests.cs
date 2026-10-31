@@ -34,13 +34,14 @@ namespace Java.InteropTests
 
 		[Test]
 		[Category ("ManagedConstruction")]
+		[Category ("JniUtf8Construction")]
 		public void JavaSideExceptionConstructorCapturesStackFromPreinstalledPeer ()
 		{
 			ConstructorActivationJavaException.Reset ();
 
-			var handle = JNIEnv.StartCreateInstance (typeof (ConstructorActivationJavaException), "()V");
+			var handle = JNIEnv.AllocObject (typeof (ConstructorActivationJavaException));
 			try {
-				JNIEnv.FinishCreateInstance (handle, "()V");
+				JNIEnv.FinishCreateInstance (handle, "()V"u8);
 				var reference = new JniObjectReference (handle);
 				using var instance = JniEnvironment.Runtime.ValueManager.PeekPeer (reference) as ConstructorActivationJavaException;
 				Assert.IsNotNull (instance, "Java construction must activate and register the managed constructor.");
@@ -134,6 +135,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("JniUtf8Construction")]
 		public void JavaSideConstructorReinvokesExistingActivatablePeer ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -142,7 +144,7 @@ namespace Java.InteropTests
 				var peer = (IJavaPeerable) instance;
 				peer.SetJniManagedPeerState (instance.JniManagedPeerState | JniManagedPeerStates.Activatable | JniManagedPeerStates.Replaceable);
 
-				JNIEnv.FinishCreateInstance (instance.Handle, "()V");
+				JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
 
 				Assert.AreEqual (2, ConstructorActivationDefault.ConstructorInvocations);
 				Assert.AreEqual (2, instance.ConstructorOrdinal);
@@ -584,7 +586,7 @@ namespace Java.InteropTests
 			T> (string constructorSignature, params JValue [] arguments)
 			where T : Java.Lang.Object
 		{
-			var instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
+			var instance = JNIEnv.AllocObject (typeof (T));
 			JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
@@ -608,7 +610,7 @@ namespace Java.InteropTests
 		{
 			IntPtr instance = IntPtr.Zero;
 			try {
-				instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
+				instance = JNIEnv.AllocObject (typeof (T));
 				JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
 			} finally {
 				if (instance != IntPtr.Zero) {

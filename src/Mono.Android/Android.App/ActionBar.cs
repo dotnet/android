@@ -66,12 +66,13 @@ namespace Android.App {
 
 		public TabEventDispatcher ()
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/app/TabEventDispatcher", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/app/TabEventDispatcher"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 

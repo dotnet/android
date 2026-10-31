@@ -48,9 +48,9 @@ namespace Java.Lang {
 					return;
 
 				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "()V"),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 
