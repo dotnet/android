@@ -132,7 +132,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--output ", Output);
 			cmd.AppendSwitchIfNotNull ("--config ", temp);
 			foreach (var file in MetaDataFiles ?? []) {
-				cmd.AppendSwitch ($"--metadata-file={file.ItemSpec}");
+				cmd.AppendSwitchIfNotNull ("--metadata-file=", file.ItemSpec);
 			}
 			return cmd;
 		}
