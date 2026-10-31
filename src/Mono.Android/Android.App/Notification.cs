@@ -25,8 +25,11 @@ namespace Android.App {
 				if (vibrate_jfieldId == IntPtr.Zero)
 					vibrate_jfieldId = JNIEnv.GetFieldID (_members.GetPeerTypeHandle (), "vibrate", "[J");
 				IntPtr native_pattern = JNIEnv.NewArray (value);
-				JNIEnv.SetField (Handle, vibrate_jfieldId, native_pattern);
-				JNIEnv.DeleteLocalRef (native_pattern);
+				try {
+					JNIEnv.SetField (Handle, vibrate_jfieldId, native_pattern);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_pattern);
+				}
 			}
 		}
 	}

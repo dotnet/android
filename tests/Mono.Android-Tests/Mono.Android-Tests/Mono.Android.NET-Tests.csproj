@@ -116,6 +116,7 @@
 
   <ItemGroup>
     <Compile Include="Android.App\ApplicationTest.cs" />
+    <Compile Include="Android.App\NotificationTests.cs" />
     <Compile Include="Android.App\TrimmableTypeMapManifestTests.cs" />
     <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
     <Compile Include="Android.Content\CursorLoaderTest.cs" />
