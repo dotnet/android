@@ -17,7 +17,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerIntermediateClass" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceCaseMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateRtxt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidDesignerConfig" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -42,7 +43,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <!-- If we have not already built an assembly in either location, prefer the
     `_OuterIntermediateOutputPath` if possible over the `IntermediateOutputPath`.
     This will mean only one copy of the assembly will be created. Rather than one
-    per TargetFramework.
+    per runtime identifier.
     -->
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' And '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'true' ">$(_OuterIntermediateOutputPath)designtime\</_DesignerIntermediateOutputPath>
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_DesignerIntermediateOutputPath>
@@ -224,8 +225,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     order for it to be included in the final application package.
 
     In additon we MUST set the `PostprocessAssembly` metadata to `true` so that the file
-    is processed by the ILLink step. If we do not do this then the reference to
-    `netstandard.dll` is not replaced with `System.Private.CoreLib` and the app crashes.
+    is processed by the ILLink step, which rewrites framework type references
+    from `System.Runtime` to their runtime implementations.
 
     The trimmable typemap targets root the designer assembly when trimming is enabled:
     resource IDs may be resolved through reflection at runtime.

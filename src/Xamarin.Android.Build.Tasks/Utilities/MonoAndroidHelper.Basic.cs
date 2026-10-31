@@ -10,6 +10,17 @@ namespace Xamarin.Android.Tasks;
 
 partial class MonoAndroidHelper
 {
+	public static Dictionary<string, string> LoadMapFile (IEnumerable<string> lines, StringComparer comparer)
+	{
+		var map = new Dictionary<string, string> (comparer);
+		foreach (var line in lines) {
+			var items = line.Split (new char [] { ';' }, count: 2);
+			if (!map.ContainsKey (items [0]))
+				map.Add (items [0], items [1]);
+		}
+		return map;
+	}
+
 	public static class AndroidAbi
 	{
 		public const string Arm32 = "armeabi-v7a";
