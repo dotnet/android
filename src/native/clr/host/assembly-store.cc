@@ -64,7 +64,7 @@ void AssemblyStore::set_assembly_data_and_size (uint8_t* source_assembly_data, u
 }
 
 [[gnu::always_inline]]
-auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>
+auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData &e, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>
 {
 	uint8_t *assembly_data = nullptr;
 	uint32_t assembly_data_size = 0;
@@ -116,7 +116,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		};
 
 		if (!is_loaded ()) {
-			StartupAwareLock decompress_lock (assembly_decompress_mutex);
+			StartupAwareLock decompress_lock (assembly_data_mutex);
 
 			if (is_loaded ()) {
 				set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
@@ -159,20 +159,25 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	{
 		log_debugf (LOG_ASSEMBLY, "Assembly '%.*s' is not compressed in the assembly store", static_cast<int>(name.length ()), name.data ());
 
-		// HACK! START
 		// Currently, MAUI crashes when we return a pointer to read-only data, so we must copy
-		// the assembly data to a read-write area.
-		log_debugf (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
-
-		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
-		if (rw_pointer == nullptr) [[unlikely]] {
-			Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate writable assembly data");
+		// the assembly data to a read-write area. Cache it even when the binder rejects the
+		// requested identity, so subsequent probes reuse the same process-lifetime image.
+		uint8_t *rw_pointer = __atomic_load_n (&e.writable_image_data, __ATOMIC_ACQUIRE);
+		if (rw_pointer == nullptr) {
+			StartupAwareLock copy_lock (assembly_data_mutex);
+			rw_pointer = __atomic_load_n (&e.writable_image_data, __ATOMIC_ACQUIRE);
+			if (rw_pointer == nullptr) {
+				log_debugf (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
+				rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
+				if (rw_pointer == nullptr) [[unlikely]] {
+					Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate writable assembly data");
+				}
+				memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
+				__atomic_store_n (&e.writable_image_data, rw_pointer, __ATOMIC_RELEASE);
+			}
 		}
-		memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);
-		// HACK! END
-		// 	set_assembly_data_and_size (e.image_data, e.descriptor->data_size, assembly_data, assembly_data_size);
 	}
 
 	return {assembly_data, assembly_data_size};
@@ -240,7 +245,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		log_debugf (LOG_ASSEMBLY, "Assembly '%.*s' has no data in the assembly store", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
-	AssemblyStoreSingleAssemblyRuntimeData const& assembly_runtime_info = runtime_assemblies[store_entry.mapping_index];
+	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = runtime_assemblies[store_entry.mapping_index];
 
 	auto [assembly_data, assembly_data_size] = get_assembly_data (assembly_runtime_info, name);
 	size = assembly_data_size;
@@ -303,6 +308,7 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const cha
 		names_cursor += name_length;
 	}
 
+	// Free only the metadata: CoreCLR can still hold the cached writable images.
 	std::free (runtime_assemblies);
 	size_t runtime_size = Helpers::multiply_with_overflow_check<size_t> (header->entry_count, sizeof (AssemblyStoreSingleAssemblyRuntimeData));
 	runtime_assemblies = runtime_size == 0 ? nullptr :
