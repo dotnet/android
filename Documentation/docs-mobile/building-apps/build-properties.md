@@ -642,6 +642,12 @@ will be loaded by the runtime early during application startup in order to
 assure their proper initialization. However, in some cases it might not be the
 desired behavior and this property allows you to effectively disable it.
 
+When JNI preloading is disabled, each exempted library's `JNI_OnLoad` function
+runs synchronously on the thread that first loads the library. Libraries whose
+`JNI_OnLoad` implementation requires the main thread (for example, because it
+expects a prepared main-thread `Looper` or `ALooper`) must be preloaded on the
+main thread instead of relying on on-demand worker-thread loading.
+
 Some framework libraries which must be loaded at application startup will not
 be affected by this property.
 
