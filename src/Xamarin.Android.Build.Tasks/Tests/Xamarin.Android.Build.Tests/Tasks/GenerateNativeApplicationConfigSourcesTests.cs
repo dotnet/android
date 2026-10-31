@@ -33,8 +33,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 				AndroidPackageName = "com.microsoft.android.timezonetest",
 			};
 			var module = generator.Construct ();
-			var globals = module.GlobalVariables;
-			Assert.IsNotNull (globals);
+			var globals = module.GlobalVariables ?? throw new AssertionException ("The module must contain global variables.");
 			Assert.That (globals.Single (v => v.Name == "init_runtime_property_names").Value,
 				Is.EqualTo (new [] { "HOST_RUNTIME_CONTRACT", "RUNTIME_IDENTIFIER", "APP_CONTEXT_BASE_DIRECTORY", name, "other" }));
 			Assert.That (globals.Single (v => v.Name == "init_runtime_property_values").Value,
