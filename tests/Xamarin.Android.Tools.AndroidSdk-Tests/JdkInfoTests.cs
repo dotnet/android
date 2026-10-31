@@ -117,18 +117,9 @@ namespace Xamarin.Android.Tools.Tests
 			}
 			if (OS.IsWindows)
 				return;
-			var chmod = new ProcessStartInfo {
-				FileName                    = "chmod",
-				Arguments                   = $"+x \"{path}\"",
-				UseShellExecute             = false,
-				RedirectStandardInput       = false,
-				RedirectStandardOutput      = true,
-				RedirectStandardError       = true,
-				CreateNoWindow              = true,
-				WindowStyle                 = ProcessWindowStyle.Hidden,
-			};
-			var p = Process.Start (chmod);
-			p.WaitForExit ();
+			var status = Process.Run ("chmod", ["+x", path], timeout: TimeSpan.FromSeconds (30));
+			Assert.IsFalse (status.Canceled, $"chmod timed out for '{path}'.");
+			Assert.AreEqual (0, status.ExitCode, $"chmod failed for '{path}'.");
 		}
 
 		[Test]

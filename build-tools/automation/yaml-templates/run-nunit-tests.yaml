@@ -1,6 +1,7 @@
 parameters:
   testRunTitle: Xamarin Android Tests
   testAssembly: ''
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   dotNetTestExtraArgs: ''
   workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()

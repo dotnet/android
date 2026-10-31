@@ -34,13 +34,6 @@ namespace Xamarin.ProjectTools
 		const int DefaultBuildTimeOut = 30;
 		const int OutputDrainTimeoutSeconds = 2;
 
-		public static bool WaitForRedirectedOutput (Task outputDone, Task errorDone)
-		{
-			bool outputDrained = outputDone.Wait (TimeSpan.FromSeconds (OutputDrainTimeoutSeconds));
-			bool errorDrained = errorDone.Wait (TimeSpan.FromSeconds (OutputDrainTimeoutSeconds));
-			return outputDrained && errorDrained;
-		}
-
 		string root;
 		string buildLogFullPath;
 		IEnumerable<string>? lastBuildOutput;
@@ -332,63 +325,13 @@ namespace Xamarin.ProjectTools
 			psi.RedirectStandardError = true;
 			psi.StandardErrorEncoding = Encoding.UTF8;
 			psi.StandardOutputEncoding = Encoding.UTF8;
+			psi.InheritedHandles = [];
 
 			bool nativeCrashDetected = false;
 			bool result = false;
-			bool ranToCompletion = false;
 			int attempts = 1;
-			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			for (int attempt = 0; attempt < attempts; attempt++) {
-				if (processLog != null)
-					File.AppendAllText (processLog, psi.FileName + " " + args.ToString () + Environment.NewLine);
-				using (var p = new Process ()) {
-					p.ErrorDataReceived += (sender, e) => {
-						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
-							File.AppendAllText (processLog, e.Data + Environment.NewLine);
-							if (e.Data.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-							if (e.Data.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-						}
-						if (e.Data == null)
-							errorDone.TrySetResult (true);
-					};
-					p.OutputDataReceived += (sender, e) => {
-						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
-							File.AppendAllText (processLog, e.Data + Environment.NewLine);
-							if (e.Data.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-							if (e.Data.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-						}
-						if (e.Data == null)
-							outputDone.TrySetResult (true);
-					};
-					p.StartInfo = psi;
-					Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
-					p.Start ();
-					p.BeginOutputReadLine ();
-					p.BeginErrorReadLine ();
-					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, DefaultBuildTimeOut, 0).TotalMilliseconds);
-					if (!ranToCompletion && !p.HasExited)
-						p.Kill (entireProcessTree: true);
-					// ADB can leave a server process holding the build's redirected handles after dotnet exits.
-					if (!WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
-						Console.WriteLine ($"Build process {p.Id} exited or timed out with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
-					result = ranToCompletion && p.ExitCode == 0;
-					if (processLog != null) {
-						if (ranToCompletion) {
-							File.AppendAllText (processLog, $"ExitCode: {p.ExitCode}{Environment.NewLine}");
-						} else {
-							File.AppendAllText (processLog, $"Build Timed Out!{Environment.ExitCode}");
-						}
-					}
-				}
+				(result, nativeCrashDetected) = RunBuildProcessAsync (psi, processLog).GetAwaiter ().GetResult ();
 
 				LastBuildTime = DateTime.UtcNow - start;
 
@@ -428,6 +371,62 @@ namespace Xamarin.ProjectTools
 			}
 
 			return result;
+		}
+
+		static async Task<(bool succeeded, bool nativeCrashDetected)> RunBuildProcessAsync (ProcessStartInfo psi, string processLog)
+		{
+			bool crashDetected = false;
+			using var writer = processLog == null ? null : new StreamWriter (processLog, append: true) { AutoFlush = true };
+			writer?.WriteLine ($"{psi.FileName} {psi.Arguments}");
+			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
+			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromMinutes (DefaultBuildTimeOut));
+			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{psi.FileName}'.");
+
+			// Process exit and output EOF differ when an ADB server inherits the pipes.
+			async Task LimitOutputDrainAsync ()
+			{
+				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+				outputDeadline.CancelAfter (TimeSpan.FromSeconds (OutputDrainTimeoutSeconds));
+			}
+			var exited = LimitOutputDrainAsync ();
+			try {
+				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false)) {
+					writer?.WriteLine (line.Content);
+					if (writer != null &&
+						(line.Content.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase) ||
+						 line.Content.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase)))
+						crashDetected = true;
+				}
+				await exited.ConfigureAwait (false);
+			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+				writer?.WriteLine ("Build Timed Out!");
+				return (false, crashDetected);
+			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+				Console.WriteLine ($"Build process {process.Id} exited with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
+			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
+				executionDeadline.Cancel ();
+				try {
+					await exited.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					// The owned execution deadline also cancels the exit observer on early disposal.
+				}
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process exited before the kill request.
+					}
+					if (!process.WaitForExit (2000))
+						throw new TimeoutException ($"Build process {process.Id} did not exit after termination.");
+				}
+			}
+
+			writer?.WriteLine ($"ExitCode: {process.ExitCode}");
+			return (process.ExitCode == 0, crashDetected);
 		}
 
 		bool IsRunningInIDE {
