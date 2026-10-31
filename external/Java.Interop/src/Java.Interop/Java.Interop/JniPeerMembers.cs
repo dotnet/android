@@ -125,25 +125,16 @@ namespace Java.Interop {
 		JniStaticFields     staticFields;
 
 		public      Type        ManagedPeerType {get; private set;}
-		public      string      JniPeerTypeName {
-			get {
-				unsafe {
-					// SAFETY: the descriptor's producer retains NUL-terminated storage; only the managed conversion is cached here.
-					return jniPeerTypeNameUtf8 == null
-						? jniPeerTypeName ?? sourceJniPeerTypeName
-						: jniPeerTypeName ??= GetStringFromNullTerminated (jniPeerTypeNameUtf8);
-				}
-			}
-		}
+		// SAFETY: the descriptor's producer retains NUL-terminated storage; only the managed conversion is cached here.
+		public      string      JniPeerTypeName => unsafe (jniPeerTypeNameUtf8 == null
+			? jniPeerTypeName ?? sourceJniPeerTypeName
+			: jniPeerTypeName ??= GetStringFromNullTerminated (jniPeerTypeNameUtf8));
 		public      JniType     JniPeerType {
 			get {
-				JniType t;
-				unsafe {
-					// SAFETY: the peer-name borrow outlives lookup, and GetCachedJniType does not retain the name pointer.
-					t = jniPeerTypeNameUtf8 == null
-						? JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeName ?? sourceJniPeerTypeName)
-						: JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeNameUtf8);
-				}
+				// SAFETY: the peer-name borrow outlives lookup, and GetCachedJniType does not retain the name pointer.
+				var t = unsafe (jniPeerTypeNameUtf8 == null
+					? JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeName ?? sourceJniPeerTypeName)
+					: JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeNameUtf8));
 				t.RegisterWithRuntime ();
 				return t;
 			}
@@ -251,12 +242,10 @@ namespace Java.Interop {
 
 		JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
-			unsafe {
-				// SAFETY: the type-name producer keeps the cached source readable through this synchronous lookup.
-				return jniPeerTypeNameUtf8 == null
-					? JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeName ?? sourceJniPeerTypeName, method, signature)
-					: JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature);
-			}
+			// SAFETY: the type-name producer keeps the cached source readable through this synchronous lookup.
+			return unsafe (jniPeerTypeNameUtf8 == null
+				? JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeName ?? sourceJniPeerTypeName, method, signature)
+				: JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature));
 		}
 
 		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
@@ -337,10 +326,8 @@ namespace Java.Interop {
 		/// </safety>
 		static unsafe string GetStringFromNullTerminated (byte* value)
 		{
-			unsafe {
-				// SAFETY: the caller establishes readability through the terminator for this synchronous managed copy.
-				return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
-			}
+			// SAFETY: the caller establishes readability through the terminator for this synchronous managed copy.
+			return unsafe (System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)));
 		}
 
 		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)

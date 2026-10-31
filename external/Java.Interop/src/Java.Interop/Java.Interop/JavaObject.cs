@@ -139,22 +139,17 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-			unsafe {
-				// SAFETY: hashCode.()I has no arguments, so the virtual call does not read the null buffer.
-				return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
-			}
+			// SAFETY: hashCode.()I has no arguments, so the virtual call does not read the null buffer.
+			return unsafe (_members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null));
 		}
 
 		public override string? ToString ()
 		{
-			JniObjectReference lref;
-			unsafe {
-				// SAFETY: toString takes no arguments; its returned local reference is consumed below.
-				lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
-						"toString.()Ljava/lang/String;",
-						this,
-						null);
-			}
+			// SAFETY: toString takes no arguments; its returned local reference is consumed below.
+			var lref = unsafe (_members.InstanceMethods.InvokeVirtualObjectMethod (
+					"toString.()Ljava/lang/String;",
+					this,
+					null));
 			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -199,13 +194,7 @@ namespace Java.Interop
 			}
 		}
 
-		IntPtr IJavaPeerable.JniObjectReferenceControlBlock {
-			get {
-				unsafe {
-					// SAFETY: Return only the address; this getter neither dereferences it nor extends the block's lifetime.
-					return (IntPtr) jniObjectReferenceControlBlock;
-				}
-			}
-		}
+		// SAFETY: Return only the address; this getter neither dereferences it nor extends the block's lifetime.
+		IntPtr IJavaPeerable.JniObjectReferenceControlBlock => unsafe ((IntPtr) jniObjectReferenceControlBlock);
 	}
 }

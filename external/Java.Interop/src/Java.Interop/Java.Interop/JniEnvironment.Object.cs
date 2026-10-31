@@ -27,10 +27,8 @@ namespace Java.Interop {
 			{
 				JniEnvironment.WithinNewObjectScope = true;
 				try {
-					unsafe {
-						// SAFETY: Caller supplies a live class and matching ()V constructor; JNI reads no argument slots.
-						return _NewObject (type, method);
-					}
+					// SAFETY: Caller supplies a live class and matching ()V constructor; JNI reads no argument slots.
+					return unsafe (_NewObject (type, method));
 				}
 				finally {
 					JniEnvironment.WithinNewObjectScope = false;
@@ -47,10 +45,8 @@ namespace Java.Interop {
 			{
 				JniEnvironment.WithinNewObjectScope = true;
 				try {
-					unsafe {
-						// SAFETY: The caller supplies constructor-compatible slots and keeps their storage/references live.
-						return _NewObject (type, method, args);
-					}
+					// SAFETY: The caller supplies constructor-compatible slots and keeps their storage/references live.
+					return unsafe (_NewObject (type, method, args));
 				}
 				finally {
 					JniEnvironment.WithinNewObjectScope = false;
@@ -59,10 +55,8 @@ namespace Java.Interop {
 
 			public static JniObjectReference    ToString (JniObjectReference value)
 			{
-				unsafe {
-					// SAFETY: Object_toString is the cached zero-argument Object.toString()String method.
-					return JniEnvironment.InstanceMethods.CallObjectMethod (value, Object_toString);
-				}
+				// SAFETY: Object_toString is the cached zero-argument Object.toString()String method.
+				return unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (value, Object_toString));
 			}
 		}
 	}
