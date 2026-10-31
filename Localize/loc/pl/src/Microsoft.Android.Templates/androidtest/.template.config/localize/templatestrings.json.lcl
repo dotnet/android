@@ -22,7 +22,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating a .NET for Android test project using MSTest]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Projekt służący do tworzenia projektu testowego platformy .NET macOS przy użyciu narzędzia MSTest]]></Val>
+            <Val><![CDATA[Projekt służący do tworzenia projektu testowego platformy .NET dla systemu Android przy użyciu narzędzia MSTest]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
