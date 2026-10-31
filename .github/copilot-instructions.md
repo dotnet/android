@@ -68,56 +68,6 @@ Reference official Android documentation where helpful:
 
 **Native Code:** Use CMake, handle multiple ABIs (arm64-v8a, armeabi-v7a, x86_64, x86).
 
-## C# memory-safety audits
-
-**An unsafe audit is not a refactoring project.** Correct safety boundaries and
-documentation; preserve the existing implementation except for concrete bugs
-discovered during the audit.
-
-- Audit declaration-level `unsafe` separately from implementation-level
-  `unsafe { ... }`. A caller-unsafe member exposes invariants the caller must
-  satisfy; an implementation block discharges native operations locally. Under
-  updated memory-safety rules, the member modifier does not provide a general
-  unsafe body context. Do not make a managed wrapper caller-unsafe merely because
-  its implementation uses pointers.
-- Add, remove, or narrow unsafe contexts according to the actual operations and
-  caller obligations. Pointer storage alone is not proof of a caller obligation.
-  Preserve existing public compatibility exceptions; do not mechanically mark
-  every member with a safety comment unsafe.
-- Minimize indentation-only churn. Prefer the smallest necessary unsafe regions
-  over wrapping and reindenting entire methods; leave unaffected statements and
-  formatting alone. Do not change lifetimes, extract helpers, misclassify callers,
-  or use unusual brace formatting just to reduce the diff. Explain unavoidable
-  residual indentation changes.
-- Use `/// <safety>` for caller-owned requirements: validity, bounds, lifetime,
-  aliasing, threading, or ABI as applicable. State how long each requirement
-  applies, including failure paths. Use ordinary remarks for descriptive
-  implementation details. Document what the code actually guarantees, not a
-  stronger ownership or recovery model.
-- Put a concrete `// SAFETY:` justification inside every unsafe block being
-  audited, including generated blocks and tests. Explain the relevant checks,
-  pinning, roots, lifetimes, or caller preconditions; avoid boilerplate such as
-  "this is safe." Use plain language.
-- Do not rename, extract helpers, introduce callbacks or test hooks, redesign
-  ownership, add copying, or change accepted call sequences merely to perform the
-  audit. Preserve allocation, dispatch, exception, cleanup, and ABI behavior
-  unless a specific bug requires a change.
-- Fix concrete bugs found during the audit with the smallest complete correction
-  and focused regression coverage. Explain the bug and intentional behavior change
-  separately from annotation/block changes. If a broader redesign is needed,
-  discuss it first; explicitly deferred bugs must remain documented limitations,
-  not silently claimed as fixed.
-- Add tests only for specific bugs being fixed, not general audit, annotation, or
-  metadata coverage. Each added regression must identify the defect and why it
-  would fail without the fix. Apply this rule to test additions already made in
-  the audit: remove annotation-only cases and their unused scaffolding, while
-  preserving pre-existing tests and necessary compilation adjustments. Do not
-  relabel a broad safety-coverage matrix as a bug regression.
-- Update canonical generators/templates and their outputs together. Validate
-  caller contracts under the intended compiler rules as well as relevant runtime
-  behavior. Compilation alone does not establish runtime safety, and results from
-  an earlier implementation do not validate a later behavioral fix.
-
 ## Nullable Reference Types
 
 When opting C# code into nullable reference types:
