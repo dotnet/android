@@ -1,4 +1,9 @@
 #nullable enable
+static Android.Runtime.JNIEnv.AllocObject(System.ReadOnlySpan<byte> jniClassName) -> nint
+static Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
+static Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params Android.Runtime.JValue[]! constructorParameters) -> void
+static Android.Runtime.JNIEnv.InvokeConstructor(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
+static Android.Runtime.JNIEnv.InvokeConstructor(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params Android.Runtime.JValue[]! constructorParameters) -> void
 *REMOVED*override Android.AccessibilityServices.AccessibilityButtonController.AccessibilityButtonCallback.ThresholdClass.get -> nint
 *REMOVED*override Android.AccessibilityServices.AccessibilityButtonController.AccessibilityButtonCallback.ThresholdType.get -> System.Type!
 *REMOVED*override Android.AccessibilityServices.AccessibilityService.GestureResultCallback.ThresholdClass.get -> nint

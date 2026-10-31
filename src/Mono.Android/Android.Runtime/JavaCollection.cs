@@ -36,12 +36,13 @@ namespace Android.Runtime {
 
 		internal JavaCollection (IEnumerable items)
 			: base (
-					JNIEnv.StartCreateInstance ("java/util/ArrayList", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("java/util/ArrayList"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: this allocated ArrayList peer uses its zero-argument ()V constructor.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 
 			if (items == null) {
@@ -268,12 +269,13 @@ namespace Android.Runtime {
 		//
 		internal JavaCollection (IEnumerable<T> items)
 			: base (
-					JNIEnv.StartCreateInstance ("java/util/ArrayList", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("java/util/ArrayList"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: this allocated ArrayList peer uses its zero-argument ()V constructor.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 
 			if (items == null) {

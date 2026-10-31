@@ -19,12 +19,13 @@ namespace Java.Lang {
 
 			public RunnableImplementor (Action handler, bool removable)
 				: base (
-						JNIEnv.StartCreateInstance ("mono/java/lang/RunnableImplementor", "()V"),
+						// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+						unsafe (JNIEnv.AllocObject ("mono/java/lang/RunnableImplementor"u8)),
 						JniHandleOwnership.TransferLocalRef)
 			{
 				unsafe {
 					// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
-					JNIEnv.FinishCreateInstance (Handle, "()V");
+					JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 				}
 
 				Handler = handler;

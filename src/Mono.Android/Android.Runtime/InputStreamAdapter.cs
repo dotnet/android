@@ -10,12 +10,13 @@ namespace Android.Runtime {
 
 		public InputStreamAdapter (System.IO.Stream stream)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/runtime/InputStreamAdapter", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/runtime/InputStreamAdapter"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 
 			this.BaseStream = stream;
@@ -59,4 +60,3 @@ namespace Android.Runtime {
 		}
 	}
 }
-
