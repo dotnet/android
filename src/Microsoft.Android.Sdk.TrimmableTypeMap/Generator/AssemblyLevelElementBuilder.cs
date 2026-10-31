@@ -101,26 +101,12 @@ static class AssemblyLevelElementBuilder
 			}
 		}
 
-		// <uses-library> elements inside <application>
-		foreach (var ul in info.UsesLibraries) {
-			if (string.IsNullOrEmpty (ul.Name)) {
-				continue;
-			}
-			if (!app.Elements ("uses-library").Any (e => (string?)e.Attribute (AttName) == ul.Name)) {
-				app.Add (new XElement ("uses-library",
-					new XAttribute (AttName, ul.Name),
-					new XAttribute (AndroidNs + "required", ul.Required ? "true" : "false")));
-			}
-		}
-
 		// Assembly-level <meta-data> inside <application>
 		foreach (var md in info.MetaData) {
 			if (string.IsNullOrEmpty (md.Name)) {
 				continue;
 			}
-			if (!app.Elements ("meta-data").Any (e => (string?)e.Attribute (AndroidNs + "name") == md.Name)) {
-				app.Add (ComponentElementBuilder.CreateMetaDataElement (md));
-			}
+			app.Add (ComponentElementBuilder.CreateMetaDataElement (md));
 		}
 
 		// Assembly-level <property> inside <application>
@@ -128,17 +114,15 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (prop.Name)) {
 				continue;
 			}
-			if (!app.Elements ("property").Any (e => (string?)e.Attribute (AndroidNs + "name") == prop.Name)) {
-				var element = new XElement ("property",
-					new XAttribute (AndroidNs + "name", prop.Name));
-				if (prop.Value is not null) {
-					element.SetAttributeValue (AndroidNs + "value", prop.Value);
-				}
-				if (prop.Resource is not null) {
-					element.SetAttributeValue (AndroidNs + "resource", prop.Resource);
-				}
-				app.Add (element);
+			var element = new XElement ("property",
+				new XAttribute (AndroidNs + "name", prop.Name));
+			if (prop.Value is not null) {
+				element.SetAttributeValue (AndroidNs + "value", prop.Value);
 			}
+			if (prop.Resource is not null) {
+				element.SetAttributeValue (AndroidNs + "resource", prop.Resource);
+			}
+			app.Add (element);
 		}
 
 		// <uses-configuration> elements
@@ -172,49 +156,118 @@ static class AssemblyLevelElementBuilder
 		}
 	}
 
+	internal static void AddInstrumentations (XElement manifest, IEnumerable<InstrumentationInfo> instrumentations)
+	{
+		var existingInstrumentations = new HashSet<string> (
+			manifest.Descendants ("instrumentation").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+		foreach (var instrumentation in instrumentations) {
+			if (string.IsNullOrEmpty (instrumentation.Name)) {
+				continue;
+			}
+			if (!existingInstrumentations.Add (instrumentation.Name)) {
+				continue;
+			}
+			var element = new XElement ("instrumentation", new XAttribute (AttName, instrumentation.Name));
+			PropertyMapper.ApplyMappings (element, instrumentation.Properties, PropertyMapper.InstrumentationMappings);
+			if (element.Attribute (AndroidNs + "targetPackage") is null) {
+				element.SetAttributeValue (AndroidNs + "targetPackage", (string?) manifest.Attribute ("package"));
+			}
+			manifest.Add (element);
+		}
+	}
+
+	internal static void AddUsesLibraries (XElement app, IEnumerable<UsesLibraryInfo> libraries)
+	{
+		var existingLibraries = new HashSet<string> (
+			app.Elements ("uses-library").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+		foreach (var library in libraries) {
+			if (!string.IsNullOrEmpty (library.Name) && existingLibraries.Add (library.Name)) {
+				app.Add (new XElement ("uses-library",
+					new XAttribute (AttName, library.Name),
+					new XAttribute (AndroidNs + "required", library.Required ? "true" : "false")));
+			}
+		}
+	}
+
 	internal static void ApplyApplicationProperties (
 		XElement app,
-		Dictionary<string, object?> properties,
+		IReadOnlyDictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
-		Action<int, string>? warn = null)
+		Action<int, string>? warn = null,
+		ISet<XAttribute>? writtenAttributes = null)
 	{
-		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings, skipExisting: true);
+		PropertyMapper.ApplyMappings (
+			app,
+			properties,
+			PropertyMapper.ApplicationPropertyMappings,
+			writtenAttributes: writtenAttributes);
 
 		// BackupAgent and ManageSpaceActivity are Type properties — resolve managed type names to JNI names
-		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent", warn);
-		ApplyTypeProperty (app, properties, allPeers, "ManageSpaceActivity", "manageSpaceActivity", warn);
+		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent", warn, writtenAttributes);
+		ApplyTypeProperty (app, properties, allPeers, "ManageSpaceActivity", "manageSpaceActivity", warn, writtenAttributes);
 	}
 
 	static void ApplyTypeProperty (
 		XElement app,
-		Dictionary<string, object?> properties,
+		IReadOnlyDictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		string propertyName,
 		string xmlAttrName,
-		Action<int, string>? warn)
+		Action<int, string>? warn,
+		ISet<XAttribute>? writtenAttributes)
 	{
-		if (app.Attribute (AndroidNs + xmlAttrName) is not null) {
-			return;
-		}
 		if (!properties.TryGetValue (propertyName, out var value) || value is not string managedName || managedName.Length == 0) {
 			return;
 		}
 
-		// Strip assembly qualification if present (e.g., "MyApp.MyAgent, MyAssembly")
-		var commaIndex = managedName.IndexOf (',');
-		if (commaIndex > 0) {
-			managedName = managedName.Substring (0, commaIndex).Trim ();
-		}
-
-		foreach (var peer in allPeers) {
-			if (peer.ManagedTypeName == managedName) {
-				app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
-				return;
+		var peer = FindPeerByAssemblyQualifiedName (allPeers, managedName);
+		if (peer is not null) {
+			if (propertyName == "BackupAgent" && !IsSubclassOf (peer, "android/app/backup/BackupAgent", allPeers)) {
+				throw new InvalidOperationException (
+					$"The Type '{peer.ManagedTypeName}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.");
 			}
+			app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
+			var attribute = app.Attribute (AndroidNs + xmlAttrName);
+			if (attribute is not null) {
+				writtenAttributes?.Add (attribute);
+			}
+			return;
 		}
 
 		// Code 0 = no XA code assigned; the caller may silently ignore it.
 		warn?.Invoke (0, $"Could not resolve {propertyName} type '{managedName}' to a Java peer for android:{xmlAttrName}.");
+	}
+
+	internal static JavaPeerInfo? FindPeerByAssemblyQualifiedName (IReadOnlyList<JavaPeerInfo> allPeers, string value)
+	{
+		var managedTypeName = value.Trim ();
+		string? assemblyName = null;
+		var commaIndex = managedTypeName.IndexOf (',');
+		if (commaIndex > 0) {
+			var assemblyStart = commaIndex + 1;
+			var assemblyEnd = managedTypeName.IndexOf (',', assemblyStart);
+			assemblyName = managedTypeName.Substring (
+				assemblyStart,
+				assemblyEnd < 0 ? managedTypeName.Length - assemblyStart : assemblyEnd - assemblyStart).Trim ();
+			managedTypeName = managedTypeName.Substring (0, commaIndex).Trim ();
+		}
+
+		return allPeers.FirstOrDefault (peer =>
+			peer.ManagedTypeName == managedTypeName &&
+			(assemblyName is null || peer.AssemblyName == assemblyName));
+	}
+
+	internal static bool IsSubclassOf (JavaPeerInfo peer, string baseJavaName, IReadOnlyList<JavaPeerInfo> allPeers)
+	{
+		var currentBase = peer.BaseJavaName;
+		var visited = new HashSet<string> (StringComparer.Ordinal);
+		while (currentBase is not null && visited.Add (currentBase)) {
+			if (currentBase == baseJavaName) {
+				return true;
+			}
+			currentBase = allPeers.FirstOrDefault (candidate => candidate.JavaName == currentBase)?.BaseJavaName;
+		}
+		return false;
 	}
 
 	internal static void AddInternetPermission (XElement manifest)

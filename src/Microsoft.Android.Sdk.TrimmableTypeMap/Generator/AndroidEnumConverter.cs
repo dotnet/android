@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -98,7 +99,37 @@ static class AndroidEnumConverter
 	public static string? UiOptionsToString (int value) => value switch {
 		0 => "none",
 		1 => "splitActionBarWhenNarrow",
-		_ => null,
+		_ => throw new ArgumentException ($"Unsupported UiOptions value '{value}'."),
+	};
+
+	public static string? RequiredContentUriPermissionToString (int value) => value switch {
+		0 => "none",
+		1 => "read",
+		2 => "write",
+		3 => "readOrWrite",
+		4 => "readAndWrite",
+		_ => throw new ArgumentException ($"Unsupported RequiredContentUriPermission value '{value}'."),
+	};
+
+	public static string? ApplicationCategoriesToString (int value) => value switch {
+		0 => "game",
+		1 => "audio",
+		2 => "video",
+		3 => "image",
+		4 => "social",
+		5 => "news",
+		6 => "maps",
+		7 => "productivity",
+		8 => "accessibility",
+		-1 => throw new ArgumentException ("Unsupported ApplicationCategories value 'Undefined'."),
+		_ => throw new ArgumentException ($"Unsupported ApplicationCategories value '{value}'."),
+	};
+
+	public static string? GwpAsanToString (int value) => value switch {
+		-1 => "never",
+		0 => "never",
+		1 => "always",
+		_ => throw new ArgumentException ($"Unsupported GwpAsan value '{value}'."),
 	};
 
 	public static string? ForegroundServiceTypeToString (int value)
