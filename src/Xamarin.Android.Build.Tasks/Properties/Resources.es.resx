@@ -193,7 +193,7 @@ Este error se debe probablemente a un problema con el archivo AndroidManifest.xm
 {0} - The library name.</comment>
   </data>
   <data name="XA0101" xml:space="preserve">
-    <value>@(Content) build action is not supported</value>
+    <value>La acción de compilación @(Content) no se admite</value>
     <comment>@(Content) is an MSBuild item name and should not be translated.</comment>
   </data>
   <data name="XA0105" xml:space="preserve">

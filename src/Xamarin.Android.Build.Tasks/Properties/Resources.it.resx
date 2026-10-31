@@ -193,7 +193,7 @@ Questo errore è probabilmente causato da un problema con il file di AndroidMani
 {0} - The library name.</comment>
   </data>
   <data name="XA0101" xml:space="preserve">
-    <value>@(Content) build action is not supported</value>
+    <value>L'azione di compilazione @(Content) non è supportata</value>
     <comment>@(Content) is an MSBuild item name and should not be translated.</comment>
   </data>
   <data name="XA0105" xml:space="preserve">
