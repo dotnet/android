@@ -13,8 +13,9 @@ namespace Android.OS {
 
 		public bool Post (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (Post (runnable)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -23,8 +24,9 @@ namespace Android.OS {
 
 		public bool PostAtFrontOfQueue (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostAtFrontOfQueue (runnable)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -33,8 +35,9 @@ namespace Android.OS {
 
 		public bool PostAtTime (Action action, long uptimeMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostAtTime (runnable, uptimeMillis)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -43,8 +46,9 @@ namespace Android.OS {
 
 		public bool PostAtTime (Action action, Java.Lang.Object token, long uptimeMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this, token: token);
 			if (PostAtTime (runnable, token, uptimeMillis)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -53,8 +57,9 @@ namespace Android.OS {
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostDelayed (runnable, delayMillis)) {
+				runnable.SetPosted ();
 				return true;
 			}
 			runnable.Dispose ();
@@ -63,20 +68,12 @@ namespace Android.OS {
 
 		public void RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return;
-			RemoveCallbacks (runnable);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable), retire: true);
 		}
 
 		public void RemoveCallbacks (Action action, Java.Lang.Object token)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return;
-			RemoveCallbacks (runnable, token);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => RemoveCallbacks (runnable, token), token: token, retire: true);
 		}
 	}
 
@@ -103,4 +100,3 @@ namespace Android.OS {
 		}
 	}
 }
-

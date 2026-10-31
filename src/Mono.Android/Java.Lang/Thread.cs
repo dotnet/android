@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Android.Runtime;
+using Java.Interop;
 
 namespace Java.Lang {
 
@@ -12,46 +13,116 @@ namespace Java.Lang {
 		[Register ("mono/java/lang/RunnableImplementor")]
 		internal sealed class RunnableImplementor : Java.Lang.Object, IRunnable {
 
-			public Action Handler;
-			bool removable;
+			Action? handler;
+			JniObjectReference owner;
+			JniObjectReference context;
+			JniObjectReference token;
+			bool posted;
+			LinkedListNode<WeakReference<RunnableImplementor>>? registration;
 
-			public RunnableImplementor (Action handler) : this (handler, false) {}
+			public RunnableImplementor (Action handler) : this (handler, null) {}
 
-			public RunnableImplementor (Action handler, bool removable)
+			public RunnableImplementor (Action handler, Java.Lang.Object? owner, Java.Lang.Object? context = null, Java.Lang.Object? token = null)
 				: base (
 						JNIEnv.StartCreateInstance ("mono/java/lang/RunnableImplementor", "()V"),
 						JniHandleOwnership.TransferLocalRef)
 			{
 				JNIEnv.FinishCreateInstance (Handle, "()V");
 
-				Handler = handler;
-				this.removable = removable;
-				if (removable)
-					lock (instances)
-						instances.AddOrUpdate (handler, this);
+				this.handler = handler;
+				if (owner != null) {
+					this.owner = owner.PeerReference.NewWeakGlobalRef ();
+					if (context != null)
+						this.context = context.PeerReference.NewWeakGlobalRef ();
+					if (token != null)
+						this.token = token.PeerReference.NewWeakGlobalRef ();
+					lock (instances) {
+						var runnables = instances.GetOrCreateValue (handler);
+						// Java queues own these peers. A live Action must not keep a cleared queue alive.
+						registration = runnables.AddLast (new WeakReference<RunnableImplementor> (this, trackResurrection: true));
+					}
+				}
 			}
 
 			public void Run ()
 			{
-				if (Handler != null)
-					Handler ();
-				if (removable)
-					lock (instances)
-						if (Handler != null)
-							instances.Remove (Handler);
-				Dispose ();
+				try {
+					handler?.Invoke ();
+				} finally {
+					Dispose ();
+				}
 			}
 
-			static ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
+			static readonly ConditionalWeakTable<Action, LinkedList<WeakReference<RunnableImplementor>>> instances = new ();
 
-			public static RunnableImplementor Remove (Action handler)
+			public void SetPosted ()
 			{
-				RunnableImplementor result;
 				lock (instances) {
-					instances.TryGetValue (handler, out result!);
-					instances.Remove (handler);
+					posted = true;
 				}
-				return result;
+			}
+
+			void Unregister ()
+			{
+				if (registration?.List is { } runnables) {
+					runnables.Remove (registration);
+					if (runnables.Count == 0 && handler != null &&
+							instances.TryGetValue (handler, out var current) && ReferenceEquals (current, runnables))
+						instances.Remove (handler);
+				}
+				registration = null;
+				JniObjectReference.Dispose (ref owner);
+				JniObjectReference.Dispose (ref context);
+				JniObjectReference.Dispose (ref token);
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				lock (instances) {
+					Unregister ();
+					handler = null;
+					base.Dispose (disposing);
+				}
+			}
+
+			static bool IsSameObject (JniObjectReference first, Java.Lang.Object second)
+			{
+				return first.IsValid && JNIEnv.IsSameObject (first.Handle, second.Handle);
+			}
+
+			public static void Remove (Action handler, Java.Lang.Object owner, Action<RunnableImplementor> remove, Java.Lang.Object? context = null, Java.Lang.Object? token = null, bool retire = false)
+			{
+				List<(RunnableImplementor Runnable, bool Retire)> matches;
+				lock (instances) {
+					if (!instances.TryGetValue (handler, out var runnables))
+						return;
+					matches = new ();
+					for (var node = runnables.First; node != null;) {
+						var next = node.Next;
+						if (!node.Value.TryGetTarget (out var runnable))
+							runnables.Remove (node);
+						else if ((context != null
+								? IsSameObject (runnable.context.IsValid ? runnable.context : runnable.owner, context)
+								: IsSameObject (runnable.owner, owner)) &&
+								(token == null || IsSameObject (runnable.token, token)))
+							matches.Add ((runnable, retire && runnable.posted));
+						node = next;
+					}
+					if (runnables.Count == 0)
+						instances.Remove (handler);
+				}
+				// Drawable helpers share an originating drawable even across forwarding entry points.
+				// Native removal still filters the actual queue, without disposing possibly owned peers.
+				foreach (var (runnable, canRetire) in matches) {
+					if (runnable.Handle != IntPtr.Zero) {
+						remove (runnable);
+						if (canRetire) {
+							lock (instances) {
+								runnable.Unregister ();
+							}
+						}
+					}
+				}
 			}
 		}
 
