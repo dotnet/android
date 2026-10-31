@@ -3,7 +3,6 @@ package mono;
 import java.io.*;
 import java.lang.String;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.HashSet;
@@ -47,7 +46,6 @@ public class MonoPackageManager {
 				String cacheDir     = context.getCacheDir ().getAbsolutePath ();
 				String dataDir      = getNativeLibraryPath (context);
 				ClassLoader loader  = context.getClassLoader ();
-				String runtimeDir   = getNativeLibraryPath (runtimePackage);
 				int localDateTimeOffset;
 
 				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -67,11 +65,9 @@ public class MonoPackageManager {
 				Runtime.initInternal (
 					language,
 					apks,
-					runtimeDir,
 					appDirs,
 					localDateTimeOffset,
 					loader,
-					MonoPackageManager_Resources.Assemblies,
 					isEmulator (),
 					haveSplitApks
 				);
