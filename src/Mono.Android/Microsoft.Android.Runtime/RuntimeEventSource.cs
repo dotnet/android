@@ -274,18 +274,22 @@ internal static class RuntimeEventSource
 
 		[NonEvent]
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The payload contains only fixed-size primitive values; no object graph is serialized.")]
-		unsafe void WriteGlobalReference (int eventId, ulong sourceHandle, ulong handle, int sourceType, int referenceType, int globalCount, int weakCount, int managedThreadId, int bridgeOperation)
+		void WriteGlobalReference (int eventId, ulong sourceHandle, ulong handle, int sourceType, int referenceType, int globalCount, int weakCount, int managedThreadId, int bridgeOperation)
 		{
-			EventData* data = stackalloc EventData [8];
-			data [0] = new EventData { DataPointer = (IntPtr) (&sourceHandle), Size = sizeof (ulong) };
-			data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
-			data [2] = new EventData { DataPointer = (IntPtr) (&sourceType), Size = sizeof (int) };
-			data [3] = new EventData { DataPointer = (IntPtr) (&referenceType), Size = sizeof (int) };
-			data [4] = new EventData { DataPointer = (IntPtr) (&globalCount), Size = sizeof (int) };
-			data [5] = new EventData { DataPointer = (IntPtr) (&weakCount), Size = sizeof (int) };
-			data [6] = new EventData { DataPointer = (IntPtr) (&managedThreadId), Size = sizeof (int) };
-			data [7] = new EventData { DataPointer = (IntPtr) (&bridgeOperation), Size = sizeof (int) };
-			WriteEventCore (eventId, 8, data);
+			unsafe {
+				// SAFETY: eight stack entries address two ulongs and six ints with their exact sizes;
+				// WriteEventCore consumes them synchronously before this frame unwinds, without retaining pointers.
+				EventData* data = stackalloc EventData [8];
+				data [0] = new EventData { DataPointer = (IntPtr) (&sourceHandle), Size = sizeof (ulong) };
+				data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
+				data [2] = new EventData { DataPointer = (IntPtr) (&sourceType), Size = sizeof (int) };
+				data [3] = new EventData { DataPointer = (IntPtr) (&referenceType), Size = sizeof (int) };
+				data [4] = new EventData { DataPointer = (IntPtr) (&globalCount), Size = sizeof (int) };
+				data [5] = new EventData { DataPointer = (IntPtr) (&weakCount), Size = sizeof (int) };
+				data [6] = new EventData { DataPointer = (IntPtr) (&managedThreadId), Size = sizeof (int) };
+				data [7] = new EventData { DataPointer = (IntPtr) (&bridgeOperation), Size = sizeof (int) };
+				WriteEventCore (eventId, 8, data);
+			}
 		}
 
 		[Event (LocalReferenceCreatedEventId, Level = EventLevel.Verbose, Keywords = Keywords.LocalReference)]
@@ -308,15 +312,19 @@ internal static class RuntimeEventSource
 
 		[NonEvent]
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The payload contains only fixed-size primitive values; no object graph is serialized.")]
-		unsafe void WriteLocalReference (int eventId, ulong sourceHandle, ulong handle, int localCount, int managedThreadId, int bridgeOperation)
+		void WriteLocalReference (int eventId, ulong sourceHandle, ulong handle, int localCount, int managedThreadId, int bridgeOperation)
 		{
-			EventData* data = stackalloc EventData [5];
-			data [0] = new EventData { DataPointer = (IntPtr) (&sourceHandle), Size = sizeof (ulong) };
-			data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
-			data [2] = new EventData { DataPointer = (IntPtr) (&localCount), Size = sizeof (int) };
-			data [3] = new EventData { DataPointer = (IntPtr) (&managedThreadId), Size = sizeof (int) };
-			data [4] = new EventData { DataPointer = (IntPtr) (&bridgeOperation), Size = sizeof (int) };
-			WriteEventCore (eventId, 5, data);
+			unsafe {
+				// SAFETY: five stack entries address two ulongs and three ints with their exact sizes;
+				// WriteEventCore consumes them before return or exception unwinding; no string buffer is involved.
+				EventData* data = stackalloc EventData [5];
+				data [0] = new EventData { DataPointer = (IntPtr) (&sourceHandle), Size = sizeof (ulong) };
+				data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
+				data [2] = new EventData { DataPointer = (IntPtr) (&localCount), Size = sizeof (int) };
+				data [3] = new EventData { DataPointer = (IntPtr) (&managedThreadId), Size = sizeof (int) };
+				data [4] = new EventData { DataPointer = (IntPtr) (&bridgeOperation), Size = sizeof (int) };
+				WriteEventCore (eventId, 5, data);
+			}
 		}
 
 		[Event (GlobalReferenceDiagnosticEventId, Level = EventLevel.Verbose, Keywords = Keywords.GlobalReference)]
@@ -333,23 +341,31 @@ internal static class RuntimeEventSource
 
 		[Event (WeakGlobalReferenceCollectedEventId, Level = EventLevel.Verbose, Keywords = Keywords.GlobalReference)]
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The payload is a single unsigned integer; no object graph is serialized.")]
-		public unsafe void WeakGlobalReferenceCollected (ulong handle)
+		public void WeakGlobalReferenceCollected (ulong handle)
 		{
-			EventData data = new () { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
-			WriteEventCore (WeakGlobalReferenceCollectedEventId, 1, &data);
+			unsafe {
+				// SAFETY: the one descriptor addresses the live ulong handle scalar, not JNI memory;
+				// WriteEventCore copies its sizeof(ulong) bytes before this frame ends.
+				EventData data = new () { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
+				WriteEventCore (WeakGlobalReferenceCollectedEventId, 1, &data);
+			}
 		}
 
 		[Event (ReferenceStackTraceEventId, Level = EventLevel.Verbose, Keywords = Keywords.ReferenceStackTrace)]
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The payload contains only primitive values and a string; no object graph is serialized.")]
-		public unsafe void ReferenceStackTrace (int referenceEventId, ulong handle, int managedThreadId, string stackTrace)
+		public void ReferenceStackTrace (int referenceEventId, ulong handle, int managedThreadId, string stackTrace)
 		{
-			fixed (char* text = stackTrace) {
-				EventData* data = stackalloc EventData [4];
-				data [0] = new EventData { DataPointer = (IntPtr) (&referenceEventId), Size = sizeof (int) };
-				data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
-				data [2] = new EventData { DataPointer = (IntPtr) (&managedThreadId), Size = sizeof (int) };
-				data [3] = new EventData { DataPointer = (IntPtr) text, Size = (stackTrace.Length + 1) * sizeof (char) };
-				WriteEventCore (ReferenceStackTraceEventId, 4, data);
+			unsafe {
+				// SAFETY: three scalar descriptors use exact widths, and fixed pins stackTrace including
+				// its UTF-16 terminator for the fourth; WriteEventCore consumes all four before the pin ends.
+				fixed (char* text = stackTrace) {
+					EventData* data = stackalloc EventData [4];
+					data [0] = new EventData { DataPointer = (IntPtr) (&referenceEventId), Size = sizeof (int) };
+					data [1] = new EventData { DataPointer = (IntPtr) (&handle), Size = sizeof (ulong) };
+					data [2] = new EventData { DataPointer = (IntPtr) (&managedThreadId), Size = sizeof (int) };
+					data [3] = new EventData { DataPointer = (IntPtr) text, Size = (stackTrace.Length + 1) * sizeof (char) };
+					WriteEventCore (ReferenceStackTraceEventId, 4, data);
+				}
 			}
 		}
 	}

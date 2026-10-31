@@ -45,14 +45,17 @@ namespace Android.App {
 		// The binding generator has no hook for injecting the startup no-GC cleanup into this method.
 		[SupportedOSPlatform ("android19.0")]
 		[Register ("reportFullyDrawn", "()V", "GetReportFullyDrawnHandler")]
-		public virtual unsafe void ReportFullyDrawn ()
+		public virtual void ReportFullyDrawn ()
 		{
 			const string id = "reportFullyDrawn.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
-			} finally {
-				if (RuntimeFeature.StartupNoGCRegion) {
-					StartupNoGCRegion.End ();
+			unsafe {
+				// SAFETY: reportFullyDrawn has the parameterless void ABI; the Activity peer remains live through the existing JNI invocation and startup cleanup.
+				try {
+					_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
+				} finally {
+					if (RuntimeFeature.StartupNoGCRegion) {
+						StartupNoGCRegion.End ();
+					}
 				}
 			}
 		}
@@ -67,17 +70,23 @@ namespace Android.App {
 		static void n_ReportFullyDrawn (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and borrowed Activity receiver; the rooted
+				// handler points to __n_ReportFullyDrawn with the exact managed (IntPtr, IntPtr) -> void ABI.
 				Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_ReportFullyDrawn);
 			}
 		}
 
 		static void __n_ReportFullyDrawn (IntPtr jnienv, IntPtr native__this)
 		{
-			var activity = Java.Lang.Object.GetObject<Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			if (activity == null) {
-				throw new InvalidOperationException ("Could not obtain the managed Activity instance for reportFullyDrawn.");
+			unsafe {
+				// SAFETY: SafeInvokeAction supplies the live current-thread JNI environment and borrowed
+				// Activity receiver for this transition; the managed peer is used synchronously without transferring that reference.
+				var activity = Java.Lang.Object.GetObject<Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				if (activity == null) {
+					throw new InvalidOperationException ("Could not obtain the managed Activity instance for reportFullyDrawn.");
+				}
+				activity.ReportFullyDrawn ();
 			}
-			activity.ReportFullyDrawn ();
 		}
 	}
 }

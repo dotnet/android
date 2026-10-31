@@ -102,7 +102,10 @@ namespace Android.Text {
 					JNIEnv.StartCreateInstance ("mono/android/text/TextWatcherImplementor", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 
 			this.inst = inst;
 			AfterTextChanged = after_handler;

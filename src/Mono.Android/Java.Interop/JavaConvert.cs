@@ -72,7 +72,8 @@ namespace Java.Interop {
 				return (h, t) => h == IntPtr.Zero ? null : underlyingConverter (h, t);
 
 			if (target.IsArray)
-				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
+				// SAFETY: conversion supplies h's live array reference and t's owned transfer.
+				return (h, t) => unsafe(JNIEnv.GetArray (h, t, target.GetElementType ()));
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
 				if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups ||
@@ -87,11 +88,14 @@ namespace Java.Interop {
 			}
 
 			if (typeof (IDictionary).IsAssignableFrom (target))
-				return (h, t) => JavaDictionary.FromJniHandle (h, t);
+				// SAFETY: conversion supplies h's live Map reference and t's owned transfer.
+				return (h, t) => unsafe(JavaDictionary.FromJniHandle (h, t));
 			if (typeof (IList).IsAssignableFrom (target))
-				return (h, t) => JavaList.FromJniHandle (h, t);
+				// SAFETY: conversion supplies h's live List reference and t's owned transfer.
+				return (h, t) => unsafe(JavaList.FromJniHandle (h, t));
 			if (typeof (ICollection).IsAssignableFrom (target))
-				return (h, t) => JavaCollection.FromJniHandle (h, t);
+				// SAFETY: conversion supplies h's live Collection reference and t's owned transfer.
+				return (h, t) => unsafe(JavaCollection.FromJniHandle (h, t));
 
 			return null;
 
@@ -146,40 +150,53 @@ namespace Java.Interop {
 				useRuntimeTypeMapping = elementType is null || elementType == typeof (object);
 			}
 
-			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+			/// <safety>
+			/// <paramref name="handle"/> must be null or a live object reference compatible with this converter's
+			/// element type, usable on this thread until conversion returns or throws. Own the requested transfer;
+			/// conversion may consume it before a later failure, so do not race release or reuse consumed aliases.
+			/// </safety>
+			public unsafe object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 			{
-				if (handle == IntPtr.Zero)
-					return null;
+				unsafe {
+					// SAFETY: the caller supplies the element reference and transfer; cached-peer lookup
+					// does not validate raw addresses, and each branch retains its existing ownership/failure path.
+					if (handle == IntPtr.Zero)
+						return null;
 
-				if (useRuntimeTypeMapping)
-					return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+					if (useRuntimeTypeMapping)
+						return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 
-				if (elementType != null) {
-					var peeked = Java.Lang.Object.PeekObject (handle, elementType);
-					if (peeked != null) {
-						JNIEnv.DeleteRef (handle, transfer);
-						return peeked;
+					if (elementType != null) {
+						var peeked = Java.Lang.Object.PeekObject (handle, elementType);
+						if (peeked != null) {
+							JNIEnv.DeleteRef (handle, transfer);
+							return peeked;
+						}
 					}
+
+					if (converter != null)
+						return converter (handle, transfer);
+
+					if (elementType != null && elementType.IsArray)
+						return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
+
+					if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
+						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
+					}
+
+					var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+					if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
+						return value;
+					return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
 				}
-
-				if (converter != null)
-					return converter (handle, transfer);
-
-				if (elementType != null && elementType.IsArray)
-					return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
-
-				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
-					return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
-				}
-
-				var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
-				if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
-					return value;
-				return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
 			}
 		}
 
-		static object? FromJniHandleWithRuntimeTypeMapping (IntPtr handle, JniHandleOwnership transfer)
+		/// <safety>
+		/// Retain the supplied live, current-thread JNI object reference until type lookup/conversion finishes,
+		/// including failure; transfer must match owned reference kind and exclude concurrent release or reuse.
+		/// </safety>
+		static unsafe object? FromJniHandleWithRuntimeTypeMapping (IntPtr handle, JniHandleOwnership transfer)
 		{
 			var converter = GetJniHandleConverter (GetTypeMapping (handle));
 			if (converter != null)
@@ -187,7 +204,11 @@ namespace Java.Interop {
 			return FromJniHandle (handle, transfer);
 		}
 
-		static object? FromJniHandleWithTrimmableTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
+		/// <safety>
+		/// Supply a live current-thread JNI object reference compatible with elementType and own the indicated
+		/// transfer. This path may consume the reference on success or failure; do not access released aliases.
+		/// </safety>
+		static unsafe object? FromJniHandleWithTrimmableTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
 		{
 			bool consumed = false;
 			try {
@@ -217,7 +238,12 @@ namespace Java.Interop {
 			}
 		}
 
-		public static T? FromJniHandle<
+		/// <safety>
+		/// A nonzero handle must be a live current-thread JNI object reference compatible with the requested
+		/// conversion to T. Retain it until conversion returns or throws and own the indicated transfer.
+		/// Conversion may consume the handle before a later failure; exclude release/use through aliases.
+		/// </safety>
+		public static unsafe T? FromJniHandle<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		>(IntPtr handle, JniHandleOwnership transfer)
@@ -226,7 +252,12 @@ namespace Java.Interop {
 			return FromJniHandle<T>(handle, transfer, out set);
 		}
 
-		public static T? FromJniHandle<
+		/// <safety>
+		/// A nonzero handle must be a live current-thread JNI object reference compatible with the requested
+		/// conversion to T. Retain it until conversion returns or throws and own the indicated transfer.
+		/// Conversion may consume the handle before a later failure; exclude release/use through aliases.
+		/// </safety>
+		public static unsafe T? FromJniHandle<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		>(IntPtr handle, JniHandleOwnership transfer, out bool set)
@@ -281,15 +312,24 @@ namespace Java.Interop {
 				};
 			}
 
-			var value = FromJniHandle (reference.Handle, transfer, targetType);
-			if (transfer != JniHandleOwnership.DoNotTransfer) {
-				reference = default;
-			}
+			unsafe {
+				// SAFETY: the value manager supplies this live typed reference and ownership options;
+				// transfer is derived from its actual local/global kind, and conversion finishes before reference is cleared.
+				var value = FromJniHandle (reference.Handle, transfer, targetType);
+				if (transfer != JniHandleOwnership.DoNotTransfer) {
+					reference = default;
+				}
 
-			return value;
+				return value;
+			}
 		}
 
-		public static object? FromJniHandle (
+		/// <safety>
+		/// A nonzero handle must be a live JNI object reference from this VM usable on this thread and
+		/// compatible with targetType's conversion. Own the requested transfer, keep the reference until
+		/// conversion returns or throws, and do not race release or reuse aliases after ownership is consumed.
+		/// </safety>
+		public static unsafe object? FromJniHandle (
 				IntPtr handle,
 				JniHandleOwnership transfer,
 				[DynamicallyAccessedMembers (Constructors)]
@@ -338,7 +378,11 @@ namespace Java.Interop {
 			{ "java/lang/String",     typeof (string) },
 		};
 
-		static Type? GetTypeMapping (IntPtr handle)
+		/// <safety>
+		/// Supply a live JNI object reference from this VM usable on this thread through class lookup,
+		/// including exception unwinding. The local class acquired here does not retain the original object handle.
+		/// </safety>
+		static unsafe Type? GetTypeMapping (IntPtr handle)
 		{
 			var lref = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 			try {
@@ -409,7 +453,10 @@ namespace Java.Interop {
 			var converter = GetJniHandleConverter (typeof (T));
 			if (converter != null)
 				return (T?) converter (lrefValue, JniHandleOwnership.TransferLocalRef);
-			JNIEnv.DeleteLocalRef (lrefValue);
+			unsafe {
+				// SAFETY: lrefValue is the owned local from ToLocalJniHandle; this is its existing normal-path release.
+				JNIEnv.DeleteLocalRef (lrefValue);
+			}
 			return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 		}
 
@@ -441,7 +488,10 @@ namespace Java.Interop {
 			var converter = GetJniHandleConverter (targetType);
 			if (converter != null)
 				return converter (lrefValue, JniHandleOwnership.TransferLocalRef);
-			JNIEnv.DeleteLocalRef (lrefValue);
+			unsafe {
+				// SAFETY: lrefValue is the owned local from ToLocalJniHandle; this is its existing normal-path release.
+				JNIEnv.DeleteLocalRef (lrefValue);
+			}
 			return Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 		}
 
@@ -592,25 +642,33 @@ namespace Java.Interop {
 
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = ToLocalJniHandle (value);
-			try {
-				return action (lref);
-			}
-			finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: ToLocalJniHandle creates lref for value; action borrows it synchronously, and
+				// the existing finally deletes that local and retains value through both return and exception.
+				IntPtr lref = ToLocalJniHandle (value);
+				try {
+					return action (lref);
+				}
+				finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 
 		public static TReturn WithLocalJniHandle<TReturn>(object? value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = ToLocalJniHandle (value);
-			try {
-				return action (lref);
-			}
-			finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: ToLocalJniHandle creates lref for value; action borrows it synchronously, and
+				// the existing finally deletes that local and retains value through both return and exception.
+				IntPtr lref = ToLocalJniHandle (value);
+				try {
+					return action (lref);
+				}
+				finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 	}

@@ -30,6 +30,8 @@ static class JavaMarshalRegisteredPeers
 	public static void CollectPeers ()
 	{
 		unsafe {
+			// SAFETY: the bridge enqueues registered contexts after collection; each dequeued allocation
+			// stays live through bucket removal and is freed only afterward, outside bridge processing.
 			while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
 				Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
 				HandleContext* context = (HandleContext*)contextPtr;
@@ -331,37 +333,49 @@ static class JavaMarshalRegisteredPeers
 		}
 	}
 
-	unsafe struct ReferenceTrackingHandle : IDisposable
+	struct ReferenceTrackingHandle : IDisposable
 	{
 		WeakReference<IJavaPeerable?> _weakReference;
 		HandleContext* _context;
 
-		public bool BelongsToContext (HandleContext* context)
-			=> _context == context;
+		// SAFETY: this only compares stored context addresses; no context memory is accessed.
+		public bool BelongsToContext (HandleContext* context) => unsafe(_context == context);
 
 		public ReferenceTrackingHandle (IJavaPeerable peer)
 		{
-			_context = HandleContext.Alloc (peer);
+			unsafe {
+				// SAFETY: allocation captures the peer's live control block and owns the context until Dispose/bridge collection.
+				_context = HandleContext.Alloc (peer);
+			}
 			_weakReference = new (peer);
 		}
 
 		public IJavaPeerable? Target
 			=> _weakReference.TryGetTarget (out var target) ? target : null;
 
-		public bool IsValid => _context != null;
+		// SAFETY: this only tests the stored context address; no context memory is accessed.
+		public bool IsValid => unsafe(_context != null);
 
 		public void Dispose ()
 		{
-			if (_context == null)
+			// SAFETY: this only tests the stored context address; no context memory is accessed.
+			if (unsafe(_context == null))
 				return;
 
 			IJavaPeerable? target = Target;
 
-			GCHandle handle = HandleContext.GetAssociatedGCHandle (_context);
-			HandleContext.Free (ref _context);
+			// SAFETY: this owner retains the registered context until the matching release below.
+			GCHandle handle = unsafe(HandleContext.GetAssociatedGCHandle (_context));
+			unsafe {
+				// SAFETY: this registered handle owns the context; peer/GCHandle retention prevents premature control-block collection.
+				HandleContext.Free (ref _context);
+			}
 			_weakReference.SetTarget (null);
 			if (handle.IsAllocated) {
-				handle.Free ();
+				unsafe {
+					// SAFETY: the associated registered context has been removed and this owner releases its GCHandle exactly once.
+					handle.Free ();
+				}
 			}
 
 			// Make sure the target is not collected before we finish disposing

@@ -10,11 +10,14 @@ namespace Android.Widget {
 		static IntPtr id_addTextChangedListener;
 		void AddTextChangedListener (TextWatcherImplementor watcher)
 		{
-			if (id_addTextChangedListener == IntPtr.Zero)
-				id_addTextChangedListener = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "addTextChangedListener", "(Landroid/text/TextWatcher;)V");
-			JNIEnv.CallVoidMethod (Handle, id_addTextChangedListener, new JValue (watcher));
-			GC.KeepAlive (watcher);
-			GC.KeepAlive (this);
+			unsafe {
+				// SAFETY: addTextChangedListener takes one TextWatcher; the cached ID matches that ABI and existing KeepAlive retains the watcher and receiver.
+				if (id_addTextChangedListener == IntPtr.Zero)
+					id_addTextChangedListener = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "addTextChangedListener", "(Landroid/text/TextWatcher;)V");
+				JNIEnv.CallVoidMethod (Handle, id_addTextChangedListener, new JValue (watcher));
+				GC.KeepAlive (watcher);
+				GC.KeepAlive (this);
+			}
 		}
 
 		WeakReference? implementor_TextWatcher;

@@ -14,7 +14,10 @@ namespace Android.Runtime
 					JNIEnv.StartCreateInstance ("mono/android/runtime/OutputStreamAdapter", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 
 			this.BaseStream = stream;
 		}

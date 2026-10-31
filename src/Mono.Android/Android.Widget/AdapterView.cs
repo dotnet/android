@@ -55,6 +55,12 @@ namespace Android.Widget {
 			T
 	> : AdapterView  where T : IAdapter {
 
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live AdapterView-compatible reference from this VM
+		/// usable on this thread until construction returns or throws. Own the requested reference transfer,
+		/// exclude concurrent release/use of consumed aliases, and use zero only for empty-peer initialization.
+		/// Caller-unsafe enforcement on raw peer constructors is deferred; existing initialization APIs are unchanged.
+		/// </safety>
 		public AdapterView (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -67,11 +73,14 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			SetHandle (
-					JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;)V", new JValue (context)),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V", new JValue (context));
-			GC.KeepAlive (context);
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;)V constructor with the matching arguments before this constructor returns.
+				SetHandle (
+						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;)V", new JValue (context)),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V", new JValue (context));
+				GC.KeepAlive (context);
+			}
 		}
 
 		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;)V", "")]
@@ -81,12 +90,15 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			SetHandle (
-					JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs)),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs));
-			GC.KeepAlive (context);
-			GC.KeepAlive (attrs);
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;Landroid/util/AttributeSet;)V constructor with the matching arguments before this constructor returns.
+				SetHandle (
+						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs)),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs));
+				GC.KeepAlive (context);
+				GC.KeepAlive (attrs);
+			}
 		}
 
 		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", "")]
@@ -96,12 +108,15 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			SetHandle (
-					JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle)),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle));
-			GC.KeepAlive (context);
-			GC.KeepAlive (attrs);
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;Landroid/util/AttributeSet;I)V constructor with the matching arguments before this constructor returns.
+				SetHandle (
+						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle)),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle));
+				GC.KeepAlive (context);
+				GC.KeepAlive (attrs);
+			}
 		}
 
 		protected override Java.Lang.Object? RawAdapter {
