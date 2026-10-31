@@ -15,7 +15,7 @@ internal static class CoreClrBootstrapBlob
 	public const string Symbol = "coreclr_bootstrap";
 	public const string LocalDateTimeOffsetPropertyName = "System.TimeZoneInfo.LocalDateTimeOffset";
 	const uint Magic = 0x47464358; // XCFG
-	const ushort Version = 1;
+	const ushort Version = 2;
 	const int HeaderSize = 84;
 	const int HostRuntimePropertyCount = 4;
 	const int MaximumSize = 256 * 1024 * 1024;
@@ -26,7 +26,7 @@ internal static class CoreClrBootstrapBlob
 		uint assemblyCount, uint bundledNameWidth, uint sharedLibraryCount, string packageName,
 		IDictionary<string, string> environment, IDictionary<string, string> systemProperties,
 		IDictionary<string, string> runtimeProperties,
-		IReadOnlyList<(uint Hash, bool Ignore, bool IsJniLibrary, string Name)> libraries,
+		IReadOnlyList<(uint Hash, bool Ignore, bool IsJniLibrary, string Name, string Alias)> libraries,
 		IReadOnlyList<uint> preloads, uint preloadStride)
 	{
 		var output = MemoryStreamPool.Shared.Rent ();
@@ -46,7 +46,7 @@ internal static class CoreClrBootstrapBlob
 		uint assemblyCount, uint bundledNameWidth, uint sharedLibraryCount, string packageName,
 		IDictionary<string, string> environment, IDictionary<string, string> systemProperties,
 		IDictionary<string, string> runtimeProperties,
-		IReadOnlyList<(uint Hash, bool Ignore, bool IsJniLibrary, string Name)> libraries,
+		IReadOnlyList<(uint Hash, bool Ignore, bool IsJniLibrary, string Name, string Alias)> libraries,
 		IReadOnlyList<uint> preloads, uint preloadStride)
 	{
 		if (string.IsNullOrEmpty (packageName) || libraries == null || preloads == null ||
@@ -88,7 +88,7 @@ internal static class CoreClrBootstrapBlob
 		uint sysOffset = checked (envOffset + (uint)environmentPairs.Count * 8);
 		uint runtimeOffset = checked (sysOffset + (uint)systemPairs.Count * 8);
 		uint dsoOffset = checked (runtimeOffset + (uint)runtimeNames.Count * 8);
-		uint preloadsOffset = checked (dsoOffset + (uint)libraries.Count * 12);
+		uint preloadsOffset = checked (dsoOffset + (uint)libraries.Count * 16);
 		uint stringsOffset = checked (preloadsOffset + (uint)preloads.Count * 4);
 		if (stringsOffset >= MaximumSize) {
 			throw new InvalidDataException ("CoreCLR bootstrap configuration exceeds 256 MiB.");
@@ -137,6 +137,7 @@ internal static class CoreClrBootstrapBlob
 			writer.Write ((byte)(library.IsJniLibrary ? 1 : 0));
 			writer.Write ((ushort)0);
 			writer.Write (Add (library.Name, required: true));
+			writer.Write (Add (library.Alias));
 		}
 		foreach (uint preload in preloads) {
 			if (preload >= libraries.Count) {
@@ -210,7 +211,7 @@ internal static class CoreClrBootstrapBlob
 		reader.ReadUInt32 (); // Bundled assembly name width.
 		uint packageOffset = reader.ReadUInt32 ();
 		ulong next = HeaderSize;
-		uint [] entrySizes = [8, 8, 8, 12, 4];
+		uint [] entrySizes = [8, 8, 8, 16, 4];
 		for (int i = 0; i < entrySizes.Length; i++) {
 			if (offsets [i] != next) {
 				throw new InvalidDataException ("Invalid CoreCLR bootstrap table offset.");
@@ -266,6 +267,7 @@ internal static class CoreClrBootstrapBlob
 				throw new InvalidDataException ("Invalid CoreCLR DSO cache flags.");
 			}
 			ReadString (reader.ReadUInt32 (), required: true);
+			ReadString (reader.ReadUInt32 (), required: false);
 		}
 		for (uint j = 0; j < counts [4]; j++) {
 			reader.BaseStream.Position = offsets [4] + j * entrySizes [4];

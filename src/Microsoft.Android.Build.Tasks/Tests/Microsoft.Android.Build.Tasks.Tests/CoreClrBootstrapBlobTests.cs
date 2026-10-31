@@ -137,6 +137,6 @@ public class CoreClrBootstrapBlobTests : BaseTest
 		Assert.Throws<InvalidDataException> (() => CoreClrBootstrapBlob.Create (
 			false, false, 0, 0, 0, 0, "com.example.test",
 			new Dictionary<string, string> (), new Dictionary<string, string> (), new Dictionary<string, string> (),
-			[(2u, false, false, "libsecond.so"), (1u, false, false, "libfirst.so")], [], 1));
+			[(2u, false, false, "libsecond.so", "second"), (1u, false, false, "libfirst.so", "first")], [], 1));
 	}
 }
