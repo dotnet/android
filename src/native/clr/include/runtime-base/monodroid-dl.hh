@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <string_view>
 
 #include <dlfcn.h>
@@ -13,7 +14,6 @@
 #include "coreclr-bootstrap.hh"
 #include <runtime-base/crc32.hh>
 #include <runtime-base/dso-loader.hh>
-#include <runtime-base/search.hh>
 #include "startup-aware-lock.hh"
 
 namespace xamarin::android
@@ -120,15 +120,19 @@ namespace xamarin::android
 		{
 			log_debugf (LOG_ASSEMBLY, "Looking for hash %x in DSO cache", hash);
 
-			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
-			size_t idx = Search::lower_bound<DSOCacheEntry, hash_t, less_than> (hash, CoreClrBootstrap::dso_cache, CoreClrBootstrap::config.number_of_dso_cache_entries);
+			if (CoreClrBootstrap::config.number_of_dso_cache_entries == 0) {
+				return nullptr;
+			}
 
-			while (idx < CoreClrBootstrap::config.number_of_dso_cache_entries && CoreClrBootstrap::dso_cache[idx].hash == hash) {
-				DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[idx];
-				if (name_is_mutation_of (name, get_dso_name (&entry))) {
-					return &entry;
+			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
+			const auto end = CoreClrBootstrap::dso_cache + CoreClrBootstrap::config.number_of_dso_cache_entries;
+			auto entry = std::lower_bound (CoreClrBootstrap::dso_cache, end, hash, less_than);
+
+			while (entry != end && entry->hash == hash) {
+				if (name_is_mutation_of (name, get_dso_name (entry))) {
+					return entry;
 				}
-				idx++;
+				++entry;
 			}
 
 			return nullptr;
