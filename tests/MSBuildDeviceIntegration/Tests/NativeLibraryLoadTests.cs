@@ -4,9 +4,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-
+using System.Text;
+using System.Threading;
+using Microsoft.Android.Tasks;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;
@@ -185,6 +189,296 @@ public class NativeLibraryLoadTests : DeviceTest
 
 		Assert.IsFalse (loadTimedOut, "The worker P/Invoke waited for the blocked Android main thread.");
 		Assert.IsTrue (appCompleted, $"Output did not contain {completedMessage}.");
+	}
+
+	[Test]
+	public void ExemptJniLibraryLoadsOnWorkerThreadWithBlockedMainThread ([Values] bool extractNativeLibs)
+	{
+		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			return;
+		}
+
+		const string completedMessage = "WORKER_JNI_LIBRARY_LOAD_COMPLETED:115:1:1";
+		const string failedMessage = "WORKER_JNI_LIBRARY_LOAD_FAILED:";
+		string packageName = PackageUtils.MakePackageName (
+			AndroidRuntime.CoreCLR, $"workerjniload{(extractNativeLibs ? "extracted" : "embedded")}");
+		var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
+			IsRelease = true,
+			ProjectName = "WorkerJniLibraryLoad",
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetRuntimeIdentifiers ([DeviceAbi]);
+		proj.SetDefaultTargetDevice ();
+		proj.SetProperty ("AllowUnsafeBlocks", "true");
+		proj.SetProperty ("AndroidLinkTool", "r8");
+		proj.SetProperty ("PublishReadyToRun", "false");
+		proj.AndroidManifest = proj.AndroidManifest.Replace (
+			"<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" ");
+
+		using var builder = CreateApkBuilder (packageName: packageName);
+		string nativeWorkDir = Path.Combine (Root, builder.ProjectDirectory, "native-fixtures");
+		Directory.CreateDirectory (nativeWorkDir);
+
+		byte [] outerLibrary = CompileJniFixtureLibrary (
+			nativeWorkDir,
+			"libjniworkerouter.so",
+			"""
+			#include <jni.h>
+
+			static jint outer_loaded = 0;
+
+			JNIEXPORT jint JNICALL
+			JNI_OnLoad (JavaVM *vm, void *reserved)
+			{
+				(void)reserved;
+				JNIEnv *env = NULL;
+				if ((*vm)->GetEnv (vm, (void**)&env, JNI_VERSION_1_6) != JNI_OK || env == NULL) {
+					return JNI_ERR;
+				}
+
+				jclass probe = (*env)->FindClass (env, "com/xamarin/jniloadertest/JniLoadProbe");
+				if (probe == NULL) {
+					return JNI_ERR;
+				}
+
+				jmethodID on_outer_load = (*env)->GetStaticMethodID (env, probe, "onOuterLoad", "()I");
+				if (on_outer_load == NULL) {
+					(*env)->DeleteLocalRef (env, probe);
+					return JNI_ERR;
+				}
+
+				jint inner_value = (*env)->CallStaticIntMethod (env, probe, on_outer_load);
+				(*env)->DeleteLocalRef (env, probe);
+				if ((*env)->ExceptionCheck (env) || inner_value != 73) {
+					return JNI_ERR;
+				}
+
+				outer_loaded = 42 + inner_value;
+				return JNI_VERSION_1_6;
+			}
+
+			JNIEXPORT int JNICALL
+			jni_worker_outer_get_value (void)
+			{
+				return (int)outer_loaded;
+			}
+			""");
+
+		byte [] innerLibrary = CompileJniFixtureLibrary (
+			nativeWorkDir,
+			"libjniworkerinner.so",
+			"""
+			#include <jni.h>
+
+			static jint inner_loaded = 0;
+
+			JNIEXPORT jint JNICALL
+			JNI_OnLoad (JavaVM *vm, void *reserved)
+			{
+				(void)reserved;
+				JNIEnv *env = NULL;
+				if ((*vm)->GetEnv (vm, (void**)&env, JNI_VERSION_1_6) != JNI_OK || env == NULL) {
+					return JNI_ERR;
+				}
+
+				jclass probe = (*env)->FindClass (env, "com/xamarin/jniloadertest/JniLoadProbe");
+				if (probe == NULL) {
+					return JNI_ERR;
+				}
+
+				jmethodID on_inner_load = (*env)->GetStaticMethodID (env, probe, "onInnerLoad", "()I");
+				if (on_inner_load == NULL) {
+					(*env)->DeleteLocalRef (env, probe);
+					return JNI_ERR;
+				}
+
+				jint value = (*env)->CallStaticIntMethod (env, probe, on_inner_load);
+				(*env)->DeleteLocalRef (env, probe);
+				if ((*env)->ExceptionCheck (env) || value != 73) {
+					return JNI_ERR;
+				}
+
+				inner_loaded = value;
+				return JNI_VERSION_1_6;
+			}
+
+			JNIEXPORT int JNICALL
+			jni_worker_inner_get_value (void)
+			{
+				return (int)inner_loaded;
+			}
+			""");
+
+		proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JniLoadProbe.java") {
+			Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+			TextContent = () => """
+			package com.xamarin.jniloadertest;
+
+			public final class JniLoadProbe {
+				public static volatile int outerOnLoadCount;
+				public static volatile int innerOnLoadCount;
+
+				public static native int invokeInnerFromManaged ();
+
+				public static int onOuterLoad () {
+					outerOnLoadCount++;
+					return invokeInnerFromManaged ();
+				}
+
+				public static int onInnerLoad () {
+					innerOnLoadCount++;
+					return 73;
+				}
+			}
+			""",
+		});
+
+		foreach ((string fileName, byte [] content) in new [] {
+			("libjniworkerouter.so", outerLibrary),
+			("libjniworkerinner.so", innerLibrary),
+		}) {
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ($"native/{DeviceAbi}/{fileName}") {
+				BinaryContent = () => content,
+				MetadataValues = $"Link={DeviceAbi}/{fileName}",
+			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibraryNoJniPreload (fileName));
+		}
+
+		proj.MainActivity = proj.DefaultMainActivity
+			.Replace ("//${USINGS}", "using System;\nusing System.Runtime.InteropServices;\nusing System.Threading;\nusing Java.Interop;")
+			.Replace (
+				"//${AFTER_ONCREATE}",
+				$$"""
+				try {
+					using var probeType = new JniType ("com/xamarin/jniloadertest/JniLoadProbe");
+					unsafe {
+						Span<JniNativeMethod> methods = stackalloc JniNativeMethod [1];
+						fixed (byte* namePtr = "invokeInnerFromManaged"u8)
+						fixed (byte* sigPtr = "()I"u8) {
+							methods [0] = new JniNativeMethod (namePtr, sigPtr, (IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &NativeMethods.InvokeInnerFromManaged);
+							JniEnvironment.Types.RegisterNatives (probeType.PeerReference, methods);
+						}
+					}
+
+					var outerCountField = probeType.GetStaticField ("outerOnLoadCount", "I");
+					var innerCountField = probeType.GetStaticField ("innerOnLoadCount", "I");
+					int initialOuterCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, outerCountField);
+					int initialInnerCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, innerCountField);
+					if (initialOuterCount != 0 || initialInnerCount != 0) {
+						Android.Util.Log.Error ("NativeLibraryLoadTest", $"{{failedMessage}}Libraries were preloaded ({initialOuterCount}, {initialInnerCount})");
+						return;
+					}
+
+					int workerValue = 0;
+					Exception? workerException = null;
+					var worker = new Thread (() => {
+						try {
+							workerValue = NativeMethods.GetOuterValue ();
+						} catch (Exception ex) {
+							workerException = ex;
+						}
+					}) {
+						IsBackground = true,
+						Name = "WorkerJniLoader",
+					};
+					worker.Start ();
+					if (!worker.Join (TimeSpan.FromSeconds (5))) {
+						Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}TimedOut");
+						return;
+					}
+					if (workerException != null) {
+						Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}" + workerException);
+						return;
+					}
+
+					int finalOuterCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, outerCountField);
+					int finalInnerCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, innerCountField);
+					Android.Util.Log.Info ("NativeLibraryLoadTest", $"WORKER_JNI_LIBRARY_LOAD_COMPLETED:{workerValue}:{finalOuterCount}:{finalInnerCount}");
+				} catch (Exception ex) {
+					Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}" + ex);
+				}
+				""")
+			.Replace (
+				"//${AFTER_MAINACTIVITY}",
+				"""
+				static class NativeMethods
+				{
+					[UnmanagedCallersOnly]
+					public static int InvokeInnerFromManaged (IntPtr jnienv, IntPtr klass)
+					{
+						return GetInnerValue ();
+					}
+
+					[DllImport ("jniworkerouter", EntryPoint = "jni_worker_outer_get_value")]
+					public static extern int GetOuterValue ();
+
+					[DllImport ("jniworkerinner", EntryPoint = "jni_worker_inner_get_value")]
+					public static extern int GetInnerValue ();
+				}
+				""");
+
+		Assert.IsTrue (builder.Install (proj), "Project should have built and installed.");
+		AssertExtractNativeLibs (builder.Output.GetIntermediaryPath (Path.Combine ("android", "AndroidManifest.xml")), extractNativeLibs);
+
+		ClearAdbLogcat ();
+		string? failureLine = null;
+		bool completed = MonitorAdbLogcat (
+			line => {
+				if (line.Contains (failedMessage, StringComparison.Ordinal)) {
+					failureLine = line;
+					return true;
+				}
+				return line.Contains (completedMessage, StringComparison.Ordinal);
+			},
+			Path.Combine (Root, builder.ProjectDirectory, "worker-jni-library-load.log"),
+			timeout: 45,
+			onMonitoringStarted: () => StartActivityAndAssert (proj)
+		);
+
+		Assert.IsNull (failureLine, $"Worker JNI library load failed: {failureLine}");
+		Assert.IsTrue (completed, $"Output did not contain {completedMessage}.");
+	}
+
+	byte [] CompileJniFixtureLibrary (string directory, string libraryFileName, string source)
+	{
+		var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out), nameof (NativeLibraryLoadTests));
+		var ndk = AndroidNdkTools.Create (AndroidNdkPath, log)
+			?? throw new InvalidOperationException ("The configured Android NDK must be available.");
+		string clang = ndk.GetToolPath ("clang")
+			?? throw new InvalidOperationException ("Unable to locate clang in the configured Android NDK.");
+
+		string targetTriple = DeviceAbi switch {
+			"arm64-v8a" => "aarch64-linux-android24",
+			"armeabi-v7a" => "armv7a-linux-androideabi24",
+			"x86_64" => "x86_64-linux-android24",
+			"x86" => "i686-linux-android24",
+			_ => throw new NotSupportedException ($"Unsupported device ABI '{DeviceAbi}'."),
+		};
+
+		string sourcePath = Path.Combine (directory, Path.ChangeExtension (libraryFileName, ".c"));
+		string outputPath = Path.Combine (directory, libraryFileName);
+		File.WriteAllText (sourcePath, source, new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
+
+		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
+		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
+		var startInfo = ProcessUtils.CreateProcessStartInfo (
+			clang,
+			$"--target={targetTriple}",
+			"-shared",
+			"-fPIC",
+			"-O2",
+			"-Wall",
+			"-Wextra",
+			"-Werror",
+			$"-Wl,-soname,{libraryFileName}",
+			"-Wl,--no-undefined",
+			sourcePath,
+			"-o",
+			outputPath
+		);
+		int exitCode = ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken.None).GetAwaiter ().GetResult ();
+		Assert.AreEqual (0, exitCode, $"clang failed for {libraryFileName}: {stderr}{stdout}");
+		return File.ReadAllBytes (outputPath);
 	}
 
 	[Test]

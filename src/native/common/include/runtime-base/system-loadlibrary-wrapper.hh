@@ -14,20 +14,26 @@ namespace xamarin::android {
 	{
 	public:
 		[[gnu::flatten]]
-		static void init (JNIEnv *env, jclass systemClass) noexcept
+		static void init (JNIEnv *env, jclass helperClass) noexcept
 		{
-			systemKlass = systemClass;
-			System_loadLibrary = env->GetStaticMethodID (systemClass, "loadLibrary", "(Ljava/lang/String;)V");
-			if (System_loadLibrary == nullptr) [[unlikely]] {
-				Helpers::abort_application ("Failed to look up the Java System.loadLibrary method.");
+			// The host supplies a global reference from the application's Runtime class.
+			nativeLibraryHelperClass = helperClass;
+			if (nativeLibraryHelperClass == nullptr) [[unlikely]] {
+				env->ExceptionDescribe ();
+				Helpers::abort_application ("Failed to look up the Java NativeLibraryHelper class.");
+			}
+			helper_loadLibrary = env->GetStaticMethodID (helperClass, "loadLibrary", "(Ljava/lang/String;)V");
+			if (helper_loadLibrary == nullptr) [[unlikely]] {
+				env->ExceptionDescribe ();
+				Helpers::abort_application ("Failed to look up the Java NativeLibraryHelper.loadLibrary method.");
 			}
 		}
 
 		[[gnu::flatten]]
 		static auto load (JNIEnv *jni_env, std::string_view const& undecorated_lib_name) noexcept -> bool
 		{
-			if (systemKlass == nullptr) [[unlikely]] {
-				Helpers::abort_application ("System.loadeLibrary wrapper class not initialized properly."sv);
+			if (nativeLibraryHelperClass == nullptr) [[unlikely]] {
+				Helpers::abort_application ("System.loadLibrary wrapper class not initialized properly."sv);
 			}
 
 			// We must pass a NUL-terminated string to Java, otherwise strange things happen, and a
@@ -68,7 +74,7 @@ namespace xamarin::android {
 				// It's an OOM, there's nothing better we can do
 				Helpers::abort_application ("Java string allocation failed while loading a shared library.");
 			}
-			jni_env->CallStaticVoidMethod (systemKlass, System_loadLibrary, java_lib_name);
+			jni_env->CallStaticVoidMethod (nativeLibraryHelperClass, helper_loadLibrary, java_lib_name);
 			// This runs while loading the application's shared libraries, before returning to Java, so
 			// the local reference has to be released here or the local reference table fills up.
 			jni_env->DeleteLocalRef (java_lib_name);
@@ -84,7 +90,7 @@ namespace xamarin::android {
 			return true;
 		}
 
-		static inline jmethodID System_loadLibrary = nullptr;
-		static inline jclass systemKlass = nullptr;
+		static inline jmethodID helper_loadLibrary = nullptr;
+		static inline jclass nativeLibraryHelperClass = nullptr;
 	};
 }

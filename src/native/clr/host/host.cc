@@ -9,8 +9,6 @@
 #include <cstring>
 #include <unistd.h>
 
-#include <android/looper.h>
-
 #include <coreclrhost.h>
 
 #include <xamarin-app.hh>
@@ -433,9 +431,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	DsoLoader::init (
 		env,
-		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true),
-		ALooper_forThread (), // main thread looper
-		gettid ()
+		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_NativeLibraryHelper", true)
 	);
 
 	preload_jni_libraries ();
