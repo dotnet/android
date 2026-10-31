@@ -154,7 +154,10 @@ namespace Android.Runtime {
 				// SAFETY: The class reference is live until the finally releases it; AllocObject returns a new local reference.
 				return unsafe (AllocObject (jniClass));
 			} finally {
-				DeleteGlobalRef (jniClass);
+				unsafe {
+					// SAFETY: This call owns the global class reference returned by FindClass.
+					DeleteGlobalRef (jniClass);
+				}
 			}
 		}
 
@@ -344,7 +347,10 @@ namespace Android.Runtime {
 					CallNonvirtualVoidMethod (instance, lrefClass, ctor.ID, constructorParameters);
 				}
 			} finally {
-				DeleteLocalRef (lrefClass);
+				unsafe {
+					// SAFETY: This call owns the current-thread local class reference returned by GetObjectClass.
+					DeleteLocalRef (lrefClass);
+				}
 			}
 		}
 
