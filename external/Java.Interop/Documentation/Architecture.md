@@ -27,29 +27,6 @@ conversion and argument-state creation/cleanup. Primitive, string, and array
 conversion remain supported. `JavaObject` and `JavaException` maintain managed
 peers and their JNI reference ownership.
 
-## Compiler-enforced caller contracts
-
-Java.Interop opts into the preview compiler's `updated-memory-safety-rules`
-feature. Its implementation and reference modules carry
-`MemorySafetyRulesAttribute (2)`, and caller-unsafe members carry
-`RequiresUnsafeAttribute`. Updated-rule consumers must acknowledge those
-contracts at their call sites. Legacy consumers retain the existing compiler
-behavior; the metadata does not validate native addresses or callback ABIs.
-
-A declaration's `unsafe` modifier describes a caller obligation, not an unsafe
-implementation context. Managed alternatives keep pinning, pointer access, and
-native invocation inside explicit local `unsafe` blocks without transferring
-those obligations to their callers. Mono.Android and customer-project opt-in
-remain separate changes.
-
-This is an unsafe audit, not an implementation redesign. Caller-unsafe
-declarations and local implementation scopes are reviewed independently.
-Each audited `unsafe` block records its concrete `// SAFETY:` justification;
-`<safety>` describes the actual caller's ABI, bounds, lifetime, aliasing, and
-thread obligations, including obligations that survive a failed operation.
-Neither kind of annotation adds validation, ownership, pinning, or cleanup
-that the implementation does not perform.
-
 ## Native callback ownership
 
 `JniType.RegisterNativeMethods` retains the original array and its owner only after
@@ -77,9 +54,6 @@ all callbacks already running have finished.
 `JniNativeMethod` name/signature storage must remain readable and NUL-terminated
 through registration. Its raw callback must match the JNI descriptor's ABI,
 including the environment and receiver/class arguments.
-The descriptor's constructor is safe-callable: it only stores addresses and
-neither reads their memory nor invokes the callback. Registration, not address
-storage, is the caller-unsafe boundary that consumes those addresses.
 
 ## Borrowed UTF-8 metadata
 
@@ -102,13 +76,9 @@ safe-callable and warning-obsolete. They are explicit compatibility exceptions,
 not pointer validation. Typed base hooks preserve old overrides and base calls;
 the distinct type-producer name avoids existing `out var` ambiguity.
 
-Typed pointer getters remain safe: reading an address does not dereference its
-storage. Their setters and the typed raw hooks require unsafe callers, who must
-establish the documented storage lifetime. The warning-obsolete native-int
-compatibility APIs remain safe-callable under both compiler modes.
-Copying or reading an address does not retain its backing storage. Changing a
-property or observing a failed lookup does not invalidate copies already
-cached by the runtime or permit their backing storage to be freed.
+Caller obligations and native implementation scopes are independent; managed
+wrappers remain safe. Typed pointer address getters are safe-callable; borrowed
+storage setters and raw hooks require unsafe callers under the updated rules.
 
 ## Owned JNI implementation memory
 
@@ -118,14 +88,15 @@ operations remain inside their implementations; local scopes do not transfer
 buffer ownership to callers or change JNI reference cleanup.
 
 `JniNativeMethod` preserves the sequential layout of JNI's `JNINativeMethod`.
-It stores opaque callback addresses as `IntPtr`. Construction only copies addresses
-and remains safe-callable; registration owns the pointee-lifetime contract.
+It stores opaque callback addresses as `IntPtr`. Construction only copies addresses;
+the constructor is safe-callable and does not establish a pointee-lifetime contract.
 Registration requires readable NUL-terminated names/signatures and a
 descriptor-compatible callback rooted until successful unregistration
 **and completion of all in-flight callbacks**.
 
-The updated rules permit pointer declarations outside unsafe type contexts and
-safe explicit-layout scalar fields. Object-reference control blocks and JavaVM
+The project uses preview syntax for pointer declarations outside unsafe type
+contexts and safe explicit-layout scalar fields. It enables the updated C#
+memory-safety rules. Object-reference control blocks and JavaVM
 arguments retain their allocation, encoding, and release behavior. JNI object
 handles and method/field IDs remain opaque `IntPtr` values.
 
@@ -167,13 +138,15 @@ An address-only `JniNativeMethod` constructor stores descriptor addresses; it
 does not read their contents or invoke a callback. Registration, not address
 storage, owns the ABI, provenance, and lifetime obligations described above.
 
-Caller-unsafe declarations are enforced for updated-rule consumers, including
-pointer-free signatures whose JNI descriptors carry native ABI obligations.
-Generated JNI wrappers and T4 inputs keep implementation unsafe
-contexts local without changing marshaling, dispatch, or cleanup. Single-value
-operations use `unsafe (...)` expressions, including `return ref unsafe (...)`
-for borrowed refs; pinning, multi-statement operations, and void calls retain
-unsafe blocks. These implementation contexts do not change caller contracts.
+Java.Interop enables `updated-memory-safety-rules`: modules carry
+`MemorySafetyRulesAttribute (2)` and caller-unsafe members carry
+`RequiresUnsafeAttribute`. Updated-rule consumers need unsafe call contexts,
+including for pointer-free APIs with JNI ABI obligations. Legacy consumers retain
+their existing compiler behavior; this metadata does not validate memory or ABIs.
+Generated JNI wrappers and T4 inputs keep implementation unsafe contexts local
+without changing marshaling, dispatch, or cleanup. Single-value operations use
+`unsafe (...)` expressions, including `return ref unsafe (...)` for borrowed refs;
+pinning, multi-statement operations, and void calls retain unsafe blocks.
 
 ## Generated managed binding safety
 
@@ -196,8 +169,8 @@ Raw callback entry points and marshal targets require the registered ABI,
 current-thread JNI frame and live compatible borrowed references without
 concurrent deletion. Their `<safety>` contracts do not validate raw addresses.
 Typed managed targets stay safe. Generated syntax and the existing legacy
-compiler test harness are preserved; this does not activate product/customer
-memory-safety rules.
+compiler test harness are preserved; Mono.Android and customer projects do not
+opt into the updated memory-safety rules.
 
 Throwable bindings forward `JniObjectReferenceOptions.None` through internal,
 unregistered empty-peer constructors, preserving partial hooks and normal JNI
@@ -209,7 +182,7 @@ initialization. An updated-rules external raw base can therefore still reject a
 safe derived initializer; internal forwarding does not solve that separate
 cross-assembly enforcement boundary.
 
-Other generated raw constructors, including class/interface invokers, construct
+Non-Throwable raw constructors, including class/interface invokers, construct
 JNI peers, not opaque-address containers. Their documented handle type, lifetime,
 thread, aliasing, ownership and failure duties still apply. `RequiresUnsafe`
 enforcement is explicitly deferred to preserve safe zero/`DoNotTransfer` base
