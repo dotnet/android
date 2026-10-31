@@ -12,6 +12,9 @@ sealed class ExportMethodDispatchEmitterContext
 {
 	readonly PEAssemblyBuilder _pe;
 
+	TypeReferenceHandle _colorRef;
+	MemberReferenceHandle _colorConstructorRef;
+	MemberReferenceHandle _colorToInt32Ref;
 	TypeReferenceHandle _systemXmlReaderRef;
 	MemberReferenceHandle _xmlPullParserReaderFromJniHandleRef;
 	MemberReferenceHandle _xmlResourceParserReaderFromJniHandleRef;
@@ -170,6 +173,37 @@ sealed class ExportMethodDispatchEmitterContext
 			EndMarshalMethodRef = endMarshalMethodRef,
 			OnUserUnhandledExceptionRef = onUserUnhandledExceptionRef,
 		};
+	}
+
+	TypeReferenceHandle GetColorRef ()
+	{
+		if (_colorRef.IsNil) {
+			_colorRef = _pe.Metadata.AddTypeReference (_pe.MonoAndroidRef,
+				_pe.Metadata.GetOrAddString ("Android.Graphics"), _pe.Metadata.GetOrAddString ("Color"));
+		}
+		return _colorRef;
+	}
+
+	public MemberReferenceHandle GetColorConstructorRef ()
+	{
+		if (_colorConstructorRef.IsNil) {
+			_colorConstructorRef = _pe.AddMemberRef (GetColorRef (), ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().Int32 ()));
+		}
+		return _colorConstructorRef;
+	}
+
+	public MemberReferenceHandle GetColorToInt32Ref ()
+	{
+		if (_colorToInt32Ref.IsNil) {
+			_colorToInt32Ref = _pe.AddMemberRef (GetColorRef (), "op_Implicit",
+				sig => sig.MethodSignature ().Parameters (1,
+					rt => rt.Type ().Int32 (),
+					p => p.AddParameter ().Type ().Type (GetColorRef (), true)));
+		}
+		return _colorToInt32Ref;
 	}
 
 	TypeReferenceHandle GetSystemXmlReaderRef ()
