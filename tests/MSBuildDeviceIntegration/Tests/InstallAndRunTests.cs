@@ -257,13 +257,13 @@ namespace Xamarin.Android.Build.Tests
 					"//${AFTER_ONCREATE}",
 					"""
 					Android.Util.Log.Info ("UnicodeJavaIdentifiers", $"UNICODE_JCW_ACTIVATED={constructorInvocations}");
-					var currencyHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (CurrencyIdentifierPeer), "()V");
-					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V");
+					var currencyHandle = Android.Runtime.JNIEnv.AllocObject (typeof (CurrencyIdentifierPeer));
+					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V"u8);
 					using (var currency = Java.Lang.Object.GetObject<CurrencyIdentifierPeer> (
 						currencyHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
 					}
-					var connectorHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (ConnectorIdentifierPeer), "()V");
-					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V");
+					var connectorHandle = Android.Runtime.JNIEnv.AllocObject (typeof (ConnectorIdentifierPeer));
+					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V"u8);
 					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
 						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
 					}

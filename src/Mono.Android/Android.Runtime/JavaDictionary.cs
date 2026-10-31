@@ -187,14 +187,15 @@ namespace Android.Runtime {
 
 				if (GetType () == typeof (JavaDictionary)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashMap", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashMap"u8)),
 							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "()V");
+					JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "()V");
+					JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 				}
 			}
 		}
@@ -443,14 +444,15 @@ namespace Android.Runtime {
 
 				if (GetType () == typeof (JavaDictionary<K, V>)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashMap", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashMap"u8)),
 							JniHandleOwnership.TransferLocalRef);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
 				}
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 

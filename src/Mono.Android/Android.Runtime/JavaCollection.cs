@@ -28,12 +28,13 @@ namespace Android.Runtime {
 
 		internal JavaCollection (IEnumerable items)
 			: base (
-					JNIEnv.StartCreateInstance ("java/util/ArrayList", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("java/util/ArrayList"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: the Collection signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 
 				if (items == null) {
 					Dispose ();
@@ -244,12 +245,13 @@ namespace Android.Runtime {
 		//
 		internal JavaCollection (IEnumerable<T> items)
 			: base (
-					JNIEnv.StartCreateInstance ("java/util/ArrayList", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("java/util/ArrayList"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: the Collection signatures match the retained peer and marshaled arguments; WithLocalJniHandle and existing cleanup retain borrowed references for each call.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 
 				if (items == null) {
 					Dispose ();

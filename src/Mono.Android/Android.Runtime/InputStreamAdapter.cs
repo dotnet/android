@@ -10,12 +10,13 @@ namespace Android.Runtime {
 
 		public InputStreamAdapter (System.IO.Stream stream)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/runtime/InputStreamAdapter", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/runtime/InputStreamAdapter"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: the constructor uses the literal JNI signature with the matching argument order; this peer owns its newly allocated handle through initialization and existing cleanup.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 
 				this.BaseStream = stream;
 			}

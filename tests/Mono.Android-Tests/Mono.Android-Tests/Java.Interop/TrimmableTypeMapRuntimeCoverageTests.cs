@@ -251,8 +251,8 @@ namespace Java.InteropTests
 			T> ()
 			where T : Java.Lang.Object
 		{
-			var instance = JNIEnv.StartCreateInstance (typeof (T), "()V");
-			JNIEnv.FinishCreateInstance (instance, "()V");
+			var instance = JNIEnv.AllocObject (typeof (T));
+			JNIEnv.FinishCreateInstance (instance, "()V"u8);
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
 			return result;

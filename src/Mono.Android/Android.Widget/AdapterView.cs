@@ -70,9 +70,9 @@ namespace Android.Widget {
 					return;
 
 				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;)V", new JValue (context)),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V", new JValue (context));
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V"u8, new JValue (context));
 				GC.KeepAlive (context);
 			}
 		}
@@ -87,9 +87,9 @@ namespace Android.Widget {
 					return;
 
 				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs)),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs));
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V"u8, new JValue (context), new JValue (attrs));
 				GC.KeepAlive (context);
 				GC.KeepAlive (attrs);
 			}
@@ -105,9 +105,9 @@ namespace Android.Widget {
 					return;
 
 				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle)),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle));
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"u8, new JValue (context), new JValue (attrs), new JValue (defStyle));
 				GC.KeepAlive (context);
 				GC.KeepAlive (attrs);
 			}
