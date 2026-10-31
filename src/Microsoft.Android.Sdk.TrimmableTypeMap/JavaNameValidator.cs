@@ -135,13 +135,20 @@ public static class JavaNameValidator
 		return false;
 	}
 
-	internal static bool TryGetInvalidJniSourceTypeSegment (ReadOnlySpan<char> jniName, out ReadOnlySpan<char> invalidSegment)
+	internal static bool TryGetInvalidJniSourceTypeSegment (
+		ReadOnlySpan<char> jniName,
+		out ReadOnlySpan<char> invalidSegment,
+		IReadOnlySet<string>? generatedPeerNames = null)
 	{
 		if (TryGetInvalidJniNameSegment (jniName, out invalidSegment)) {
 			return true;
 		}
 
-		// '$' becomes '.' when a JNI binary name is emitted as a Java source type reference.
+		if (jniName.IndexOf ('$') < 0 || generatedPeerNames?.Contains (jniName.ToString ()) == true) {
+			return false;
+		}
+
+		// Only external nested types replace '$' with '.' in Java source references.
 		var typeName = jniName [(jniName.LastIndexOf ('/') + 1)..];
 		foreach (var range in typeName.Split ('$')) {
 			var segment = typeName [range];
@@ -154,7 +161,11 @@ public static class JavaNameValidator
 		return false;
 	}
 
-	internal static bool TryGetInvalidJniTypeSegment (ReadOnlySpan<char> jniType, out ReadOnlySpan<char> typeName, out ReadOnlySpan<char> invalidSegment)
+	internal static bool TryGetInvalidJniTypeSegment (
+		ReadOnlySpan<char> jniType,
+		out ReadOnlySpan<char> typeName,
+		out ReadOnlySpan<char> invalidSegment,
+		IReadOnlySet<string>? generatedPeerNames = null)
 	{
 		int typeStart = 0;
 		while (typeStart < jniType.Length && jniType [typeStart] == '[') {
@@ -163,7 +174,7 @@ public static class JavaNameValidator
 
 		if (typeStart < jniType.Length - 1 && jniType [typeStart] == 'L' && jniType [jniType.Length - 1] == ';') {
 			typeName = jniType [(typeStart + 1)..^1];
-			return TryGetInvalidJniSourceTypeSegment (typeName, out invalidSegment);
+			return TryGetInvalidJniSourceTypeSegment (typeName, out invalidSegment, generatedPeerNames);
 		}
 
 		typeName = default;
