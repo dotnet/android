@@ -21,7 +21,6 @@
 #include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
-#include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/binary-blob-loader.hh>
@@ -29,6 +28,7 @@
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/monodroid-dl.hh>
+#include <runtime-base/runtime-environment.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
 #include <shared/log_functions.hh>
@@ -440,7 +440,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	preload_jni_libraries ();
 
 	struct JnienvInitializeArgs init = {};
-	init.javaVm                                         = jvm;
+	init.javaVm                                         = RuntimeEnvironment::get_java_vm ();
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
 	init.brokenExceptionTransitions                     = 0;
@@ -486,9 +486,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
 	CoreClrBootstrap::initialize ();
-	jvm = vm;
-
-	OSBridge::initialize_on_onload (vm);
+	RuntimeEnvironment::initialize (vm);
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
 }

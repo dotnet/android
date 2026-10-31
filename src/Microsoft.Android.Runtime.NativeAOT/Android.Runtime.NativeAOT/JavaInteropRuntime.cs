@@ -53,7 +53,7 @@ static partial class JavaInteropRuntime
 
 	[LibraryImport ("xa-internal-api")]
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-	private static partial void NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
+	private static partial void NativeAOT_OnInit (IntPtr jnienv, IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
@@ -64,7 +64,7 @@ static partial class JavaInteropRuntime
 			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
 
 			// This needs to be called first, since it sets up locations, environment variables, logging etc
-			NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
+			NativeAOT_OnInit (jnienv, language, filesDir, cacheDir, ref initArgs);
 			// Seed DateTimeOffset.Now's fast path before managed runtime initialization or application code.
 			AppContext.SetData ("System.TimeZoneInfo.LocalDateTimeOffset", localDateTimeOffset.ToString (CultureInfo.InvariantCulture));
 			JNIEnvInit.InitializeBeforeRuntimeCreation (initArgs);
