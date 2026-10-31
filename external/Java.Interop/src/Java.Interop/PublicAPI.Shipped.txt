@@ -712,47 +712,47 @@ static Java.Interop.JniEnvironment.InstanceFields.SetIntField(Java.Interop.JniOb
 static Java.Interop.JniEnvironment.InstanceFields.SetLongField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, long value) -> void
 static Java.Interop.JniEnvironment.InstanceFields.SetObjectField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, Java.Interop.JniObjectReference value) -> void
 static Java.Interop.JniEnvironment.InstanceFields.SetShortField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, short value) -> void
-static Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> bool
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> bool
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
-static Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> sbyte
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> sbyte
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
-static Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> char
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> char
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
-static Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> double
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> double
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
-static Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> float
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> float
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
-static Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> int
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> int
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
-static Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> long
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> long
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
-static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
-static Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> short
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> short
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
-static Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> void
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> void
 static unsafe Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
-static Java.Interop.JniEnvironment.InstanceMethods.GetMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
+static unsafe Java.Interop.JniEnvironment.InstanceMethods.GetMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
 static Java.Interop.JniEnvironment.IO.GetDirectBufferAddress(Java.Interop.JniObjectReference buffer) -> nint
 static Java.Interop.JniEnvironment.IO.GetDirectBufferCapacity(Java.Interop.JniObjectReference buffer) -> long
 static unsafe Java.Interop.JniEnvironment.IO.NewDirectByteBuffer(nint address, long capacity) -> Java.Interop.JniObjectReference
@@ -761,7 +761,7 @@ static Java.Interop.JniEnvironment.LocalReferenceCount.get -> int
 static Java.Interop.JniEnvironment.Monitors.MonitorEnter(Java.Interop.JniObjectReference instance) -> void
 static Java.Interop.JniEnvironment.Monitors.MonitorExit(Java.Interop.JniObjectReference instance) -> void
 static Java.Interop.JniEnvironment.Object.AllocObject(Java.Interop.JniObjectReference type) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
 static unsafe Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.Object.ToString(Java.Interop.JniObjectReference value) -> Java.Interop.JniObjectReference
 static Java.Interop.JniEnvironment.References.CreatedReference(Java.Interop.JniObjectReference value) -> void
@@ -792,27 +792,27 @@ static Java.Interop.JniEnvironment.StaticFields.SetStaticIntField(Java.Interop.J
 static Java.Interop.JniEnvironment.StaticFields.SetStaticLongField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, long value) -> void
 static Java.Interop.JniEnvironment.StaticFields.SetStaticObjectField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, Java.Interop.JniObjectReference value) -> void
 static Java.Interop.JniEnvironment.StaticFields.SetStaticShortField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, short value) -> void
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
-static Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
+static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
 static unsafe Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
-static Java.Interop.JniEnvironment.StaticMethods.GetStaticMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
+static unsafe Java.Interop.JniEnvironment.StaticMethods.GetStaticMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
 static unsafe Java.Interop.JniEnvironment.Strings.GetStringChars(Java.Interop.JniObjectReference stringInstance, bool* isCopy) -> char*
 static Java.Interop.JniEnvironment.Strings.GetStringLength(Java.Interop.JniObjectReference stringInstance) -> int
 static unsafe Java.Interop.JniEnvironment.Strings.NewString(char* unicodeChars, int length) -> Java.Interop.JniObjectReference
