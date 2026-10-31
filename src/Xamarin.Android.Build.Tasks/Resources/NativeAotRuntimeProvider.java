@@ -1,5 +1,7 @@
 package net.dot.jni.nativeaot;
 
+import java.time.OffsetDateTime;
+import java.util.Calendar;
 import java.util.Locale;
 import android.util.Log;
 import net.dot.android.ApplicationRegistration;
@@ -31,10 +33,17 @@ public class NativeAotRuntimeProvider
         String language = locale.getLanguage () + "-" + locale.getCountry ();
         String filesDir = context.getFilesDir().getAbsolutePath();
         String cacheDir = context.getCacheDir().getAbsolutePath();
+        int localDateTimeOffset;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            localDateTimeOffset = OffsetDateTime.now().getOffset().getTotalSeconds();
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            localDateTimeOffset = (calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET)) / 1000;
+        }
 
         // Initialize .NET runtime
         JavaInteropRuntime.loadLibrary(context);
-        JavaInteropRuntime.init(loader, language, filesDir, cacheDir);
+        JavaInteropRuntime.init(loader, language, filesDir, cacheDir, localDateTimeOffset);
         // NOTE: only required for custom applications
         ApplicationRegistration.registerApplications();
         super.attachInfo (context, info);
