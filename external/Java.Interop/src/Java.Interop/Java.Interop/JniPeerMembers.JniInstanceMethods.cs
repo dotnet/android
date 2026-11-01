@@ -161,13 +161,6 @@ namespace Java.Interop
 			return JniPeerType.GetInstanceMethod (method, signature);
 		}
 
-		/// <remarks>
-		/// Allocates an uninitialized Java object reference; it does not invoke a Java constructor.
-		/// <paramref name="constructorSignature"/> is null-checked but not used for invocation here.
-		/// <paramref name="parameters"/> is ignored: its storage is not read, retained, or validated.
-		/// <see cref="FinishCreateInstance"/> performs the constructor invocation and retains its
-		/// caller-unsafe argument-buffer contract.
-		/// </remarks>
 		public JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
 			// SAFETY: parameters is not read or retained; this phase only allocates the peer selected by declaringType.
