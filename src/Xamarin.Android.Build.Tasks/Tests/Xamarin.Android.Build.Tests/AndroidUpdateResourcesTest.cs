@@ -879,6 +879,8 @@ namespace UnnamedProject
 				var frameworkReference = designer.MainModule.AssemblyReferences.Single ();
 				Assert.AreEqual ("System.Runtime", frameworkReference.Name);
 				Assert.AreEqual (new Version (frameworkVersion.Major, frameworkVersion.Minor, 0, 0), frameworkReference.Version);
+				StringAssert.Contains ("library_name", GetResourceDesignerText (project, designerPath), "The designer should decompile using the project's framework.");
+				Assert.IsTrue (GetResourceDesignerLines (project, designerPath).Any (line => line.Contains ("library_name")), "The designer lines should include library resources.");
 			}
 		}
 
