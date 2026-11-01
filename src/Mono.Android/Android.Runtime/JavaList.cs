@@ -715,9 +715,29 @@ namespace Android.Runtime {
 		
 		public virtual bool RemoveAll (JavaList collection)
 		{
+			if (collection == null)
+				throw new ArgumentNullException (nameof (collection));
+
 			bool ret = false;
-			foreach (Java.Lang.Object? item in collection)
-				ret |= Remove (item);
+			for (int i = 0; i < Count;) {
+				var reference = InternalGetReference (i);
+				Java.Lang.Object? item = null;
+				bool disposeItem = false;
+				try {
+					disposeItem = Java.Lang.Object.PeekObject (reference.Handle, typeof (Java.Lang.Object)) == null;
+					// SAFETY: List.get returned this owned local, retained through the virtual calls below.
+					item = unsafe(Java.Lang.Object.GetObject<Java.Lang.Object> (reference.Handle, JniHandleOwnership.DoNotTransfer));
+					if (collection.Contains (item) && Remove (item))
+						ret = true;
+					else
+						i++;
+				} finally {
+					// Do not leave temporary peers interned or dispose a caller's existing peer.
+					if (disposeItem)
+						item?.Dispose ();
+					JniObjectReference.Dispose (ref reference);
+				}
+			}
 			return ret;
 		}
 		
