@@ -45,12 +45,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new Boolean* Elements => unsafe ((Boolean*) ElementsPointer);
 
@@ -276,12 +270,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new SByte* Elements => unsafe ((SByte*) ElementsPointer);
 
@@ -507,12 +495,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new Char* Elements => unsafe ((Char*) ElementsPointer);
 
@@ -738,12 +720,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new Int16* Elements => unsafe ((Int16*) ElementsPointer);
 
@@ -969,12 +945,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new Int32* Elements => unsafe ((Int32*) ElementsPointer);
 
@@ -1200,12 +1170,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new Int64* Elements => unsafe ((Int64*) ElementsPointer);
 
@@ -1431,12 +1395,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new Single* Elements => unsafe ((Single*) ElementsPointer);
 
@@ -1662,12 +1620,6 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		/// <remarks>
-		/// Reading this address does not access the elements or keep the acquisition alive.
-		/// Access through it must stay within the acquired element count while this owner and
-		/// the Java array remain alive and unreleased. Prevent release or disposal during access;
-		/// a disposal check when obtaining the address does not protect subsequent pointer use.
-		/// </remarks>
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
 		public new Double* Elements => unsafe ((Double*) ElementsPointer);
 
