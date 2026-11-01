@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #include <constants.hh>
 #include <host/fastdev-assemblies.hh>
@@ -103,6 +104,11 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
+	if (file_size.value () == 0 || static_cast<uintmax_t>(file_size.value ()) > static_cast<uintmax_t>(std::numeric_limits<int64_t>::max ())) [[unlikely]] {
+		log_warnf (LOG_ASSEMBLY, "Invalid FastDev assembly '%.*s' file size: %zu", static_cast<int>(name.length ()), name.data (), file_size.value ());
+		return nullptr;
+	}
+
 	size = static_cast<int64_t>(file_size.value ());
 	int asm_fd = openat (override_dir_fd, name.data (), O_RDONLY);
 	if (asm_fd < 0) {
@@ -125,31 +131,63 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			static_cast<int>(name.length ()), name.data ()
 		);
 
-		close (asm_fd);
+		if (close (asm_fd) < 0) {
+			log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+		}
 		size = 0;
 		return nullptr;
 	}
 
-	ssize_t nread = 0;
-	do {
-		nread = read (asm_fd, reinterpret_cast<void*>(buffer), file_size.value ());
-	} while (nread == -1 && errno == EINTR);
-	close (asm_fd);
+	size_t nread = 0;
+	int read_errno = 0;
+	while (nread < file_size.value ()) {
+		size_t read_count = file_size.value () - nread;
+		if (read_count > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
+			read_count = static_cast<size_t>(std::numeric_limits<ssize_t>::max ());
+		}
 
-	if (nread != size) [[unlikely]] {
+		ssize_t r = read (asm_fd, buffer + nread, read_count);
+		if (r > 0) {
+			nread += static_cast<size_t>(r);
+			continue;
+		}
+
+		if (r < 0) {
+			read_errno = errno;
+			if (read_errno == EINTR) {
+				read_errno = 0;
+				continue;
+			}
+		}
+		break;
+	}
+	if (close (asm_fd) < 0) {
+		log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+	}
+
+	if (nread != file_size.value ()) [[unlikely]] {
 		std::free (buffer);
 
-		log_warnf (
-			LOG_ASSEMBLY,
-			"Failed to read FastDev assembly '%.*s' data. %s",
-			static_cast<int>(name.length ()), name.data (),
-			strerror (errno)
-		);
+		if (read_errno != 0) {
+			log_warnf (
+				LOG_ASSEMBLY,
+				"Failed to read FastDev assembly '%.*s' data. %s",
+				static_cast<int>(name.length ()), name.data (),
+				strerror (read_errno)
+			);
+		} else {
+			log_warnf (
+				LOG_ASSEMBLY,
+				"Failed to read FastDev assembly '%.*s' data: unexpected end of file after %zu of %zu bytes",
+				static_cast<int>(name.length ()), name.data (),
+				nread, file_size.value ()
+			);
+		}
 
 		size = 0;
 		return nullptr;
 	}
-	log_debugf (LOG_ASSEMBLY, "Read %zd bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
+	log_debugf (LOG_ASSEMBLY, "Read %zu bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
 
 	if (size == 0) [[unlikely]] {
 		log_warnf (LOG_ASSEMBLY, "FastDev assembly '%.*s' is empty", static_cast<int> (name.length ()), name.data ());
