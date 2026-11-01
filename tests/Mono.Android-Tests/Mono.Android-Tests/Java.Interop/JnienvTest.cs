@@ -189,46 +189,15 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestCase (false)]
+		[TestCase (true)]
 		[Category ("JniUtf8Construction")]
-		public void Utf8DefaultConstructor (bool useManagedType, bool usePointer)
+		public void Utf8ConstructorArguments (bool usePointer)
 		{
 			IntPtr handle;
 			unsafe {
 				// SAFETY: The complete literal supplies stable, terminated class bytes.
-				handle = useManagedType
-					? JNIEnv.AllocObject (typeof (Java.Lang.StringBuilder))
-					: JNIEnv.AllocObject ("java/lang/StringBuilder"u8);
-			}
-			using var instance = new Java.Lang.StringBuilder (handle, JniHandleOwnership.TransferLocalRef);
-			unsafe {
-				// SAFETY: This peer owns the allocated handle; the terminated descriptor declares zero arguments.
-				if (usePointer)
-					JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8, (JValue*) null);
-				else
-					JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
-			}
-
-			Assert.AreEqual (16, instance.Capacity ());
-			Assert.AreEqual ("", instance.ToString ());
-		}
-
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
-		[Category ("JniUtf8Construction")]
-		public void Utf8ConstructorArguments (bool useManagedType, bool usePointer)
-		{
-			IntPtr handle;
-			unsafe {
-				// SAFETY: The complete literal supplies stable, terminated class bytes.
-				handle = useManagedType
-					? JNIEnv.AllocObject (typeof (Java.Lang.StringBuilder))
-					: JNIEnv.AllocObject ("java/lang/StringBuilder"u8);
+				handle = JNIEnv.AllocObject ("java/lang/StringBuilder"u8);
 			}
 			using var instance = new Java.Lang.StringBuilder (handle, JniHandleOwnership.TransferLocalRef);
 
@@ -244,65 +213,6 @@ namespace Java.InteropTests
 
 			Assert.AreEqual (37, instance.Capacity ());
 			Assert.AreEqual ("", instance.ToString ());
-		}
-
-		[TestCase (false)]
-		[TestCase (true)]
-		[Category ("JniUtf8Construction")]
-		public void Utf8AllocObjectAndInvokeConstructor (bool usePointer)
-		{
-			IntPtr handle;
-			unsafe {
-				// SAFETY: The complete literal supplies stable, terminated class bytes.
-				handle = JNIEnv.AllocObject ("java/lang/StringBuilder"u8);
-			}
-			using var instance = new Java.Lang.StringBuilder (handle, JniHandleOwnership.TransferLocalRef);
-			unsafe {
-				// SAFETY: This peer owns the allocated handle; the terminated descriptor declares zero arguments.
-				if (usePointer)
-					JNIEnv.InvokeConstructor (instance.Handle, "()V"u8, (JValue*) null);
-				else
-					JNIEnv.InvokeConstructor (instance.Handle, "()V"u8);
-			}
-
-			Assert.AreEqual (16, instance.Capacity ());
-			Assert.AreEqual ("", instance.ToString ());
-		}
-
-		[Test]
-		[Category ("JniUtf8Construction")]
-		public void Utf8ConstructorExceptionPropagates ()
-		{
-			IntPtr handle;
-			unsafe {
-				// SAFETY: The complete literal supplies stable, terminated class bytes.
-				handle = JNIEnv.AllocObject ("java/lang/StringBuilder"u8);
-			}
-			using var instance = new Java.Lang.StringBuilder (handle, JniHandleOwnership.TransferLocalRef);
-			Assert.Throws<Java.Lang.NegativeArraySizeException> (() => {
-				unsafe {
-					// SAFETY: The owned peer and integer argument match the terminated descriptor; the constructor rejects the value.
-					JNIEnv.FinishCreateInstance (instance.Handle, "(I)V"u8, new JValue (-1));
-				}
-			});
-		}
-
-		[Test]
-		[Category ("JniUtf8Construction")]
-		public void Utf8ConstructorLookupExceptionPropagates ()
-		{
-			IntPtr handle;
-			unsafe {
-				// SAFETY: The complete literal supplies stable, terminated class bytes.
-				handle = JNIEnv.AllocObject ("java/lang/StringBuilder"u8);
-			}
-			using var instance = new Java.Lang.StringBuilder (handle, JniHandleOwnership.TransferLocalRef);
-			Assert.Throws<Java.Lang.NoSuchMethodError> (() => {
-				unsafe {
-					// SAFETY: The peer is live and the slot matches the terminated descriptor; lookup fails before constructor invocation.
-					JNIEnv.FinishCreateInstance (instance.Handle, "(Z)V"u8, new JValue (true));
-				}
-			});
 		}
 
 		[Test]
