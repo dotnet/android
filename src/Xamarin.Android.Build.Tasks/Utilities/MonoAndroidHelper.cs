@@ -81,8 +81,6 @@ namespace Xamarin.Android.Tasks
 		public static int RunProcess (string logLabel, string command, string arguments, TaskLoggingHelper log, DataReceivedEventHandler? onOutput = null, DataReceivedEventHandler? onError = null,
 			CancellationToken? cancellationToken = null, Action? cancelTask = null, bool logWarningOnFailure = true)
 		{
-			var stdout_completed = new ManualResetEvent (false);
-			var stderr_completed = new ManualResetEvent (false);
 			var psi = new ProcessStartInfo () {
 				FileName = command,
 				Arguments = arguments,
@@ -102,31 +100,31 @@ namespace Xamarin.Android.Tasks
 				if (e.Data != null) {
 					onOutput?.Invoke (s, e);
 					stdoutLines.Add (e.Data);
-				} else
-					stdout_completed.Set ();
+				}
 			};
 
 			proc.ErrorDataReceived += (s, e) => {
 				if (e.Data != null) {
 					onError?.Invoke (s, e);
 					stderrLines.Add (e.Data);
-				} else
-					stderr_completed.Set ();
+				}
 			};
 
 			proc.StartInfo = psi;
 			proc.Start ();
 			proc.BeginOutputReadLine ();
 			proc.BeginErrorReadLine ();
-			cancellationToken?.Register (() => { try { proc.Kill (); } catch (Exception) { } });
-			proc.WaitForExit ();
-
-			if (psi.RedirectStandardError) {
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
-			}
-
-			if (psi.RedirectStandardOutput) {
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
+			using (cancellationToken.GetValueOrDefault ().Register (() => {
+				try {
+					proc.Kill ();
+				} catch (InvalidOperationException) {
+					// The process can exit before cancellation reaches it.
+				} catch (System.ComponentModel.Win32Exception ex) {
+					log.LogDebugMessage ($"{logLabel}: could not kill process: {ex.Message}");
+				}
+			})) {
+				// The parameterless overload also waits for both asynchronous readers and their callbacks.
+				proc.WaitForExit ();
 			}
 
 			log.LogDebugMessage ($"{logLabel}: exit code == {proc.ExitCode}");
@@ -138,11 +136,7 @@ namespace Xamarin.Android.Tasks
 				cancelTask?.Invoke ();
 			}
 
-			try {
-				return proc.ExitCode;
-			} finally {
-				proc.Close ();
-			}
+			return proc.ExitCode;
 		}
 
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
