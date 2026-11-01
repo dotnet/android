@@ -28,6 +28,7 @@ namespace {
 	size_t free_count = 0;
 	bool fail_open = false;
 	bool fail_close = false;
+	bool fail_allocation = false;
 	std::string warnings;
 
 	auto test_openat (int, const char*, int flags) -> int
@@ -75,15 +76,29 @@ namespace {
 		free_count++;
 		return buffer;
 	}
+
+	auto test_allocation_size (size_t count) -> size_t
+	{
+		assert (count == assembly_size);
+		return fail_allocation ? std::numeric_limits<size_t>::max () : count;
+	}
+}
+
+// Let the deliberately impossible allocation report ENOMEM instead of stopping in ASan.
+extern "C" const char* __asan_default_options ()
+{
+	return "allocator_may_return_null=1";
 }
 
 // Compile the actual reader and class header, substituting only OS/dependency boundaries.
 #define openat test_openat
 #define read test_read
 #define close test_close
+#define malloc(count) malloc (test_allocation_size (count))
 #define free(buffer) free (track_free (buffer))
 #include <fastdev-assemblies.cc>
 #undef free
+#undef malloc
 #undef close
 #undef read
 #undef openat
@@ -138,6 +153,10 @@ int main (int argc, char **argv)
 	} else if (scenario == "open-error") {
 		fail_open = true;
 		diagnostic = strerror (EACCES);
+	} else if (scenario == "allocation-error") {
+		fail_allocation = true;
+		fail_close = true;
+		diagnostic = "Unable to allocate memory for FastDev assembly";
 	} else {
 		return 2;
 	}

@@ -51,6 +51,7 @@ public class FastDevAssemblyReadTests : BaseTest
 	[TestCase ("empty")]
 	[TestCase ("oversize")]
 	[TestCase ("open-error")]
+	[TestCase ("allocation-error")]
 	[TestCase ("close-error")]
 	public void ReadsUntilCompleteOrReportsActualFailure (string scenario)
 	{
