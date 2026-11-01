@@ -121,7 +121,8 @@ implied merely by using opaque object, field, or method handles.
 `JniEnvironment.InstanceMethods` and `StaticMethods` retain their existing
 caller-unsafe classification. A nonzero method ID does not verify its
 descriptor or make a parameterless invocation safe. Managed wrappers with
-known descriptors discharge that obligation in local implementation blocks.
+known descriptors discharge that obligation in local implementation blocks or
+`unsafe (...)` expressions.
 
 For UTF-8 span lookups, callers must provide readable NUL-terminated backing
 storage throughout the call. Complete C# UTF-8 literals supply a trailing NUL
@@ -143,7 +144,11 @@ contexts. It does **not** opt into the
 updated C# memory-safety rules. Caller-unsafe declaration intent is preparation
 for that later opt-in; it is not enforced for pointer-free signatures under
 legacy rules. Generated JNI wrappers and T4 inputs keep implementation unsafe
-blocks local without changing marshaling, dispatch, or cleanup.
+contexts local without changing marshaling, dispatch, or cleanup. Single-value
+operations use `unsafe (...)` expressions, including `return ref unsafe (...)`
+for borrowed refs; pinning, multi-statement operations, and void calls retain
+unsafe blocks. This syntax does not change caller contracts or opt into the
+updated memory-safety rules.
 
 ## Generated managed binding safety
 

@@ -193,7 +193,7 @@
 {0} - The library name.</comment>
   </data>
   <data name="XA0101" xml:space="preserve">
-    <value>@(Content) build action is not supported</value>
+    <value>不支援 @(Content) 建置動作</value>
     <comment>@(Content) is an MSBuild item name and should not be translated.</comment>
   </data>
   <data name="XA0105" xml:space="preserve">

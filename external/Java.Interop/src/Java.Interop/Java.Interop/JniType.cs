@@ -146,11 +146,8 @@ namespace Java.Interop {
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
-			JniType t;
-			unsafe {
-				// SAFETY: the caller retains the class name during construction; only the resulting JNI type is cached.
-				t = new JniType (classname);
-			}
+			// SAFETY: the caller retains the class name during construction; only the resulting JNI type is cached.
+			var t = unsafe (new JniType (classname));
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
@@ -257,10 +254,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: Lookup marshals its managed strings and retains neither native buffer.
-				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>", signature);
-			}
+			// SAFETY: Lookup marshals its managed strings and retains neither native buffer.
+			return unsafe (JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>", signature));
 		}
 
 		public JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, string signature)
@@ -288,10 +283,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: The caller keeps constructor-compatible argument slots and their Java references live.
-				return JniEnvironment.Object.NewObject (PeerReference, constructor, parameters);
-			}
+			// SAFETY: The caller keeps constructor-compatible argument slots and their Java references live.
+			return unsafe (JniEnvironment.Object.NewObject (PeerReference, constructor, parameters));
 		}
 
 		public JniFieldInfo GetInstanceField (string name, string signature)
@@ -338,10 +331,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: Lookup owns the terminated name/signature buffers for this call.
-				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
-			}
+			// SAFETY: Lookup owns the terminated name/signature buffers for this call.
+			return unsafe (JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature));
 		}
 
 		internal bool TryGetInstanceMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)
@@ -404,10 +395,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: Lookup owns the terminated name/signature buffers for this call.
-				return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
-			}
+			// SAFETY: Lookup owns the terminated name/signature buffers for this call.
+			return unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature));
 		}
 
 		internal bool TryGetStaticMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)
@@ -479,11 +468,8 @@ namespace Java.Interop {
 		/// </safety>
 		public unsafe JniType (ReadOnlySpan<byte> classname)
 		{
-			JniObjectReference peer;
-			unsafe {
-				// SAFETY: The caller supplies a readable terminated name; FindClass pins it for JNI and returns an owned local reference for Initialize.
-				peer = JniEnvironment.Types.FindClass (classname);
-			}
+			// SAFETY: The caller supplies a readable terminated name; FindClass pins it for JNI and returns an owned local reference for Initialize.
+			var peer = unsafe (JniEnvironment.Types.FindClass (classname));
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -497,11 +483,8 @@ namespace Java.Interop {
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
-			JniType t;
-			unsafe {
-				// SAFETY: On a cache miss the caller's terminated bytes remain readable through construction; the constructor owns JNI pinning.
-				t = new JniType (classname);
-			}
+			// SAFETY: On a cache miss the caller's terminated bytes remain readable through construction; the constructor owns JNI pinning.
+			var t = unsafe (new JniType (classname));
 			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
 				t.Dispose ();
 			cachedType.RegisterWithRuntime ();
@@ -518,10 +501,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: The <init> literal has static NUL-terminated storage; the caller supplies the signature's terminator and lookup pins both spans.
-				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature);
-			}
+			// SAFETY: The <init> literal has static NUL-terminated storage; the caller supplies the signature's terminator and lookup pins both spans.
+			return unsafe (JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature));
 		}
 
 		/// <safety>
@@ -534,10 +515,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: The constructor name is a complete UTF8 literal; the caller keeps the signature terminated and unchanged for a possible cache miss.
-				return GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature);
-			}
+			// SAFETY: The constructor name is a complete UTF8 literal; the caller keeps the signature terminated and unchanged for a possible cache miss.
+			return unsafe (GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature));
 		}
 
 		/// <safety>
@@ -550,10 +529,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: Both caller-owned spans satisfy termination and lifetime requirements; GetFieldID pins them for this class's JNI lookup.
-				return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
-			}
+			// SAFETY: Both caller-owned spans satisfy termination and lifetime requirements; GetFieldID pins them for this class's JNI lookup.
+			return unsafe (JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature));
 		}
 
 		/// <safety>
@@ -568,11 +545,8 @@ namespace Java.Interop {
 
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
-			JniFieldInfo m;
-			unsafe {
-				// SAFETY: On a cache miss the same terminated caller bytes are consumed synchronously; only field metadata, not their addresses, is cached.
-				m = GetInstanceField (name, signature);
-			}
+			// SAFETY: On a cache miss the same terminated caller bytes are consumed synchronously; only field metadata, not their addresses, is cached.
+			var m = unsafe (GetInstanceField (name, signature));
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -589,10 +563,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: GetStaticFieldID pins both caller-guaranteed terminated spans for the current class's synchronous JNI read.
-				return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
-			}
+			// SAFETY: GetStaticFieldID pins both caller-guaranteed terminated spans for the current class's synchronous JNI read.
+			return unsafe (JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature));
 		}
 
 		/// <safety>
@@ -607,11 +579,8 @@ namespace Java.Interop {
 
 			if (cachedField != null && cachedField.IsValid)
 				return cachedField;
-			JniFieldInfo m;
-			unsafe {
-				// SAFETY: The caller maintains both terminated byte sequences until the cache-miss lookup completes, including JNI exception handling.
-				m = GetStaticField (name, signature);
-			}
+			// SAFETY: The caller maintains both terminated byte sequences until the cache-miss lookup completes, including JNI exception handling.
+			var m = unsafe (GetStaticField (name, signature));
 			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -628,10 +597,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: The caller supplies termination and byte lifetime; GetMethodID pins the spans and does not retain their addresses.
-				return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
-			}
+			// SAFETY: The caller supplies termination and byte lifetime; GetMethodID pins the spans and does not retain their addresses.
+			return unsafe (JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature));
 		}
 
 		/// <safety>
@@ -646,11 +613,8 @@ namespace Java.Interop {
 
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
-			JniMethodInfo m;
-			unsafe {
-				// SAFETY: The cache miss forwards the caller's still-live terminated spans; the result caches an opaque method ID rather than borrowed bytes.
-				m = GetInstanceMethod (name, signature);
-			}
+			// SAFETY: The cache miss forwards the caller's still-live terminated spans; the result caches an opaque method ID rather than borrowed bytes.
+			var m = unsafe (GetInstanceMethod (name, signature));
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -667,10 +631,8 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			unsafe {
-				// SAFETY: Both terminated spans are caller-valid for this call; GetStaticMethodID pins them before the current-thread JNI read.
-				return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
-			}
+			// SAFETY: Both terminated spans are caller-valid for this call; GetStaticMethodID pins them before the current-thread JNI read.
+			return unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature));
 		}
 
 		/// <safety>
@@ -685,11 +647,8 @@ namespace Java.Interop {
 
 			if (cachedMethod != null && cachedMethod.IsValid)
 				return cachedMethod;
-			JniMethodInfo m;
-			unsafe {
-				// SAFETY: A cache miss consumes the caller's terminated bytes only through lookup completion; published metadata retains no byte-buffer alias.
-				m = GetStaticMethod (name, signature);
-			}
+			// SAFETY: A cache miss consumes the caller's terminated bytes only through lookup completion; published metadata retains no byte-buffer alias.
+			var m = unsafe (GetStaticMethod (name, signature));
 			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
 				// No cleanup required; let the GC collect the unused instance
 			}
@@ -845,10 +804,8 @@ namespace Java.Interop {
 		static unsafe JniMethodInfo CreateMethodInfo (byte* name, ReadOnlySpan<char> signature, IntPtr id, bool isStatic)
 		{
 #if DEBUG
-			unsafe {
-				// SAFETY: the caller retains name storage for lazy diagnostics; the managed signature is copied, never borrowed.
-				return new JniMethodInfo (name, signature.ToString (), id, isStatic);
-			}
+			// SAFETY: the caller retains name storage for lazy diagnostics; the managed signature is copied, never borrowed.
+			return unsafe (new JniMethodInfo (name, signature.ToString (), id, isStatic));
 #else
 			return new JniMethodInfo (id, isStatic);
 #endif
@@ -861,10 +818,8 @@ namespace Java.Interop {
 		static unsafe JniMethodInfo CreateMethodInfo (ReadOnlySpan<char> name, byte* signature, IntPtr id, bool isStatic)
 		{
 #if DEBUG
-			unsafe {
-				// SAFETY: the caller retains signature storage for lazy reads; the managed name is copied before publication.
-				return new JniMethodInfo (name.ToString (), signature, id, isStatic);
-			}
+			// SAFETY: the caller retains signature storage for lazy reads; the managed name is copied before publication.
+			return unsafe (new JniMethodInfo (name.ToString (), signature, id, isStatic));
 #else
 			return new JniMethodInfo (id, isStatic);
 #endif
@@ -922,10 +877,8 @@ namespace Java.Interop {
 		{
 			if (name == null)
 				throw new ArgumentNullException (nameof (name));
-			unsafe {
-				// SAFETY: name remains borrowed from the caller; the managed signature is encoded into a private terminated buffer.
-				return GetMemberID (signature, name, false, kind, throwOnError);
-			}
+			// SAFETY: name remains borrowed from the caller; the managed signature is encoded into a private terminated buffer.
+			return unsafe (GetMemberID (signature, name, false, kind, throwOnError));
 		}
 
 		/// <safety>
@@ -982,10 +935,8 @@ namespace Java.Interop {
 		{
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
-			unsafe {
-				// SAFETY: the caller retains signature bytes; only the managed name is encoded into a temporary terminated buffer.
-				return GetMemberID (name, signature, true, kind, throwOnError);
-			}
+			// SAFETY: the caller retains signature bytes; only the managed name is encoded into a temporary terminated buffer.
+			return unsafe (GetMemberID (name, signature, true, kind, throwOnError));
 		}
 
 		/// <safety>

@@ -338,37 +338,23 @@ namespace Java.Interop
 			this.sizeOfElement = sizeOfElement;
 		}
 
-		internal bool IsDisposed {
-			get {
-				unsafe {
-					// SAFETY: Sentinel comparison does not read the buffer.
-					return elements == null;
-				}
-			}
-		}
+		// SAFETY: Sentinel comparison does not read the buffer.
+		internal bool IsDisposed => unsafe (elements == null);
 
 		internal int ElementCount {
 			get {return elementCount;}
 		}
 
-		public  IntPtr  Elements {
-			get {
-				unsafe {
-					// SAFETY: Expose the checked address without dereferencing or extending its lifetime.
-					return (IntPtr) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Expose the checked address without dereferencing or extending its lifetime.
+		public  IntPtr  Elements => unsafe ((IntPtr) ElementsPointer);
 
 		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
 		internal unsafe void* ElementsPointer {
 			get {
 				if (IsDisposed)
 					throw new ObjectDisposedException (GetType ().FullName);
-				unsafe {
-					// SAFETY: Read only the address; this does not synchronize with release.
-					return elements;
-				}
+				// SAFETY: Read only the address; this does not synchronize with release.
+				return unsafe (elements);
 			}
 		}
 

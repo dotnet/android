@@ -21,6 +21,14 @@ namespace Android.Runtime {
 		static IntPtr id_size;
 		internal static IntPtr id_toArray;
 
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live reference from this VM compatible with java.util.Collection.
+		/// Local references must belong to this thread; retain the input until construction returns or throws.
+		/// <paramref name="transfer"/> must match ownership the caller holds. Exclude concurrent use/release
+		/// through aliases to a transferred handle; construction can consume it before a later failure.
+		/// Zero is the existing empty-peer initialization path, not a usable Java instance.
+		/// Caller-unsafe enforcement on raw peer constructors is deferred; existing initialization APIs are unchanged.
+		/// </safety>
 		public JavaCollection (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -31,7 +39,10 @@ namespace Android.Runtime {
 					JNIEnv.StartCreateInstance ("java/util/ArrayList", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this allocated ArrayList peer uses its zero-argument ()V constructor.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 
 			if (items == null) {
 				Dispose ();
@@ -56,11 +67,15 @@ namespace Android.Runtime {
 		internal void Add (object item)
 		{
 			if (id_add == IntPtr.Zero)
-				id_add = JNIEnv.GetMethodID (collection_class, "add", "(Ljava/lang/Object;)Z");
+				// SAFETY: add.(Ljava/lang/Object;)Z is resolved from the retained collection class.
+				id_add = unsafe(JNIEnv.GetMethodID (collection_class, "add", "(Ljava/lang/Object;)Z"));
 			JavaConvert.WithLocalJniHandle (item, lref => {
 
 					try {
-						JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+						unsafe {
+							// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+							JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+						}
 					} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 						throw new NotSupportedException (ex.Message, ex);
 					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -87,11 +102,14 @@ namespace Android.Runtime {
 		//
 		internal Java.Util.IIterator Iterator ()
 		{
-			if (id_iterator == IntPtr.Zero)
-				id_iterator = JNIEnv.GetMethodID (collection_class, "iterator", "()Ljava/util/Iterator;");
-			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
-					JNIEnv.CallObjectMethod (Handle, id_iterator),
-					JniHandleOwnership.TransferLocalRef)!;
+			unsafe {
+				// SAFETY: java.util.Collection.iterator.()Ljava/util/Iterator; matches this peer's JNI ABI. Result locals transfer to conversion.
+				if (id_iterator == IntPtr.Zero)
+					id_iterator = JNIEnv.GetMethodID (collection_class, "iterator", "()Ljava/util/Iterator;");
+				return Java.Lang.Object.GetObject<Java.Util.IIterator> (
+						JNIEnv.CallObjectMethod (Handle, id_iterator),
+						JniHandleOwnership.TransferLocalRef)!;
+			}
 		}
 
 		//
@@ -105,9 +123,12 @@ namespace Android.Runtime {
 		//
 		public int Count {
 			get {
-				if (id_size == IntPtr.Zero)
-					id_size = JNIEnv.GetMethodID (collection_class, "size", "()I");
-				return JNIEnv.CallIntMethod (Handle, id_size);
+				unsafe {
+					// SAFETY: java.util.Collection.size.()I matches this peer's JNI ABI.
+					if (id_size == IntPtr.Zero)
+						id_size = JNIEnv.GetMethodID (collection_class, "size", "()I");
+					return JNIEnv.CallIntMethod (Handle, id_size);
+				}
 			}
 		}
 
@@ -132,11 +153,14 @@ namespace Android.Runtime {
 		//
 		internal Java.Lang.Object[] ToArray ()
 		{
-			if (id_toArray == IntPtr.Zero)
-				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
-			using (var o = new Java.Lang.Object (JNIEnv.CallObjectMethod (Handle, id_toArray),
-					JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister))
-				return ((Java.Lang.Object[]) o)!;
+			unsafe {
+				// SAFETY: java.util.Collection.toArray.()[Ljava/lang/Object; matches this peer's JNI ABI. Result locals transfer to conversion.
+				if (id_toArray == IntPtr.Zero)
+					id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
+				using (var o = new Java.Lang.Object (JNIEnv.CallObjectMethod (Handle, id_toArray),
+						JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister))
+					return ((Java.Lang.Object[]) o)!;
+			}
 		}
 
 		//
@@ -157,18 +181,21 @@ namespace Android.Runtime {
 			if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 
-			if (id_toArray == IntPtr.Zero)
-				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
+			unsafe {
+				// SAFETY: java.util.Collection.toArray.()[Ljava/lang/Object; matches this peer's JNI ABI. Result locals transfer to conversion.
+				if (id_toArray == IntPtr.Zero)
+					id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 
-			var converter = new JavaConvert.ArrayElementConverter (array);
-			IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
-			for (int i = 0; i < Count; i++)
-				array.SetValue (
-						converter.FromJniHandle (
-							JNIEnv.GetObjectArrayElement (lrefArray, i),
-							JniHandleOwnership.TransferLocalRef),
-						array_index + i);
-			JNIEnv.DeleteLocalRef (lrefArray);
+				var converter = new JavaConvert.ArrayElementConverter (array);
+				IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
+				for (int i = 0; i < Count; i++)
+					array.SetValue (
+							converter.FromJniHandle (
+								JNIEnv.GetObjectArrayElement (lrefArray, i),
+								JniHandleOwnership.TransferLocalRef),
+							array_index + i);
+				JNIEnv.DeleteLocalRef (lrefArray);
+			}
 		}
 
 		public IEnumerator GetEnumerator ()
@@ -176,7 +203,14 @@ namespace Android.Runtime {
 			return System.Linq.Extensions.ToEnumerator_Dispose (Iterator ());
 		}
 
-		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		/// <safety>
+		/// <paramref name="handle"/> must be null or a live reference to the matching Java collection/array
+		/// from this VM, usable on this thread until conversion returns or throws. Generic element types
+		/// must match the array/collection conversion; a cached peer does not validate an arbitrary handle.
+		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
+		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
+		/// </safety>
+		public static unsafe ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -210,6 +244,14 @@ namespace Android.Runtime {
 			T
 	> : JavaCollection, ICollection<T> {
 
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live reference from this VM compatible with java.util.Collection.
+		/// Local references must belong to this thread; retain the input until construction returns or throws.
+		/// <paramref name="transfer"/> must match ownership the caller holds. Exclude concurrent use/release
+		/// through aliases to a transferred handle; construction can consume it before a later failure.
+		/// Zero is the existing empty-peer initialization path, not a usable Java instance.
+		/// Caller-unsafe enforcement on raw peer constructors is deferred; existing initialization APIs are unchanged.
+		/// </safety>
 		public JavaCollection (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -229,7 +271,10 @@ namespace Android.Runtime {
 					JNIEnv.StartCreateInstance ("java/util/ArrayList", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this allocated ArrayList peer uses its zero-argument ()V constructor.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 
 			if (items == null) {
 				Dispose ();
@@ -262,10 +307,14 @@ namespace Android.Runtime {
 		public void Add (T item)
 		{
 			if (id_add == IntPtr.Zero)
-				id_add = JNIEnv.GetMethodID (collection_class, "add", "(Ljava/lang/Object;)Z");
+				// SAFETY: add.(Ljava/lang/Object;)Z is resolved from the retained collection class.
+				id_add = unsafe(JNIEnv.GetMethodID (collection_class, "add", "(Ljava/lang/Object;)Z"));
 			JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+					unsafe {
+						// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+						JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+					}
 				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new NotSupportedException (ex.Message, ex);
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -295,9 +344,13 @@ namespace Android.Runtime {
 		public void Clear ()
 		{
 			if (id_clear == IntPtr.Zero)
-				id_clear = JNIEnv.GetMethodID (collection_class, "clear", "()V");
+				// SAFETY: clear.()V is resolved from the retained collection class.
+				id_clear = unsafe(JNIEnv.GetMethodID (collection_class, "clear", "()V"));
 			try {
-				JNIEnv.CallVoidMethod (Handle, id_clear);
+				unsafe {
+					// SAFETY: clear.()V matches this peer; marshaling retains each borrowed argument for the call.
+					JNIEnv.CallVoidMethod (Handle, id_clear);
+				}
 			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 				throw new NotSupportedException (ex.Message, ex);
 			}
@@ -317,10 +370,12 @@ namespace Android.Runtime {
 		public bool Contains (T item)
 		{
 			if (id_contains == IntPtr.Zero)
-				id_contains = JNIEnv.GetMethodID (collection_class, "contains", "(Ljava/lang/Object;)Z");
+				// SAFETY: contains.(Ljava/lang/Object;)Z is resolved from the retained collection class.
+				id_contains = unsafe(JNIEnv.GetMethodID (collection_class, "contains", "(Ljava/lang/Object;)Z"));
 			return JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
+					// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new InvalidCastException (ex.Message, ex);
 				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -347,15 +402,18 @@ namespace Android.Runtime {
 			if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 
-			if (id_toArray == IntPtr.Zero)
-				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
+			unsafe {
+				// SAFETY: java.util.Collection.toArray.()[Ljava/lang/Object; matches this peer's JNI ABI. Result locals transfer to conversion.
+				if (id_toArray == IntPtr.Zero)
+					id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 
-			IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
-			for (int i = 0; i < Count; i++)
-				array [array_index + i] = JavaConvert.FromJniHandle<T>(
-						JNIEnv.GetObjectArrayElement (lrefArray, i),
-						JniHandleOwnership.TransferLocalRef)!;
-			JNIEnv.DeleteLocalRef (lrefArray);
+				IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
+				for (int i = 0; i < Count; i++)
+					array [array_index + i] = JavaConvert.FromJniHandle<T>(
+							JNIEnv.GetObjectArrayElement (lrefArray, i),
+							JniHandleOwnership.TransferLocalRef)!;
+				JNIEnv.DeleteLocalRef (lrefArray);
+			}
 		}
 
 		//
@@ -373,10 +431,12 @@ namespace Android.Runtime {
 		{
 			// https://developer.android.com/reference/java/util/Collection#remove(java.lang.Object)
 			if (id_remove == IntPtr.Zero)
-				id_remove = JNIEnv.GetMethodID (collection_class, "remove", "(Ljava/lang/Object;)Z");
+				// SAFETY: remove.(Ljava/lang/Object;)Z is resolved from the retained collection class.
+				id_remove = unsafe(JNIEnv.GetMethodID (collection_class, "remove", "(Ljava/lang/Object;)Z"));
 			return JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
+					// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new InvalidCastException (ex.Message, ex);
 				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -399,7 +459,14 @@ namespace Android.Runtime {
 		}
 #pragma warning restore CS8613
 		
-		public new static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		/// <safety>
+		/// <paramref name="handle"/> must be null or a live reference to the matching Java collection/array
+		/// from this VM, usable on this thread until conversion returns or throws. Generic element types
+		/// must match the array/collection conversion; a cached peer does not validate an arbitrary handle.
+		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
+		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
+		/// </safety>
+		public new static unsafe ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;

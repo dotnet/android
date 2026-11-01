@@ -61,10 +61,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self<#= invokeParams #>);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self<#= invokeParams #>));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;

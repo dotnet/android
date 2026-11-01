@@ -193,7 +193,7 @@ Dieser Fehler wird wahrscheinlich durch ein Problem mit der Datei "AndroidManife
 {0} - The library name.</comment>
   </data>
   <data name="XA0101" xml:space="preserve">
-    <value>@(Content) build action is not supported</value>
+    <value>Der Buildvorgang für @(Content) wird nicht unterstützt</value>
     <comment>@(Content) is an MSBuild item name and should not be translated.</comment>
   </data>
   <data name="XA0105" xml:space="preserve">
