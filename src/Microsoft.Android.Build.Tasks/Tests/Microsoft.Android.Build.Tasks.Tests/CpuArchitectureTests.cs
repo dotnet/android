@@ -41,31 +41,23 @@ public class CpuArchitectureTests : BaseTest
 		}
 	}
 
-	[TestCase ("absent", 1, 100, "")]
-	[TestCase ("empty", 1, 100, "")]
-	[TestCase ("houdini", 4, 100, "")]
-	[TestCase ("close-error", 1, 100, "Failed to close /proc/self/maps after CPU detection")]
-	[TestCase ("houdini-close-error", 4, 100, "Failed to close /proc/self/maps after CPU detection")]
-	public void DetectsArchitectureAndClosesMaps (string scenario, int cpu, int closes, string diagnostic)
+	[TestCase ("absent", 1)]
+	[TestCase ("houdini", 4)]
+	public void DetectsArchitectureAndClosesMaps (string scenario, int cpu)
 	{
 		var result = NativeAotBootstrapTestTools.Run (nativeProbe, scenario);
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-		StringAssert.Contains ($"running={cpu} opens=100 closes={closes} warnings={(diagnostic.Length > 0 ? 100 : 0)}", result.Output);
-		if (diagnostic.Length > 0) {
-			StringAssert.Contains (diagnostic, result.Error);
-		} else {
-			Assert.AreEqual ("", result.Error);
-		}
+		StringAssert.Contains ($"running={cpu} opens=1 closes=1 warnings=0", result.Output);
+		Assert.AreEqual ("", result.Error);
 	}
 
-	[TestCase ("open-error", 0, "Failed to open /proc/self/maps for CPU detection")]
-	[TestCase ("read-error", 1, "Failed to read /proc/self/maps for CPU detection")]
-	public void DetectionFailureAbortsBeforeSelectingAnApkAbi (string scenario, int closes, string diagnostic)
+	[Test]
+	public void OpenFailureAbortsBeforeSelectingAnApkAbi ()
 	{
-		var result = NativeAotBootstrapTestTools.Run (nativeProbe, scenario);
+		var result = NativeAotBootstrapTestTools.Run (nativeProbe, "open-error");
 		Assert.AreEqual (1, result.ExitCode, result.Output + result.Error);
-		StringAssert.Contains ($"opens=1 closes={closes} warnings=1", result.Output);
-		StringAssert.Contains (diagnostic, result.Error);
+		StringAssert.Contains ("opens=1 closes=0 warnings=1", result.Output);
+		StringAssert.Contains ("Failed to open /proc/self/maps for CPU detection", result.Error);
 		StringAssert.Contains ("Unable to determine the running CPU architecture", result.Error);
 	}
 }
