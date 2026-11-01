@@ -198,7 +198,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			return;
 		}
 
-		const string completedMessage = "WORKER_JNI_LIBRARY_LOAD_COMPLETED:115:1:1";
+		const string completedMessage = "WORKER_JNI_LIBRARY_LOAD_COMPLETED:115:115:10:99:1:1:1";
 		const string failedMessage = "WORKER_JNI_LIBRARY_LOAD_FAILED:";
 		string packageName = PackageUtils.MakePackageName (
 			AndroidRuntime.CoreCLR, $"workerjniload{(extractNativeLibs ? "extracted" : "embedded")}");
@@ -225,7 +225,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			"""
 			#include <jni.h>
 
-			static jint outer_loaded = 0;
+			static volatile jint outer_loaded = 0;
 
 			JNIEXPORT jint JNICALL
 			JNI_OnLoad (JavaVM *vm, void *reserved)
@@ -247,6 +247,7 @@ public class NativeLibraryLoadTests : DeviceTest
 					return JNI_ERR;
 				}
 
+				outer_loaded = 10;
 				jint inner_value = (*env)->CallStaticIntMethod (env, probe, on_outer_load);
 				(*env)->DeleteLocalRef (env, probe);
 				if ((*env)->ExceptionCheck (env) || inner_value != 73) {
@@ -309,6 +310,51 @@ public class NativeLibraryLoadTests : DeviceTest
 			}
 			""");
 
+		byte [] failLibrary = CompileJniFixtureLibrary (
+			nativeWorkDir,
+			"libjniworkerfail.dll.so",
+			"""
+			#include <jni.h>
+
+			static volatile jint fail_loaded = 0;
+
+			JNIEXPORT jint JNICALL
+			JNI_OnLoad (JavaVM *vm, void *reserved)
+			{
+				(void)reserved;
+				JNIEnv *env = NULL;
+				if ((*vm)->GetEnv (vm, (void**)&env, JNI_VERSION_1_6) != JNI_OK || env == NULL) {
+					return JNI_ERR;
+				}
+
+				jclass probe = (*env)->FindClass (env, "com/xamarin/jniloadertest/JniLoadProbe");
+				if (probe == NULL) {
+					return JNI_ERR;
+				}
+
+				jmethodID on_fail_load = (*env)->GetStaticMethodID (env, probe, "onFailLoad", "()I");
+				if (on_fail_load == NULL) {
+					(*env)->DeleteLocalRef (env, probe);
+					return JNI_ERR;
+				}
+
+				fail_loaded = 99;
+				jint recursive_value = (*env)->CallStaticIntMethod (env, probe, on_fail_load);
+				(*env)->DeleteLocalRef (env, probe);
+				if ((*env)->ExceptionCheck (env) || recursive_value != 99) {
+					return JNI_ERR;
+				}
+
+				return JNI_ERR;
+			}
+
+			JNIEXPORT int JNICALL
+			jni_worker_fail_get_value (void)
+			{
+				return (int)fail_loaded;
+			}
+			""");
+
 		proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JniLoadProbe.java") {
 			Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
 			TextContent = () => """
@@ -317,8 +363,10 @@ public class NativeLibraryLoadTests : DeviceTest
 			public final class JniLoadProbe {
 				public static volatile int outerOnLoadCount;
 				public static volatile int innerOnLoadCount;
+				public static volatile int failOnLoadCount;
 
 				public static native int invokeInnerFromManaged ();
+				public static native int invokeFailFromManaged ();
 
 				public static int onOuterLoad () {
 					outerOnLoadCount++;
@@ -329,6 +377,11 @@ public class NativeLibraryLoadTests : DeviceTest
 					innerOnLoadCount++;
 					return 73;
 				}
+
+				public static int onFailLoad () {
+					failOnLoadCount++;
+					return invokeFailFromManaged ();
+				}
 			}
 			""",
 		});
@@ -336,6 +389,7 @@ public class NativeLibraryLoadTests : DeviceTest
 		foreach ((string fileName, byte [] content) in new [] {
 			("libjniworkerouter.so", outerLibrary),
 			("libjniworkerinner.so", innerLibrary),
+			("libjniworkerfail.dll.so", failLibrary),
 		}) {
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ($"native/{DeviceAbi}/{fileName}") {
 				BinaryContent = () => content,
@@ -352,20 +406,24 @@ public class NativeLibraryLoadTests : DeviceTest
 				try {
 					using var probeType = new JniType ("com/xamarin/jniloadertest/JniLoadProbe");
 					unsafe {
-						Span<JniNativeMethod> methods = stackalloc JniNativeMethod [1];
-						fixed (byte* namePtr = "invokeInnerFromManaged"u8)
+						Span<JniNativeMethod> methods = stackalloc JniNativeMethod [2];
+						fixed (byte* innerNamePtr = "invokeInnerFromManaged"u8)
+						fixed (byte* failNamePtr = "invokeFailFromManaged"u8)
 						fixed (byte* sigPtr = "()I"u8) {
-							methods [0] = new JniNativeMethod (namePtr, sigPtr, (IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &NativeMethods.InvokeInnerFromManaged);
+							methods [0] = new JniNativeMethod (innerNamePtr, sigPtr, (IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &NativeMethods.InvokeInnerFromManaged);
+							methods [1] = new JniNativeMethod (failNamePtr, sigPtr, (IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &NativeMethods.InvokeFailFromManaged);
 							JniEnvironment.Types.RegisterNatives (probeType.PeerReference, methods);
 						}
 					}
 
 					var outerCountField = probeType.GetStaticField ("outerOnLoadCount", "I");
 					var innerCountField = probeType.GetStaticField ("innerOnLoadCount", "I");
+					var failCountField = probeType.GetStaticField ("failOnLoadCount", "I");
 					int initialOuterCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, outerCountField);
 					int initialInnerCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, innerCountField);
-					if (initialOuterCount != 0 || initialInnerCount != 0) {
-						Android.Util.Log.Error ("NativeLibraryLoadTest", $"{{failedMessage}}Libraries were preloaded ({initialOuterCount}, {initialInnerCount})");
+					int initialFailCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, failCountField);
+					if (initialOuterCount != 0 || initialInnerCount != 0 || initialFailCount != 0) {
+						Android.Util.Log.Error ("NativeLibraryLoadTest", $"{{failedMessage}}Libraries were preloaded ({initialOuterCount}, {initialInnerCount}, {initialFailCount})");
 						return;
 					}
 
@@ -374,6 +432,35 @@ public class NativeLibraryLoadTests : DeviceTest
 					var worker = new Thread (() => {
 						try {
 							workerValue = NativeMethods.GetOuterValue ();
+							if (NativeMethods.ConcurrentOuterThread == null || !NativeMethods.ConcurrentOuterThread.Join (TimeSpan.FromSeconds (5))) {
+								throw new TimeoutException ("Concurrent outer reader thread did not finish.");
+							}
+							if (NativeMethods.ConcurrentOuterException != null) {
+								throw NativeMethods.ConcurrentOuterException;
+							}
+							if (NativeMethods.ConcurrentCompletedDuringOnLoad) {
+								throw new InvalidOperationException ("Concurrent reader observed a provisionally published handle before JNI_OnLoad finished.");
+							}
+
+							bool firstFailThrew = false;
+							try {
+								NativeMethods.GetFailValue ();
+							} catch (DllNotFoundException) {
+								firstFailThrew = true;
+							}
+							if (!firstFailThrew) {
+								throw new InvalidOperationException ("Initial P/Invoke to library with failing JNI_OnLoad should throw DllNotFoundException.");
+							}
+
+							bool secondFailThrew = false;
+							try {
+								NativeMethods.GetFailValueAfterFailure ();
+							} catch (DllNotFoundException) {
+								secondFailThrew = true;
+							}
+							if (!secondFailThrew) {
+								throw new InvalidOperationException ("Subsequent P/Invoke to library with failing JNI_OnLoad should throw DllNotFoundException.");
+							}
 						} catch (Exception ex) {
 							workerException = ex;
 						}
@@ -382,7 +469,7 @@ public class NativeLibraryLoadTests : DeviceTest
 						Name = "WorkerJniLoader",
 					};
 					worker.Start ();
-					if (!worker.Join (TimeSpan.FromSeconds (5))) {
+					if (!worker.Join (TimeSpan.FromSeconds (10))) {
 						Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}TimedOut");
 						return;
 					}
@@ -393,7 +480,10 @@ public class NativeLibraryLoadTests : DeviceTest
 
 					int finalOuterCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, outerCountField);
 					int finalInnerCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, innerCountField);
-					Android.Util.Log.Info ("NativeLibraryLoadTest", $"WORKER_JNI_LIBRARY_LOAD_COMPLETED:{workerValue}:{finalOuterCount}:{finalInnerCount}");
+					int finalFailCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, failCountField);
+					Android.Util.Log.Info (
+						"NativeLibraryLoadTest",
+						$"WORKER_JNI_LIBRARY_LOAD_COMPLETED:{workerValue}:{NativeMethods.ConcurrentOuterValue}:{NativeMethods.ProvisionalOuterValue}:{NativeMethods.ProvisionalFailValue}:{finalOuterCount}:{finalInnerCount}:{finalFailCount}");
 				} catch (Exception ex) {
 					Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}" + ex);
 				}
@@ -403,17 +493,68 @@ public class NativeLibraryLoadTests : DeviceTest
 				"""
 				static class NativeMethods
 				{
+					public static volatile int ProvisionalOuterValue;
+					public static volatile int ProvisionalFailValue;
+					public static volatile int ConcurrentOuterValue;
+					public static volatile bool ConcurrentCompletedDuringOnLoad;
+					public static volatile Exception? ConcurrentOuterException;
+					public static Thread? ConcurrentOuterThread;
+
 					[UnmanagedCallersOnly]
 					public static int InvokeInnerFromManaged (IntPtr jnienv, IntPtr klass)
 					{
+						// Use a distinct P/Invoke declaration so CoreCLR resolves through PinvokeOverride::load_symbol ->
+						// MonodroidDl::monodroid_dlopen during JNI_OnLoad and exercises same-thread provisional handle lookup.
+						ProvisionalOuterValue = GetOuterValueProvisional ();
+
+						using var started = new ManualResetEventSlim (false);
+						ConcurrentOuterThread = new Thread (() => {
+							try {
+								started.Set ();
+								ConcurrentOuterValue = GetOuterValueConcurrent ();
+							} catch (Exception ex) {
+								ConcurrentOuterException = ex;
+							}
+						}) {
+							IsBackground = true,
+							Name = "ConcurrentOuterReader",
+						};
+						ConcurrentOuterThread.Start ();
+						started.Wait ();
+						if (ConcurrentOuterThread.Join (TimeSpan.FromMilliseconds (150))) {
+							ConcurrentCompletedDuringOnLoad = true;
+						}
+
 						return GetInnerValue ();
+					}
+
+					[UnmanagedCallersOnly]
+					public static int InvokeFailFromManaged (IntPtr jnienv, IntPtr klass)
+					{
+						ProvisionalFailValue = GetFailValueProvisional ();
+						return ProvisionalFailValue;
 					}
 
 					[DllImport ("jniworkerouter", EntryPoint = "jni_worker_outer_get_value")]
 					public static extern int GetOuterValue ();
 
+					[DllImport ("jniworkerouter", EntryPoint = "jni_worker_outer_get_value")]
+					public static extern int GetOuterValueProvisional ();
+
+					[DllImport ("jniworkerouter", EntryPoint = "jni_worker_outer_get_value")]
+					public static extern int GetOuterValueConcurrent ();
+
 					[DllImport ("jniworkerinner", EntryPoint = "jni_worker_inner_get_value")]
 					public static extern int GetInnerValue ();
+
+					[DllImport ("jniworkerfail", EntryPoint = "jni_worker_fail_get_value")]
+					public static extern int GetFailValue ();
+
+					[DllImport ("jniworkerfail", EntryPoint = "jni_worker_fail_get_value")]
+					public static extern int GetFailValueProvisional ();
+
+					[DllImport ("jniworkerfail", EntryPoint = "jni_worker_fail_get_value")]
+					public static extern int GetFailValueAfterFailure ();
 				}
 				""");
 

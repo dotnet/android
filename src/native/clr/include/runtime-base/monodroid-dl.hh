@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include <dlfcn.h>
+#include <unistd.h>
 #include <android/dlext.h>
 
 #include <runtime-base/mutex.hh>
@@ -14,13 +15,67 @@
 #include <runtime-base/crc32.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/search.hh>
-#include "startup-aware-lock.hh"
 
 namespace xamarin::android
 {
 	class MonodroidDl
 	{
+		struct InProgressLoad
+		{
+			uint32_t name_index;
+			pid_t owner_tid;
+			void *provisional_handle;
+			InProgressLoad *next;
+		};
+
 		static inline pthread_mutex_t dso_handle_write_lock = PTHREAD_MUTEX_INITIALIZER;
+		static inline pthread_cond_t dso_load_cond = PTHREAD_COND_INITIALIZER;
+		static inline InProgressLoad *in_progress_loads = nullptr;
+
+		static auto find_in_progress_load (uint32_t name_index) noexcept -> InProgressLoad*
+		{
+			for (InProgressLoad *cur = in_progress_loads; cur != nullptr; cur = cur->next) {
+				if (cur->name_index == name_index) {
+					return cur;
+				}
+			}
+
+			return nullptr;
+		}
+
+		static void remove_in_progress_load (InProgressLoad *target) noexcept
+		{
+			InProgressLoad **cur = &in_progress_loads;
+			while (*cur != nullptr) {
+				if (*cur == target) {
+					*cur = target->next;
+					return;
+				}
+				cur = &((*cur)->next);
+			}
+		}
+
+		static void publish_completed_handle (DSOCacheEntry *dso, void *handle) noexcept
+		{
+			uint32_t name_index = dso->name_index;
+			for (size_t i = 0; i < CoreClrBootstrap::config.number_of_dso_cache_entries; i++) {
+				DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[i];
+				if (entry.name_index == name_index) {
+					__atomic_store_n (&entry.handle, handle, __ATOMIC_RELEASE);
+				}
+			}
+			__atomic_store_n (&dso->handle, handle, __ATOMIC_RELEASE);
+		}
+
+		static auto load_dso (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
+		{
+			std::string_view dso_name = get_dso_name (dso);
+			void *handle = AndroidSystem::load_dso_from_any_directories (dso_name, flags, dso->is_jni_library);
+			if (handle == nullptr) {
+				handle = AndroidSystem::load_dso_from_any_directories (name, flags, dso->is_jni_library);
+			}
+			return handle;
+		}
 
 		[[gnu::always_inline]]
 		static constexpr auto ascii_to_lower (char c) noexcept -> char
@@ -171,26 +226,65 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			// Perform the actual load outside dso_handle_write_lock. Synchronous JNI_OnLoad callbacks
-			// can re-enter managed code and resolve another P/Invoke on the same thread, which would
-			// deadlock on a non-recursive cache mutex. ART and Bionic coordinate concurrent and
-			// recursive loads internally; only handle publication needs the cache lock.
-			std::string_view dso_name = get_dso_name (dso);
-			void *handle = AndroidSystem::load_dso_from_any_directories (dso_name, flags, dso->is_jni_library);
-			if (handle == nullptr) {
-				handle = AndroidSystem::load_dso_from_any_directories (name, flags, dso->is_jni_library);
-			}
-			if (handle == nullptr) {
-				return nullptr;
+			// Perform the actual load outside dso_handle_write_lock so synchronous JNI_OnLoad callbacks
+			// can re-enter managed code and resolve other P/Invokes without deadlocking on the cache mutex.
+			// Track in-progress loads per library: same-thread recursive calls receive a provisional handle
+			// without publishing it to dso->handle, concurrent threads wait outside the load for the
+			// outermost initialization to finish, and dso->handle is published only after the outermost
+			// load succeeds.
+			pid_t current_tid = gettid ();
+			InProgressLoad current_load {
+				.name_index = dso->name_index,
+				.owner_tid = current_tid,
+				.provisional_handle = nullptr,
+				.next = nullptr,
+			};
+			bool is_recursive_load = false;
+
+			{
+				lock_guard lock (dso_handle_write_lock);
+				for (;;) {
+					cached_handle = __atomic_load_n (&dso->handle, __ATOMIC_RELAXED);
+					if (cached_handle != nullptr) {
+						log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: library %.*s already loaded, returning handle %p", static_cast<int>(name.length ()), name.data (), cached_handle);
+						return cached_handle;
+					}
+
+					InProgressLoad *active_load = find_in_progress_load (dso->name_index);
+					if (active_load == nullptr) {
+						current_load.next = in_progress_loads;
+						in_progress_loads = &current_load;
+						break;
+					}
+
+					if (active_load->owner_tid == current_tid) {
+						if (active_load->provisional_handle != nullptr) {
+							return active_load->provisional_handle;
+						}
+						is_recursive_load = true;
+						break;
+					}
+
+					pthread_cond_wait (&dso_load_cond, &dso_handle_write_lock);
+				}
 			}
 
-			StartupAwareLock lock (dso_handle_write_lock);
-			cached_handle = __atomic_load_n (&dso->handle, __ATOMIC_RELAXED);
-			if (cached_handle != nullptr) {
-				return cached_handle;
+			void *handle = load_dso (dso, name, flags);
+
+			lock_guard lock (dso_handle_write_lock);
+			if (is_recursive_load) {
+				InProgressLoad *active_load = find_in_progress_load (dso->name_index);
+				if (active_load != nullptr && active_load->owner_tid == current_tid && active_load->provisional_handle == nullptr) {
+					active_load->provisional_handle = handle;
+				}
+				return handle;
 			}
 
-			__atomic_store_n (&dso->handle, handle, __ATOMIC_RELEASE);
+			remove_in_progress_load (&current_load);
+			if (handle != nullptr) {
+				publish_completed_handle (dso, handle);
+			}
+			pthread_cond_broadcast (&dso_load_cond);
 			return handle;
 		}
 
