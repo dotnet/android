@@ -29,7 +29,6 @@ set(XAMARIN_MONODROID_SOURCES
   host-jni.cc
   host-shared.cc
   gc-bridge.cc
-  os-bridge.cc
   runtime-environment.cc
   runtime-util.cc
   ../runtime-base/binary-blob-loader.cc
