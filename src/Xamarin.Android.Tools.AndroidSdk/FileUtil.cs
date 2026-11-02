@@ -77,39 +77,41 @@ namespace Xamarin.Android.Tools
 			catch (Exception ex) { logger (TraceLevel.Warning, $"Could not clean up {label} at '{path}': {ex.Message}"); }
 		}
 
-		/// <summary>Moves a directory to the target path, backing up any existing directory and restoring on failure.</summary>
-		internal static void MoveWithRollback (string sourcePath, string targetPath, Action<TraceLevel, string> logger)
+		/// <summary>Moves a directory to the target path, keeping its backup until validation succeeds and restoring on failure.</summary>
+		internal static void MoveWithRollback (string sourcePath, string targetPath, Action<TraceLevel, string> logger, Action? validate = null)
 		{
+			var parentDir = Path.GetDirectoryName (targetPath);
+			if (!string.IsNullOrEmpty (parentDir))
+				Directory.CreateDirectory (parentDir);
+
 			string? backupPath = null;
 			if (Directory.Exists (targetPath)) {
 				backupPath = targetPath + $".old-{Guid.NewGuid ():N}";
 				Directory.Move (targetPath, backupPath);
 			}
 
-			var parentDir = Path.GetDirectoryName (targetPath);
-			if (!string.IsNullOrEmpty (parentDir))
-				Directory.CreateDirectory (parentDir);
-
+			bool moved = false;
 			try {
 				Directory.Move (sourcePath, targetPath);
+				moved = true;
+				validate?.Invoke ();
 			}
 			catch (Exception ex) {
-				logger (TraceLevel.Error, $"Failed to move to '{targetPath}': {ex.Message}");
-				if (backupPath is not null && Directory.Exists (backupPath)) {
-					try {
-						if (Directory.Exists (targetPath))
-							Directory.Delete (targetPath, recursive: true);
+				logger (TraceLevel.Error, $"Failed to install to '{targetPath}': {ex.Message}");
+				try {
+					if (moved && Directory.Exists (targetPath))
+						Directory.Delete (targetPath, recursive: true);
+					if (backupPath is not null && Directory.Exists (backupPath)) {
 						Directory.Move (backupPath, targetPath);
 						logger (TraceLevel.Warning, $"Restored previous directory from backup '{backupPath}'.");
 					}
-					catch (Exception restoreEx) {
-						logger (TraceLevel.Error, $"Failed to restore from backup: {restoreEx.Message}");
-					}
+				}
+				catch (Exception restoreEx) {
+					logger (TraceLevel.Error, $"Failed to roll back installation at '{targetPath}' (backup '{backupPath}'): {restoreEx.Message}");
 				}
 				throw;
 			}
 
-			// Delete backup only after move and caller validation succeed
 			if (backupPath is not null)
 				TryDeleteDirectory (backupPath, "old backup", logger);
 		}
@@ -136,20 +138,6 @@ namespace Xamarin.Android.Tools
 			}
 			finally {
 				TryDeleteDirectory (tempExtractDir, "temp extract dir", logger);
-			}
-		}
-
-		/// <summary>Deletes a backup created by MoveWithRollback. Call after validation succeeds.</summary>
-		internal static void CommitMove (string targetPath, Action<TraceLevel, string> logger)
-		{
-			// Find and clean up any leftover backup directories
-			var parentDir = Path.GetDirectoryName (targetPath);
-			if (string.IsNullOrEmpty (parentDir) || !Directory.Exists (parentDir))
-				return;
-
-			var dirName = Path.GetFileName (targetPath);
-			foreach (var dir in Directory.GetDirectories (parentDir, $"{dirName}.old-*")) {
-				TryDeleteDirectory (dir, "old backup", logger);
 			}
 		}
 

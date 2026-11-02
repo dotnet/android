@@ -139,20 +139,7 @@ namespace Xamarin.Android.Tools
 				// Extract
 				logger (TraceLevel.Info, $"Extracting JDK to {targetPath}");
 				progress.Report (new JdkInstallProgress (JdkInstallPhase.Extracting, 0, "Extracting JDK..."));
-				await ExtractArchiveAsync (tempArchivePath, targetPath, cancellationToken).ConfigureAwait (false);
-				logger (TraceLevel.Info, "Extraction complete.");
-				progress.Report (new JdkInstallProgress (JdkInstallPhase.Extracting, 100, "Extraction complete."));
-
-				// Validate
-				progress.Report (new JdkInstallProgress (JdkInstallPhase.Validating, 0, "Validating installation..."));
-				if (!IsValid (targetPath)) {
-					logger (TraceLevel.Error, $"JDK installation at '{targetPath}' failed validation.");
-					FileUtil.TryDeleteDirectory (targetPath, "invalid installation", logger);
-					throw new InvalidOperationException ($"JDK installation at '{targetPath}' failed validation. The extracted files may be corrupted.");
-				}
-
-				// Validation passed — commit the move by cleaning up any backup
-				FileUtil.CommitMove (targetPath, logger);
+				await ExtractArchiveAsync (tempArchivePath, targetPath, progress, cancellationToken).ConfigureAwait (false);
 				logger (TraceLevel.Info, $"Microsoft OpenJDK {majorVersion} installed successfully at {targetPath}");
 				progress.Report (new JdkInstallProgress (JdkInstallPhase.Validating, 100, "Validation complete."));
 
@@ -281,7 +268,7 @@ namespace Xamarin.Android.Tools
 			);
 		}
 
-		async Task ExtractArchiveAsync (string archivePath, string targetPath, CancellationToken cancellationToken)
+		internal async Task ExtractArchiveAsync (string archivePath, string targetPath, IProgress<JdkInstallProgress> progress, CancellationToken cancellationToken)
 		{
 			var targetParent = Path.GetDirectoryName (targetPath);
 			if (string.IsNullOrEmpty (targetParent))
@@ -309,7 +296,19 @@ namespace Xamarin.Android.Tools
 						jdkRoot = contentsHome;
 				}
 
-				FileUtil.MoveWithRollback (jdkRoot, targetPath, logger);
+				cancellationToken.ThrowIfCancellationRequested ();
+				FileUtil.MoveWithRollback (jdkRoot, targetPath, logger, () => {
+					logger (TraceLevel.Info, "Extraction complete.");
+					progress.Report (new JdkInstallProgress (JdkInstallPhase.Extracting, 100, "Extraction complete."));
+					cancellationToken.ThrowIfCancellationRequested ();
+
+					progress.Report (new JdkInstallProgress (JdkInstallPhase.Validating, 0, "Validating installation..."));
+					if (!IsValid (targetPath)) {
+						logger (TraceLevel.Error, $"JDK installation at '{targetPath}' failed validation.");
+						throw new InvalidOperationException ($"JDK installation at '{targetPath}' failed validation. The extracted files may be corrupted.");
+					}
+					cancellationToken.ThrowIfCancellationRequested ();
+				});
 			}
 			finally {
 				FileUtil.TryDeleteDirectory (tempExtractPath, "temp extract directory", logger);

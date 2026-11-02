@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 
@@ -88,6 +89,87 @@ namespace Xamarin.Android.Tools.Tests
 
 			Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
 			Assert.IsFalse (Directory.Exists (target));
+		}
+
+		[Test]
+		public void MoveWithRollback_ValidationSuccess_RemovesOnlyItsBackup ()
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			var unrelatedBackup = target + ".old-unrelated";
+			Directory.CreateDirectory (source);
+			Directory.CreateDirectory (target);
+			Directory.CreateDirectory (unrelatedBackup);
+			File.WriteAllText (Path.Combine (target, "original.txt"), "original");
+
+			FileUtil.MoveWithRollback (source, target, logger, () => {
+				var backups = Directory.GetDirectories (tempDir, "target.old-*");
+				Assert.AreEqual (2, backups.Length, "Keep the original until validation succeeds");
+			});
+
+			Assert.That (Directory.GetDirectories (tempDir, "target.old-*"), Is.EquivalentTo (new [] { unrelatedBackup }));
+		}
+
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void MoveWithRollback_ValidationFailure_RollsBack (bool existingTarget, bool canceled)
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			Directory.CreateDirectory (source);
+			File.WriteAllText (Path.Combine (source, "replacement.txt"), "replacement");
+			if (existingTarget) {
+				Directory.CreateDirectory (target);
+				File.WriteAllText (Path.Combine (target, "original.txt"), "original");
+			}
+			Exception failure = canceled ? new OperationCanceledException () : new InvalidOperationException ("Invalid installation");
+
+			var actual = Assert.Catch (() => FileUtil.MoveWithRollback (source, target, logger, () => throw failure));
+
+			Assert.AreSame (failure, actual);
+			Assert.AreEqual (existingTarget, Directory.Exists (target));
+			if (existingTarget)
+				Assert.AreEqual ("original", File.ReadAllText (Path.Combine (target, "original.txt")));
+			Assert.IsFalse (File.Exists (Path.Combine (target, "replacement.txt")));
+			Assert.IsEmpty (Directory.GetDirectories (tempDir, "target.old-*"));
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void SystemRename_Success (bool existingTarget)
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			File.WriteAllText (source, "replacement");
+			if (existingTarget)
+				File.WriteAllText (target, "original");
+
+			FileUtil.SystemRename (source, target);
+
+			Assert.IsFalse (File.Exists (source));
+			Assert.AreEqual ("replacement", File.ReadAllText (target));
+		}
+
+		[Test]
+		public void SystemRename_DirectoryTarget_ThrowsAndPreservesSource ()
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			File.WriteAllText (source, "preserve");
+			Directory.CreateDirectory (target);
+
+			var error = Assert.Throws<IOException> (() => FileUtil.SystemRename (source, target));
+
+			Assert.AreEqual ("preserve", File.ReadAllText (source));
+			Assert.IsTrue (Directory.Exists (target));
+			if (!OS.IsWindows) {
+				Assert.IsNotNull (error);
+				Assert.That (error.Message, Does.Contain (source).And.Contain (target).And.Contain ("errno"));
+				Assert.That (error.InnerException, Is.TypeOf<Win32Exception> ());
+				Assert.AreNotEqual (0, ((Win32Exception) error.InnerException).NativeErrorCode);
+			}
 		}
 
 		[Test]
