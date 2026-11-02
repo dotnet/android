@@ -43,11 +43,6 @@ It uses the production raw-only envelope reader and checks compressed/truncated 
 On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 
-The `CpuArchitectureTests` cases in the same suite compile the production CPU detector's
-ARM branch on macOS/Linux with a C++23 compiler (`clang++`, or `CXX`). They cover
-Houdini detection, map-file descriptor cleanup on match and EOF, and fatal open failure before
-an APK ABI can be selected. They do not require a local Android SDK or a device.
-
 ---
 
 The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
