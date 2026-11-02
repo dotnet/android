@@ -105,7 +105,7 @@ namespace Java.Interop {
 			/// may overlap; no concurrent writes/frees are allowed. Java.Interop neither roots
 			/// nor frees the storage. The getter returns only the address.
 			/// </safety>
-			public unsafe byte* TargetJniTypeUtf8Pointer {get; set;}
+			public byte* TargetJniTypeUtf8Pointer {get; unsafe set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method name.
 			/// </summary>
@@ -113,7 +113,7 @@ namespace Java.Interop {
 			/// The setter's buffer has the same NUL, lifetime, aliasing and failure obligations as
 			/// <see cref="TargetJniTypeUtf8Pointer"/>. The getter returns only the address.
 			/// </safety>
-			public unsafe byte* TargetJniMethodNameUtf8Pointer {get; set;}
+			public byte* TargetJniMethodNameUtf8Pointer {get; unsafe set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method signature.
 			/// </summary>
@@ -121,7 +121,7 @@ namespace Java.Interop {
 			/// The setter's buffer has the same NUL, lifetime, aliasing and failure obligations as
 			/// <see cref="TargetJniTypeUtf8Pointer"/>. The getter returns only the address.
 			/// </safety>
-			public unsafe byte* TargetJniMethodSignatureUtf8Pointer {get; set;}
+			public byte* TargetJniMethodSignatureUtf8Pointer {get; unsafe set;}
 			public  int?    TargetJniMethodParameterCount   {get; set;}
 			public  bool    TargetJniMethodInstanceToStatic {get; set;}
 
