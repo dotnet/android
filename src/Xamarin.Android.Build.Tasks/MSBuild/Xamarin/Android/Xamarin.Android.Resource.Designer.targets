@@ -156,10 +156,28 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
+<Target Name="_GenerateResourceDesignerAssemblyInputs"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
+    DependsOnTargets="_SetupDesignerProperties"
+    BeforeTargets="_UpdateAndroidResgen">
+  <PropertyGroup>
+    <_AndroidResourceDesignerFrameworkFile>$(_DesignerIntermediateOutputPath)resource.designer.framework</_AndroidResourceDesignerFrameworkFile>
+  </PropertyGroup>
+  <WriteLinesToFile
+      File="$(_AndroidResourceDesignerFrameworkFile)"
+      Lines="$(TargetFrameworkIdentifier);$(TargetFrameworkVersion)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
+  />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidResourceDesignerFrameworkFile)" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GenerateResourceDesignerAssembly"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
-    DependsOnTargets="_GenerateResourceCaseMap"
-    Inputs="$(_DesignerIntermediateOutputPath)R.txt"
+    DependsOnTargets="_GenerateResourceCaseMap;_GenerateResourceDesignerAssemblyInputs"
+    Inputs="$(_DesignerIntermediateOutputPath)R.txt;$(_AndroidResourceDesignerFrameworkFile)"
     Outputs="$(_GenerateResourceDesignerAssemblyOutput)">
   <GenerateResourceDesignerAssembly
       ContinueOnError="$(DesignTimeBuild)"
