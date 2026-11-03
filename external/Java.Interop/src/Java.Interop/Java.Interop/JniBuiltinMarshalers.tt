@@ -55,10 +55,8 @@ namespace Java.Interop {
 			Debug.Assert (targetType == null || targetType == typeof (<#= type.Type #>), "Expected targetType==typeof(<#= type.Type #>); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
 			try {
-				unsafe {
-					// SAFETY: The cached <#= type.GetValue #> ID has no arguments and the peer reference is retained until the enclosing finally.
-					return JniEnvironment.InstanceMethods.Call<#= type.JniCallType #>Method (self, <#= type.GetValue #>);
-				}
+				// SAFETY: The cached <#= type.GetValue #> ID has no arguments and the peer reference is retained until the enclosing finally.
+				return unsafe (JniEnvironment.InstanceMethods.Call<#= type.JniCallType #>Method (self, <#= type.GetValue #>));
 			} finally {
 				JniObjectReference.Dispose (ref self, transfer);
 			}

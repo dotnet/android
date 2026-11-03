@@ -117,6 +117,9 @@ namespace Xamarin.Android.Build.Tests
 				"The NativeAOT host must not retain the CoreCLR blob decompression path.");
 			StringAssert.DoesNotContain ("BinaryBlobLoader::load(", definitions);
 			StringAssert.DoesNotContain ("BinaryBlobLoader::load_optional(", definitions);
+			StringAssert.DoesNotContain ("OSBridge::", definitions);
+			StringAssert.DoesNotContain ("RuntimeEnvironment::", definitions,
+				"NativeAOT startup must use the supplied JNI environment without retaining a native JavaVM cache.");
 		}
 
 		[Test]

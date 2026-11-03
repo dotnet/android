@@ -45,44 +45,68 @@ namespace Android.Views {
 #pragma warning disable 0169
 			static Delegate GetOnClick_Landroid_view_View_Handler ()
 			{
-				return cb_onClick_OnClick_Landroid_view_View__V ??= new _JniMarshal_PPL_V (n_OnClick_Landroid_view_View_);
+				unsafe {
+					// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+					return cb_onClick_OnClick_Landroid_view_View__V ??= new _JniMarshal_PPL_V (n_OnClick_Landroid_view_View_);
+				}
 			}
 
-			static void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
+			/// <safety>
+			/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+			/// must match the registered types and stay live without concurrent deletion for this call;
+			/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+			/// failures and may return default; invalid addresses are not validated.
+			/// </safety>
+			static unsafe void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
 			{
 				unsafe {
+					// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 					global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_v, &__n_OnClick_Landroid_view_View_);
 				}
 			}
-			private static void __n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
+			/// <safety>
+			/// Requires the entry point's live, type-correct borrowed references in its active JNI
+			/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+			/// failures propagate to the marshal helper.
+			/// </safety>
+			private static unsafe void __n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
 			{
-				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var v = global::Java.Lang.Object.GetObject<global::Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
-				__this.OnClick (v);
+				unsafe {
+					// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+					var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+					var v = global::Java.Lang.Object.GetObject<global::Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
+					__this.OnClick (v);
+				}
 			}
 #pragma warning restore 0169
 
-			public unsafe void OnClick (global::Android.Views.View v)
+			public void OnClick (global::Android.Views.View v)
 			{
 				const string __id = "onClick.(Landroid/view/View;)V";
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
-				_members_android_view_View_OnClickListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				global::System.GC.KeepAlive (v);
+				unsafe {
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
+					_members_android_view_View_OnClickListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+					global::System.GC.KeepAlive (v);
+				}
 			}
 
 		}
 
 		[global::Android.Runtime.Register ("mono/android/view/View_OnClickListenerImplementor")]
 		internal sealed partial class IOnClickListenerImplementor : global::Java.Lang.Object, IOnClickListener {
-			public unsafe IOnClickListenerImplementor () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+			public IOnClickListenerImplementor () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 			{
 				const string __id = "()V";
 				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 					return;
-				var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
-				JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
+				unsafe {
+					// SAFETY: ()V needs no arguments; SetHandle takes the new local peer before FinishCreateInstance.
+					var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+					SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
+					JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
+				}
 			}
 
 			#pragma warning disable 0649
@@ -119,100 +143,163 @@ namespace Android.Views {
 #pragma warning disable 0169
 		static Delegate GetSetOnClickListener_Landroid_view_View_OnClickListener_Handler ()
 		{
-			return cb_setOnClickListener_SetOnClickListener_Landroid_view_View_OnClickListener__V ??= new _JniMarshal_PPL_V (n_SetOnClickListener_Landroid_view_View_OnClickListener_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setOnClickListener_SetOnClickListener_Landroid_view_View_OnClickListener__V ??= new _JniMarshal_PPL_V (n_SetOnClickListener_Landroid_view_View_OnClickListener_);
+			}
 		}
 
-		static void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_l, &__n_SetOnClickListener_Landroid_view_View_OnClickListener_);
 			}
 		}
-		private static void __n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
-			__this.SetOnClickListener (l);
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+				__this.SetOnClickListener (l);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOnClickListener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
 		[Register ("setOnClickListener", "(Landroid/view/View$OnClickListener;)V", "GetSetOnClickListener_Landroid_view_View_OnClickListener_Handler")]
-		public virtual unsafe void SetOnClickListener (global::Android.Views.View.IOnClickListener l)
+		public virtual void SetOnClickListener (global::Android.Views.View.IOnClickListener l)
 		{
 			const string __id = "setOnClickListener.(Landroid/view/View$OnClickListener;)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			global::System.GC.KeepAlive (l);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (l);
+			}
 		}
 
 		static Delegate cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V;
 #pragma warning disable 0169
 		static Delegate GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler ()
 		{
-			return cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V ??= new _JniMarshal_PPL_V (n_SetOn123Listener_Landroid_view_View_OnClickListener_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V ??= new _JniMarshal_PPL_V (n_SetOn123Listener_Landroid_view_View_OnClickListener_);
+			}
 		}
 
-		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_l, &__n_SetOn123Listener_Landroid_view_View_OnClickListener_);
 			}
 		}
-		private static void __n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
-			__this.SetOn123Listener (l);
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+				__this.SetOn123Listener (l);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOn123Listener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
 		[Register ("setOn123Listener", "(Landroid/view/View$OnClickListener;)V", "GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler")]
-		public virtual unsafe void SetOn123Listener (global::Android.Views.View.IOnClickListener l)
+		public virtual void SetOn123Listener (global::Android.Views.View.IOnClickListener l)
 		{
 			const string __id = "setOn123Listener.(Landroid/view/View$OnClickListener;)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			global::System.GC.KeepAlive (l);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (l);
+			}
 		}
 
 		static Delegate cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V;
 #pragma warning disable 0169
 		static Delegate GetAddTouchables_Ljava_util_ArrayList_Handler ()
 		{
-			return cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V ??= new _JniMarshal_PPL_V (n_AddTouchables_Ljava_util_ArrayList_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V ??= new _JniMarshal_PPL_V (n_AddTouchables_Ljava_util_ArrayList_);
+			}
 		}
 
-		static void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_views, &__n_AddTouchables_Ljava_util_ArrayList_);
 			}
 		}
-		private static void __n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var views = global::Android.Runtime.JavaList<global::Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
-			__this.AddTouchables (views);
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var views = global::Android.Runtime.JavaList<global::Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
+				__this.AddTouchables (views);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='addTouchables' and count(parameter)=1 and parameter[1][@type='java.util.ArrayList&lt;android.view.View&gt;']]"
 		[Register ("addTouchables", "(Ljava/util/ArrayList;)V", "GetAddTouchables_Ljava_util_ArrayList_Handler")]
-		public virtual unsafe void AddTouchables (global::System.Collections.Generic.IList<global::Android.Views.View> views)
+		public virtual void AddTouchables (global::System.Collections.Generic.IList<global::Android.Views.View> views)
 		{
 			const string __id = "addTouchables.(Ljava/util/ArrayList;)V";
-			IntPtr native_views = global::Android.Runtime.JavaList<global::Android.Views.View>.ToLocalJniHandle (views);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_views);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				JNIEnv.DeleteLocalRef (native_views);
-				global::System.GC.KeepAlive (views);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				IntPtr native_views = global::Android.Runtime.JavaList<global::Android.Views.View>.ToLocalJniHandle (views);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_views);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_views);
+					global::System.GC.KeepAlive (views);
+				}
 			}
 		}
 

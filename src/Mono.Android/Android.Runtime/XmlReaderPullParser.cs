@@ -14,13 +14,16 @@ namespace Android.Runtime
 			if (value == null)
 				return IntPtr.Zero;
 
-			var xpr = value as XmlResourceParserReader;
-			if (xpr != null) {
-				IntPtr result = JNIEnv.NewLocalRef (xpr.Handle);
-				GC.KeepAlive (xpr);
-				return result;
+			unsafe {
+				// SAFETY: the managed parser adapter retains its JNI peer until the owned local reference is duplicated and existing KeepAlive completes.
+				var xpr = value as XmlResourceParserReader;
+				if (xpr != null) {
+					IntPtr result = JNIEnv.NewLocalRef (xpr.Handle);
+					GC.KeepAlive (xpr);
+					return result;
+				}
+				return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderResourceParser (value));
 			}
-			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderResourceParser (value));
 		}
 
 		XmlReader r;
@@ -132,13 +135,16 @@ namespace Android.Runtime
 			if (value == null)
 				return IntPtr.Zero;
 
-			var xppr = value as XmlPullParserReader;
-			if (xppr != null) {
-				IntPtr result = JNIEnv.NewLocalRef (xppr.Handle);
-				GC.KeepAlive (xppr);
-				return result;
+			unsafe {
+				// SAFETY: the managed parser adapter retains its JNI peer until the owned local reference is duplicated and existing KeepAlive completes.
+				var xppr = value as XmlPullParserReader;
+				if (xppr != null) {
+					IntPtr result = JNIEnv.NewLocalRef (xppr.Handle);
+					GC.KeepAlive (xppr);
+					return result;
+				}
+				return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderPullParser (value));
 			}
-			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderPullParser (value));
 		}
 		
 		XmlReader r;

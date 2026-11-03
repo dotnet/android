@@ -66,7 +66,7 @@ namespace Android.Runtime {
 
 		[LibraryImport ("libc")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		private static partial void exit (int status);
+		private static safe partial void exit (int status);
 
 		public static void FailFast (string? message)
 		{
@@ -78,10 +78,13 @@ namespace Android.Runtime {
 
 		public static void RaiseThrowable (Java.Lang.Throwable throwable)
 		{
-			if (throwable == null)
-				throw new ArgumentNullException ("throwable");
-			JNIEnv.Throw (throwable.Handle);
-			GC.KeepAlive (throwable);
+			unsafe {
+				// SAFETY: the managed Throwable owns its live JNI throwable reference and existing KeepAlive retains it through the throw operation.
+				if (throwable == null)
+					throw new ArgumentNullException ("throwable");
+				JNIEnv.Throw (throwable.Handle);
+				GC.KeepAlive (throwable);
+			}
 		}
 
 		internal static void UnhandledException (Exception e)

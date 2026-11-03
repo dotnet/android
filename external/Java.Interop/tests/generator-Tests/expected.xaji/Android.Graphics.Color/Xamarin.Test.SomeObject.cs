@@ -51,19 +51,37 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetSomeColorHandler ()
 		{
-			return cb_getSomeColor_GetSomeColor_I ??= new _JniMarshal_PP_I (n_GetSomeColor);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getSomeColor_GetSomeColor_I ??= new _JniMarshal_PP_I (n_GetSomeColor);
+			}
 		}
 
-		static int n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe int n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeColor);
 			}
 		}
-		private static int __n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe int __n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.SomeColor.ToArgb ();
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.SomeColor.ToArgb ();
+			}
 		}
 #pragma warning restore 0169
 
@@ -71,20 +89,38 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetSetSomeColor_IHandler ()
 		{
-			return cb_setSomeColor_SetSomeColor_I_V ??= new _JniMarshal_PPI_V (n_SetSomeColor_I);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_setSomeColor_SetSomeColor_I_V ??= new _JniMarshal_PPI_V (n_SetSomeColor_I);
+			}
 		}
 
-		static void n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_newvalue, &__n_SetSomeColor_I);
 			}
 		}
-		private static void __n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var newvalue = new global::Android.Graphics.Color (native_newvalue);
-			__this.SomeColor = newvalue;
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var newvalue = new global::Android.Graphics.Color (native_newvalue);
+				__this.SomeColor = newvalue;
+			}
 		}
 #pragma warning restore 0169
 
@@ -114,21 +150,27 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		public override unsafe global::Android.Graphics.Color SomeColor {
+		public override global::Android.Graphics.Color SomeColor {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeColor' and count(parameter)=0]"
 			[Register ("getSomeColor", "()I", "GetGetSomeColorHandler")]
 			get {
 				const string __id = "getSomeColor.()I";
-				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-				return new global::Android.Graphics.Color (__rm);
+				unsafe {
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+					var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+					return new global::Android.Graphics.Color (__rm);
+				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeColor' and count(parameter)=1 and parameter[1][@type='Android.Graphics.Color']]"
 			[Register ("setSomeColor", "(I)V", "GetSetSomeColor_IHandler")]
 			set {
 				const string __id = "setSomeColor.(I)V";
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value.ToArgb ());
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				unsafe {
+					// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (value.ToArgb ());
+					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				}
 			}
 		}
 

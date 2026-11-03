@@ -37,36 +37,57 @@ namespace Java.Util {
 #pragma warning disable 0169
 		static Delegate GetAdd_Ljava_lang_Object_Handler ()
 		{
-			return cb_add_Add_Ljava_lang_Object__Z ??= new _JniMarshal_PPL_B (n_Add_Ljava_lang_Object_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_add_Add_Ljava_lang_Object__Z ??= new _JniMarshal_PPL_B (n_Add_Ljava_lang_Object_);
+			}
 		}
 
-		static sbyte n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe sbyte n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_e, &__n_Add_Ljava_lang_Object_);
 			}
 		}
-		private static sbyte __n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe sbyte __n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Util.ICollection> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var e = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_e, JniHandleOwnership.DoNotTransfer);
-			sbyte __ret = __this.Add (e) ? (sbyte)1 : (sbyte)0;
-			return __ret;
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Util.ICollection> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var e = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_e, JniHandleOwnership.DoNotTransfer);
+				sbyte __ret = __this.Add (e) ? (sbyte)1 : (sbyte)0;
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe bool Add (global::Java.Lang.Object e)
+		public bool Add (global::Java.Lang.Object e)
 		{
 			const string __id = "add.(Ljava/lang/Object;)Z";
-			IntPtr native_e = JNIEnv.ToLocalJniHandle (e);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_e);
-				var __rm = _members_java_util_Collection.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-				return __rm;
-			} finally {
-				JNIEnv.DeleteLocalRef (native_e);
-				global::System.GC.KeepAlive (e);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				IntPtr native_e = JNIEnv.ToLocalJniHandle (e);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_e);
+					var __rm = _members_java_util_Collection.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+					return __rm;
+				} finally {
+					JNIEnv.DeleteLocalRef (native_e);
+					global::System.GC.KeepAlive (e);
+				}
 			}
 		}
 
@@ -74,26 +95,47 @@ namespace Java.Util {
 #pragma warning disable 0169
 		static Delegate GetClearHandler ()
 		{
-			return cb_clear_Clear_V ??= new _JniMarshal_PP_V (n_Clear);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_clear_Clear_V ??= new _JniMarshal_PP_V (n_Clear);
+			}
 		}
 
-		static void n_Clear (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_Clear (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Clear);
 			}
 		}
-		private static void __n_Clear (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_Clear (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Util.ICollection> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Clear ();
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Util.ICollection> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Clear ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void Clear ()
+		public void Clear ()
 		{
 			const string __id = "clear.()V";
-			_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

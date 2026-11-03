@@ -24,28 +24,37 @@ public abstract class Parent : Java.Lang.Object {
 			const string __id = "API_NAME.Ljava/lang/String;";
 
 			var __v = _members.StaticFields.GetObjectValue (__id);
-			return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+				return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparing' and count(parameter)=0]"
 	[global::System.Obsolete (@"Use 'Com.Xamarin.Android.IParent.Comparing'. This class will be removed in a future release.")]
 	[Register ("comparing", "()I", "")]
-	public static unsafe int Comparing ()
+	public static int Comparing ()
 	{
 		const string __id = "comparing.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparingOld' and count(parameter)=0]"
 	[global::System.Obsolete (@"deprecated")]
 	[Register ("comparingOld", "()I", "")]
-	public static unsafe int ComparingOld ()
+	public static int ComparingOld ()
 	{
 		const string __id = "comparingOld.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 	static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/Parent", typeof (Parent));
@@ -74,27 +83,36 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 			const string __id = "API_NAME.Ljava/lang/String;";
 
 			var __v = _members.StaticFields.GetObjectValue (__id);
-			return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+				return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparing' and count(parameter)=0]"
 	[Register ("comparing", "()I", "")]
-	public static unsafe int Comparing ()
+	public static int Comparing ()
 	{
 		const string __id = "comparing.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparingOld' and count(parameter)=0]"
 	[global::System.Obsolete (@"deprecated")]
 	[Register ("comparingOld", "()I", "")]
-	public static unsafe int ComparingOld ()
+	public static int ComparingOld ()
 	{
 		const string __id = "comparingOld.()I";
-		var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-		return __rm;
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		}
 	}
 
 }

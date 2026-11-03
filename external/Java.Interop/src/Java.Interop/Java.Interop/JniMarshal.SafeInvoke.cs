@@ -48,10 +48,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -96,10 +94,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -144,10 +140,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -192,10 +186,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -240,10 +232,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -288,10 +278,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -336,10 +324,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -384,10 +370,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -432,10 +416,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -480,10 +462,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -528,10 +508,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -576,10 +554,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -624,10 +600,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -672,10 +646,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -720,10 +692,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -768,10 +738,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;
@@ -816,10 +784,8 @@ namespace Java.Interop {
 				return default;
 
 			try {
-				unsafe {
-					// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
-					return action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15);
-				}
+				// SAFETY: Caller supplies the exact managed ABI and live JNI arguments.
+				return unsafe (action (jnienv, self, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15));
 			} catch (Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;

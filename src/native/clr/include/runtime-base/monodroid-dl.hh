@@ -3,8 +3,6 @@
 #include <string_view>
 
 #include <dlfcn.h>
-#include <unistd.h>
-#include <android/dlext.h>
 
 #include <runtime-base/mutex.hh>
 
@@ -15,44 +13,30 @@
 #include <runtime-base/crc32.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/search.hh>
+#include "startup-aware-lock.hh"
 
 namespace xamarin::android
 {
 	class MonodroidDl
 	{
-		struct InProgressLoad
+		struct ActiveLoadFrame
 		{
 			uint32_t name_index;
-			pid_t owner_tid;
-			void *provisional_handle;
-			InProgressLoad *next;
+			ActiveLoadFrame *parent;
 		};
 
 		static inline pthread_mutex_t dso_handle_write_lock = PTHREAD_MUTEX_INITIALIZER;
-		static inline pthread_cond_t dso_load_cond = PTHREAD_COND_INITIALIZER;
-		static inline InProgressLoad *in_progress_loads = nullptr;
+		static inline thread_local ActiveLoadFrame *active_load_stack = nullptr;
 
-		static auto find_in_progress_load (uint32_t name_index) noexcept -> InProgressLoad*
+		static auto is_same_thread_loading (uint32_t name_index) noexcept -> bool
 		{
-			for (InProgressLoad *cur = in_progress_loads; cur != nullptr; cur = cur->next) {
+			for (ActiveLoadFrame *cur = active_load_stack; cur != nullptr; cur = cur->parent) {
 				if (cur->name_index == name_index) {
-					return cur;
+					return true;
 				}
 			}
 
-			return nullptr;
-		}
-
-		static void remove_in_progress_load (InProgressLoad *target) noexcept
-		{
-			InProgressLoad **cur = &in_progress_loads;
-			while (*cur != nullptr) {
-				if (*cur == target) {
-					*cur = target->next;
-					return;
-				}
-				cur = &((*cur)->next);
-			}
+			return false;
 		}
 
 		static void publish_completed_handle (DSOCacheEntry *dso, void *handle) noexcept
@@ -77,99 +61,9 @@ namespace xamarin::android
 			return handle;
 		}
 
-		[[gnu::always_inline]]
-		static constexpr auto ascii_to_lower (char c) noexcept -> char
-		{
-			return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : c;
-		}
-
-		[[gnu::always_inline]]
-		static auto ends_with_ci (std::string_view value, std::string_view suffix) noexcept -> bool
-		{
-			if (value.length () < suffix.length ()) {
-				return false;
-			}
-
-			size_t offset = value.length () - suffix.length ();
-			for (size_t i = 0; i < suffix.length (); i++) {
-				if (ascii_to_lower (value[offset + i]) != ascii_to_lower (suffix[i])) {
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		[[gnu::always_inline]]
-		static auto starts_with_ci (std::string_view value, std::string_view prefix) noexcept -> bool
-		{
-			if (value.length () < prefix.length ()) {
-				return false;
-			}
-
-			for (size_t i = 0; i < prefix.length (); i++) {
-				if (ascii_to_lower (value[i]) != ascii_to_lower (prefix[i])) {
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		// Equivalent of Path.GetFileNameWithoutExtension for a bare file name: strip the last '.' and
-		// everything following it.
-		[[gnu::always_inline]]
-		static auto strip_last_extension (std::string_view name) noexcept -> std::string_view
-		{
-			size_t dot = name.find_last_of ('.');
-			return dot == std::string_view::npos ? name : name.substr (0, dot);
-		}
-
-		// Mirror of AddNameMutations () in
-		// src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigNativeAssemblyGeneratorCLR.cs.
-		//
-		// The DSO cache stores one entry per name mutation of a library. Each entry is keyed by the
-		// CRC32 of the *mutation*, but only the library's real (unmutated) name is stored (referenced
-		// through `name_index`); the mutation strings themselves are discarded. To disambiguate a
-		// CRC32 collision we re-derive the mutations of a matched entry's real name and check whether
-		// the requested name is one of them. This MUST be kept in sync with the managed generator.
-		static auto name_is_mutation_of (std::string_view requested, std::string_view real_name) noexcept -> bool
-		{
-			// Mutation: the (real) name itself.
-			if (requested == real_name) {
-				return true;
-			}
-
-			if (ends_with_ci (real_name, ".dll.so"sv)) {
-				// Path.GetFileNameWithoutExtension applied twice strips ".so" and then ".dll".
-				std::string_view no_ext = strip_last_extension (strip_last_extension (real_name));
-
-				// Mutation: the name without the ".dll.so" suffix.
-				if (requested == no_ext) {
-					return true;
-				}
-
-				// Mutation: that same stem with a plain ".so" suffix.
-				if (requested.ends_with (".so"sv) && requested.substr (0, requested.length () - ".so"sv.length ()) == no_ext) {
-					return true;
-				}
-			} else if (requested == strip_last_extension (real_name)) {
-				// Mutation: the name without its final extension.
-				return true;
-			}
-
-			// The generator also emits the mutations of the name with a leading "lib" removed.
-			if (starts_with_ci (real_name, "lib"sv)) {
-				return name_is_mutation_of (requested, real_name.substr ("lib"sv.length ()));
-			}
-
-			return false;
-		}
-
 		// Entries are sorted by `hash`, so all entries sharing `hash` are contiguous. CRC32 is a
 		// 32-bit hash, so collisions are possible (though very unlikely); walk the whole run of
-		// entries with a matching hash and confirm the requested name really is a mutation of the
-		// candidate library's name before accepting it.
+		// entries with a matching hash and compare the exact build-generated alias before accepting it.
 		[[gnu::always_inline, gnu::flatten]]
 		static auto find_dso_cache_entry (std::string_view const& name, hash_t hash) noexcept -> DSOCacheEntry*
 		{
@@ -180,7 +74,7 @@ namespace xamarin::android
 
 			while (idx < CoreClrBootstrap::config.number_of_dso_cache_entries && CoreClrBootstrap::dso_cache[idx].hash == hash) {
 				DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[idx];
-				if (name_is_mutation_of (name, get_dso_name (&entry))) {
+				if (name == CoreClrBootstrap::string (entry.alias_index, false)) {
 					return &entry;
 				}
 				idx++;
@@ -228,63 +122,33 @@ namespace xamarin::android
 
 			// Perform the actual load outside dso_handle_write_lock so synchronous JNI_OnLoad callbacks
 			// can re-enter managed code and resolve other P/Invokes without deadlocking on the cache mutex.
-			// Track in-progress loads per library: same-thread recursive calls receive a provisional handle
-			// without publishing it to dso->handle, concurrent threads wait outside the load for the
-			// outermost initialization to finish, and dso->handle is published only after the outermost
-			// load succeeds.
-			pid_t current_tid = gettid ();
-			InProgressLoad current_load {
+			// Do not block cross-thread callers on a pre-Java in-progress gate: Android's Runtime.loadLibrary0
+			// is synchronized on the Runtime monitor and ART's SharedLibrary::CheckOnLoadResult coordinates
+			// concurrent/recursive JNI_OnLoad execution internally. Track only the current thread's active
+			// load stack so a same-thread recursive (A -> A) call during JNI_OnLoad returns its provisional
+			// handle without publishing it to dso->handle before the outermost load succeeds.
+			if (is_same_thread_loading (dso->name_index)) {
+				return load_dso (dso, name, flags);
+			}
+
+			ActiveLoadFrame frame {
 				.name_index = dso->name_index,
-				.owner_tid = current_tid,
-				.provisional_handle = nullptr,
-				.next = nullptr,
+				.parent = active_load_stack,
 			};
-			bool is_recursive_load = false;
-
-			{
-				lock_guard lock (dso_handle_write_lock);
-				for (;;) {
-					cached_handle = __atomic_load_n (&dso->handle, __ATOMIC_RELAXED);
-					if (cached_handle != nullptr) {
-						log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: library %.*s already loaded, returning handle %p", static_cast<int>(name.length ()), name.data (), cached_handle);
-						return cached_handle;
-					}
-
-					InProgressLoad *active_load = find_in_progress_load (dso->name_index);
-					if (active_load == nullptr) {
-						current_load.next = in_progress_loads;
-						in_progress_loads = &current_load;
-						break;
-					}
-
-					if (active_load->owner_tid == current_tid) {
-						if (active_load->provisional_handle != nullptr) {
-							return active_load->provisional_handle;
-						}
-						is_recursive_load = true;
-						break;
-					}
-
-					pthread_cond_wait (&dso_load_cond, &dso_handle_write_lock);
-				}
-			}
-
+			active_load_stack = &frame;
 			void *handle = load_dso (dso, name, flags);
-
-			lock_guard lock (dso_handle_write_lock);
-			if (is_recursive_load) {
-				InProgressLoad *active_load = find_in_progress_load (dso->name_index);
-				if (active_load != nullptr && active_load->owner_tid == current_tid && active_load->provisional_handle == nullptr) {
-					active_load->provisional_handle = handle;
-				}
-				return handle;
+			active_load_stack = frame.parent;
+			if (handle == nullptr) {
+				return nullptr;
 			}
 
-			remove_in_progress_load (&current_load);
-			if (handle != nullptr) {
-				publish_completed_handle (dso, handle);
+			StartupAwareLock lock (dso_handle_write_lock);
+			cached_handle = __atomic_load_n (&dso->handle, __ATOMIC_RELAXED);
+			if (cached_handle != nullptr) {
+				return cached_handle;
 			}
-			pthread_cond_broadcast (&dso_load_cond);
+
+			publish_completed_handle (dso, handle);
 			return handle;
 		}
 

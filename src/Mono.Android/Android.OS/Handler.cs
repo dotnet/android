@@ -89,7 +89,10 @@ namespace Android.OS {
 					JNIEnv.StartCreateInstance ("mono/android/os/ActionHandlerCallback", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 
 			if (handler == null)
 				throw new ArgumentNullException ("handler");

@@ -34,29 +34,50 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGenericReturnHandler ()
 		{
-			return cb_GenericReturn_GenericReturn_Lxamarin_test_AdapterView_ ??= new _JniMarshal_PP_L (n_GenericReturn);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_GenericReturn_GenericReturn_Lxamarin_test_AdapterView_ ??= new _JniMarshal_PP_L (n_GenericReturn);
+			}
 		}
 
-		static IntPtr n_GenericReturn (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe IntPtr n_GenericReturn (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GenericReturn);
 			}
 		}
-		private static IntPtr __n_GenericReturn (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe IntPtr __n_GenericReturn (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='GenericReturnObject']/method[@name='GenericReturn' and count(parameter)=0]"
 		[Register ("GenericReturn", "()Lxamarin/test/AdapterView;", "GetGenericReturnHandler")]
-		public virtual unsafe global::Xamarin.Test.AdapterView GenericReturn ()
+		public virtual global::Xamarin.Test.AdapterView GenericReturn ()
 		{
 			const string __id = "GenericReturn.()Lxamarin/test/AdapterView;";
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-			return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 
 	}

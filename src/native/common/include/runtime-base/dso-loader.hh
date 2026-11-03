@@ -3,8 +3,6 @@
 #include <jni.h>
 #include <dlfcn.h>
 
-#include <android/dlext.h>
-
 #include <string_view>
 
 #include <runtime-base/android-system.hh>
@@ -45,24 +43,6 @@ namespace xamarin::android {
 			}
 
 			return log_and_return (dlopen (path.data (), flags), path);
-		}
-
-		// Overload used to load libraries from the APK.
-		[[gnu::always_inline, gnu::flatten]]
-		static auto load (int fd, off64_t offset, std::string_view const& name, int flags, bool is_jni) -> void*
-		{
-			if (is_jni) {
-				return load_jni (name, true /* name_is_path */);
-			}
-
-			log_infof (LOG_ASSEMBLY, "[apk] Trying to load shared library '%.*s', offset in the apk == %lld", static_cast<int>(name.length ()), name.data (), static_cast<long long>(offset));
-
-			android_dlextinfo dli;
-			dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
-			dli.library_fd = fd;
-			dli.library_fd_offset = offset;
-
-			return log_and_return (android_dlopen_ext (name.data (), flags, &dli), name);
 		}
 
 	private:

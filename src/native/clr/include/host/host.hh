@@ -17,8 +17,7 @@ namespace xamarin::android {
 	{
 	public:
 		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-			jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
+			jobjectArray appDirs, jint localDateTimeOffset, jobject loader, jboolean isEmulator, jboolean haveSplitApks) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
 
 	private:
@@ -27,7 +26,7 @@ namespace xamarin::android {
 
 		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
 		static void map_assembly_store_via_dlopen (const char *store_path) noexcept;
-		static void scan_filesystem_for_assemblies_and_libraries () noexcept;
+		static void load_assembly_store_from_filesystem () noexcept;
 
 		static bool clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept;
 		static void clr_error_writer (const char *message) noexcept;

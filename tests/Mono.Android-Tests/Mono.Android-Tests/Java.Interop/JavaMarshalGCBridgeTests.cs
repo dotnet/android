@@ -106,29 +106,33 @@ public class JavaMarshalGCBridgeTests
 	}
 
 	[Test]
-	public unsafe void EmptyComponentsCanAddCrossReferenceWithoutLeakingLocalRefs ()
+	public void EmptyComponentsCanAddCrossReferenceWithoutLeakingLocalRefs ()
 	{
-		StronglyConnectedComponent* components = stackalloc StronglyConnectedComponent [2];
-		components [0] = default;
-		components [1] = default;
-		ComponentCrossReference crossReference = new () { SourceGroupIndex = 0, DestinationGroupIndex = 1 };
-		MarkCrossReferencesArgs args = new () {
-			ComponentCount = 2,
-			Components = components,
-			CrossReferenceCount = 1,
-			CrossReferences = &crossReference,
-		};
+		unsafe {
+			// SAFETY: the test owns two initialized stack SCC records and one cross-reference with indices
+			// 0 and 1; the descriptor reports those exact counts, and the accessor processes it synchronously before the stack unwinds.
+			StronglyConnectedComponent* components = stackalloc StronglyConnectedComponent [2];
+			components [0] = default;
+			components [1] = default;
+			ComponentCrossReference crossReference = new () { SourceGroupIndex = 0, DestinationGroupIndex = 1 };
+			MarkCrossReferencesArgs args = new () {
+				ComponentCount = 2,
+				Components = components,
+				CrossReferenceCount = 1,
+				CrossReferences = &crossReference,
+			};
 
-		int localReferences = Java.Interop.Runtime.LocalReferenceCount;
-		PrepareComponentsAndCrossReferences (null, &args);
+			int localReferences = Java.Interop.Runtime.LocalReferenceCount;
+			PrepareComponentsAndCrossReferences (null, &args);
 
-		Assert.IsTrue (components [0].Count == 0,
-			$"After adding a temporary-peer cross-reference, source SCC Count should be 0, but was {components [0].Count}.");
-		Assert.IsTrue (components [1].Count == 0,
-			$"After adding a temporary-peer cross-reference, destination SCC Count should be 0, but was {components [1].Count}.");
-		int remainingLocalReferences = Java.Interop.Runtime.LocalReferenceCount;
-		Assert.IsTrue (remainingLocalReferences == localReferences,
-			$"Temporary peers should be released after the cross-reference is added: expected {localReferences} local references, but found {remainingLocalReferences}.");
+			Assert.IsTrue (components [0].Count == 0,
+				$"After adding a temporary-peer cross-reference, source SCC Count should be 0, but was {components [0].Count}.");
+			Assert.IsTrue (components [1].Count == 0,
+				$"After adding a temporary-peer cross-reference, destination SCC Count should be 0, but was {components [1].Count}.");
+			int remainingLocalReferences = Java.Interop.Runtime.LocalReferenceCount;
+			Assert.IsTrue (remainingLocalReferences == localReferences,
+				$"Temporary peers should be released after the cross-reference is added: expected {localReferences} local references, but found {remainingLocalReferences}.");
+		}
 	}
 
 	[Test]

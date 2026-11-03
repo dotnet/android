@@ -34,36 +34,57 @@ namespace Android.Text {
 #pragma warning disable 0169
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()
 		{
-			return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_);
+			}
 		}
 
-		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_p0, &__n_GetSpanFlags_Ljava_lang_Object_);
 			}
 		}
-		private static int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableStringInternal> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var p0 = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_p0, JniHandleOwnership.DoNotTransfer);
-			int __ret = (int) __this.GetSpanFlags (p0);
-			return __ret;
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableStringInternal> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var p0 = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_p0, JniHandleOwnership.DoNotTransfer);
+				int __ret = (int) __this.GetSpanFlags (p0);
+				return __ret;
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.text']/class[@name='SpannableStringInternal']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[return:global::Android.Runtime.GeneratedEnum]
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler")]
-		public virtual unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object p0)
+		public virtual global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object p0)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-			var __result = (global::Android.Text.SpanTypes) __rm;
-			global::System.GC.KeepAlive (p0);
-			return __result;
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+				var __result = (global::Android.Text.SpanTypes) __rm;
+				global::System.GC.KeepAlive (p0);
+				return __result;
+			}
 		}
 
 	}

@@ -22,7 +22,6 @@ namespace generator.SourceWriters
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 
 			IsPublic = true;
-			IsUnsafe = true;
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
 

@@ -49,7 +49,7 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.GreaterOrEqual (data.Length, 84);
 			Assert.AreEqual (0x47464358u, Read (0), "Expected XCFG magic.");
-			Assert.AreEqual (1, BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (4, 2)));
+			Assert.AreEqual (2, BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (4, 2)));
 			Assert.AreEqual (data.Length, Read (8));
 			uint environmentCount = Read (12);
 			uint dsoCount = Read (24);
@@ -95,7 +95,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Less (index, dsoCount);
 				preloads.Entries.Add (new JniPreloadsEntry {
 					Index = index,
-					LibraryName = ReadString (Read (dsoOffset + index * 12 + 8)),
+					LibraryName = ReadString (Read (dsoOffset + index * 16 + 8)),
 				});
 			}
 			Dictionary<string, string> ReadPairs (uint count, uint tableOffset)

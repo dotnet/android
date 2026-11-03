@@ -69,7 +69,10 @@ namespace Android.App {
 					JNIEnv.StartCreateInstance ("mono/android/app/TabEventDispatcher", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				JNIEnv.FinishCreateInstance (Handle, "()V");
+			}
 		}
 
 		public EventHandler<ActionBar.TabEventArgs>? TabReselected;

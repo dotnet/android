@@ -32,23 +32,26 @@ namespace Java.IO {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='java.io']/class[@name='FilterOutputStream']/constructor[@name='FilterOutputStream' and count(parameter)=1 and parameter[1][@type='java.io.OutputStream']]"
 		[Register (".ctor", "(Ljava/io/OutputStream;)V", "")]
-		public unsafe FilterOutputStream (global::System.IO.Stream @out) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public FilterOutputStream (global::System.IO.Stream @out) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "(Ljava/io/OutputStream;)V";
 
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			IntPtr native__out = global::Android.Runtime.OutputStreamAdapter.ToLocalJniHandle (@out);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native__out);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-			} finally {
-				JNIEnv.DeleteLocalRef (native__out);
-				global::System.GC.KeepAlive (@out);
+			unsafe {
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
+				IntPtr native__out = global::Android.Runtime.OutputStreamAdapter.ToLocalJniHandle (@out);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native__out);
+					var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+				} finally {
+					JNIEnv.DeleteLocalRef (native__out);
+					global::System.GC.KeepAlive (@out);
+				}
 			}
 		}
 
@@ -56,30 +59,51 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetWrite_IHandler ()
 		{
-			return cb_write_Write_I_V ??= new _JniMarshal_PPI_V (n_Write_I);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_write_Write_I_V ??= new _JniMarshal_PPI_V (n_Write_I);
+			}
 		}
 
-		static void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, oneByte, &__n_Write_I);
 			}
 		}
-		private static void __n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.FilterOutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Write (oneByte);
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.FilterOutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Write (oneByte);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='FilterOutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("write", "(I)V", "GetWrite_IHandler")]
-		public override unsafe void Write (int oneByte)
+		public override void Write (int oneByte)
 		{
 			const string __id = "write.(I)V";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (oneByte);
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (oneByte);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			}
 		}
 
 	}

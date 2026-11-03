@@ -45,15 +45,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe Boolean* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (Boolean*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new Boolean* Elements => unsafe ((Boolean*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -68,10 +61,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 
@@ -279,15 +270,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe SByte* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (SByte*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new SByte* Elements => unsafe ((SByte*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -302,10 +286,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 
@@ -513,15 +495,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe Char* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (Char*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new Char* Elements => unsafe ((Char*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -536,10 +511,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 
@@ -747,15 +720,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe Int16* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (Int16*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new Int16* Elements => unsafe ((Int16*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -770,10 +736,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 
@@ -981,15 +945,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe Int32* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (Int32*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new Int32* Elements => unsafe ((Int32*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -1004,10 +961,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 
@@ -1215,15 +1170,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe Int64* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (Int64*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new Int64* Elements => unsafe ((Int64*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -1238,10 +1186,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 
@@ -1449,15 +1395,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe Single* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (Single*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new Single* Elements => unsafe ((Single*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -1472,10 +1411,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 
@@ -1683,15 +1620,8 @@ namespace Java.Interop {
 			this.arrayHandle = arrayHandle;
 		}
 
-		// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-		public new unsafe Double* Elements {
-			get {
-				unsafe {
-					// SAFETY: Cast the checked address only; no dereference or lifetime extension.
-					return (Double*) ElementsPointer;
-				}
-			}
-		}
+		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
+		public new Double* Elements => unsafe ((Double*) ElementsPointer);
 
 		/// <safety>
 		/// Keep the Java array reference and acquisition alive and unreleased for this call and
@@ -1706,10 +1636,8 @@ namespace Java.Interop {
 					throw new ObjectDisposedException (GetType ().FullName);
 				if (index < 0 || index >= ElementCount)
 					throw new ArgumentOutOfRangeException (nameof (index));
-				unsafe {
-					// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
-					return ref Elements [index];
-				}
+				// SAFETY: Guards checked the typed extent; the caller excludes release through all ref uses.
+				return ref unsafe (Elements [index]);
 			}
 		}
 

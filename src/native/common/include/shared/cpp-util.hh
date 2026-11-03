@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <concepts>
-#include <memory>
+#include <functional>
 #include <source_location>
 #include <string_view>
 #include <type_traits>
@@ -197,72 +197,8 @@ abort_if_invalid_pointer_argument (T *ptr, const char *ptr_name, std::source_loc
 	);
 }
 
-[[gnu::always_inline, gnu::flatten]]
-static inline void
-abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_location sloc = std::source_location::current ()) noexcept
-{
-	abort_unless (
-		arg > 0,
-		[&arg_name, &sloc] {
-			std::string_view function_name = xamarin::android::detail::get_function_name (sloc.function_name ());
-			return xamarin::android::detail::_format_message (
-				"%.*s: parameter '%s' must be a positive integer",
-				static_cast<int>(function_name.length ()),
-				function_name.data (),
-				arg_name
-			);
-		},
-		sloc
-	);
-}
-
 namespace xamarin::android
 {
-	template <typename T>
-	struct CDeleter final
-	{
-		using UnderlyingType = std::remove_cv_t<T>;
-
-		void operator() (T* p)
-		{
-			UnderlyingType *ptr;
-
-			if constexpr (std::is_const_v<T>) {
-				ptr = const_cast<std::remove_const_t<T>*> (p);
-			} else {
-				ptr = p;
-			}
-
-			std::free (reinterpret_cast<void*>(ptr));
-		}
-	};
-
-	template <typename T>
-	using c_unique_ptr = std::unique_ptr<T, CDeleter<T>>;
-
-	template<size_t Size>
-	using char_array = std::array<char, Size>;
-
-	template<size_t ...Length>
-	constexpr auto concat_const (const char (&...parts)[Length])
-	{
-		// `parts` being constant string arrays, Length for each of them includes the trailing NUL byte, thus the
-		// `sizeof... (Length)` part which subtracts the number of template parameters - the amount of NUL bytes so that
-		// we don't waste space.
-		constexpr size_t total_length = (... + Length) - sizeof... (Length);
-		char_array<total_length + 1> ret; // lgtm [cpp/paddingbyteinformationdisclosure] the buffer is filled in the loop below
-		ret[total_length] = 0;
-
-		size_t i = 0uz;
-		for (char const* from : {parts...}) {
-			for (; *from != '\0'; i++) {
-				ret[i] = *from++;
-			}
-		}
-
-		return ret;
-	};
-
 	template<class T>
 	concept StringViewPart = std::is_same_v<T, std::string_view>;
 

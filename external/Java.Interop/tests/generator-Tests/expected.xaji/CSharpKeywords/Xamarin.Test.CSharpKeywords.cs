@@ -34,46 +34,70 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetUsePartial_IHandler ()
 		{
-			return cb_usePartial_UsePartial_I_Ljava_lang_String_ ??= new _JniMarshal_PPI_L (n_UsePartial_I);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_usePartial_UsePartial_I_Ljava_lang_String_ ??= new _JniMarshal_PPI_L (n_UsePartial_I);
+			}
 		}
 
-		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, partial, &__n_UsePartial_I);
 			}
 		}
-		private static IntPtr __n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe IntPtr __n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.UsePartial (partial));
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.NewString (__this.UsePartial (partial));
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='usePartial' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("usePartial", "(I)Ljava/lang/String;", "GetUsePartial_IHandler")]
-		public virtual unsafe string UsePartial (int partial)
+		public virtual string UsePartial (int partial)
 		{
 			const string __id = "usePartial.(I)Ljava/lang/String;";
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (partial);
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (partial);
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='useThis' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 		[Register ("useThis", "(Ljava/lang/String;)Ljava/lang/String;", "")]
-		public static unsafe string UseThis (string this_)
+		public static string UseThis (string this_)
 		{
 			const string __id = "useThis.(Ljava/lang/String;)Ljava/lang/String;";
-			IntPtr native_this = JNIEnv.NewString ((string)this_);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_this);
-				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
-				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-				JNIEnv.DeleteLocalRef (native_this);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				IntPtr native_this = JNIEnv.NewString ((string)this_);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_this);
+					var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
+					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_this);
+				}
 			}
 		}
 

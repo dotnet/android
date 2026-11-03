@@ -9,16 +9,22 @@ public partial class MyClass {
 			const string __id = "field.Ljava/code/Example;";
 
 			var __v = _members.InstanceFields.GetObjectValue (__id, this);
-			return global::Java.Lang.Object.GetObject<java.code.Example> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			unsafe {
+				// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.
+				return global::Java.Lang.Object.GetObject<java.code.Example> (__v.Handle, JniHandleOwnership.TransferLocalRef);
+			}
 		}
 		set {
 			const string __id = "field.Ljava/code/Example;";
 
-			IntPtr native_value = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);
-			try {
-				_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
-			} finally {
-				global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+			unsafe {
+				// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.
+				IntPtr native_value = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);
+				try {
+					_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+				} finally {
+					global::Android.Runtime.JNIEnv.DeleteLocalRef (native_value);
+				}
 			}
 		}
 	}

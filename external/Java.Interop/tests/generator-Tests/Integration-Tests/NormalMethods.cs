@@ -18,23 +18,23 @@ namespace generatortests
 
 			var output = File.ReadAllText (FullPath ("out.xaji/NormalMethods/Xamarin.Test.SomeObject.cs"));
 			Assert.That (output, Does.Contain (string.Join (Environment.NewLine, new [] {
-				"\t\t\tvar __result = __rm;",
-				"\t\t\tglobal::System.GC.KeepAlive (o);",
-				"\t\t\tglobal::System.GC.KeepAlive (t);",
-				"\t\t\treturn __result;",
+				"\t\t\t\tvar __result = __rm;",
+				"\t\t\t\tglobal::System.GC.KeepAlive (o);",
+				"\t\t\t\tglobal::System.GC.KeepAlive (t);",
+				"\t\t\t\treturn __result;",
 			})));
 			Assert.That (output, Does.Contain (string.Join (Environment.NewLine, new [] {
-				"\t\t\t_members.InstanceMethods.FinishCreateInstance (__id, this, __args);",
-				"\t\t\tglobal::System.GC.KeepAlive (c);",
+				"\t\t\t\t_members.InstanceMethods.FinishCreateInstance (__id, this, __args);",
+				"\t\t\t\tglobal::System.GC.KeepAlive (c);",
 			})));
 			Assert.That (output, Does.Contain (string.Join (Environment.NewLine, new [] {
-				"\t\t\ttry {",
-				"\t\t\t\tJniArgumentValue* __args = stackalloc JniArgumentValue [3];",
+				"\t\t\t\ttry {",
+				"\t\t\t\t\tJniArgumentValue* __args = stackalloc JniArgumentValue [3];",
 			})));
 			Assert.That (output, Does.Contain (string.Join (Environment.NewLine, new [] {
-				"\t\t\t} finally {",
-				"\t\t\t\tJNIEnv.DeleteLocalRef (native_astring);",
-				"\t\t\t\tglobal::System.GC.KeepAlive (anObject);",
+				"\t\t\t\t} finally {",
+				"\t\t\t\t\tJNIEnv.DeleteLocalRef (native_astring);",
+				"\t\t\t\t\tglobal::System.GC.KeepAlive (anObject);",
 			})));
 		}
 	}

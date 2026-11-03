@@ -198,7 +198,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			return;
 		}
 
-		const string completedMessage = "WORKER_JNI_LIBRARY_LOAD_COMPLETED:115:115:10:99:1:1:1";
+		const string completedMessage = "WORKER_JNI_LIBRARY_LOAD_COMPLETED:115:115:73:10:99:1:1:1";
 		const string failedMessage = "WORKER_JNI_LIBRARY_LOAD_FAILED:";
 		string packageName = PackageUtils.MakePackageName (
 			AndroidRuntime.CoreCLR, $"workerjniload{(extractNativeLibs ? "extracted" : "embedded")}");
@@ -441,6 +441,12 @@ public class NativeLibraryLoadTests : DeviceTest
 							if (NativeMethods.ConcurrentCompletedDuringOnLoad) {
 								throw new InvalidOperationException ("Concurrent reader observed a provisionally published handle before JNI_OnLoad finished.");
 							}
+							if (NativeMethods.CompetingInnerThread == null || !NativeMethods.CompetingInnerThread.Join (TimeSpan.FromSeconds (5))) {
+								throw new TimeoutException ("Competing inner reader thread did not finish.");
+							}
+							if (NativeMethods.CompetingInnerException != null) {
+								throw NativeMethods.CompetingInnerException;
+							}
 
 							bool firstFailThrew = false;
 							try {
@@ -483,7 +489,7 @@ public class NativeLibraryLoadTests : DeviceTest
 					int finalFailCount = JniEnvironment.StaticFields.GetStaticIntField (probeType.PeerReference, failCountField);
 					Android.Util.Log.Info (
 						"NativeLibraryLoadTest",
-						$"WORKER_JNI_LIBRARY_LOAD_COMPLETED:{workerValue}:{NativeMethods.ConcurrentOuterValue}:{NativeMethods.ProvisionalOuterValue}:{NativeMethods.ProvisionalFailValue}:{finalOuterCount}:{finalInnerCount}:{finalFailCount}");
+						$"WORKER_JNI_LIBRARY_LOAD_COMPLETED:{workerValue}:{NativeMethods.ConcurrentOuterValue}:{NativeMethods.CompetingInnerValue}:{NativeMethods.ProvisionalOuterValue}:{NativeMethods.ProvisionalFailValue}:{finalOuterCount}:{finalInnerCount}:{finalFailCount}");
 				} catch (Exception ex) {
 					Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}" + ex);
 				}
@@ -496,9 +502,12 @@ public class NativeLibraryLoadTests : DeviceTest
 					public static volatile int ProvisionalOuterValue;
 					public static volatile int ProvisionalFailValue;
 					public static volatile int ConcurrentOuterValue;
+					public static volatile int CompetingInnerValue;
 					public static volatile bool ConcurrentCompletedDuringOnLoad;
 					public static volatile Exception? ConcurrentOuterException;
+					public static volatile Exception? CompetingInnerException;
 					public static Thread? ConcurrentOuterThread;
+					public static Thread? CompetingInnerThread;
 
 					[UnmanagedCallersOnly]
 					public static int InvokeInnerFromManaged (IntPtr jnienv, IntPtr klass)
@@ -525,6 +534,24 @@ public class NativeLibraryLoadTests : DeviceTest
 							ConcurrentCompletedDuringOnLoad = true;
 						}
 
+						// Start a competing caller for cold library B while this thread holds the Java Runtime
+						// loadLibrary0 monitor inside A's JNI_OnLoad, then P/Invoke B from A's callback.
+						using var innerStarted = new ManualResetEventSlim (false);
+						CompetingInnerThread = new Thread (() => {
+							try {
+								innerStarted.Set ();
+								CompetingInnerValue = GetInnerValueConcurrent ();
+							} catch (Exception ex) {
+								CompetingInnerException = ex;
+							}
+						}) {
+							IsBackground = true,
+							Name = "CompetingInnerReader",
+						};
+						CompetingInnerThread.Start ();
+						innerStarted.Wait ();
+						Thread.Sleep (TimeSpan.FromMilliseconds (100));
+
 						return GetInnerValue ();
 					}
 
@@ -546,6 +573,9 @@ public class NativeLibraryLoadTests : DeviceTest
 
 					[DllImport ("jniworkerinner", EntryPoint = "jni_worker_inner_get_value")]
 					public static extern int GetInnerValue ();
+
+					[DllImport ("jniworkerinner", EntryPoint = "jni_worker_inner_get_value")]
+					public static extern int GetInnerValueConcurrent ();
 
 					[DllImport ("jniworkerfail", EntryPoint = "jni_worker_fail_get_value")]
 					public static extern int GetFailValue ();

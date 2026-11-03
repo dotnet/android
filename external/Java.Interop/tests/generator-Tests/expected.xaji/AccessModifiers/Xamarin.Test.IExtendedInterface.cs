@@ -38,52 +38,94 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetExtendedMethodHandler ()
 		{
-			return cb_extendedMethod_ExtendedMethod_V ??= new _JniMarshal_PP_V (n_ExtendedMethod);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_extendedMethod_ExtendedMethod_V ??= new _JniMarshal_PP_V (n_ExtendedMethod);
+			}
 		}
 
-		static void n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_ExtendedMethod);
 			}
 		}
-		private static void __n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.ExtendedMethod ();
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.ExtendedMethod ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void ExtendedMethod ()
+		public void ExtendedMethod ()
 		{
 			const string __id = "extendedMethod.()V";
-			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 		static Delegate cb_baseMethod_BaseMethod_V;
 #pragma warning disable 0169
 		static Delegate GetBaseMethodHandler ()
 		{
-			return cb_baseMethod_BaseMethod_V ??= new _JniMarshal_PP_V (n_BaseMethod);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_baseMethod_BaseMethod_V ??= new _JniMarshal_PP_V (n_BaseMethod);
+			}
 		}
 
-		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_BaseMethod);
 			}
 		}
-		private static void __n_BaseMethod (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.BaseMethod ();
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.BaseMethod ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void BaseMethod ()
+		public void BaseMethod ()
 		{
 			const string __id = "baseMethod.()V";
-			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

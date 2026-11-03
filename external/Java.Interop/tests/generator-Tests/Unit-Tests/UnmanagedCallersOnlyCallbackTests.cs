@@ -121,7 +121,7 @@ namespace generatortests
 				source);
 			Assert.False (source.Contains ("WaitForBridgeProcessing"), source);
 			Assert.True (source.Contains (
-				"private static IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
+				"private static unsafe IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
 				source);
 			Assert.True (source.Contains ("global::Java.Lang.Object.GetObject<global::Com.Example.Widget> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)"), source);
 		}
@@ -237,7 +237,7 @@ namespace generatortests
 			Assert.True (source.Contains ("\"clear\", \"()V\", \"n_Clear\")"), source);
 
 			foreach (var name in new [] { "n_Remove", "n_Remove_1", "n_Remove_2", "n_Clear" })
-				Assert.True (source.Contains ($"static void {name} (IntPtr jnienv"), $"missing {name}\n{source}");
+				Assert.True (source.Contains ($"static unsafe void {name} (IntPtr jnienv"), $"missing {name}\n{source}");
 		}
 
 		[Test]
@@ -274,11 +274,11 @@ namespace generatortests
 			var source = GetGeneratedTypeOutput (ParseApiDefinition (api).Single (g => g.Name == "Widget"));
 
 			CompileCallbacks (source);
-			Assert.True (source.Contains ("public virtual unsafe void m0 ()"), source);
+			Assert.True (source.Contains ("public virtual void m0 ()"), source);
 			Assert.True (source.Contains ("&global::Com.Example.Widget.m0_1);"), source);
 			Assert.True (source.Contains ("private static void m0_1 (global::Com.Example.Widget __this)"), source);
 			Assert.True (source.Contains ("[Register (\"work\", \"()V\", \"n_Work_1\")]"), source);
-			Assert.True (source.Contains ("static void n_Work_1 (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Work_1 (IntPtr jnienv"), source);
 		}
 
 		[Test]
@@ -302,8 +302,8 @@ namespace generatortests
 			Assert.True (source.Contains ("\"remove\", \"(J)V\", \"n_Remove_1:Com.Example.IListenerInvoker"), source);
 
 			// ... and the invoker really does declare callbacks under those names.
-			Assert.True (source.Contains ("static void n_Remove (IntPtr jnienv"), source);
-			Assert.True (source.Contains ("static void n_Remove_1 (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Remove (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Remove_1 (IntPtr jnienv"), source);
 		}
 
 		[Test]
@@ -333,7 +333,7 @@ namespace generatortests
 			// Legacy names still carry the escaped Java signature, and the connector still names a
 			// connector method rather than the callback.
 			Assert.True (source.Contains ("\"remove\", \"(I)V\", \"GetRemove_IHandler\")"), source);
-			Assert.True (source.Contains ("static void n_Remove_I (IntPtr jnienv"), source);
+			Assert.True (source.Contains ("static unsafe void n_Remove_I (IntPtr jnienv"), source);
 			Assert.True (source.Contains ("static Delegate GetRemove_IHandler ()"), source);
 			Assert.False (source.Contains ("n_Remove_1"), source);
 			Assert.False (source.Contains ("&m0)"), source);

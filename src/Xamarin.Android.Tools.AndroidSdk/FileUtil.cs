@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -50,7 +51,11 @@ namespace Xamarin.Android.Tools
 				}
 			}
 			else {
-				rename (sourceFile, destFile);
+				if (rename (sourceFile, destFile) != 0) {
+					int errno = Marshal.GetLastWin32Error ();
+					var error = new Win32Exception (errno);
+					throw new IOException ($"Could not rename '{sourceFile}' to '{destFile}' (errno {errno}): {error.Message}", error);
+				}
 			}
 		}
 

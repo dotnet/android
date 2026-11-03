@@ -32,57 +32,81 @@ namespace Test.ME {
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='GenericImplementation']/constructor[@name='GenericImplementation' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe GenericImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public GenericImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			unsafe {
+				// SAFETY: __id fixes initialized argument slots; synchronous JNI construction transfers the new local peer to SetHandle.
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+			}
 		}
 
 		static Delegate cb_SetObject_SetObject_arrayB_V;
 #pragma warning disable 0169
 		static Delegate GetSetObject_arrayBHandler ()
 		{
-			return cb_SetObject_SetObject_arrayB_V ??= new _JniMarshal_PPL_V (n_SetObject_arrayB);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_SetObject_SetObject_arrayB_V ??= new _JniMarshal_PPL_V (n_SetObject_arrayB);
+			}
 		}
 
-		static void n_SetObject_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_SetObject_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_value, &__n_SetObject_arrayB);
 			}
 		}
-		private static void __n_SetObject_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_SetObject_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var value = (byte[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			__this.SetObject (value);
-			if (value != null)
-				JNIEnv.CopyArray (value, native_value);
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var value = (byte[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				__this.SetObject (value);
+				if (value != null)
+					JNIEnv.CopyArray (value, native_value);
+			}
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericImplementation']/method[@name='SetObject' and count(parameter)=1 and parameter[1][@type='byte[]']]"
 		[Register ("SetObject", "([B)V", "GetSetObject_arrayBHandler")]
-		public virtual unsafe void SetObject (byte[] value)
+		public virtual void SetObject (byte[] value)
 		{
 			const string __id = "SetObject.([B)V";
-			IntPtr native_value = JNIEnv.NewArray (value);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_value);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				if (value != null) {
-					JNIEnv.CopyArray (native_value, value);
-					JNIEnv.DeleteLocalRef (native_value);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				IntPtr native_value = JNIEnv.NewArray (value);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_value);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					if (value != null) {
+						JNIEnv.CopyArray (native_value, value);
+						JNIEnv.DeleteLocalRef (native_value);
+					}
+					global::System.GC.KeepAlive (value);
 				}
-				global::System.GC.KeepAlive (value);
 			}
 		}
 

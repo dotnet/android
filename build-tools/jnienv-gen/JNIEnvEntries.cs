@@ -19,6 +19,37 @@ namespace Xamarin.Android.JniEnv
 		const   string          ReflectionSupportCategory       = "Reflection";
 		const   string          JavaVMCategory                  = "References";
 
+		const string ReferenceLifetime =
+			"JNI references must have the operation's required type and reference kind in the current VM; local references must belong to this thread.";
+		const string ReferenceAccess =
+			"Keep references live until the call returns or throws, without concurrent release through aliases. Null is valid only where the JNI operation permits it.";
+
+		static readonly string [] ReferenceSafety = [
+			ReferenceLifetime,
+			ReferenceAccess,
+		];
+
+		static readonly string [] MethodInvocationSafety = [
+			ReferenceLifetime,
+			ReferenceAccess,
+			"The method ID must match the receiver or class, static/instance dispatch, argument descriptor and return ABI; retain its declaring class.",
+			"Supply every argument in declared JNI order and type, retaining referenced objects. An overload without arguments requires a zero-argument method.",
+			"Pointer overloads require readable storage for the full argument count; array overloads require that many initialized entries. Do not mutate argument storage during the call, including failure.",
+			"Managed argument arrays are pinned only for this call; pinning the array does not retain the objects referenced by its JNI handles.",
+		];
+
+		static readonly string [] FieldAccessSafety = [
+			ReferenceLifetime,
+			ReferenceAccess,
+			"The field ID must match the receiver or class, static/instance kind and value ABI; retain the declaring class.",
+			"An object value must be null or assignable to the field type and remain live through the call.",
+		];
+
+		static readonly string [] CopyArraySafety = [
+			"The JNI array must be a live reference from this VM, usable on this thread, with the matching primitive element type and enough elements for the managed buffer.",
+			"The managed buffer is pinned for the copy. Keep both arrays live and exclude conflicting access until the call returns or throws.",
+		];
+
 		static readonly JniFunction[] JNIEnvEntries    = new JniFunction[]{
 			new JniFunction {
 				DeclaringType = VersionsCategory,
@@ -67,6 +98,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ClassesCategory,
 				Name          = "GetSuperclass",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jclass"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass")},
@@ -74,6 +107,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ClassesCategory,
 				Name          = "IsAssignableFrom",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "clazz1"), new ParamInfo ("jclass", "clazz2")},
@@ -140,6 +175,12 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ReferencesCatgeory,
 				Name          = "PopLocalFrame",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = [
+					ReferenceLifetime,
+					ReferenceAccess,
+					"Own the current local frame and stop using every reference from it after this call; only the returned reference survives in the previous frame.",
+				],
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "result")},
@@ -173,6 +214,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ClassesCategory,
 				Name          = "IsSameObject",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "ref1"), new ParamInfo ("jobject", "ref2")},
@@ -195,6 +238,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ObjectOperationsCategory,
 				Name          = "AllocObject",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass")},
@@ -227,6 +272,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ClassesCategory,
 				Name          = "GetObjectClass",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jclass"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject")},
@@ -234,6 +281,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ClassesCategory,
 				Name          = "IsInstanceOf",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "obj"), new ParamInfo ("jclass", "clazz")},
@@ -241,6 +290,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "GetMethodID",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jmethodID"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "kls"), new ParamInfo ("const char*", "name"), new ParamInfo ("const char*", "signature")},
@@ -248,6 +299,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallObjectMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -262,6 +315,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallObjectMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallObjectMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
@@ -270,6 +325,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallBooleanMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -284,6 +341,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallBooleanMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallBooleanMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
@@ -292,6 +351,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallByteMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -306,6 +367,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallByteMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallByteMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
@@ -314,6 +377,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallCharMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -328,6 +393,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallCharMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallCharMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
@@ -336,6 +403,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallShortMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -350,6 +419,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallShortMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallShortMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
@@ -358,6 +429,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallIntMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -372,6 +445,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallIntMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallIntMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
@@ -380,6 +455,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallLongMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -394,6 +471,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallLongMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallLongMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
@@ -402,6 +481,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallFloatMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -416,6 +497,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallFloatMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallFloatMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
@@ -424,6 +507,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallDoubleMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -438,6 +523,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallDoubleMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallDoubleMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
@@ -446,6 +533,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallVoidMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jmethodID", "jmethod")},
@@ -460,6 +549,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallVoidMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallVoidMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -468,6 +559,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualObjectMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -482,6 +575,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualObjectMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualObjectMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
@@ -490,6 +585,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualBooleanMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -504,6 +601,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualBooleanMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualBooleanMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
@@ -512,6 +611,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualByteMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -526,6 +627,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualByteMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualByteMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
@@ -534,6 +637,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualCharMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -548,6 +653,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualCharMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualCharMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
@@ -556,6 +663,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualShortMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -570,6 +679,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualShortMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualShortMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
@@ -578,6 +689,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualIntMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -592,6 +705,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualIntMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualIntMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
@@ -600,6 +715,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualLongMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -614,6 +731,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualLongMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualLongMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
@@ -622,6 +741,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualFloatMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -636,6 +757,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualFloatMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualFloatMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
@@ -644,6 +767,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualDoubleMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -658,6 +783,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualDoubleMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualDoubleMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
@@ -666,6 +793,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualVoidMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jclass", "jclass"), new ParamInfo ("jmethodID", "jmethod")},
@@ -680,6 +809,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceMethodsCategory,
 				Name          = "CallNonvirtualVoidMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallNonvirtualVoidMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -688,6 +819,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetFieldID",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfieldID"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("const char*", "name"), new ParamInfo ("const char*", "sig")},
@@ -695,6 +828,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetObjectField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -702,6 +837,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetBooleanField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -709,6 +846,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetByteField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -716,6 +855,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetCharField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -723,6 +864,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetShortField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -730,6 +873,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetIntField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -737,6 +882,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetLongField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -744,6 +891,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetFloatField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -751,6 +900,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "GetDoubleField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "jobject"), new ParamInfo ("jfieldID", "jfieldID")},
@@ -758,6 +909,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetObjectField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -766,6 +919,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetBooleanField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -774,6 +929,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetByteField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -782,6 +939,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetCharField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -790,6 +949,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetShortField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -798,6 +959,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetIntField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -806,6 +969,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetLongField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -814,6 +979,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetFloatField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -822,6 +989,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = InstanceFieldsCategory,
 				Name          = "SetDoubleField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -830,6 +999,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "GetStaticMethodID",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jstaticmethodID"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("const char*", "name"), new ParamInfo ("const char*", "sig")},
@@ -837,6 +1008,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticObjectMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -851,6 +1024,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticObjectMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticObjectMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
@@ -859,6 +1034,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticBooleanMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -873,6 +1050,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticBooleanMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticBooleanMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
@@ -881,6 +1060,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticByteMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -895,6 +1076,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticByteMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticByteMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
@@ -903,6 +1086,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticCharMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -917,6 +1102,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticCharMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticCharMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
@@ -925,6 +1112,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticShortMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -939,6 +1128,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticShortMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticShortMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
@@ -947,6 +1138,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticIntMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -961,6 +1154,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticIntMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticIntMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
@@ -969,6 +1164,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticLongMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -983,6 +1180,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticLongMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticLongMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
@@ -991,6 +1190,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticFloatMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -1005,6 +1206,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticFloatMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticFloatMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
@@ -1013,6 +1216,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticDoubleMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -1027,6 +1232,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticDoubleMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticDoubleMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
@@ -1035,6 +1242,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticVoidMethod",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticmethodID", "jmethod")},
@@ -1049,6 +1258,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticMethodsCategory,
 				Name          = "CallStaticVoidMethodA",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = MethodInvocationSafety,
 				ApiName       = "CallStaticVoidMethod",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1057,6 +1268,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticFieldID",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jstaticfieldID"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("const char*", "name"), new ParamInfo ("const char*", "sig")},
@@ -1064,6 +1277,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticObjectField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1071,6 +1286,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticBooleanField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jboolean"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1078,6 +1295,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticByteField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jbyte"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1085,6 +1304,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticCharField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jchar"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1092,6 +1313,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticShortField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jshort"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1099,6 +1322,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticIntField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jint"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1106,6 +1331,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticLongField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1113,6 +1340,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticFloatField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jfloat"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1120,6 +1349,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "GetStaticDoubleField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jdouble"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jclass", "jclass"), new ParamInfo ("jstaticfieldID", "jfieldID")},
@@ -1127,6 +1358,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticObjectField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1135,6 +1368,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticBooleanField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1143,6 +1378,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticByteField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1151,6 +1388,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticCharField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1159,6 +1398,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticShortField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1167,6 +1408,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticIntField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1175,6 +1418,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticLongField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1183,6 +1428,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticFloatField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1191,6 +1438,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StaticFieldsCategory,
 				Name          = "SetStaticDoubleField",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = FieldAccessSafety,
 				ApiName       = "SetStaticField",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1207,6 +1456,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = StringOperationsCategory,
 				Name          = "GetStringLength",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = ReferenceSafety,
 				Visibility    = "internal",
 				ReturnType    = new TypeInfo ("jsize"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jstring", "@string")},
@@ -1273,6 +1524,12 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetObjectArrayElement",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = [
+					ReferenceLifetime,
+					ReferenceAccess,
+					"The array must be an object array, not a primitive array. The returned local reference belongs to the current JNI frame.",
+				],
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobjectArray", "array"), new ParamInfo ("jsize", "index")},
@@ -1280,6 +1537,12 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetObjectArrayElement",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = [
+					ReferenceLifetime,
+					ReferenceAccess,
+					"The array must be an object array; a nonnull value must be assignable to its element class and remain live through the set.",
+				],
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobjectArray", "array"), new ParamInfo ("jsize", "index"), new ParamInfo ("jobject", "value")},
@@ -1470,6 +1733,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetByteArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1478,6 +1743,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetCharArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1486,6 +1753,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetShortArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1494,6 +1763,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetIntArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1502,6 +1773,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetLongArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1510,6 +1783,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetFloatArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1518,6 +1793,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "GetDoubleArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1533,6 +1810,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetByteArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1541,6 +1820,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetCharArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1549,6 +1830,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetShortArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1557,6 +1840,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetIntArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1565,6 +1850,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetLongArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1573,6 +1860,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetFloatArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1581,6 +1870,8 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = ArrayOperationsCategory,
 				Name          = "SetDoubleArrayRegion",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = CopyArraySafety,
 				ApiName       = "CopyArray",
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void"),
@@ -1691,6 +1982,11 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = NIOSupportCategory,
 				Name          = "NewDirectByteBuffer",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = [
+					"<paramref name=\"capacity\"/> must be non-negative and within JNI direct-buffer limits; <paramref name=\"address\"/> must address that many accessible bytes.",
+					"Keep the backing allocation accessible for every Java/native use of the buffer, coordinating all aliases. This wrapper does not own, pin or release the allocation on success or failure.",
+				],
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jobject"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("void*", "address"), new ParamInfo ("jlong", "capacity")},
@@ -1698,6 +1994,12 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = NIOSupportCategory,
 				Name          = "GetDirectBufferAddress",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = [
+					ReferenceLifetime,
+					ReferenceAccess,
+					"The returned address does not own or pin the backing storage. Retain the buffer and allocation, stay within its byte extent and synchronize aliases during later access.",
+				],
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("void*"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "buf")},
@@ -1705,6 +2007,12 @@ namespace Xamarin.Android.JniEnv
 			new JniFunction {
 				DeclaringType = NIOSupportCategory,
 				Name          = "GetDirectBufferCapacity",
+				RequiresUnsafe = true,
+				CallerSafetyRequirements = [
+					ReferenceLifetime,
+					ReferenceAccess,
+					"The returned capacity does not retain the backing storage. Retain the buffer and allocation, respect its byte extent and synchronize aliases during later access.",
+				],
 				Visibility    = "public",
 				ReturnType    = new TypeInfo ("jlong"),
 				Parameters    = new ParamInfo [] {new ParamInfo ("jobject", "buf")},

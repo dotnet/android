@@ -27,10 +27,8 @@ namespace Java.Interop
 
 		public int DestroyJavaVM (IntPtr javavm)
 		{
-			unsafe {
-				// SAFETY: Runtime initialization binds this vtable to javavm; disposal controls when that VM is destroyed.
-				return destroyJavaVM (javavm);
-			}
+			// SAFETY: Runtime initialization binds this vtable to javavm; disposal controls when that VM is destroyed.
+			return unsafe (destroyJavaVM (javavm));
 		}
 
 		/// <safety>
@@ -189,7 +187,18 @@ namespace Java.Interop
 
 		internal    bool                                TrackIDs            {get; private set;}
 
-		protected JniRuntime (CreationOptions options)
+		/// <safety>
+		/// The VM in <paramref name="options"/> must have the JNI invocation-table ABI and remain live
+		/// for the runtime lifetime. A supplied environment must belong to that VM and the current thread,
+		/// with readable JNI table storage. When only the VM is supplied, initialization obtains an environment
+		/// through GetEnv or attaches the current thread. Any supplied class-loader reference must remain live
+		/// until initialization duplicates it; local references must belong to the current thread.
+		/// Do not concurrently destroy the VM, release the loader, or mutate the supplied options while construction
+		/// reads them. Construction can publish runtime state before it throws; failure alone does not release native
+		/// resources or authorize invalidating outstanding JNI references. If DestroyRuntimeOnDispose is set,
+		/// disposal must be the sole owner of VM destruction after all other VM users have stopped.
+		/// </safety>
+		protected unsafe JniRuntime (CreationOptions options)
 		{
 			if (options == null)
 				throw new ArgumentNullException (nameof (options));
@@ -202,18 +211,14 @@ namespace Java.Interop
 			JniVersion          = options.JniVersion;
 
 			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer != IntPtr.Zero) {
-				unsafe {
-					// SAFETY: The supplying runtime keeps options.EnvironmentPointer live on this JNI thread through lookup.
-					InvocationPointer   = GetInvocationPointerFromEnvironmentPointer (options.EnvironmentPointer);
-				}
+				// SAFETY: The supplying runtime keeps options.EnvironmentPointer live on this JNI thread through lookup.
+				InvocationPointer   = unsafe (GetInvocationPointerFromEnvironmentPointer (options.EnvironmentPointer));
 			} else {
 				InvocationPointer   = options.InvocationPointer;
 			}
-			unsafe {
-				// SAFETY: CreationOptions must identify a live JavaVM with a readable invocation table; nonzero checks alone
-				// do not validate that external storage. Copy the table while that runtime remains alive.
-				Invoker = *(JavaVMInterface*) Marshal.ReadIntPtr (InvocationPointer);
-			}
+			// SAFETY: CreationOptions must identify a live JavaVM with a readable invocation table; nonzero checks alone
+			// do not validate that external storage. Copy the table while that runtime remains alive.
+			Invoker = unsafe (*(JavaVMInterface*) Marshal.ReadIntPtr (InvocationPointer));
 
 			SetValueManager (options);
 
@@ -244,11 +249,8 @@ namespace Java.Interop
 			} else {
 				using (var t = new JniType ("java/lang/ClassLoader")) {
 					var m       = t.GetStaticMethod ("getSystemClassLoader", "()Ljava/lang/ClassLoader;");
-					JniObjectReference loader;
-					unsafe {
-						// SAFETY: m resolves ClassLoader.getSystemClassLoader()ClassLoader with no arguments.
-						loader = JniEnvironment.StaticMethods.CallStaticObjectMethod (t.PeerReference, m);
-					}
+					// SAFETY: m resolves ClassLoader.getSystemClassLoader()ClassLoader with no arguments.
+					var loader = unsafe (JniEnvironment.StaticMethods.CallStaticObjectMethod (t.PeerReference, m));
 					ClassLoader = loader.NewGlobalRef ();
 					JniObjectReference.Dispose (ref loader);
 				}
@@ -267,12 +269,9 @@ namespace Java.Interop
 				throw new ArgumentNullException (nameof (envp));
 
 			IntPtr vm   = IntPtr.Zero;
-			int r;
-			unsafe {
-				// SAFETY: The caller owns the current-thread JNI environment's validity.
-				// JNI writes only the synchronous pointer-sized output slot; &vm does not escape.
-				r = JniNativeMethods.GetJavaVM (envp, &vm);
-			}
+			// SAFETY: The caller owns the current-thread JNI environment's validity.
+			// JNI writes only the synchronous pointer-sized output slot; &vm does not escape.
+			int r = unsafe (JniNativeMethods.GetJavaVM (envp, &vm));
 			if (r != JNI_OK) {
 				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
 			}
@@ -382,11 +381,8 @@ namespace Java.Interop
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
 				IntPtr jnienv;
-				int r;
-				unsafe {
-					// SAFETY: threadArgs is local; its optional name allocation and supplied group stay live through attachment.
-					r = Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs);
-				}
+				// SAFETY: threadArgs is local; its optional name allocation and supplied group stay live through attachment.
+				int r = unsafe (Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs));
 				if (r != JNI_OK)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;

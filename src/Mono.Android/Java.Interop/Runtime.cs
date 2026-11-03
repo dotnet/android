@@ -36,12 +36,19 @@ namespace Java.Interop {
 		{
 			if (value == null)
 				return false;
-			bool result = IsGCUserPeer (value.Handle);
-			GC.KeepAlive (value);
-			return result;
+			unsafe {
+				// SAFETY: value owns the borrowed JNI peer; KeepAlive retains that owner past the synchronous type test.
+				bool result = IsGCUserPeer (value.Handle);
+				GC.KeepAlive (value);
+				return result;
+			}
 		}
 
-		public static bool IsGCUserPeer (IntPtr value)
+		/// <safety>
+		/// A nonzero <paramref name="value"/> must be a live JNI object reference from this VM usable
+		/// on this thread until the type test returns or throws. Exclude concurrent release; zero returns false.
+		/// </safety>
+		public static unsafe bool IsGCUserPeer (IntPtr value)
 		{
 			return JNIEnv.IsGCUserPeer (value);
 		}

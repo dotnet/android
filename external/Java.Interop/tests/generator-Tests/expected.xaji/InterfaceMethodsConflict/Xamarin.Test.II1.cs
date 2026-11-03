@@ -32,26 +32,47 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetCloseHandler ()
 		{
-			return cb_close_Close_V ??= new _JniMarshal_PP_V (n_Close);
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_close_Close_V ??= new _JniMarshal_PP_V (n_Close);
+			}
 		}
 
-		static void n_Close (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
 				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_Close);
 			}
 		}
-		private static void __n_Close (IntPtr jnienv, IntPtr native__this)
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe void __n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.II1> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Close ();
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.II1> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Close ();
+			}
 		}
 #pragma warning restore 0169
 
-		public unsafe void Close ()
+		public void Close ()
 		{
 			const string __id = "close.()V";
-			_members_xamarin_test_I1.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				_members_xamarin_test_I1.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			}
 		}
 
 	}

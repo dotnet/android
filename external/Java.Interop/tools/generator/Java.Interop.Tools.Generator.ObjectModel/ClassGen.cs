@@ -43,6 +43,7 @@ namespace MonoDroid.Generation
 			(base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as ClassGen;
 
 		public string BaseType { get; set; }
+		internal bool HasDeferredThrowableConstructor { get; set; }
 
 		public bool ContainsCtor (string jni_sig) => Ctors.Any (c => c.JniSignature == jni_sig);
 
