@@ -1051,12 +1051,16 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		UseShellExecute = false,
 		InheritedHandles = [],
 	};
-	foreach (var a in cliArgs)
-		psi.ArgumentList.Add (a);
-	var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
-	if (result.ExitStatus.Canceled)
-		throw new TimeoutException ($"'{file}' did not complete within five minutes.");
-	return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
+	foreach (var arg in cliArgs)
+		psi.ArgumentList.Add (arg);
+	try {
+		var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
+		return result.ExitStatus.Canceled
+			? (-1, result.StandardOutput, $"{result.StandardError}\n{file} timed out after 5 minutes.")
+			: (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
+	} catch (TimeoutException) {
+		return (-1, "", $"{file} timed out after 5 minutes.");
+	}
 }
 
 static JsonArray GetArray (JsonNode? root, string key)
