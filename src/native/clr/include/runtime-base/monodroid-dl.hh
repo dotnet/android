@@ -3,7 +3,6 @@
 #include <string_view>
 
 #include <dlfcn.h>
-#include <android/dlext.h>
 
 #include <runtime-base/mutex.hh>
 
@@ -20,7 +19,47 @@ namespace xamarin::android
 {
 	class MonodroidDl
 	{
+		struct ActiveLoadFrame
+		{
+			uint32_t name_index;
+			ActiveLoadFrame *parent;
+		};
+
 		static inline pthread_mutex_t dso_handle_write_lock = PTHREAD_MUTEX_INITIALIZER;
+		static inline thread_local ActiveLoadFrame *active_load_stack = nullptr;
+
+		static auto is_same_thread_loading (uint32_t name_index) noexcept -> bool
+		{
+			for (ActiveLoadFrame *cur = active_load_stack; cur != nullptr; cur = cur->parent) {
+				if (cur->name_index == name_index) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		static void publish_completed_handle (DSOCacheEntry *dso, void *handle) noexcept
+		{
+			uint32_t name_index = dso->name_index;
+			for (size_t i = 0; i < CoreClrBootstrap::config.number_of_dso_cache_entries; i++) {
+				DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[i];
+				if (entry.name_index == name_index) {
+					__atomic_store_n (&entry.handle, handle, __ATOMIC_RELEASE);
+				}
+			}
+			__atomic_store_n (&dso->handle, handle, __ATOMIC_RELEASE);
+		}
+
+		static auto load_dso (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
+		{
+			std::string_view dso_name = get_dso_name (dso);
+			void *handle = AndroidSystem::load_dso_from_any_directories (dso_name, flags, dso->is_jni_library);
+			if (handle == nullptr) {
+				handle = AndroidSystem::load_dso_from_any_directories (name, flags, dso->is_jni_library);
+			}
+			return handle;
+		}
 
 		// Entries are sorted by `hash`, so all entries sharing `hash` are contiguous. CRC32 is a
 		// 32-bit hash, so collisions are possible (though very unlikely); walk the whole run of
@@ -62,14 +101,17 @@ namespace xamarin::android
 
 			if (dso == nullptr) {
 				// Packaged libraries have build-time JNI metadata in the DSO cache.  A cache miss is therefore
-				// assumed to be a platform or other non-JNI library, avoiding a synchronous System.loadLibrary
-				// dispatch to the main thread.
+				// assumed to be a platform or other non-JNI library, avoiding an unnecessary JNI System.loadLibrary
+				// call.
 				constexpr bool IsJniLibrary = false;
 				constexpr bool SkipExistsCheck = true;
 				return DsoLoader::load<SkipExistsCheck> (name, flags, IsJniLibrary);
-			} else if (dso->handle != nullptr) {
-				log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: library %.*s already loaded, returning handle %p", static_cast<int>(name.length ()), name.data (), dso->handle);
-				return dso->handle;
+			}
+
+			void *cached_handle = __atomic_load_n (&dso->handle, __ATOMIC_ACQUIRE);
+			if (cached_handle != nullptr) {
+				log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: library %.*s already loaded, returning handle %p", static_cast<int>(name.length ()), name.data (), cached_handle);
+				return cached_handle;
 			}
 
 			if (dso->ignore) {
@@ -78,16 +120,36 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			std::string_view dso_name = get_dso_name (dso);
-			StartupAwareLock lock (dso_handle_write_lock);
-			dso->handle = AndroidSystem::load_dso_from_any_directories (dso_name, flags, dso->is_jni_library);
-
-			if (dso->handle != nullptr) {
-				return dso->handle;
+			// Perform the actual load outside dso_handle_write_lock so synchronous JNI_OnLoad callbacks
+			// can re-enter managed code and resolve other P/Invokes without deadlocking on the cache mutex.
+			// Do not block cross-thread callers on a pre-Java in-progress gate: Android's Runtime.loadLibrary0
+			// is synchronized on the Runtime monitor and ART's SharedLibrary::CheckOnLoadResult coordinates
+			// concurrent/recursive JNI_OnLoad execution internally. Track only the current thread's active
+			// load stack so a same-thread recursive (A -> A) call during JNI_OnLoad returns its provisional
+			// handle without publishing it to dso->handle before the outermost load succeeds.
+			if (is_same_thread_loading (dso->name_index)) {
+				return load_dso (dso, name, flags);
 			}
 
-			dso->handle = AndroidSystem::load_dso_from_any_directories (name, flags, dso->is_jni_library);
-			return dso->handle;
+			ActiveLoadFrame frame {
+				.name_index = dso->name_index,
+				.parent = active_load_stack,
+			};
+			active_load_stack = &frame;
+			void *handle = load_dso (dso, name, flags);
+			active_load_stack = frame.parent;
+			if (handle == nullptr) {
+				return nullptr;
+			}
+
+			StartupAwareLock lock (dso_handle_write_lock);
+			cached_handle = __atomic_load_n (&dso->handle, __ATOMIC_RELAXED);
+			if (cached_handle != nullptr) {
+				return cached_handle;
+			}
+
+			publish_completed_handle (dso, handle);
+			return handle;
 		}
 
 		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*

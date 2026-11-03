@@ -11,6 +11,10 @@ namespace xamarin::android {
 		static auto get_jnienv () noexcept -> JNIEnv*;
 
 	private:
+		static void create_jni_env_key () noexcept;
+		static void register_thread_detach (JNIEnv *env) noexcept;
+		static void detach_current_thread (void *value) noexcept;
+
 		static inline JavaVM *jvm = nullptr;
 	};
 }
