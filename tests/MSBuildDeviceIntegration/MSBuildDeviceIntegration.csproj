@@ -38,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Linked AssemblyCompression.cs uses LZ4 when NET11_0_OR_GREATER enables decompression. -->
     <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="NodaTime" Version="2.4.5" />
