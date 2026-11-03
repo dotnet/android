@@ -17,6 +17,59 @@ public class TrimmableTypeMapRidCallbackTests
 	const string Arm64Path = "/packages/runtimes/android-arm64/lib/net11.0-android/RidSpecificCallbacks.dll";
 	const string X64Path = "/packages/runtimes/android-x64/lib/net11.0-android/RidSpecificCallbacks.dll";
 
+	[TestCase (1)]
+	[TestCase (2)]
+	public void SupportedCallbackFormatIsAccepted (int version)
+	{
+		using var assembly = CreateCallbackAssembly (includeCallback: false, callbackFormatVersion: version);
+		using var pe = new PEReader (assembly);
+		using var scanner = new JavaPeerScanner ();
+
+		Assert.IsEmpty (scanner.Scan ([new AssemblyInput ("RidSpecificCallbacks", Arm64Path, pe)]));
+	}
+
+	[TestCase (-1)]
+	[TestCase (0)]
+	[TestCase (3)]
+	public void UnsupportedCallbackFormatIsRejected (int version)
+	{
+		using var assembly = CreateCallbackAssembly (includeCallback: false, callbackFormatVersion: version);
+		using var pe = new PEReader (assembly);
+		using var scanner = new JavaPeerScanner ();
+
+		var error = Assert.Throws<NotSupportedException> (() =>
+			scanner.Scan ([new AssemblyInput ("RidSpecificCallbacks", Arm64Path, pe)]));
+		StringAssert.Contains ($"unsupported Java peer callback format version '{version}'", error.Message);
+	}
+
+	[Test]
+	public void UnsupportedCallbackFormatOnLaterRidIsRejected ()
+	{
+		using var arm64Assembly = CreateCallbackAssembly (includeCallback: true);
+		using var x64Assembly = CreateCallbackAssembly (includeCallback: true, callbackFormatVersion: 3);
+		using var arm64 = new PEReader (arm64Assembly);
+		using var x64 = new PEReader (x64Assembly);
+		using var scanner = new JavaPeerScanner ();
+
+		var error = Assert.Throws<NotSupportedException> (() => scanner.Scan ([
+			new AssemblyInput ("RidSpecificCallbacks", Arm64Path, arm64),
+			new AssemblyInput ("RidSpecificCallbacks", X64Path, x64),
+		]));
+		StringAssert.Contains ("unsupported Java peer callback format version '3'", error.Message);
+	}
+
+	[Test]
+	public void NonIntegerCallbackFormatIsRejected ()
+	{
+		using var assembly = CreateCallbackAssembly (includeCallback: false, invalidVersionType: true);
+		using var pe = new PEReader (assembly);
+		using var scanner = new JavaPeerScanner ();
+
+		var error = Assert.Throws<NotSupportedException> (() =>
+			scanner.Scan ([new AssemblyInput ("RidSpecificCallbacks", Arm64Path, pe)]));
+		StringAssert.Contains ("without a supported integer version", error.Message);
+	}
+
 	[Test]
 	public void EquivalentRidSpecificUcoCallbacksAreAccepted ()
 	{
@@ -50,7 +103,7 @@ public class TrimmableTypeMapRidCallbackTests
 		StringAssert.Contains (X64Path, error.Message);
 	}
 
-	static MemoryStream CreateCallbackAssembly (bool includeCallback)
+	static MemoryStream CreateCallbackAssembly (bool includeCallback, int callbackFormatVersion = 2, bool invalidVersionType = false)
 	{
 		var stream = new MemoryStream ();
 		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
@@ -63,11 +116,23 @@ public class TrimmableTypeMapRidCallbackTests
 		var callbackFormatCtor = pe.AddMemberRef (callbackFormatAttribute, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
 				rt => rt.Void (),
-				p => p.AddParameter ().Type ().Int32 ()));
+				p => {
+					if (invalidVersionType) {
+						p.AddParameter ().Type ().String ();
+					} else {
+						p.AddParameter ().Type ().Int32 ();
+					}
+				}));
 		pe.Metadata.AddCustomAttribute (
 			EntityHandle.AssemblyDefinition,
 			callbackFormatCtor,
-			pe.BuildAttributeBlob (blob => blob.WriteInt32 (2)));
+			pe.BuildAttributeBlob (blob => {
+				if (invalidVersionType) {
+					blob.WriteSerializedString ("2");
+				} else {
+					blob.WriteInt32 (callbackFormatVersion);
+				}
+			}));
 
 		var objectRef = pe.Metadata.AddTypeReference (
 			pe.SystemRuntimeRef,
