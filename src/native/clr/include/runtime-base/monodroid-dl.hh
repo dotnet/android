@@ -22,99 +22,9 @@ namespace xamarin::android
 	{
 		static inline pthread_mutex_t dso_handle_write_lock = PTHREAD_MUTEX_INITIALIZER;
 
-		[[gnu::always_inline]]
-		static constexpr auto ascii_to_lower (char c) noexcept -> char
-		{
-			return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : c;
-		}
-
-		[[gnu::always_inline]]
-		static auto ends_with_ci (std::string_view value, std::string_view suffix) noexcept -> bool
-		{
-			if (value.length () < suffix.length ()) {
-				return false;
-			}
-
-			size_t offset = value.length () - suffix.length ();
-			for (size_t i = 0; i < suffix.length (); i++) {
-				if (ascii_to_lower (value[offset + i]) != ascii_to_lower (suffix[i])) {
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		[[gnu::always_inline]]
-		static auto starts_with_ci (std::string_view value, std::string_view prefix) noexcept -> bool
-		{
-			if (value.length () < prefix.length ()) {
-				return false;
-			}
-
-			for (size_t i = 0; i < prefix.length (); i++) {
-				if (ascii_to_lower (value[i]) != ascii_to_lower (prefix[i])) {
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		// Equivalent of Path.GetFileNameWithoutExtension for a bare file name: strip the last '.' and
-		// everything following it.
-		[[gnu::always_inline]]
-		static auto strip_last_extension (std::string_view name) noexcept -> std::string_view
-		{
-			size_t dot = name.find_last_of ('.');
-			return dot == std::string_view::npos ? name : name.substr (0, dot);
-		}
-
-		// Mirror of AddNameMutations () in
-		// src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigNativeAssemblyGeneratorCLR.cs.
-		//
-		// The DSO cache stores one entry per name mutation of a library. Each entry is keyed by the
-		// CRC32 of the *mutation*, but only the library's real (unmutated) name is stored (referenced
-		// through `name_index`); the mutation strings themselves are discarded. To disambiguate a
-		// CRC32 collision we re-derive the mutations of a matched entry's real name and check whether
-		// the requested name is one of them. This MUST be kept in sync with the managed generator.
-		static auto name_is_mutation_of (std::string_view requested, std::string_view real_name) noexcept -> bool
-		{
-			// Mutation: the (real) name itself.
-			if (requested == real_name) {
-				return true;
-			}
-
-			if (ends_with_ci (real_name, ".dll.so"sv)) {
-				// Path.GetFileNameWithoutExtension applied twice strips ".so" and then ".dll".
-				std::string_view no_ext = strip_last_extension (strip_last_extension (real_name));
-
-				// Mutation: the name without the ".dll.so" suffix.
-				if (requested == no_ext) {
-					return true;
-				}
-
-				// Mutation: that same stem with a plain ".so" suffix.
-				if (requested.ends_with (".so"sv) && requested.substr (0, requested.length () - ".so"sv.length ()) == no_ext) {
-					return true;
-				}
-			} else if (requested == strip_last_extension (real_name)) {
-				// Mutation: the name without its final extension.
-				return true;
-			}
-
-			// The generator also emits the mutations of the name with a leading "lib" removed.
-			if (starts_with_ci (real_name, "lib"sv)) {
-				return name_is_mutation_of (requested, real_name.substr ("lib"sv.length ()));
-			}
-
-			return false;
-		}
-
 		// Entries are sorted by `hash`, so all entries sharing `hash` are contiguous. CRC32 is a
 		// 32-bit hash, so collisions are possible (though very unlikely); walk the whole run of
-		// entries with a matching hash and confirm the requested name really is a mutation of the
-		// candidate library's name before accepting it.
+		// entries with a matching hash and compare the exact build-generated alias before accepting it.
 		[[gnu::always_inline, gnu::flatten]]
 		static auto find_dso_cache_entry (std::string_view const& name, hash_t hash) noexcept -> DSOCacheEntry*
 		{
@@ -125,7 +35,7 @@ namespace xamarin::android
 
 			while (idx < CoreClrBootstrap::config.number_of_dso_cache_entries && CoreClrBootstrap::dso_cache[idx].hash == hash) {
 				DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[idx];
-				if (name_is_mutation_of (name, get_dso_name (&entry))) {
+				if (name == CoreClrBootstrap::string (entry.alias_index, false)) {
 					return &entry;
 				}
 				idx++;
