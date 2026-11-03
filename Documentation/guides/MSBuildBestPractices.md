@@ -99,6 +99,15 @@ paths still belong to the correct project.
 
 See [Microsoft's task migration guide](https://learn.microsoft.com/visualstudio/msbuild/update-task-multithreaded).
 
+`GenerateCoreClrRuntimeProviderSources` lives in `Microsoft.Android.Build.Tasks`
+and resolves its output directory through `TaskEnvironment`. Its Java template is
+embedded in that assembly as `MonoRuntimeProvider.Bundled.java`; unchanged generated
+providers retain their timestamps. The old
+`Xamarin.Android.Tasks.GenerateCoreClrRuntimeProviderSources` entry point has been
+removed; custom registrations must use
+`Microsoft.Android.Tasks.GenerateCoreClrRuntimeProviderSources` from the modern
+assembly, with the same conditional Full/Core runtime registration as the shipped targets.
+
 ## Naming
 
 MSBuild targets, properties, and item groups are prefixed with an

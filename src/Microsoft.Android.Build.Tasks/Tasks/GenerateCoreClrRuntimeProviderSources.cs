@@ -2,9 +2,10 @@
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
-public sealed class GenerateCoreClrRuntimeProviderSources : AndroidTask
+[MSBuildMultiThreadableTask]
+public sealed class GenerateCoreClrRuntimeProviderSources : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GCRP";
 
@@ -16,7 +17,8 @@ public sealed class GenerateCoreClrRuntimeProviderSources : AndroidTask
 
 	public override bool RunTask ()
 	{
-		RuntimeProviderSourceGenerator.WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR: true, AdditionalProviderSources);
+		RuntimeProviderSourceGenerator.WriteAdditionalRuntimeProviderSources (
+			TaskEnvironment, OutputDirectory, isCoreCLR: true, AdditionalProviderSources);
 		return !Log.HasLoggedErrors;
 	}
 }
