@@ -3,6 +3,7 @@
 
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
@@ -100,6 +102,45 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.WriteLine ();
 				writer.Flush ();
 				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write when changed.");
+			}
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_TaskEnvironmentRetrySettingsAreNotCached ()
+		{
+			Directory.CreateDirectory (tempDir);
+			string destination = Path.Combine (tempDir, "retry.txt");
+			foreach (int retries in new [] { 0, 1, 0 }) {
+				var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new Dictionary<string, string> {
+					{ "DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS", retries.ToString () },
+					{ "DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS", "0" },
+				});
+				File.Delete (destination);
+				using var source = new RetryCopyStream ();
+				if (retries == 0) {
+					Assert.Throws<IOException> (() => Files.CopyIfStreamChanged (source, destination, environment));
+					Assert.AreEqual (1, source.Attempts);
+				} else {
+					Assert.IsTrue (Files.CopyIfStreamChanged (source, destination, environment));
+					Assert.AreEqual ("contents", File.ReadAllText (destination));
+				}
+			}
+		}
+
+		sealed class RetryCopyStream : MemoryStream
+		{
+			public int Attempts { get; private set; }
+
+			public RetryCopyStream () : base (Encoding.UTF8.GetBytes ("contents"))
+			{
+			}
+
+			public override void CopyTo (Stream destination, int bufferSize)
+			{
+				if (++Attempts == 1) {
+					throw new IOException ("Simulated sharing violation.", unchecked ((int)0x80070020));
+				}
+				base.CopyTo (destination, bufferSize);
 			}
 		}
 

@@ -70,6 +70,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetFilesThatExist" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1511,7 +1513,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_AndroidPackageManagerJavaFile>$(_AndroidIntermediateJavaSourceDirectory)mono/MonoPackageManager_Resources.java</_AndroidPackageManagerJavaFile>
     <_AndroidPackageManagerJavaInputsFile>$(IntermediateOutputPath)package-manager-java.inputs</_AndroidPackageManagerJavaInputsFile>
-    <_AndroidPackageManagerJavaTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Xamarin.Android.Build.Tasks.dll'))</_AndroidPackageManagerJavaTaskAssembly>
+    <_AndroidPackageManagerJavaTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidPackageManagerJavaTaskAssembly>
   </PropertyGroup>
   <WriteLinesToFile File="$(_AndroidPackageManagerJavaInputsFile)"
       Lines="MainAssembly=$([System.IO.Path]::GetFileName('$(TargetPath)'))"
@@ -1532,10 +1534,10 @@ because xbuild doesn't support framework reference assemblies.
 
   <Delete Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
 
-  <GeneratePackageManagerJava
+  <Microsoft.Android.Tasks.GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
       OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono">
-  </GeneratePackageManagerJava>
+  </Microsoft.Android.Tasks.GeneratePackageManagerJava>
 
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
 </Target>

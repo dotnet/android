@@ -97,6 +97,12 @@ Use `-warnaserror:MSB4286,MSB4287,MSB4288` for the strict checks. Inspect a
 binary log to confirm that each migrated task ran in-process and that item
 paths still belong to the correct project.
 
+`GeneratePackageManagerJava` runs from `Microsoft.Android.Build.Tasks.dll` on
+.NET, using the .NET task host when invoked by .NET Framework MSBuild.
+It resolves its output directory through `TaskEnvironment` and preserves the
+timestamp of unchanged `MonoPackageManager_Resources.java` files. Its copy
+helper reads retry settings from the task environment rather than the process.
+
 See [Microsoft's task migration guide](https://learn.microsoft.com/visualstudio/msbuild/update-task-multithreaded).
 
 ## Naming
