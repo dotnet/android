@@ -1,0 +1,80 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Version>11.0.0</Version>
+    <LangVersion>13.0</LangVersion>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(TestOutputDirectory)$(DotNetStableTargetFramework)\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <PackageReference Include="nunit" Version="3.14.0" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="3.22.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\src\generator\generator.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
+  </ItemGroup>
+
+  <!-- Reuse the real Kotlin .class files compiled from the kotlin-gradle/ fixture
+       under this project's obj/ directory so we can exercise the
+       full class-parse -> XmlApiImporter -> generator pipeline against actual
+       Kotlin @JvmInline value classes (dotnet/java-interop#1431, Phase 2). -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" Link="kotlin-gradle\MyColor.class" LogicalName="generatortests.kotlin-gradle.MyColor.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" Link="kotlin-gradle\MyAlpha.class" LogicalName="generatortests.kotlin-gradle.MyAlpha.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" Link="kotlin-gradle\MyDp.class" LogicalName="generatortests.kotlin-gradle.MyDp.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" Link="kotlin-gradle\Widgets.class" LogicalName="generatortests.kotlin-gradle.Widgets.class" />
+  </ItemGroup>
+
+  <Import Project="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle.targets" />
+
+  <ItemGroup>
+    <Compile Remove="expected\**\*" />
+    <Compile Remove="TestInputs\**\*" />
+    <Compile Remove="expected.xaji\**\*" />
+    <Compile Remove="Tests-Core\**\*" />
+    <Compile Remove="SupportFiles\**\*" />
+    <Compile Include="SupportFiles\RegisterAttribute.cs" />
+    <None Include="expected\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestInputs\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="expected.xaji\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="SupportFiles\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Unit-Tests\CodeGeneratorExpectedResults\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Unit-Tests\EnumGeneratorExpectedResults\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="EnumGeneratorExpectedResults\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

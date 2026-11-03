@@ -7,29 +7,26 @@ Android runtime integration is built as part of the enclosing dotnet/android
 
 ## MSBuild Properties
 
-MSBuild properties may be placed into `external/Java.Interop/Configuration.Override.props`,
-which can be copied from
-[`Configuration.Override.props.in`](../Configuration.Override.props.in).
-The `Configuration.Override.props` file is `<Import/>`ed by
-[`Directory.Build.props`](../Directory.Build.props); there is no need to
-`<Import/>` it within other project files.
+Projects use the repository's shared
+[`Directory.Build.props`](../../../Directory.Build.props) and
+[`Configuration.props`](../../../Configuration.props).
+MSBuild properties may be placed in the repository-root
+`Configuration.Override.props` or passed with `-p:Name=Value`.
 
 Overridable MSBuild properties include:
 
 * `$(Configuration)`: Build configuration, normally `Debug` or `Release`.
-* `$(JdksRoot)`: JDK location used during preparation. Preparation also checks
-    `JAVA_HOME` and installed JDKs, and writes the selected Java tool paths to
-    `bin/Build$(Configuration)/JdkInfo.props`.
 * `$(JavaSdkDirectory)`, `$(JavaCPath)`, and `$(JarPath)`: JDK directory and paths
-    to `javac` and `jar`, normally loaded from the generated `JdkInfo.props`.
+    to `javac` and `jar`, supplied by the shared `Configuration.props`.
+    `make prepare` provisions the configured Microsoft OpenJDK. For standalone
+    tooling builds, pass `-p:JavaSdkDirectory=/path/to/jdk` to use an installed JDK.
     These are used for Java tooling and test fixtures, not a desktop JNI test host.
-* `$(UtilityOutputFullPathCoreApps)`: Full output directory for utilities such as
-    [`class-parse`](../tools/class-parse) and [`generator`](../tools/generator).
-    The enclosing repository sets this to the Android SDK pack's `tools`
-    directory in [`Java.Interop.override.props`](../../Java.Interop.override.props).
-    Without that override, tools use `bin/$(Configuration)-net10.0/` under
-    `external/Java.Interop/`, as defined by
-    [`TargetFrameworkDependentValues.props`](../TargetFrameworkDependentValues.props).
+* `$(MicrosoftAndroidSdkOutDir)`: Output directory for tools such as
+    [`class-parse`](../../../src/class-parse) and [`generator`](../../../src/generator),
+    within the Android SDK pack's `tools/` directory.
+* `$(BuildOutputDirectory)` and `$(TestOutputDirectory)`: Libraries and tooling
+    tests use `bin/$(Configuration)/net10.0/` and
+    `bin/Test$(Configuration)/net10.0/`, respectively.
 
 ## Native registration
 
@@ -55,7 +52,7 @@ proxy implementation or `java-interop.jar`.
 
 ## Tests
 
-Tooling tests remain under `external/Java.Interop/tests/` and run with
+Tooling tests remain under `tests/` and run with
 `dotnet test` on the individual test `.csproj` files. They do not require a
 locally built Android SDK; Java/Gradle fixtures still require the configured JDK.
 

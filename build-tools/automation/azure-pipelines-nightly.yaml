@@ -122,8 +122,8 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Microsoft.Android.slnx
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
-        displayName: prepare java.interop $(XA.Build.Configuration)
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) -m:1 -v:n
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml

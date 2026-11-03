@@ -28,9 +28,7 @@
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
   </PropertyGroup>
   <PropertyGroup>
-    <!-- Properties shared between dotnet/android and the Java.Interop submodule.
-         Imported by Directory.Build.props, Configuration.props, and
-         external/Java.Interop.override.props. -->
+    <!-- Properties shared by the runtime, build tasks, and Java.Interop tools. -->
     <MonoCecilVersion>0.11.6</MonoCecilVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:

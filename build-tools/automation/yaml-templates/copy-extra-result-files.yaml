@@ -22,7 +22,6 @@ steps:
       **/config.h
       **/android-*.config.cache
       CMakeFiles/*.log
-      external/Java.Interop/bin/Build${{ parameters.configuration }}/*.props
     targetFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
     flattenFolders: false
 

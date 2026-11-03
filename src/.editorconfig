@@ -1,2 +1,6 @@
 [*.{cs,vb}]
 dotnet_diagnostic.CA1305.severity = error		# Specify IFormatProvider
+
+# Preserve the existing analyzer baseline for the relocated Java.Interop tooling.
+[{Java.Interop.Tools.*,Xamarin.Android.Tools.AnnotationSupport,Xamarin.Android.Tools.ApiXmlAdjuster,Xamarin.Android.Tools.Bytecode,Xamarin.SourceWriter,generator,class-parse,utils}/**.{cs,vb}]
+dotnet_diagnostic.CA1305.severity = none

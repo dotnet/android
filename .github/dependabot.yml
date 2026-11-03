@@ -44,7 +44,7 @@ updates:
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
   - package-ecosystem: "gradle"
     directories:
-      - "/external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
+      - "/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
       - "/src/bundletool"
       - "/src/r8"
       - "/src/proguard-android"
@@ -56,7 +56,7 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "gradle"
-    directory: "/external/Java.Interop/tools/java-source-utils"
+    directory: "/src/java-source-utils"
     cooldown:
       default-days: 0
     schedule:

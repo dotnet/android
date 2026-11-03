@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <_JNIEnvGenPath>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\java-interop-jnienv-gen.dll</_JNIEnvGenPath>
+  </PropertyGroup>
+  <Target Name="BuildJniEnvironment_g_cs"
+      BeforeTargets="BeforeCompile"
+      Inputs="$(_JNIEnvGenPath)"
+      Outputs="$(IntermediateOutputPath)JniEnvironment.g.cs;$(IntermediateOutputPath)jni.c">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_JNIEnvGenPath)&quot; &quot;$(IntermediateOutputPath)JniEnvironment.g.cs&quot; &quot;$(IntermediateOutputPath)jni.c&quot;"
+    />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)JniEnvironment.g.cs" KeepDuplicates="false" />
+    </ItemGroup>
+  </Target>
+</Project>
