@@ -299,10 +299,10 @@ namespace Android.Runtime {
 		}
 
 		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
-		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params JValue[] constructorParameters)
+		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params ReadOnlySpan<JValue> constructorParameters)
 		{
 			unsafe {
-				// SAFETY: The array is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
+				// SAFETY: The span's backing storage is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
 				fixed (JValue* cp = constructorParameters)
 					FinishCreateInstance (instance, jniCtorSignature, cp);
 			}
