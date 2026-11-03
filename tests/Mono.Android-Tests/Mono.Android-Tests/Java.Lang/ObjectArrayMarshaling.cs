@@ -247,10 +247,20 @@ namespace Java.LangTests {
 
 		[TestCase (0)]
 		[TestCase (2)]
-		public void ToArrayRejectsWrongManagedOnlyArrayRank (int length)
+		public void ToArrayPreservesNullManagedOnlyArrayElements (int length)
 		{
 			using var array = new Java.Lang.Object (
 				JNIEnv.NewArray (new Java.Lang.Object [length]), JniHandleOwnership.TransferLocalRef);
+			CollectionAssert.AreEqual (new IJavaObject [length][], array.ToArray<IJavaObject[]> ());
+			CollectionAssert.AreEqual (new Array [length][], array.ToArray<Array[]> ());
+		}
+
+		[Test]
+		public void ToArrayRejectsNonArrayManagedOnlyArrayElements ()
+		{
+			using var value = new Java.Lang.String ("not an array");
+			using var array = new Java.Lang.Object (
+				JNIEnv.NewArray (new Java.Lang.Object [] { value }), JniHandleOwnership.TransferLocalRef);
 			Assert.Throws<InvalidCastException> (() => array.ToArray<IJavaObject[]> ());
 			Assert.Throws<InvalidCastException> (() => array.ToArray<Array[]> ());
 		}

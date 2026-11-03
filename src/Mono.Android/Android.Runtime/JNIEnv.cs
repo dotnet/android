@@ -775,7 +775,7 @@ namespace Android.Runtime {
 
 		static void AssertArrayConversionType (IntPtr sourceArray, Type? elementType)
 		{
-			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) ||
+			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) || elementType == typeof (Array) ||
 					elementType.IsArray || typeof (IJavaObject).IsAssignableFrom (elementType))) {
 				AssertCompatibleArrayTypes (sourceArray,
 					destElementType: elementType.IsValueType ? elementType : typeof (Java.Lang.Object));
@@ -799,9 +799,6 @@ namespace Android.Runtime {
 			}
 
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
-			// Managed-only destinations use object references at each jagged array level.
-			if (elementType == typeof (IJavaObject) || elementType == typeof (Array))
-				elementType = typeof (Java.Lang.Object);
 			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
 			return JniEnvironment.Types.FindClass (typeSignature.Name);
 		}
