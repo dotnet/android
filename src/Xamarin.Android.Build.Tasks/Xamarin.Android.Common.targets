@@ -43,7 +43,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.CollectAssemblyFilesToCompress" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CollectCompressedAssemblyInfo" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CollectCompressedAssemblyInfo" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.ResolveAndroidNdk" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
@@ -2040,11 +2039,20 @@ because xbuild doesn't support framework reference assemblies.
     <FilesToAddToArchive Include="@(_AndroidBinaryBlobLibrary)" />
   </ItemGroup>
 
-  <CollectDalvikFilesForArchive
-      AndroidPackageFormat="$(AndroidPackageFormat)"
-      DalvikClasses="@(_DexFile)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectDalvikFilesForArchive>
+  <PropertyGroup>
+    <_AndroidDalvikArchivePrefix></_AndroidDalvikArchivePrefix>
+    <_AndroidDalvikArchivePrefix Condition=" $([System.String]::Equals('$(AndroidPackageFormat)', 'aab', System.StringComparison.InvariantCultureIgnoreCase)) ">dex/</_AndroidDalvikArchivePrefix>
+  </PropertyGroup>
+  <ItemGroup>
+    <_AndroidDalvikFiles Include="@(_DexFile)" />
+    <!-- Update the copy in place so metadata batching does not reorder duplicate items. -->
+    <_AndroidDalvikFiles>
+      <ArchivePath>$(_AndroidDalvikArchivePrefix)$([System.IO.Path]::GetFileName(`%(_AndroidDalvikFiles.Identity)`))</ArchivePath>
+      <ArchivePath Condition=" !$([System.String]::IsNullOrWhiteSpace(`%(_AndroidDalvikFiles.ApkName)`)) ">$(_AndroidDalvikArchivePrefix)%(_AndroidDalvikFiles.ApkName)</ArchivePath>
+    </_AndroidDalvikFiles>
+    <FilesToAddToArchive Include="@(_AndroidDalvikFiles)" KeepMetadata="ArchivePath" />
+    <_AndroidDalvikFiles Remove="@(_AndroidDalvikFiles)" />
+  </ItemGroup>
 
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
@@ -2159,11 +2167,20 @@ because xbuild doesn't support framework reference assemblies.
     <_DalvikClasses Include="@(_DexFile)" />
   </ItemGroup>
 
-	<CollectDalvikFilesForArchive
-      AndroidPackageFormat="$(AndroidPackageFormat)"
-      DalvikClasses="@(_DalvikClasses)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectDalvikFilesForArchive>
+  <PropertyGroup>
+    <_AndroidDalvikArchivePrefix></_AndroidDalvikArchivePrefix>
+    <_AndroidDalvikArchivePrefix Condition=" $([System.String]::Equals('$(AndroidPackageFormat)', 'aab', System.StringComparison.InvariantCultureIgnoreCase)) ">dex/</_AndroidDalvikArchivePrefix>
+  </PropertyGroup>
+  <ItemGroup>
+    <_AndroidDalvikFiles Include="@(_DalvikClasses)" />
+    <!-- Update the copy in place so metadata batching does not reorder duplicate items. -->
+    <_AndroidDalvikFiles>
+      <ArchivePath>$(_AndroidDalvikArchivePrefix)$([System.IO.Path]::GetFileName(`%(_AndroidDalvikFiles.Identity)`))</ArchivePath>
+      <ArchivePath Condition=" !$([System.String]::IsNullOrWhiteSpace(`%(_AndroidDalvikFiles.ApkName)`)) ">$(_AndroidDalvikArchivePrefix)%(_AndroidDalvikFiles.ApkName)</ArchivePath>
+    </_AndroidDalvikFiles>
+    <FilesToAddToArchive Include="@(_AndroidDalvikFiles)" KeepMetadata="ArchivePath" />
+    <_AndroidDalvikFiles Remove="@(_AndroidDalvikFiles)" />
+  </ItemGroup>
 
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"

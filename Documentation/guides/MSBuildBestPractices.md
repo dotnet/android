@@ -60,6 +60,17 @@ If you want to test in-tree using the same the `build-sample-under-dotnet` comma
 
 ## Multithreaded tasks
 
+Prefer MSBuild item construction for simple item/metadata transformations.
+For example, `_BuildApkEmbed` and `_BuildApkFastDev` construct Dalvik archive
+items directly rather than invoking `CollectDalvikFilesForArchive`.
+They retain the source path and only the `ArchivePath` metadata: a nonblank
+`ApkName` overrides the filename, and app bundles prepend `dex/`.
+Use `KeepMetadata` to avoid leaking input metadata such as `JavaArchiveEntry`
+into the archive writer, while preserving input order and duplicate items.
+Clone the input list before updating metadata in place: constructing items and
+setting metadata in the same operation can reorder duplicates through batching.
+Custom targets invoking the removed task must construct the archive items instead.
+
 For tasks that only transform strings or items, use `MultithreadedAndroidTask`
 and put `[MSBuildMultiThreadableTask]` directly on each concrete task class.
 The attribute is not inherited. This base keeps the `AndroidTask` exception

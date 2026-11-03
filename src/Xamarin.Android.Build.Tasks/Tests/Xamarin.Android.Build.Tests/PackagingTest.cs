@@ -505,9 +505,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void CheckClassesDexIsIncluded ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckClassesDexIsIncluded (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
+			[Values ("apk", "aab")] string packageFormat,
+			[Values (false, true)] bool isRelease)
 		{
-			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -515,12 +517,21 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.EmbedAssembliesIntoApk = isRelease;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build failed");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (zip.GetEntry ("classes.dex"), "Apk should contain classes.dex");
+				for (int build = 0; build < 2; build++) {
+					if (build != 0) {
+						Assert.IsTrue (b.Build (proj), "incremental build failed");
+					}
+					var archive = Path.Combine (Root, b.ProjectDirectory,
+							proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+					using (var zip = ZipHelper.OpenZip (archive)) {
+						string entry = packageFormat == "aab" ? "base/dex/classes.dex" : "classes.dex";
+						Assert.IsNotNull (zip.GetEntry (entry), $"Package should contain {entry}");
+						Assert.AreEqual (1, zip.Entries.Count (item => item.FullName == entry), "Do not duplicate dex entries on incremental builds.");
+					}
 				}
 			}
 		}
