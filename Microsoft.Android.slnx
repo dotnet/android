@@ -58,8 +58,6 @@
     <Project Path="tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
-    <Project Path=".github/skills/read-assembly-store/src/AssemblyStore/AssemblyStore.csproj" />
-    <Project Path=".github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj" />
     <Project Path="src/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil.csproj" />
     <Project Path="src/Java.Interop.Tools.Diagnostics/Java.Interop.Tools.Diagnostics.csproj" />
     <Project Path="src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers.csproj" />

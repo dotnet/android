@@ -24,8 +24,7 @@
 
    <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
-    <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\*.cs" />
-    <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
+    <Compile Include="..\Utilities\AssemblyStore\**\*.cs" />
     <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
   <ItemGroup>

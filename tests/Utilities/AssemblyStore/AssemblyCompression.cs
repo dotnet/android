@@ -3,7 +3,6 @@ using System.IO;
 
 #if NET11_0_OR_GREATER
 using System.Buffers;
-using K4os.Compression.LZ4;
 using ZstandardDecoder = System.IO.Compression.ZstandardDecoder;
 #endif // NET11_0_OR_GREATER
 
@@ -42,6 +41,9 @@ public static class AssemblyCompression
 		if (!TryReadFormat (input, out format)) {
 			return false;
 		}
+		if (format == AssemblyCompressionFormat.Lz4) {
+			throw new NotSupportedException ("LZ4 assembly decompression is no longer supported");
+		}
 
 		if (input.Length - start < HeaderSize) {
 			throw new InvalidDataException ($"Truncated {format} assembly header");
@@ -67,14 +69,6 @@ public static class AssemblyCompression
 
 			assemblyBytes = bytePool.Rent ((int)uncompressedLength);
 			int decoded = format switch {
-				AssemblyCompressionFormat.Lz4 => LZ4Codec.Decode (
-					compressedBytes,
-					0,
-					(int)compressedLength,
-					assemblyBytes,
-					0,
-					(int)uncompressedLength
-				),
 				AssemblyCompressionFormat.Zstandard => ZstandardDecoder.TryDecompress (
 					compressedBytes.AsSpan (0, (int)compressedLength),
 					assemblyBytes.AsSpan (0, (int)uncompressedLength),
