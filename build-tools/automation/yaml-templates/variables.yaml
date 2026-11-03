@@ -48,9 +48,9 @@ variables:
 - name: TeamName
   value: .NET MAUI
 - name: DotNetTargetFramework
-  value: net11.0
+  value: net12.0
 - name: DotNetStableTargetFramework
-  value: net10.0
+  value: net11.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false

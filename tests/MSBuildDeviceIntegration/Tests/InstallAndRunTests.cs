@@ -2430,7 +2430,7 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework)
+				[Values ("net12.0-android37.1", "net12.0-android37.2")] string targetFramework)
 		{
 			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
 			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
@@ -2497,15 +2497,11 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		// .NET 10 NativeAOT was experimental and is not covered by previous-version compatibility tests.
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values] bool isRelease,
-				[Values ("net10.0-android36.1")] string targetFramework,
+				[Values ("net11.0-android37.1")] string targetFramework,
 				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (isRelease && targetFramework == "net10.0-android36.1" && runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("https://github.com/dotnet/android/issues/12923");
-			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
