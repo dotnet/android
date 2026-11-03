@@ -42,12 +42,13 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
     retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
+  # Hosted macOS images can have a non-writable ~/.dotnet.
   - bash: >
-      DOTNET_ROOT=~/.dotnet/ &&
-      (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
+      DOTNET_ROOT="$(Agent.TempDirectory)/dotnet-bootstrap" &&
+      (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv "$DOTNET_ROOT"; fi) &&
       curl -L https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh --retry 5 --retry-max-time 300 > dotnet-install.sh &&
       chmod +x dotnet-install.sh &&
-      ./dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --skip-non-versioned-files --verbose &&
+      ./dotnet-install.sh --version ${{ parameters.version }} --install-dir "$DOTNET_ROOT" --skip-non-versioned-files --verbose &&
       PATH="$DOTNET_ROOT:$PATH" &&
       echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
       echo "##vso[task.setvariable variable=PATH]$PATH"
