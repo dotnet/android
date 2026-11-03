@@ -30,7 +30,6 @@ namespace {
 	// successful snapshot of each name until process exit, including across collectible loads.
 	// Protected by FastDevAssemblies::override_dir_lock.
 	assembly_data *loaded_assemblies = nullptr;
-
 }
 
 auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
@@ -181,12 +180,6 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 	log_debugf (LOG_ASSEMBLY, "Read %zu bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
-
-	if (size == 0) [[unlikely]] {
-		log_warnf (LOG_ASSEMBLY, "FastDev assembly '%.*s' is empty", static_cast<int> (name.length ()), name.data ());
-		std::free (buffer);
-		return nullptr;
-	}
 
 	size_t entry_size = Helpers::add_with_overflow_check<size_t> (sizeof (assembly_data), name.length ());
 	auto entry = static_cast<assembly_data*> (std::malloc (entry_size));
