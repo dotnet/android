@@ -107,6 +107,9 @@ public class GeneratePackageManagerJavaTests
 	public void ProductionRegistrationSelectsTheDotNetTaskHost ()
 	{
 		var common = LoadCommonTargets ();
+		Assert.IsFalse (common.Descendants ().Any (element =>
+			element.Name.LocalName == "UsingTask" &&
+			(string?)element.Attribute ("TaskName") == "Xamarin.Android.Tasks.GeneratePackageManagerJava"));
 		var registrations = common.Descendants ().Where (element =>
 			element.Name.LocalName == "UsingTask" &&
 			(string?)element.Attribute ("TaskName") == typeof (GeneratePackageManagerJava).FullName).ToArray ();
