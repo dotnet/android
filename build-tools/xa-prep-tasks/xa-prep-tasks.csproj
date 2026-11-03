@@ -4,6 +4,7 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.BuildTools.PrepTasks</RootNamespace>
     <OutputPath>$(BootstrapOutputDirectory)</OutputPath>
+    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

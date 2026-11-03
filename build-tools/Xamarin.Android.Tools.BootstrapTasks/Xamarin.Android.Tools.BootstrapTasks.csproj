@@ -22,4 +22,8 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
+  <PropertyGroup>
+    <Features>$(Features);updated-memory-safety-rules</Features>
+  </PropertyGroup>
+
 </Project>

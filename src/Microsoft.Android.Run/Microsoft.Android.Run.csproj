@@ -9,6 +9,7 @@
     <RootNamespace>Microsoft.Android.Run</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Features>$(Features);updated-memory-safety-rules</Features>
     <DebugType>portable</DebugType>
     <RollForward>Major</RollForward>
     <StartupHookSupport>false</StartupHookSupport>
