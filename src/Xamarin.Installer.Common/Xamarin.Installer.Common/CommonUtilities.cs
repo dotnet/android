@@ -303,8 +303,11 @@ namespace Xamarin.Installer.Common
 			return null;
 		}
 
+		/// <safety>
+		/// <paramref name="shortPathLength"/> must not exceed <paramref name="shortPath"/>'s capacity.
+		/// </safety>
 		[DllImport ("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-		static extern uint GetShortPathName (
+		static extern unsafe uint GetShortPathName (
 			[MarshalAs (UnmanagedType.LPTStr)] string longPath,
 			[MarshalAs (UnmanagedType.LPTStr)] StringBuilder shortPath,
 			uint shortPathLength);
@@ -319,7 +322,11 @@ namespace Xamarin.Installer.Common
 
 			var sb = new StringBuilder (SHORT_PATH_BUFFER_LENGTH);
 			try {
-				uint result = GetShortPathName (path, sb, SHORT_PATH_BUFFER_LENGTH);
+				uint result;
+				unsafe {
+					// SAFETY: sb was allocated with the same capacity passed to the native function.
+					result = GetShortPathName (path, sb, SHORT_PATH_BUFFER_LENGTH);
+				}
 				if (result == 0) {
 					int error = Marshal.GetLastWin32Error ();
 					Logger.Warning ("failed to retrieve short path name for '{0}'. Long path form will be used instead. Error: {1}", path, error);

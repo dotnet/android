@@ -9,6 +9,7 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <UseAppHost>false</UseAppHost>
+    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
 
   <PropertyGroup>

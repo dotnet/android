@@ -12,6 +12,7 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>$(DefineConstants);JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
+    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
 
   <PropertyGroup>

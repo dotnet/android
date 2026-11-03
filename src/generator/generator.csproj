@@ -10,6 +10,7 @@
     <OutputType>Exe</OutputType>
     <UseAppHost>false</UseAppHost>
     <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
 
   <PropertyGroup>

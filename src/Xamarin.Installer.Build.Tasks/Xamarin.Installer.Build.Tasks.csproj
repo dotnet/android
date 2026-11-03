@@ -2,6 +2,7 @@
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
     <NoWarn>$(NoWarn);CA1305</NoWarn>
+    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
