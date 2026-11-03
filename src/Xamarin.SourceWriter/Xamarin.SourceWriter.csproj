@@ -9,6 +9,7 @@
     <OutputPath>$(BuildOutputDirectory)$(DotNetStableTargetFramework)\</OutputPath>
 
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
 
 </Project>

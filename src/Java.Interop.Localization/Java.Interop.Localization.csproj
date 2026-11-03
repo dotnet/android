@@ -13,6 +13,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <Features>$(Features);updated-memory-safety-rules</Features>
   </PropertyGroup>
 
   <ItemGroup>
