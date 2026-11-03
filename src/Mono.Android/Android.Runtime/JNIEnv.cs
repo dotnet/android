@@ -970,7 +970,10 @@ namespace Android.Runtime {
 				} },
 				{ typeof (Android.Graphics.Color), (type, source, index) => {
 					var r = new int [1];
-					_GetIntArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live primitive element; r has exactly one destination slot.
+						_GetIntArrayRegion (source, index, 1, r);
+					}
 					return new Android.Graphics.Color (r [0]);
 				} },
 				{ typeof (long), (type, source, index) => {
@@ -1508,7 +1511,10 @@ namespace Android.Runtime {
 		static void CopyColorArray (IntPtr source, Android.Graphics.Color[] colors)
 		{
 			var values = new int [colors.Length];
-			_GetIntArrayRegion (source, 0, values.Length, values);
+			unsafe {
+				// SAFETY: source is the matching live JNI array and values bounds the complete primitive copy.
+				_GetIntArrayRegion (source, 0, values.Length, values);
+			}
 			for (int i = 0; i < colors.Length; i++)
 				colors [i] = new Android.Graphics.Color (values [i]);
 		}
@@ -2251,7 +2257,10 @@ namespace Android.Runtime {
 				} },
 				{ typeof (Android.Graphics.Color), (dest, index, value) => {
 					var _value = new [] { ((Android.Graphics.Color) value!).ToArgb () };
-					_SetIntArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live primitive element; _value has exactly one source slot.
+						_SetIntArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (long), (dest, index, value) => {
 					var _value = new[]{(long) value!};
