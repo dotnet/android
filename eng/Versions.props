@@ -17,6 +17,7 @@
     <!-- Previous .NET Android version -->
     <MicrosoftNETSdkAndroidManifest110100rc2PackageVersion>37.2.0-rc.2.84</MicrosoftNETSdkAndroidManifest110100rc2PackageVersion>
     <AndroidNetPreviousVersion>$(MicrosoftNETSdkAndroidManifest110100rc2PackageVersion)</AndroidNetPreviousVersion>
+    <AndroidNetPreviousILLinkVersion>11.0.0-rc.2.26504.105</AndroidNetPreviousILLinkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->

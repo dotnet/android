@@ -9,6 +9,10 @@
   </ImportGroup>
 
   <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '11.0')) ">
+    <!-- The initial .NET 12 SDK bundles a preview linker incompatible with the .NET 11 Android RC2 steps. -->
+    <KnownILLinkPack Update="Microsoft.NET.ILLink.Tasks">
+      <ILLinkPackVersion Condition=" '%(KnownILLinkPack.TargetFramework)' == 'net11.0' and '%(KnownILLinkPack.ILLinkPackVersion)' == '11.0.0-preview.7.26381.103' ">@NET_PREVIOUS_ILLINK_VERSION@</ILLinkPackVersion>
+    </KnownILLinkPack>
     <KnownFrameworkReference
         Update="Microsoft.Android;Microsoft.Android.Runtimes"
         LatestRuntimeFrameworkVersion="@NET_PREVIOUS_VERSION@"
