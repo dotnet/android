@@ -5,9 +5,10 @@ namespace Java.Interop;
 
 [ExtendedLayout (ExtendedLayoutKind.CStruct)]
 internal struct JniObjectReferenceControlBlock {
-	public	IntPtr  handle;
-	public  int     handle_type;
-	public  int     refs_added;
+	// SAFETY: C layout contains only non-overlapping scalar fields; address access does not dereference the handle.
+	public	safe IntPtr  handle;
+	public  safe int     handle_type;
+	public  safe int     refs_added;
 
 	public  static  readonly    int Size    = Marshal.SizeOf<JniObjectReferenceControlBlock>();
 

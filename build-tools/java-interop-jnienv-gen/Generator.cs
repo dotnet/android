@@ -120,17 +120,18 @@ namespace Xamarin.Java.Interop
 
 			o.WriteLine ("\t[ExtendedLayout (ExtendedLayoutKind.CStruct)]");
 			o.WriteLine ("\tpartial struct JNIEnv {");
+			o.WriteLine ("\t\t// SAFETY: Fields store non-overlapping addresses; native access and invocation remain in caller-validated unsafe contexts.");
 
 			for (int i = 0; i < 4; i++)
-				o.WriteLine ("\t\tprivate IntPtr  reserved{0};                      // void*", i);
+				o.WriteLine ("\t\tprivate safe IntPtr  reserved{0};                      // void*", i);
 
 			foreach (var e in JNIEnvEntries) {
 				if (e.Parameters.Length > 0 &&
 						"va_list" == e.Parameters [e.Parameters.Length-1].Type.GetManagedType (isReturn: false, isPinvoke: true)) {
-					o.WriteLine ("\t\tpublic  IntPtr  {0};{1}  // {2}", e.Name, new string (' ', maxName - e.Name.Length), e.Prototype);
+					o.WriteLine ("\t\tpublic safe IntPtr  {0};{1}  // {2}", e.Name, new string (' ', maxName - e.Name.Length), e.Prototype);
 					continue;
 				}
-				o.Write ("\t\tpublic  delegate* unmanaged <IntPtr /* env */");
+				o.Write ("\t\tpublic safe delegate* unmanaged <IntPtr /* env */");
 				foreach (var p in e.Parameters) {
 					o.Write (", ");
 					o.Write (p.Type.GetMarshalType (isReturn: false, isPinvoke: true));

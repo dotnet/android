@@ -12,8 +12,9 @@ internal struct HandleContext
 	static readonly nuint Size = (nuint)Marshal.SizeOf<HandleContext> ();
 	static readonly Dictionary<IntPtr, GCHandle> referenceTrackingHandles = new ();
 
-	int identityHashCode;
-	IntPtr controlBlock;
+	// SAFETY: Scalar storage does not dereference controlBlock; access to its allocation remains separately guarded.
+	safe int identityHashCode;
+	safe IntPtr controlBlock;
 
 	public int PeerIdentityHashCode => identityHashCode;
 	public bool IsCollected
@@ -80,9 +81,10 @@ internal struct HandleContext
 	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	internal struct JniObjectReferenceControlBlock
 	{
-		public IntPtr handle;
-		public int handle_type;
-		public int refs_added;
+		// SAFETY: This C-layout mirror contains only non-overlapping scalar values.
+		public safe IntPtr handle;
+		public safe int handle_type;
+		public safe int refs_added;
 	}
 
 	public static GCHandle GetAssociatedGCHandle (HandleContext* context)

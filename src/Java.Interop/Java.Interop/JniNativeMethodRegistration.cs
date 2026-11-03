@@ -29,9 +29,10 @@ namespace Java.Interop {
 	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	public struct JniNativeMethod
 	{
-		byte* name;
-		byte* signature;
-		IntPtr functionPointer;
+		// SAFETY: Field access stores or copies addresses; pointee access and callback invocation have separate contracts.
+		safe byte* name;
+		safe byte* signature;
+		safe IntPtr functionPointer;
 
 		/// <remarks>
 		/// This constructor stores addresses without reading their memory or invoking the callback.
