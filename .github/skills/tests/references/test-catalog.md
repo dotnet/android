@@ -43,14 +43,6 @@ It uses the production raw-only envelope reader and checks compressed/truncated 
 On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 
-The modern build-task `FastDevAssemblyReadTests` compiles the production CoreCLR
-Debug assembly reader with injected `read`/`openat`/`close` boundaries. It covers
-short reads, EINTR, early EOF, saved syscall errors, invalid sizes, and descriptor
-cleanup using AddressSanitizer and UndefinedBehaviorSanitizer. Run it with
-`dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj --filter "FullyQualifiedName~FastDevAssemblyReadTests"`.
-It requires a C++23 compiler (`clang++`, or `CXX`) on macOS/Linux. This focused
-host coverage does not replace CoreCLR Debug/FastDev device validation.
-
 ---
 
 The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite

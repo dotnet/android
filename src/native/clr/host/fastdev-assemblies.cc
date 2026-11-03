@@ -29,7 +29,6 @@ namespace {
 	// CoreCLR borrows external probe data; it neither copies nor releases it. Keep the first
 	// successful snapshot of each name until process exit, including across collectible loads.
 	// Protected by FastDevAssemblies::override_dir_lock.
-	// See Documentation/guides/fastdev-assembly-ownership.md.
 	assembly_data *loaded_assemblies = nullptr;
 
 }
@@ -109,7 +108,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
-	size = static_cast<int64_t>(file_size.value ());
+	size_t assembly_size = file_size.value ();
 	int asm_fd = openat (override_dir_fd, name.data (), O_RDONLY);
 	if (asm_fd < 0) {
 		log_warnf (
@@ -119,11 +118,10 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			strerror (errno)
 		);
 
-		size = 0;
 		return nullptr;
 	}
 
-	auto buffer = static_cast<uint8_t*> (std::malloc (file_size.value ()));
+	auto buffer = static_cast<uint8_t*> (std::malloc (assembly_size));
 	if (buffer == nullptr) [[unlikely]] {
 		log_warnf (
 			LOG_ASSEMBLY,
@@ -134,14 +132,13 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		if (close (asm_fd) < 0) {
 			log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
 		}
-		size = 0;
 		return nullptr;
 	}
 
 	size_t nread = 0;
 	int read_errno = 0;
-	while (nread < file_size.value ()) {
-		size_t read_count = file_size.value () - nread;
+	while (nread < assembly_size) {
+		size_t read_count = assembly_size - nread;
 		if (read_count > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
 			read_count = static_cast<size_t>(std::numeric_limits<ssize_t>::max ());
 		}
@@ -152,20 +149,17 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			continue;
 		}
 
-		if (r < 0) {
-			read_errno = errno;
-			if (read_errno == EINTR) {
-				read_errno = 0;
-				continue;
-			}
+		if (r < 0 && errno == EINTR) {
+			continue;
 		}
+		read_errno = r < 0 ? errno : 0;
 		break;
 	}
 	if (close (asm_fd) < 0) {
 		log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
 	}
 
-	if (nread != file_size.value ()) [[unlikely]] {
+	if (nread != assembly_size) [[unlikely]] {
 		std::free (buffer);
 
 		if (read_errno != 0) {
@@ -180,11 +174,10 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 				LOG_ASSEMBLY,
 				"Failed to read FastDev assembly '%.*s' data: unexpected end of file after %zu of %zu bytes",
 				static_cast<int>(name.length ()), name.data (),
-				nread, file_size.value ()
+				nread, assembly_size
 			);
 		}
 
-		size = 0;
 		return nullptr;
 	}
 	log_debugf (LOG_ASSEMBLY, "Read %zu bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
@@ -196,7 +189,6 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	}
 
 	size_t entry_size = Helpers::add_with_overflow_check<size_t> (sizeof (assembly_data), name.length ());
-	entry_size = Helpers::add_with_overflow_check<size_t> (entry_size, 1uz);
 	auto entry = static_cast<assembly_data*> (std::malloc (entry_size));
 	if (entry == nullptr) [[unlikely]] {
 		log_warnf (
@@ -205,20 +197,18 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			static_cast<int>(name.length ()), name.data ()
 		);
 		std::free (buffer);
-		size = 0;
 		return nullptr;
 	}
 
-	char *entry_name = reinterpret_cast<char*> (entry + 1);
-	memcpy (entry_name, name.data (), name.length ());
-	entry_name [name.length ()] = '\0';
+	memcpy (entry + 1, name.data (), name.length ());
 	entry->next = loaded_assemblies;
 	entry->data = buffer;
-	entry->size = size;
+	entry->size = static_cast<int64_t>(assembly_size);
 	entry->name_length = name.length ();
 	loaded_assemblies = entry;
 
-	return reinterpret_cast<void*>(buffer);
+	size = entry->size;
+	return buffer;
 }
 
 auto FastDevAssemblies::build_tpa_list () noexcept -> char*
