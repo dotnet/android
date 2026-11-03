@@ -200,6 +200,54 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		AssertTargetFramework (11);
 	}
 
+	[TestCase (10, true)]
+	[TestCase (10, false)]
+	[TestCase (12, true)]
+	[TestCase (12, false)]
+	public void DesignTimeTargetRetargetingRegeneratesDesigner (int originalVersion, bool isApplication)
+	{
+		string targets = Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (), "src", "Xamarin.Android.Build.Tasks",
+			"MSBuild", "Xamarin", "Android", "Xamarin.Android.Resource.Designer.targets");
+		string projectPath = Path.Combine (DirectoryPath, "designer.proj");
+		File.WriteAllText (Path.Combine (DirectoryPath, "case_map.txt"), "");
+		File.SetLastWriteTimeUtc (RtxtPath, DateTime.UtcNow.AddMinutes (-1));
+		var rtxtTimestamp = File.GetLastWriteTimeUtc (RtxtPath);
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup",
+				new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GenerateResourceDesignerAssembly).Assembly.Location),
+				new XElement ("AndroidUseDesignerAssembly", "True"),
+				new XElement ("DesignTimeBuild", "True"),
+				new XElement ("Deterministic", "True"),
+				new XElement ("TargetFrameworkIdentifier", ".NETCoreApp"),
+				new XElement ("AndroidApplication", isApplication),
+				new XElement ("AssemblyName", "TestApp"),
+				new XElement ("ProjectDir", DirectoryPath),
+				new XElement ("MonoAndroidResourcePrefix", "res"),
+				new XElement ("_DesignerIntermediateOutputPath", DirectoryPath + Path.DirectorySeparatorChar)),
+			new XElement ("ItemGroup", new XElement ("AndroidResource", new XAttribute ("Include", RtxtPath))),
+			new XElement ("Import", new XAttribute ("Project", targets)),
+			new XElement ("Target", new XAttribute ("Name", "_GenerateResourceCaseMap"))))
+			.Save (projectPath);
+
+		foreach (int version in new [] { originalVersion, 11, originalVersion }) {
+			BuildDesigner (version);
+			AssertTargetFramework (version);
+			var timestamp = File.GetLastWriteTimeUtc (OutputPath);
+			Assert.Less (rtxtTimestamp, timestamp, "The unchanged R.txt must remain older than the designer.");
+			var image = File.ReadAllBytes (OutputPath);
+			string output = BuildDesigner (version);
+			StringAssert.Contains ("Skipping target \"_GenerateResourceDesignerAssembly\"", output, "An unchanged framework should skip generation.");
+			AssertTargetFramework (version);
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (OutputPath), "A no-op build should preserve the designer timestamp.");
+			CollectionAssert.AreEqual (image, File.ReadAllBytes (OutputPath), "A no-op build should preserve the designer contents.");
+			Assert.AreEqual (rtxtTimestamp, File.GetLastWriteTimeUtc (RtxtPath), "Retargeting should not touch R.txt.");
+		}
+
+		string BuildDesigner (int version) => RunMSBuild ("dotnet", "msbuild", projectPath,
+			"-t:_SetupDesignerProperties;_GenerateResourceDesignerAssembly", $"-p:TargetFrameworkVersion=v{version}.0",
+			"-nologo", "-v:diagnostic", "-nr:false");
+	}
+
 	void AssertTargetFramework (int version)
 	{
 		using var stream = File.OpenRead (OutputPath);
