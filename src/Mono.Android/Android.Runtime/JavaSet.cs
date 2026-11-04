@@ -55,14 +55,15 @@ namespace Android.Runtime {
 				// SAFETY: java.util.Set.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (GetType () == typeof (JavaSet)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashSet"u8)),
 							JniHandleOwnership.TransferLocalRef);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
 				}
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 
@@ -330,14 +331,15 @@ namespace Android.Runtime {
 				// SAFETY: java.util.Set.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (GetType () == typeof (JavaSet<T>)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashSet"u8)),
 							JniHandleOwnership.TransferLocalRef);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
 				}
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 

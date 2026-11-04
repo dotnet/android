@@ -151,6 +151,27 @@ namespace Android.Runtime {
 			}
 		}
 
+		/// <summary>Allocates a Java object without invoking its constructor, using a modified UTF-8 class name.</summary>
+		/// <safety>
+		/// jniClassName must have readable, unchanged NUL-terminated backing storage through this call,
+		/// including failure. Complete ASCII u8 literals satisfy this contract; copies and slices may not.
+		/// The span is not retained.
+		/// </safety>
+		public static unsafe IntPtr AllocObject (ReadOnlySpan<byte> jniClassName)
+		{
+			// SAFETY: The caller supplies terminated bytes; FindClass returns the owned class reference used through allocation.
+			IntPtr jniClass = unsafe (FindClass (jniClassName));
+			try {
+				// SAFETY: The class reference is live until the finally releases it; AllocObject returns a new local reference.
+				return unsafe (AllocObject (jniClass));
+			} finally {
+				unsafe {
+					// SAFETY: This call owns the global class reference returned by FindClass.
+					DeleteGlobalRef (jniClass);
+				}
+			}
+		}
+
 		/// <safety>
 		/// <paramref name="jclass"/> must be a live allocatable JNI class from this VM, usable on the current thread
 		/// until allocation returns or throws. No constructor ID or argument is read in this phase.
@@ -260,6 +281,33 @@ namespace Android.Runtime {
 			}
 		}
 
+		/// <summary>Invokes the allocated peer's constructor using a modified UTF-8 descriptor.</summary>
+		/// <safety>
+		/// jniCtorSignature must have readable, unchanged NUL-terminated backing storage through this call,
+		/// including failure. Complete ASCII u8 literals satisfy this contract; copies and slices may not.
+		/// instance must be a live allocated peer compatible with the constructor. constructorParameters must
+		/// address initialized JNI slots matching the descriptor, or be null for a zero-argument constructor.
+		/// Keep argument storage and referenced objects live and unchanged through the call.
+		/// Local references must belong to the calling thread. The span and arguments are not retained.
+		/// </safety>
+		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The caller keeps the constructor-compatible peer, descriptor and argument slots live through invocation.
+				InvokeConstructor (instance, jniCtorSignature, constructorParameters);
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params ReadOnlySpan<JValue> constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The span's backing storage is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
+				fixed (JValue* cp = constructorParameters)
+					FinishCreateInstance (instance, jniCtorSignature, cp);
+			}
+		}
+
 		/// <safety>
 		/// <paramref name="instance"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
 		/// <paramref name="jniCtorSignature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
@@ -292,6 +340,36 @@ namespace Android.Runtime {
 		{
 			unsafe {
 				// SAFETY: constructorParameters remains pinned until InvokeConstructor returns or throws; its entries and instance are the caller's matching constructor inputs.
+				fixed (JValue* cp = constructorParameters)
+					InvokeConstructor (instance, jniCtorSignature, cp);
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
+		{
+			// SAFETY: The caller keeps the compatible peer live; GetObjectClass returns an owned local class reference.
+			IntPtr lrefClass = unsafe (GetObjectClass (instance));
+			try {
+				// SAFETY: The class reference is live; the caller supplies a terminated descriptor and the literal supplies the name terminator.
+				var ctor = unsafe (JniEnvironment.InstanceMethods.GetMethodID (new JniObjectReference (lrefClass), "<init>"u8, jniCtorSignature));
+				unsafe {
+					// SAFETY: The resolved constructor matches the peer and caller-supplied argument ABI; all storage/references remain live.
+					CallNonvirtualVoidMethod (instance, lrefClass, ctor.ID, constructorParameters);
+				}
+			} finally {
+				unsafe {
+					// SAFETY: This call owns the current-thread local class reference returned by GetObjectClass.
+					DeleteLocalRef (lrefClass);
+				}
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params JValue[] constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The array is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
 				fixed (JValue* cp = constructorParameters)
 					InvokeConstructor (instance, jniCtorSignature, cp);
 			}
