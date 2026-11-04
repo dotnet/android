@@ -29,18 +29,13 @@ and [Architecture][architecture] pages.
 The standalone tooling build does not require a locally built Android SDK.
 For the Android product build, follow the enclosing repository's
 [build instructions](../../Documentation/README.md#building-from-source).
-Run the following commands from `external/Java.Interop/`.
-
-`Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:
-
-```console
-dotnet build -t:Prepare
-```
-
-Once `Java.Interop.slnx` has been prepared, build it with `dotnet`:
+Libraries and command-line tools live in the repository's top-level `src/`,
+tooling tests in `tests/`, and the JNI source generator in
+`build-tools/java-interop-jnienv-gen/`. There is no separate bootstrap project
+or Java.Interop preparation step. Build from the repository root:
 
 ```
-dotnet build
+dotnet build Java.Interop.slnx
 ```
 
 [net-10]: https://dotnet.microsoft.com/en-us/download/dotnet/10.0

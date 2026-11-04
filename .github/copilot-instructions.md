@@ -6,7 +6,7 @@
 - `src/Mono.Android/` - Android SDK bindings in C#
 - `src/Xamarin.Android.Build.Tasks/` - MSBuild tasks for Android apps  
 - `src/native/` - Native runtime (MonoVM/CoreCLR/NativeAOT)
-- `external/Java.Interop/` - JNI bindings and Java-to-.NET interop
+- `src/Java.Interop/`, `src/Java.Interop.Tools.*/` - JNI bindings and Java-to-.NET interop tooling
 - `src/Microsoft.Android.Build.BaseTasks/` - Shared MSBuild task infrastructure: `AndroidTask`, `AsyncTask`, NRT extensions, and common file/process utilities
 - `src/Xamarin.Android.Tools.AndroidSdk/` - Shared Android SDK/JDK discovery, `AdbRunner`, `EmulatorRunner`, and SDK info utilities
 - `tests/` - NUnit tests, integration tests, device tests

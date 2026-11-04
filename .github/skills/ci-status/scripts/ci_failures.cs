@@ -866,7 +866,12 @@ bool TouchesRuntime (List<string> files)
 	=> files.Any (file =>
 		file.StartsWith ("src/native/", StringComparison.Ordinal) ||
 		file.StartsWith ("src/Mono.Android/", StringComparison.Ordinal) ||
-		file.StartsWith ("external/Java.Interop/src/", StringComparison.Ordinal) ||
+		file.StartsWith ("src/Java.Interop", StringComparison.Ordinal) ||
+		file.StartsWith ("src/Xamarin.Android.Tools.AnnotationSupport/", StringComparison.Ordinal) ||
+		file.StartsWith ("src/Xamarin.Android.Tools.ApiXmlAdjuster/", StringComparison.Ordinal) ||
+		file.StartsWith ("src/Xamarin.Android.Tools.Bytecode/", StringComparison.Ordinal) ||
+		file.StartsWith ("src/Xamarin.SourceWriter/", StringComparison.Ordinal) ||
+		file.StartsWith ("src/utils/", StringComparison.Ordinal) ||
 		file.StartsWith ("src/monodroid/", StringComparison.Ordinal));
 
 string ExtractChangedPath (string message, List<string> files)
