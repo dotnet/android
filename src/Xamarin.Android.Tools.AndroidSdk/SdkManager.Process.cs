@@ -48,7 +48,6 @@ public partial class SdkManager
 				var capture = process.ReadAllTextAsync (execution.Token);
 				using var stdout = process.StandardOutput;
 				using var stderr = process.StandardError;
-				using var input = process.StandardInput;
 				var answers = AnswerLicensesAsync ();
 				try {
 					var status = await exit.WaitAsync (cancellationToken).ConfigureAwait (false);
@@ -78,12 +77,16 @@ public partial class SdkManager
 				async Task AnswerLicensesAsync ()
 				{
 					try {
-						while (!exit.IsCompleted) {
-							await input.WriteLineAsync ((acceptLicenses ? "y" : "n").AsMemory (), execution.Token).ConfigureAwait (false);
-							await Task.Delay (StdinPollDelayMs, execution.Token).ConfigureAwait (false);
+						try {
+							using var input = process.StandardInput;
+							while (!exit.IsCompleted) {
+								await input.WriteLineAsync ((acceptLicenses ? "y" : "n").AsMemory (), execution.Token).ConfigureAwait (false);
+								await Task.Delay (StdinPollDelayMs, execution.Token).ConfigureAwait (false);
+							}
+						} catch (IOException ex) {
+							// Closing stdin can precede exit; keep observing the command and its output.
+							logger (TraceLevel.Verbose, $"sdkmanager standard input closed: {ex.Message}");
 						}
-					} catch (IOException) when (process.HasExited) {
-						// The child can close stdin just before its native exit wait completes.
 					} catch {
 						execution.Cancel ();
 						throw;

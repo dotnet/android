@@ -47,8 +47,10 @@ the caller retains responsibility for terminating it.
 
 JDK discovery uses bounded native capture. SDK-manager and AVD creation own
 interactive stdin, start native capture before feeding input, and observe their
-input/exit tasks. Native line enumeration serializes instrumentation parsing and
-LLVM symbol filtering without an event pump or text-writer adapter.
+input/exit tasks. SDK-manager closing stdin ends answer feeding, not execution
+or output capture; the command's exit status still determines success.
+Native line enumeration serializes instrumentation parsing and LLVM symbol
+filtering without an event pump or text-writer adapter.
 
 Native text capture preserves CR/LF and trailing text but decodes with the selected
 encoding, rather than guessing a different encoding from a BOM. Applications

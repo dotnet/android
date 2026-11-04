@@ -68,6 +68,74 @@ public class SdkManagerTests
 		}
 	}
 
+	[TestCase (false, 0, false)]
+	[TestCase (false, 1, false)]
+	[TestCase (true, 0, false)]
+	[TestCase (true, 7, false)]
+	[TestCase (false, 0, true)]
+	[TestCase (true, 0, true)]
+	[Platform ("Linux,MacOsX")]
+	public async Task LicenseCommandsAsync_AllowStandardInputToCloseBeforeExit (bool acceptLicenses, int exitCode, bool cancel)
+	{
+		var root = Path.Combine (Path.GetTempPath (), $"sdk-license-{Guid.NewGuid ():N}");
+		var bin = Path.Combine (root, "cmdline-tools", "latest", "bin");
+		Directory.CreateDirectory (bin);
+		var executable = Path.Combine (bin, "sdkmanager");
+		try {
+			File.WriteAllText (executable, $$"""
+				#!/bin/sh
+				printf 'License test-license:\n'
+				IFS= read -r answer
+				printf '%s\n' "$answer" > "$0.answer"
+				exec 0<&-
+				sleep 2
+				printf 'license terms\nAccept? (y/N):\n'
+				printf 'late sdkmanager diagnostic\n' >&2
+				printf 'completed\n' > "$0.completed"
+				exit {{exitCode}}
+				""");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			var inputClosed = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			if (cancel) {
+				manager.Dispose ();
+				manager = new SdkManager (logger: (level, message) => {
+					TestContext.WriteLine ($"[{level}] {message}");
+					if (message.StartsWith ("sdkmanager standard input closed:", StringComparison.Ordinal))
+						inputClosed.TrySetResult (true);
+				});
+			}
+			manager.AndroidSdkPath = root;
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (10));
+			if (cancel) {
+				Task operation = acceptLicenses ? manager.AcceptLicensesAsync (deadline.Token) : manager.GetPendingLicensesAsync (deadline.Token);
+				await inputClosed.Task.WaitAsync (deadline.Token);
+				deadline.Cancel ();
+				var error = Assert.CatchAsync<OperationCanceledException> (async () => await operation.WaitAsync (TimeSpan.FromSeconds (5)));
+				Assert.IsNotNull (error);
+				Assert.AreEqual (deadline.Token, error.CancellationToken);
+			} else if (acceptLicenses) {
+				if (exitCode == 0) {
+					await manager.AcceptLicensesAsync (deadline.Token);
+				} else {
+					var error = Assert.ThrowsAsync<InvalidOperationException> (() => manager.AcceptLicensesAsync (deadline.Token));
+					Assert.IsNotNull (error);
+					StringAssert.Contains ($"exit code {exitCode}", error.Message);
+					StringAssert.Contains ("late sdkmanager diagnostic", error.Message);
+				}
+			} else {
+				var licenses = await manager.GetPendingLicensesAsync (deadline.Token);
+				Assert.AreEqual (1, licenses.Count);
+				Assert.AreEqual ("test-license", licenses [0].Id);
+				Assert.AreEqual ("license terms", licenses [0].Text);
+			}
+			Assert.AreEqual (acceptLicenses ? "y" : "n", File.ReadAllText (executable + ".answer").Trim ());
+			Assert.AreEqual (!cancel, File.Exists (executable + ".completed"), "Only cancellation may stop sdkmanager after stdin closes.");
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
 	[Test]
 	public void ParseManifest_CmdlineTools_ReturnsComponents ()
 	{
