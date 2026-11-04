@@ -62,10 +62,11 @@ Use an MSBuild/CLI host supporting the selected framework.
 They are not supported in .NET Framework MSBuild or an older `dotnet` host.
 The workload retains its existing flat `tools/` and isolated `tools/net/` layout;
 both contain native-runtime-compatible dependencies. Unrelated BaseTasks,
-Installer.Common, Java.Interop libraries, and repository publishing tools keep
-their own target frameworks. Only Java.Interop bootstrap and bytecode-test
-consumers of this library require the native SDK's framework; the remaining
-standalone Java.Interop tools keep their independent target framework.
+Installer.Common and repository publishing tools keep their own target
+frameworks. Java.Interop libraries, tooling, and tests now use the repository's
+standard `src/`, `tests/`, and `build-tools/` layout and shared framework
+properties; the retired standalone bootstrap tasks and host overrides are not
+required.
 
 `System.Collections.Immutable` and `System.Reflection.Metadata` are supplied by
 the host framework, not copied into the workload's tooling directories. The
