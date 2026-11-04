@@ -7,7 +7,6 @@
 #include <host/host-common.hh>
 #include <host/gc-bridge.hh>
 #include <host/host-environment.hh>
-#include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/binary-blob-loader.hh>
 #include <runtime-base/app-system-properties.hh>
@@ -117,7 +116,6 @@ auto NativeAOT_JNI_OnLoad (JavaVM *vm, void*, JnienvInitializeArgs *initArgs) ->
 		HostEnvironment::set_system_property (property.name, property.value);
 	}
 
-	OSBridge::initialize_on_onload (vm);
 	AndroidSystem::init_max_gref_count ();
 
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
@@ -127,11 +125,10 @@ auto NativeAOT_JNI_OnLoad (JavaVM *vm, void*, JnienvInitializeArgs *initArgs) ->
 
 // Be VERY careful with what we do here - the managed runtime is not fully initialized
 // at the point this method is called.
-extern "C" void NativeAOT_OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvInitializeArgs *initArgs)
+extern "C" void NativeAOT_OnInit (JNIEnv *env, jstring language, jstring filesDir, jstring cacheDir, JnienvInitializeArgs *initArgs)
 {
+	abort_if_invalid_pointer_argument (env, "env");
 	abort_if_invalid_pointer_argument (initArgs, "initArgs");
-
-	JNIEnv *env = OSBridge::ensure_jnienv ();
 
 	// Give the wrappers their own references; the caller still needs its borrowed arguments.
 	auto language_js = duplicate_local_reference (env, language);

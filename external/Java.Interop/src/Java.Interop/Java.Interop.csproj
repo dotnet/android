@@ -15,6 +15,7 @@
     <!-- Required for safe explicit-layout fields and relaxed pointer declarations.
          Remove when the baseline language version supports this syntax without preview. -->
     <LangVersion>preview</LangVersion>
+    <Features>$(Features);updated-memory-safety-rules</Features>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>

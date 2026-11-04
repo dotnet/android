@@ -162,13 +162,14 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("JniUtf8Construction")]
 		public void ExportConstructor_ForwardsSuperArgumentsToJavaBase ()
 		{
 			TrimmableExportSuperArgsPeer.ConstructorInvocations = 0;
 
-			var handle = JNIEnv.StartCreateInstance (typeof (TrimmableExportSuperArgsPeer), "(I)V", new JValue (42));
+			var handle = JNIEnv.AllocObject (typeof (TrimmableExportSuperArgsPeer));
 			try {
-				JNIEnv.FinishCreateInstance (handle, "(I)V", new JValue (42));
+				JNIEnv.FinishCreateInstance (handle, "(I)V"u8, new JValue (42));
 				using var peer = Java.Lang.Object.GetObject<TrimmableExportSuperArgsPeer> (handle, JniHandleOwnership.DoNotTransfer);
 				Assert.IsNotNull (peer);
 

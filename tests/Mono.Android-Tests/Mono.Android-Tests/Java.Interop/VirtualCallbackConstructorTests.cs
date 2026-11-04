@@ -86,7 +86,7 @@ namespace Java.InteropTests
 		{
 			using var javaClass = VirtualCallbackConstructorDerived.GetJavaClass ();
 			var constructor = JNIEnv.GetMethodID (javaClass.Handle, "<init>", "(I)V");
-			var instance = JNIEnv.StartCreateInstance (javaClass.Handle, constructor, new JValue (value));
+			var instance = JNIEnv.AllocObject (javaClass.Handle);
 			JNIEnv.FinishCreateInstance (instance, javaClass.Handle, constructor, new JValue (value));
 			var result = Java.Lang.Object.GetObject<VirtualCallbackConstructorDerived> (
 				instance,
@@ -101,7 +101,7 @@ namespace Java.InteropTests
 			try {
 				using var javaClass = VirtualCallbackConstructorDerived.GetJavaClass ();
 				var constructor = JNIEnv.GetMethodID (javaClass.Handle, "<init>", "(I)V");
-				instance = JNIEnv.StartCreateInstance (javaClass.Handle, constructor, new JValue (value));
+				instance = JNIEnv.AllocObject (javaClass.Handle);
 				JNIEnv.FinishCreateInstance (instance, javaClass.Handle, constructor, new JValue (value));
 			} finally {
 				if (instance != IntPtr.Zero) {

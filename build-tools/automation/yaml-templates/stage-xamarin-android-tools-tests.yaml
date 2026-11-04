@@ -46,8 +46,7 @@ stages:
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.condition }}
   variables:
-    DotNetCoreVersion: $(DotNetSdkVersion).x
-    XatBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=$(DotNetSdkVersion)
+    XatBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=$(DotNetSdkChannel)
   jobs:
 
   # Check - "Xamarin.Android (Android Tools Tests Windows - .NET)"
@@ -71,9 +70,10 @@ stages:
       clean: true
 
     - task: UseDotNet@2
-      displayName: Use .NET Core $(DotNetCoreVersion)
+      displayName: Use .NET SDK $(DotNetSdkVersion)
       inputs:
-        version: $(DotNetCoreVersion)
+        version: $(DotNetSdkVersion)
+        includePreviewVersions: true
 
     - task: DotNetCoreCLI@2
       displayName: Build Android tools projects
@@ -123,9 +123,10 @@ stages:
       clean: true
 
     - task: UseDotNet@2
-      displayName: Use .NET Core $(DotNetCoreVersion)
+      displayName: Use .NET SDK $(DotNetSdkVersion)
       inputs:
-        version: $(DotNetCoreVersion)
+        version: $(DotNetSdkVersion)
+        includePreviewVersions: true
 
     - task: DotNetCoreCLI@2
       displayName: Build Android tools projects

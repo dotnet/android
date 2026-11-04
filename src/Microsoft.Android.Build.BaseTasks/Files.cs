@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -240,9 +241,26 @@ namespace Microsoft.Android.Build.Tasks
 
 		public static bool CopyIfStreamChanged (Stream stream, string destination)
 		{
-			int retryCount = 0;
 			int attempts = GetFileWriteRetryAttempts ();
 			int delay = GetFileWriteRetryDelay ();
+			return CopyIfStreamChanged (stream, destination, attempts, delay);
+		}
+
+		public static bool CopyIfStreamChanged (Stream stream, string destination, TaskEnvironment taskEnvironment)
+		{
+			if (taskEnvironment == null)
+				throw new ArgumentNullException (nameof (taskEnvironment));
+
+			int attempts = int.TryParse (taskEnvironment.GetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"), out int retries)
+				? retries : DEFAULT_FILE_WRITE_RETRY_ATTEMPTS;
+			int delay = int.TryParse (taskEnvironment.GetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"), out int milliseconds)
+				? milliseconds : DEFAULT_FILE_WRITE_RETRY_DELAY_MS;
+			return CopyIfStreamChanged (stream, destination, attempts, delay);
+		}
+
+		static bool CopyIfStreamChanged (Stream stream, string destination, int attempts, int delay)
+		{
+			int retryCount = 0;
 			while (retryCount <= attempts) {
 				try {
 					return CopyIfStreamChangedOnce (stream, destination);

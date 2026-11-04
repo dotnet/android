@@ -1,12 +1,12 @@
 #nullable enable
-using System;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
-public class GeneratePackageManagerJava : AndroidTask
+[MSBuildMultiThreadableTask]
+public class GeneratePackageManagerJava : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GPM";
 
@@ -36,9 +36,9 @@ public class GeneratePackageManagerJava : AndroidTask
 			pkgmgr.Flush ();
 
 			// Only copy to the real location if the contents actually changed
-			var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
+			var dest = TaskEnvironment.GetAbsolutePath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
 
-			Files.CopyIfStreamChanged (pkgmgr.BaseStream, dest);
+			Files.CopyIfStreamChanged (pkgmgr.BaseStream, dest, TaskEnvironment);
 		}
 
 		return !Log.HasLoggedErrors;

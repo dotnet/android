@@ -12,8 +12,7 @@ internal struct JniObjectReferenceControlBlock {
 	public  static  readonly    int Size    = Marshal.SizeOf<JniObjectReferenceControlBlock>();
 
 	/// <remarks>The returned zeroed native allocation belongs to the peer and must be released with Free.</remarks>
-	// Note: Remove unsafe with the memory-safety opt-in; required only for legacy pointer syntax.
-	public static unsafe JniObjectReferenceControlBlock* Alloc (JniObjectReference reference)
+	public static JniObjectReferenceControlBlock* Alloc (JniObjectReference reference)
 	{
 		unsafe {
 			// SAFETY: Allocate exactly one complete block before initializing its scalar fields; no caller buffer is read.

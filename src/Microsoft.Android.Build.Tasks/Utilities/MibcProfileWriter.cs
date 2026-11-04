@@ -10,8 +10,10 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Writes a MIBC (Managed Instrumented Binary Code) profile that lists every compilable method
@@ -51,13 +53,15 @@ class MibcProfileWriter
 	readonly BlobBuilder ilBuilder = new BlobBuilder ();
 	readonly MethodBodyStreamEncoder methodBodies;
 	readonly Action<string>? log;
+	readonly TaskEnvironment taskEnvironment;
 
 	readonly Dictionary<string, AssemblyReferenceHandle> assemblyRefs = new Dictionary<string, AssemblyReferenceHandle> (StringComparer.Ordinal);
 	// Keyed by metadata token from the assembly currently being scanned; cleared per assembly.
 	readonly Dictionary<int, EntityHandle> typeRefs = new Dictionary<int, EntityHandle> ();
 
-	MibcProfileWriter (Action<string>? log)
+	MibcProfileWriter (TaskEnvironment taskEnvironment, Action<string>? log)
 	{
+		this.taskEnvironment = taskEnvironment;
 		this.log = log;
 		methodBodies = new MethodBodyStreamEncoder (ilBuilder);
 	}
@@ -71,15 +75,16 @@ class MibcProfileWriter
 	/// (normally <c>.mibc</c>) writes the zip-compressed form.
 	/// </param>
 	/// <param name="log">Optional callback receiving diagnostic messages.</param>
+	/// <param name="taskEnvironment">The task's project-relative file environment.</param>
 	/// <returns>The number of methods written into the profile.</returns>
-	public static int Write (IEnumerable<string> assemblies, string outputPath, Action<string>? log = null)
+	public static int Write (IEnumerable<string> assemblies, string outputPath, TaskEnvironment taskEnvironment, Action<string>? log = null)
 	{
 		if (assemblies is null)
 			throw new ArgumentNullException (nameof (assemblies));
 		if (outputPath is null)
 			throw new ArgumentNullException (nameof (outputPath));
 
-		return new MibcProfileWriter (log).WriteCore (assemblies, outputPath);
+		return new MibcProfileWriter (taskEnvironment, log).WriteCore (assemblies, outputPath);
 	}
 
 	int WriteCore (IEnumerable<string> assemblies, string outputPath)
@@ -190,7 +195,7 @@ class MibcProfileWriter
 	{
 		int methodCount = 0;
 
-		using var stream = File.OpenRead (path);
+		using var stream = File.OpenRead (taskEnvironment.GetAbsolutePath (path));
 		using var peReader = new PEReader (stream);
 
 		MetadataReader reader = peReader.GetMetadataReader ();
@@ -528,15 +533,15 @@ class MibcProfileWriter
 
 		string? directory = Path.GetDirectoryName (outputPath);
 		if (!directory.IsNullOrEmpty ())
-			Directory.CreateDirectory (directory);
+			Directory.CreateDirectory (taskEnvironment.GetAbsolutePath (directory));
 
 		if (string.Equals (Path.GetExtension (outputPath), ".dll", StringComparison.OrdinalIgnoreCase)) {
-			using var file = File.Create (outputPath);
+			using var file = File.Create (taskEnvironment.GetAbsolutePath (outputPath));
 			peBlob.WriteContentTo (file);
 			return;
 		}
 
-		using var archiveStream = File.Create (outputPath);
+		using var archiveStream = File.Create (taskEnvironment.GetAbsolutePath (outputPath));
 		using var archive = new ZipArchive (archiveStream, ZipArchiveMode.Create);
 		// crossgen2 looks for an entry named "<mibc file name>.dll".
 		ZipArchiveEntry entry = archive.CreateEntry (Path.GetFileName (outputPath) + ".dll", CompressionLevel.Optimal);

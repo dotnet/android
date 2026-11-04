@@ -1,6 +1,6 @@
 # Instructions for AIs
 
-**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 11**.
+**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 12**.
 
 ## Architecture
 - `src/Mono.Android/` - Android SDK bindings in C#
@@ -16,8 +16,8 @@
 ## Essential Commands
 - **Build:** `./build.sh` or `build.cmd`
 - **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` 
-- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net10.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
-- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net10.0/MSBuildDeviceIntegration.dll`
+- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
+- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll`
 
 The test assembly framework comes from `DotNetStableTargetFramework` in `Directory.Build.props`. On macOS/Linux, use `./dotnet-local.sh` instead of `dotnet-local.cmd`.
 
@@ -67,6 +67,14 @@ Reference official Android documentation where helpful:
 **API Bindings:** Use `[Register]` attributes, follow `Android.*` namespace patterns.
 
 **Native Code:** Use CMake, handle multiple ABIs (arm64-v8a, armeabi-v7a, x86_64, x86).
+
+## Unsafe C# and Memory Safety
+
+Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices) for affected unsafe code; do not scan the repository unless asked. For caller contracts and safety documentation, see [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/).
+
+- Prefer `unsafe (expression)` for single value-producing operations, including getters, ref returns and `using` acquisition. Keep managed comparisons/hash/formatting outside; retain blocks for pinning, void calls and multiple statements.
+- Under the new rules, caller-unsafe members still need body contexts. Keep `// SAFETY:` proofs adjacent; use multiline `/// <safety>` for caller obligations.
+- Respect producer/consumer language modes, including generated code. Inline expressions need pinned-compiler preview; never enable preview just for syntax. Preserve behavior and lifetimes.
 
 ## Nullable Reference Types
 

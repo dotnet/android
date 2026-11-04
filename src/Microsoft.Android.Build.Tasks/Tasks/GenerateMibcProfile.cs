@@ -4,7 +4,7 @@ using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Generates a MIBC profile listing the methods of the "main app assembly" so that
@@ -13,7 +13,8 @@ namespace Xamarin.Android.Tasks;
 /// This runs after ILLink has trimmed the application, but before crossgen2 runs, so the profile
 /// only ever contains methods that survived trimming.
 /// </summary>
-public class GenerateMibcProfile : AndroidTask
+[MSBuildMultiThreadableTask]
+public class GenerateMibcProfile : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GMP";
 
@@ -29,12 +30,13 @@ public class GenerateMibcProfile : AndroidTask
 
 	public override bool RunTask ()
 	{
-		if (!File.Exists (MainAssembly)) {
+		string mainAssembly = TaskEnvironment.GetAbsolutePath (MainAssembly);
+		if (!File.Exists (mainAssembly)) {
 			Log.LogDebugMessage ($"Skipping MIBC profile generation, '{MainAssembly}' does not exist.");
 			return !Log.HasLoggedErrors;
 		}
 
-		int methods = MibcProfileWriter.Write ([MainAssembly], OutputFile, message => Log.LogDebugMessage ("{0}", message));
+		int methods = MibcProfileWriter.Write ([MainAssembly], OutputFile, TaskEnvironment, message => Log.LogDebugMessage ("{0}", message));
 		Log.LogDebugMessage ($"Wrote {methods} method(s) to '{OutputFile}'.");
 
 		return !Log.HasLoggedErrors;

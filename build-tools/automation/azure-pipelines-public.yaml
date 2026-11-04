@@ -497,7 +497,6 @@ stages:
         xaSourcePath: $(Build.SourcesDirectory)/android
         androidSdkPlatforms: $(DefaultTestSdkPlatforms)
         dotnetVersion: $(DotNetSdkVersion)
-        dotnetQuality: $(DotNetSdkQuality)
         jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
         useAgentJdkPath: true
         use1ESTemplate: false

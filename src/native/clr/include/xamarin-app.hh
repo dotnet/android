@@ -155,6 +155,7 @@ struct DSOCacheEntry
 	const bool      ignore;
 	const bool      is_jni_library;
 	const uint32_t  name_index;
+	const uint32_t  alias_index;
 	void           *handle;
 };
 

@@ -16,6 +16,8 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
+    <!-- Linked AssemblyCompression.cs uses LZ4 when NET11_0_OR_GREATER enables decompression. -->
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
@@ -48,10 +50,6 @@
     </Content>
     <Content Include="Expected\GenerateDesignerFileWithLibraryReferenceExpected.cs">
       <Link>..\Expected\GenerateDesignerFileWithLibraryReferenceExpected.cs</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Expected\CheckPackageManagerAssemblyOrder.java">
-      <Link>..\Expected\CheckPackageManagerAssemblyOrder.java</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

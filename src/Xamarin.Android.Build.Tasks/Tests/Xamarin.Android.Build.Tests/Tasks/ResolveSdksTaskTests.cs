@@ -346,7 +346,7 @@ namespace Xamarin.Android.Build.Tests {
 						AndroidSdkDirectory = "sdk",
 						ReferenceAssemblyPaths = ["references"],
 						AndroidApiLevel = "36",
-						TargetFramework = "net11.0-android",
+						TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android",
 						SupportedOSPlatformVersion = "24.0",
 					};
 					Assert.IsTrue (task.Execute ());

@@ -54,7 +54,7 @@ namespace Java.Interop {
 
 			public string SourceName { get; }
 			public string? TargetName { get; }
-			public unsafe byte* TargetNameUtf8 { get; }
+			public byte* TargetNameUtf8 { get; }
 		}
 
 		static JniPeerTypeNameInfo GetReplacementType (string jniPeerTypeName)
@@ -118,7 +118,7 @@ namespace Java.Interop {
 		JniType?            jniPeerType;
 		string              sourceJniPeerTypeName;
 		string?             jniPeerTypeName;
-		unsafe byte*        jniPeerTypeNameUtf8;
+		byte*               jniPeerTypeNameUtf8;
 		JniInstanceMethods  instanceMethods;
 		JniInstanceFields   instanceFields;
 		JniStaticMethods    staticMethods;
