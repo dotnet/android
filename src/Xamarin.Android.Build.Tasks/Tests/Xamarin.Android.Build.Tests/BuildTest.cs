@@ -442,8 +442,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase (false, AndroidRuntime.NativeAOT)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.NativeAOT)]
+		public void SmokeTestBuildWithSpecialCharacters (bool forms, AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;

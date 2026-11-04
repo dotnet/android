@@ -9,8 +9,8 @@ using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[TestFixtureSource(nameof(Get_FixtureArgs))]
+	[TestFixture (AndroidRuntime.CoreCLR)]
+	[TestFixture (AndroidRuntime.NativeAOT)]
 	[Category ("XamarinBuildDownload")]
 	public class BundleToolTests : DeviceTest
 	{
@@ -20,7 +20,6 @@ namespace Xamarin.Android.Build.Tests
 		ProjectBuilder libBuilder, appBuilder;
 		string intermediate;
 		string bin;
-		bool usesAssemblyBlobs;
 		readonly AndroidRuntime runtime;
 
 		// Disable split by language
@@ -42,41 +41,21 @@ namespace Xamarin.Android.Build.Tests
 	}
 }";
 
-		static IEnumerable<object[]> Get_FixtureArgs ()
+		public BundleToolTests (AndroidRuntime runtime)
 		{
-			object[] fixtureArgs = {
-				new object[] { false },
-				new object[] { true },
-			};
-			var ret = new List<object[]> ();
-
-			foreach (object[] args in fixtureArgs) {
-				foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-					ret.Add (new object[] {
-						args[0],
-						runtime,
-					});
-				}
-			}
-
-			return ret;
-		}
-
-		public BundleToolTests (bool usesAssemblyBlobs, AndroidRuntime runtime)
-		{
-			this.usesAssemblyBlobs = usesAssemblyBlobs;
 			this.runtime = runtime;
 		}
 
-		[OneTimeSetUp]
-		public void OneTimeSetUp ()
+		// Keep these checks in one case so CI slicing cannot repeat the project builds.
+		[Test, Category ("UsesDevice")]
+		public void BundleArtifacts ()
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			var path = Path.Combine ("temp", TestName);
+			var path = Path.Combine ("temp", $"{TestName}{runtime}");
 			lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
 				IsRelease = isRelease,
@@ -91,7 +70,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			lib.SetRuntime (runtime);
-			lib.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			var bytes = new byte [1024];
 			app = new XamarinFormsMapsApplicationProject {
@@ -119,7 +97,6 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
 			app.SetRuntimeIdentifiers (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
-			app.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
 			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
@@ -129,6 +106,13 @@ namespace Xamarin.Android.Build.Tests
 			var projectDir = Path.Combine (Root, appBuilder.ProjectDirectory);
 			intermediate = Path.Combine (projectDir, app.IntermediateOutputPath);
 			bin = Path.Combine (projectDir, app.OutputPath);
+
+			Assert.Multiple (() => {
+				CheckBaseZip ();
+				CheckAppBundle ();
+				CheckAppBundleSigned ();
+				CheckApkSet ();
+			});
 		}
 
 		[TearDown]
@@ -141,11 +125,6 @@ namespace Xamarin.Android.Build.Tests
 				if (appBuilder != null)
 					appBuilder.CleanupOnDispose = false;
 			}
-		}
-
-		[OneTimeTearDown]
-		public void OneTimeTearDown ()
-		{
 			libBuilder?.Dispose ();
 			appBuilder?.Dispose ();
 		}
@@ -158,16 +137,10 @@ namespace Xamarin.Android.Build.Tests
 			return entries.ToArray ();
 		}
 
-		[Test]
-		public void BaseZip ()
+		void CheckBaseZip ()
 		{
-			if (runtime == AndroidRuntime.CoreCLR && !usesAssemblyBlobs) {
-				Assert.Ignore ("CoreCLR does not support builds without assembly stores");
-				return;
-			}
-
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
-			var contents = ListArchiveContents (baseZip, usesAssemblyBlobs);
+			var contents = ListArchiveContents (baseZip, usesAssembliesBlob: runtime == AndroidRuntime.CoreCLR);
 			var expectedFiles = new List<string> {
 				"dex/classes.dex",
 				"manifest/AndroidManifest.xml",
@@ -195,26 +168,14 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				// All assemblies are in per-abi directories now
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
-				} else {
-					expectedFiles.Add ($"lib/{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib_UnnamedProject.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
-				} else {
-					expectedFiles.Add ($"lib/{abi}/lib_System.Private.CoreLib.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
 			}
@@ -223,17 +184,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void AppBundle ()
+		void CheckAppBundle ()
 		{
-			if (runtime == AndroidRuntime.CoreCLR && !usesAssemblyBlobs) {
-				Assert.Ignore ("CoreCLR does not support builds without assembly stores");
-				return;
-			}
-
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
 			FileAssert.Exists (aab);
-			var contents = ListArchiveContents (aab, usesAssemblyBlobs);
+			var contents = ListArchiveContents (aab, usesAssembliesBlob: runtime == AndroidRuntime.CoreCLR);
 			var expectedFiles = new List<string> {
 				"base/dex/classes.dex",
 				"base/manifest/AndroidManifest.xml",
@@ -263,26 +218,14 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				// All assemblies are in per-abi directories now
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
-				} else {
-					expectedFiles.Add ($"base/lib/{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib_UnnamedProject.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
-				} else {
-					expectedFiles.Add ($"base/lib/{abi}/lib_System.Private.CoreLib.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
 			}
@@ -291,8 +234,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void AppBundleSigned ()
+		void CheckAppBundleSigned ()
 		{
 			var aab = Path.Combine (bin, $"{app.PackageName}-Signed.aab");
 			FileAssert.Exists (aab);
@@ -300,8 +242,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (StringAssertEx.ContainsText (contents, "META-INF/MANIFEST.MF"), $"{aab} is not signed!");
 		}
 
-		[Test, Category ("UsesDevice")]
-		public void ApkSet ()
+		void CheckApkSet ()
 		{
 			appBuilder.BuildLogFile = "install.log";
 			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
@@ -314,7 +255,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (3, contents.Length, "Expecting three APKs!");
 
 			// Language split has been removed by the bundle configuration file, and therefore shouldn't be present
-			var languageSplitContent = ListArchiveContents (aab, usesAssemblyBlobs).Where (a => a.EndsWith ("-en.apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
+			var languageSplitContent = ListArchiveContents (aab, usesAssembliesBlob: runtime == AndroidRuntime.CoreCLR).Where (a => a.EndsWith ("-en.apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
 			Assert.AreEqual (0, languageSplitContent.Length, "Found language split apk in bundle, but disabled by bundle configuration file!");
 
 			using (var stream = new MemoryStream ())
@@ -329,13 +270,9 @@ namespace Xamarin.Android.Build.Tests
 					".bar",
 					".wav",
 					".data",
+					".blob",
+					".dll",
 				};
-
-				if (usesAssemblyBlobs) {
-					uncompressed.Add (".blob");
-				} else {
-					uncompressed.Add (".dll");
-				}
 				using (var baseApk = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 					foreach (var file in baseApk.Entries) {
 						foreach (var ext in uncompressed) {
@@ -346,56 +283,6 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			}
-		}
-
-		[Test]
-		public void BuildAppBundleCommand ()
-		{
-			var task = new BuildAppBundle {
-				BaseZip = "base.zip",
-				Output = "foo.aab",
-				JarPath = "bundletool.jar",
-			};
-			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"-jar bundletool.jar build-bundle --modules base.zip --output foo.aab", cmd);
-		}
-
-		[Test]
-		public void BuildApkSetCommand ()
-		{
-			var task = new BuildApkSet {
-				AppBundle = "foo.aab",
-				Output = "foo.apks",
-				KeyStore = "foo.keystore",
-				KeyAlias = "alias",
-				KeyPass = "keypass",
-				StorePass = "storepass",
-				Aapt2ToolPath = Path.Combine ("aapt", "with spaces"),
-				Aapt2ToolExe = "aapt2",
-				AdbToolPath = Path.Combine ("adb", "with spaces"),
-				AdbToolExe = "adb",
-				AdbTarget = "-s emulator-5554",
-				JarPath = "bundletool.jar",
-			};
-			string aapt2 = Path.Combine (task.Aapt2ToolPath, task.Aapt2ToolExe);
-			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
-			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"-jar bundletool.jar build-apks --connected-device --mode default --adb \"{adb}\" --device-id emulator-5554 --bundle foo.aab --output foo.apks --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
-		}
-
-		[Test]
-		public void InstallApkSetCommand ()
-		{
-			var task = new InstallApkSet {
-				ApkSet = "foo.apks",
-				AdbToolPath = Path.Combine ("path", "with spaces"),
-				AdbToolExe = "adb",
-				AdbTarget = "-s emulator-5554",
-				JarPath = "bundletool.jar",
-			};
-			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
-			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"-jar bundletool.jar install-apks --apks foo.apks --adb \"{adb}\" --device-id emulator-5554 --allow-downgrade --modules _ALL_", cmd);
 		}
 	}
 }

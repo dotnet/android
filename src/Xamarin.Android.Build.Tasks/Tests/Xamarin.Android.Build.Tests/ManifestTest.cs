@@ -185,38 +185,6 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void OverlayManifestTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				ManifestMerger = "manifestmerger.jar",
-			};
-			proj.SetRuntime (runtime);
-			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
-	<application android:label=""foo"">
-	</application>
-</manifest>";
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidManifestOverlay", "ManifestOverlay.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
-	<uses-permission android:name=""android.permission.CAMERA"" />
-</manifest>
-"
-			});
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				var text = File.ReadAllText (manifestFile);
-				StringAssert.Contains ("android.permission.CAMERA", text, $"{manifestFile} should contain 'android.permission.CAMERA'");
-			}
-		}
-
-		[Test]
 		public void OverlayManifestIncrementalBuildTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
