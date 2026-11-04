@@ -1053,13 +1053,22 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 	};
 	foreach (var arg in cliArgs)
 		psi.ArgumentList.Add (arg);
+	var timeout = TimeSpan.FromMinutes (5);
+	var timer = Stopwatch.StartNew ();
+	using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{file}'.");
 	try {
-		var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
-		return result.ExitStatus.Canceled
-			? (-1, result.StandardOutput, $"{result.StandardError}\n{file} timed out after 5 minutes.")
-			: (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
+		var (stdout, stderr) = process.ReadAllText (timeout);
+		var remaining = timeout - timer.Elapsed;
+		return process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status)
+			? (status.ExitCode, stdout, stderr)
+			: (-1, stdout, $"{stderr}\n{file} timed out after 5 minutes.");
 	} catch (TimeoutException) {
 		return (-1, "", $"{file} timed out after 5 minutes.");
+	} finally {
+		if (!process.HasExited) {
+			process.Kill (entireProcessTree: true);
+			process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
+		}
 	}
 }
 

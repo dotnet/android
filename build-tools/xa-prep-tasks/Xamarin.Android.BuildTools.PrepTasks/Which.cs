@@ -164,25 +164,38 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				psi.ArgumentList.Add ("-c");
 				psi.ArgumentList.Add (command);
 			}
-			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
-			Console.Error.Write (result.StandardError);
-			if (result.ExitStatus.Canceled) {
-				throw new TimeoutException ($"Version command '{command}' did not complete within 30 seconds.");
-			}
-			if (result.ExitStatus.ExitCode != 0) {
-				throw new InvalidOperationException ($"Version command '{command}' failed with exit code {result.ExitStatus.ExitCode}.");
-			}
+			var timeout = TimeSpan.FromSeconds (30);
+			var timer = Stopwatch.StartNew ();
+			using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start version command '{command}'.");
+			try {
+				var (stdout, stderr) = process.ReadAllText (timeout);
+				Console.Error.Write (stderr);
+				var remaining = timeout - timer.Elapsed;
+				if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status)) {
+					throw new TimeoutException ();
+				}
+				if (status.ExitCode != 0) {
+					throw new InvalidOperationException ($"Version command '{command}' failed with exit code {status.ExitCode}.");
+				}
 
-			using var reader = new StringReader (result.StandardOutput);
-			string line;
-			while ((line = reader.ReadLine ()) != null) {
-				var match = VersionMatch.Match (line);
-				if (!match.Success)
-					continue;
-				var version = match.Groups ["version"].Value;
-				return new Version (version.Contains (".") ? version : version + ".0");
+				using var reader = new StringReader (stdout);
+				string line;
+				while ((line = reader.ReadLine ()) != null) {
+					var match = VersionMatch.Match (line);
+					if (!match.Success)
+						continue;
+					var version = match.Groups ["version"].Value;
+					return new Version (version.Contains (".") ? version : version + ".0");
+				}
+				return new Version ();
+			} catch (TimeoutException ex) {
+				throw new TimeoutException ($"Version command '{command}' did not complete within 30 seconds.", ex);
+			} finally {
+				if (!process.HasExited) {
+					process.Kill (entireProcessTree: true);
+					process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
+				}
 			}
-			return new Version ();
 		}
 	}
 }

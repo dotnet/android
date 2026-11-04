@@ -5,11 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using IOFile = System.IO.File;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.BuildTools.PrepTasks
 {
@@ -269,7 +271,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			using var p = Process.Start (si) ?? throw new InvalidOperationException ($"Could not start '{commandPath}'.");
 			using var readCancellation = new CancellationTokenSource ();
-			var output = p.ReadAllLinesAsync (readCancellation.Token).ToListAsync (readCancellation.Token).AsTask ();
+			var output = ReadOutputAsync ();
 			try {
 				var status = ProcessTimeout > 0
 					? p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (ProcessTimeout))
@@ -277,10 +279,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				if (status.Canceled) {
 					Log.LogWarning ($"Process '{commandPath} {string.Join (" ", arguments)}' failed to exit within {ProcessTimeout}s.");
 				}
-				var lines = output.WaitAsync (TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout)).GetAwaiter ().GetResult ();
-				foreach (var line in lines) {
-					(line.StandardError ? stderrLines : stdoutLines).Add (line.Content);
-				}
+				output.WaitAsync (TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout)).GetAwaiter ().GetResult ();
 				return status.Canceled ? -1 : status.ExitCode;
 			} catch (TimeoutException ex) {
 				Log.LogWarning (ex.Message);
@@ -290,6 +289,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				try {
 					output.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
 				} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
+				}
+			}
+
+			async System.Threading.Tasks.Task ReadOutputAsync ()
+			{
+				await foreach (var line in p.ReadAllLinesAsync (readCancellation.Token).ConfigureAwait (false)) {
+					(line.StandardError ? stderrLines : stdoutLines).Add (line.Content);
 				}
 			}
 		}
