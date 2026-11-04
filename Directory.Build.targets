@@ -35,4 +35,19 @@
     <DefineConstants>$(DefineConstants);INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
   </PropertyGroup>
 
+  <!-- Satellite Csc forwards Features but not LangVersion: https://github.com/dotnet/sdk/issues/56839.
+       Keep the opt-in on primary compilations, including with the pinned compiler that predates MemorySafetyRulesVersion. -->
+  <Target Name="_AndroidIsolateMemorySafetyRules"
+      BeforeTargets="CoreCompile"
+      Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(Features)', '(^|[;,])updated-memory-safety-rules([;,]|$)'))">
+    <PropertyGroup>
+      <_AndroidMemorySafetyResponseFile>$(MSBuildThisFileDirectory)build-tools\scripts\updated-memory-safety-rules.rsp</_AndroidMemorySafetyResponseFile>
+      <Features>$([System.Text.RegularExpressions.Regex]::Replace('$(Features)', '(^|[;,])updated-memory-safety-rules(?=([;,]|$))', '$1'))</Features>
+      <CompilerResponseFile>$(CompilerResponseFile);$(_AndroidMemorySafetyResponseFile)</CompilerResponseFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <CustomAdditionalCompileInputs Include="$(_AndroidMemorySafetyResponseFile)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
