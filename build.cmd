@@ -8,9 +8,7 @@ IF ERRORLEVEL 1 CALL:FAILED_CASE
 IF ERRORLEVEL 1 CALL :DEFAULT_CASE
 
 :Prepare_CASE
-    pwsh -NoProfile -ExecutionPolicy Bypass -File eng\install-dotnet.ps1
-    IF ERRORLEVEL 1 GOTO END_CASE
-    CALL dotnet-local.cmd build Microsoft.Android.slnx -t:Prepare -nodeReuse:false
+    dotnet msbuild Microsoft.Android.slnx -t:Prepare -nodeReuse:false
     GOTO END_CASE
 :Build_CASE
     dotnet-local.cmd build Microsoft.Android.slnx  -nodeReuse:false
@@ -19,13 +17,9 @@ IF ERRORLEVEL 1 CALL :DEFAULT_CASE
     dotnet-local.cmd build  Microsoft.Android.slnx -t:PackDotNet -nodeReuse:false
     GOTO END_CASE
 :DEFAULT_CASE
-    pwsh -NoProfile -ExecutionPolicy Bypass -File eng\install-dotnet.ps1
-    IF ERRORLEVEL 1 GOTO END_CASE
-    CALL dotnet-local.cmd build Microsoft.Android.slnx -t:Prepare -nodeReuse:false
-    IF ERRORLEVEL 1 GOTO END_CASE
-    CALL dotnet-local.cmd build Microsoft.Android.slnx -nodeReuse:false
-    IF ERRORLEVEL 1 GOTO END_CASE
-    CALL dotnet-local.cmd build Microsoft.Android.slnx -t:PackDotNet -nodeReuse:false
+    dotnet msbuild Microsoft.Android.slnx -t:Prepare -nodeReuse:false
+    dotnet-local.cmd build Microsoft.Android.slnx -nodeReuse:false
+    dotnet-local.cmd build Microsoft.Android.slnx -t:PackDotNet -nodeReuse:false
     GOTO END_CASE
 :FAILED_CASE
     echo "Failed to find an instance of Visual Studio. Please check it is correctly installed."
