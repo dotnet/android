@@ -1,15 +1,15 @@
 # Build Configuration
 
 The standalone Java.Interop tooling build uses `dotnet` and MSBuild properties.
-See the [README](../README.md#building) for preparation and build commands.
+See the [README](README.md#building) for preparation and build commands.
 Android runtime integration is built as part of the enclosing dotnet/android
-[SDK build](../../../Documentation/README.md#building-from-source).
+[SDK build](../README.md#building-from-source).
 
 ## MSBuild Properties
 
 Projects use the repository's shared
-[`Directory.Build.props`](../../../Directory.Build.props) and
-[`Configuration.props`](../../../Configuration.props).
+[`Directory.Build.props`](../../Directory.Build.props) and
+[`Configuration.props`](../../Configuration.props).
 MSBuild properties may be placed in the repository-root
 `Configuration.Override.props` or passed with `-p:Name=Value`.
 
@@ -22,7 +22,7 @@ Overridable MSBuild properties include:
     tooling builds, pass `-p:JavaSdkDirectory=/path/to/jdk` to use an installed JDK.
     These are used for Java tooling and test fixtures, not a desktop JNI test host.
 * `$(MicrosoftAndroidSdkOutDir)`: Output directory for tools such as
-    [`class-parse`](../../../src/class-parse) and [`generator`](../../../src/generator),
+    [`class-parse`](../../src/class-parse) and [`generator`](../../src/generator),
     within the Android SDK pack's `tools/` directory.
 * `$(BuildOutputDirectory)` and `$(TestOutputDirectory)`: Libraries and tooling
     tests use `bin/$(Configuration)/net10.0/` and
@@ -57,8 +57,8 @@ Tooling tests remain under `tests/` and run with
 locally built Android SDK; Java/Gradle fixtures still require the configured JDK.
 
 Core JNI interop sources and Java fixtures live in
-[`tests/Mono.Android-Tests/Java.Interop-Tests/`](../../../tests/Mono.Android-Tests/Java.Interop-Tests/)
+[`tests/Mono.Android-Tests/Java.Interop-Tests/`](../../tests/Mono.Android-Tests/Java.Interop-Tests/)
 and run on Android through
-[`Mono.Android.NET-Tests.csproj`](../../../tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj).
+[`Mono.Android.NET-Tests.csproj`](../../tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj).
 These tests require a locally built Android SDK and a device or emulator.
 There is no standalone core host-JVM harness or `make run-tests` workflow.

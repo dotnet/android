@@ -7,7 +7,7 @@
           "CopyOption": "LangIDOnName",
           "SourceFile": ".\\src\\Java.Interop.Localization\\Resources.resx",
           "OutputPath": ".\\src\\Java.Interop.Localization",
-          "LclFile": "external\\Java.Interop\\Localize\\loc\\{Lang}\\src\\Java.Interop.Localization\\Resources.resx.lcl"
+          "LclFile": "Localize\\loc\\{Lang}\\src\\Java.Interop.Localization\\Resources.resx.lcl"
         },
         {
           "CopyOption": "LangIDOnName",
