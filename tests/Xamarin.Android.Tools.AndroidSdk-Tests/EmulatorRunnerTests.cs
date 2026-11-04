@@ -432,7 +432,7 @@ public class EmulatorRunnerTests
 
 	[Test]
 	[Platform ("Linux,MacOsX")]
-	public void LaunchEmulator_SurvivesSigint ()
+	public async Task LaunchEmulator_SurvivesSigint ()
 	{
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk (keepRunning: true);
 		Process? process = null;
@@ -440,6 +440,9 @@ public class EmulatorRunnerTests
 			var runner = new EmulatorRunner (emuPath);
 			process = runner.LaunchEmulator ("TestAVD");
 
+			// Process.Start can return before the launcher shell installs its SIGINT trap.
+			Assert.IsTrue (await WaitForFileAsync (emuPath + ".ready", TimeSpan.FromSeconds (5)),
+				"The fake emulator should reach its entry point before SIGINT is sent");
 			Assert.IsFalse (process.HasExited, "Process should be running after launch");
 
 			// Send SIGINT to the emulator process
@@ -449,10 +452,7 @@ public class EmulatorRunnerTests
 			Assert.IsTrue (kill.WaitForExit (5000), "kill command should exit promptly");
 			Assert.AreEqual (0, kill.ExitCode, "kill -INT should succeed");
 
-			// Give the signal a moment to be delivered
-			Thread.Sleep (500);
-
-			Assert.IsFalse (process.HasExited, "Emulator process should survive SIGINT");
+			Assert.IsFalse (process.WaitForExit (500), "Emulator process should survive SIGINT");
 		} finally {
 			try { process?.Kill (); process?.WaitForExit (5000); } catch { }
 			process?.Dispose ();
@@ -535,7 +535,7 @@ public class EmulatorRunnerTests
 			var command = keepRunning ? "ping -n 60 127.0.0.1 >nul" : "exit /b 0";
 			File.WriteAllText (emuPath, $"@echo off\r\n{command}\r\n");
 		} else {
-			var command = keepRunning ? "sleep 60" : "exit 0";
+			var command = keepRunning ? "echo ready > \"$0.ready\"\nexec sleep 60" : "exit 0";
 			File.WriteAllText (emuPath, $"#!/bin/sh\n{command}\n");
 			var psi = ProcessUtils.CreateProcessStartInfo ("chmod", "+x", emuPath);
 			using var chmod = new Process { StartInfo = psi };

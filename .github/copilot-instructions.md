@@ -1,6 +1,6 @@
 # Instructions for AIs
 
-**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 11**.
+**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 12**.
 
 ## Architecture
 - `src/Mono.Android/` - Android SDK bindings in C#
@@ -16,8 +16,8 @@
 ## Essential Commands
 - **Build:** `./build.sh` or `build.cmd`
 - **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` 
-- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net10.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
-- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net10.0/MSBuildDeviceIntegration.dll`
+- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
+- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll`
 
 The test assembly framework comes from `DotNetStableTargetFramework` in `Directory.Build.props`. On macOS/Linux, use `./dotnet-local.sh` instead of `dotnet-local.cmd`.
 

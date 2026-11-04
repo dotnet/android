@@ -1,9 +1,8 @@
-# This template enables installation of stable and main/nighly builds of .NET.
+# This template installs the pinned .NET SDK version.
 # We prefer this over the UseDotNet task so that we can always clean up old/unstable versions on disk.
 
 parameters:
   version: $(DotNetSdkVersion)
-  quality: $(DotNetSdkQuality)
   remove_dotnet: false
   retryCountOnTaskFailure: 3
 
@@ -38,17 +37,18 @@ steps:
               $sleepTime = $sleepTime * 2
           }
       }
-      & .\dotnet-install.ps1 -Channel ${{ parameters.version }} -Quality ${{ parameters.quality }} -InstallDir $DotNetRoot -SkipNonVersionedFiles -Verbose
+      & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir $DotNetRoot -SkipNonVersionedFiles -Verbose
     displayName: install .NET Core ${{ parameters.version }}
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
     retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
+  # Hosted macOS images can have a non-writable ~/.dotnet.
   - bash: >
-      DOTNET_ROOT=~/.dotnet/ &&
-      (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
+      DOTNET_ROOT="$(Agent.TempDirectory)/dotnet-bootstrap" &&
+      (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv "$DOTNET_ROOT"; fi) &&
       curl -L https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh --retry 5 --retry-max-time 300 > dotnet-install.sh &&
       chmod +x dotnet-install.sh &&
-      ./dotnet-install.sh --channel ${{ parameters.version }} --quality ${{ parameters.quality }} --install-dir $DOTNET_ROOT --skip-non-versioned-files --verbose &&
+      ./dotnet-install.sh --version ${{ parameters.version }} --install-dir "$DOTNET_ROOT" --skip-non-versioned-files --verbose &&
       PATH="$DOTNET_ROOT:$PATH" &&
       echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
       echo "##vso[task.setvariable variable=PATH]$PATH"

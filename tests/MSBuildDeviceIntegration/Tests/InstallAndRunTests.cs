@@ -2430,7 +2430,7 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework)
+				[Values ("net12.0-android37.1", "net12.0-android37.2")] string targetFramework)
 		{
 			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
 			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
@@ -2448,20 +2448,7 @@ namespace UnnamedProject
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
 
-			proj.Imports.Add (new Import (() => "Directory.Build.targets") {
-				TextContent = () => $"""
-<Project>
-	<Target Name="_AssertAndroidTargetingPack" BeforeTargets="ResolveFrameworkReferences">
-		<ItemGroup>
-			<_AndroidKnownFrameworkReference Include="@(KnownFrameworkReference)" Condition=" '%(Identity)' == 'Microsoft.Android' " />
-		</ItemGroup>
-		<Error
-			Condition=" '%(_AndroidKnownFrameworkReference.TargetingPackName)' != 'Microsoft.Android.Ref.{apiLevel}' "
-			Text="Expected Microsoft.Android.Ref.{apiLevel}, but selected '%(_AndroidKnownFrameworkReference.TargetingPackName)'." />
-	</Target>
-</Project>
-"""
-			});
+			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
@@ -2497,19 +2484,19 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		// .NET 10 NativeAOT was experimental and is not covered by previous-version compatibility tests.
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values] bool isRelease,
-				[Values ("net10.0-android36.1")] string targetFramework,
+				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework,
 				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (isRelease && targetFramework == "net10.0-android36.1" && runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("https://github.com/dotnet/android/issues/12923");
-			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
+			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
+			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
+			var permission = apiLevel == "37.1" ? "AccessHid" : "BindContentSafetyService";
+			var enablePreviewFeatures = apiLevel == "37.2";
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
@@ -2518,6 +2505,11 @@ namespace UnnamedProject
 				}
 			};
 			proj.SetRuntime (runtime);
+			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
+
+			if (enablePreviewFeatures) {
+				proj.SetProperty ("EnablePreviewFeatures", "true");
+			}
 
 			// https://github.com/dotnet/android/issues/11719 - PublishReadyToRun
 			// fails on Release+CoreCLR because crossgen2 does not yet accept
@@ -2526,36 +2518,46 @@ namespace UnnamedProject
 				proj.SetProperty ("PublishReadyToRun", "false");
 			}
 
-			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", "using Android.Telecom;\nusing Android.Graphics.Pdf.Component;")
 				.Replace ("//${AFTER_ONCREATE}", """
-					if (OperatingSystem.IsAndroidVersionAtLeast (36, 1)) {
-						Console.WriteLine ($"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}");
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, ${ANDROID_API_MINOR_VERSION})) {
+						Console.WriteLine ($"Android.Manifest.Permission.${ANDROID_PERMISSION}={(global::Android.Manifest.Permission.${ANDROID_PERMISSION})}");
 					} else {
-						Console.WriteLine ("TelecomManager.ActionCallBack not available");
+						Console.WriteLine ("Android.Manifest.Permission.${ANDROID_PERMISSION} not available");
 					}
 				""")
-				.Replace ("//${AFTER_MAINACTIVITY}", """
-					#pragma warning disable CA1416 // Type only available on Android 36.1 and later
-					class MyTextObjectFont : PdfPageTextObjectFont
-					{
-						public MyTextObjectFont (PdfPageTextObjectFont font) : base (font)
-						{
-						}
-					}
-					#pragma warning restore CA1416 // Type only available on Android 36.1 and later
-				""");
+				.Replace ("${ANDROID_API_MINOR_VERSION}", apiMinorVersion)
+				.Replace ("${ANDROID_PERMISSION}", permission);
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			builder.AssertHasNoWarnings ();
+			if (!enablePreviewFeatures) {
+				builder.AssertHasNoWarnings ();
+			}
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		static Import CreateAndroidTargetingPackAssertion (string apiLevel)
+		{
+			return new Import (() => "Directory.Build.targets") {
+				TextContent = () => $"""
+<Project>
+	<Target Name="_AssertAndroidTargetingPack" BeforeTargets="ResolveFrameworkReferences">
+		<ItemGroup>
+			<_AndroidKnownFrameworkReference Include="@(KnownFrameworkReference)" Condition=" '%(Identity)' == 'Microsoft.Android' " />
+		</ItemGroup>
+		<Error
+			Condition=" '%(_AndroidKnownFrameworkReference.TargetingPackName)' != 'Microsoft.Android.Ref.{apiLevel}' "
+			Text="Expected Microsoft.Android.Ref.{apiLevel}, but selected '%(_AndroidKnownFrameworkReference.TargetingPackName)'." />
+	</Target>
+</Project>
+"""
+			};
 		}
 
 		[Test]

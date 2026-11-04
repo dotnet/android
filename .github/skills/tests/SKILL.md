@@ -56,7 +56,7 @@ Present results as: **Must run** → **Should run** → **Consider running**, wi
 
 ## Running tests
 
-The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.props` (currently `net10.0`).
+The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.props` (currently `net11.0`).
 
 ### Standalone
 ```bash

@@ -48,7 +48,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void EolFrameworks ([Values ("net6.0-android", "net7.0-android")] string targetFramework)
+		public void EolFrameworks ([Values ("net6.0-android", "net7.0-android", "net8.0-android", "net9.0-android", "net10.0-android")] string targetFramework)
 		{
 			var library = new XamarinAndroidLibraryProject () {
 				TargetFramework = targetFramework,

@@ -384,7 +384,7 @@ extends:
             - task: UseDotNet@2
               displayName: Install .NET SDK for Arcade signing
               inputs:
-                version: $(DotNetSdkVersion).x
+                version: $(DotNetSdkVersion)
                 includePreviewVersions: true
 
             - pwsh: |
@@ -861,7 +861,6 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
             dotnetVersion: $(DotNetSdkVersion)
-            dotnetQuality: $(DotNetSdkQuality)
             jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
             useAgentJdkPath: true
             use1ESTemplate: true
