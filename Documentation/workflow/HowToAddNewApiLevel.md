@@ -276,8 +276,8 @@ To build *just* `src/Mono.Android/Mono.Android.csproj`:
 
 ### New AndroidManifest.xml Elements
 
-- See `build-tools/manifest-attribute-codegen/README.md` for instructions on surfacing any new
-  elements or attributes added to `AndroidManifest.xml`.
+- See [New `AndroidManifest.xml` elements and attributes](#new-androidmanifestxml-elements-and-attributes)
+  for instructions on surfacing new manifest APIs.
 
 ### ApiCompat
 
@@ -663,20 +663,23 @@ But wait, there's more!
 
 ### New `AndroidManifest.xml` elements and attributes
 
-`build-tools/manifest-attribute-codegen/manifest-attribute-codegen.cs` can be
-compiled to a tool that collects all Manifest elements and attributes with the
-API level since when each of them became available.  New members are supposed
-to be added to the existing `(FooBar)Attribute.cs` and
-`(FooBar)Attribute.Partial.cs` in `src/Mono.Android` and
-`src/Xamarin.Android.Build.Tasks`, respectively.
+Review the [Android app manifest documentation](https://developer.android.com/guide/topics/manifest/manifest-intro)
+for newly documented elements and attributes. Undocumented XML nodes do not need
+to be exposed.
 
-See [`build-tools/manifest-attribute-codegen/README.md`](../../build-tools/manifest-attribute-codegen/README.md)
-for details.
+Maintain the checked-in manifest attribute classes directly. Shared attributes
+such as `ActivityAttribute` and `ApplicationAttribute` live in
+`src/Xamarin.Android.NamingCustomAttributes`; other manifest attributes live in
+`src/Mono.Android`. Add properties to the corresponding `(FooBar)Attribute.cs`
+and update its manifest mappings under `#if XABT_MANIFEST_EXTENSIONS`, where
+applicable. Additional mapping logic lives in `(FooBar)Attribute.Partial.cs`
+in those directories and in `src/Xamarin.Android.Build.Tasks/Mono.Android`.
 
-Note that there are documented and undocumented XML nodes, and we don't have to
-deal with undocumented ones.
-
-Android P introduced no documented XML artifact.
+For a new attribute class, also update the relevant project compile items and
+`src/Xamarin.Android.Build.Tasks/Utilities/ManifestDocument.cs` so the build
+tasks emit the corresponding manifest XML. Update the public API declarations
+and add manifest-generation tests in
+`src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests`.
 
 ### Update Android Tooling Versions
 
