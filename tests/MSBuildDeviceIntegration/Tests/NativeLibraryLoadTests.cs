@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -630,25 +630,28 @@ public class NativeLibraryLoadTests : DeviceTest
 		string outputPath = Path.Combine (directory, libraryFileName);
 		File.WriteAllText (sourcePath, source, new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 
-		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-		var startInfo = ProcessUtils.CreateProcessStartInfo (
-			clang,
-			$"--target={targetTriple}",
-			"-shared",
-			"-fPIC",
-			"-O2",
-			"-Wall",
-			"-Wextra",
-			"-Werror",
-			$"-Wl,-soname,{libraryFileName}",
-			"-Wl,--no-undefined",
-			sourcePath,
-			"-o",
-			outputPath
-		);
-		int exitCode = ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken.None).GetAwaiter ().GetResult ();
-		Assert.AreEqual (0, exitCode, $"clang failed for {libraryFileName}: {stderr}{stdout}");
+		var startInfo = new ProcessStartInfo (clang) {
+			ArgumentList = {
+				$"--target={targetTriple}",
+				"-shared",
+				"-fPIC",
+				"-O2",
+				"-Wall",
+				"-Wextra",
+				"-Werror",
+				$"-Wl,-soname,{libraryFileName}",
+				"-Wl,--no-undefined",
+				sourcePath,
+				"-o",
+				outputPath,
+			},
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		var result = Process.RunAndCaptureText (startInfo);
+		Assert.AreEqual (0, result.ExitStatus.ExitCode, $"clang failed for {libraryFileName}: {result.StandardError}{result.StandardOutput}");
 		return File.ReadAllBytes (outputPath);
 	}
 

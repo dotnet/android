@@ -473,7 +473,7 @@ public class EmulatorRunnerTests
 
 			Assert.IsFalse (process.WaitForExit (500), "Emulator process should survive SIGINT");
 		} finally {
-			try { process?.Kill (); process?.WaitForExit (5000); } catch { }
+			try { process?.Kill (entireProcessTree: true); process?.WaitForExit (5000); } catch { }
 			process?.Dispose ();
 			Directory.Delete (tempDir, true);
 		}
@@ -531,7 +531,7 @@ public class EmulatorRunnerTests
 
 			Assert.IsFalse (process.HasExited, "Process should start even with single-quote in path");
 		} finally {
-			try { process?.Kill (); process?.WaitForExit (5000); } catch { }
+			try { process?.Kill (entireProcessTree: true); process?.WaitForExit (5000); } catch { }
 			process?.Dispose ();
 			Directory.Delete (tempDir, true);
 		}

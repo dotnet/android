@@ -13,10 +13,11 @@ reference those assemblies directly. Use this library's `AndroidSdkInfo` and
 
 ## Build
 
-The SDK tooling requires .NET 11, including its build/MSBuild host and consumers.
-There is no older-runtime process implementation.
+The SDK tooling uses the repository's shared stable target framework,
+`$(DotNetStableTargetFramework)` (currently .NET 11). Its build/MSBuild host and
+consumers must support that framework. There is no older-runtime process implementation.
 
-From the repository root, using a .NET 11 SDK with the native process APIs:
+From the repository root, using the repository-pinned SDK:
 
 ```shell
 dotnet build src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
@@ -55,13 +56,16 @@ that actually require BOM detection should use native byte capture plus BCL
 `StreamReader`; do not recreate a decoding or compatibility framework.
 
 The affected SDK, build/debugging/installer task assemblies, instrumentation
-runner, and discovery tools require a **.NET 11 or later MSBuild/CLI host**.
+runner, and discovery tools follow the shared stable framework. Modern build
+tasks retain the shared product framework, `$(DotNetTargetFramework)`.
+Use an MSBuild/CLI host supporting the selected framework.
 They are not supported in .NET Framework MSBuild or an older `dotnet` host.
 The workload retains its existing flat `tools/` and isolated `tools/net/` layout;
 both contain native-runtime-compatible dependencies. Unrelated BaseTasks,
 Installer.Common, Java.Interop libraries, and repository publishing tools keep
-their own target frameworks. The selected Java.Interop bootstrap/test consumers
-use truthful .NET 11 paths, not .NET 10 aliases.
+their own target frameworks. Only Java.Interop bootstrap and bytecode-test
+consumers of this library require the native SDK's framework; the remaining
+standalone Java.Interop tools keep their independent target framework.
 
 `System.Collections.Immutable` and `System.Reflection.Metadata` are supplied by
 the host framework, not copied into the workload's tooling directories. The

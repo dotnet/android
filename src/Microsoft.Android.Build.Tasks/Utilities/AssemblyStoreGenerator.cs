@@ -74,7 +74,7 @@ partial class AssemblyStoreGenerator
 
 	public void Add (AssemblyStoreAssemblyInfo asmInfo)
 	{
-		if (!assemblies.TryGetValue (asmInfo.Arch, out var infos)) {
+		if (!assemblies.TryGetValue (asmInfo.Arch, out List<AssemblyStoreAssemblyInfo>? infos)) {
 			infos = new List<AssemblyStoreAssemblyInfo> ();
 			assemblies.Add (asmInfo.Arch, infos);
 		}

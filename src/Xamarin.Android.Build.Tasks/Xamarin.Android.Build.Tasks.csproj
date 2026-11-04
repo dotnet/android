@@ -8,7 +8,7 @@
   <Import Project="$(XamarinAndroidSourcePath)build-tools\banned-apis\banned-apis.targets" />
 
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>

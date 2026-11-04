@@ -4,7 +4,7 @@
     <NoWarn>$(NoWarn);CA1305</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <LangVersion>12</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants Condition=" '$(OS)' == 'Windows_NT' ">WINDOWS</DefineConstants>

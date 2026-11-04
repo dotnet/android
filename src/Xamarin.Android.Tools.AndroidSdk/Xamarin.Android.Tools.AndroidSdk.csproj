@@ -5,7 +5,7 @@
   <Import Project="..\..\build-tools\scripts\Xamarin.Android.Tools.Versioning.targets" />
 
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);CA1305;CA5350</NoWarn>

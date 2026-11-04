@@ -4,7 +4,7 @@
     <NoWarn>$(NoWarn);CA1305;CS1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <LangVersion>12</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <DefineConstants Condition=" '$(OS)' == 'Windows_NT' ">WINDOWS;$(DefineConstants)</DefineConstants>
