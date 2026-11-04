@@ -775,7 +775,7 @@ namespace Android.Runtime {
 
 		static void AssertArrayConversionType (IntPtr sourceArray, Type? elementType)
 		{
-			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) ||
+			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) || elementType == typeof (Array) ||
 					elementType.IsArray || typeof (IJavaObject).IsAssignableFrom (elementType))) {
 				AssertCompatibleArrayTypes (sourceArray,
 					destElementType: elementType.IsValueType ? elementType : typeof (Java.Lang.Object));
