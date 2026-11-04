@@ -1,9 +1,0 @@
-{
-    "recommendations": [
-      "ms-dotnettools.csdevkit",
-      "ms-dotnettools.dotnet-maui",
-      "ms-vscode.cpptools",
-      "llvm-vs-code-extensions.lldb-dap",
-      "streetsidesoftware.code-spell-checker"
-    ]
-}
