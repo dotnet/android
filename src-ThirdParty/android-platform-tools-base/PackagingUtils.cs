@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Checks if a zip entry is valid for packaging into the .apk as standard Java resource.
 		/// </summary>
-		/// <param name="entryName">the name of the zip entry from Xamarin.Tools.Zip.ZipEntry.FullName.</param>
+		/// <param name="entryName">the name of the zip entry from System.IO.Compression.ZipArchiveEntry.FullName.</param>
 		/// <returns>true if the entry is valid for packaging.</returns>
 		public static bool CheckEntryForPackaging (string entryName)
 		{
