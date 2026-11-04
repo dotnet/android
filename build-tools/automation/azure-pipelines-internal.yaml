@@ -763,7 +763,7 @@ extends:
       jobs:
       - job: mac_dotnetdevice_tests
         strategy:
-          parallel: 12
+          parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
         displayName: "macOS > Tests > MSBuild+Emulator"
         # Emulator jobs need the hosted image that can boot Android emulators
         pool:

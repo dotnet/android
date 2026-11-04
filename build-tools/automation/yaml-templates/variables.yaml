@@ -21,6 +21,8 @@ variables:
   value: 3.16.3
 - name: NUnit.NumberOfTestWorkers
   value: -1
+- name: MSBuildEmulatorTestAgentCount
+  value: 11
 - name: DotNetSdkVersion
   value: 11.0.100-rc.3.26522.148
 - name: DotNetSdkChannel
