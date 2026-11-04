@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Build.Tasks;
 
@@ -15,7 +16,7 @@ internal static class RuntimeProviderSourceGenerator
 	}
 
 	internal static string [] WriteAdditionalRuntimeProviderSources (
-		string outputDirectory, bool isCoreCLR, string [] additionalProviderSources, bool preserveTimestamp = true)
+		TaskEnvironment taskEnvironment, string outputDirectory, bool isCoreCLR, string [] additionalProviderSources, bool preserveTimestamp = true)
 	{
 		if (additionalProviderSources.Length == 0) {
 			return [];
@@ -30,12 +31,14 @@ internal static class RuntimeProviderSourceGenerator
 			string path = isCoreCLR ?
 				Path.Combine (outputDirectory, "src", "mono", provider + ".java") :
 				Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
+			string absolutePath = taskEnvironment.GetAbsolutePath (path);
 			if (preserveTimestamp) {
-				Files.CopyIfStringChanged (contents, path);
+				Files.CopyIfStringChanged (contents, absolutePath);
 			} else {
-				Directory.CreateDirectory (Path.GetDirectoryName (path)
-					?? throw new InvalidOperationException ($"No directory for Java source '{path}'."));
-				File.WriteAllText (path, contents, new UTF8Encoding (false));
+				string directory = Path.GetDirectoryName (absolutePath)
+					?? throw new InvalidOperationException ($"No directory for Java source '{path}'.");
+				Directory.CreateDirectory (taskEnvironment.GetAbsolutePath (directory));
+				File.WriteAllText (absolutePath, contents, new UTF8Encoding (false));
 			}
 			files [i] = path;
 		}
