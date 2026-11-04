@@ -1,3 +1,4 @@
 {
+    "cmake.configureOnOpen": false,
     "dotnet.defaultSolution": "Microsoft.Android.slnx"
 }
