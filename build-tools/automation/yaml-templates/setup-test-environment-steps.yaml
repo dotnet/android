@@ -32,21 +32,6 @@ steps:
     custom: build-server
     arguments: shutdown
 
-# Install p7zip on Linux/macOS for public agents
-- ${{ if ne(parameters.use1ESTemplate, true) }}:
-  - bash: |
-      set -e
-      sudo apt-get update
-      sudo apt-get install -y p7zip-full
-    displayName: Install p7zip on Linux
-    condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
-
-  - bash: |
-      set -e
-      brew install p7zip
-    displayName: Install p7zip on macOS
-    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
 - template: /build-tools/automation/yaml-templates/cache-android-archives.yaml
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
