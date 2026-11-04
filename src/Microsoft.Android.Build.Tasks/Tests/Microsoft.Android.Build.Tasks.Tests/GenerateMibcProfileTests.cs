@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
