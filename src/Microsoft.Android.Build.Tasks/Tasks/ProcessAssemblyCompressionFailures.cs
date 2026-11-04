@@ -4,12 +4,13 @@ using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Remove "CompressedAssembly" metadata from assemblies that failed to compress.
 /// </summary>
-public class ProcessAssemblyCompressionFailures : AndroidTask
+[MSBuildMultiThreadableTask]
+public class ProcessAssemblyCompressionFailures : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "PAC";
 
