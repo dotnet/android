@@ -343,7 +343,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GAD` - `GetAndroidDefineConstants`
 * `GAP` - `GetAndroidPackageName`
 * `GAR` - `GetAdditionalResourcesFromAssemblies`
-* `GAS` - `GetAppSettingsDirectory`
 * `GCB` - `GenerateCodeBehindForLayout`
 * `GEP` - `GetExtraPackages`
 * `GFT` - `GetFilesThatExist`
