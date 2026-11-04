@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #include <constants.hh>
 #include <host/fastdev-assemblies.hh>
@@ -14,6 +15,22 @@
 #include <runtime-base/util.hh>
 
 using namespace xamarin::android;
+
+namespace {
+	struct assembly_data final
+	{
+		assembly_data *next;
+		void         *data;
+		int64_t       size;
+		size_t        name_length;
+		// The exact probe name follows this structure in the same allocation.
+	};
+
+	// CoreCLR borrows external probe data; it neither copies nor releases it. Keep the first
+	// successful snapshot of each name until process exit, including across collectible loads.
+	// Protected by FastDevAssemblies::override_dir_lock.
+	assembly_data *loaded_assemblies = nullptr;
+}
 
 auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
@@ -41,6 +58,14 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
+	lock_guard dir_lock { override_dir_lock };
+	for (assembly_data *entry = loaded_assemblies; entry != nullptr; entry = entry->next) {
+		if (entry->name_length == name.length () && memcmp (entry + 1, name.data (), name.length ()) == 0) {
+			size = entry->size;
+			return entry->data;
+		}
+	}
+
 	const char *override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
 		log_debugf (LOG_ASSEMBLY, "Override directory '%s' does not exist", override_dir_path);
@@ -50,15 +75,12 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	// NOTE: override_dir will be kept open, we have no way of knowing when it will be no longer
 	//       needed
 	if (override_dir_fd < 0) [[unlikely]] {
-		lock_guard dir_lock { override_dir_lock };
-		if (override_dir_fd < 0) [[likely]] {
-			override_dir = opendir (override_dir_path);
-			if (override_dir == nullptr) [[unlikely]] {
-				log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path, strerror (errno));
-				return nullptr;
-			}
-			override_dir_fd = dirfd (override_dir);
+		override_dir = opendir (override_dir_path);
+		if (override_dir == nullptr) [[unlikely]] {
+			log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path, strerror (errno));
+			return nullptr;
 		}
+		override_dir_fd = dirfd (override_dir);
 	}
 
 	log_debugf (
@@ -80,7 +102,12 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
-	size = static_cast<int64_t>(file_size.value ());
+	if (file_size.value () == 0 || static_cast<uintmax_t>(file_size.value ()) > static_cast<uintmax_t>(std::numeric_limits<int64_t>::max ())) [[unlikely]] {
+		log_warnf (LOG_ASSEMBLY, "Invalid FastDev assembly '%.*s' file size: %zu", static_cast<int>(name.length ()), name.data (), file_size.value ());
+		return nullptr;
+	}
+
+	size_t assembly_size = file_size.value ();
 	int asm_fd = openat (override_dir_fd, name.data (), O_RDONLY);
 	if (asm_fd < 0) {
 		log_warnf (
@@ -90,15 +117,10 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			strerror (errno)
 		);
 
-		size = 0;
 		return nullptr;
 	}
 
-	// TODO: consider who owns the pointer - we allocate the data, but we have no way of knowing when
-	//       the allocated space is no longer (if ever) needed by CoreCLR. Probably would be best if
-	//       CoreCLR notified us when it wants to free the data, as that eliminates any races as well
-	//       as ambiguity.
-	auto buffer = static_cast<uint8_t*> (std::malloc (file_size.value ()));
+	auto buffer = static_cast<uint8_t*> (std::malloc (assembly_size));
 	if (buffer == nullptr) [[unlikely]] {
 		log_warnf (
 			LOG_ASSEMBLY,
@@ -106,33 +128,80 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			static_cast<int>(name.length ()), name.data ()
 		);
 
-		close (asm_fd);
-		size = 0;
+		if (close (asm_fd) < 0) {
+			log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+		}
 		return nullptr;
 	}
 
-	ssize_t nread = 0;
-	do {
-		nread = read (asm_fd, reinterpret_cast<void*>(buffer), file_size.value ());
-	} while (nread == -1 && errno == EINTR);
-	close (asm_fd);
+	size_t nread = 0;
+	int read_errno = 0;
+	while (nread < assembly_size) {
+		size_t read_count = assembly_size - nread;
+		if (read_count > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
+			read_count = static_cast<size_t>(std::numeric_limits<ssize_t>::max ());
+		}
 
-	if (nread != size) [[unlikely]] {
+		ssize_t r = read (asm_fd, buffer + nread, read_count);
+		if (r > 0) {
+			nread += static_cast<size_t>(r);
+			continue;
+		}
+
+		if (r < 0 && errno == EINTR) {
+			continue;
+		}
+		read_errno = r < 0 ? errno : 0;
+		break;
+	}
+	if (close (asm_fd) < 0) {
+		log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+	}
+
+	if (nread != assembly_size) [[unlikely]] {
 		std::free (buffer);
 
-		log_warnf (
-			LOG_ASSEMBLY,
-			"Failed to read FastDev assembly '%.*s' data. %s",
-			static_cast<int>(name.length ()), name.data (),
-			strerror (errno)
-		);
+		if (read_errno != 0) {
+			log_warnf (
+				LOG_ASSEMBLY,
+				"Failed to read FastDev assembly '%.*s' data. %s",
+				static_cast<int>(name.length ()), name.data (),
+				strerror (read_errno)
+			);
+		} else {
+			log_warnf (
+				LOG_ASSEMBLY,
+				"Failed to read FastDev assembly '%.*s' data: unexpected end of file after %zu of %zu bytes",
+				static_cast<int>(name.length ()), name.data (),
+				nread, assembly_size
+			);
+		}
 
-		size = 0;
 		return nullptr;
 	}
-	log_debugf (LOG_ASSEMBLY, "Read %zd bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
+	log_debugf (LOG_ASSEMBLY, "Read %zu bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
 
-	return reinterpret_cast<void*>(buffer);
+	size_t entry_size = Helpers::add_with_overflow_check<size_t> (sizeof (assembly_data), name.length ());
+	auto entry = static_cast<assembly_data*> (std::malloc (entry_size));
+	if (entry == nullptr) [[unlikely]] {
+		log_warnf (
+			LOG_ASSEMBLY,
+			"Unable to retain FastDev assembly '%.*s'",
+			static_cast<int>(name.length ()), name.data ()
+		);
+		std::free (buffer);
+		return nullptr;
+	}
+
+	memcpy (entry + 1, name.data (), name.length ());
+	entry->next = loaded_assemblies;
+	entry->data = buffer;
+	entry->size = static_cast<int64_t>(assembly_size);
+	entry->name_length = name.length ();
+	loaded_assemblies = entry;
+
+	size = entry->size;
+	return buffer;
 }
 
 auto FastDevAssemblies::build_tpa_list () noexcept -> char*
