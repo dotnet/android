@@ -55,14 +55,14 @@ Reference official Android documentation where helpful:
 - Review helpers, exception paths, and static state for thread safety. Do not mutate shared process state or use process isolation as a substitute for MT support. For asynchronous tasks, preserve the `Yield()`/`Reacquire()` contract with `try`/`finally`.
 - Use `XA####` error codes and test in isolation. Validate ordinary and strict `-m -mt -nr:false -warnaserror:MSB4286,MSB4287,MSB4288` builds. See [MSBuild best practices](../Documentation/guides/MSBuildBestPractices.md#multithreaded-tasks).
 
-**Internal build `<UsingTask/>` elements:** For `xa-prep-tasks` and `BootstrapTasks` (internal build-time tasks, not shipped to customers), always use `TaskFactory="TaskHostFactory"` and `Runtime="NET"` attributes on `<UsingTask/>` elements. This runs the task in a separate process to avoid Windows file locking issues and ensures the task runs on .NET (even when MSBuild.exe in Visual Studio uses .NET Framework). Example:
+**Native .NET `<UsingTask/>` elements:** Follow the existing paired registration pattern when a task must also run under legacy full MSBuild. Use `TaskFactory="TaskHostFactory"` only when `MSBuildRuntimeType` is `Full`; .NET/Core MSBuild loads the task directly without a factory. Keep `Runtime="NET"` on both registrations. This also applies to native `xa-prep-tasks` and `BootstrapTasks`:
 
 ```xml
-<UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.MyTask" TaskFactory="TaskHostFactory" Runtime="NET" />
-<UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.MyTask" TaskFactory="TaskHostFactory" Runtime="NET" />
+<UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.MyTask" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.MyTask" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 ```
 
-**Do NOT** use `TaskFactory="TaskHostFactory"` or `Runtime="NET"` on `<UsingTask/>` elements shipped in the product (e.g., in `Xamarin.Android.Common.targets` or `Microsoft.Android.Sdk/*.targets`), as it could negatively impact customer builds.
+Do not add an unconditional `TaskHostFactory`, including in shipped targets. Preserve the existing Full/Core registrations for native product tasks instead of replacing them with a single registration.
 
 **API Bindings:** Use `[Register]` attributes, follow `Android.*` namespace patterns.
 
