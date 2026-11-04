@@ -35,7 +35,11 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator** | `tests/generator-Tests/` | `dotnet test tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
+| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0` |
+
+The Android SDK tools command selects the shared stable version for the modern
+project-reference leg, as the Android Tools CI stage does. Selecting only the newer
+product target leaves the stable test suite using the `netstandard2.0` leg instead.
 
 The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
 NativeAOT offset-based property reader. Its native probe memory-maps the generated
@@ -83,6 +87,7 @@ Device: No
 | **environment** | `--filter "FullyQualifiedName~EnvironmentContentTests"` | Environment variable injection tests |
 | **dependencies** | `--filter "FullyQualifiedName~AndroidDependenciesTests"` | Android SDK/NDK dependency resolution |
 | **trimmable type map (build)** | `--filter "FullyQualifiedName~TrimmableTypeMapBuildTests"` | Trimmable type map build integration |
+| **host process policies** | `--filter "FullyQualifiedName~ProjectToolsProcessTests|FullyQualifiedName~BaseTestProcessTests|Name~BuilderDoesNotWaitForInheritedRedirectedOutput"` | Logging, diagnostics, single JAR invocation, owned timeouts and bounded inherited output |
 
 The Builder/DotNetCLI high-volume logging cases run on all host platforms.
 Only shell-script-dependent cases exclude Windows. APK diff coverage verifies raw
