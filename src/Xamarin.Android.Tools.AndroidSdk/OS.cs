@@ -42,14 +42,19 @@ namespace Xamarin.Android.Tools
 				// This is a hacktastic way of getting sysname from uname ()
 				// SAFETY: The live 8192-byte allocation exceeds the platform's utsname size.
 				if (unsafe (uname (buf)) == 0) {
-					string? os = System.Runtime.InteropServices.Marshal.PtrToStringAnsi (buf);
+					// SAFETY: Successful uname supplies a NUL-terminated sysname in the live allocation.
+					string? os = unsafe (System.Runtime.InteropServices.Marshal.PtrToStringAnsi (buf));
 					if (os == "Darwin")
 						return true;
 				}
 			} catch {
 			} finally {
-				if (buf != IntPtr.Zero)
-					System.Runtime.InteropServices.Marshal.FreeHGlobal (buf);
+				if (buf != IntPtr.Zero) {
+					unsafe {
+						// SAFETY: This finally block releases our still-live allocation exactly once.
+						System.Runtime.InteropServices.Marshal.FreeHGlobal (buf);
+					}
+				}
 			}
 			return false;
 		}
