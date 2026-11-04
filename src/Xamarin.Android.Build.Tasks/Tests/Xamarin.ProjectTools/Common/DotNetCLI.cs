@@ -90,60 +90,64 @@ namespace Xamarin.ProjectTools
 			}
 
 			var procOutput = new StringBuilder ();
-			bool succeeded = false;
+			var terminationOutput = new StringBuilder ();
 			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromMinutes (15));
-			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var outputDeadline = new CancellationTokenSource ();
 			using var process = ExecuteProcess (args);
 			procOutput.AppendLine ($"Running: {process.StartInfo.FileName} {process.StartInfo.Arguments}");
-			async Task LimitOutputDrainAsync ()
+			async Task<bool> WaitForExitOrTerminateAsync ()
 			{
-				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
-				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
-				outputDeadline.CancelAfter (TimeSpan.FromSeconds (30));
+				try {
+					await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+					executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+					return true;
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					if (!process.HasExited) {
+						try {
+							try {
+								process.Kill (entireProcessTree: true);
+								terminationOutput.AppendLine ("Issued kill request for process tree.");
+							} catch (InvalidOperationException) when (process.HasExited) {
+								// The process exited before the kill request.
+							}
+							if (!process.WaitForExit (30000))
+								terminationOutput.AppendLine ($"Process {process.Id} did not exit within 30000ms after kill request.");
+						} catch (Exception ex) when (ex is Win32Exception || ex is NotSupportedException || ex is AggregateException) {
+							terminationOutput.AppendLine ($"Failed to terminate process {process.Id}: {ex.GetType ().Name}: {ex.Message}");
+						}
+					}
+					return false;
+				} finally {
+					outputDeadline.CancelAfter (TimeSpan.FromSeconds (30));
+				}
 			}
-			var exited = LimitOutputDrainAsync ();
+			var exited = WaitForExitOrTerminateAsync ();
+			bool outputTimedOut = false;
+			bool completed;
 			try {
-				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false))
-					procOutput.AppendLine (line.Content);
-				await exited.ConfigureAwait (false);
-				succeeded = process.ExitCode == 0;
-			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
-				procOutput.AppendLine ("Process timed out after 15 minutes.");
-			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
-				procOutput.AppendLine ("Timed out waiting for redirected output to drain after 30 seconds.");
-				succeeded = process.ExitCode == 0;
+				try {
+					await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false))
+						procOutput.AppendLine (line.Content);
+				} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+					outputTimedOut = true;
+				}
+				completed = await exited.ConfigureAwait (false);
 			} finally {
 				using var stdoutReader = process.StandardOutput;
 				using var stderrReader = process.StandardError;
 				executionDeadline.Cancel ();
-				try {
-					await exited.ConfigureAwait (false);
-				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
-					// The execution deadline owns this exit observer.
-				}
-				if (!process.HasExited) {
-					try {
-						try {
-							process.Kill (entireProcessTree: true);
-							procOutput.AppendLine ("Issued kill request for process tree.");
-						} catch (InvalidOperationException) when (process.HasExited) {
-							// The process exited before the kill request.
-						}
-						if (!process.WaitForExit (30000)) {
-							procOutput.AppendLine ($"Process {process.Id} did not exit within 30000ms after kill request.");
-							succeeded = false;
-						}
-					} catch (Exception ex) when (ex is Win32Exception || ex is NotSupportedException || ex is AggregateException) {
-						procOutput.AppendLine ($"Failed to terminate process {process.Id}: {ex.GetType ().Name}: {ex.Message}");
-						succeeded = false;
-					}
-				}
+				await exited.ConfigureAwait (false);
 			}
 
+			if (!completed)
+				procOutput.AppendLine ("Process timed out after 15 minutes.");
+			if (outputTimedOut)
+				procOutput.AppendLine ("Timed out waiting for redirected output to drain after 30 seconds.");
+			procOutput.Append (terminationOutput);
 			int? exitCode = process.HasExited ? process.ExitCode : null;
 			procOutput.AppendLine (exitCode.HasValue ? $"Exit Code: {exitCode.Value}" : "Exit Code: <not available>");
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
-			return succeeded && exitCode.HasValue;
+			return completed && exitCode == 0;
 		}
 
 		public bool New (string template, string output = null, bool noRestore = false, string framework = null)

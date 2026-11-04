@@ -380,49 +380,57 @@ namespace Xamarin.ProjectTools
 			writer?.WriteLine ($"{psi.FileName} {psi.Arguments}");
 			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
 			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromMinutes (DefaultBuildTimeOut));
-			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var outputDeadline = new CancellationTokenSource ();
 			using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{psi.FileName}'.");
 
-			// Process exit and output EOF differ when an ADB server inherits the pipes.
-			async Task LimitOutputDrainAsync ()
+			// Keep readers active through termination so pipe EOF delivers unterminated diagnostics.
+			async Task<bool> WaitForExitOrTerminateAsync ()
 			{
-				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
-				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
-				outputDeadline.CancelAfter (TimeSpan.FromSeconds (OutputDrainTimeoutSeconds));
-			}
-			var exited = LimitOutputDrainAsync ();
-			try {
-				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false)) {
-					writer?.WriteLine (line.Content);
-					if (writer != null &&
-						(line.Content.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase) ||
-						 line.Content.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase)))
-						crashDetected = true;
+				try {
+					await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+					executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+					return true;
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					if (!process.HasExited) {
+						try {
+							process.Kill (entireProcessTree: true);
+						} catch (InvalidOperationException) when (process.HasExited) {
+							// The process exited before the kill request.
+						}
+						if (!process.WaitForExit (2000))
+							throw new TimeoutException ($"Build process {process.Id} did not exit after termination.");
+					}
+					return false;
+				} finally {
+					// A descendant may keep the pipes open even after the owned process exits.
+					outputDeadline.CancelAfter (TimeSpan.FromSeconds (OutputDrainTimeoutSeconds));
 				}
-				await exited.ConfigureAwait (false);
-			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
-				writer?.WriteLine ("Build Timed Out!");
-				return (false, crashDetected);
-			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
-				Console.WriteLine ($"Build process {process.Id} exited with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
+			}
+			var exited = WaitForExitOrTerminateAsync ();
+			bool completed;
+			try {
+				try {
+					await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false)) {
+						writer?.WriteLine (line.Content);
+						if (writer != null &&
+							(line.Content.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase) ||
+							 line.Content.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase)))
+							crashDetected = true;
+					}
+				} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+					Console.WriteLine ($"Build process {process.Id} exited with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
+				}
+				completed = await exited.ConfigureAwait (false);
 			} finally {
 				using var stdoutReader = process.StandardOutput;
 				using var stderrReader = process.StandardError;
 				executionDeadline.Cancel ();
-				try {
-					await exited.ConfigureAwait (false);
-				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
-					// The owned execution deadline also cancels the exit observer on early disposal.
-				}
-				if (!process.HasExited) {
-					try {
-						process.Kill (entireProcessTree: true);
-					} catch (InvalidOperationException) when (process.HasExited) {
-						// The process exited before the kill request.
-					}
-					if (!process.WaitForExit (2000))
-						throw new TimeoutException ($"Build process {process.Id} did not exit after termination.");
-				}
+				await exited.ConfigureAwait (false);
+			}
+
+			if (!completed) {
+				writer?.WriteLine ("Build Timed Out!");
+				return (false, crashDetected);
 			}
 
 			writer?.WriteLine ($"ExitCode: {process.ExitCode}");

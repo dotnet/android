@@ -92,6 +92,8 @@ Device: No
 The Builder/DotNetCLI high-volume logging cases run on all host platforms.
 Only shell-script-dependent cases exclude Windows. APK diff coverage verifies raw
 partial diagnostics and the completed process status when the separate EOF deadline expires.
+Builder, DotNetCLI and Gradle keep output readers active through timeout termination,
+then apply their bounded EOF drains so unterminated diagnostics are preserved.
 
 ### Task-level unit tests
 

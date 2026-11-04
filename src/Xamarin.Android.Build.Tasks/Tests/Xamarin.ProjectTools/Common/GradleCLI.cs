@@ -46,50 +46,55 @@ namespace Xamarin.ProjectTools
 			if (Directory.Exists (ProjectDirectory))
 				psi.WorkingDirectory = ProjectDirectory;
 			procOutput.AppendLine ($"Running: {psi.FileName} {psi.Arguments}");
-			bool succeeded = false;
 			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromMinutes (5));
-			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var outputDeadline = new CancellationTokenSource ();
 			using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{GradlePath}'.");
-			async Task LimitOutputDrainAsync ()
+			async Task<bool> WaitForExitOrTerminateAsync ()
 			{
-				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
-				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
-				outputDeadline.CancelAfter (TimeSpan.FromSeconds (2));
+				try {
+					await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+					executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+					return true;
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					if (!process.HasExited) {
+						try {
+							process.Kill (entireProcessTree: true);
+						} catch (InvalidOperationException) when (process.HasExited) {
+							// The process exited before the kill request.
+						}
+						if (!process.WaitForExit (30000))
+							throw new TimeoutException ($"Process {process.Id} did not exit after termination.");
+					}
+					return false;
+				} finally {
+					outputDeadline.CancelAfter (TimeSpan.FromSeconds (2));
+				}
 			}
-			var exited = LimitOutputDrainAsync ();
+			var exited = WaitForExitOrTerminateAsync ();
+			bool outputTimedOut = false;
+			bool completed;
 			try {
-				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false))
-					procOutput.AppendLine (line.Content);
-				await exited.ConfigureAwait (false);
-				succeeded = process.ExitCode == 0;
-			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
-				procOutput.AppendLine ("Process timed out after 5 minutes.");
-			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
-				procOutput.AppendLine ("Process exited with redirected output still open after 2 seconds.");
-				succeeded = process.ExitCode == 0;
+				try {
+					await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false))
+						procOutput.AppendLine (line.Content);
+				} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+					outputTimedOut = true;
+				}
+				completed = await exited.ConfigureAwait (false);
 			} finally {
 				using var stdoutReader = process.StandardOutput;
 				using var stderrReader = process.StandardError;
 				executionDeadline.Cancel ();
-				try {
-					await exited.ConfigureAwait (false);
-				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
-					// The execution deadline owns this exit observer.
-				}
-				if (!process.HasExited) {
-					try {
-						process.Kill (entireProcessTree: true);
-					} catch (InvalidOperationException) when (process.HasExited) {
-						// The process exited before the kill request.
-					}
-					if (!process.WaitForExit (30000))
-						throw new TimeoutException ($"Process {process.Id} did not exit after termination.");
-				}
+				await exited.ConfigureAwait (false);
 			}
 
+			if (!completed)
+				procOutput.AppendLine ("Process timed out after 5 minutes.");
+			if (outputTimedOut)
+				procOutput.AppendLine ("Process exited with redirected output still open after 2 seconds.");
 			procOutput.AppendLine ($"Exit Code: {process.ExitCode}");
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
-			return succeeded;
+			return completed && process.ExitCode == 0;
 		}
 
 		public bool Init (string projectDirectory, string projectType = "basic", string dsl = "kotlin", string packageName = "")
