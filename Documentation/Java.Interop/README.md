@@ -1,20 +1,10 @@
 # Java.Interop
 
-**Java.Interop** is a binding of the [Java Native Interface][jni] for use from
-managed languages such as C#, and an associated set of code generators to
-allow Java code to invoke managed code.
+**Java.Interop** provides .NET bindings for the [Java Native Interface][jni]
+and code generators for Java-to-.NET calls. It ships with [.NET for Android][android]
+and can be built from source for other Java VMs.
 
-This allows one to bridge code running on .NET's CLR and code running on a Java VM.
-
-Note this does not mean that one can run Java code on .NET, or vice-versa.
-
-**Java.Interop** currently does not ship independently.  It is shipped as part of Microsoft's
-[.NET for Android][android] product, available via Visual Studio or .NET 6+.  However, it is designed
-to be fully independent of Android and should be usable by other Java implementations.
-For other uses, please compile and distribute from source.
-
-Some additional context for this project is documented in the [Motivation][motivation]
-and [Architecture][architecture] pages.
+See [Motivation][motivation] and [Architecture][architecture] for more context.
 
 [jni]: http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html
 [motivation]: Motivation.md
@@ -23,38 +13,26 @@ and [Architecture][architecture] pages.
 
 ## Building
 
-- The standalone tooling and test target framework on `main` is .NET 11, available [here][net-11].
-- The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
-
-The standalone tooling build does not require a locally built Android SDK.
-For the Android product build, follow the enclosing repository's
+Standalone tools and tests target [.NET 11][net-11] and do not require a locally
+built Android SDK. For the Android product build, follow the repository's
 [build instructions](../README.md#building-from-source).
-Libraries and command-line tools live in the repository's top-level `src/`,
-tooling tests in `tests/`, and the JNI source generator in
-`build-tools/java-interop-jnienv-gen/`. There is no separate bootstrap project
-or Java.Interop preparation step. Build from the repository root:
+
+Libraries and tools live in `src/`, tooling tests in `tests/`, and the JNI
+generator in `build-tools/java-interop-jnienv-gen/`. Build from the repository root:
 
 ```
 dotnet build Java.Interop.slnx
 ```
 
-`JniArgumentValue` uses [`ExtendedLayout`][extended-layout] with
-[`ExtendedLayoutKind.CUnion`][extended-layout-kind] to match JNI's native
-`jvalue` union. This requires compiler and runtime support for .NET 11
-extended layout; adoption in .NET for Android is intended for .NET 12.
-
-Native JNI method registration, VM/vtable, binary-blob descriptors, and
-reference-control-block structs use `ExtendedLayoutKind.CStruct` for their C ABI.
-Extended C layouts require unmanaged instance fields and use a blittable
-representation, including one-byte `bool` fields rather than the default
-marshaller's four-byte `BOOL`.
+Native ABI types use [`ExtendedLayout`][extended-layout]: [`CUnion`][extended-layout-kind]
+for `JniArgumentValue` and `CStruct` for native structs. These layouts require
+.NET 11 or later compiler and runtime support.
 
 [net-11]: https://dotnet.microsoft.com/en-us/download/dotnet/11.0
-[net-6]: https://github.com/dotnet/java-interop/tree/release/6.0.3xx
 [extended-layout]: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.extendedlayoutattribute?view=net-11.0
 [extended-layout-kind]: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.extendedlayoutkind?view=net-11.0
 
-Additional build options are documented [here][build-configuration].
+See [Build Configuration][build-configuration] for additional options.
 
 [build-configuration]: BuildConfiguration.md
 
