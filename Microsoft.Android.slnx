@@ -58,8 +58,6 @@
     <Project Path="tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
-    <Project Path=".github/skills/read-assembly-store/src/AssemblyStore/AssemblyStore.csproj" />
-    <Project Path=".github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj" />
     <Project Path="src/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil.csproj" />
     <Project Path="src/Java.Interop.Tools.Diagnostics/Java.Interop.Tools.Diagnostics.csproj" />
     <Project Path="src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers.csproj" />
@@ -69,9 +67,6 @@
     <Project Path="src/class-parse/class-parse.csproj" />
     <Project Path="src/java-source-utils/java-source-utils.csproj" />
     <Project Path="tools/relnote-gen/relnote-gen.csproj" />
-    <Project Path="tools/tmt/tmt.csproj">
-      <Platform Solution="*|Any CPU" Project="anycpu" />
-    </Project>
   </Folder>
   <Project Path="src/Microsoft.Android.Run/Microsoft.Android.Run.csproj" />
   <Project Path="src/Microsoft.Android.Sdk.TrimmableTypeMap/Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />

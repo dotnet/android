@@ -77,7 +77,6 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 | Package | Name in TPN | License URL |
 |---------|------------|-------------|
 | ELFSharp | KonradKuczynski/ELFSharp | https://elfsharp.it/ (MIT + LLVM) |
-| K4os.Compression.LZ4 | MiloszKrajewski/K4os.Compression.LZ4 | https://github.com/MiloszKrajewski/K4os.Compression.LZ4/ (MIT) |
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
 | NuGet.Versioning | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
 | Mono.Cecil | mono/cecil | https://github.com/mono/cecil/ (MIT) |

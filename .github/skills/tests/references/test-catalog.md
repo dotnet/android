@@ -20,7 +20,6 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 | Test Area | Project | Command |
 |-----------|---------|---------|
-| **assembly store reader** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | `dotnet test .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj -v minimal` |
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
@@ -243,6 +242,5 @@ To run the on-device typemap tests:
 | Test Area | Tier | Assembly / Project | Notes |
 |-----------|------|--------------------|-------|
 | **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
-| **assembly store reader** | **Standalone** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | Legacy/current store layouts and LZ4/Zstd decompression |
 | **api compatibility** | N/A | `tests/api-compatibility/` | Not a test runner — reference data for API surface checks |
 | **android sdk tools** | **Standalone** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |
