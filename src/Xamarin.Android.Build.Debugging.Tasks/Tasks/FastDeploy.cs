@@ -205,11 +205,18 @@ namespace Xamarin.Android.Tasks
 					return;
 				}
 
-				await CheckAppInstalledAndDebuggable (PackageName);
+				if (!await CheckAppInstalledAndDebuggable (PackageName)) {
+					return;
+				}
 			}
 
 			if (EmbedAssembliesIntoApk) {
-				await RemoveOverrideDirectory ();
+				if (packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0 ||
+						packageInfo.InternalPath.IndexOf ("not debuggable", StringComparison.OrdinalIgnoreCase) >= 0) {
+					LogDiagnostic ("Skipping override cleanup for an uninstalled or non-debuggable package before installation.");
+				} else if (!await ClearOverrideDirectory (OverrideFullPath)) {
+					return;
+				}
 			}
 
 			bool packageFileOutOfDate = !string.IsNullOrEmpty (PackageFile) &&
@@ -230,7 +237,9 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!EmbedAssembliesIntoApk && packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 					packageInfo.InternalPath = null;
-					await CheckAppInstalledAndDebuggable (PackageName);
+					if (!await CheckAppInstalledAndDebuggable (PackageName)) {
+						return;
+					}
 					if (RaiseRunAsError (packageInfo.InternalPath)) {
 						return;
 					}
@@ -260,21 +269,23 @@ namespace Xamarin.Android.Tasks
 			return lastUpload < lastPackage;
 		}
 
-		async Task CheckAppInstalledAndDebuggable (string packageName)
+		async Task<bool> CheckAppInstalledAndDebuggable (string packageName)
 		{
 			packageInfo.UserId = UserID;
 			packageInfo.PackageName = packageName;
 			packageInfo.ProcessId = 0;
 			await EnsureUserIsRunning ();
-			string packageInfoOutput = IsSafePackageNameForShell (packageName) ?
-				await RunAs ("sh", "-c", $"pwd; pidof {packageName} 2>/dev/null || true") :
+			var result = IsSafePackageNameForShell (packageName) ?
+				await RunAs ("sh", "-c", $"pwd && (pidof {packageName} 2>/dev/null || true)") :
 				await RunAs ("pwd");
+			string packageInfoOutput = result.Output;
 			ParsePackageInfoOutput (packageInfoOutput);
 			if (string.IsNullOrEmpty (packageInfo.InternalPath)) {
 				packageInfo.InternalPath = packageInfoOutput?.Trim ();
 			}
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
-				packageInfo.InternalPath = await RunAs ("readlink", "-f", ".");
+				result = await RunAs ("readlink", "-f", ".");
+				packageInfo.InternalPath = result.Output;
 			}
 			if (packageInfo.InternalPath.IndexOf ("not an application", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} is a system application.");
@@ -283,20 +294,21 @@ namespace Xamarin.Android.Tasks
 				packageInfo.AdbIsRoot = whoami.Output.Trim () == "root";
 				LogDiagnostic ($"using {(packageInfo.AdbIsRoot ? "root" : $"su {packageInfo.UserId}")} to install fast deployment files.");
 				packageInfo.InternalPath = $"/data/user/{(packageInfo.UserId ?? "0")}/{packageInfo.PackageName}";
-				return;
+				return true;
 			}
 			if (packageInfo.InternalPath.IndexOf ("not debuggable", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} was not debuggable. Forcing ReInstall");
 				ReInstall = true;
-				return;
+				return true;
 			}
 			if (packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} was not installed.");
-				return;
+				return true;
 			}
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ("run-as not supported on this device.");
 			}
+			return !ReportRunAsCommandError (result, packageName, "pwd", "readlink");
 		}
 
 		static bool IsSafePackageNameForShell (string packageName)
@@ -353,11 +365,6 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ($"Installing Package {PackageName}");
 			await InstallApkWithRetry (PackageFile, reinstall: ReInstall, testOnly: IsTestOnly, user: UserID);
 			LogDebugMessage ($"Installed Package {PackageName}.");
-		}
-
-		async Task RemoveOverrideDirectory ()
-		{
-			await RunAs ("rm", "-Rf", OverrideFullPath);
 		}
 
 		async Task TerminateApp ()
@@ -541,7 +548,9 @@ namespace Xamarin.Android.Tasks
 			string output;
 			int exitCode = 0;
 			if (runAs) {
-				output = await RunAsShell (findCommand);
+				var result = await RunAsShell (findCommand);
+				output = result.Output;
+				exitCode = result.ExitCode;
 				if (RaiseRunAsError (output)) {
 					return null;
 				}
@@ -603,9 +612,8 @@ namespace Xamarin.Android.Tasks
 
 			LogDiagnostic ($"FastDeploy removing {staleFiles.Count} stale override files.");
 			foreach (var batch in BatchShellArguments (new [] { "rm", "-f" }, staleFiles, StaleFileRemovalBatchSize)) {
-				string output = await RunAs (batch.ToArray ());
-				if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-					LogFastDeployError ("XA0129", output, overridePath);
+				var result = await RunAs (batch.ToArray ());
+				if (ReportRunAsCommandError (result, overridePath, "rm")) {
 					return false;
 				}
 			}
@@ -628,9 +636,8 @@ namespace Xamarin.Android.Tasks
 
 			foreach (var group in filesByDirectory) {
 				string targetDirectory = CombineRemotePath (overridePath, group.Key);
-				string output = await RunAs ("mkdir", "-p", targetDirectory);
-				if (RaiseRunAsError (output) || IsShellError (output, "mkdir")) {
-					LogFastDeployError ("XA0129", output, targetDirectory);
+				var result = await RunAs ("mkdir", "-p", targetDirectory);
+				if (ReportRunAsCommandError (result, targetDirectory, "mkdir")) {
 					return false;
 				}
 
@@ -639,18 +646,16 @@ namespace Xamarin.Android.Tasks
 				// is equivalent and lets each command batch independently by length.
 				var destinationFiles = group.Value.Select (file => CombineRemotePath (targetDirectory, Path.GetFileName (file)));
 				foreach (var batch in BatchShellArguments (new [] { "rm", "-f" }, destinationFiles, CopyBatchSize)) {
-					output = await RunAs (batch.ToArray ());
-					if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-						LogFastDeployError ("XA0129", output, targetDirectory);
+					result = await RunAs (batch.ToArray ());
+					if (ReportRunAsCommandError (result, targetDirectory, "rm")) {
 						return false;
 					}
 				}
 
 				var sourceFiles = group.Value.Select (file => CombineRemotePath (remoteStagingPath, file));
 				foreach (var batch in BatchShellArguments (new [] { "cp", "-p" }, sourceFiles, CopyBatchSize, trailing: targetDirectory)) {
-					output = await RunAs (batch.ToArray ());
-					if (RaiseRunAsError (output) || IsShellError (output, "cp")) {
-						LogFastDeployError ("XA0129", output, targetDirectory);
+					result = await RunAs (batch.ToArray ());
+					if (ReportRunAsCommandError (result, targetDirectory, "cp")) {
 						return false;
 					}
 				}
@@ -843,23 +848,21 @@ namespace Xamarin.Android.Tasks
 			return args;
 		}
 
-		async Task<string> RunAs (params string [] arguments)
+		async Task<AdbCommandResult> RunAs (params string [] arguments)
 		{
 			List<string> args = BuildRunAsArgs ();
 			args.AddRange (arguments);
-			var result = await RunAdbShellCommand (args.ToArray ());
-			return result.Output;
+			return await RunAdbShellCommand (args.ToArray ());
 		}
 
-		async Task<string> RunAsShell (string script)
+		async Task<AdbCommandResult> RunAsShell (string script)
 		{
 			List<string> args = BuildRunAsArgs ();
 			args.Add ("sh");
 			args.Add ("-c");
 			args.Add (script);
 			string command = string.Join (" ", args.Select (QuoteShellArgument));
-			var result = await RunAdbShellCommand (command);
-			return result.Output;
+			return await RunAdbShellCommand (command);
 		}
 
 		static string QuoteShellArgument (string value)
@@ -950,6 +953,18 @@ namespace Xamarin.Android.Tasks
 				LogDiagnostic ($"{err.code}: {err.message}");
 				PrintDiagnostics ();
 				LogCodedError (err.code, err.message, error);
+				return true;
+			}
+			return false;
+		}
+
+		bool ReportRunAsCommandError (AdbCommandResult result, string path, params string [] commands)
+		{
+			if (RaiseRunAsError (result.Output)) {
+				return true;
+			}
+			if (result.ExitCode != 0 || commands.Any (command => IsShellError (result.Output, command))) {
+				LogFastDeployError ("XA0129", $"Exit code {result.ExitCode}: {result.Output}", path);
 				return true;
 			}
 			return false;

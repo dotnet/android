@@ -512,7 +512,7 @@ namespace Xamarin.Android.Build.Tests
 						echo "List of devices attached"
 						echo "emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1"
 						;;
-					*"pwd; pidof"*)
+					*"pwd"*"pidof"*)
 						echo "/data/user/0/com.example.app"
 						;;
 					*"shell find "*"-exec stat"*)
