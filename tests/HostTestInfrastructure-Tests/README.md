@@ -25,7 +25,11 @@ DOTNET_TEST_RUNNER=Microsoft.Testing.Platform dotnet test \
 Repeat **all** commands with `-c Release` for that configuration. Only the MSTest
 invocation selects MTP; root runner configuration and existing NUnit consumers
 are unchanged. MSTest/MTP versions match the SourceWriter pilot's project-local
-pins. ProjectTools references the existing NUnit **framework** for its legacy
+pins. The MSTest proof directly references `MSTest.SourceGeneration` at the
+same project-local version as its framework/adapter. This analyzer generates
+test registration; it does not change the SDK, use `MSTest.Engine`, or imply
+that every framework operation is reflection-free.
+ProjectTools references the existing NUnit **framework** for its legacy
 overloads, not a test SDK, adapter, console runner or native test entry point.
 
 The tests cover parser success and assertion failures, native process capture,
@@ -40,6 +44,24 @@ from its passed/total counters.
 Retention tests deliberately leave their registered files available until the
 runner has copied them into its results directory. Each row has its own output
 directory. These files are ordinary ignored test output.
+
+The concrete test class is directly annotated with `[TestClass]`. Its abstract
+base supplies the inherited `TestContext` property and one `[TestCleanup]`
+method. Cleanup asserts one invocation per instance, verifies removal of
+non-retained output, and emits one `[BOUNDARY CLEANUP]` marker per result.
+Generated-mode verification must check the emitted concrete fixture/member
+registry, all typed data rows, these markers (including the inconclusive row),
+and copied attachments rather than treating a passing build as discovery proof.
+The framework's supported bounded reflection fallbacks remain allowed.
+
+For this fixture, the emitted registry contains one concrete class, 20 test
+method delegates, the inherited cleanup delegate, the inherited context setter,
+and 12 typed data-row attributes (29 executed cases). Its
+`AreGeneratedDescriptorsComplete` flag is **false**. Registration and successful
+execution therefore establish use of the generated path, not complete
+elimination of reflection. Preserve the inherited-member and attachment checks
+when updating the generator; do not make a whole-suite compatibility claim from
+these focused probes.
 
 ## Boundaries for subsequent migrations
 

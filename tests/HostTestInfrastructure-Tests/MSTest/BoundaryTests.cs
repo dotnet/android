@@ -15,6 +15,8 @@ namespace Xamarin.Android.Build.Tests;
 [TestClass]
 public abstract class BoundaryTestBase
 {
+	int cleanupCalls;
+
 	public TestContext? TestContext { get; set; }
 
 	protected TestContext Context => TestContext ?? throw new InvalidOperationException ("The runner must supply TestContext.");
@@ -26,9 +28,12 @@ public abstract class BoundaryTestBase
 	[TestCleanup]
 	public void Cleanup ()
 	{
+		Assert.AreEqual (1, ++cleanupCalls, "Inherited cleanup must run exactly once per test instance.");
 		if (!RetainArtifacts) {
 			FileSystemUtils.DeleteDirectoryWithRetry (DirectoryPath);
+			Assert.IsFalse (Directory.Exists (DirectoryPath), "Inherited cleanup must remove non-retained row output.");
 		}
+		Context.WriteLine ($"[BOUNDARY CLEANUP] {Context.TestName}; row={RowName}; calls={cleanupCalls}; retained={RetainArtifacts}");
 	}
 }
 
