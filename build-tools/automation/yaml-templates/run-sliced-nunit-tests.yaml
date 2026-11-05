@@ -67,9 +67,25 @@ steps:
         --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Look for failed tests
     workingDirectory: ${{ parameters.xaSourcePath }}
-    condition: ${{ parameters.condition }}
+    condition: and(${{ parameters.condition }}, ne(variables['Agent.OS'], 'Darwin'))
     env:
       DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
+
+  - bash: |
+      bash build-tools/automation/scripts/retry-pwsh-startup.sh \
+        -NoLogo -NoProfile -NonInteractive -Command '
+          $ErrorActionPreference = "Stop"
+          & "$env:AGENT_TOOLSDIRECTORY/dotnet-test-slicer" retry `
+            "--trx=$env:AGENT_TEMPDIRECTORY" `
+            "--outfile=$env:TEST_ASSEMBLY.runsettings"
+          exit $LASTEXITCODE
+        '
+    displayName: Look for failed tests (macOS)
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    condition: and(${{ parameters.condition }}, eq(variables['Agent.OS'], 'Darwin'))
+    env:
+      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
+      TEST_ASSEMBLY: ${{ parameters.testAssembly }}
 
     # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
   - task: PublishTestResults@2
