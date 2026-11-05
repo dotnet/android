@@ -19,9 +19,12 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.3.2" />
+    <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="2.4.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- MSTest discovers tests through reflection, not the application's call graph. -->
+    <TrimmerRootAssembly Include="$(AssemblyName)" RootMode="All" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 </Project>

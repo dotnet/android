@@ -3400,12 +3400,17 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		[TestCase ("run", MSTestPackageChannel.Nightly)]
-		[TestCase ("test", MSTestPackageChannel.Stable)]
-		[TestCase ("test", MSTestPackageChannel.Nightly)]
-		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
+		[TestCase ("run", MSTestPackageChannel.Nightly, "Debug")]
+		[TestCase ("test", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("test", MSTestPackageChannel.Nightly, "Debug")]
+		[TestCase ("discover", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("discover", MSTestPackageChannel.Nightly, "Debug")]
+		[TestCase ("discover", MSTestPackageChannel.Stable, "Release")]
+		[TestCase ("select", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("select", MSTestPackageChannel.Nightly, "Debug")]
+		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel, string configuration)
 		{
-			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
+			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}_{configuration}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -3414,7 +3419,8 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
-			var buildParameters = new List<string> ();
+			// Generated projects should use the SDK default, not the repository's XML-documentation policy.
+			var buildParameters = new List<string> { "GenerateDocumentationFile=false", $"Configuration={configuration}" };
 
 			if (msTestPackageChannel == MSTestPackageChannel.Nightly) {
 				// Override the stable template version with the version used by our build.
@@ -3430,14 +3436,39 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				buildParameters.Add ("RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json");
 			}
 
-			// Build and assert 0 warnings
+			// MSTest's dependencies still emit IL2104 under full trimming.
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
-			dotnet.AssertHasNoWarnings ();
+			if (configuration == "Debug") {
+				dotnet.AssertHasNoWarnings ();
+			} else {
+				foreach (var warning in dotnet.LastBuildOutput.Where (line => line.Contains (": warning ", StringComparison.Ordinal)))
+					StringAssert.Contains ("warning IL2104: Assembly ", warning, "Release must not introduce other warnings.");
+			}
 
 			// Run based on mode
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
-			if (mode == "test")
+			var serial = RunAdbCommand ("get-serialno").Trim ();
+			if (mode == "run")
+				runParameters.Add ($"/p:Device={serial}");
+			else
+				runParameters.Add ($"--device {serial}");
+			if (mode is "test" or "select")
 				runParameters.Add ("--report-trx");
+			if (mode == "discover")
+				runParameters.Add ("--list-tests");
+			if (mode == "select") {
+				Assert.IsTrue (dotnet.Build ("Install", parameters: [.. buildParameters, $"Device={serial}"]),
+					"The test app must be installed before discovery.");
+				var discovered = RunAdbCommand ($"shell am instrument -w -r -e list-tests true com.companyname.{templateName}/.TestInstrumentation")
+					.Replace ("\r\n", "\n");
+				StringAssert.Contains ("INSTRUMENTATION_RESULT: discovered=3", discovered);
+				var selectedTest = discovered.Split ("INSTRUMENTATION_STATUS_CODE:")
+					.Single (block => block.Contains ("INSTRUMENTATION_STATUS: name=TestMethod1\n", StringComparison.Ordinal));
+				var uid = selectedTest.Split ('\n')
+					.Single (line => line.StartsWith ("INSTRUMENTATION_STATUS: test=", StringComparison.Ordinal))
+					.Substring ("INSTRUMENTATION_STATUS: test=".Length).Trim ();
+				runParameters.Add ($"--filter-uid {uid}");
+			}
 
 			using var process = mode == "run"
 				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
@@ -3487,6 +3518,27 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
 				Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
 				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			} else if (mode == "select") {
+				Assert.AreEqual (0, process.ExitCode, $"Selected execution should succeed. See {logPath} for details.");
+				StringAssert.Contains ("total: 1", outputText);
+				StringAssert.Contains ("succeeded: 1", outputText);
+				StringAssert.Contains ("failed: 0", outputText);
+				StringAssert.Contains ("skipped: 0", outputText);
+			} else if (mode == "discover") {
+				Assert.AreEqual (0, process.ExitCode, $"Discovery should succeed. See {logPath} for details.");
+				StringAssert.Contains ("TestMethod1", outputText);
+				StringAssert.Contains ("TestMethod2", outputText);
+				StringAssert.Contains ("TestMethod3", outputText);
+				StringAssert.DoesNotContain ("failed: 1", outputText, "Discovery must not execute the failing test.");
+				var discovered = RunAdbCommand ($"shell am instrument -w -r -e list-tests true com.companyname.{templateName}/.TestInstrumentation")
+					.Replace ("\r\n", "\n");
+				StringAssert.Contains ($"INSTRUMENTATION_STATUS: class={templateName}.Test1\n", discovered);
+				StringAssert.Contains ($"INSTRUMENTATION_STATUS: namespace={templateName}\n", discovered);
+				StringAssert.Contains ("INSTRUMENTATION_STATUS: type=Test1\n", discovered);
+				StringAssert.Contains ("INSTRUMENTATION_STATUS: method=TestMethod1\n", discovered);
+				StringAssert.Contains ("INSTRUMENTATION_STATUS: return-type=System.Void\n", discovered);
+				Assert.IsEmpty (Directory.GetFiles (projectDirectory, "*.trx", SearchOption.AllDirectories),
+					"Discovery must not create an execution report.");
 			} else {
 				// dotnet test reports results via MTP protocol
 				// Verify non-zero exit code (there is a failing test) and stable summary counts

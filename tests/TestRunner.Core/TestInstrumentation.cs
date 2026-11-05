@@ -70,7 +70,9 @@ public abstract class TestInstrumentation : Instrumentation
 			Directory.CreateDirectory (resultsDir);
 
 			var filter = BuildNUnitFilter ();
+			bool discover = GetBoolExtra (InstrumentationProtocol.ExtraDiscover);
 			int passed = 0, failed = 0, skipped = 0;
+			int discovered = 0;
 			var allResults = new List<ITestResult> ();
 			var listener = new TestListener (this);
 
@@ -96,9 +98,20 @@ public abstract class TestInstrumentation : Instrumentation
 				};
 				runner.Load (assembly, settings);
 
+				if (discover) {
+					discovered += DiscoverTests (runner.LoadedTest, filter);
+					continue;
+				}
+
 				var result = runner.Run (listener, filter);
 				CountResults (result, ref passed, ref failed, ref skipped);
 				allResults.Add (result);
+			}
+
+			if (discover) {
+				bundle.PutInt (InstrumentationProtocol.KeyDiscoveredCount, discovered);
+				Finish (Result.Ok, bundle);
+				return;
 			}
 
 			var trxPath = Path.Combine (resultsDir, "TestResults.trx");
@@ -123,6 +136,22 @@ public abstract class TestInstrumentation : Instrumentation
 	/// </summary>
 	protected abstract IEnumerable<Assembly> GetTestAssemblies ();
 
+	int DiscoverTests (ITest test, TestFilter filter)
+	{
+		if (test.IsSuite) {
+			int count = 0;
+			foreach (var child in test.Tests)
+				count += DiscoverTests (child, filter);
+			return count;
+		}
+		if (!filter.Pass (test))
+			return 0;
+
+		var status = TestListener.CreateStatus (test, InstrumentationProtocol.EventDiscover);
+		SendStatus (Result.Ok, status);
+		return 1;
+	}
+
 	/// <summary>
 	/// Builds an NUnit TestFilter from excluded categories, excluded test names,
 	/// and instrumentation extras (include/exclude).
@@ -131,6 +160,13 @@ public abstract class TestInstrumentation : Instrumentation
 	{
 		bool noExclusions = GetBoolExtra ("noexclusions");
 		var filterElements = new List<XElement> ();
+		var selectedUids = GetStringExtra (InstrumentationProtocol.ExtraTestUids);
+		if (selectedUids != null) {
+			var tests = InstrumentationProtocol.DecodeTestUids (selectedUids);
+			if (tests.Length == 0)
+				throw new ArgumentException ("The selected-test filter must not be empty.");
+			filterElements.Add (new XElement ("or", tests.Select (uid => new XElement ("test", uid))));
+		}
 
 		// Include categories from two sources:
 		//   1. `am instrument -e include "Cat1,Cat2"` (legacy CLI extras)
@@ -345,11 +381,7 @@ public abstract class TestInstrumentation : Instrumentation
 				return;
 			Log.Info (LogTag, $"[START] {test.FullName}");
 
-			var b = new Bundle ();
-			b.PutString (InstrumentationProtocol.KeyEvent, InstrumentationProtocol.EventStart);
-			b.PutString (InstrumentationProtocol.KeyTest, test.FullName);
-			b.PutString (InstrumentationProtocol.KeyName, test.Name);
-			b.PutString (InstrumentationProtocol.KeyClass, test.ClassName ?? "");
+			var b = CreateStatus (test, InstrumentationProtocol.EventStart);
 			instrumentation.SendStatus ((Result) (int) InstrumentationStatusCode.Start, b);
 		}
 
@@ -366,11 +398,7 @@ public abstract class TestInstrumentation : Instrumentation
 
 			Log.Info (LogTag, $"[{outcome.ToUpperInvariant ()}] {result.FullName}");
 
-			var b = new Bundle ();
-			b.PutString (InstrumentationProtocol.KeyEvent, InstrumentationProtocol.EventFinish);
-			b.PutString (InstrumentationProtocol.KeyTest, result.FullName);
-			b.PutString (InstrumentationProtocol.KeyName, result.Test.Name);
-			b.PutString (InstrumentationProtocol.KeyClass, result.Test.ClassName ?? "");
+			var b = CreateStatus (result.Test, InstrumentationProtocol.EventFinish);
 			b.PutString (InstrumentationProtocol.KeyOutcome, outcome);
 			if (result.Message is not null)
 				b.PutString (InstrumentationProtocol.KeyMessageBase64, Encode (result.Message));
@@ -381,6 +409,32 @@ public abstract class TestInstrumentation : Instrumentation
 
 		static string Encode (string value)
 			=> Convert.ToBase64String (System.Text.Encoding.UTF8.GetBytes (value));
+
+		public static Bundle CreateStatus (ITest test, string eventKind)
+		{
+			var b = new Bundle ();
+			b.PutString (InstrumentationProtocol.KeyEvent, eventKind);
+			b.PutString (InstrumentationProtocol.KeyTest, test.FullName);
+			b.PutString (InstrumentationProtocol.KeyName, test.Name);
+			b.PutString (InstrumentationProtocol.KeyClass, test.ClassName ?? "");
+
+			var method = test.Method?.MethodInfo;
+			if (method?.DeclaringType is Type type) {
+				var ns = type.Namespace ?? "";
+				var typeName = type.FullName ?? type.Name;
+				if (ns.Length > 0)
+					typeName = typeName.Substring (ns.Length + 1);
+				b.PutString (InstrumentationProtocol.KeyAssembly, type.Assembly.FullName ?? "");
+				b.PutString (InstrumentationProtocol.KeyNamespace, ns);
+				b.PutString (InstrumentationProtocol.KeyType, typeName);
+				b.PutString (InstrumentationProtocol.KeyMethod, method.Name);
+				b.PutString (InstrumentationProtocol.KeyMethodArity, method.GetGenericArguments ().Length.ToString (System.Globalization.CultureInfo.InvariantCulture));
+				b.PutString (InstrumentationProtocol.KeyParameterTypes, InstrumentationProtocol.EncodeTestUids (
+					method.GetParameters ().Select (parameter => parameter.ParameterType.FullName ?? parameter.ParameterType.Name)));
+				b.PutString (InstrumentationProtocol.KeyReturnType, method.ReturnType.FullName ?? method.ReturnType.Name);
+			}
+			return b;
+		}
 
 		public void TestOutput (TestOutput output) { }
 		public void SendMessage (TestMessage message) { }
