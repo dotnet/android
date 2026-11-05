@@ -16,7 +16,7 @@
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <!-- Makes the shared HexUtilities.cs `public` here; it stays `internal` where it is linked in. -->
     <DefineConstants>$(DefineConstants);MICROSOFT_ANDROID_BUILD_BASETASKS</DefineConstants>
-    <Features>$(Features);updated-memory-safety-rules</Features>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <ItemGroup>
