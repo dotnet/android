@@ -545,19 +545,10 @@ namespace Xamarin.Android.Tasks
 			// (e.g. via RunAdbShellCommand (params string [])) would let the device shell treat the
 			// `|` characters as pipes. Building a single, explicitly quoted command string avoids it.
 			string findCommand = $"find {QuoteShellArgument (rootPath)} -type f -exec stat -c '%n|%s|%Y' {{}} +";
-			string output;
-			int exitCode = 0;
-			if (runAs) {
-				var result = await RunAsShell (findCommand);
-				output = result.Output;
-				exitCode = result.ExitCode;
-				if (RaiseRunAsError (output)) {
-					return null;
-				}
-			} else {
-				var result = await RunAdbShellCommand (findCommand);
-				output = result.Output;
-				exitCode = result.ExitCode;
+			var result = runAs ? await RunAsShell (findCommand) : await RunAdbShellCommand (findCommand);
+			string output = result.Output;
+			if (runAs && RaiseRunAsError (output)) {
+				return null;
 			}
 
 			if (IsMissingDirectoryError (output)) {
@@ -566,7 +557,7 @@ namespace Xamarin.Android.Tasks
 			// A failed listing (for example a killed `find` or a dropped adb connection) can produce
 			// output that IsShellError does not recognize. Treating it as an empty directory would
 			// make the caller delete override files that are still wanted.
-			if (exitCode != 0 || IsShellError (output, "find") || IsShellError (output, "stat")) {
+			if (result.ExitCode != 0 || IsShellError (output, "find") || IsShellError (output, "stat")) {
 				LogFastDeployError ("XA0129", output, rootPath);
 				return null;
 			}
@@ -848,21 +839,21 @@ namespace Xamarin.Android.Tasks
 			return args;
 		}
 
-		async Task<AdbCommandResult> RunAs (params string [] arguments)
+		Task<AdbCommandResult> RunAs (params string [] arguments)
 		{
 			List<string> args = BuildRunAsArgs ();
 			args.AddRange (arguments);
-			return await RunAdbShellCommand (args.ToArray ());
+			return RunAdbShellCommand (args.ToArray ());
 		}
 
-		async Task<AdbCommandResult> RunAsShell (string script)
+		Task<AdbCommandResult> RunAsShell (string script)
 		{
 			List<string> args = BuildRunAsArgs ();
 			args.Add ("sh");
 			args.Add ("-c");
 			args.Add (script);
 			string command = string.Join (" ", args.Select (QuoteShellArgument));
-			return await RunAdbShellCommand (command);
+			return RunAdbShellCommand (command);
 		}
 
 		static string QuoteShellArgument (string value)
@@ -960,11 +951,12 @@ namespace Xamarin.Android.Tasks
 
 		bool ReportRunAsCommandError (AdbCommandResult result, string path, params string [] commands)
 		{
-			if (RaiseRunAsError (result.Output)) {
+			string output = result.Output;
+			if (RaiseRunAsError (output)) {
 				return true;
 			}
-			if (result.ExitCode != 0 || commands.Any (command => IsShellError (result.Output, command))) {
-				LogFastDeployError ("XA0129", $"Exit code {result.ExitCode}: {result.Output}", path);
+			if (result.ExitCode != 0 || commands.Any (command => IsShellError (output, command))) {
+				LogFastDeployError ("XA0129", $"Exit code {result.ExitCode}: {output}", path);
 				return true;
 			}
 			return false;

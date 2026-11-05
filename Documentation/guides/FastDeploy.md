@@ -122,9 +122,8 @@ adb install -r -d [-t] [--user <id>] <path-to-apk>
 
 If `$(EmbedAssembliesIntoApk)` is `true`, the override directory is removed and
 deployment stops here — there are no separate files to push.
-Cleanup is skipped when the package query reports an uninstalled or non-debuggable
-package, allowing the install/reinstall recovery to proceed. Otherwise a failed
-override removal aborts deployment.
+Cleanup is skipped for uninstalled or non-debuggable packages; other cleanup
+failures abort deployment.
 
 ### 5. Terminate the running app
 
@@ -182,10 +181,8 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
      If the device does not support symlinking into the override directory, the
      task automatically falls back to `Copy`.
 
-     A nonzero command exit status triggers this fallback even when the command
-     prints no recognizable error. Copy-mode listing, directory creation, removal,
-     and copy failures abort deployment with a coded error instead of recording a
-     successful manifest. A missing listing root is still treated as empty.
+     Nonzero `run-as` exits fail deployment, or trigger copy fallback for symlink
+     updates, even without recognizable error text. Missing listing roots remain empty.
    * **`Copy`:** the staged files are copied into the override directory instead
      of symlinked.
 7. **Mark success.** When the override directory is up to date, one

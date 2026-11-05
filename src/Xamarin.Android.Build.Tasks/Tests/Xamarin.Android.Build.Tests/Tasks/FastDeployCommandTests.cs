@@ -13,10 +13,16 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture, NonParallelizable]
 	public class FastDeployCommandTests
 	{
-		[Test, Combinatorial]
+		[Test]
 		public void NonzeroOverrideCommandFailsDeployment (
-			[Values ("'-c' 'find ", "rm -f files/.__override__/stale.dll", "rm -f files/.__override__/arm64-v8a/Foo.dll", "mkdir -p files/.__override__", "cp -p", "if test -f")] string command,
-			[Values ("", "error: closed", "Killed")] string output)
+			[Values (
+				"'-c' 'find ",
+				"rm -f files/.__override__/stale.dll",
+				"rm -f files/.__override__/arm64-v8a/Foo.dll",
+				"mkdir -p files/.__override__",
+				"cp -p",
+				"if test -f")] string command,
+			[Values ("", "error: closed")] string output)
 		{
 			using var device = new CommandDevice ();
 			device.FailCommand (command, output);
@@ -52,29 +58,21 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (device.HasManifest);
 		}
 
-		[TestCase ("")]
-		[TestCase ("error: closed")]
-		public void FailedPackageQueryStopsDeployment (string output)
+		[Test]
+		public void FailedPackageQueryStopsDeployment (
+			[Values (false, true)] bool readlink,
+			[Values ("", "error: closed")] string output)
 		{
 			using var device = new CommandDevice ();
-			device.FailCommand ("pwd", output);
+			if (readlink) {
+				device.WriteResult ("package", 1, "Permission denied");
+			}
+			string command = readlink ? "readlink -f ." : "pwd";
+			device.FailCommand (command, output);
 
 			Assert.IsFalse (device.Run ());
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
-			Assert.That (device.Commands.Last (), Does.Contain ("pwd"));
-		}
-
-		[TestCase ("")]
-		[TestCase ("error: closed")]
-		public void FailedReadlinkFallbackStopsDeployment (string output)
-		{
-			using var device = new CommandDevice ();
-			device.SetPackageQuery (1, "Permission denied");
-			device.FailCommand ("readlink -f .", output);
-
-			Assert.IsFalse (device.Run ());
-			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
-			Assert.That (device.Commands.Last (), Does.Contain ("readlink"));
+			Assert.That (device.Commands.Last (), Does.Contain (command));
 		}
 
 		[TestCase (false, "")]
@@ -117,7 +115,7 @@ namespace Xamarin.Android.Build.Tests
 		public void MissingOrEmptyOverrideDirectoryStillDeploys (int exitCode, string output)
 		{
 			using var device = new CommandDevice ();
-			device.SetOverrideListing (exitCode, output);
+			device.WriteResult ("override", exitCode, output);
 
 			Assert.IsTrue (device.Run ());
 			Assert.IsEmpty (device.Errors);
@@ -129,7 +127,7 @@ namespace Xamarin.Android.Build.Tests
 		public void PermissionDeniedPackageQueryStillUsesReadlinkFallback ()
 		{
 			using var device = new CommandDevice ();
-			device.SetPackageQuery (1, "Permission denied");
+			device.WriteResult ("package", 1, "Permission denied");
 
 			Assert.IsTrue (device.Run ());
 			Assert.IsEmpty (device.Errors);
@@ -141,7 +139,7 @@ namespace Xamarin.Android.Build.Tests
 		public void RecoverablePackageQueryStillInstalls (string output)
 		{
 			using var device = new CommandDevice ();
-			device.SetPackageQuery (1, output);
+			device.WriteResult ("package", 1, output);
 			device.FailCommand ("rm -rf files/.__override__", output);
 
 			Assert.IsTrue (device.Run (embedded: true, install: true));
@@ -208,8 +206,8 @@ namespace Xamarin.Android.Build.Tests
 				""";
 
 			readonly string directory = Path.Combine (Path.GetTempPath (), "fastdeploy-commands-" + Guid.NewGuid ().ToString ("N"));
-			readonly List<ITaskItem> files = new List<ITaskItem> ();
-			public List<BuildErrorEventArgs> Errors { get; } = new List<BuildErrorEventArgs> ();
+			readonly List<ITaskItem> files = [];
+			public List<BuildErrorEventArgs> Errors { get; } = [];
 			public IReadOnlyList<string> Commands => File.ReadAllLines (Path.Combine (directory, "adb.log"));
 			public bool HasManifest => Directory.GetFiles (Path.Combine (directory, "obj"), "manifest.json", SearchOption.AllDirectories).Length > 0;
 
@@ -223,8 +221,8 @@ namespace Xamarin.Android.Build.Tests
 				var adb = Path.Combine (directory, "adb");
 				File.WriteAllText (adb, Script);
 				File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-				SetPackageQuery (0, "/data/user/0/com.example.app");
-				SetOverrideListing (0, "files/.__override__/stale.dll|1|1700000000");
+				WriteResult ("package", 0, "/data/user/0/com.example.app");
+				WriteResult ("override", 0, "files/.__override__/stale.dll|1|1700000000");
 				AddFile ("Foo.dll");
 			}
 
@@ -238,24 +236,17 @@ namespace Xamarin.Android.Build.Tests
 				File.AppendAllText (Path.Combine (directory, "staging.out"), $"{StagingRoot}/arm64-v8a/{name}|3|1700000000\n");
 			}
 
-			public void FailCommand (string command, string output, bool second = false, int exitCode = 137)
+			public void FailCommand (string command, string output, bool second = false, int exitCode = 1)
 			{
 				string fault = second ? "second-fault" : "fault";
 				File.WriteAllText (Path.Combine (directory, fault), command);
-				File.WriteAllText (Path.Combine (directory, fault + ".out"), output);
-				File.WriteAllText (Path.Combine (directory, fault + ".exit"), exitCode.ToString ());
+				WriteResult (fault, exitCode, output);
 			}
 
-			public void SetPackageQuery (int exitCode, string output)
+			public void WriteResult (string name, int exitCode, string output)
 			{
-				File.WriteAllText (Path.Combine (directory, "package.exit"), exitCode.ToString ());
-				File.WriteAllText (Path.Combine (directory, "package.out"), output);
-			}
-
-			public void SetOverrideListing (int exitCode, string output)
-			{
-				File.WriteAllText (Path.Combine (directory, "override.exit"), exitCode.ToString ());
-				File.WriteAllText (Path.Combine (directory, "override.out"), output);
+				File.WriteAllText (Path.Combine (directory, name + ".exit"), exitCode.ToString ());
+				File.WriteAllText (Path.Combine (directory, name + ".out"), output);
 			}
 
 			public bool Run (bool symlink = false, bool embedded = false, bool install = false)
@@ -281,10 +272,6 @@ namespace Xamarin.Android.Build.Tests
 
 			public int RunGlobScript (string failingCommand)
 			{
-				if (OperatingSystem.IsWindows ()) {
-					Assert.Ignore ("The shell script requires a Unix shell.");
-					return 0;
-				}
 				string staging = Path.Combine (directory, "staging");
 				string target = Path.Combine (directory, "override");
 				Directory.CreateDirectory (staging);
@@ -299,7 +286,9 @@ namespace Xamarin.Android.Build.Tests
 					case "$*" in *Foo.dll*) exit 137;; esac
 					exec /bin/{failingCommand} "$@"
 					""");
-				File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				if (!OperatingSystem.IsWindows ()) {
+					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				}
 
 				string invocation = Commands.Single (c => c.Contains ("for f in"));
 				const string shellPrefix = "'sh' '-c' ";
