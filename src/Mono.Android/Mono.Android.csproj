@@ -75,11 +75,8 @@
     <Compile Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
       <Link>Crc64.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs">
+    <Compile Include="..\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs">
       <Link>Crc64Helper.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
-      <Link>Crc64.Table.cs</Link>
     </Compile>
     <Compile Include="Android.App\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Android.App\MetaDataAttribute.Partial.cs" />
@@ -381,6 +378,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -418,6 +416,7 @@
       <_RefExtras Include="$(OutputPath)*.*" Exclude="$(OutputPath)*.dll" />
       <_SourceFiles Include="$(OutputPath)Mono.Android.*" />
       <_SourceFiles Include="$(OutputPath)Java.Interop.*" />
+      <_SourceFiles Include="$(OutputPath)System.IO.Hashing.dll" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_RefExtras)"
