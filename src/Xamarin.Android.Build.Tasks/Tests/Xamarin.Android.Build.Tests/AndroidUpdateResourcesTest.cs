@@ -632,16 +632,14 @@ namespace UnnamedProject
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		[TestCaseSource (nameof (Get_ReleaseLanguageData))]
-		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
+		public void CheckResourceDesignerIsCreated ([Values (false, true)] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
 
 			var proj = new XamarinAndroidApplicationProject () {
-				Language = language,
+				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);

@@ -380,7 +380,7 @@ stages:
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
-      parallel: 12
+      parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
     pool:

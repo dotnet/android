@@ -4,7 +4,6 @@ parameters:
   stageName: msbuilddevice_tests
   job_name: 'mac_dotnetdevice_tests'
   dependsOn: mac_build
-  agent_count: 12
   stageCondition: succeeded()
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
@@ -23,7 +22,7 @@ stages:
   jobs:
   - job: ${{ parameters.job_name }}
     strategy:
-      parallel: ${{ parameters.agent_count }}
+      parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
       name: Azure Pipelines

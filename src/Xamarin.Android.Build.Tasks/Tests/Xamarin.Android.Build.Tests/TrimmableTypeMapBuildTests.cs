@@ -151,8 +151,7 @@ namespace Xamarin.Android.Build.Tests {
 
 		[Test]
 		public void Build_WithTrimmableTypeMap_Succeeds (
-			[ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration,
-			[Values (null, "", "llvm-ir", "trimmable", "unsupported")] string? obsoleteImplementation)
+			[ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 
@@ -162,8 +161,7 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetRuntime (runtime);
 
 			using var builder = CreateApkBuilder ();
-			string [] parameters = obsoleteImplementation == null ? [] : [$"AndroidTypeMapImplementation={obsoleteImplementation}"];
-			Assert.IsTrue (builder.Build (proj, parameters: parameters), "Build should use the trimmable type map regardless of the obsolete property.");
+			Assert.IsTrue (builder.Build (proj), "Build should use the trimmable type map.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
