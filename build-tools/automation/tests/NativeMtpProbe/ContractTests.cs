@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -103,6 +104,27 @@ public class ContractTests
 	public void Sleeps ()
 	{
 		System.Threading.Thread.Sleep (30_000);
+	}
+
+	[TestMethod]
+	[TestCategory ("child-timeout")]
+	public void SpawnChildAndWait ()
+	{
+		RecordExecution ();
+		var executable = Environment.GetEnvironmentVariable ("MTP_PROBE_CHILD_EXECUTABLE");
+		var script = Environment.GetEnvironmentVariable ("MTP_PROBE_CHILD_SCRIPT");
+		var state = Environment.GetEnvironmentVariable ("MTP_PROBE_STATE");
+		Assert.IsFalse (string.IsNullOrEmpty (executable));
+		Assert.IsFalse (string.IsNullOrEmpty (script));
+		Assert.IsFalse (string.IsNullOrEmpty (state));
+		var start = new ProcessStartInfo (executable) { UseShellExecute = false };
+		start.ArgumentList.Add (script);
+		start.ArgumentList.Add (state);
+		start.ArgumentList.Add ("child");
+		using var child = Process.Start (start);
+		Assert.IsNotNull (child);
+		child.WaitForExit ();
+		Assert.Fail ("timeout child exited before the native test process was stopped");
 	}
 
 	[TestMethod]

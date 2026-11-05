@@ -14,6 +14,16 @@ MSTest `4.6.0-preview.26524.1` and MTP/TRX `2.6.0-preview.26524.1`.
 The latter pins belong to the converted project, not the root package policy.
 The adapter needs Python 3.9+ and the matching .NET runtime.
 
+The exact SDK pin was verified on 2026-11-05 against the metadata actually used
+by `UseDotNet@2`: its [release index][sdk-index] links the 11.0
+[`releases.json`][sdk-releases], which lists this exact SDK and a
+`linux-x64` `.tar.gz` file. The task's actual `getMatchingVersionFromList`
+function, from azure-pipelines-tasks commit
+`3cdc037ed3702e99641e536ed7512b3f873b9d1d`, selected this exact version with
+`includePreviewVersions: true`; its Linux archive URL returned HTTP 200.
+This is metadata/resolver verification, not inference from a local installation
+or an archive download. No custom daily-feed installer is needed.
+
 `run-native-mtp-tests.yaml` is **execution-only**, selecting exactly one built
 native-MTP DLL with its runtimeconfig, dependencies and TRX extension alongside
 it. It never restores, builds, evaluates a project, accepts a wildcard, or scans
@@ -39,6 +49,22 @@ variables. `MTP_TIMEOUT_SECONDS` defaults to 600 per discovery/execution process
 timeouts are infrastructure failures, not retries. `MTP_DOTNET` selects the host
 executable. The CI template uses environment inputs so filter values and paths
 aren't interpolated into shell commands.
+
+Each native process runs in an owned POSIX session/process group. On timeout
+the adapter sends SIGKILL to that specific group, terminating inherited children
+and grandchildren as well as the host, then reaps the direct child. It never
+kills by executable name or touches the agent's group. Windows starts a separate
+process group and uses `taskkill /PID <owned-root> /T /F` for tree cleanup.
+Cleanup failures are explicit infrastructure errors, not ignored successful
+timeouts; the owned PID/group and cleanup outcome are retained in
+`command.json` alongside stdout/stderr and diagnostics. Interrupted waits also
+clean the owned tree before propagating interruption.
+
+The real spawned-child regression has been exercised on macOS, with a child
+and grandchild heartbeat plus an unrelated sibling process that must survive.
+The Windows `taskkill` branch and Linux group cleanup have **not** been run here.
+POSIX children that deliberately detach into a different session/group escape
+this ownership boundary; tests must not daemonize unmanaged background work.
 
 ## Discovery, selection and slicing contract
 
@@ -158,6 +184,9 @@ first-failure recovery (including one of two same-display data rows), exhausted
 retries, disabled retries, skipped tests,
 first/retry-process crashes, timeout, output/attachment paths, schema/identity
 rejection and unchanged NUnit AIDL Debug/Release/root-DLL execution.
+Timeout coverage includes a real native test spawning a child and grandchild,
+both terminated while an unrelated sibling stays alive; no effective success
+report is emitted.
 
 Local macOS arm64 coverage does **not** certify Azure task orchestration,
 server-side result/attachment publication, agent image/SDK installation, Linux
@@ -165,3 +194,5 @@ or Windows execution. The public job is opt-in until those remote checks run.
 
 [filters]: https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests
 [slicer]: https://github.com/jpobst/dotnet-test-slicer/blob/e36677d51cff00f81404b8ba8cdacf9215bed7c6/src/DotNet.Test.Slicer/NUnitTestDiscoverer.cs
+[sdk-index]: https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json
+[sdk-releases]: https://builds.dotnet.microsoft.com/dotnet/release-metadata/11.0/releases.json

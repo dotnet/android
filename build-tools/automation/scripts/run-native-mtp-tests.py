@@ -7,6 +7,7 @@ import copy
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import uuid
@@ -31,17 +32,52 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+def stop_owned_process_tree(process, directory, record):
+    cleanup = record["timeoutCleanup"] = {"rootPid": process.pid}
+    if os.name == "posix":
+        cleanup.update({"method": "killpg", "processGroup": process.pid})
+        try:
+            # start_new_session makes this PID the group leader, isolated from the agent.
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            cleanup["alreadyExited"] = True
+    elif os.name == "nt":
+        command = ["taskkill", "/PID", str(process.pid), "/T", "/F"]
+        cleanup.update({"method": "taskkill", "argv": command})
+        with (directory / "timeout-cleanup.stdout.log").open("w") as stdout, (
+            directory / "timeout-cleanup.stderr.log"
+        ).open("w") as stderr:
+            result = subprocess.run(command, stdout=stdout, stderr=stderr, timeout=30, check=False)
+        cleanup["exitCode"] = result.returncode
+        if result.returncode:
+            raise ContractError(f"Owned process-tree cleanup failed with exit {result.returncode}; see {directory}")
+    cleanup["rootExitCode"] = process.wait(timeout=10)
+
+
 def invoke(command, directory, timeout):
     directory.mkdir(parents=True, exist_ok=True)
     record = {"argv": command, "cwd": str(Path.cwd())}
+    if os.name not in ("posix", "nt"):
+        raise ContractError(f"No owned process-tree isolation for OS {os.name}")
     try:
         with (directory / "stdout.log").open("w", encoding="utf-8") as stdout, (
             directory / "stderr.log"
         ).open("w", encoding="utf-8") as stderr:
-            result = subprocess.run(
-                command, stdout=stdout, stderr=stderr, timeout=timeout, check=False
+            process = subprocess.Popen(
+                command, stdout=stdout, stderr=stderr, start_new_session=os.name == "posix",
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
             )
-        record["exitCode"] = result.returncode
+            record.update({"pid": process.pid, "isolation": "session" if os.name == "posix" else "process-group"})
+            try:
+                record["exitCode"] = process.wait(timeout=timeout)
+            except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
+                record["error"] = str(error) or "Interrupted"
+                try:
+                    stop_owned_process_tree(process, directory, record)
+                except (OSError, subprocess.TimeoutExpired, ContractError) as cleanup_error:
+                    record["timeoutCleanup"]["error"] = str(cleanup_error)
+                    raise ContractError(f"Owned process-tree cleanup failed: {cleanup_error}") from cleanup_error
+                raise
     except (OSError, subprocess.TimeoutExpired) as error:
         record["error"] = str(error)
         raise ContractError(f"Unable to complete {command[0]}: {error}") from error
@@ -49,7 +85,7 @@ def invoke(command, directory, timeout):
         write_json(directory / "command.json", record)
     print((directory / "stdout.log").read_text(encoding="utf-8"), end="")
     print((directory / "stderr.log").read_text(encoding="utf-8"), end="", file=sys.stderr)
-    return result.returncode
+    return record["exitCode"]
 
 
 def discovery(module, args, output):

@@ -1,12 +1,15 @@
 """Real host integration probes. Run with python3 -m unittest discover -s build-tools/automation/tests."""
 
 from collections import Counter
+import csv
 import importlib.util
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
 import tempfile
+import time
 import unittest
 from unittest import mock
 import xml.etree.ElementTree as ET
@@ -20,6 +23,18 @@ spec = importlib.util.spec_from_file_location("native_mtp", SCRIPT)
 adapter = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(adapter)
 NS = adapter.NS
+
+
+def process_is_running(pid):
+    if os.name == "posix":
+        result = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+        if result.returncode not in (0, 1):
+            raise AssertionError(f"Unable to inspect owned PID {pid}: {result.stderr}")
+        return bool(result.stdout.strip()) and not result.stdout.strip().startswith("Z")
+    result = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+    return any(len(row) > 1 and row[1] == str(pid) for row in csv.reader(result.stdout.splitlines()))
 
 
 class NativeMtpIntegration(unittest.TestCase):
@@ -222,6 +237,62 @@ class NativeMtpIntegration(unittest.TestCase):
         self.command("bad-numeric-argument", [os.sys.executable, str(SCRIPT),
                      "--module", str(self.probe), "--results-directory", str(self.evidence / "bad-number"),
                      "--total-slices", "not-an-integer"], 5)
+
+    def test_timeout_cleans_owned_child_and_grandchild(self):
+        state = self.evidence / "child-timeout-state"
+        sentinel = subprocess.Popen([os.sys.executable, "-c", "import time; time.sleep(60)"])
+        try:
+            directory = self.execute(
+                "child-timeout", filter="TestCategory=child-timeout", expected=10,
+                extra_env={
+                    "MTP_TIMEOUT_SECONDS": "5", "MTP_PROBE_CHILD_EXECUTABLE": os.sys.executable,
+                    "MTP_PROBE_CHILD_SCRIPT": str(ROOT / "build-tools/automation/tests/timeout_child.py"),
+                },
+            )
+            attempt = directory / "attempt-1"
+            command = json.loads((attempt / "command.json").read_text())
+            self.assertIn("error", command)
+            self.assertEqual(command["pid"], command["timeoutCleanup"]["rootPid"])
+            self.assertFalse(process_is_running(command["pid"]))
+            self.assertIsNone(sentinel.poll(), "timeout cleanup killed an unrelated sibling process")
+            descendants = []
+            for role in ("child", "grandchild"):
+                record = json.loads((state / f"{role}.json").read_text())
+                if os.name == "posix":
+                    self.assertEqual(command["pid"], record["processGroup"])
+                deadline = time.monotonic() + 5
+                while process_is_running(record["pid"]) and time.monotonic() < deadline:
+                    time.sleep(0.05)
+                self.assertFalse(process_is_running(record["pid"]), f"surviving owned {role}: {record}")
+                descendants.append({"role": role, **record, "runningAfterTimeout": False})
+                heartbeat = (state / f"{role}.heartbeat").read_text()
+                time.sleep(0.2)
+                self.assertEqual(heartbeat, (state / f"{role}.heartbeat").read_text())
+            self.assertFalse(list(directory.glob("attempt-*/effective.trx")))
+            self.assertTrue(list(attempt.glob("*.diag")))
+            self.assertIn("timeout probe child PID", (attempt / "stdout.log").read_text())
+            self.assertIn("timeout probe grandchild PID", (attempt / "stdout.log").read_text())
+            self.assertIsNone(sentinel.poll())
+            adapter.write_json(directory / "timeout-tree-verification.json", {
+                "exitCode": 10, "rootPid": command["pid"], "rootReaped": True,
+                "descendants": descendants, "unrelatedSiblingPid": sentinel.pid,
+                "unrelatedSiblingStillRunning": True, "effectiveTrxCount": 0,
+            })
+        finally:
+            sentinel.terminate()
+            sentinel.wait(timeout=10)
+            # A failing regression must not leave the deliberately spawned workers running.
+            for role in ("child", "grandchild"):
+                path = state / f"{role}.json"
+                if path.exists():
+                    record = json.loads(path.read_text())
+                    pid = record["pid"]
+                    if process_is_running(pid):
+                        if os.name == "posix":
+                            self.assertEqual(record["processGroup"], os.getpgid(pid), "PID ownership changed")
+                            os.kill(pid, signal.SIGKILL)
+                        else:
+                            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], check=True)
 
     def test_project_and_module_boundaries_and_nunit_neighbor(self):
         module_time = self.sourcewriter.stat().st_mtime_ns
