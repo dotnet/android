@@ -8,7 +8,6 @@
 #include <host/assembly-store.hh>
 #include <runtime-base/crc32.hh>
 #include <runtime-base/util.hh>
-#include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/zstd.hh>
 
@@ -181,19 +180,23 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 [[gnu::always_inline]]
 auto AssemblyStore::find_assembly_store_entry (std::string_view const& name, hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*
 {
+	if (entry_count == 0) {
+		return nullptr;
+	}
+
 	// Entries are sorted by `name_hash`, so all entries sharing `hash` are contiguous. CRC32 is a
 	// 32-bit hash, so collisions are possible (though very unlikely); walk the entire run of entries
 	// with a matching hash and compare the actual assembly name to find the correct one.
 	auto less_than = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
-	size_t idx = Search::lower_bound<AssemblyStoreIndexEntry, hash_t, less_than> (hash, entries, entry_count);
+	const auto end = entries + entry_count;
+	auto entry = std::lower_bound (entries, end, hash, less_than);
 
-	while (idx < entry_count && entries[idx].name_hash == hash) {
-		AssemblyStoreIndexEntry const& entry = entries[idx];
-		if (entry.descriptor_index < assembly_store.assembly_count &&
-		    name_matches (name, assembly_store_names[entry.descriptor_index])) {
-			return &entry;
+	while (entry != end && entry->name_hash == hash) {
+		if (entry->descriptor_index < assembly_store.assembly_count &&
+		    name_matches (name, assembly_store_names[entry->descriptor_index])) {
+			return entry;
 		}
-		idx++;
+		++entry;
 	}
 
 	return nullptr;

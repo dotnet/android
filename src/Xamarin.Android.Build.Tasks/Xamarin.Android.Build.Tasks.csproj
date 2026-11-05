@@ -108,10 +108,10 @@
     <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
       <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
+    <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
     </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\utils\NullableAttributes.cs">
+    <Compile Include="..\..\src\utils\NullableAttributes.cs">
       <Link>Utilities\NullableAttributes.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
@@ -182,7 +182,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\RuntimeProviderSourceGenerator.cs" Link="Utilities\RuntimeProviderSourceGenerator.cs" />
     <Compile Include="..\..\src-ThirdParty\android-platform-tools-base\PackagingUtils.cs">
       <Link>Utilities\%(Filename)%(Extension)</Link>
     </Compile>
@@ -228,11 +227,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Maven\Java.Interop.Tools.Maven.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Maven\Java.Interop.Tools.Maven.csproj" />
     <!--
       Mono.Android.csproj needs to be built first because this project
       references files *generated* and contained within the Mono.Android project.

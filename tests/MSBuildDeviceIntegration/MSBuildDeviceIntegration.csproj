@@ -24,8 +24,7 @@
 
    <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
-    <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\*.cs" />
-    <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
+    <Compile Include="..\Utilities\AssemblyStore\**\*.cs" />
     <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
   <ItemGroup>
@@ -38,8 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Linked AssemblyCompression.cs uses LZ4 when NET11_0_OR_GREATER enables decompression. -->
-    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="NodaTime" Version="2.4.5" />
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.3.17" />

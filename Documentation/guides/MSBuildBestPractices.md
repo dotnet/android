@@ -17,7 +17,7 @@ You will see the following prompt.
 Waiting for debugger to attach (dotnet PID 13001).  Press enter to continue...
 ```
 
-You can then use VS or VSCode to attach to this process and debug you tasks.
+You can then use Visual Studio or another .NET debugger to attach to this process and debug your tasks.
 
 You can start your test app with the `dotnet-local` script (so it uses your build).
 
@@ -50,13 +50,11 @@ Once MSBuild starts it will print the following
 Waiting for debugger to attach (dotnet PID xxxx).  Press enter to continue...
 ```
 
-You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the `Microsoft.Android.slnx` solution open. For VSCode open the workspace then use the `Attach to Process` Run and Debug option. You will be prompted for the PID and it will then connect.
+You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the `Microsoft.Android.slnx` solution open.
 
 Once connected go back to your command prompt and press ENTER so that the MSBuild process can continue.
 
 You will be able to set breakpoints in Tasks (but not Targets) and step through code from this point on.
-
-If you want to test in-tree using the same the `build-sample-under-dotnet` command will ask you if you want to debug MSBuild tasks and fill in the `MSBUILDDEBUGONSTART` for you. The PID text will appear in the `Terminal` window in VSCode. In addition the `run-sample-under-dotnet` command will ask the same.
 
 ## Multithreaded tasks
 

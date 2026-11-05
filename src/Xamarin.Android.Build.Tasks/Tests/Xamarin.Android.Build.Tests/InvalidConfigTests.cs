@@ -149,7 +149,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 		[TestCase ("AndroidLinkTool", "d8", "AndroidLinkTool")]
 		[TestCase ("AndroidLinkTool", "", "AndroidLinkTool")]
-		[TestCase ("AndroidLinkTool", "", "AndroidLinkTool")]
 		[TestCase ("PublishTrimmed", "false", "PublishTrimmed")]
 		[TestCase ("_AndroidRuntime", "MonoVM", "Supported runtimes are CoreCLR and NativeAOT")]
 		public void R8ObfuscationInvalidConfiguration (string property, string value, string expectedMessage)
@@ -192,12 +191,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (project), "Application obfuscation settings must not affect referenced libraries.");
 		}
 		[Test]
-		public void LibraryBuildDoesNotGenerateTypeMap ([Values (null, "", "llvm-ir", "trimmable", "unsupported")] string? obsoleteImplementation)
+		public void LibraryBuildDoesNotGenerateTypeMap ()
 		{
 			var project = new XamarinAndroidLibraryProject ();
 			using var builder = CreateDllBuilder ();
-			string [] parameters = obsoleteImplementation == null ? [] : [$"AndroidTypeMapImplementation={obsoleteImplementation}"];
-			Assert.IsTrue (builder.Build (project, parameters: parameters), "A library should build regardless of the obsolete type map property.");
+			Assert.IsTrue (builder.Build (project), "A library should build without generating a type map.");
 			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "typemap-assemblies.txt")));
 		}
 

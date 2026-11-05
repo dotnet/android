@@ -232,7 +232,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4262](xa4262.md): Type '{type}' has an invalid [Export] SuperArgumentsString value '{value}'.
 + [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
 + [XA4264](xa4264.md): Java callable wrapper XML file '{path}' was not found.
-+ [XA4265](xa4265.md): Assembly '{assembly}' uses an unsupported Java peer callback format.
 + [XA4266](xa4266.md): Assembly '{assembly}' has different Java peer callback metadata across runtime-specific implementations.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
@@ -346,7 +345,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GAR` - `GetAdditionalResourcesFromAssemblies`
 * `GCB` - `GenerateCodeBehindForLayout`
 * `GEP` - `GetExtraPackages`
-* `GFT` - `GetFilesThatExist`
 * `GIL` - `GetImportedLibraries`
 * `GJP` - `GetJavaPlatformJar`
 * `GJS` - `GenerateJavaStubs`
@@ -361,7 +359,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `JVC` - `Javac`
 * `JTX` - `JarToXml`
 * `KEY` - `KeyTool`
-* `LEF` - `LogErrorsForFiles`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`

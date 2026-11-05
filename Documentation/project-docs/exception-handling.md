@@ -39,7 +39,7 @@ without a safe-invocation helper relies on the forwarder's exception boundary.
 The implementations are in
 [`TypeMapAssemblyEmitter`](../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs),
 [`ExportMethodDispatchEmitter`](../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/ExportMethodDispatchEmitter.cs),
-[`JniMarshal.SafeInvoke`](../../external/Java.Interop/src/Java.Interop/Java.Interop/JniMarshal.SafeInvoke.cs),
+[`JniMarshal.SafeInvoke`](../../src/Java.Interop/Java.Interop/JniMarshal.SafeInvoke.cs),
 and [`JniMarshalTyped`](../../src/Mono.Android/Java.Interop/JniMarshalTyped.cs).
 They are generated or compiled ahead of execution, not emitted dynamically by
 `JNINativeWrapper.CreateDelegate`.
@@ -72,9 +72,9 @@ transition. `EndMarshalMethod` disposes the transition and calls the runtime's
 return a default ABI value after catching an exception; that value is not a
 successful result while a Java exception is pending.
 
-See [`JniEnvironment`](../../external/Java.Interop/src/Java.Interop/Java.Interop/JniEnvironment.cs),
-[`JniRuntime`](../../external/Java.Interop/src/Java.Interop/Java.Interop/JniRuntime.cs),
-and [`JniTransition`](../../external/Java.Interop/src/Java.Interop/Java.Interop/JniTransition.cs).
+See [`JniEnvironment`](../../src/Java.Interop/Java.Interop/JniEnvironment.cs),
+[`JniRuntime`](../../src/Java.Interop/Java.Interop/JniRuntime.cs),
+and [`JniTransition`](../../src/Java.Interop/Java.Interop/JniTransition.cs).
 
 ### Legacy connector methods
 

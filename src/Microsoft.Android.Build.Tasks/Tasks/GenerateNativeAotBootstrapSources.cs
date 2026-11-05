@@ -34,7 +34,7 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 			WriteSource ("JavaInteropRuntime.java", ("@MAIN_ASSEMBLY_NAME@", EscapeJavaString (TargetName))),
 		};
 		sources.AddRange (RuntimeProviderSourceGenerator.WriteAdditionalRuntimeProviderSources (
-			OutputDirectory, isCoreCLR: false, AdditionalProviderSources, preserveTimestamp: false));
+			TaskEnvironment.Fallback, OutputDirectory, isCoreCLR: false, AdditionalProviderSources, preserveTimestamp: false));
 		var selected = new HashSet<string> (sources, StringComparer.Ordinal);
 		foreach (string oldProvider in Directory.GetFiles (outputDirectory, "NativeAotRuntimeProvider_*.java")) {
 			if (Regex.IsMatch (Path.GetFileName (oldProvider), @"^NativeAotRuntimeProvider_[0-9]+\.java$") && !selected.Contains (oldProvider)) {

@@ -1,10 +1,10 @@
 ---
-applyTo: "external/Java.Interop/**"
+applyTo: "src/Java.Interop*/**,src/Xamarin.Android.Tools.AnnotationSupport/**,src/Xamarin.Android.Tools.ApiXmlAdjuster/**,src/Xamarin.Android.Tools.Bytecode/**,src/Xamarin.SourceWriter/**,src/generator/**,src/class-parse/**,src/java-source-utils/**,build-tools/java-interop-jnienv-gen/**,tests/Java.Interop*/**,tests/generator-Tests/**,tests/Xamarin.Android.Tools.Bytecode-Tests/**"
 ---
 
 # Java.Interop conventions
 
-Additional context for code under `external/Java.Interop/`. This complements the top-level `.github/copilot-instructions.md` — the Mono formatting rules, nullable-reference-type rules, and CI/investigation practices there apply here too.
+Additional context for Java.Interop libraries, tools, and tests. This complements the top-level `.github/copilot-instructions.md` — the Mono formatting rules, nullable-reference-type rules, and CI/investigation practices there apply here too.
 
 ## Project overview
 
@@ -44,12 +44,12 @@ generation reads legacy connector metadata without executing those connectors.
 See the [JNI interop guide](../../Documentation/guides/internals/JavaJNI_Interop.md)
 and [exception-handling guide](../../Documentation/project-docs/exception-handling.md).
 
-## Repository layout (within `external/Java.Interop/`)
+## Repository layout
 
 ### Core libraries (`src/`)
 - **`Java.Interop/`** — main JNI binding library, core types and runtime.
 
-### Code generation tools (`tools/`)
+### Code generation tools (`src/`)
 - **`generator/`** — primary tool for generating C# bindings from Java API descriptions.
 - **`class-parse/`** — parses Java `.class` files and generates API descriptions.
 - **`java-source-utils/`** — utilities for processing Java source code.
@@ -110,21 +110,21 @@ prerequisites are documented in the top-level `.github/copilot-instructions.md`.
 
 Standalone host tooling builds and tooling tests do not require a locally built
 Android SDK. The standalone tooling and test target framework is .NET 10 via
-`external/Java.Interop/Directory.Build.props`, independently of the Android
+`DotNetStableTargetFramework` in the root `Directory.Build.props`, independently of the Android
 product's target framework. Follow the Java.Interop
-[README](../../external/Java.Interop/README.md#building) and
-[build configuration](../../external/Java.Interop/Documentation/BuildConfiguration.md)
-for preparation and JDK tool-path settings (`JAVA_HOME`, `JdksRoot`,
-`JavaSdkDirectory`, `JavaCPath`, and `JarPath`).
+[README](../../Documentation/Java.Interop/README.md#building) and
+[build configuration](../../Documentation/Java.Interop/BuildConfiguration.md)
+for shared build configuration and JDK tool-path settings
+(`JavaSdkDirectory`, `JavaCPath`, and `JarPath`).
 
 Core JNI tests and Java fixtures live in
 `tests/Mono.Android-Tests/Java.Interop-Tests/` and run on Android with
 `Mono.Android.NET-Tests.csproj`. Tooling tests remain under
-`external/Java.Interop/tests/`; there is no standalone core host-JVM harness.
+`tests/`; there is no standalone core host-JVM harness.
 
 ## Reference material
 
 - [JNI Specification](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
 - [Android JNI Performance Guide](https://developer.android.com/training/articles/perf-jni)
-- `external/Java.Interop/Documentation/Architecture.md`
-- `external/Java.Interop/Documentation/BuildConfiguration.md`
+- `Documentation/Java.Interop/Architecture.md`
+- `Documentation/Java.Interop/BuildConfiguration.md`

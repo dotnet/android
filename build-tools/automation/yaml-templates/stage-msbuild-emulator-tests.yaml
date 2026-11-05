@@ -4,7 +4,6 @@ parameters:
   stageName: msbuilddevice_tests
   job_name: 'mac_dotnetdevice_tests'
   dependsOn: mac_build
-  agent_count: 12
   stageCondition: succeeded()
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
@@ -23,7 +22,7 @@ stages:
   jobs:
   - job: ${{ parameters.job_name }}
     strategy:
-      parallel: ${{ parameters.agent_count }}
+      parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
       name: Azure Pipelines
@@ -52,8 +51,8 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
       parameters:
         project: Microsoft.Android.slnx
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
-        displayName: prepare java.interop $(XA.Build.Configuration)
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml

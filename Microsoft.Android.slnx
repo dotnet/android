@@ -12,11 +12,11 @@
     <Project Path="build-tools/jnienv-gen/jnienv-gen.csproj" />
   </Folder>
   <Folder Name="/Core/">
-    <Project Path="external/Java.Interop/src/Java.Interop.Tools.Generator/Java.Interop.Tools.Generator.csproj" />
-    <Project Path="external/Java.Interop/src/Java.Interop/Java.Interop.csproj" />
-    <Project Path="external/Java.Interop/src/Xamarin.Android.Tools.Bytecode/Xamarin.Android.Tools.Bytecode.csproj" />
-    <Project Path="external/Java.Interop/src/Xamarin.SourceWriter/Xamarin.SourceWriter.csproj" />
-    <Project Path="external/Java.Interop/tools/generator/generator.csproj" />
+    <Project Path="src/Java.Interop.Tools.Generator/Java.Interop.Tools.Generator.csproj" />
+    <Project Path="src/Java.Interop/Java.Interop.csproj" />
+    <Project Path="src/Xamarin.Android.Tools.Bytecode/Xamarin.Android.Tools.Bytecode.csproj" />
+    <Project Path="src/Xamarin.SourceWriter/Xamarin.SourceWriter.csproj" />
+    <Project Path="src/generator/generator.csproj" />
     <Project Path="src/aapt2/aapt2.csproj" />
     <Project Path="src/AndroidBuildConfig/AndroidBuildConfig.csproj" />
     <Project Path="src/androidsdk/androidsdk.csproj" />
@@ -37,8 +37,8 @@
     <Project Path="src/Xamarin.Android.Tools.Aidl/Xamarin.Android.Tools.Aidl.csproj" />
     <Project Path="src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj" />
   </Folder>
-  <Folder Name="/external/">
-    <Project Path="external/Java.Interop/build-tools/jnienv-gen/jnienv-gen.csproj" />
+  <Folder Name="/Build-Tools/Java.Interop/">
+    <Project Path="build-tools/java-interop-jnienv-gen/java-interop-jnienv-gen.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Microsoft.Android.Build.Tasks/Microsoft.Android.Build.Tasks.csproj" />
@@ -58,20 +58,15 @@
     <Project Path="tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
-    <Project Path=".github/skills/read-assembly-store/src/AssemblyStore/AssemblyStore.csproj" />
-    <Project Path=".github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj" />
-    <Project Path="external/Java.Interop/src/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil.csproj" />
-    <Project Path="external/Java.Interop/src/Java.Interop.Tools.Diagnostics/Java.Interop.Tools.Diagnostics.csproj" />
-    <Project Path="external/Java.Interop/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers.csproj" />
-    <Project Path="external/Java.Interop/src/Java.Interop.Tools.JavaTypeSystem/Java.Interop.Tools.JavaTypeSystem.csproj" />
-    <Project Path="external/Java.Interop/src/Xamarin.Android.Tools.AnnotationSupport/Xamarin.Android.Tools.AnnotationSupport.csproj" />
-    <Project Path="external/Java.Interop/src/Xamarin.Android.Tools.ApiXmlAdjuster/Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
-    <Project Path="external/Java.Interop/tools/class-parse/class-parse.csproj" />
-    <Project Path="external/Java.Interop/tools/java-source-utils/java-source-utils.csproj" />
+    <Project Path="src/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil.csproj" />
+    <Project Path="src/Java.Interop.Tools.Diagnostics/Java.Interop.Tools.Diagnostics.csproj" />
+    <Project Path="src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <Project Path="src/Java.Interop.Tools.JavaTypeSystem/Java.Interop.Tools.JavaTypeSystem.csproj" />
+    <Project Path="src/Xamarin.Android.Tools.AnnotationSupport/Xamarin.Android.Tools.AnnotationSupport.csproj" />
+    <Project Path="src/Xamarin.Android.Tools.ApiXmlAdjuster/Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
+    <Project Path="src/class-parse/class-parse.csproj" />
+    <Project Path="src/java-source-utils/java-source-utils.csproj" />
     <Project Path="tools/relnote-gen/relnote-gen.csproj" />
-    <Project Path="tools/tmt/tmt.csproj">
-      <Platform Solution="*|Any CPU" Project="anycpu" />
-    </Project>
   </Folder>
   <Project Path="src/Microsoft.Android.Run/Microsoft.Android.Run.csproj" />
   <Project Path="src/Microsoft.Android.Sdk.TrimmableTypeMap/Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />

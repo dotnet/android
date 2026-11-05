@@ -16,8 +16,6 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
-    <!-- Linked AssemblyCompression.cs uses LZ4 when NET11_0_OR_GREATER enables decompression. -->
-    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
@@ -38,8 +36,7 @@
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelper.cs" Link="Utilities\NativeToolTestHelper.cs" />
     <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelperTests.cs" Link="NativeToolTestHelperTests.cs" />
-    <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\*.cs" />
-    <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
+    <Compile Include="..\..\..\..\tests\Utilities\AssemblyStore\**\*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

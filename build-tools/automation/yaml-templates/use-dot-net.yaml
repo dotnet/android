@@ -42,15 +42,22 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
     retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
-  # Hosted macOS images can have a non-writable ~/.dotnet.
+  # Hosted macOS images can have a non-writable ~/.dotnet. DOTNET_ROOT only moves
+  # the SDK, so isolate CLI first-run state too. Keep NuGet config, credentials,
+  # and caches in the existing home; leave HOME and existing tool paths unchanged.
   - bash: >
       DOTNET_ROOT="$(Agent.TempDirectory)/dotnet-bootstrap" &&
+      DOTNET_CLI_HOME="$(mktemp -d "$(Agent.TempDirectory)/dotnet-cli-home.XXXXXX")" &&
+      mkdir -p "$HOME/.nuget" "$HOME/.local/share" &&
+      ln -s "$HOME/.nuget" "$DOTNET_CLI_HOME/.nuget" &&
+      ln -s "$HOME/.local" "$DOTNET_CLI_HOME/.local" &&
       (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv "$DOTNET_ROOT"; fi) &&
       curl -L https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh --retry 5 --retry-max-time 300 > dotnet-install.sh &&
       chmod +x dotnet-install.sh &&
       ./dotnet-install.sh --version ${{ parameters.version }} --install-dir "$DOTNET_ROOT" --skip-non-versioned-files --verbose &&
-      PATH="$DOTNET_ROOT:$PATH" &&
+      PATH="$DOTNET_ROOT:$DOTNET_CLI_HOME/.dotnet/tools:$HOME/.dotnet/tools:$PATH" &&
       echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
+      echo "##vso[task.setvariable variable=DOTNET_CLI_HOME]$DOTNET_CLI_HOME" &&
       echo "##vso[task.setvariable variable=PATH]$PATH"
     displayName: install .NET Core ${{ parameters.version }}
     condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))

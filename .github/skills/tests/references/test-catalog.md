@@ -20,20 +20,19 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 | Test Area | Project | Command |
 |-----------|---------|---------|
-| **assembly store reader** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | `dotnet test .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj -v minimal` |
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
-| **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
-| **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
-| **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
-| **api xml adjuster** | `external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
-| **Java peer naming** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
-| **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
-| **expressions** | `external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
-| **generator tools** | `external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
-| **generator** | `external/Java.Interop/tests/generator-Tests/` | `dotnet test external/Java.Interop/tests/generator-Tests/generator-Tests.csproj -v minimal` |
-| **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
+| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
+| **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
+| **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
+| **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
+| **Java peer naming** | `tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
+| **java type system** | `tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
+| **expressions** | `tests/Java.Interop.Tools.Expressions-Tests/` | `dotnet test tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
+| **generator tools** | `tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
+| **generator** | `tests/generator-Tests/` | `dotnet test tests/generator-Tests/generator-Tests.csproj -v minimal` |
+| **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 
@@ -95,6 +94,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
+| **bundletool commands** | `--filter "FullyQualifiedName~BundleToolTaskTests"` | Command-line generation only; no project builds or device |
 | **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools, Clang runtime discovery, and checked-build wrapper diagnostics |
 
 ---
@@ -116,7 +116,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **timezone** | `--filter "cat=TimeZoneInfo"` | Time zone handling on device |
 | **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
 | **export** | `--filter "FullyQualifiedName~ExportAttributeBuildTest"` | `[Export]` attribute tests |
-| **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
+| **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | One combined archive/signing/APK-set check per runtime, sharing a single project build per case |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Java exception handling and fatal managed main-thread process termination on CoreCLR and NativeAOT |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
 | **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
@@ -198,14 +198,14 @@ cause, or stack-trace extraction fails, while borrowed references remain valid.
 
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|
-| **generator** | `external/Java.Interop/tests/generator-Tests/` | Binding generator tests |
-| **Java peer naming** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | CRC64 hashing, identifier validation, native type naming, and assembly resolution; current scanning and JCW generation are covered by the trimmable type map suites |
-| **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |
-| **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | Java source generation |
-| **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | Maven integration |
-| **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | Bytecode analysis |
-| **api xml adjuster** | `external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | API XML adjustment |
-| **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | Source code generation |
+| **generator** | `tests/generator-Tests/` | Binding generator tests |
+| **Java peer naming** | `tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | CRC64 hashing, identifier validation, native type naming, and assembly resolution; current scanning and JCW generation are covered by the trimmable type map suites |
+| **java type system** | `tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |
+| **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | Java source generation |
+| **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | Maven integration |
+| **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | Bytecode analysis |
+| **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | API XML adjustment |
+| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | Source code generation |
 
 Run these tests with `dotnet test` from each test project directory listed above.
 
@@ -242,6 +242,5 @@ To run the on-device typemap tests:
 | Test Area | Tier | Assembly / Project | Notes |
 |-----------|------|--------------------|-------|
 | **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
-| **assembly store reader** | **Standalone** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | Legacy/current store layouts and LZ4/Zstd decompression |
 | **api compatibility** | N/A | `tests/api-compatibility/` | Not a test runner — reference data for API surface checks |
 | **android sdk tools** | **Standalone** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |

@@ -1277,11 +1277,6 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
-  <data name="XA4265" xml:space="preserve">
-    <value>O assembly '{0}' usa um formato de retorno de chamada de par Java sem suporte.</value>
-    <comment>The following is a literal name and should not be translated: Java.
-{0} - Assembly path</comment>
-  </data>
   <data name="XA4266" xml:space="preserve">
     <value>O assembly '{0}' tem metadados de retorno de chamada de pares Java diferentes em implementações específicas do tempo de execução '{1}' e '{2}'. Todos os RuntimeIdentifiers devem fornecer metadados de retorno de chamada equivalentes.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
