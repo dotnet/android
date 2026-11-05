@@ -50,6 +50,11 @@ for discovery and execution by compatible IDE clients. The host runner accepts
 Discovery lists tests without running them, and clients can execute selected
 tests using the UIDs returned by discovery.
 
+New `androidtest` projects use MSTest source generation in `ReflectionFree`
+mode to preserve test metadata and invokers under trimming without rooting
+the entire test assembly. Apply `[TestClass]` directly to each test class;
+inheriting the attribute is not supported by MSTest's source generator.
+
 Build and install an updated test APK on a connected device or emulator before
 discovering tests. Both the NUnit instrumentation in this repository and newly
 generated `androidtest` projects support discovery; older installed APKs must
