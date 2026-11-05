@@ -134,7 +134,7 @@
       </_EmptyWorkloadJsonContent>
     </PropertyGroup>
 
-    <!-- Install the previous Android SDK and the dotnet/runtime tooling packs extended by the Android workload. -->
+    <!-- Install the previous Android SDK and runtime tooling. -->
     <Error Condition=" '$(AndroidWorkloadExtendsElement)' == '' " Text="Failed to find extends element in workload json" />
     <MakeDir Directories="$(_EmptyWorkloadDir)" />
     <WriteLinesToFile
@@ -151,7 +151,7 @@
   </Target>
 
   <PropertyGroup>
-    <!-- Cleanup must precede dependency installation so it does not delete the previous Android SDK. -->
+    <!-- Clean before installing the previous Android SDK. -->
     <ConfigureLocalWorkloadDependsOn Condition="'$(RunningOnCI)' != 'true'">CreateLocalFrameworkLists;CreateLocalRuntimeLists;DeleteExtractedWorkloadPacks;InstallManifestAndDependencies;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
   </PropertyGroup>
   <Target Name="ConfigureLocalWorkload" DependsOnTargets="$(ConfigureLocalWorkloadDependsOn)" />

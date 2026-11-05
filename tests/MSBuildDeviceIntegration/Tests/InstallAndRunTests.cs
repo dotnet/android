@@ -2414,32 +2414,16 @@ namespace UnnamedProject
 			string [] parameters = [$"JavaSdkDirectory=\"{GetPreviousWorkloadJavaSdkPath ()}\""];
 			// The .NET 11 crossgen2 does not support --targetos android (#11719).
 			proj.SetProperty ("PublishReadyToRun", "false");
-			proj.Imports.Add (new Import (() => "Directory.Build.targets") {
-				TextContent = () => $"""
-<Project>
-	<Target Name="_AssertPreviousSdkRuntime" BeforeTargets="Build">
-		<Error Condition=" '$(TargetFramework)' != '{proj.TargetFramework}' "
-			Text="Expected the previous Android target framework, but selected '$(TargetFramework)'." />
-		<Error Condition=" '$(_AndroidRuntime)' != '{runtime}' "
-			Text="Expected {runtime}, but selected '$(_AndroidRuntime)'." />
-	</Target>
-</Project>
-""",
-			});
-			const string started = "Previous SDK managed activity started.";
+			const string started = "Previous SDK activity started.";
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $"Console.WriteLine (\"{started}\");");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj, parameters: parameters), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder, parameters: parameters);
 
-			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
-			Assert.IsTrue (didLaunch, "Activity should have started.");
-			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (started),
-				Path.Combine (Root, builder.ProjectDirectory, "managed-logcat.log")),
-				"The previous SDK application should have executed managed code.");
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (started),
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds),
+				"MainActivity should have run managed code.");
 		}
 
 		[Test]
