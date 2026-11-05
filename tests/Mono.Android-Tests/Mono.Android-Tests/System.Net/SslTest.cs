@@ -84,7 +84,6 @@ namespace System.NetTests {
 			string[] urls = new string[]  {
 				"https://dotnet.microsoft.com/",
 				"https://www.bing.com/",
-				"https://httpbin.org/get",
 			};
 			// string url = "http://slashdot.org";
 			HttpWebResponse response = null;

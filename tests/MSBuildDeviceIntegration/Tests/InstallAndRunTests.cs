@@ -621,11 +621,15 @@ namespace Library1 {
 					new BuildItem.Source ("HttpClientTest.cs") {
 						TextContent = () => getResource("HttpClientTest")
 					},
+					new BuildItem.Source ("LocalTestServers.cs") {
+						TextContent = () => File.ReadAllText (Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", "Xamarin.Android.Net", "LocalTestServers.cs"))
+					},
 					new BuildItem.Source ("PreserveTest.cs") {
 						TextContent = () => getResource("PreserveTest")
 					},
 				},
 			};
+			lib2.SetProperty ("LangVersion", "8.0");
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
@@ -660,6 +664,16 @@ namespace Library1 {
 </linker>
 ",
 					},
+					new BuildItem ("AndroidResource", "Resources\\xml\\network_security_config.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<network-security-config>
+  <domain-config cleartextTrafficPermitted=""true"">
+    <domain>localhost</domain>
+    <domain>127.0.0.1</domain>
+  </domain-config>
+</network-security-config>
+",
+					},
 				},
 			};
 
@@ -670,6 +684,7 @@ namespace Library1 {
 				Version = "2.0.3",
 			});
 
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:networkSecurityConfig=\"@xml/network_security_config\" ");
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
