@@ -198,12 +198,15 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (emittedProxy.Methods.Any (method => method.Name == "CreateInstance"));
 			foreach (var uco in proxy.UcoMethods) {
 				var wrapper = emittedProxy.Methods.Single (method => method.Name == uco.WrapperName);
-				var handler = wrapper.Body.ExceptionHandlers.Single ();
-				Assert.AreEqual (wrapper.Body.Instructions [0], handler.TryStart, "No bridge wait is needed before the callback.");
-				var unhandledException = wrapper.Body.Instructions.Select (instruction => instruction.Operand)
-					.OfType<Mono.Cecil.MethodReference> ().Single (method => method.Name == "UnhandledException");
-				Assert.AreEqual ("Android.Runtime.AndroidEnvironment", unhandledException.DeclaringType.FullName);
-				Assert.AreEqual ("Mono.Android", unhandledException.DeclaringType.Scope.Name);
+				Assert.IsEmpty (wrapper.Body.ExceptionHandlers, "SafeInvoke owns the unavailable callback's exception boundary.");
+				var methods = wrapper.Body.Instructions.Select (instruction => instruction.Operand)
+					.OfType<Mono.Cecil.MethodReference> ().ToArray ();
+				var helper = methods.Single (method => method.Name == "SafeInvokeAction");
+				Assert.AreEqual ("Java.Interop.JniMarshal", helper.DeclaringType.FullName);
+				Assert.AreEqual ("Java.Interop", helper.DeclaringType.Scope.Name);
+				var callbackPointer = wrapper.Body.Instructions.Single (instruction => instruction.OpCode == Mono.Cecil.Cil.OpCodes.Ldftn);
+				Assert.AreEqual (uco.CallbackMethodName, ((Mono.Cecil.MethodReference) callbackPointer.Operand).Name);
+				Assert.IsFalse (methods.Any (method => method.Name is "WaitForBridgeProcessing" or "UnhandledException" or "BeginMarshalMethod" or "EndMarshalMethod"));
 			}
 			TestContext.Out.WriteLine ($"abstract={isAbstract}, deferred={deferred}, callback={hasCallback}: Java nctor={hasNativeConstructor}, native registrations=[{string.Join (", ", proxy.NativeRegistrations.Select (registration => registration.JniMethodName))}]");
 		}

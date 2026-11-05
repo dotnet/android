@@ -292,6 +292,8 @@ sealed record UcoMethodData
 	/// </summary>
 	public string? CallbackReturnTypeName { get; init; }
 
+	public bool CallbackOwnsBoundary { get; init; }
+
 	/// <summary>
 	/// Optional metadata for wrappers that dispatch directly to the managed target
 	/// instead of forwarding to a generated n_* callback.

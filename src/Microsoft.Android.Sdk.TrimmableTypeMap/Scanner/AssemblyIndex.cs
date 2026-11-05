@@ -30,6 +30,9 @@ sealed class AssemblyIndex : IDisposable
 	readonly Dictionary<EntityHandle, string?> customAttributeNames = new ();
 	readonly Dictionary<EntityHandle, int> constructorParameterCounts = new ();
 	IReadOnlyList<string>? callbackMetadata;
+	CallbackBoundaryClassifier? boundaryClassifier;
+	internal CallbackBoundary ClassifyCallback (MethodDefinitionHandle handle)
+		=> (boundaryClassifier ??= new CallbackBoundaryClassifier (peReader, IsReferenceAssembly)).Classify (handle);
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
@@ -513,7 +516,7 @@ sealed class AssemblyIndex : IDisposable
 					signatureText,
 					register,
 					((int) methodDef.Attributes).ToString (CultureInfo.InvariantCulture),
-					isUnmanagedCallersOnly.ToString (),
+					$"{isUnmanagedCallersOnly}:{(methodName.StartsWith ("n_", StringComparison.Ordinal) ? ClassifyCallback (methodHandle).IsProtected : false)}",
 					registrationAttributes is null ? null : string.Join (",", registrationAttributes),
 					parameterAttributes.Count == 0 ? null : string.Join (",", parameterAttributes)));
 			}
