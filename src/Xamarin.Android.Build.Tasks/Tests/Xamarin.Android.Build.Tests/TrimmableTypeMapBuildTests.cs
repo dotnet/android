@@ -423,6 +423,7 @@ namespace Xamarin.Android.Build.Tests {
 					}
 
 					[Application (
+						Name = "",
 						Description = "@string/application_description",
 						Process = "application-process",
 						TaskAffinity = "",
@@ -547,6 +548,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotNull (application);
 			XNamespace android = "http://schemas.android.com/apk/res/android";
 
+			StringAssert.EndsWith (".ParityApplication", (string) application.Attribute (android + "name"));
 			Assert.AreEqual ("@string/application_description", (string) application.Attribute (android + "description"));
 			Assert.AreEqual ("", (string) application.Attribute (android + "permission"));
 			Assert.AreEqual ("application-process", (string) application.Attribute (android + "process"));
@@ -636,6 +638,9 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
 			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty (
+				"AndroidManifestPlaceholders",
+				$"AppClass=${{applicationId}}.AssemblyNamedApplication;InstrumentationClass=@PACKAGE_NAME@.AssemblyNamedInstrumentation");
 			if (runtime == AndroidRuntime.NativeAOT) {
 				proj.SetProperty ("_SkipNdkResolution", "false");
 			}
@@ -643,31 +648,31 @@ namespace Xamarin.Android.Build.Tests {
 				"<application ",
 				"""<application android:description="@string/template_description" android:backupAgent="template.BackupAgent" android:manageSpaceActivity="template.ManageSpaceActivity" """);
 			proj.Sources.Add (new BuildItem.Source ("AssemblyApplication.cs") {
-				TextContent = () => """
+				TextContent = () => $$"""
 					using System;
 					using Android.App;
 					using Android.App.Backup;
 					using Android.OS;
 
 					[assembly: Application (
-						Name = "UnnamedProject.AssemblyNamedApplication",
+						Name = "${AppClass}",
 						Description = "@string/assembly_description",
 						BackupAgent = typeof (UnnamedProject.ParityBackupAgent),
 						ManageSpaceActivity = typeof (UnnamedProject.ParityManageActivity))]
-					[assembly: Instrumentation (Name = "UnnamedProject.AssemblyNamedInstrumentation")]
+					[assembly: Instrumentation (Name = "${InstrumentationClass}")]
 
 					namespace UnnamedProject;
 
 					[Activity]
 					public class ParityActivity : Activity {}
 
-					[Android.Runtime.Register ("UnnamedProject.AssemblyNamedApplication")]
+					[Android.Runtime.Register ("{{proj.PackageName}}.AssemblyNamedApplication")]
 					public class AssemblyNamedApplication : Application
 					{
 						public AssemblyNamedApplication (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) {}
 					}
 
-					[Android.Runtime.Register ("UnnamedProject.AssemblyNamedInstrumentation")]
+					[Android.Runtime.Register ("{{proj.PackageName}}.AssemblyNamedInstrumentation")]
 					public class AssemblyNamedInstrumentation : Instrumentation {}
 
 					public class ParityManageActivity : Activity {}
@@ -699,9 +704,9 @@ namespace Xamarin.Android.Build.Tests {
 			var application = root.Element ("application");
 			Assert.IsNotNull (application);
 			XNamespace android = "http://schemas.android.com/apk/res/android";
-			Assert.AreEqual ("UnnamedProject.AssemblyNamedApplication", (string) application.Attribute (android + "name"));
+			Assert.AreEqual ($"{proj.PackageName}.AssemblyNamedApplication", (string) application.Attribute (android + "name"));
 			Assert.IsTrue (root.Elements ("instrumentation")
-				.Any (element => (string) element.Attribute (android + "name") == "UnnamedProject.AssemblyNamedInstrumentation"));
+				.Any (element => (string) element.Attribute (android + "name") == $"{proj.PackageName}.AssemblyNamedInstrumentation"));
 			Assert.AreEqual ("@string/assembly_description", (string) application.Attribute (android + "description"));
 			StringAssert.EndsWith (".ParityBackupAgent", (string) application.Attribute (android + "backupAgent"));
 			StringAssert.EndsWith (".ParityManageActivity", (string) application.Attribute (android + "manageSpaceActivity"));

@@ -158,11 +158,6 @@ static class PropertyMapper
 	];
 
 	internal static readonly PropertyMapping[] ApplicationElementMappings = ApplicationMappings;
-	internal static readonly PropertyMapping[] ApplicationPropertyMappings = [
-		.. ApplicationMappings,
-		new ("Name", "name"),
-	];
-
 	internal static readonly PropertyMapping[] InstrumentationMappings = [
 		new ("Label", "label"),
 		new ("Icon", "icon"),

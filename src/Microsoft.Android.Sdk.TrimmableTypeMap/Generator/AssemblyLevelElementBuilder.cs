@@ -194,13 +194,24 @@ static class AssemblyLevelElementBuilder
 		IReadOnlyDictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		Action<int, string>? warn = null,
-		ISet<XAttribute>? writtenAttributes = null)
+		ISet<XAttribute>? writtenAttributes = null,
+		bool preserveGeneratedNameWhenEmpty = false)
 	{
 		PropertyMapper.ApplyMappings (
 			app,
 			properties,
-			PropertyMapper.ApplicationPropertyMappings,
+			PropertyMapper.ApplicationElementMappings,
 			writtenAttributes: writtenAttributes);
+
+		if (properties.TryGetValue ("Name", out var name) &&
+		    name is string nameString &&
+		    (!preserveGeneratedNameWhenEmpty || nameString.Length > 0)) {
+			app.SetAttributeValue (AndroidNs + "name", nameString);
+			var nameAttribute = app.Attribute (AndroidNs + "name");
+			if (nameAttribute is not null) {
+				writtenAttributes?.Add (nameAttribute);
+			}
+		}
 
 		// BackupAgent and ManageSpaceActivity are Type properties — resolve managed type names to JNI names
 		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent", warn, writtenAttributes);

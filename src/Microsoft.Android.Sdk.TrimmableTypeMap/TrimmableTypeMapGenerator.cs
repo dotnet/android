@@ -72,12 +72,7 @@ public class TrimmableTypeMapGenerator
 		bool validConstructors = ValidateConstructors (allPeers);
 
 		RootCustomViewTypes (allPeers, customViewTypeNames);
-		var assemblyManifestComponentNames = new List<string> ();
-		if (assemblyManifestInfo.ApplicationProperties?.TryGetValue ("Name", out var applicationName) == true &&
-		    applicationName is string applicationNameString) {
-			assemblyManifestComponentNames.Add (applicationNameString);
-		}
-		assemblyManifestComponentNames.AddRange (assemblyManifestInfo.Instrumentations.Select (instrumentation => instrumentation.Name));
+		var assemblyManifestComponentNames = GetAssemblyManifestComponentNames (assemblyManifestInfo, manifestConfig);
 		RootManifestReferencedTypes (
 			allPeers,
 			manifestForRooting,
@@ -113,6 +108,32 @@ public class TrimmableTypeMapGenerator
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+	}
+
+	static List<string> GetAssemblyManifestComponentNames (AssemblyManifestInfo assemblyManifestInfo, ManifestConfig? manifestConfig)
+	{
+		var names = new List<string> ();
+		if (assemblyManifestInfo.ApplicationProperties?.TryGetValue ("Name", out var applicationName) == true &&
+		    applicationName is string applicationNameString) {
+			names.Add (applicationNameString);
+		}
+		names.AddRange (assemblyManifestInfo.Instrumentations.Select (instrumentation => instrumentation.Name));
+
+		if (names.Count == 0 || manifestConfig is null) {
+			return names;
+		}
+
+		var doc = new XDocument (new XElement ("manifest",
+			names.Select (name => new XElement ("instrumentation", new XAttribute (ManifestConstants.AttName, name)))));
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders, manifestConfig.PackageName);
+
+		var resolvedNames = new List<string> (names.Count);
+		foreach (var element in doc.Descendants ("instrumentation")) {
+			if (element.Attribute (ManifestConstants.AttName) is { } nameAttribute) {
+				resolvedNames.Add (nameAttribute.Value.Replace ("@PACKAGE_NAME@", manifestConfig.PackageName, StringComparison.Ordinal));
+			}
+		}
+		return resolvedNames;
 	}
 
 	internal static void RootCustomViewTypes (List<JavaPeerInfo> allPeers, IReadOnlyCollection<string>? customViewTypeNames)

@@ -109,7 +109,8 @@ class ManifestGenerator
 					peer.ComponentAttribute.Properties,
 					allPeers,
 					Warn,
-					generatedAttributes);
+					generatedAttributes,
+					preserveGeneratedNameWhenEmpty: true);
 				continue;
 			}
 
