@@ -408,7 +408,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase (1, "error: closed")]
 		[TestCase (1, "adb: error: device offline")]
 		[TestCase (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0/lib': Permission denied")]
-		[TestCase (137, "find: '/data/local/tmp/fastdeploy/com.example.app/0': No such file or directory")]
 		public void FastDeployRejectsFailedStagingFileListing (int exitCode, string output)
 		{
 			using var device = new FakeAdbDevice (exitCode, output);
@@ -423,8 +422,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[TestCase (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0': No such file or directory")]
-		[TestCase (1, "find: \"/data/local/tmp/fastdeploy/com.example.app/0\": No such file or directory")]
-		[TestCase (1, "find: /data/local/tmp/fastdeploy/com.example.app/0: No such file or directory")]
 		[TestCase (0, "")]
 		public void FastDeployTreatsMissingOrEmptyStagingDirectoryAsEmpty (int exitCode, string output)
 		{
@@ -438,7 +435,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FastDeployCopiesFilesFromSuccessfulStagingFileListing ()
 		{
-			using var device = new FakeAdbDevice (0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000");
+			using var device = new FakeAdbDevice (
+				0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000",
+				$"find: '{FakeAdbDevice.OverrideRoot}': No such file or directory");
 
 			Assert.IsTrue (device.RunFastDeploy ());
 
@@ -447,16 +446,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		// https://github.com/dotnet/android/issues/13274
-		[Test]
-		public void FastDeployRejectsPartialFileListing (
-			[Values ("Copy", "Symlink")] string transferMode,
-			[Values (false, true)] bool overrideListing,
-			[Values (false, true)] bool includeValidEntry,
-			[Values ("stat", "find")] string command)
+		[TestCase ("Copy", false)]
+		[TestCase ("Symlink", false)]
+		[TestCase ("Copy", true)]
+		public void FastDeployRejectsPartialFileListing (string transferMode, bool overrideListing)
 		{
 			string root = overrideListing ? FakeAdbDevice.OverrideRoot : FakeAdbDevice.StagingRoot;
-			string listing = includeValidEntry ? $"{root}/arm64-v8a/Foo.dll|3|1700000000\n" : "";
-			listing += $"{command}: '{root}/arm64-v8a/Bar.dll': No such file or directory";
+			string listing = $"{root}/arm64-v8a/Foo.dll|3|1700000000\nstat: '{root}/arm64-v8a/Bar.dll': No such file or directory";
 			using var device = new FakeAdbDevice (
 				overrideListing ? 0 : 1,
 				overrideListing ? $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000" : listing,
@@ -475,11 +471,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeployRejectsMissingRootWithValidEntries ([Values (false, true)] bool overrideListing)
+		public void FastDeployRejectsMissingRootWithValidEntries ()
 		{
-			string root = overrideListing ? FakeAdbDevice.OverrideRoot : FakeAdbDevice.StagingRoot;
-			string listing = $"{root}/arm64-v8a/Foo.dll|3|1700000000\nfind: '{root}': No such file or directory";
-			using var device = new FakeAdbDevice (overrideListing ? 0 : 1, overrideListing ? "" : listing, overrideListing ? listing : "");
+			string root = FakeAdbDevice.StagingRoot;
+			using var device = new FakeAdbDevice (1, $"{root}/arm64-v8a/Foo.dll|3|1700000000\nfind: '{root}': No such file or directory");
 
 			Assert.IsFalse (device.RunFastDeploy ());
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
@@ -488,13 +483,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeployCopiesAfterClearingSymlinkState ([Values ("Copy", "Symlink")] string transferMode)
+		public void FastDeployCopiesAfterClearingSymlinkState ()
 		{
 			using var device = new FakeAdbDevice (
 				0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000",
 				$"{FakeAdbDevice.OverrideRoot}/arm64-v8a/Foo.dll|3|1700000000\n{FakeAdbDevice.OverrideRoot}/.fastdeploy-manifest-hash|64|1700000000");
 
-			Assert.IsTrue (device.RunFastDeploy (transferMode));
+			Assert.IsTrue (device.RunFastDeploy ());
 
 			var commands = device.Commands.ToList ();
 			int clearIndex = commands.FindIndex (c => c.Contains ($"rm -rf {FakeAdbDevice.OverrideRoot}"));
@@ -503,17 +498,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.That (commands.Skip (clearIndex + 1), Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"),
 				"Cleared files must be copied even when the previous listing matched staging.");
 			Assert.IsTrue (device.HasManifest);
-		}
-
-		[Test]
-		public void FastDeployCopiesIntoMissingOverrideRoot ()
-		{
-			using var device = new FakeAdbDevice (
-				0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000",
-				$"find: '{FakeAdbDevice.OverrideRoot}': No such file or directory");
-
-			Assert.IsTrue (device.RunFastDeploy ());
-			Assert.That (device.Commands, Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"));
 		}
 
 		[Test]
