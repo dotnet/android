@@ -2400,31 +2400,46 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12880")]
-		public void DotNetInstallAndRunPreviousSdk (
-				[Values] bool isRelease,
-				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void DotNetInstallAndRunPreviousSdk ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var (isRelease, runtime) = configuration;
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a", "x86_64" });
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			string [] parameters = [$"JavaSdkDirectory=\"{GetPreviousWorkloadJavaSdkPath ()}\""];
+			// The .NET 11 crossgen2 does not support --targetos android (#11719).
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.Imports.Add (new Import (() => "Directory.Build.targets") {
+				TextContent = () => $"""
+<Project>
+	<Target Name="_AssertPreviousSdkRuntime" BeforeTargets="Build">
+		<Error Condition=" '$(TargetFramework)' != '{proj.TargetFramework}' "
+			Text="Expected the previous Android target framework, but selected '$(TargetFramework)'." />
+		<Error Condition=" '$(_AndroidRuntime)' != '{runtime}' "
+			Text="Expected {runtime}, but selected '$(_AndroidRuntime)'." />
+	</Target>
+</Project>
+""",
+			});
+			const string started = "Previous SDK managed activity started.";
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $"Console.WriteLine (\"{started}\");");
 
-			var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			RunProjectAndAssert (proj, builder);
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj, parameters: parameters), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder, parameters: parameters);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
-			Assert.IsTrue(didLaunch, "Activity should have started.");
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (started),
+				Path.Combine (Root, builder.ProjectDirectory, "managed-logcat.log")),
+				"The previous SDK application should have executed managed code.");
 		}
 
 		[Test]

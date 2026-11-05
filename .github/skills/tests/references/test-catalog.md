@@ -121,6 +121,15 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
 | **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
 
+`DotNetInstallAndRunPreviousSdk` exercises the previous .NET Android workload with
+CoreCLR Debug/Release and NativeAOT Release on the connected device's ABI. Set
+`JAVA_HOME_21_ARM64` or `JAVA_HOME_21_X64` (matching the test host architecture) to
+JDK 21; the previous workload cannot use main's JDK 25. The test disables the
+previous workload's unsupported Android ReadyToRun path (#11719) and uses a plain
+Android activity rather than the legacy Xamarin.Forms dependency graph.
+Local workload configuration installs the previous Android SDK alongside main's
+locally built packs.
+
 ---
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
