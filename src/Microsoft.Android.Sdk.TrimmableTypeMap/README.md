@@ -23,6 +23,12 @@ The work happens in the `GenerateTrimmableTypeMap` task, invoked from the
 (`*.Trimmable.CoreCLR.targets`, `*.Trimmable.NativeAOT.targets`) extend the
 shared pipeline.
 
+Generated JCWs are top-level Java classes, even when an explicit component or
+registration name contains `$` (for example, `example.components.Outer$for`).
+Name validation and source references preserve that identifier as a whole.
+External Java nested types still use dotted source references and validate each
+nested identifier separately.
+
 ## Target pipeline (CoreCLR, non-trimmed Debug build)
 
 ```
