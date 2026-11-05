@@ -250,9 +250,11 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_Without_Protocol_Works()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/dotnet/android");
-			var redirectedURI = new Uri ("https://github.com/dotnet/android");
+			using var server = LocalHttpServer.Start ();
+			var requestURI = $"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}";
+			var redirectedURI = server.OkUri;
 			using (var c = new HttpClient (CreateHandler ())) {
+				c.BaseAddress = server.Uri;
 				var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
 				if (connectionFailed)
 					return;
@@ -264,14 +266,17 @@ namespace Xamarin.Android.NetTests {
 				EnsureSuccessStatusCode (tr.Result);
 				Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
 		public void Redirect_POST_With_Content_Works ()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/dotnet/android");
-			var redirectedURI = new Uri ("https://github.com/dotnet/android");
+			using var server = LocalHttpServer.Start ();
+			var requestURI = $"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}";
+			var redirectedURI = server.OkUri;
 			using (var c = new HttpClient (CreateHandler ())) {
+				c.BaseAddress = server.Uri;
 				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
 				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
 				var t = ConnectIgnoreFailure (() => c.SendAsync(request), out bool connectionFailed);
@@ -286,6 +291,7 @@ namespace Xamarin.Android.NetTests {
 				EnsureSuccessStatusCode (response);
 				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		public void EnsureSuccessStatusCode (HttpResponseMessage response)
