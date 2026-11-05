@@ -55,7 +55,7 @@ namespace Microsoft.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime) != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Xamarin.Android.Tasks.Properties.Resources.XAGCA7009_UnsupportedRuntime, AndroidRuntime));
+				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.", AndroidRuntime));
 			}
 			string? bootstrapPath = CoreClrBootstrapOutputFile;
 			if (bootstrapPath.IsNullOrWhiteSpace ()) {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
@@ -41,7 +40,7 @@ public class CompressAssemblies : AndroidTask
 	public override bool RunTask ()
 	{
 		if (CompressionLevel < MinCompressionLevel || CompressionLevel > MaxCompressionLevel) {
-			Log.LogCodedError ("XA5304", Properties.Resources.XA5304, CompressionLevel, MinCompressionLevel, MaxCompressionLevel);
+			Log.LogCodedError ("XA5304", "Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.", CompressionLevel, MinCompressionLevel, MaxCompressionLevel);
 			return false;
 		}
 
@@ -57,7 +56,7 @@ public class CompressAssemblies : AndroidTask
 				break;
 
 			if (!uint.TryParse (descriptor_index_string, out var descriptor_index)) {
-				Log.LogCodedError ("XA5303", Properties.Resources.XA5303, descriptor_index_string, assembly.ItemSpec);
+				Log.LogCodedError ("XA5303", "Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.", descriptor_index_string, assembly.ItemSpec);
 				break;
 			}
 

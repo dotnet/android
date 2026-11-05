@@ -20,6 +20,31 @@ public class TypeMapProguardTargetsTests : BaseTest
 	[SetUp]
 	public void SetUp () => Directory.CreateDirectory (directory);
 
+	[TestCase ("XamarinAndroid", false)]
+	[TestCase ("JavaInterop1", false)]
+	[TestCase ("XAJavaInterop1", true)]
+	public void InternalJcwCodegenDiagnosticDoesNotRequireLocalizedResources (string codegen, bool success)
+	{
+		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		var target = new XElement (source.Descendants ().Single (element =>
+			element.Name.LocalName == "Target" && (string?) element.Attribute ("Name") == "_ValidateAndroidJcwCodegenTarget"));
+		foreach (var element in target.DescendantsAndSelf ()) {
+			element.Name = element.Name.LocalName;
+		}
+		var project = Path.Combine (directory, "codegen.proj");
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup", new XElement ("_AndroidJcwCodegenTarget", codegen)),
+			target,
+			new XElement ("Target", new XAttribute ("Name", "Build"),
+				new XAttribute ("DependsOnTargets", "_ValidateAndroidJcwCodegenTarget"))))
+			.Save (project);
+
+		var output = Build (project, success);
+		if (!success) {
+			StringAssert.Contains ($"error XA4240: The Java callable wrapper code generation target '{codegen}' is no longer supported.", output);
+		}
+	}
+
 	[TestCase ("CoreCLR", "true", "disabled", "proguard-android-optimize.txt")]
 	[TestCase ("CoreCLR", "true", "private-members", "proguard-android-optimize.txt")]
 	[TestCase ("CoreCLR", "false", "disabled", "proguard-android.txt")]

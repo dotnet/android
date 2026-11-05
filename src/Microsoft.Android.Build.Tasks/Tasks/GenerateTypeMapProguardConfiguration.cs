@@ -5,7 +5,6 @@ using System.IO;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
@@ -25,7 +24,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 		string currentFile = "";
 		try {
 			if (TypeMapKeyFiles.Length == 0) {
-				Log.LogCodedError ("XA4328", Properties.Resources.XA4328, OutputFile, Properties.Resources.XA4328_NoInputs);
+				Log.LogCodedError ("XA4328", "Could not generate typemap ProGuard configuration from '{0}': {1}", OutputFile, "No retained Java type map key files were provided.");
 				return !Log.HasLoggedErrors;
 			}
 
@@ -40,8 +39,8 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 						continue;
 					}
 					if (!IsClassName (name)) {
-						Log.LogCodedError ("XA4328", Properties.Resources.XA4328, currentFile,
-							string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA4328_InvalidName, lineNumber, name));
+						Log.LogCodedError ("XA4328", "Could not generate typemap ProGuard configuration from '{0}': {1}", currentFile,
+							string.Format (CultureInfo.CurrentCulture, "Line {0} contains an invalid retained Java class name: '{1}'.", lineNumber, name));
 						return !Log.HasLoggedErrors;
 					}
 					classes.Add (name.Replace ('/', '.'));
@@ -66,7 +65,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 			}
 		} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is DecoderFallbackException ||
 				ex is ArgumentException || ex is NotSupportedException) {
-			Log.LogCodedError ("XA4328", Properties.Resources.XA4328, currentFile, ex.Message);
+			Log.LogCodedError ("XA4328", "Could not generate typemap ProGuard configuration from '{0}': {1}", currentFile, ex.Message);
 			return !Log.HasLoggedErrors;
 		}
 		return !Log.HasLoggedErrors;

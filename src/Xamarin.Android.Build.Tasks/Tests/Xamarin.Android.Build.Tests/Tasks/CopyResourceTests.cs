@@ -50,6 +50,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[TestCase ("thisdoesnotexist")]
 		[TestCase ("ApplicationRegistration.java")]
+		[SetUICulture ("fr-FR")]
 		public void FileThatDoesNotExist (string resourceName)
 		{
 			var task = new CopyResource {
@@ -61,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, errors.Count);
 			var error = errors [0];
 			Assert.AreEqual ("XA0116", error.Code);
-			StringAssert.Contains (resourceName, error.Message);
+			Assert.AreEqual ($"Unable to find `EmbeddedResource` named `{resourceName}`.", error.Message);
 		}
 	}
 }

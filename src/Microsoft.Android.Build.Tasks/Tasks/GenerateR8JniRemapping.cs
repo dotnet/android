@@ -46,7 +46,7 @@ namespace Microsoft.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (!File.Exists (MappingFile)) {
-				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingNotFound, MappingFile));
+				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The R8 mapping file '{0}' was not found.", MappingFile));
 				return false;
 			}
 
@@ -54,7 +54,7 @@ namespace Microsoft.Android.Tasks
 			try {
 				mapping = R8Mapping.Load (MappingFile);
 			} catch (Exception ex) when (ex is FormatException || ex is IOException || ex is UnauthorizedAccessException) {
-				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingDataFailure, MappingFile, ex.Message));
+				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The R8 mapping file '{0}' could not be read: {1}", MappingFile, ex.Message));
 				return false;
 			}
 
@@ -63,19 +63,19 @@ namespace Microsoft.Android.Tasks
 			HashSet<string>? requiredEntries;
 			if (NativeAot) {
 				if (NativeAotObjectFile.IsNullOrEmpty () || !File.Exists (NativeAotObjectFile)) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectRequired, NativeAotObjectFile ?? ""));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.", NativeAotObjectFile ?? ""));
 					return false;
 				}
 				try {
 					requiredEntries = NativeAotJniRetention.GetRequiredEntries (NativeAotObjectFile, mapping);
 				} catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectReadFailure, NativeAotObjectFile, ex.Message));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The NativeAOT retention object '{0}' could not be read: {1}", NativeAotObjectFile, ex.Message));
 					return false;
 				}
 				Log.LogDebugMessage ($"Post-ILC NativeAOT JNI retention selected {requiredEntries.Count} mapping entries.");
 			} else {
 				if (!NativeAotObjectFile.IsNullOrEmpty ()) {
-					LogR8JniRemappingError (Properties.Resources.XA4325_NativeAotModeRequired);
+					LogR8JniRemappingError ("NativeAotObjectFile requires NativeAot=true.");
 					return false;
 				}
 				ScanLinkedAssemblies (mapping);
@@ -112,7 +112,7 @@ namespace Microsoft.Android.Tasks
 					continue;
 				}
 				if (!File.Exists (path)) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyNotFound, path));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' was not found.", path));
 					continue;
 				}
 
@@ -120,14 +120,14 @@ namespace Microsoft.Android.Tasks
 					using var stream = File.OpenRead (path);
 					using var peReader = new PEReader (stream);
 					if (!peReader.HasMetadata) {
-						LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyHasNoMetadata, path));
+						LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' does not contain managed metadata.", path));
 						continue;
 					}
 					JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, Log);
 				} catch (BadImageFormatException ex) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' could not be read: {1}", path, ex.Message));
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' could not be read: {1}", path, ex.Message));
 				}
 			}
 		}
@@ -331,7 +331,7 @@ namespace Microsoft.Android.Tasks
 			if (!preexistingEntryKeys.Contains (key)) {
 				LogR8JniRemappingError (string.Format (
 					CultureInfo.InvariantCulture,
-					Properties.Resources.XA4325_AmbiguousEntry,
+					"The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.",
 					elementName,
 					key.Replace ('\t', ' '),
 					existingTarget.Replace ('\t', ' '),
@@ -432,7 +432,7 @@ namespace Microsoft.Android.Tasks
 			=> sourceType.IsNullOrEmpty () || methodName.IsNullOrEmpty () ? "" : $"M\t{sourceType}\t{methodName}\t{signature}";
 
 		void LogR8JniRemappingError (string detail)
-			=> Log.LogCodedError ("XA4325", Properties.Resources.XA4325, detail);
+			=> Log.LogCodedError ("XA4325", "Failed to generate the JNI remapping data. {0}", detail);
 
 		void LogR8JniRemappingWarning (string detail)
 			=> Log.LogCodedWarning ("XA4326", Properties.Resources.XA4326, detail);

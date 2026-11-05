@@ -167,20 +167,6 @@ namespace Xamarin.Android.Build.Debugging.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The package is a &apos;system&apos; application. These are applications which install under
-        /// the &apos;system&apos; user on a device. These types of applications cannot use &apos;run-as&apos;.
-        /// The Fast Deployment system should have handled this particular error automatically
-        /// and used a backup installation path. However if you are seeing this error please file
-        /// an issue with the exact error message using the &apos;Help-&gt;Send Feedback-&gt;Report a Problem&apos; menu item in Visual Studio
-        /// or &apos;Help-&gt;Report a Problem&apos; in Visual Studio for Mac. If poss [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string XA0135_RunAsPackageNotAndApplication {
-            get {
-                return ResourceManager.GetString("XA0135_RunAsPackageNotAndApplication", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The &apos;run-as&apos; command failed with &apos;{0}&apos;.
         ///The currently installation of the package in corrupt. Please manually uninstall the 
         ///package from all the users on device and try again. If that does not work you can disable Fast Deployment.

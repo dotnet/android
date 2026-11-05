@@ -3,7 +3,6 @@ using System;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
@@ -31,7 +30,7 @@ static class TaskItemExtensions
 		value = item.GetMetadata (name);
 
 		if (string.IsNullOrWhiteSpace (value)) {
-			log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ItemSpec, name);
+			log.LogCodedError ("XA4234", "'<{0}>' item '{1}' is missing required attribute '{2}'.", itemName, item.ItemSpec, name);
 			return false;
 		}
 

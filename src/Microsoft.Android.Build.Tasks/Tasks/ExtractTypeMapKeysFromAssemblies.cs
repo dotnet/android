@@ -9,7 +9,6 @@ using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
-using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks
 {
@@ -26,7 +25,7 @@ namespace Microsoft.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (LinkedAssemblies.Length == 0) {
-				Log.LogCodedError ("XA4327", Properties.Resources.XA4327, nameof (LinkedAssemblies), "No linked assemblies were supplied.");
+				Log.LogCodedError ("XA4327", "Could not extract Java type map keys from '{0}': {1}", nameof (LinkedAssemblies), "No linked assemblies were supplied.");
 				return false;
 			}
 
@@ -35,7 +34,7 @@ namespace Microsoft.Android.Tasks
 				try {
 					ReadKeys (assembly.ItemSpec, keys);
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is BadImageFormatException || ex is ArgumentException) {
-					Log.LogCodedError ("XA4327", Properties.Resources.XA4327, assembly.ItemSpec, ex.Message);
+					Log.LogCodedError ("XA4327", "Could not extract Java type map keys from '{0}': {1}", assembly.ItemSpec, ex.Message);
 				}
 			}
 
@@ -56,7 +55,7 @@ namespace Microsoft.Android.Tasks
 					File.Delete (temporaryOutputFile);
 				}
 			} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException) {
-				Log.LogCodedError ("XA4327", Properties.Resources.XA4327, OutputFile, ex.Message);
+				Log.LogCodedError ("XA4327", "Could not extract Java type map keys from '{0}': {1}", OutputFile, ex.Message);
 			}
 
 			return !Log.HasLoggedErrors;

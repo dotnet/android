@@ -2869,9 +2869,8 @@ because xbuild doesn't support framework reference assemblies.
 
   <Target Name="_ValidateAndroidJcwCodegenTarget"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
-    <AndroidError Code="XA4240"
-        ResourceName="XA4240"
-        FormatArguments="$(_AndroidJcwCodegenTarget)"
+    <Error Code="XA4240"
+        Text="The Java callable wrapper code generation target '$(_AndroidJcwCodegenTarget)' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported."
         Condition=" '$(_AndroidJcwCodegenTarget)' == 'XamarinAndroid' or '$(_AndroidJcwCodegenTarget)' == 'JavaInterop1' " />
   </Target>
 
