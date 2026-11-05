@@ -23,6 +23,7 @@
   <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" PrivateAssets="all" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
   </ItemGroup>
