@@ -269,7 +269,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			// Validate both listings before clearing symlink state, including the copy fallback.
+			// Validate both listings before clearing the override directory.
 			if (clearOverrideDirectory || overrideFileData.ContainsKey (ManifestHashMarker)) {
 				if (!await ClearOverrideDirectory (overridePath)) {
 					return false;

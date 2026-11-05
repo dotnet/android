@@ -567,13 +567,8 @@ namespace Xamarin.Android.Tasks
 
 		static bool IsMissingRootDirectoryError (string rootPath, string output)
 		{
-			var lines = output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-			// Only a single find diagnostic naming the root proves that the directory is absent.
-			// A missing child or a stat failure can accompany a partial listing and must fail.
-			if (lines.Length != 1) {
-				return false;
-			}
-			string line = lines [0].Trim ();
+			// The root diagnostic must be the entire output, not part of a failed listing.
+			string line = output.Trim ();
 			return line.Equals ($"find: '{rootPath}': No such file or directory", StringComparison.Ordinal) ||
 				line.Equals ($"find: \"{rootPath}\": No such file or directory", StringComparison.Ordinal) ||
 				line.Equals ($"find: {rootPath}: No such file or directory", StringComparison.Ordinal);

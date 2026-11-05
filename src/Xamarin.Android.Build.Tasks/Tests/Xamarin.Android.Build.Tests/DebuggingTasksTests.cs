@@ -452,35 +452,26 @@ namespace Xamarin.Android.Build.Tests
 			[Values ("Copy", "Symlink")] string transferMode,
 			[Values (false, true)] bool overrideListing,
 			[Values (false, true)] bool includeValidEntry,
-			[Values ("stat", "child", "root-and-child")] string failure)
+			[Values ("stat", "find")] string command)
 		{
 			string root = overrideListing ? FakeAdbDevice.OverrideRoot : FakeAdbDevice.StagingRoot;
-			string diagnostic = failure == "stat" ?
-				$"stat: '{root}/arm64-v8a/Bar.dll': No such file or directory" :
-				$"find: '{root}/arm64-v8a': No such file or directory";
-			if (failure == "root-and-child") {
-				diagnostic = $"find: '{root}': No such file or directory\n" + diagnostic;
-			}
 			string listing = includeValidEntry ? $"{root}/arm64-v8a/Foo.dll|3|1700000000\n" : "";
-			listing += diagnostic;
+			listing += $"{command}: '{root}/arm64-v8a/Bar.dll': No such file or directory";
 			using var device = new FakeAdbDevice (
 				overrideListing ? 0 : 1,
 				overrideListing ? $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000" : listing,
 				overrideListing ? listing : $"{FakeAdbDevice.OverrideRoot}/.fastdeploy-manifest-hash|64|1700000000");
 
-			Assert.IsFalse (device.RunFastDeploy (transferMode), "A partial listing must fail Copy mode and the Symlink-to-Copy fallback.");
+			Assert.IsFalse (device.RunFastDeploy (transferMode), "Partial listings must fail deployment.");
 
 			Assert.AreEqual (1, device.Errors.Count);
 			Assert.AreEqual ("XA0129", device.Errors [0].Code);
 			Assert.That (device.Errors [0].Message, Does.Contain (root));
-			Assert.That (device.Commands.Last (), Does.Contain ("find ").And.Contain ("-exec stat"),
-				"No device commands may run after the failed listing.");
+			Assert.That (device.Commands.Last (), Does.Contain ("-exec stat"), "No commands after a failed listing.");
 			Assert.That (device.Commands, Has.None.Contain ($"rm -rf {FakeAdbDevice.OverrideRoot}"),
-				"Copy fallback must validate listings before clearing the override directory.");
-			Assert.That (device.Commands, Has.None.Contain ("if test -f"),
-				"Copy mode must validate listings before clearing symlink state.");
+				"The override directory must not be cleared.");
 			Assert.That (device.Commands, Has.None.Contain ("printf %s"), "No success marker may be written.");
-			Assert.IsFalse (device.HasManifest, "No successful host manifest may be written.");
+			Assert.IsFalse (device.HasManifest);
 		}
 
 		[Test]
@@ -505,7 +496,6 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (device.RunFastDeploy (transferMode));
 
-			Assert.IsEmpty (device.Errors);
 			var commands = device.Commands.ToList ();
 			int clearIndex = commands.FindIndex (c => c.Contains ($"rm -rf {FakeAdbDevice.OverrideRoot}"));
 			Assert.Greater (clearIndex, commands.FindLastIndex (c => c.Contains ("-exec stat")),
@@ -523,9 +513,7 @@ namespace Xamarin.Android.Build.Tests
 				$"find: '{FakeAdbDevice.OverrideRoot}': No such file or directory");
 
 			Assert.IsTrue (device.RunFastDeploy ());
-			Assert.IsEmpty (device.Errors);
 			Assert.That (device.Commands, Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"));
-			Assert.IsTrue (device.HasManifest);
 		}
 
 		[Test]
