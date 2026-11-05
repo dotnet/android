@@ -551,7 +551,7 @@ namespace Xamarin.Android.Tasks
 				exitCode = result.ExitCode;
 			}
 
-			if (IsMissingDirectoryError (output)) {
+			if ((exitCode == 0 || exitCode == 1) && IsMissingRootDirectoryError (rootPath, output)) {
 				return new Dictionary<string, RemoteFileInfo> (StringComparer.Ordinal);
 			}
 			// A failed listing (for example a killed `find` or a dropped adb connection) can produce
@@ -563,6 +563,20 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return ParseRemoteFileData (rootPath, output);
+		}
+
+		static bool IsMissingRootDirectoryError (string rootPath, string output)
+		{
+			var lines = output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			// Only a single find diagnostic naming the root proves that the directory is absent.
+			// A missing child or a stat failure can accompany a partial listing and must fail.
+			if (lines.Length != 1) {
+				return false;
+			}
+			string line = lines [0].Trim ();
+			return line.Equals ($"find: '{rootPath}': No such file or directory", StringComparison.Ordinal) ||
+				line.Equals ($"find: \"{rootPath}\": No such file or directory", StringComparison.Ordinal) ||
+				line.Equals ($"find: {rootPath}: No such file or directory", StringComparison.Ordinal);
 		}
 
 		Dictionary<string, RemoteFileInfo> ParseRemoteFileData (string rootPath, string output)
