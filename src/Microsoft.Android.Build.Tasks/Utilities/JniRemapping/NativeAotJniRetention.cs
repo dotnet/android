@@ -11,6 +11,7 @@ using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
 using Microsoft.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks.JniRemapping
 {
@@ -102,7 +103,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 			ulong fileSize = (ulong) stream.Length;
 			if (elf.Type != FileType.Relocatable || elf.Endianess != Endianess.LittleEndian ||
 					(elf.Class != Class.Bit64 && elf.Class != Class.Bit32)) {
-				throw new InvalidDataException ("Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.");
+				throw new InvalidDataException (Properties.Resources.XA4325_NativeAotObjectFormat);
 			}
 			var data = new List<byte []> ();
 			classPayloads = new List<LiteralPayload> ();
@@ -119,17 +120,17 @@ namespace Microsoft.Android.Tasks.JniRemapping
 					offset = section32.Offset;
 					size = section32.Size;
 				} else {
-					throw new InvalidDataException ("Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.");
+					throw new InvalidDataException (Properties.Resources.XA4325_NativeAotObjectFormat);
 				}
 				if (section.Type != SectionType.NoBits && (offset > fileSize || size > fileSize - offset)) {
-					throw new InvalidDataException ("The NativeAOT ELF object contains an invalid section extent.");
+					throw new InvalidDataException (Properties.Resources.XA4325_NativeAotInvalidSection);
 				}
 				if ((section.Flags & SectionFlags.Allocatable) == 0 || section.Type == SectionType.NoBits) {
 					continue;
 				}
 				byte [] contents = ReadElfData (() => section.GetContents ());
 				if ((ulong) contents.Length != size) {
-					throw new InvalidDataException ("The NativeAOT ELF object contains truncated section data.");
+					throw new InvalidDataException (Properties.Resources.XA4325_NativeAotTruncatedSection);
 				}
 				if (contents.Length == 0) {
 					continue;
@@ -149,7 +150,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 				}
 			}
 			if (!hasManagedCode || !hasData) {
-				throw new InvalidDataException ("The NativeAOT object must contain allocated __managedcode and initialized data sections.");
+				throw new InvalidDataException (Properties.Resources.XA4325_NativeAotMissingSections);
 			}
 			var sections = elf.Sections.ToArray ();
 			var symbols = sections.OfType<ISymbolTable> ().SelectMany (table => table.Entries)
@@ -164,7 +165,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 				ulong offset = SymbolValue (symbol);
 				ISection target = symbol.PointedSection;
 				if (!sectionData.TryGetValue (target, out byte []? contents) || offset > (ulong) contents.Length) {
-					throw new InvalidDataException ("The NativeAOT ELF object contains an invalid section extent.");
+					throw new InvalidDataException (Properties.Resources.XA4325_NativeAotInvalidSection);
 				}
 				if (offset == (ulong) contents.Length || !decoded.Add ((target, offset))) {
 					continue;
@@ -489,7 +490,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 		}
 
 		static InvalidDataException InvalidDehydration ()
-			=> new InvalidDataException ("The NativeAOT object contains an invalid data dehydration stream.");
+			=> new InvalidDataException (Properties.Resources.XA4325_NativeAotInvalidDehydration);
 
 		static T ReadElfData<T> (Func<T> read)
 		{

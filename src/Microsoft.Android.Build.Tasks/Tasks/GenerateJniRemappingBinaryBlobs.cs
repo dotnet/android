@@ -10,6 +10,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
@@ -92,7 +93,7 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 			File.WriteAllText (stamp, BinaryBlobLibraries.Length == 0 ? "false" : "true");
 		} catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException or UnauthorizedAccessException or
 			NotSupportedException or OverflowException or XmlException) {
-			Log.LogCodedError ("XA4325", "Failed to generate the JNI remapping data. {0}", ex.Message);
+			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);
 		}
 		return !Log.HasLoggedErrors;
 	}

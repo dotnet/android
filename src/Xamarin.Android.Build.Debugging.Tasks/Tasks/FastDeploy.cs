@@ -1027,15 +1027,7 @@ namespace Xamarin.Android.Tasks
 			{ (error: "unknown",                        code: "XA0132", message: Resources.XA0132_PackageNotInstalled ) },
 			{ (error: "Permission denied",              code: "XA0133", message: Resources.XA0133_RunAsPermissionDenied ) },
 			{ (error: "package not debuggable",         code: "XA0134", message: Resources.XA0134_RunAsPackageNotDebuggable ) },
-			{ (error: "package not an application",     code: "XA0135", message: """
-				The package is a 'system' application. These are applications which install under
-				 the 'system' user on a device. These types of applications cannot use 'run-as'.
-				 The Fast Deployment system should have handled this particular error automatically
-				 and used a backup installation path. However if you are seeing this error please file
-				 an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio
-				 or 'Help->Report a Problem' in Visual Studio for Mac. If possible attach a full diagnostic build
-				 log to the feedback report as this will help us diagnose the issue.
-				""" ) },
+			{ (error: "package not an application",     code: "XA0135", message: Resources.XA0135_RunAsPackageNotAndApplication ) },
 			{ (error: "has corrupt installation",       code: "XA0136", message: Resources.XA0136_RunAsCorruptInstallation ) },
 			{ (error: "users can run this program",     code: "XA0137", message: Resources.XA0137_RunAsOSCorrupt ) },
 			{ (error: "set SELinux security context",   code: "XA0137", message: Resources.XA0137_RunAsOSCorrupt ) },

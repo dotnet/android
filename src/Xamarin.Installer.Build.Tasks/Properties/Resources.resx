@@ -130,6 +130,10 @@
     <value>The Android SDK license agreements were not accepted, please set `$(AcceptAndroidSDKLicenses)` to accept.</value>
     <comment>The following are literal names and should not be translated: `Android SDK`, `$(AcceptAndroidSDKLicenses)`</comment>
   </data>
+  <data name="Required_Downloadable_Mismatch" xml:space="preserve">
+    <value>Internal error: expected to install {0} components, but no downloads were available.</value>
+    <comment>{0} - The number of SDK components that need to be installed</comment>
+  </data>
   <data name="Required_Not_Installed" xml:space="preserve">
     <value>Dependency `{0}` should have been installed but could not be resolved. You can attempt to install it with: `{1} --install "{0}"`</value>
     <comment>The following are literal names and should not be translated: `{1} --install "{0}"`

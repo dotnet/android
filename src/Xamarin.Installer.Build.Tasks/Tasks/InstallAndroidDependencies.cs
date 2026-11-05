@@ -262,7 +262,7 @@ namespace Xamarin.Installer.Build.Tasks
 				var downloads = installer.GetDownloadItems(installationSet);
 				if (downloads == null)
 				{
-					Error("Internal error: expected to install {0} components, but no downloads were available.", installationSet.Count);
+					Error(Resources.Required_Downloadable_Mismatch, installationSet.Count);
 					return false;
 				}
 

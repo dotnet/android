@@ -136,7 +136,7 @@ namespace Xamarin.Android.Tasks
 						Log.LogCodedWarning ("XA4306", Properties.Resources.XA4306);
 					}
 				} else if (MultiDexMainDexListFile.IsNullOrEmpty ()) {
-					Log.LogCodedWarning ("XA4305", "Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.");
+					Log.LogCodedWarning ("XA4305", Properties.Resources.XA4305);
 				} else {
 					var content = new List<string> ();
 					var temp = Path.GetTempFileName ();

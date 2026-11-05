@@ -6,6 +6,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
@@ -66,7 +67,7 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 			success = true;
 		} catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException or UnauthorizedAccessException or
 			NotSupportedException or OverflowException or XmlException) {
-			Log.LogCodedError ("XA4325", "Failed to generate the JNI remapping data. {0}", ex.Message);
+			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);
 		} finally {
 			if (!success) {
 				DeleteFailedOutput (CompletionStamp);
@@ -84,7 +85,7 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 		try {
 			File.Delete (path);
 		} catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException) {
-			Log.LogCodedError ("XA4325", "Failed to generate the JNI remapping data. {0}", ex.Message);
+			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);
 		}
 	}
 }

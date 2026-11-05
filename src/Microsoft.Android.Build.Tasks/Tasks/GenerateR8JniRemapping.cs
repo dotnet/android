@@ -46,7 +46,7 @@ namespace Microsoft.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (!File.Exists (MappingFile)) {
-				LogR8JniRemappingError ($"The R8 mapping file '{MappingFile}' was not found.");
+				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingNotFound, MappingFile));
 				return false;
 			}
 
@@ -54,7 +54,7 @@ namespace Microsoft.Android.Tasks
 			try {
 				mapping = R8Mapping.Load (MappingFile);
 			} catch (Exception ex) when (ex is FormatException || ex is IOException || ex is UnauthorizedAccessException) {
-				LogR8JniRemappingError ($"The R8 mapping file '{MappingFile}' could not be read: {ex.Message}");
+				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingDataFailure, MappingFile, ex.Message));
 				return false;
 			}
 
@@ -63,19 +63,19 @@ namespace Microsoft.Android.Tasks
 			HashSet<string>? requiredEntries;
 			if (NativeAot) {
 				if (NativeAotObjectFile.IsNullOrEmpty () || !File.Exists (NativeAotObjectFile)) {
-					LogR8JniRemappingError ($"NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{NativeAotObjectFile}' was not found.");
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectRequired, NativeAotObjectFile ?? ""));
 					return false;
 				}
 				try {
 					requiredEntries = NativeAotJniRetention.GetRequiredEntries (NativeAotObjectFile, mapping);
 				} catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError ($"The NativeAOT retention object '{NativeAotObjectFile}' could not be read: {ex.Message}");
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectReadFailure, NativeAotObjectFile, ex.Message));
 					return false;
 				}
 				Log.LogDebugMessage ($"Post-ILC NativeAOT JNI retention selected {requiredEntries.Count} mapping entries.");
 			} else {
 				if (!NativeAotObjectFile.IsNullOrEmpty ()) {
-					LogR8JniRemappingError ("NativeAotObjectFile requires NativeAot=true.");
+					LogR8JniRemappingError (Properties.Resources.XA4325_NativeAotModeRequired);
 					return false;
 				}
 				ScanLinkedAssemblies (mapping);
@@ -112,7 +112,7 @@ namespace Microsoft.Android.Tasks
 					continue;
 				}
 				if (!File.Exists (path)) {
-					LogR8JniRemappingError ($"The linked managed assembly '{path}' was not found.");
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyNotFound, path));
 					continue;
 				}
 
@@ -120,14 +120,14 @@ namespace Microsoft.Android.Tasks
 					using var stream = File.OpenRead (path);
 					using var peReader = new PEReader (stream);
 					if (!peReader.HasMetadata) {
-						LogR8JniRemappingError ($"The linked managed assembly '{path}' does not contain managed metadata.");
+						LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyHasNoMetadata, path));
 						continue;
 					}
 					JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, Log);
 				} catch (BadImageFormatException ex) {
-					LogR8JniRemappingError ($"The linked managed assembly '{path}' could not be read: {ex.Message}");
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError ($"The linked managed assembly '{path}' could not be read: {ex.Message}");
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				}
 			}
 		}
@@ -329,9 +329,13 @@ namespace Microsoft.Android.Tasks
 			}
 
 			if (!preexistingEntryKeys.Contains (key)) {
-				LogR8JniRemappingError (
-					$"The generated '{elementName}' entries for '{key.Replace ('\t', ' ')}' have conflicting runtime targets " +
-					$"'{existingTarget.Replace ('\t', ' ')}' and '{target.Replace ('\t', ' ')}', which cannot be represented by the JNI remapping tables.");
+				LogR8JniRemappingError (string.Format (
+					CultureInfo.InvariantCulture,
+					Properties.Resources.XA4325_AmbiguousEntry,
+					elementName,
+					key.Replace ('\t', ' '),
+					existingTarget.Replace ('\t', ' '),
+					target.Replace ('\t', ' ')));
 				return false;
 			}
 
@@ -428,7 +432,7 @@ namespace Microsoft.Android.Tasks
 			=> sourceType.IsNullOrEmpty () || methodName.IsNullOrEmpty () ? "" : $"M\t{sourceType}\t{methodName}\t{signature}";
 
 		void LogR8JniRemappingError (string detail)
-			=> Log.LogCodedError ("XA4325", "Failed to generate the JNI remapping data. {0}", detail);
+			=> Log.LogCodedError ("XA4325", Properties.Resources.XA4325, detail);
 
 		void LogR8JniRemappingWarning (string detail)
 			=> Log.LogCodedWarning ("XA4326", Properties.Resources.XA4326, detail);

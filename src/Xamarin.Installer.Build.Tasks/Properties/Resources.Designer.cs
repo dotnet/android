@@ -132,6 +132,15 @@ namespace Xamarin.Installer.Build.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal error: expected to install {0} components, but no downloads were available..
+        /// </summary>
+        internal static string Required_Downloadable_Mismatch {
+            get {
+                return ResourceManager.GetString("Required_Downloadable_Mismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dependency `{0}` should have been installed but could not be resolved. You can attempt to install it with: `{1} --install &quot;{0}&quot;`.
         /// </summary>
         internal static string Required_Not_Installed {

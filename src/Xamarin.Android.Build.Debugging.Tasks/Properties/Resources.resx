@@ -187,6 +187,17 @@ Debuggable - A code property
 android:debuggable - An attribute in a xml file.
     </comment>
   </data>
+  <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
+    <value>The package is a 'system' application. These are applications which install under
+ the 'system' user on a device. These types of applications cannot use 'run-as'.
+ The Fast Deployment system should have handled this particular error automatically
+ and used a backup installation path. However if you are seeing this error please file
+ an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio
+ or 'Help->Report a Problem' in Visual Studio for Mac. If possible attach a full diagnostic build
+ log to the feedback report as this will help us diagnose the issue.</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
   <data name="XA0136_RunAsCorruptInstallation" xml:space="preserve">
     <value>The 'run-as' command failed with '{0}'.
 The currently installation of the package in corrupt. Please manually uninstall the 

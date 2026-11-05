@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks
 		{
 			using (var from = ExecutingAssembly.GetManifestResourceStream (ResourceName)) {
 				if (from == null) {
-					Log.LogCodedError ("XA0116", "Unable to find `EmbeddedResource` named `{0}`.", ResourceName);
+					Log.LogCodedError ("XA0116", Properties.Resources.XA0116, ResourceName);
 					return false;
 				}
 				if (Files.CopyIfStreamChanged (from, OutputPath)) {

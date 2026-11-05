@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
+using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
@@ -66,7 +67,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 			}
 		} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is BadImageFormatException ||
 			e is JsonException || e is InvalidOperationException || e is FormatException || e is ArgumentException || e is Win32Exception) {
-			LogCodedError ("XA4327", "Could not extract Java type map keys from '{0}': {1}", currentFile, e.Message);
+			LogCodedError ("XA4327", Properties.Resources.XA4327, currentFile, e.Message);
 		}
 	}
 

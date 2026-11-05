@@ -104,7 +104,7 @@ namespace Xamarin.Android.Tasks
 
 			if (generator == null) {
 				// Should "never" happen
-				LogCodedError ("XA4219", "Cannot find binding generator for language {0} or {1}.", OutputLanguage, DefaultOutputGenerator.Name);
+				LogCodedError ("XA4219", Properties.Resources.XA4219, OutputLanguage, DefaultOutputGenerator.Name);
 				return;
 			}
 
@@ -230,13 +230,13 @@ namespace Xamarin.Android.Tasks
 				bool fail = false;
 				classNamespace = fullClassName.Substring (0, idx);
 				if (classNamespace.IsNullOrEmpty ()) {
-					LogCodedError ("XA4223", "Malformed full class name '{0}'. Missing namespace.", fullClassName);
+					LogCodedError ("XA4223", Properties.Resources.XA4223, fullClassName);
 					fail = true;
 				}
 
 				className = fullClassName.Substring (idx + 1);
 				if (className.IsNullOrEmpty ()) {
-					LogCodedError ("XA4224", "Malformed full class name '{0}'. Missing class name.", fullClassName);
+					LogCodedError ("XA4224", Properties.Resources.XA4224, fullClassName);
 					fail = true;
 				}
 
@@ -372,7 +372,7 @@ namespace Xamarin.Android.Tasks
 		{
 			metadataValue = resourceItem.GetMetadata (metadataName);
 			if (String.IsNullOrEmpty (metadataValue)) {
-				LogCodedError ("XA4226", "Resource item '{0}' does not have the required metadata item '{1}'.", resourceItem.ItemSpec, metadataName);
+				LogCodedError ("XA4226", Properties.Resources.XA4226, resourceItem.ItemSpec, metadataName);
 				return false;
 			}
 

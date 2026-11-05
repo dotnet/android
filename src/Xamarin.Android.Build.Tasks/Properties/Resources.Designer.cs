@@ -302,6 +302,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
+        /// </summary>
+        public static string XA0116 {
+            get {
+                return ResourceManager.GetString("XA0116", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations..
         /// </summary>
         public static string XA0119_ReadyToRun {
@@ -888,6 +897,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find binding generator for language {0} or {1}..
+        /// </summary>
+        public static string XA4219 {
+            get {
+                return ResourceManager.GetString("XA4219", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Partial class item &apos;{0}&apos; does not have an associated binding for layout &apos;{1}&apos;..
         /// </summary>
         public static string XA4220 {
@@ -915,11 +933,38 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Malformed full class name &apos;{0}&apos;. Missing namespace..
+        /// </summary>
+        public static string XA4223 {
+            get {
+                return ResourceManager.GetString("XA4223", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Malformed full class name &apos;{0}&apos;. Missing class name..
+        /// </summary>
+        public static string XA4224 {
+            get {
+                return ResourceManager.GetString("XA4224", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Widget &apos;{0}&apos; in layout &apos;{1}&apos; has multiple instances with different types. The property type will be set to: {2}.
         /// </summary>
         public static string XA4225 {
             get {
                 return ResourceManager.GetString("XA4225", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource item &apos;{0}&apos; does not have the required metadata item &apos;{1}&apos;..
+        /// </summary>
+        public static string XA4226 {
+            get {
+                return ResourceManager.GetString("XA4226", resourceCulture);
             }
         }
         
@@ -1026,6 +1071,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Java callable wrapper code generation target &apos;{0}&apos; is no longer supported. The &apos;_AndroidJcwCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;; &apos;XamarinAndroid&apos; and &apos;JavaInterop1&apos; are not supported..
+        /// </summary>
+        public static string XA4240 {
+            get {
+                return ResourceManager.GetString("XA4240", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied..
         /// </summary>
         public static string XA4241 {
@@ -1113,6 +1167,24 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4252 {
             get {
                 return ResourceManager.GetString("XA4252", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Trimmable type map Java source input directory &apos;{0}&apos; and output directory &apos;{1}&apos; must be different..
+        /// </summary>
+        public static string XA4254 {
+            get {
+                return ResourceManager.GetString("XA4254", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generated trimmable type map Java source &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4255 {
+            get {
+                return ResourceManager.GetString("XA4255", resourceCulture);
             }
         }
 
@@ -1253,6 +1325,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty..
+        /// </summary>
+        public static string XA4305 {
+            get {
+                return ResourceManager.GetString("XA4305", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21.
         /// </summary>
         public static string XA4306 {
@@ -1362,6 +1443,97 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        public static string XA4325 {
+            get {
+                return ResourceManager.GetString("XA4325", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_MappingNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingDataFailure {
+            get {
+                return ResourceManager.GetString("XA4325_MappingDataFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyHasNoMetadata {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyHasNoMetadata", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AmbiguousEntry {
+            get {
+                return ResourceManager.GetString("XA4325_AmbiguousEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotModeRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotModeRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectFormat {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectFormat", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotInvalidSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotTruncatedSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotTruncatedSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotMissingSections {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotMissingSections", resourceCulture);
+            }
+
+        }
+
+        public static string XA4325_NativeAotInvalidDehydration {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidDehydration", resourceCulture);
+            }
+        }
+
         public static string XA4326 {
             get {
                 return ResourceManager.GetString("XA4326", resourceCulture);
@@ -1380,6 +1552,42 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Could not extract Java type map keys from &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4327 {
+            get {
+                return ResourceManager.GetString("XA4327", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not generate typemap ProGuard configuration from &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4328 {
+            get {
+                return ResourceManager.GetString("XA4328", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No retained Java type map key files were provided..
+        /// </summary>
+        public static string XA4328_NoInputs {
+            get {
+                return ResourceManager.GetString("XA4328_NoInputs", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Line {0} contains an invalid retained Java class name: &apos;{1}&apos;..
+        /// </summary>
+        public static string XA4328_InvalidName {
+            get {
+                return ResourceManager.GetString("XA4328_InvalidName", resourceCulture);
+            }
+        }
+
         public static string XA4329_RequiredProperty {
             get {
                 return ResourceManager.GetString("XA4329_RequiredProperty", resourceCulture);
@@ -1529,6 +1737,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to parse &apos;DescriptorIndex&apos; metadata value &apos;{0}&apos; for assembly &apos;{1}&apos;..
+        /// </summary>
+        public static string XA5303 {
+            get {
+                return ResourceManager.GetString("XA5303", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid AssemblyStore compression level &apos;{0}&apos;. The value must be between {1} and {2}..
+        /// </summary>
+        public static string XA5304 {
+            get {
+                return ResourceManager.GetString("XA5304", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find Android Resource &apos;{0}&apos;. Please update @(AndroidResource) to add the missing resource..
         /// </summary>
         public static string XA8000 {
@@ -1537,6 +1763,15 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was &apos;{0}&apos;..
+        /// </summary>
+        public static string XAGCA7009_UnsupportedRuntime {
+            get {
+                return ResourceManager.GetString("XAGCA7009_UnsupportedRuntime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Executable &apos;gradlew&apos; not found in project directory &apos;{0}&apos;. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts..
         /// </summary>
