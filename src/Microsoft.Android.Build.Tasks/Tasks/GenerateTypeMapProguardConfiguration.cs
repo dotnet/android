@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
@@ -40,7 +39,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 					}
 					if (!IsClassName (name)) {
 						Log.LogCodedError ("XA4328", "Could not generate typemap ProGuard configuration from '{0}': {1}", currentFile,
-							string.Format (CultureInfo.CurrentCulture, "Line {0} contains an invalid retained Java class name: '{1}'.", lineNumber, name));
+							$"Line {lineNumber} contains an invalid retained Java class name: '{name}'.");
 						return !Log.HasLoggedErrors;
 					}
 					classes.Add (name.Replace ('/', '.'));

@@ -46,7 +46,7 @@ namespace Microsoft.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (!File.Exists (MappingFile)) {
-				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The R8 mapping file '{0}' was not found.", MappingFile));
+				LogR8JniRemappingError ($"The R8 mapping file '{MappingFile}' was not found.");
 				return false;
 			}
 
@@ -54,7 +54,7 @@ namespace Microsoft.Android.Tasks
 			try {
 				mapping = R8Mapping.Load (MappingFile);
 			} catch (Exception ex) when (ex is FormatException || ex is IOException || ex is UnauthorizedAccessException) {
-				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The R8 mapping file '{0}' could not be read: {1}", MappingFile, ex.Message));
+				LogR8JniRemappingError ($"The R8 mapping file '{MappingFile}' could not be read: {ex.Message}");
 				return false;
 			}
 
@@ -63,13 +63,13 @@ namespace Microsoft.Android.Tasks
 			HashSet<string>? requiredEntries;
 			if (NativeAot) {
 				if (NativeAotObjectFile.IsNullOrEmpty () || !File.Exists (NativeAotObjectFile)) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.", NativeAotObjectFile ?? ""));
+					LogR8JniRemappingError ($"NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{NativeAotObjectFile}' was not found.");
 					return false;
 				}
 				try {
 					requiredEntries = NativeAotJniRetention.GetRequiredEntries (NativeAotObjectFile, mapping);
 				} catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The NativeAOT retention object '{0}' could not be read: {1}", NativeAotObjectFile, ex.Message));
+					LogR8JniRemappingError ($"The NativeAOT retention object '{NativeAotObjectFile}' could not be read: {ex.Message}");
 					return false;
 				}
 				Log.LogDebugMessage ($"Post-ILC NativeAOT JNI retention selected {requiredEntries.Count} mapping entries.");
@@ -112,7 +112,7 @@ namespace Microsoft.Android.Tasks
 					continue;
 				}
 				if (!File.Exists (path)) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' was not found.", path));
+					LogR8JniRemappingError ($"The linked managed assembly '{path}' was not found.");
 					continue;
 				}
 
@@ -120,14 +120,14 @@ namespace Microsoft.Android.Tasks
 					using var stream = File.OpenRead (path);
 					using var peReader = new PEReader (stream);
 					if (!peReader.HasMetadata) {
-						LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' does not contain managed metadata.", path));
+						LogR8JniRemappingError ($"The linked managed assembly '{path}' does not contain managed metadata.");
 						continue;
 					}
 					JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, Log);
 				} catch (BadImageFormatException ex) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' could not be read: {1}", path, ex.Message));
+					LogR8JniRemappingError ($"The linked managed assembly '{path}' could not be read: {ex.Message}");
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, "The linked managed assembly '{0}' could not be read: {1}", path, ex.Message));
+					LogR8JniRemappingError ($"The linked managed assembly '{path}' could not be read: {ex.Message}");
 				}
 			}
 		}
@@ -329,13 +329,9 @@ namespace Microsoft.Android.Tasks
 			}
 
 			if (!preexistingEntryKeys.Contains (key)) {
-				LogR8JniRemappingError (string.Format (
-					CultureInfo.InvariantCulture,
-					"The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.",
-					elementName,
-					key.Replace ('\t', ' '),
-					existingTarget.Replace ('\t', ' '),
-					target.Replace ('\t', ' ')));
+				LogR8JniRemappingError (
+					$"The generated '{elementName}' entries for '{key.Replace ('\t', ' ')}' have conflicting runtime targets " +
+					$"'{existingTarget.Replace ('\t', ' ')}' and '{target.Replace ('\t', ' ')}', which cannot be represented by the JNI remapping tables.");
 				return false;
 			}
 
