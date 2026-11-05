@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.SourceWriter.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class MethodWriterTests
 	{
-		[Test]
+		[TestMethod]
 		public void Basics ()
 		{
 			var method = new MethodWriter { Name = "MyMethod", IsPublic = true, ReturnType = TypeReferenceWriter.Void };
