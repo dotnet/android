@@ -5,6 +5,20 @@ as a native Microsoft.Testing.Platform (MTP) executable. Its MSTest and MTP prev
 versions are pinned in this project, independently of the product's MTP version.
 No Android SDK build or device is required.
 
+`MSTest.SourceGeneration` is referenced directly, with `PrivateAssets="all"`, at
+the verified `4.6.0-preview.26524.1` version available from the configured
+`dotnet-tools` feed. This package generates test metadata and invocation delegates
+for this `Microsoft.NET.Sdk` project; no `MSTest.Sdk` opt-in property is required.
+It registers the nine directly annotated test classes and eleven test methods
+with the adapter through a generated module initializer. MTP remains pinned to
+`2.6.0-preview.26524.1`.
+
+This enables generated metadata, not universally reflection-free execution:
+upstream retains bounded startup lookups and fallback paths. Unsupported test
+shapes can be omitted from the generated registry; preserve the expected eleven
+qualified test identities when changing this suite. See the upstream
+[source-generator design and limitations](https://github.com/microsoft/testfx/blob/88a31ec394abe9f5c5dcf596f0a150ff998d3a0e/docs/source-generator/design.md).
+
 `IsTestingPlatformApplication` is set explicitly so native `dotnet test` can
 identify this project before its first package restore. Starting with an empty
 project `obj/` directory does not require a separate restore or build command.
