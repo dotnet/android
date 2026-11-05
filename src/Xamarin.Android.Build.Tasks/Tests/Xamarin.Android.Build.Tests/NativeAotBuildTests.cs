@@ -122,7 +122,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				ProjectName = "Test Me",
+				ProjectName = "テスト\u2002Me",
 				RootNamespace = "Test.Me",
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
