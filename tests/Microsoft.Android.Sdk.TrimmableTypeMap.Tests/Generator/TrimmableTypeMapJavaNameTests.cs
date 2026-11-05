@@ -1,20 +1,29 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Microsoft.Android.Sdk.TrimmableTypeMap;
+using Xunit;
 
-using NUnit.Framework;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
-namespace Xamarin.Android.Build.Tests;
-
-[TestFixture]
 public class TrimmableTypeMapJavaNameTests
 {
-	[Test]
+	public static IEnumerable<object []> SourceReferenceCases ()
+	{
+		foreach (string simpleName in new [] { "Outer$NamedComponent", "Outer$for", "Outer$var", "Outer$1" }) {
+			foreach (string referenceKind in new [] { "constructor", "method", "field", "base", "constructor-throws", "method-throws" }) {
+				foreach (bool external in new [] { false, true }) {
+					yield return new object [] { simpleName, referenceKind, external };
+				}
+			}
+		}
+	}
+
+	[Theory]
+	[MemberData (nameof (SourceReferenceCases))]
 	public void SourceReferencesDistinguishGeneratedAndExternalTypes (
-		[Values ("Outer$NamedComponent", "Outer$for", "Outer$var", "Outer$1")] string simpleName,
-		[Values ("constructor", "method", "field", "base", "constructor-throws", "method-throws")] string referenceKind,
-		[Values (false, true)] bool external)
+		string simpleName,
+		string referenceKind,
+		bool external)
 	{
 		string jniName = "example/components/" + simpleName;
 		var target = CreatePeer (jniName) with {
@@ -66,10 +75,9 @@ public class TrimmableTypeMapJavaNameTests
 			},
 			_ => throw new System.ArgumentException (nameof (referenceKind)),
 		};
-		var generator = new TrimmableTypeMapGenerator (new TrimmableTypeMapTestLogger ());
+		var generator = new TrimmableTypeMapGenerator (new NoOpTrimmableTypeMapLogger ());
 		bool expectedValid = !external || simpleName == "Outer$NamedComponent";
-		Assert.AreEqual (expectedValid, generator.ValidateJavaNames ([target, consumer]),
-			"Only generated wrappers can preserve '$' instead of treating it as a nested-type separator.");
+		Assert.Equal (expectedValid, generator.ValidateJavaNames ([target, consumer]));
 		if (!expectedValid) {
 			return;
 		}
@@ -77,26 +85,27 @@ public class TrimmableTypeMapJavaNameTests
 		var java = new JcwJavaSourceGenerator ().GenerateContent ([target, consumer])
 			.Single (source => source.RelativePath == "example/Consumer.java").Content;
 		string expectedTypeName = "example.components." + (external ? simpleName.Replace ('$', '.') : simpleName);
-		StringAssert.Contains (expectedTypeName, java);
+		Assert.Contains (expectedTypeName, java);
 	}
 
-	[TestCase ("Outer$for")]
-	[TestCase ("Outer$var")]
-	[TestCase ("Outer$1")]
+	[Theory]
+	[InlineData ("Outer$for")]
+	[InlineData ("Outer$var")]
+	[InlineData ("Outer$1")]
 	public void DeferredRegistrationUsesWholeGeneratedIdentifier (string simpleName)
 	{
 		var peer = CreatePeer ("example/components/" + simpleName) with {
 			CannotRegisterInStaticConstructor = true,
 		};
 		var peers = new List<JavaPeerInfo> { peer };
-		var generator = new TrimmableTypeMapGenerator (new TrimmableTypeMapTestLogger ());
+		var generator = new TrimmableTypeMapGenerator (new NoOpTrimmableTypeMapLogger ());
 
-		Assert.IsTrue (generator.ValidateJavaNames (peers));
-		CollectionAssert.AreEqual (new [] { "example.components." + simpleName },
+		Assert.True (generator.ValidateJavaNames (peers));
+		Assert.Equal (new [] { "example.components." + simpleName },
 			TrimmableTypeMapGenerator.CollectApplicationRegistrationTypes (peers));
 	}
 
-	[Test]
+	[Fact]
 	public void ThrowsCanReferenceGeneratedTypeWithoutPackage ()
 	{
 		var target = CreatePeer ("Outer$for");
@@ -115,30 +124,32 @@ public class TrimmableTypeMapJavaNameTests
 				ThrownNames = [target.JavaName],
 			}],
 		};
-		var generator = new TrimmableTypeMapGenerator (new TrimmableTypeMapTestLogger ());
-		Assert.IsTrue (generator.ValidateJavaNames ([target, consumer]));
+		var generator = new TrimmableTypeMapGenerator (new NoOpTrimmableTypeMapLogger ());
+		Assert.True (generator.ValidateJavaNames ([target, consumer]));
 	}
 
-	[TestCase ("Outer$Nested", true)]
-	[TestCase ("Outer$for", false)]
+	[Theory]
+	[InlineData ("Outer$Nested", true)]
+	[InlineData ("Outer$for", false)]
 	public void InterfacesKeepNestedTypeValidation (string simpleName, bool expectedValid)
 	{
 		var target = CreatePeer ("example/" + simpleName) with { IsInterface = true };
 		var consumer = CreatePeer ("example/Consumer") with {
 			ImplementedInterfaceJavaNames = [target.JavaName],
 		};
-		var generator = new TrimmableTypeMapGenerator (new TrimmableTypeMapTestLogger ());
-		Assert.AreEqual (expectedValid, generator.ValidateJavaNames ([target, consumer]));
+		var generator = new TrimmableTypeMapGenerator (new NoOpTrimmableTypeMapLogger ());
+		Assert.Equal (expectedValid, generator.ValidateJavaNames ([target, consumer]));
 	}
 
-	[TestCase ("example/for")]
-	[TestCase ("example/Outer-for")]
-	[TestCase ("example/1Outer$for")]
-	[TestCase ("for/Outer$for")]
+	[Theory]
+	[InlineData ("example/for")]
+	[InlineData ("example/Outer-for")]
+	[InlineData ("example/1Outer$for")]
+	[InlineData ("for/Outer$for")]
 	public void GeneratedWrappersStillRejectInvalidIdentifiers (string jniName)
 	{
-		var generator = new TrimmableTypeMapGenerator (new TrimmableTypeMapTestLogger ());
-		Assert.IsFalse (generator.ValidateJavaNames ([CreatePeer (jniName)]));
+		var generator = new TrimmableTypeMapGenerator (new NoOpTrimmableTypeMapLogger ());
+		Assert.False (generator.ValidateJavaNames ([CreatePeer (jniName)]));
 	}
 
 	static JavaPeerInfo CreatePeer (string jniName) => new () {
