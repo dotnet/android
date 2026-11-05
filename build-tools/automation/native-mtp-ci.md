@@ -10,9 +10,23 @@ NUnit jobs are unchanged.
 ## Prerequisites and build boundary
 
 The pilot uses SDK `11.0.100-rc.3.26522.148`, installed in a job-local directory,
-MSTest `4.6.0-preview.26524.1` and MTP/TRX `2.6.0-preview.26524.1`.
+MSTest and MSTest.SourceGeneration `4.6.0-preview.26524.1` and
+MTP/TRX `2.6.0-preview.26524.1`.
 The latter pins belong to the converted project, not the root package policy.
 The adapter needs Python 3.9+ and the matching .NET runtime.
+
+SourceWriter and the bounded probe both reference `MSTest.SourceGeneration`
+directly with `PrivateAssets="all"`; the probe also persists compiler-generated
+files for its contract checks. They use the package's default mode on
+`Microsoft.NET.Sdk`, without an extra mode property or experimental engine.
+The host integration checks source-generated registry/support/ModuleInitializer
+output and the real native probe's active `SourceGeneratedReflectionOperations`
+provider. Generated failure stacks independently prove direct invocation.
+The probe verifies its complete intended test-method registry and generated
+DynamicData source/display-name accessors. This is generated metadata/provider
+activation, **not** a claim of universally reflection-free execution:
+the framework retains bounded startup lookups and compatibility fallbacks.
+No AOT, trimming or device validation is implied.
 
 The exact SDK pin was verified on 2026-11-05 against the metadata actually used
 by `UseDotNet@2`: its [release index][sdk-index] links the 11.0
@@ -106,6 +120,8 @@ UIDs are passed through an MTP response file to avoid command-line size/escaping
 limits. Every completed attempt must produce exactly the requested multiset of
 TRX result IDs, definitions and entries. This binds the pinned MSTest discovery
 UID to TRX `testId`, rather than presuming another framework's identity mapping.
+Source-generation changes must rediscover and revalidate this mapping, not
+reuse pre-generator UID lists even if observed GUIDs remain unchanged.
 Unexpected zero discovery exits 8 even if all slices would be empty.
 An **explicit empty slice of a verified nonempty baseline** succeeds without
 starting execution or fabricating a TRX, and records `status: empty-slice`.
@@ -187,6 +203,14 @@ rejection and unchanged NUnit AIDL Debug/Release/root-DLL execution.
 Timeout coverage includes a real native test spawning a child and grandchild,
 both terminated while an unrelated sibling stays alive; no effective success
 report is emitted.
+Generated-mode coverage additionally includes deterministic `DynamicData`
+properties with genuinely identical argument rows and duplicate display names,
+six slices over four distinct row UIDs (two empty), native method/display/category
+filters, and retrying exactly one of two same-display dynamic rows. Both
+discovery and retry run through the actual generated probe, not a mock metadata
+model. Generated registry and provider-activation output are retained beside
+the current evidence; earlier non-sourcegen results are historical, not current
+mode certification.
 
 Local macOS arm64 coverage does **not** certify Azure task orchestration,
 server-side result/attachment publication, agent image/SDK installation, Linux

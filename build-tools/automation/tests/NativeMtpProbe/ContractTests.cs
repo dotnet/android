@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: DoNotParallelize]
@@ -11,6 +14,40 @@ namespace NativeMtpProbe;
 public class ContractTests
 {
 	public TestContext TestContext { get; set; }
+
+	[TestMethod]
+	[TestCategory ("sourcegen-contract")]
+	public void GeneratedMetadataActive ()
+	{
+		RecordExecution ();
+		var assembly = Assembly.Load ("MSTestAdapter.PlatformServices");
+		var providerType = assembly.GetType ("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider", throwOnError: true);
+		Assert.IsNotNull (providerType);
+		var instanceProperty = providerType.GetProperty ("Instance", BindingFlags.Static | BindingFlags.NonPublic);
+		Assert.IsNotNull (instanceProperty);
+		var provider = instanceProperty.GetValue (null);
+		Assert.IsNotNull (provider);
+		var operationsProperty = providerType.GetProperty ("ReflectionOperations");
+		Assert.IsNotNull (operationsProperty);
+		var operations = operationsProperty.GetValue (provider);
+		Assert.IsNotNull (operations);
+		Assert.AreEqual ("SourceGeneratedReflectionOperations", operations.GetType ().Name);
+
+		var classes = MSTest.SourceGenerated.MSTestReflectionMetadata.TestClasses;
+		Assert.AreEqual (1, classes.Count);
+		var generated = classes [0];
+		Assert.AreEqual (typeof (ContractTests), generated.Type);
+		var expected = typeof (ContractTests).GetMethods ()
+			.Where (method => method.GetCustomAttribute<TestMethodAttribute> () != null)
+			.Select (method => method.Name).OrderBy (name => name).ToArray ();
+		var actual = generated.Methods.Where (method => method.IsTestMethod)
+			.Select (method => method.Name).OrderBy (name => name).ToArray ();
+		CollectionAssert.AreEqual (expected, actual);
+		Assert.IsTrue (generated.Methods.All (method => method.Invoke != null));
+		Assert.AreEqual (2, generated.Methods.Sum (method => method.DynamicDataSources.Count));
+		Console.WriteLine ("active provider: " + operations.GetType ().FullName);
+		Console.WriteLine ("generated test methods: " + string.Join (",", actual));
+	}
 
 	[TestMethod]
 	[TestCategory ("selection")]
@@ -31,6 +68,53 @@ public class ContractTests
 		RecordExecution ();
 		Assert.IsFalse (string.IsNullOrEmpty (value));
 		Console.WriteLine ("row value: " + value);
+	}
+
+	public static IEnumerable<object []> DynamicCases {
+		get {
+			yield return ["duplicate"];
+			yield return ["duplicate"];
+			yield return ["different"];
+			yield return ["a&b|(c)=!~\\\"; percent%2C comma, space"];
+		}
+	}
+
+	public static IEnumerable<object []> DynamicRetryCases {
+		get {
+			yield return [0];
+			yield return [1];
+		}
+	}
+
+	public static string DynamicDisplayName (MethodInfo method, object [] data)
+	{
+		return method.Name == nameof (DynamicRows) ? "dynamic duplicate display" : "dynamic retry display";
+	}
+
+	[TestMethod]
+	[TestCategory ("dynamic-selection")]
+	[DynamicData (nameof (DynamicCases), DynamicDataDisplayName = nameof (DynamicDisplayName))]
+	public void DynamicRows (string value)
+	{
+		RecordExecution ();
+		Assert.IsFalse (string.IsNullOrEmpty (value));
+		Console.WriteLine ("dynamic row value: " + value);
+	}
+
+	[TestMethod]
+	[TestCategory ("dynamic-retry")]
+	[DynamicData (nameof (DynamicRetryCases), DynamicDataDisplayName = nameof (DynamicDisplayName))]
+	public void DynamicRetryRows (int row)
+	{
+		RecordExecution ();
+		if (row != 0)
+			return;
+		var directory = Environment.GetEnvironmentVariable ("MTP_PROBE_STATE");
+		Assert.IsFalse (string.IsNullOrEmpty (directory));
+		var marker = Path.Combine (directory, "dynamic-retry-marker");
+		bool first = !File.Exists (marker);
+		File.WriteAllText (marker, "attempted");
+		Assert.IsFalse (first, "deliberate first-dynamic-row failure");
 	}
 
 	[TestMethod]

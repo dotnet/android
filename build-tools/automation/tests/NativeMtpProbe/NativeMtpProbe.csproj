@@ -5,12 +5,14 @@
     <IsPackable>false</IsPackable>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <MSTestVersion>4.6.0-preview.26524.1</MSTestVersion>
     <MicrosoftTestingPlatformVersion>2.6.0-preview.26524.1</MicrosoftTestingPlatformVersion>
     <!-- Deliberate duplicate rows/display names exercise the scheduler's identity contract. -->
     <NoWarn>$(NoWarn);MSTEST0042;MSTEST0087</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestVersion)" PrivateAssets="all" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" PrivateAssets="all" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />

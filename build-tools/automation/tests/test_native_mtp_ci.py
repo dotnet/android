@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import tempfile
 import time
@@ -49,12 +50,20 @@ class NativeMtpIntegration(unittest.TestCase):
         cls.command("python-info", [os.sys.executable, "--version"], 0)
         cls.sourcewriter = ROOT / "bin/TestDebug/net11.0/Xamarin.SourceWriter-Tests.dll"
         cls.probe = ROOT / "build-tools/automation/tests/NativeMtpProbe/bin/Debug/net11.0/NativeMtpProbe.dll"
+        cls.command("build-probe", [cls.dotnet, "build", PROBE_PROJECT, "-c", "Debug", "-t:Rebuild", "-v:q"], 0)
+        cls.sourcewriter_built = False
+
+    @classmethod
+    def build_sourcewriter(cls):
+        if cls.sourcewriter_built:
+            return
         for name, project, configuration in (
             ("build-sourcewriter", PROJECT, "Debug"),
             ("build-sourcewriter-release", PROJECT, "Release"),
-            ("build-probe", PROBE_PROJECT, "Debug"),
         ):
-            cls.command(name, [cls.dotnet, "build", project, "-c", configuration, "-v:q"], 0)
+            cls.command(name, [cls.dotnet, "build", project, "-c", configuration, "-t:Rebuild",
+                              "-p:EmitCompilerGeneratedFiles=true", "-v:q"], 0)
+        cls.sourcewriter_built = True
 
     @classmethod
     def tearDownClass(cls):
@@ -121,6 +130,22 @@ class NativeMtpIntegration(unittest.TestCase):
         return cases
 
     def test_sourcewriter_slices_and_release(self):
+        self.build_sourcewriter()
+        for configuration in ("Debug", "Release"):
+            generated = ROOT / f"tests/Xamarin.SourceWriter-Tests/obj/{configuration}/generated"
+            files = list(generated.rglob("MSTestReflectionMetadata.*.g.cs"))
+            self.assertEqual(3, len(files))
+            copied = self.evidence / f"generated-sourcewriter-{configuration}"
+            copied.mkdir()
+            for path in files:
+                shutil.copyfile(path, copied / path.name)
+            registry = (copied / "MSTestReflectionMetadata.Registry.g.cs").read_text(encoding="utf-8-sig")
+            registration = (copied / "MSTestReflectionMetadata.Registration.g.cs").read_text(encoding="utf-8-sig")
+            self.assertEqual(9, sum(line.strip().startswith("Type = typeof(global::Xamarin.SourceWriter.Tests.")
+                                    for line in registry.splitlines()))
+            self.assertEqual(11, registry.count("Invoke = static (instance, args)"))
+            self.assertIn("[ModuleInitializer]", registration)
+            self.assertIn("ReflectionMetadataHook.Register(", registration)
         union = []
         baselines = []
         for number in range(1, 4):
@@ -189,11 +214,75 @@ class NativeMtpIntegration(unittest.TestCase):
         self.execute("unsupported-filter", filter="NotAProperty=foo", expected=8)
         self.execute("invalid-filter", filter="(TestCategory=selection", expected=8)
 
+    def test_dynamic_data_discovery_selection_and_slices(self):
+        state = self.evidence / "dynamic-discovery-state"
+        state.mkdir()
+        baseline = None
+        for index in range(2):
+            directory = self.command(
+                f"dynamic-discovery-{index}",
+                [self.dotnet, str(self.probe), "--list-tests", "json", "--filter",
+                 "TestCategory=dynamic-selection", "--no-ansi"],
+                0, {"MTP_PROBE_STATE": str(state)},
+            )
+            tests = json.loads((directory / "stdout.log").read_text())["tests"]
+            if baseline is None:
+                baseline = tests
+            else:
+                self.assertEqual(baseline, tests)
+        self.assertFalse((state / "executions.txt").exists(), "dynamic discovery executed test bodies")
+        self.assertEqual(4, len(baseline))
+        self.assertEqual({"dynamic duplicate display"}, {test["displayName"] for test in baseline})
+        union = []
+        empty = 0
+        for number in range(1, 7):
+            directory = self.execute(f"dynamic-slice-{number}", filter="TestCategory=dynamic-selection",
+                                     slices=6, number=number)
+            selection = json.loads((directory / "selection.json").read_text())
+            cases = self.effective(directory)
+            self.assertCountEqual(selection["selected"], [uid for uid, _ in cases])
+            self.assertTrue(all(outcome == "Passed" for _, outcome in cases))
+            union.extend(uid for uid, _ in cases)
+            empty += not cases
+        self.assertEqual(2, empty)
+        self.assertEqual(Counter(test["uid"] for test in baseline), Counter(union))
+        for name, expression in (
+            ("dynamic-method", "FullyQualifiedName=NativeMtpProbe.ContractTests.DynamicRows"),
+            ("dynamic-display", "Name=dynamic duplicate display"),
+            ("dynamic-compound", "TestCategory=dynamic-selection&FullyQualifiedName~DynamicRows"),
+        ):
+            directory = self.execute(name, filter=expression)
+            self.assertEqual(Counter(union), Counter(uid for uid, _ in self.effective(directory)))
+
+    def test_generated_registry_and_active_provider(self):
+        generated = ROOT / "build-tools/automation/tests/NativeMtpProbe/obj/Debug/net11.0/generated"
+        files = list(generated.rglob("MSTestReflectionMetadata.*.g.cs"))
+        self.assertEqual(3, len(files))
+        copied = self.evidence / "generated-probe"
+        copied.mkdir()
+        for path in files:
+            shutil.copyfile(path, copied / path.name)
+        registration = (copied / "MSTestReflectionMetadata.Registration.g.cs").read_text(encoding="utf-8-sig")
+        registry = (copied / "MSTestReflectionMetadata.Registry.g.cs").read_text(encoding="utf-8-sig")
+        self.assertIn("[ModuleInitializer]", registration)
+        self.assertIn("ReflectionMetadataHook.Register(", registration)
+        self.assertIn("DynamicDataSourceResolver.RegisterDataProvider(", registration)
+        self.assertIn("DynamicDataSourceResolver.RegisterDisplayNameProvider(", registration)
+        self.assertIn("ContractTests.DynamicCases", registry)
+        self.assertIn("ContractTests.DynamicRetryCases", registry)
+        self.assertIn("ContractTests.DynamicDisplayName(", registry)
+        directory = self.execute("generated-provider", filter="TestCategory=sourcegen-contract")
+        self.assertEqual(1, len(self.effective(directory)))
+        output = (directory / "attempt-1/raw.trx").read_text(encoding="utf-8-sig")
+        self.assertIn("active provider:", output)
+        self.assertIn("SourceGeneratedReflectionOperations", output)
+
     def test_retry_success_and_final_failure(self):
         for name, expression, expected in (
             ("retry-success", "TestCategory=retry", 0),
             ("retry-failure", "TestCategory=retry|TestCategory=failure|TestCategory=selection", 2),
             ("data-retry", "TestCategory=data-retry", 0),
+            ("dynamic-retry", "TestCategory=dynamic-retry", 0),
         ):
             directory = self.execute(name, filter=expression, expected=expected)
             summary = json.loads((directory / "summary.json").read_text())
@@ -203,10 +292,14 @@ class NativeMtpIntegration(unittest.TestCase):
             initial = {r.get("testId"): r for r in first.findall(f"{NS}Results/{NS}UnitTestResult")}
             retried = {r.get("testId"): r for r in second.findall(f"{NS}Results/{NS}UnitTestResult")}
             self.assertEqual({uid for uid, r in initial.items() if r.get("outcome") == "Failed"}, set(retried))
-            message = "deliberate first-row failure" if name == "data-retry" else "deliberate first-attempt failure"
-            method = "ContractTests.RetryRows" if name == "data-retry" else "ContractTests.FailsOnce"
+            message, method = {
+                "data-retry": ("deliberate first-row failure", "ContractTests.RetryRows"),
+                "dynamic-retry": ("deliberate first-dynamic-row failure", "ContractTests.DynamicRetryRows"),
+            }.get(name, ("deliberate first-attempt failure", "ContractTests.FailsOnce"))
             self.assertIn(message, (directory / "attempt-1/raw.trx").read_text(encoding="utf-8-sig"))
             self.assertIn(method, (directory / "attempt-1/raw.trx").read_text(encoding="utf-8-sig"))
+            self.assertIn("MSTestReflectionMetadata.Registry.g.cs",
+                          (directory / "attempt-1/raw.trx").read_text(encoding="utf-8-sig"))
             final = self.effective(directory)
             self.assertEqual(len(initial), len(final))
             self.assertEqual(1 if expected else 0, sum(outcome == "Failed" for _, outcome in final))
@@ -295,6 +388,7 @@ class NativeMtpIntegration(unittest.TestCase):
                             subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], check=True)
 
     def test_project_and_module_boundaries_and_nunit_neighbor(self):
+        self.build_sourcewriter()
         module_time = self.sourcewriter.stat().st_mtime_ns
         for name, arguments in (
             ("project-execution-only", ["--project", PROJECT, "--no-build", "-c", "Debug"]),
