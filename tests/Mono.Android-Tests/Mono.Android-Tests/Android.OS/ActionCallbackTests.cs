@@ -645,13 +645,13 @@ namespace Xamarin.Android.RuntimeTests {
 
 		sealed class RecordingHandler : Handler {
 			public List<Java.Lang.IRunnable> Runnables { get; } = new ();
-			public Action? BeforePost { get; set; }
+			public Action BeforePost { get; set; } = static () => {};
 
 			public RecordingHandler (Looper looper) : base (looper) {}
 
 			public override bool SendMessageAtTime (Message message, long uptimeMillis)
 			{
-				BeforePost?.Invoke ();
+				BeforePost ();
 				var runnable = message.Callback;
 				Assert.IsNotNull (runnable);
 				if (runnable != null)
