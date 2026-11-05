@@ -26,6 +26,10 @@
       <Uri>https://github.com/dotnet/android</Uri>
       <Sha>801f9ecbab5118b13d21cb52409e507ad4b2feb7</Sha>
     </Dependency>
+    <Dependency Name="System.IO.Hashing" Version="11.0.0-rc.3.26522.148">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>5254d8bcf59917edc1e1abc33bdf2442b77b1c70</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="12.0.0-beta.26523.103">
