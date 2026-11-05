@@ -23,7 +23,7 @@ public class AvdManagerRunnerTests
 		using var avd = new FakeAvdManager ("# Keep this comment\nhw.ramSize=2048\nhw.gpu.enabled.extra=no\n" + gpuConfig);
 		var created = await avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image");
 
-		Assert.AreEqual (avd.AvdPath, created.Path, "Use the path reported by avdmanager, not the AVD name or a default home.");
+		Assert.AreEqual (avd.AvdPath, created.Path);
 		CollectionAssert.AreEqual (new [] {
 			"# Keep this comment",
 			"hw.ramSize=2048",
@@ -31,7 +31,7 @@ public class AvdManagerRunnerTests
 			"hw.gpu.enabled=yes",
 			"hw.gpu.mode=auto",
 		}, File.ReadAllLines (avd.ConfigPath));
-		Assert.That (File.ReadAllText (avd.CommandsPath), Does.Contain ("create avd -n test-avd -k system-image"));
+		Assert.That (avd.CreationCommand, Is.EqualTo ("create avd -n test-avd -k system-image"));
 	}
 
 	[Test]
@@ -43,7 +43,7 @@ public class AvdManagerRunnerTests
 
 		Assert.AreEqual (avd.AvdPath, existing.Path);
 		Assert.AreEqual (config, File.ReadAllText (avd.ConfigPath));
-		Assert.That (File.ReadAllText (avd.CommandsPath), Does.Not.Contain ("create"));
+		Assert.IsEmpty (avd.CreationCommand);
 	}
 
 	[Test]
@@ -53,7 +53,7 @@ public class AvdManagerRunnerTests
 		await avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image", force: true);
 
 		CollectionAssert.AreEqual (new [] { "hw.gpu.enabled=yes", "hw.gpu.mode=auto" }, File.ReadAllLines (avd.ConfigPath));
-		Assert.That (File.ReadAllText (avd.CommandsPath), Does.Contain ("--force"));
+		Assert.That (avd.CreationCommand, Does.Contain ("--force"));
 	}
 
 	[Test]
@@ -63,7 +63,7 @@ public class AvdManagerRunnerTests
 		File.Delete (avd.ConfigPath);
 
 		Assert.ThrowsAsync<FileNotFoundException> (() => avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image"));
-		Assert.IsFalse (File.Exists (avd.ConfigPath), "Do not replace a missing config with an incomplete one.");
+		Assert.IsFalse (File.Exists (avd.ConfigPath));
 	}
 
 	[Test]
@@ -81,7 +81,8 @@ public class AvdManagerRunnerTests
 
 		public string AvdPath { get; }
 		public string ConfigPath => Path.Combine (AvdPath, "config.ini");
-		public string CommandsPath => Path.Combine (directory, "commands.txt");
+		string MarkerPath => Path.Combine (directory, "created");
+		public string CreationCommand => File.ReadAllText (MarkerPath).Trim ();
 		public AvdManagerRunner Runner { get; }
 
 		public FakeAvdManager (string config, bool existing = false, bool reportPath = true)
@@ -92,17 +93,15 @@ public class AvdManagerRunnerTests
 			AvdPath = Path.Combine (directory, "custom location", "actual.avd");
 			Directory.CreateDirectory (AvdPath);
 			File.WriteAllText (ConfigPath, config);
-			var markerPath = Path.Combine (directory, "created");
 			if (existing)
-				File.WriteAllText (markerPath, "");
+				File.WriteAllText (MarkerPath, "");
 
 			var scriptPath = Path.Combine (directory, "avdmanager");
 			File.WriteAllText (scriptPath, """
 				#!/bin/sh
-				echo "$*" >> "$FAKE_COMMANDS"
 				if [ "$1" = create ]; then
 				  read answer
-				  touch "$FAKE_MARKER"
+				  echo "$*" > "$FAKE_MARKER"
 				  exit 0
 				fi
 				if [ -f "$FAKE_MARKER" ]; then
@@ -116,8 +115,7 @@ public class AvdManagerRunnerTests
 				File.SetUnixFileMode (scriptPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 
 			Runner = new AvdManagerRunner (scriptPath, new Dictionary<string, string> {
-				["FAKE_COMMANDS"] = CommandsPath,
-				["FAKE_MARKER"] = markerPath,
+				["FAKE_MARKER"] = MarkerPath,
 				["FAKE_AVD_PATH"] = reportPath ? AvdPath : "",
 			});
 		}

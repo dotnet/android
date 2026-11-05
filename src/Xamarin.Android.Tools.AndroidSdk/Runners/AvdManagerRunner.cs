@@ -107,14 +107,14 @@ public class AvdManagerRunner
 		var configPath = Path.Combine (created.Path, "config.ini");
 		var lines = File.ReadAllLines (configPath).Where (line => {
 			var separator = line.IndexOf ('=');
-			var key = separator < 0 ? line.Trim () : line.Substring (0, separator).Trim ();
+			if (separator < 0)
+				return true;
+			var key = line.Substring (0, separator).Trim ();
 			return key != "hw.gpu.enabled" && key != "hw.gpu.mode";
 		}).ToList ();
 		lines.Add ("hw.gpu.enabled=yes");
 		lines.Add ("hw.gpu.mode=auto");
 		File.WriteAllLines (configPath, lines);
-		logger.Invoke (TraceLevel.Verbose, $"Enabled GPU acceleration in '{configPath}'.");
-
 		return created;
 	}
 
