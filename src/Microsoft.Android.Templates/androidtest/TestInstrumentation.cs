@@ -147,8 +147,8 @@ public class TestInstrumentation : Instrumentation
         return discovered;
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "The project roots the complete test assembly with TrimmerRootAssembly.")]
-    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "The project roots all methods in the test assembly with TrimmerRootAssembly.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "MSTest.SourceGeneration preserves the discovered test types and their members.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "MSTest.SourceGeneration preserves the methods on each discovered test class.")]
     TestMethodIdentifierProperty? GetDiscoveryMethodIdentifier(MtpTestNodeUpdate node)
     {
         if (!node.Node.TryGetValue("location.type", out var typeValue) || typeValue is not string typeName ||
@@ -156,7 +156,7 @@ public class TestInstrumentation : Instrumentation
             return null;
 
         // Server notifications omit the assembly, return type, and separate parameter types.
-        // Recover the complete identifier from the rooted test assembly, without changing its UID.
+        // Resolve only discovered test members, preserved by MSTest.SourceGeneration.
         var type = GetType().Assembly.GetType(typeName, throwOnError: true)
             ?? throw new InvalidOperationException($"Discovered test type '{typeName}' could not be resolved.");
         var arity = node.Node.TryGetValue("location.method-arity", out var arityValue)
