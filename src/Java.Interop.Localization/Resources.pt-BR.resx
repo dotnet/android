@@ -308,26 +308,13 @@ The following terms should not be translated: Metadata.xml, path.</comment>
     <value>Para o tipo '{0}', a interface base '{1}' é inválida.</value>
     <comment>{0}, {1} - .NET types.</comment>
   </data>
-  <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
-    <value>Não é possível gerar o wrapper Java para o tipo '{0}'. Somente tipos de 'classe' são suportados.</value>
-    <comment>{0} - Java type.
-The following terms should not be translated:
-class.</comment>
+  <data name="Generator_BG8C02" xml:space="preserve">
+    <value>For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.</value>
+    <comment>{0} - .NET type. {1} - C# method name. {2} - Original (mangled) JVM method name.</comment>
   </data>
-  <data name="JavaCallableWrappers_XA4201" xml:space="preserve">
-    <value>Não é possível determinar o nome JNI para o tipo '{0}'.</value>
-    <comment>{0} - Java type.
-The following terms should not be translated: JNI.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4203" xml:space="preserve">
-    <value>A propriedade 'Name' deve ser um tipo totalmente qualificado como 'com.example.MyClass' e nenhum pacote foi encontrado para '{0}'.</value>
-    <comment>{0} - Java type.
-The following terms should not be translated:
-Name, com.example.MyClass.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4204" xml:space="preserve">
-    <value>Não é possível resolver o tipo de interface '{0}'. Uma referência de assembly está ausente?</value>
-    <comment>{0} - Java interface.</comment>
+  <data name="Generator_BG8C03" xml:space="preserve">
+    <value>JNI signature override '{0}' is invalid or does not match the parameter count for member '{1}'.</value>
+    <comment>{0} - JNI method signature. {1} - .NET member.</comment>
   </data>
   <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
     <value>[ExportField] só pode ser usado em métodos com parâmetros 0.</value>
@@ -344,10 +331,6 @@ Name, com.example.MyClass.</comment>
   <data name="JavaCallableWrappers_XA4208" xml:space="preserve">
     <value>[ExportField] não pode ser usado em um método que retorna 'void'.</value>
     <comment>The following terms should not be translated: [ExportField], void.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4217" xml:space="preserve">
-    <value>Não é possível substituir o método gerado pelo Kotlin '{0}' porque ele não é um nome de método Java válido. Esse método só pode ser substituído a partir do Kotlin.</value>
-    <comment>{0} - Kotlin method name.</comment>
   </data>
   <data name="JniMarshalMethodGen_JM4001" xml:space="preserve">
     <value>Não é possível pré-carregar a referência '{0}'.</value>

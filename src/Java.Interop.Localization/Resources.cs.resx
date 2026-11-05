@@ -308,26 +308,13 @@ The following terms should not be translated: Metadata.xml, path.</comment>
     <value>Pro typ {0} je základní rozhraní {1} neplatné.</value>
     <comment>{0}, {1} - .NET types.</comment>
   </data>
-  <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
-    <value>Pro typ{0} nelze vygenerovat obálku Javy. Jsou podporovány pouze typy class.</value>
-    <comment>{0} - Java type.
-The following terms should not be translated:
-class.</comment>
+  <data name="Generator_BG8C02" xml:space="preserve">
+    <value>For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.</value>
+    <comment>{0} - .NET type. {1} - C# method name. {2} - Original (mangled) JVM method name.</comment>
   </data>
-  <data name="JavaCallableWrappers_XA4201" xml:space="preserve">
-    <value>Nelze určit název JNI pro typ {0}.</value>
-    <comment>{0} - Java type.
-The following terms should not be translated: JNI.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4203" xml:space="preserve">
-    <value>Vlastnost Name musí být plně kvalifikovaný typ, například com.example.MyClass, a pro {0}nebyl nalezen žádný balíček.</value>
-    <comment>{0} - Java type.
-The following terms should not be translated:
-Name, com.example.MyClass.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4204" xml:space="preserve">
-    <value>Nelze přeložit typ rozhraní {0}. Nechybí vám odkaz na sestavení?</value>
-    <comment>{0} - Java interface.</comment>
+  <data name="Generator_BG8C03" xml:space="preserve">
+    <value>JNI signature override '{0}' is invalid or does not match the parameter count for member '{1}'.</value>
+    <comment>{0} - JNI method signature. {1} - .NET member.</comment>
   </data>
   <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
     <value>[ExportField] lze použít pouze u metod s 0 parametry.</value>
@@ -344,10 +331,6 @@ Name, com.example.MyClass.</comment>
   <data name="JavaCallableWrappers_XA4208" xml:space="preserve">
     <value>[ExportField] se nedá použít u metody, která vrací void.</value>
     <comment>The following terms should not be translated: [ExportField], void.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4217" xml:space="preserve">
-    <value>Metodu '{0}' vygenerovanou metodou Kotlin nelze přepsat, protože se nejedná o platný název metody Java. Tuto metodu lze přepsat pouze přes Kotlin.</value>
-    <comment>{0} - Kotlin method name.</comment>
   </data>
   <data name="JniMarshalMethodGen_JM4001" xml:space="preserve">
     <value>Odkaz {0} nelze předem načíst {0}.</value>

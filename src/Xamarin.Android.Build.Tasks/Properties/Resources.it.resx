@@ -1277,11 +1277,6 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
-  <data name="XA4265" xml:space="preserve">
-    <value>L'assembly '{0}' utilizza un formato di callback peer Java non supportato.</value>
-    <comment>The following is a literal name and should not be translated: Java.
-{0} - Assembly path</comment>
-  </data>
   <data name="XA4266" xml:space="preserve">
     <value>L'assembly '{0}' ha metadati di callback del peer Java diversi nelle implementazioni specifiche del runtime '{1}' e '{2}'. Tutti i RuntimeIdentifier devono fornire metadati di callback equivalenti.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.

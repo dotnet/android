@@ -308,26 +308,13 @@ The following terms should not be translated: Metadata.xml, path.</comment>
     <value>針對型別 '{0}'，基底介面 '{1}' 無效。</value>
     <comment>{0}, {1} - .NET types.</comment>
   </data>
-  <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
-    <value>無法產生型別 '{0}' 的 JAVA 包裝函式。只支援 'class' 型別。</value>
-    <comment>{0} - Java type.
-The following terms should not be translated:
-class.</comment>
+  <data name="Generator_BG8C02" xml:space="preserve">
+    <value>For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.</value>
+    <comment>{0} - .NET type. {1} - C# method name. {2} - Original (mangled) JVM method name.</comment>
   </data>
-  <data name="JavaCallableWrappers_XA4201" xml:space="preserve">
-    <value>無法判斷型別 '{0}' 的 JNI 名稱。</value>
-    <comment>{0} - Java type.
-The following terms should not be translated: JNI.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4203" xml:space="preserve">
-    <value>'Name' 屬性必須是如 'com.example.MyClass' 的完整型別，但找不到 '{0}' 的套件。</value>
-    <comment>{0} - Java type.
-The following terms should not be translated:
-Name, com.example.MyClass.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4204" xml:space="preserve">
-    <value>無法解析介面型別 '{0}'。您是否遺失組件參考?</value>
-    <comment>{0} - Java interface.</comment>
+  <data name="Generator_BG8C03" xml:space="preserve">
+    <value>JNI signature override '{0}' is invalid or does not match the parameter count for member '{1}'.</value>
+    <comment>{0} - JNI method signature. {1} - .NET member.</comment>
   </data>
   <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
     <value>[ExportField] 只能在具有 0 個參數的方法上使用。</value>
@@ -344,10 +331,6 @@ Name, com.example.MyClass.</comment>
   <data name="JavaCallableWrappers_XA4208" xml:space="preserve">
     <value>[ExportField] 無法用於傳回 'void' 的方法。</value>
     <comment>The following terms should not be translated: [ExportField], void.</comment>
-  </data>
-  <data name="JavaCallableWrappers_XA4217" xml:space="preserve">
-    <value>無法覆寫 Kotlin 產生的方法 '{0}'，因為它不是有效的 JAVA 方法名稱。此方法只能從 Kotlin 覆寫。</value>
-    <comment>{0} - Kotlin method name.</comment>
   </data>
   <data name="JniMarshalMethodGen_JM4001" xml:space="preserve">
     <value>無法預先載入參考 '{0}'。</value>

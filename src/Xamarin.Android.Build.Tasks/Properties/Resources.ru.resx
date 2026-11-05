@@ -1277,11 +1277,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
-  <data name="XA4265" xml:space="preserve">
-    <value>Сборка "{0}" использует неподдерживаемый формат обратного вызова одноранговых узлов Java.</value>
-    <comment>The following is a literal name and should not be translated: Java.
-{0} - Assembly path</comment>
-  </data>
   <data name="XA4266" xml:space="preserve">
     <value>В сборке "{0}" метаданные обратного вызова одноранговых узлов Java различаются в реализациях "{1}" и "{2}", специфичных для конкретной среды выполнения. Все RuntimeIdentifiers должны предоставлять эквивалентные метаданные обратного вызова.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.

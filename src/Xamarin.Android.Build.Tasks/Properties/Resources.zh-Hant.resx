@@ -1277,11 +1277,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
-  <data name="XA4265" xml:space="preserve">
-    <value>組件 '{0}' 使用不支援的 Java 對等回撥格式。</value>
-    <comment>The following is a literal name and should not be translated: Java.
-{0} - Assembly path</comment>
-  </data>
   <data name="XA4266" xml:space="preserve">
     <value>組件 '{0}' 在執行階段特定實作 '{1}' 和 '{2}' 中有不同的 Java 對等中繼資料。所有 RuntimeIdentifiers 都必須提供對等的回撥中繼資料。</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
