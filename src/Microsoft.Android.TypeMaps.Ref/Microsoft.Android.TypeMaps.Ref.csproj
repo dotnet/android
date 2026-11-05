@@ -11,7 +11,7 @@
     <ProduceOnlyReferenceAssembly>true</ProduceOnlyReferenceAssembly>
     <!-- Do NOT sign — the generated implementation assembly (emitted by PEAssemblyBuilder)
          is unsigned, so the ref assembly must match to avoid identity mismatch. -->
-    <Features>$(Features);updated-memory-safety-rules</Features>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
 </Project>

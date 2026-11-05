@@ -10,7 +10,7 @@
     <TargetFrameworks Condition=" '$(AndroidToolsDisableMultiTargeting)' != 'true' ">$(TargetFrameworks);$(DotNetTargetFramework)</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Features>$(Features);updated-memory-safety-rules</Features>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <Nullable>enable</Nullable>
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <UseProjectNullableAttributes>true</UseProjectNullableAttributes>

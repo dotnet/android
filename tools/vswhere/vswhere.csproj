@@ -7,7 +7,7 @@
     <AssemblyName>vswhere</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <Features>$(Features);updated-memory-safety-rules</Features>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

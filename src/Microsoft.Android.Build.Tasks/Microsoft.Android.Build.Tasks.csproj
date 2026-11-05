@@ -14,7 +14,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
-    <Features>$(Features);updated-memory-safety-rules</Features>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own

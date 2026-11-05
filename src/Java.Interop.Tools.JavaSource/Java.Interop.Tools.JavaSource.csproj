@@ -8,7 +8,7 @@
     <LangVersion>13.0</LangVersion>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
-    <Features>$(Features);updated-memory-safety-rules</Features>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <PropertyGroup>
