@@ -1277,11 +1277,6 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
-  <data name="XA4265" xml:space="preserve">
-    <value>Zestaw „{0}” używa nieobsługiwanego formatu wywołania zwrotnego elementu równorzędnego Java.</value>
-    <comment>The following is a literal name and should not be translated: Java.
-{0} - Assembly path</comment>
-  </data>
   <data name="XA4266" xml:space="preserve">
     <value>Zestaw „{0}” ma różne metadane wywołania zwrotnego elementu równorzędnego Java w implementacjach specyficznych dla środowiska uruchomieniowego „{1}” i „{2}”. Wszystkie elementy RuntimeIdentifiers muszą udostępniać równoważne metadane wywołania zwrotnego.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.

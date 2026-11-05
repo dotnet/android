@@ -1277,11 +1277,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
-  <data name="XA4265" xml:space="preserve">
-    <value>アセンブリ '{0}' は、サポートされていない Java ピア コールバック形式を使用しています。</value>
-    <comment>The following is a literal name and should not be translated: Java.
-{0} - Assembly path</comment>
-  </data>
   <data name="XA4266" xml:space="preserve">
     <value>アセンブリ '{0}' には、ランタイム固有の実装 '{1}' と '{2}' で異なる Java ピア コールバック メタデータがあります。すべての RuntimeIdentifier は同等のコールバック メタデータを提供する必要があります。</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers.
