@@ -20,6 +20,10 @@ pr:
     - '*'
 
 parameters:
+- name: runNativeMtpHostTests
+  displayName: Run opt-in SourceWriter native MTP host tests
+  type: boolean
+  default: false
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
 - name: skipTests                      # Skip all test stages (builds only). Default 'false' so PRs run the full test matrix.
@@ -65,6 +69,39 @@ variables:
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
+- ${{ if eq(parameters.runNativeMtpHostTests, true) }}:
+  - stage: native_mtp_host_tests
+    displayName: Native MTP host pilot
+    dependsOn: []
+    condition: ne(variables['SkipTestStages'], 'true')
+    jobs:
+    - job: sourcewriter_native_mtp
+      displayName: SourceWriter native MTP
+      pool:
+        name: $(NetCorePublicPoolName)
+        demands:
+        - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+      strategy:
+        parallel: 3
+      steps:
+      - checkout: self
+        submodules: false
+      - task: UseDotNet@2
+        displayName: Install native MTP pilot SDK
+        inputs:
+          packageType: sdk
+          version: $(NativeMtpHostSdkVersion)
+          includePreviewVersions: true
+          installationPath: $(Agent.TempDirectory)/native-mtp-dotnet
+      - pwsh: |
+          dotnet build tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -c Debug -v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        displayName: Restore and build only the converted host module
+      - template: /build-tools/automation/yaml-templates/run-native-mtp-tests.yaml
+        parameters:
+          testModule: $(System.DefaultWorkingDirectory)/bin/TestDebug/$(DotNetStableTargetFramework)/Xamarin.SourceWriter-Tests.dll
+          testRunTitle: SourceWriter native MTP
+
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <MSTestVersion>4.6.0-preview.26524.1</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>2.6.0-preview.26524.1</MicrosoftTestingPlatformVersion>
+    <!-- Deliberate duplicate rows/display names exercise the scheduler's identity contract. -->
+    <NoWarn>$(NoWarn);MSTEST0042;MSTEST0087</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
