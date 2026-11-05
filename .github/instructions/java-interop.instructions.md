@@ -112,8 +112,8 @@ Standalone host tooling builds and tooling tests do not require a locally built
 Android SDK. The standalone tooling and test target framework is .NET 10 via
 `DotNetStableTargetFramework` in the root `Directory.Build.props`, independently of the Android
 product's target framework. Follow the Java.Interop
-[README](../../external/Java.Interop/README.md#building) and
-[build configuration](../../external/Java.Interop/Documentation/BuildConfiguration.md)
+[README](../../Documentation/Java.Interop/README.md#building) and
+[build configuration](../../Documentation/Java.Interop/BuildConfiguration.md)
 for shared build configuration and JDK tool-path settings
 (`JavaSdkDirectory`, `JavaCPath`, and `JarPath`).
 
@@ -126,5 +126,5 @@ Core JNI tests and Java fixtures live in
 
 - [JNI Specification](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
 - [Android JNI Performance Guide](https://developer.android.com/training/articles/perf-jni)
-- `external/Java.Interop/Documentation/Architecture.md`
-- `external/Java.Interop/Documentation/BuildConfiguration.md`
+- `Documentation/Java.Interop/Architecture.md`
+- `Documentation/Java.Interop/BuildConfiguration.md`

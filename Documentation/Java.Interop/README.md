@@ -17,8 +17,8 @@ Some additional context for this project is documented in the [Motivation][motiv
 and [Architecture][architecture] pages.
 
 [jni]: http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html
-[motivation]: Documentation/Motivation.md
-[architecture]: Documentation/Architecture.md
+[motivation]: Motivation.md
+[architecture]: Architecture.md
 [android]: https://github.com/dotnet/android
 
 ## Building
@@ -28,7 +28,7 @@ and [Architecture][architecture] pages.
 
 The standalone tooling build does not require a locally built Android SDK.
 For the Android product build, follow the enclosing repository's
-[build instructions](../../Documentation/README.md#building-from-source).
+[build instructions](../README.md#building-from-source).
 Libraries and command-line tools live in the repository's top-level `src/`,
 tooling tests in `tests/`, and the JNI source generator in
 `build-tools/java-interop-jnienv-gen/`. There is no separate bootstrap project
@@ -43,7 +43,7 @@ dotnet build Java.Interop.slnx
 
 Additional build options are documented [here][build-configuration].
 
-[build-configuration]: Documentation/BuildConfiguration.md
+[build-configuration]: BuildConfiguration.md
 
 ## Feedback and Contributing
 

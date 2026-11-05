@@ -8,7 +8,7 @@ Java-to-managed calls use generated Java callable wrappers and registered JNI
 callbacks. CoreCLR and NativeAOT applications use generated trimmable typemaps for
 peer lookup, constructor activation, and callback registration.
 
-See [Java and managed interoperability with the trimmable TypeMap](../../../Documentation/guides/internals/JavaJNI_Interop.md)
+See [Java and managed interoperability with the trimmable TypeMap](../guides/internals/JavaJNI_Interop.md)
 for the build pipeline, generated callbacks, runtime startup, and activation flow.
 
 ## Values and reference ownership
@@ -200,5 +200,5 @@ lower-level JNI references and argument values used by those wrappers.
 .NET 12 removes the obsolete runtime expression-marshaling builder, context,
 hooks, and the unused `JniValueManager.ActivatePeer` contract. These are not part
 of generated callbacks or trimmable typemap activation. See the
-[breaking-change and migration notes](../../../Documentation/release-notes/expression-marshalling-retirement.md)
+[breaking-change and migration notes](../release-notes/expression-marshalling-retirement.md)
 for the removed APIs and migration guidance.

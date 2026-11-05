@@ -1,6 +1,6 @@
 # JNI Invocation Overhead Musings
 
-[tests/PerformanceTests/TimingTests.cs](tests/PerformanceTests/TimingTests.cs)
+[tests/PerformanceTests/TimingTests.cs](https://github.com/dotnet/java-interop/blob/c9db386c5457ff6243b3e36d919ca8669f502192/tests/PerformanceTests/TimingTests.cs)
 contains various tests to investigate the overheads involved in using JNI to
 invoke Java methods. In particular, see the
 `Java.Interop.PerformanceTests.JniMethodInvocationOverheadTiming.MethodInvocationTiming()`
