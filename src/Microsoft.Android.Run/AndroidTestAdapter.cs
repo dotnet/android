@@ -46,22 +46,53 @@ class AndroidTestAdapter(
 
 	public async Task ExecuteRequestAsync (ExecuteRequestContext context)
 	{
-		switch (context.Request) {
-		case RunTestExecutionRequest runRequest:
-			await RunAndReportAsync (context, runRequest.Session.SessionUid);
-			break;
-		case DiscoverTestExecutionRequest discoverRequest:
-			await DiscoverAndReportAsync (context, discoverRequest.Session.SessionUid);
-			break;
-		default:
-			break;
+		try {
+			switch (context.Request) {
+			case DiscoverTestExecutionRequest discoverRequest:
+				await DiscoverAndReportAsync (context, discoverRequest);
+				break;
+			case RunTestExecutionRequest runRequest:
+				await RunAndReportAsync (context, runRequest);
+				break;
+			default:
+				throw new NotSupportedException ($"Unsupported Android test request: {context.Request.GetType ().Name}.");
+			}
+		} finally {
+			context.Complete ();
 		}
-
-		context.Complete ();
 	}
 
-	async Task RunAndReportAsync (ExecuteRequestContext context, SessionUid sessionUid)
+	static string[]? GetTestUids (ITestExecutionFilter filter)
+		=> filter switch {
+			NopFilter => null,
+			TestNodeUidListFilter uidFilter => uidFilter.TestNodeUids.Select (uid => uid.Value).ToArray (),
+			_ => throw new NotSupportedException ($"Unsupported Android test filter: {filter.GetType ().Name}. Select tests by UID."),
+		};
+
+	async Task DiscoverAndReportAsync (ExecuteRequestContext context, DiscoverTestExecutionRequest request)
 	{
+		var testUids = GetTestUids (request.Filter);
+		if (testUids is { Length: 0 })
+			return;
+
+		var state = new StreamingState ();
+		var result = await RunInstrumentationOnDeviceAsync (context, request.Session.SessionUid, state, context.CancellationToken, discover: true, testUids);
+		if (result.Crashed || result.Error != null)
+			throw new InvalidOperationException ($"Android test discovery failed: {result.Error ?? "The instrumentation process crashed."}");
+		if (result.InstrumentationCode != -1)
+			throw new InvalidOperationException ($"Android test discovery did not finish successfully (instrumentation code: {result.InstrumentationCode}).");
+		if (result.DiscoveredCount == null)
+			throw new InvalidOperationException ("The installed instrumentation does not support test discovery. Rebuild and install a test application with discovery support.");
+		if (result.DiscoveredCount != state.DiscoveredCount)
+			throw new InvalidOperationException ($"Android test discovery reported {result.DiscoveredCount} tests, but received {state.DiscoveredCount} test nodes.");
+	}
+
+	async Task RunAndReportAsync (ExecuteRequestContext context, RunTestExecutionRequest request)
+	{
+		var sessionUid = request.Session.SessionUid;
+		var testUids = GetTestUids (request.Filter);
+		if (testUids is { Length: 0 })
+			return;
 		// Shared state for the streamed run: the set of tests we've streamed a
 		// final outcome for (a non-empty set means streaming was authoritative, so
 		// we skip the TRX fallback), and which test — if any — is currently
@@ -71,7 +102,7 @@ class AndroidTestAdapter(
 
 		bool finished = false;
 		try {
-			var bundleResults = await RunInstrumentationOnDeviceAsync (context, sessionUid, state, context.CancellationToken);
+			var bundleResults = await RunInstrumentationOnDeviceAsync (context, sessionUid, state, context.CancellationToken, discover: false, testUids);
 
 			if (verbose) {
 				Console.WriteLine ($"[AndroidTestAdapter] Instrumentation results: passed={bundleResults.Passed}, failed={bundleResults.Failed}, skipped={bundleResults.Skipped}, streamed={state.ReportedFinal.Count}");
@@ -96,53 +127,20 @@ class AndroidTestAdapter(
 	}
 
 	/// <summary>
-	/// Runs the instrumentation with 'list-tests' and publishes the tests it discovers.
-	/// </summary>
-	async Task DiscoverAndReportAsync (ExecuteRequestContext context, SessionUid sessionUid)
-	{
-		var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, $"shell am instrument -w -r -e {InstrumentationProtocol.ArgListTests} true {package}/{instrumentation}");
-		if (verbose)
-			Console.WriteLine ($"Running: adb {psi.Arguments}");
-
-		var discovered = new List<InstrumentationStatus> ();
-		var fullOutput = new StringBuilder ();
-		var parser = new StatusStreamParser (discovered.Add, fullOutput, verbose);
-		using var stdout = new LineWriter (parser.OnLine);
-		using var stderr = new StringWriter ();
-		int exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, context.CancellationToken);
-		stdout.Flush ();
-
-		var output = fullOutput.ToString ();
-		// adb can write informational messages to stderr, so use stderr only when adb fails.
-		var result = ParseInstrumentationBundle (output, exitCode != 0 ? stderr.ToString () : "");
-		var error = result.Error ?? ExtractCrashMessage (output);
-		if (exitCode != 0 || error != null || result.InstrumentationCode != -1)
-			throw new InvalidOperationException ($"Test discovery failed: {error ?? (exitCode != 0 ? $"adb exited with code {exitCode}." : "Instrumentation did not finish.")}");
-
-		foreach (var status in discovered) {
-			if (!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind) || eventKind != InstrumentationProtocol.EventDiscovered ||
-				!status.Values.TryGetValue (InstrumentationProtocol.KeyTest, out var uid) || string.IsNullOrEmpty (uid))
-				continue;
-			status.Values.TryGetValue (InstrumentationProtocol.KeyName, out var displayName);
-			var testNode = new TestNode {
-				Uid = new TestNodeUid (uid),
-				DisplayName = displayName ?? uid,
-				Properties = new PropertyBag (DiscoveredTestNodeStateProperty.CachedInstance),
-			};
-			await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, testNode));
-		}
-	}
-
-	/// <summary>
 	/// Publishes each test to MTP as its INSTRUMENTATION_STATUS block arrives from
 	/// the streamed 'am instrument -w -r' output, and returns the parsed final
 	/// results bundle (summary counts, resultsPath, error, crash state).
 	/// </summary>
-	async Task<InstrumentationBundleResult> RunInstrumentationOnDeviceAsync (ExecuteRequestContext context, SessionUid sessionUid, StreamingState state, CancellationToken cancellationToken)
+	async Task<InstrumentationBundleResult> RunInstrumentationOnDeviceAsync (ExecuteRequestContext context, SessionUid sessionUid, StreamingState state, CancellationToken cancellationToken, bool discover, string[]? testUids)
 	{
 		// '-r' prints raw INSTRUMENTATION_STATUS results (so we can stream them);
 		// '-w' waits for the run to complete.
-		var cmdArgs = $"shell am instrument -w -r {package}/{instrumentation}";
+		var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
+		if (discover)
+			cmdArgs.AddRange (["-e", InstrumentationProtocol.ExtraDiscover, "true"]);
+		if (testUids != null)
+			cmdArgs.AddRange (["-e", InstrumentationProtocol.ExtraTestUids, InstrumentationProtocol.EncodeTestUids (testUids)]);
+		cmdArgs.Add ($"{package}/{instrumentation}");
 		var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
 
 		if (verbose)
@@ -162,7 +160,7 @@ class AndroidTestAdapter(
 		var consumer = Task.Run (async () => {
 			await foreach (var status in channel.Reader.ReadAllAsync ()) {
 				try {
-					await PublishStatusAsync (context, sessionUid, status, state);
+					await PublishStatusAsync (context, sessionUid, status, state, discover);
 				} catch (OperationCanceledException) {
 					throw;
 				} catch (Exception ex) {
@@ -223,14 +221,14 @@ class AndroidTestAdapter(
 	/// (no recognized "event", or a "finish" without an "outcome") are ignored so
 	/// they neither mis-report a test nor suppress the TRX fallback.
 	/// </summary>
-	async Task PublishStatusAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationStatus status, StreamingState state)
+	async Task PublishStatusAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationStatus status, StreamingState state, bool discover)
 	{
 		// Only handle our explicit streaming protocol. Other instrumentation
 		// (e.g. AndroidJUnitRunner) emits status blocks with a "test" key but no
 		// "event"/"outcome"; treating those as results would report them as
 		// passed and, worse, mark ReportedFinal non-empty so the TRX fallback
 		// never runs. Skip them and let ReportFromTrxAsync handle the run.
-		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind) || (eventKind != InstrumentationProtocol.EventStart && eventKind != InstrumentationProtocol.EventFinish))
+		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind))
 			return;
 
 		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyTest, out var fullyQualifiedName) || string.IsNullOrEmpty (fullyQualifiedName))
@@ -238,6 +236,21 @@ class AndroidTestAdapter(
 
 		status.Values.TryGetValue (InstrumentationProtocol.KeyName, out var displayName);
 		status.Values.TryGetValue (InstrumentationProtocol.KeyClass, out var className);
+
+		if (discover) {
+			if (eventKind != InstrumentationProtocol.EventDiscover)
+				return;
+			var discoveryProperties = new List<IProperty> { DiscoveredTestNodeStateProperty.CachedInstance };
+			AddMethodIdentifier (status.Values, discoveryProperties);
+			var node = new TestNode {
+				Uid = new TestNodeUid (fullyQualifiedName),
+				DisplayName = displayName ?? fullyQualifiedName,
+				Properties = new PropertyBag (discoveryProperties.ToArray ()),
+			};
+			await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, node));
+			state.DiscoveredCount++;
+			return;
+		}
 
 		if (eventKind == InstrumentationProtocol.EventStart) {
 			// Remember the running test so a crash can resolve it to a terminal
@@ -253,6 +266,9 @@ class AndroidTestAdapter(
 			await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, startNode));
 			return;
 		}
+
+		if (eventKind != InstrumentationProtocol.EventFinish)
+			return;
 
 		// eventKind == "finish": a valid completion must carry an outcome.
 		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyOutcome, out var outcome) || string.IsNullOrEmpty (outcome))
@@ -282,6 +298,7 @@ class AndroidTestAdapter(
 		};
 
 		var properties = new List<IProperty> { stateProperty };
+		AddMethodIdentifier (status.Values, properties);
 		if (!string.IsNullOrEmpty (className))
 			properties.Add (new TrxFullyQualifiedTypeNameProperty (className));
 		if (outcome == InstrumentationProtocol.OutcomeFailed && (!string.IsNullOrEmpty (errorMessage) || !string.IsNullOrEmpty (stackTrace)))
@@ -295,6 +312,21 @@ class AndroidTestAdapter(
 
 		await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, testNode));
 		state.ReportedFinal.Add (fullyQualifiedName);
+	}
+
+	static void AddMethodIdentifier (IReadOnlyDictionary<string, string> values, List<IProperty> properties)
+	{
+		if (values.TryGetValue (InstrumentationProtocol.KeyAssembly, out var assembly) &&
+			values.TryGetValue (InstrumentationProtocol.KeyNamespace, out var ns) &&
+			values.TryGetValue (InstrumentationProtocol.KeyType, out var type) &&
+			values.TryGetValue (InstrumentationProtocol.KeyMethod, out var method) &&
+			values.TryGetValue (InstrumentationProtocol.KeyMethodArity, out var arity) &&
+			values.TryGetValue (InstrumentationProtocol.KeyParameterTypes, out var parameters) &&
+			values.TryGetValue (InstrumentationProtocol.KeyReturnType, out var returnType)) {
+			properties.Add (new TestMethodIdentifierProperty (assembly, ns, type, method,
+				int.Parse (arity, System.Globalization.CultureInfo.InvariantCulture),
+				InstrumentationProtocol.DecodeTestUids (parameters), returnType));
+		}
 	}
 
 	/// <summary>
@@ -494,6 +526,8 @@ class AndroidTestAdapter(
 			result.Failed = failed;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeySkippedCount, out var skippedStr) && int.TryParse (skippedStr, out int skipped))
 			result.Skipped = skipped;
+		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyDiscoveredCount, out var discoveredStr) && int.TryParse (discoveredStr, out int discovered))
+			result.DiscoveredCount = discovered;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyResultsPath, out var resultsPath))
 			result.ResultsPath = resultsPath;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyError, out var bundleError))
@@ -573,6 +607,7 @@ class AndroidTestAdapter(
 
 class InstrumentationBundleResult
 {
+	public int? DiscoveredCount { get; set; }
 	public int Passed { get; set; }
 	public int Failed { get; set; }
 	public int Skipped { get; set; }
@@ -592,6 +627,7 @@ sealed class StreamingState
 	readonly Dictionary<string, string> observedResults = new (StringComparer.Ordinal);
 	readonly HashSet<string> activeTests = new (StringComparer.Ordinal);
 
+	public int DiscoveredCount { get; set; }
 	public HashSet<string> ReportedFinal { get; } = new (StringComparer.Ordinal);
 	public string? InFlightUid { get; set; }
 	public string? InFlightName { get; set; }
