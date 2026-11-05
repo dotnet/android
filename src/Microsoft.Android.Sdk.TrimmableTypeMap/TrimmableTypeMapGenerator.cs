@@ -156,6 +156,8 @@ public class TrimmableTypeMapGenerator
 	{
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
+		var generatedPeerNames = peers.Where (ShouldGenerateJcw)
+			.Select (peer => peer.JavaName).ToHashSet (StringComparer.Ordinal);
 		foreach (var group in peers
 				.Where (ShouldGenerateJcw)
 				.GroupBy (peer => peer.JavaName, StringComparer.Ordinal)
@@ -189,7 +191,7 @@ public class TrimmableTypeMapGenerator
 				ReportInvalidName (peer.JavaName, invalidManifestIdentifier);
 			}
 			if (peer.CannotRegisterInStaticConstructor &&
-					JavaNameValidator.TryGetInvalidJniSourceTypeSegment (peer.JavaName, out var invalidIdentifier)) {
+					JavaNameValidator.TryGetInvalidJniSourceTypeSegment (peer.JavaName, out var invalidIdentifier, generatedPeerNames)) {
 				ReportInvalidName (peer.JavaName, invalidIdentifier);
 			}
 			if (peer.BaseJavaName is not null) {
@@ -222,7 +224,7 @@ public class TrimmableTypeMapGenerator
 			}
 			foreach (var field in peer.JavaFields) {
 				bool invalid = field.JniTypeName is not null
-					? JavaNameValidator.TryGetInvalidJniTypeSegment (field.JniTypeName, out _, out invalidIdentifier)
+					? JavaNameValidator.TryGetInvalidJniTypeSegment (field.JniTypeName, out _, out invalidIdentifier, generatedPeerNames)
 					: JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (field.JavaTypeName, out invalidIdentifier);
 				if (invalid) {
 					ReportInvalidName (field.JavaTypeName, invalidIdentifier);
@@ -239,9 +241,9 @@ public class TrimmableTypeMapGenerator
 			ReportInvalidJniType (JniSignatureHelper.ParseReturnTypeString (jniSignature));
 		}
 
-		static bool TryGetInvalidThrownNameSegment (string thrownName, out ReadOnlySpan<char> invalidIdentifier) =>
-			thrownName.IndexOf ('/') >= 0
-				? JavaNameValidator.TryGetInvalidJniSourceTypeSegment (thrownName, out invalidIdentifier)
+		bool TryGetInvalidThrownNameSegment (string thrownName, out ReadOnlySpan<char> invalidIdentifier) =>
+			thrownName.IndexOf ('/') >= 0 || generatedPeerNames.Contains (thrownName)
+				? JavaNameValidator.TryGetInvalidJniSourceTypeSegment (thrownName, out invalidIdentifier, generatedPeerNames)
 				: JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier);
 
 		void ValidateManifestComponentNames ()
@@ -286,14 +288,14 @@ public class TrimmableTypeMapGenerator
 
 		void ReportInvalidJniSourceType (string jniName)
 		{
-			if (JavaNameValidator.TryGetInvalidJniSourceTypeSegment (jniName, out var invalidIdentifier)) {
+			if (JavaNameValidator.TryGetInvalidJniSourceTypeSegment (jniName, out var invalidIdentifier, generatedPeerNames)) {
 				ReportInvalidName (jniName, invalidIdentifier);
 			}
 		}
 
 		void ReportInvalidJniType (string jniType)
 		{
-			if (JavaNameValidator.TryGetInvalidJniTypeSegment (jniType, out var typeName, out var invalidIdentifier)) {
+			if (JavaNameValidator.TryGetInvalidJniTypeSegment (jniType, out var typeName, out var invalidIdentifier, generatedPeerNames)) {
 				ReportInvalidName (typeName.ToString (), invalidIdentifier);
 			}
 		}
