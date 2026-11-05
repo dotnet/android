@@ -179,7 +179,10 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
      If the device does not support symlinking into the override directory, the
      task automatically falls back to `Copy`.
    * **`Copy`:** the staged files are copied into the override directory instead
-     of symlinked.
+     of symlinked. Both directory listings are validated before cleanup, including
+     when falling back from `Symlink`. Only a missing root counts as empty.
+     Partial `find`/`stat` failures stop deployment with `XA0129` without updating
+     the manifests.
 7. **Mark success.** When the override directory is up to date, one
    `adb shell` invocation writes the current manifest hash to the staging and
    override markers, and the manifest is saved to `obj` for the next incremental

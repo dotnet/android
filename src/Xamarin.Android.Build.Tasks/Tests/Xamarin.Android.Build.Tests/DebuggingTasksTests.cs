@@ -435,12 +435,87 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FastDeployCopiesFilesFromSuccessfulStagingFileListing ()
 		{
-			using var device = new FakeAdbDevice (0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000");
+			using var device = new FakeAdbDevice (
+				0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000",
+				$"find: '{FakeAdbDevice.OverrideRoot}': No such file or directory");
 
 			Assert.IsTrue (device.RunFastDeploy ());
 
 			Assert.AreEqual (0, device.Errors.Count);
 			Assert.That (device.Commands, Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"));
+		}
+
+		// https://github.com/dotnet/android/issues/13274
+		[TestCase ("Copy", false)]
+		[TestCase ("Symlink", false)]
+		[TestCase ("Copy", true)]
+		public void FastDeployRejectsPartialFileListing (string transferMode, bool overrideListing)
+		{
+			string root = overrideListing ? FakeAdbDevice.OverrideRoot : FakeAdbDevice.StagingRoot;
+			string listing = $"{root}/arm64-v8a/Foo.dll|3|1700000000\nstat: '{root}/arm64-v8a/Bar.dll': No such file or directory";
+			using var device = new FakeAdbDevice (
+				overrideListing ? 0 : 1,
+				overrideListing ? $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000" : listing,
+				overrideListing ? listing : $"{FakeAdbDevice.OverrideRoot}/.fastdeploy-manifest-hash|64|1700000000");
+
+			Assert.IsFalse (device.RunFastDeploy (transferMode), "Partial listings must fail deployment.");
+
+			Assert.AreEqual (1, device.Errors.Count);
+			Assert.AreEqual ("XA0129", device.Errors [0].Code);
+			Assert.That (device.Errors [0].Message, Does.Contain (root));
+			Assert.That (device.Commands.Last (), Does.Contain ("-exec stat"), "No commands after a failed listing.");
+			Assert.That (device.Commands, Has.None.Contain ($"rm -rf {FakeAdbDevice.OverrideRoot}"),
+				"The override directory must not be cleared.");
+			Assert.That (device.Commands, Has.None.Contain ("printf %s"), "No success marker may be written.");
+			Assert.IsFalse (device.HasManifest);
+		}
+
+		[Test]
+		public void FastDeployRejectsMissingRootWithValidEntries ()
+		{
+			string root = FakeAdbDevice.StagingRoot;
+			using var device = new FakeAdbDevice (1, $"{root}/arm64-v8a/Foo.dll|3|1700000000\nfind: '{root}': No such file or directory");
+
+			Assert.IsFalse (device.RunFastDeploy ());
+			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
+			Assert.That (device.Commands, Has.None.Contain ("printf %s"));
+			Assert.IsFalse (device.HasManifest);
+		}
+
+		[Test]
+		public void FastDeployCopiesAfterClearingSymlinkState ()
+		{
+			using var device = new FakeAdbDevice (
+				0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000",
+				$"{FakeAdbDevice.OverrideRoot}/arm64-v8a/Foo.dll|3|1700000000\n{FakeAdbDevice.OverrideRoot}/.fastdeploy-manifest-hash|64|1700000000");
+
+			Assert.IsTrue (device.RunFastDeploy ());
+
+			var commands = device.Commands.ToList ();
+			int clearIndex = commands.FindIndex (c => c.Contains ($"rm -rf {FakeAdbDevice.OverrideRoot}"));
+			Assert.Greater (clearIndex, commands.FindLastIndex (c => c.Contains ("-exec stat")),
+				"Both listings must precede clearing the override directory.");
+			Assert.That (commands.Skip (clearIndex + 1), Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"),
+				"Cleared files must be copied even when the previous listing matched staging.");
+			Assert.IsTrue (device.HasManifest);
+		}
+
+		[Test]
+		public void FastDeployPreservesManifestAfterPartialFileListing ()
+		{
+			using var device = new FakeAdbDevice (0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000");
+			Assert.IsTrue (device.RunFastDeploy ());
+			string previousManifest = device.Manifest;
+			int previousCommandCount = device.Commands.Count;
+			device.TouchPayload ();
+			device.SetStagingListing (1, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000\nstat: '{FakeAdbDevice.StagingRoot}/arm64-v8a/Bar.dll': No such file or directory");
+
+			Assert.IsFalse (device.RunFastDeploy ());
+
+			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
+			Assert.AreEqual (previousManifest, device.Manifest, "A failed incremental deployment must not overwrite the successful host manifest.");
+			Assert.That (device.Commands.Skip (previousCommandCount), Has.None.Contain ("printf %s"),
+				"A failed incremental deployment must not update the remote success marker.");
 		}
 
 		static FastDeploy.AdbCommandResult CreateAdbResult (int exitCode, string output)
@@ -502,6 +577,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public const string PackageName = "com.example.app";
 			public const string StagingRoot = "/data/local/tmp/fastdeploy/" + PackageName + "/0";
+			public const string OverrideRoot = "files/.__override__";
 
 			const string AdbScript = """
 				#!/bin/bash
@@ -519,6 +595,13 @@ namespace Xamarin.Android.Build.Tests
 						cat "$dir/staging-listing.out"
 						exit "$(cat "$dir/staging-listing.exit")"
 						;;
+					*"find "*"-exec stat"*)
+						cat "$dir/override-listing.out"
+						;;
+					*"ln -sf"*)
+						echo "ln: Operation not permitted" >&2
+						exit 1
+						;;
 				esac
 				exit 0
 				""";
@@ -526,15 +609,15 @@ namespace Xamarin.Android.Build.Tests
 			readonly string directory = Path.Combine (Path.GetTempPath (), "fake-adb-" + Guid.NewGuid ().ToString ("N"));
 			readonly List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
 
-			public FakeAdbDevice (int stagingListingExitCode, string stagingListing)
+			public FakeAdbDevice (int stagingListingExitCode, string stagingListing, string overrideListing = "")
 			{
 				if (TestEnvironment.IsWindows) {
 					Assert.Ignore ("The fake adb is a bash script, which is not supported on Windows.");
 				} else {
 					Directory.CreateDirectory (Path.Combine (directory, "obj"));
 					File.WriteAllText (Path.Combine (directory, "Foo.dll"), "foo");
-					File.WriteAllText (Path.Combine (directory, "staging-listing.out"), stagingListing);
-					File.WriteAllText (Path.Combine (directory, "staging-listing.exit"), stagingListingExitCode.ToString ());
+					SetStagingListing (stagingListingExitCode, stagingListing);
+					File.WriteAllText (Path.Combine (directory, "override-listing.out"), overrideListing);
 
 					var adb = Path.Combine (directory, "adb");
 					File.WriteAllText (adb, AdbScript);
@@ -544,17 +627,33 @@ namespace Xamarin.Android.Build.Tests
 
 			public IReadOnlyList<BuildErrorEventArgs> Errors => errors;
 
+			public bool HasManifest => Directory.GetFiles (Path.Combine (directory, "obj"), "manifest.json", SearchOption.AllDirectories).Length > 0;
+
+			public string Manifest => File.ReadAllText (Directory.GetFiles (Path.Combine (directory, "obj"), "manifest.json", SearchOption.AllDirectories).Single ());
+
+			public void SetStagingListing (int exitCode, string output)
+			{
+				File.WriteAllText (Path.Combine (directory, "staging-listing.out"), output);
+				File.WriteAllText (Path.Combine (directory, "staging-listing.exit"), exitCode.ToString ());
+			}
+
+			public void TouchPayload ()
+			{
+				string path = Path.Combine (directory, "Foo.dll");
+				File.SetLastWriteTimeUtc (path, File.GetLastWriteTimeUtc (path).AddMinutes (1));
+			}
+
 			// One entry per adb invocation, without the adb executable itself.
 			public IReadOnlyList<string> Commands => File.ReadAllLines (Path.Combine (directory, "adb.log"));
 
-			public bool RunFastDeploy ()
+			public bool RunFastDeploy (string transferMode = "Copy")
 			{
 				var foo = new TaskItem (Path.Combine (directory, "Foo.dll"));
 				foo.SetMetadata ("TargetPath", "arm64-v8a/Foo.dll");
 				var task = new FastDeploy {
 					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
 					AdbToolPath = directory,
-					AppFileTransferMode = "Copy",
+					AppFileTransferMode = transferMode,
 					FastDevFiles = new ITaskItem [] { foo },
 					IntermediateOutputPath = Path.Combine (directory, "obj") + Path.DirectorySeparatorChar,
 					PackageName = PackageName,

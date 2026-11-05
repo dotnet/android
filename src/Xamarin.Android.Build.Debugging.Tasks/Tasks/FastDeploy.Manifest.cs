@@ -258,14 +258,6 @@ namespace Xamarin.Android.Tasks
 
 		async Task<bool> UpdateOverrideCopies (string remoteStagingPath, string overridePath, bool clearOverrideDirectory = false)
 		{
-			if (clearOverrideDirectory) {
-				if (!await ClearOverrideDirectory (overridePath)) {
-					return false;
-				}
-			} else if (!await ClearOverrideSymlinkState (overridePath)) {
-				return false;
-			}
-
 			var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
 			if (stagedFileData == null) {
 				return false;
@@ -275,6 +267,14 @@ namespace Xamarin.Android.Tasks
 			var overrideFileData = await GetRemoteFileData (overridePath, runAs: true);
 			if (overrideFileData == null) {
 				return false;
+			}
+
+			// Validate both listings before clearing the override directory.
+			if (clearOverrideDirectory || overrideFileData.ContainsKey (ManifestHashMarker)) {
+				if (!await ClearOverrideDirectory (overridePath)) {
+					return false;
+				}
+				overrideFileData.Clear ();
 			}
 
 			if (!await RemoveStaleOverrideFiles (overridePath, stagedFileData, overrideFileData)) {
@@ -447,17 +447,6 @@ namespace Xamarin.Android.Tasks
 			string script = $"echo \"remote=$(cat {QuoteShellArgument (remoteMarkerPath)} 2>/dev/null)\"; echo \"override=$({runAsCommand} 2>/dev/null)\"";
 			var result = await RunAdbShellCommand (script);
 			return ParseDeviceManifestState (result.Output);
-		}
-
-		async Task<bool> ClearOverrideSymlinkState (string overridePath)
-		{
-			string markerPath = CombineRemotePath (overridePath, ManifestHashMarker);
-			string output = await RunAsShell ($"if test -f {QuoteShellArgument (markerPath)}; then rm -rf {QuoteShellArgument (overridePath)}; else rm -f {QuoteShellArgument (markerPath)}; fi");
-			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-				LogFastDeployError ("XA0129", output, overridePath);
-				return false;
-			}
-			return true;
 		}
 
 		async Task<bool> ClearOverrideDirectory (string overridePath)
