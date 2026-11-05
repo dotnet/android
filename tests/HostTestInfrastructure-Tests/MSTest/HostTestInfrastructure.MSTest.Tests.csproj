@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>annotations</Nullable>
+    <HostBoundaryFramework>MSTest</HostBoundaryFramework>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <MSTestVersion>4.6.0-preview.26524.1</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>2.6.0-preview.26524.1</MicrosoftTestingPlatformVersion>
+  </PropertyGroup>
+  <Import Project="..\SharedSources.projitems" />
+  <ItemGroup>
+    <Compile Include="..\BoundaryChecks.cs" Link="BoundaryChecks.cs" />
+    <AssemblyMetadata Include="AndroidNdkDirectory" Value="" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
