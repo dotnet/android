@@ -20,7 +20,7 @@
 
   <!-- Adding 100 to the product major keeps stable MSIs above shipped previews.
        MSI major <= 255 limits the product major to 155 (255 - 100). -->
-  <Target Name="_AndroidSetStableManifestMsiVersion"
+  <Target Name="_AndroidSetNet11StableManifestMsiVersion"
       BeforeTargets="_SetMsiVersionFromNuGetVersion;_CreateManifestMsiVersionsWithDateTime;_SetStableMsiVersions;_SetPreviewMsiVersions">
     <ItemGroup>
       <WorkloadPackages Condition="'%(WorkloadPackages.Filename)' == 'Microsoft.NET.Sdk.Android.Manifest-11.0.100.@PACK_VERSION_LONG@'
