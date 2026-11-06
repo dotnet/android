@@ -81,4 +81,6 @@ dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Te
 ```
 
 Do not pass a solution containing unconverted NUnit projects to the native MTP
-runner. This pilot does not change repository-wide runner selection or CI jobs.
+runner. Repository-wide runner selection remains unchanged. The separate
+[opt-in host CI path](../../build-tools/automation/native-mtp-ci.md) discovers,
+slices and retries this built module without changing legacy NUnit jobs.
