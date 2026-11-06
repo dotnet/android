@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ using Microsoft.Android.Build.Tasks;
 using System.Runtime.CompilerServices;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
+using ICSharpCode.Decompiler.Metadata;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -548,7 +550,24 @@ namespace Xamarin.Android.Build.Tests
 		protected string GetResourceDesignerText (XamarinAndroidProject project, string path)
 		{
 			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
-				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+				string targetFramework = project.TargetFramework.Split ('-') [0];
+				string [] packDirectories = [
+					Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref"),
+					Path.Combine (project.GlobalPackagesFolder, "microsoft.netcore.app.ref"),
+				];
+				var referenceDirectory = packDirectories
+					.Where (Directory.Exists)
+					.SelectMany (directory => Directory.GetDirectories (directory))
+					.Select (directory => Path.Combine (directory, "ref", targetFramework))
+					.FirstOrDefault (Directory.Exists);
+				if (referenceDirectory == null) {
+					throw new DirectoryNotFoundException ($"Could not find Microsoft.NETCore.App.Ref for '{targetFramework}'.");
+				}
+				// Use the project's targeting pack instead of the unrelated dotnet found on PATH.
+				var resolver = new UniversalAssemblyResolver (path, throwOnError: true, targetFramework: null,
+					streamOptions: PEStreamOptions.PrefetchMetadata);
+				resolver.AddSearchDirectory (referenceDirectory);
+				var decompiler = new CSharpDecompiler (path, resolver, new DecompilerSettings ());
 				return decompiler.DecompileWholeModuleAsString ();
 			}
 
@@ -558,8 +577,7 @@ namespace Xamarin.Android.Build.Tests
 		protected string[] GetResourceDesignerLines (XamarinAndroidProject project, string path)
 		{
 			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
-				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
-				return decompiler.DecompileWholeModuleAsString ().Split (Environment.NewLine[0]);
+				return GetResourceDesignerText (project, path).Split (Environment.NewLine[0]);
 			}
 			return File.ReadAllLines (path);
 		}
