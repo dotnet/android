@@ -18,8 +18,7 @@
     <WorkloadPackages Include="$(NuGetPackagePath)\Microsoft.NET.Sdk.Android.Manifest*.nupkg" Version="@WORKLOAD_VERSION@" SupportsMachineArch="true" />
   </ItemGroup>
 
-  <!-- Both MSI conversion pipelines import this file. Keep stable net11 installers
-       above the encoded RC versions without restricting the product patch to 4 bits. -->
+  <!-- Leave older manifest bands and previews on their existing numbering. -->
   <Target Name="_AndroidSetStableManifestMsiVersion"
       BeforeTargets="_SetMsiVersionFromNuGetVersion;_CreateManifestMsiVersionsWithDateTime;_SetStableMsiVersions;_SetPreviewMsiVersions">
     <ItemGroup>
