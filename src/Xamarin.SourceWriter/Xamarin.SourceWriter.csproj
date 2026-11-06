@@ -9,6 +9,7 @@
     <OutputPath>$(BuildOutputDirectory)$(DotNetStableTargetFramework)\</OutputPath>
 
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
 </Project>

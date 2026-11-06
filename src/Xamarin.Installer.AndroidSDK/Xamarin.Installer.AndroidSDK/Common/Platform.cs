@@ -30,8 +30,11 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			OSVersion = Environment.OSVersion.Version;
 		}
 
+		/// <safety>
+		/// <paramref name="buf"/> must point to writable memory large enough for the platform's utsname structure.
+		/// </safety>
 		[DllImport ("libc")]
-		static extern int uname (IntPtr buf);
+		static extern unsafe int uname (IntPtr buf);
 
 		//From Managed.Windows.Forms/XplatUI
 		static bool IsRunningOnMac ()
@@ -40,7 +43,12 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			try {
 				buf = Marshal.AllocHGlobal (8192);
 				// This is a hacktastic way of getting sysname from uname ()
-				if (uname (buf) == 0) {
+				int result;
+				unsafe {
+					// SAFETY: buf is a live 8192-byte allocation, large enough for the supported platforms' utsname.
+					result = uname (buf);
+				}
+				if (result == 0) {
 					string? os = Marshal.PtrToStringAnsi (buf);
 					if (os == "Darwin")
 						return true;

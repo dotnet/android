@@ -1,0 +1,21 @@
+<Project>
+  <!-- The pinned compiler predates MemorySafetyRulesVersion. Fall back only for primary compilations:
+       satellite Csc forwards Features but not LangVersion (https://github.com/dotnet/sdk/issues/56839). -->
+  <Target Name="_AndroidIsolateMemorySafetyRules"
+      BeforeTargets="CoreCompile"
+      Condition=" '$(MemorySafetyRulesVersion)' == '2' or $([System.Text.RegularExpressions.Regex]::IsMatch('$(Features)', '(^|[;,])updated-memory-safety-rules([;,]|$)')) ">
+    <PropertyGroup>
+      <_AndroidCompilerSupportsMemorySafetyRulesVersion>$([System.IO.File]::ReadAllText('$(CSharpCoreTargetsPath)').Contains('MemorySafetyRulesVersion='))</_AndroidCompilerSupportsMemorySafetyRulesVersion>
+      <_AndroidMemorySafetyResponseRequired>false</_AndroidMemorySafetyResponseRequired>
+      <_AndroidMemorySafetyResponseRequired Condition=" '$(_AndroidCompilerSupportsMemorySafetyRulesVersion)' != 'True' or $([System.Text.RegularExpressions.Regex]::IsMatch('$(Features)', '(^|[;,])updated-memory-safety-rules([;,]|$)')) ">true</_AndroidMemorySafetyResponseRequired>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(_AndroidMemorySafetyResponseRequired)' == 'true' ">
+      <_AndroidMemorySafetyResponseFile>$(MSBuildThisFileDirectory)updated-memory-safety-rules.rsp</_AndroidMemorySafetyResponseFile>
+      <Features>$([System.Text.RegularExpressions.Regex]::Replace('$(Features)', '(^|[;,])updated-memory-safety-rules(?=([;,]|$))', '$1'))</Features>
+      <CompilerResponseFile>$(CompilerResponseFile);$(_AndroidMemorySafetyResponseFile)</CompilerResponseFile>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_AndroidMemorySafetyResponseRequired)' == 'true' ">
+      <CustomAdditionalCompileInputs Include="$(_AndroidMemorySafetyResponseFile)" />
+    </ItemGroup>
+  </Target>
+</Project>

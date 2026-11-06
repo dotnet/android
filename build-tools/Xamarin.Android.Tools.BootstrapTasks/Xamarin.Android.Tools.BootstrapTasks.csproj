@@ -24,6 +24,7 @@
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\MonoUnixNative.targets" />
 
   <PropertyGroup>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <BuildDependsOn>
       $(BuildDependsOn);
       _MakeMonoUnixFatBinariesOSX;

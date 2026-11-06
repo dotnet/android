@@ -9,6 +9,7 @@
     <AssemblyName>java-interop-jnienv-gen</AssemblyName>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

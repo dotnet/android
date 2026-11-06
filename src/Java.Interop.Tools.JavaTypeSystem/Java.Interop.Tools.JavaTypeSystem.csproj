@@ -8,6 +8,7 @@
     <LangVersion>13.0</LangVersion>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <PropertyGroup>

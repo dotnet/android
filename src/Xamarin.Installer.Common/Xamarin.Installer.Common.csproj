@@ -5,6 +5,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>12</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
