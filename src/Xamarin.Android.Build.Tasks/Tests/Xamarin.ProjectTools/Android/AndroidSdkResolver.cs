@@ -1,9 +1,7 @@
 using System;
-using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Text;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
@@ -73,14 +71,13 @@ namespace Xamarin.ProjectTools
 					RedirectStandardError = true,
 					WindowStyle = ProcessWindowStyle.Hidden,
 					UseShellExecute = false,
+					InheritedHandles = [],
 				};
-				var output = new StringBuilder ();
-				using (var p = Process.Start (psi)) {
-					p.WaitForExit ();
-					output.AppendLine (p.StandardOutput.ReadToEnd ());
-					output.AppendLine (p.StandardError.ReadToEnd ());
-					JavaSdkVersionString = output.ToString ();
-				}
+				var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
+				if (result.ExitStatus.Canceled || result.ExitStatus.ExitCode != 0)
+					throw new InvalidOperationException ($"Java version discovery failed: exit code {result.ExitStatus.ExitCode}, canceled: {result.ExitStatus.Canceled}{Environment.NewLine}" +
+						result.StandardError + Environment.NewLine + result.StandardOutput);
+				JavaSdkVersionString = result.StandardOutput + Environment.NewLine + result.StandardError + Environment.NewLine;
 			}
 			return JavaSdkVersionString;
 		}
@@ -93,15 +90,21 @@ namespace Xamarin.ProjectTools
 			var psi = new ProcessStartInfo (dotnet, args) {
 				CreateNoWindow = true,
 				RedirectStandardOutput = true,
+				RedirectStandardError = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
 				WorkingDirectory = XABuildPaths.TestAssemblyOutputDirectory,
+				InheritedHandles = [],
 			};
-			using (var p = Process.Start (psi)) {
-				p.WaitForExit ();
-				string path = p.StandardOutput.ReadLine ().Trim ();
-				return Directory.Exists (path) ? path : null;
+			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
+			if (result.ExitStatus.Canceled || result.ExitStatus.ExitCode != 0) {
+				Console.Error.WriteLine ($"SDK path discovery failed: exit code {result.ExitStatus.ExitCode}, canceled: {result.ExitStatus.Canceled}{Environment.NewLine}" +
+					result.StandardError + Environment.NewLine + result.StandardOutput);
+				return null;
 			}
+			using var reader = new StringReader (result.StandardOutput);
+			string path = reader.ReadLine ()?.Trim ();
+			return Directory.Exists (path) ? path : null;
 		}
 
 		static Version? maxInstalled;
