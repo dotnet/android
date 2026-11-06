@@ -870,6 +870,10 @@ namespace Android.Runtime {
 
 		static JniObjectReference FindArrayClassByElementType (Type elementType)
 		{
+			string? colorArrayTypeName = GetColorArrayTypeName (elementType);
+			if (colorArrayTypeName != null)
+				return JniEnvironment.Types.FindClass (colorArrayTypeName);
+
 			var builtInArrayJniClassName = GetBuiltInArrayJniClassNameUtf8 (elementType);
 			if (!builtInArrayJniClassName.IsEmpty) {
 				// SAFETY: GetBuiltInArrayJniClassNameUtf8 returns only complete, process-lifetime UTF-8 literals, never slices or copies.
@@ -879,6 +883,26 @@ namespace Android.Runtime {
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
 			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
 			return JniEnvironment.Types.FindClass (typeSignature.Name);
+		}
+
+		static string? GetColorArrayTypeName (Type elementType, int rank = 1)
+		{
+			while (elementType.IsArray) {
+				if (elementType.GetArrayRank () != 1 || elementType.GetElementType () is not Type arrayElementType)
+					return null;
+				rank++;
+				elementType = arrayElementType;
+			}
+
+			return elementType == typeof (Android.Graphics.Color) ? new string ('[', rank) + "I" : null;
+		}
+
+		static IntPtr FindClassForArrayElementType (Type arrayType)
+		{
+			string? colorArrayTypeName = GetColorArrayTypeName (arrayType, rank: 0);
+			return colorArrayTypeName == null
+				? FindClass (arrayType)
+				: FindClass (colorArrayTypeName);
 		}
 
 		static ReadOnlySpan<byte> GetBuiltInArrayJniClassNameUtf8 (Type type)
@@ -1021,6 +1045,14 @@ namespace Android.Runtime {
 						_GetIntArrayRegion (source, index, 1, r);
 					}
 					return r [0];
+				} },
+				{ typeof (Android.Graphics.Color), (type, source, index) => {
+					var r = new int [1];
+					unsafe {
+						// SAFETY: source/index identify one live primitive element; r has exactly one destination slot.
+						_GetIntArrayRegion (source, index, 1, r);
+					}
+					return new Android.Graphics.Color (r [0]);
 				} },
 				{ typeof (long), (type, source, index) => {
 					var r = new long [1];
@@ -1290,12 +1322,21 @@ namespace Android.Runtime {
 				if (elementType != null && elementType.IsValueType)
 					AssertCompatibleArrayTypes (src, destElementType: elementType);
 
+				if (dest is Android.Graphics.Color[] colors && (elementType == null || elementType == typeof (Android.Graphics.Color))) {
+					if (elementType == null)
+						AssertCompatibleArrayTypes (src, destElementType: typeof (Android.Graphics.Color));
+					CopyColorArray (src, colors);
+					return;
+				}
+
 				if (elementType != null && elementType.IsArray) {
 					for (int i = 0; i < dest.Length; ++i) {
 						IntPtr a = GetObjectArrayElement (src, i);
 						try {
 							var d = (Array?) dest.GetValue (i);
-							if (d == null)
+							if (a == IntPtr.Zero)
+								dest.SetValue (null, i);
+							else if (d == null)
 								dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer, elementType.GetElementType ()), i);
 							else
 								CopyArray (a, d, elementType.GetElementType ());
@@ -1335,6 +1376,11 @@ namespace Android.Runtime {
 
 				if (typeof (T).IsArray) {
 					CopyArray (src, dest, typeof (T));
+					return;
+				}
+
+				if (typeof (T) == typeof (Android.Graphics.Color)) {
+					CopyColorArray (src, (Android.Graphics.Color[]) (object) dest);
 					return;
 				}
 
@@ -1449,6 +1495,12 @@ namespace Android.Runtime {
 						CopyArray ((int[]) source, dest);
 					}
 				} },
+				{ typeof (Android.Graphics.Color), (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray (GetArgbValues ((Android.Graphics.Color []) source), dest);
+					}
+				} },
 				{ typeof (long),        (source, dest) => {
 					unsafe {
 						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
@@ -1511,13 +1563,38 @@ namespace Android.Runtime {
 						unsafe {
 							// SAFETY: dest/i supply the nested array; conversion and the existing local release stay together.
 							IntPtr _dest = GetObjectArrayElement (dest, i);
-							Array  _source  = (Array) source.GetValue (i)!;
-							CopyArray (_source, _source.GetType ().GetElementType ()!, _dest);
-							JNIEnv.DeleteLocalRef (_dest);
+							try {
+								var _source = (Array?) source.GetValue (i);
+								if (_source == null)
+									SetObjectArrayElement (dest, i, IntPtr.Zero);
+								else
+									CopyArray (_source, _source.GetType ().GetElementType ()!, _dest);
+							} finally {
+								JNIEnv.DeleteLocalRef (_dest);
+							}
 						}
 					}
 				} },
 			};
+		}
+
+		static int[] GetArgbValues (Android.Graphics.Color[] colors)
+		{
+			var values = new int [colors.Length];
+			for (int i = 0; i < colors.Length; i++)
+				values [i] = colors [i].ToArgb ();
+			return values;
+		}
+
+		static void CopyColorArray (IntPtr source, Android.Graphics.Color[] colors)
+		{
+			var values = new int [colors.Length];
+			unsafe {
+				// SAFETY: source is the matching live JNI array and values bounds the complete primitive copy.
+				_GetIntArrayRegion (source, 0, values.Length, values);
+			}
+			for (int i = 0; i < colors.Length; i++)
+				colors [i] = new Android.Graphics.Color (values [i]);
 		}
 
 		static void CopyManagedObjectArray (Array source, IntPtr dest)
@@ -1659,6 +1736,11 @@ namespace Android.Runtime {
 						CopyArray (source, r);
 					}
 					return r;
+				} },
+				{ typeof (Android.Graphics.Color), (type, source, len) => {
+					var colors = new Android.Graphics.Color [len];
+					CopyColorArray (source, colors);
+					return colors;
 				} },
 				{ typeof (uint), (type, source, len) => {
 					var r = new uint[len];
@@ -2066,6 +2148,7 @@ namespace Android.Runtime {
 				{ typeof (char),          (source) => NewArray ((char[]) source) },
 				{ typeof (short),         (source) => NewArray ((short[]) source) },
 				{ typeof (int),           (source) => NewArray ((int[]) source) },
+				{ typeof (Android.Graphics.Color), (source) => NewArray (GetArgbValues ((Android.Graphics.Color []) source)) },
 				{ typeof (long),          (source) => NewArray ((long[]) source) },
 				{ typeof (float),         (source) => NewArray ((float[]) source) },
 				{ typeof (double),        (source) => NewArray ((double[]) source) },
@@ -2126,7 +2209,7 @@ namespace Android.Runtime {
 				elementType ??= value.GetType ().GetElementType ()!;
 
 				if (elementType.IsArray) {
-					IntPtr grefArrayElementClass = FindClass (elementType);
+					IntPtr grefArrayElementClass = FindClassForArrayElementType (elementType);
 					try {
 						return NewArray (value, elementType, grefArrayElementClass);
 					} finally {
@@ -2148,7 +2231,7 @@ namespace Android.Runtime {
 			unsafe {
 				// SAFETY: nested arrays use the class global found for T and released in finally; nonnested creators use array.Length and the matching managed element conversion.
 				if (typeof (T).IsArray) {
-					IntPtr grefArrayElementClass = FindClass (typeof (T));
+					IntPtr grefArrayElementClass = FindClassForArrayElementType (typeof (T));
 					try {
 						return NewArray (array, typeof (T), grefArrayElementClass);
 					} finally {
@@ -2174,9 +2257,15 @@ namespace Android.Runtime {
 					array = NewObjectArray (value.Length, elementClass, IntPtr.Zero);
 
 					for (int i = 0; i < value.Length; ++i) {
-						IntPtr subarray = NewArray ((Array) value.GetValue (i)!, elementType.GetElementType ());
-						SetObjectArrayElement (array, i, subarray);
-						DeleteLocalRef (subarray);
+						var subarrayValue = (Array?) value.GetValue (i);
+						IntPtr subarray = subarrayValue == null
+							? IntPtr.Zero
+							: NewArray (subarrayValue, elementType.GetElementType ());
+						try {
+							SetObjectArrayElement (array, i, subarray);
+						} finally {
+							DeleteLocalRef (subarray);
+						}
 					}
 
 					return array;
@@ -2241,6 +2330,13 @@ namespace Android.Runtime {
 					var _value = new[]{(int) value!};
 					unsafe {
 						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetIntArrayRegion (dest, index, _value.Length, _value);
+					}
+				} },
+				{ typeof (Android.Graphics.Color), (dest, index, value) => {
+					var _value = new [] { ((Android.Graphics.Color) value!).ToArgb () };
+					unsafe {
+						// SAFETY: dest/index identify one live primitive element; _value has exactly one source slot.
 						_SetIntArrayRegion (dest, index, _value.Length, _value);
 					}
 				} },
