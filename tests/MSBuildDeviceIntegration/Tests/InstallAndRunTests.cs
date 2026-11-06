@@ -94,8 +94,9 @@ namespace Xamarin.Android.Build.Tests
 			StartActivityAndAssert (proj);
 		}
 
-		[Test]
-		public void CoreCLRAssemblyStoreConcurrentLoads ()
+		[TestCase (true)]
+		[TestCase (false)]
+		public void CoreCLRAssemblyStoreConcurrentLoads (bool compressed)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
@@ -112,7 +113,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("PublishReadyToRun", "false");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("AndroidUseAssemblyStore", "true");
-			proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", compressed.ToString ());
 
 			foreach (string name in new [] { "AssemblyStoreDeferredOne", "AssemblyStoreDeferredTwo" }) {
 				var library = new XamarinAndroidLibraryProject {
@@ -192,6 +193,7 @@ namespace Xamarin.Android.Build.Tests
 			var assemblies = store.Assemblies ?? throw new InvalidOperationException ("The packaged assembly store is empty.");
 			var compressedIndices = new HashSet<uint> ();
 			var compressedNames = new HashSet<string> (StringComparer.Ordinal);
+			var uncompressedNames = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var assembly in assemblies) {
 				if (assembly.Ignore || assembly.DataSize < 3 * sizeof (uint)) {
 					continue;
@@ -201,19 +203,24 @@ namespace Xamarin.Android.Build.Tests
 				if (reader.ReadUInt32 () == 0x535A4158u) {
 					Assert.IsTrue (compressedIndices.Add (reader.ReadUInt32 ()), "Packaged compression identities must be unique.");
 					compressedNames.Add (assembly.Name);
+				} else {
+					uncompressedNames.Add (assembly.Name);
 				}
 			}
-			Assert.That (compressedNames, Is.SupersetOf (new [] { "AssemblyStoreDeferredOne.dll", "AssemblyStoreDeferredTwo.dll" }),
-				"Both concurrent first-load fixtures must actually be compressed in the installed package.");
-			Assert.That (compressedIndices.Max () + 1, Is.GreaterThan (store.AssemblyCount),
-				"The installed package must exercise sparse pre-trim compression indices beyond its trimmed entry count.");
+			Assert.That (compressed ? compressedNames : uncompressedNames,
+				Is.SupersetOf (new [] { "AssemblyStoreDeferredOne.dll", "AssemblyStoreDeferredTwo.dll" }),
+				$"Both concurrent first-load fixtures must actually be {(compressed ? "compressed" : "uncompressed")} in the installed package.");
+			if (compressed) {
+				Assert.That (compressedIndices.Max () + 1, Is.GreaterThan (store.AssemblyCount),
+					"The installed package must exercise sparse pre-trim compression indices beyond its trimmed entry count.");
+			}
 			StartActivityAndAssert (proj);
 			Assert.IsTrue (
 				MonitorAdbLogcat (
 					line => line.Contains (success, StringComparison.Ordinal),
 					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-store-logcat.log"),
 					ActivityStartTimeoutInSeconds),
-				"Concurrent first loads of compressed assemblies should complete.");
+				$"Concurrent first loads of {(compressed ? "compressed" : "uncompressed")} assemblies should complete.");
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
