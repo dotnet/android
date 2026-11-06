@@ -651,12 +651,15 @@ namespace Xamarin.Android.RuntimeTests {
 
 			public override bool SendMessageAtTime (Message message, long uptimeMillis)
 			{
-				BeforePost ();
-				var runnable = message.Callback;
-				Assert.IsNotNull (runnable);
-				if (runnable != null)
-					Runnables.Add (runnable);
-				return base.SendMessageAtTime (message, uptimeMillis);
+				// Release the temporary managed peer, not the message owned by the Java queue.
+				using (message) {
+					BeforePost ();
+					var runnable = message.Callback;
+					Assert.IsNotNull (runnable);
+					if (runnable != null)
+						Runnables.Add (runnable);
+					return base.SendMessageAtTime (message, uptimeMillis);
+				}
 			}
 		}
 
