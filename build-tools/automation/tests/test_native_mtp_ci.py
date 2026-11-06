@@ -6,10 +6,12 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import shutil
 import subprocess
 import tempfile
+import textwrap
 import time
 import unittest
 from unittest import mock
@@ -420,6 +422,99 @@ class NativeMtpIntegration(unittest.TestCase):
 
 
 class AdapterContractTests(unittest.TestCase):
+    def yaml_scripts(self):
+        text = (ROOT / "build-tools/automation/yaml-templates/run-native-mtp-tests.yaml").read_text()
+        blocks = text.split("- task: Bash@3\n")[1:]
+        self.assertEqual(2, len(blocks))
+        scripts = [
+            textwrap.dedent(block.split("    script: |\n", 1)[1].split("  env:\n", 1)[0])
+            for block in blocks
+        ]
+        self.assertIn("    pythonInterpreter: $(NativeMtpPythonInterpreter)\n", text)
+        self.assertEqual(2, text.count(
+            "condition: and(succeededOrFailed(), eq(variables['NativeMtpResultsAvailable'], 'true'))"))
+        pipeline = (ROOT / "build-tools/automation/azure-pipelines-public.yaml").read_text()
+        pilot = pipeline.split("  - stage: native_mtp_host_tests\n", 1)[1].split("# macOS Build Stage", 1)[0]
+        self.assertIn("condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))", pilot)
+        return scripts
+
+    def run_yaml_script(self, label, script, environment):
+        bash = shutil.which("bash")
+        self.assertIsNotNone(bash)
+        result = subprocess.run([bash, "-c", script], cwd=ROOT, env={**os.environ, **environment},
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=15)
+        destination = os.environ.get("MTP_CI_EVIDENCE")
+        if destination:
+            directory = Path(destination) / label
+            directory.mkdir(parents=True)
+            (directory / "stdout.log").write_text(result.stdout)
+            adapter.write_json(directory / "command.json", {
+                "argv": [bash, "-c", script], "cwd": str(ROOT),
+                "environment": environment, "exitCode": result.returncode,
+            })
+        variables = dict(re.findall(r"^##vso\[task.setvariable variable=([A-Za-z]+)\](.*)$",
+                                    result.stdout, re.MULTILINE))
+        return result, variables
+
+    @unittest.skipUnless(os.name == "posix", "The execution template currently targets Linux/macOS")
+    def test_yaml_selects_supported_python_and_rejects_stale_results(self):
+        select, _ = self.yaml_scripts()
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            results = directory / "results"
+            result, variables = self.run_yaml_script("yaml-python-selected", select, {
+                "MTP_RESULTS_DIRECTORY": str(results),
+            })
+            self.assertEqual(0, result.returncode, result.stdout)
+            self.assertEqual("true", variables["NativeMtpResultsEligible"])
+            interpreter = variables["NativeMtpPythonInterpreter"]
+            self.assertTrue(Path(interpreter).is_absolute(), interpreter)
+            self.assertTrue(Path(interpreter).is_file(), interpreter)
+            self.assertFalse(results.exists(), "preflight must not create the adapter's output directory")
+            results.mkdir()
+            result, variables = self.run_yaml_script("yaml-stale-results", select, {
+                "MTP_RESULTS_DIRECTORY": str(results),
+            })
+            self.assertNotEqual(0, result.returncode)
+            self.assertEqual("false", variables["NativeMtpResultsEligible"])
+            self.assertIn("results directory must be new", result.stdout)
+            for name, contents in (
+                ("missing", None),
+                ("unsupported", "#!/bin/sh\necho 'Python 3.8 unsupported'\nexit 1\n"),
+            ):
+                tools = directory / name
+                tools.mkdir()
+                if contents:
+                    python = tools / "python3"
+                    python.write_text(contents)
+                    python.chmod(0o755)
+                result, variables = self.run_yaml_script("yaml-python-" + name, select, {
+                    "PATH": str(tools), "MTP_RESULTS_DIRECTORY": str(directory / "fresh"),
+                })
+                self.assertNotEqual(0, result.returncode)
+                self.assertEqual("false", variables["NativeMtpResultsEligible"])
+                self.assertIn("Python 3.9 or later", result.stdout)
+
+    @unittest.skipUnless(os.name == "posix", "The execution template currently targets Linux/macOS")
+    def test_yaml_publication_requires_fresh_results(self):
+        _, inspect = self.yaml_scripts()
+        with tempfile.TemporaryDirectory() as temporary:
+            results = Path(temporary) / "results"
+            for label, exists, eligible, expected in (
+                ("absent", False, "true", "false"),
+                ("stale", True, "false", "false"),
+                ("fresh", True, "true", "true"),
+            ):
+                if exists:
+                    results.mkdir(exist_ok=True)
+                result, variables = self.run_yaml_script("yaml-publication-" + label, inspect, {
+                    "MTP_RESULTS_DIRECTORY": str(results), "MTP_RESULTS_ELIGIBLE": eligible,
+                })
+                self.assertEqual(0, result.returncode, result.stdout)
+                self.assertEqual(expected, variables["NativeMtpResultsAvailable"])
+                if expected == "false":
+                    self.assertIn("Earlier task failures remain failures", result.stdout)
+
     def test_execution_identity_mismatch_is_not_success(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "incomplete.trx"

@@ -73,7 +73,7 @@ stages:
   - stage: native_mtp_host_tests
     displayName: Native MTP host pilot
     dependsOn: []
-    condition: ne(variables['SkipTestStages'], 'true')
+    condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
     jobs:
     - job: sourcewriter_native_mtp
       displayName: SourceWriter native MTP

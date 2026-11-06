@@ -15,6 +15,15 @@ MTP/TRX `2.6.0-preview.26524.1`.
 The latter pins belong to the converted project, not the root package policy.
 The adapter needs Python 3.9+ and the matching .NET runtime.
 
+The Linux/macOS execution template explicitly selects installed `python3`,
+checks that it is at least 3.9, and passes its absolute path through
+`PythonScript@0`'s `pythonInterpreter` input. It does not rely on that task's
+default `python` lookup or assume this custom agent pool has a Python tool
+cache. A missing/unsupported interpreter fails before execution; it is not
+downloaded implicitly. Windows use of the Bash-based template is not certified.
+The pilot stage includes `succeeded()` in its condition so cancellation cannot
+leave its otherwise-true opt-in condition running.
+
 SourceWriter and the bounded probe both reference `MSTest.SourceGeneration`
 directly with `PrivateAssets="all"`; the probe also persists compiler-generated
 files for its contract checks. They use the package's default mode on
@@ -147,6 +156,11 @@ records the complete discovery baseline and the chosen slice.
 
 The template publishes only `**/effective.trx`, including attachments, and retains
 the entire results directory as a pipeline artifact on success or failure.
+It first rejects existing results paths, including symlinks. After execution,
+both publishers require a directory created by this eligible invocation.
+If interpreter selection or task launch never produced a fresh directory,
+publication is explicitly skipped with a warning; the earlier failure remains
+gating. Existing output cannot be republished as this invocation's success.
 Missing TRX is allowed by the publisher solely because explicit empty slices
 have none; adapter failures are still failing pipeline tasks. No
 `continueOnError`, ignore-exit-code switch or blanket task retry masks them.
@@ -203,6 +217,11 @@ rejection and unchanged NUnit AIDL Debug/Release/root-DLL execution.
 Timeout coverage includes a real native test spawning a child and grandchild,
 both terminated while an unrelated sibling stays alive; no effective success
 report is emitted.
+Local YAML task-contract checks also execute the actual Bash selection and
+publication-precondition scripts. They check the selected absolute Python path,
+version/missing-interpreter failures, stale-directory rejection and absent-output
+publication suppression. The actual YAML-input invocation uses that selected
+`pythonInterpreter`, rather than substituting the verifier's own executable.
 Generated-mode coverage additionally includes deterministic `DynamicData`
 properties with genuinely identical argument rows and duplicate display names,
 six slices over four distinct row UIDs (two empty), native method/display/category
