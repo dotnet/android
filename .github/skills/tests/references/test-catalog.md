@@ -121,6 +121,10 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
 | **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
 
+`DotNetInstallAndRunPreviousSdk` covers CoreCLR Debug/Release and NativeAOT Release.
+Set `JAVA_HOME_21_ARM64` or `JAVA_HOME_21_X64` to JDK 21, matching the test host's
+architecture. Local workload setup installs the previous Android SDK.
+
 ---
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
