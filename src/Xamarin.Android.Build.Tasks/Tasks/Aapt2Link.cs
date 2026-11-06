@@ -100,6 +100,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			try {
 				var versions = supportedVersions ?? throw new InvalidOperationException ("API metadata must be resolved before linking resources.");
+				ArgumentNullException.ThrowIfNull (AssemblyIdentityMapFile);
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 				resourceSymbolsTextFileTemp = GetTempFile ();
@@ -158,7 +159,9 @@ namespace Xamarin.Android.Tasks {
 		string [] GenerateCommandLineCommands (string ManifestFile, string? currentAbi, string currentResourceOutputFile, AndroidVersions versions)
 		{
 			List<string> cmd = new List<string> ();
-			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");
+			string manifestDir = Path.Combine (
+				Path.GetDirectoryName (ManifestFile) ?? throw new ArgumentException ("Manifest path must have a directory.", nameof (ManifestFile)),
+				currentAbi != null ? currentAbi : "manifest");
 			Directory.CreateDirectory (manifestDir);
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			string targetSdkVersion = AndroidApiLevel;

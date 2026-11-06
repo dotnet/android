@@ -183,7 +183,7 @@ namespace Xamarin.Android.Tools
 					return false;
 				}
 
-				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
+				if (!FileUtil.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
 					return false;
 				}
 
@@ -337,4 +337,3 @@ namespace Xamarin.Android.Tools
 		}
 	}
 }
-

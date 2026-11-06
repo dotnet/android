@@ -138,15 +138,19 @@ namespace Xamarin.Android.Tools
 		/// <summary>Extracts a tar.gz archive using the system tar command.</summary>
 		public static async Task ExtractTarGzAsync (string archivePath, string destinationPath, Action<TraceLevel, string> logger, CancellationToken cancellationToken)
 		{
-			var psi = ProcessUtils.CreateProcessStartInfo ("/usr/bin/tar", "-xzf", archivePath, "-C", destinationPath);
-
-			using var stdout = new StringWriter ();
-			using var stderr = new StringWriter ();
-			var exitCode = await ProcessUtils.StartProcess (psi, stdout: stdout, stderr: stderr, cancellationToken).ConfigureAwait (false);
-
-			if (exitCode != 0) {
-				var errorOutput = stderr.ToString ();
-				logger (TraceLevel.Error, $"tar extraction failed (exit code {exitCode}): {errorOutput}");
+			cancellationToken.ThrowIfCancellationRequested ();
+			var psi = new ProcessStartInfo ("/usr/bin/tar") {
+				ArgumentList = { "-xzf", archivePath, "-C", destinationPath },
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			};
+			var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+			cancellationToken.ThrowIfCancellationRequested ();
+			if (result.ExitStatus.ExitCode != 0) {
+				var errorOutput = result.StandardError;
+				logger (TraceLevel.Error, $"tar extraction failed (exit code {result.ExitStatus.ExitCode}): {errorOutput}");
 				throw new IOException ($"Failed to extract archive '{archivePath}': {errorOutput}");
 			}
 		}

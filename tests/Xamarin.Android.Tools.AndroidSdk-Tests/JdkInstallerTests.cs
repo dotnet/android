@@ -99,8 +99,13 @@ namespace Xamarin.Android.Tools.Tests
 				if (OS.IsWindows)
 					ZipFile.CreateFromDirectory (staging, archive);
 				else {
-					var psi = ProcessUtils.CreateProcessStartInfo ("/usr/bin/tar", "-czf", archive, "-C", staging, "jdk");
-					Assert.AreEqual (0, await ProcessUtils.StartProcess (psi, null, null, CancellationToken.None));
+					var psi = new ProcessStartInfo ("/usr/bin/tar") {
+						ArgumentList = { "-czf", archive, "-C", staging, "jdk" },
+						UseShellExecute = false,
+						CreateNoWindow = true,
+					};
+					var status = await Process.RunAsync (psi, CancellationToken.None);
+					Assert.AreEqual (0, status.ExitCode);
 				}
 				if (existingTarget) {
 					JdkInfoTests.CreateFauxJdk (target, releaseVersion: "17.0.1", releaseBuildNumber: "1", javaVersion: "17.0.1-1");

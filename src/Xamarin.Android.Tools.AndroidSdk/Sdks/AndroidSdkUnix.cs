@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tools
 			}
 
 			// Look in PATH
-			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb)) {
+			foreach (var adb in FileUtil.FindExecutablesInPath (Adb)) {
 				var path = Path.GetDirectoryName (adb);
 				// Strip off "platform-tools"
 				var dir = Path.GetDirectoryName (path);
@@ -271,31 +271,24 @@ namespace Xamarin.Android.Tools
 			if (!need_chown || paths == null || paths.Count == 0)
 				return;
 
-			var stdout = new StringWriter ();
-			var stderr = new StringWriter ();
-			var args = new List <string> {
-				QuoteString (sudo_user!)
-			};
-
-			foreach (string p in paths)
-				args.Add (QuoteString (p));
-
 			var psi = new ProcessStartInfo (OS.IsMac ? "/usr/sbin/chown" : "/bin/chown") {
 				CreateNoWindow = true,
-				Arguments = String.Join (" ", args),
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
 			};
-			Logger (TraceLevel.Verbose, $"Changing filesystem object ownership: {psi.FileName} {psi.Arguments}");
-			Task<int> chown_task = ProcessUtils.StartProcess (psi, stdout, stderr, System.Threading.CancellationToken.None);
+			if (sudo_user == null)
+				throw new InvalidOperationException ("The sudo user is required when changing SDK ownership.");
+			psi.ArgumentList.Add (sudo_user);
+			foreach (var path in paths)
+				psi.ArgumentList.Add (path);
+			Logger (TraceLevel.Verbose, $"Changing filesystem object ownership: {psi.FileName}");
+			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
 
-			if (chown_task.Result != 0) {
+			if (result.ExitStatus.ExitCode != 0 || result.ExitStatus.Canceled) {
 				Logger (TraceLevel.Warning, $"Failed to change ownership of filesystem object(s)");
-				Logger (TraceLevel.Verbose, $"standard output: {stdout}");
-				Logger (TraceLevel.Verbose, $"standard error: {stderr}");
-			}
-
-			string QuoteString (string p)
-			{
-				return $"\"{p}\"";
+				Logger (TraceLevel.Verbose, $"standard output: {result.StandardOutput}");
+				Logger (TraceLevel.Verbose, $"standard error: {result.StandardError}");
 			}
 		}
 

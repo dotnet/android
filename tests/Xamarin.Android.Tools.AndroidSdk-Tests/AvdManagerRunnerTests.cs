@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -124,6 +126,42 @@ public class AvdManagerRunnerTests
 	}
 
 	[Test]
+	[Platform ("Linux,MacOsX")]
+	public async Task GetOrCreateAvdAsync_FeedsNoClosesInputAndPreservesTheAvdArgument ()
+	{
+		var directory = Path.Combine (Path.GetTempPath (), $"avd-native-{Guid.NewGuid ():N}");
+		Directory.CreateDirectory (directory);
+		var executable = Path.Combine (directory, "avdmanager");
+		try {
+			File.WriteAllText (executable, """
+				#!/bin/sh
+				if [ "$1" = "create" ]; then
+				    printf '%s\n' "$@" > "$0.arguments"
+				    IFS= read -r answer
+				    [ "$answer" = "no" ] || exit 7
+				    [ -z "$(cat)" ] || exit 8
+				    exit 0
+				fi
+				printf 'Name: AVD with spaces\nPath: /fake/avd\n'
+				""");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (5));
+			var runner = new AvdManagerRunner (executable);
+			var avd = await runner.GetOrCreateAvdAsync ("AVD with spaces", "system-images;android-37;google_apis;arm64-v8a",
+				force: true, cancellationToken: deadline.Token);
+			Assert.AreEqual ("AVD with spaces", avd.Name);
+			CollectionAssert.AreEqual (
+				new [] { "create", "avd", "-n", "AVD with spaces", "-k", "system-images;android-37;google_apis;arm64-v8a", "--force" },
+				File.ReadAllLines (executable + ".arguments"));
+		} finally {
+			File.Delete (executable + ".arguments");
+			File.Delete (executable);
+			Directory.Delete (directory);
+		}
+	}
+
+	[Test]
 	public void ParseAvdListOutput_MultipleAvds ()
 	{
 		var output =
@@ -219,7 +257,7 @@ public class AvdManagerRunnerTests
 			var avdMgrName = OS.IsWindows ? "avdmanager.bat" : "avdmanager";
 			File.WriteAllText (Path.Combine (binDir, avdMgrName), "");
 
-			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
+			var path = CommandLineToolsResolver.Find (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "")?.Path;
 			Assert.That (path, Does.Contain ("12.0"));
 		} finally {
 			Directory.Delete (tempDir, true);
@@ -240,7 +278,7 @@ public class AvdManagerRunnerTests
 		File.WriteAllText (Path.Combine (binDir12, avdMgrName), "");
 
 		try {
-			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
+			var path = CommandLineToolsResolver.Find (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "")?.Path;
 			Assert.That (path, Does.Contain ("12.0"));
 		} finally {
 			Directory.Delete (tempDir, true);
@@ -262,7 +300,7 @@ public class AvdManagerRunnerTests
 		File.WriteAllText (Path.Combine (binDirRc, avdMgrName), "");
 
 		try {
-			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
+			var path = CommandLineToolsResolver.Find (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "")?.Path;
 			Assert.That (path, Does.Contain ("13.0-rc1"));
 		} finally {
 			Directory.Delete (tempDir, true);
@@ -280,7 +318,7 @@ public class AvdManagerRunnerTests
 			var avdMgrName = OS.IsWindows ? "avdmanager.bat" : "avdmanager";
 			File.WriteAllText (Path.Combine (binDir, avdMgrName), "");
 
-			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
+			var path = CommandLineToolsResolver.Find (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "")?.Path;
 			Assert.That (path, Does.Contain ("latest"));
 		} finally {
 			Directory.Delete (tempDir, true);
@@ -290,7 +328,7 @@ public class AvdManagerRunnerTests
 	[Test]
 	public void FindCmdlineTool_MissingSdk_ReturnsNull ()
 	{
-		var path = ProcessUtils.FindCmdlineTool ("/nonexistent/path", "avdmanager", OS.IsWindows ? ".bat" : "");
+		var path = CommandLineToolsResolver.Find ("/nonexistent/path", "avdmanager", OS.IsWindows ? ".bat" : "")?.Path;
 		Assert.IsNull (path);
 	}
 
@@ -344,7 +382,7 @@ public class AvdManagerRunnerTests
 		File.WriteAllText (Path.Combine (binDirRc, avdMgrName), "");
 
 		try {
-			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
+			var path = CommandLineToolsResolver.Find (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "")?.Path;
 			Assert.That (path, Does.Contain (Path.Combine ("13.0", "bin")));
 		} finally {
 			Directory.Delete (tempDir, true);

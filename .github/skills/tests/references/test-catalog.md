@@ -34,7 +34,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator** | `tests/generator-Tests/` | `dotnet test tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
+| **android sdk tools (.NET 11)** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal` |
 
 The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
 NativeAOT offset-based property reader. Its native probe memory-maps the generated

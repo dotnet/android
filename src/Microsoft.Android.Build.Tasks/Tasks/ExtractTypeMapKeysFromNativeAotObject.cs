@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
@@ -81,16 +83,21 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 
 	protected virtual async Task<string> ReadObjectMetadataAsync (string objectFile)
 	{
-		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-		var startInfo = ProcessUtils.CreateProcessStartInfo (LlvmReadObjPath,
-			"--elf-output-style=JSON", "--file-headers", "--sections", Path.GetFullPath (objectFile));
-		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
-		if (exitCode != 0) {
-			throw new InvalidOperationException ($"llvm-readobj exited with code {exitCode}: {stderr}");
+		CancellationToken.ThrowIfCancellationRequested ();
+		var startInfo = new ProcessStartInfo (LlvmReadObjPath) {
+			ArgumentList = { "--elf-output-style=JSON", "--file-headers", "--sections", Path.GetFullPath (objectFile) },
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		var capture = await Process.RunAndCaptureTextAsync (startInfo, CancellationToken).ConfigureAwait (false);
+		CancellationToken.ThrowIfCancellationRequested ();
+		if (capture.ExitStatus.ExitCode != 0) {
+			throw new InvalidOperationException ($"llvm-readobj exited with code {capture.ExitStatus.ExitCode}: {capture.StandardError}");
 		}
 
-		using var document = JsonDocument.Parse (stdout.ToString ());
+		using var document = JsonDocument.Parse (capture.StandardOutput);
 		if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength () != 1) {
 			throw new BadImageFormatException ("Expected llvm-readobj metadata for one native object.");
 		}
@@ -176,11 +183,36 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 		if (!File.Exists (objdump)) {
 			throw new FileNotFoundException ("llvm-objdump is required alongside llvm-readobj.", objdump);
 		}
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-		var startInfo = ProcessUtils.CreateProcessStartInfo (objdump, arguments);
-		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
-		if (exitCode != 0) {
-			throw new InvalidOperationException ($"llvm-objdump exited with code {exitCode}: {stderr}");
+		CancellationToken.ThrowIfCancellationRequested ();
+		var startInfo = new ProcessStartInfo (objdump) {
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		foreach (var argument in arguments)
+			startInfo.ArgumentList.Add (argument);
+		using var process = new Process { StartInfo = startInfo };
+		process.Start ();
+		using var execution = CancellationTokenSource.CreateLinkedTokenSource (CancellationToken);
+		var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+		var stderr = new StringBuilder ();
+		try {
+			await foreach (var line in process.ReadAllLinesAsync (execution.Token).ConfigureAwait (false)) {
+				if (line.StandardError)
+					stderr.AppendLine (line.Content);
+				else
+					stdout.WriteLine (line.Content);
+			}
+			var status = await exit.WaitAsync (CancellationToken).ConfigureAwait (false);
+			CancellationToken.ThrowIfCancellationRequested ();
+			if (status.ExitCode != 0)
+				throw new InvalidOperationException ($"llvm-objdump exited with code {status.ExitCode}: {stderr}");
+		} finally {
+			execution.Cancel ();
+			process.StandardOutput.Dispose ();
+			process.StandardError.Dispose ();
+			await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
 		}
 	}
 

@@ -74,7 +74,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 
 			// Ensure our output directory exists
-			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
+			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile) ?? throw new InvalidOperationException ("Binding output path must have a directory."));
 
 			return base.RunTask ();
 		}
@@ -140,7 +140,8 @@ namespace Xamarin.Android.Tasks
 				foreach (var doc in JavaDocs) {
 					var opt = GetJavadocOption (doc.ItemSpec);
 					if (opt != null)
-						cmd.AppendSwitchIfNotNull (opt, Path.GetFullPath (Path.GetDirectoryName (doc.ItemSpec)));
+						cmd.AppendSwitchIfNotNull (opt, Path.GetFullPath (Path.GetDirectoryName (doc.ItemSpec) ??
+							throw new InvalidOperationException ($"Javadoc path has no directory: {doc.ItemSpec}")));
 				}
 			return cmd.ToString ();
 		}

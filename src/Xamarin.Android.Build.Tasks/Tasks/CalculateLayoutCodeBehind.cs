@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tasks
 		{
 			widgetWithId = XPathExpression.Compile ("//*[@android:id and string-length(@android:id) != 0] | //include[not(@android:id)]");
 
-			GenerateLayoutBindings.BindingGeneratorLanguage gen;
+			GenerateLayoutBindings.BindingGeneratorLanguage? gen;
 			if (!GenerateLayoutBindings.KnownBindingGenerators.TryGetValue (OutputLanguage, out gen) || gen == null) {
 				LogDebugMessage ($"Language {OutputLanguage} isn't supported, will use {GenerateLayoutBindings.DefaultOutputGenerator.Name} instead");
 				sourceFileExtension = GenerateLayoutBindings.DefaultOutputGenerator.Extension;
@@ -211,7 +211,7 @@ namespace Xamarin.Android.Tasks
 				if (skipFirst)
 					continue;
 
-				XPathNavigator current = nodes.Current;
+				XPathNavigator current = nodes.Current ?? throw new InvalidOperationException ("The layout iterator has no current node.");
 
 				// <merge> anywhere is ignored - Android always returns 'null' if you try to find such
 				// an element. Prevents https://github.com/dotnet/android/issues/1929
@@ -409,8 +409,7 @@ namespace Xamarin.Android.Tasks
 			if (typeName == null)
 				return false;
 				
-			string newType;
-			if (knownTypeNameFixups.TryGetValue (typeName, out newType)) {
+			if (knownTypeNameFixups.TryGetValue (typeName, out var newType)) {
 				typeName = newType;
 				return true;
 			}
@@ -552,8 +551,7 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			string groupName = Path.GetFileNameWithoutExtension (filePath);
-			LayoutGroup group;
-			if (!layoutsByName.TryGetValue (groupName, out group) || group == null) {
+			if (!layoutsByName.TryGetValue (groupName, out var group) || group == null) {
 				group = new LayoutGroup {
 					InputItems = new List<ITaskItem> ()
 				};

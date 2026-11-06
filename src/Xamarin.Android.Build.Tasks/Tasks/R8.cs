@@ -171,6 +171,7 @@ namespace Xamarin.Android.Tasks
 					// User-authored AndroidJavaSource (Bind != true) has no managed peer
 					// and is absent from that map, so keep it here explicitly; otherwise R8 shrinks it away
 					// (e.g. dropping large unreferenced sources so an app that needs multidex no longer does).
+					ArgumentNullException.ThrowIfNull (ProguardGeneratedApplicationConfiguration);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						appcfg.WriteLine ("# Class keep rules are generated from retained typemap keys.");
 						foreach (var java in GetUserJavaTypes ()) {
@@ -184,6 +185,7 @@ namespace Xamarin.Android.Tasks
 						javaTypes.Add (v);
 					}
 					javaTypes.Sort (StringComparer.Ordinal);
+					ArgumentNullException.ThrowIfNull (ProguardGeneratedApplicationConfiguration);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
 							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");

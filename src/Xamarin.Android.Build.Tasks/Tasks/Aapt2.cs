@@ -71,6 +71,7 @@ namespace Xamarin.Android.Tasks {
 
 		protected string GenerateFullPathToTool ()
 		{
+			ArgumentNullException.ThrowIfNull (ToolPath);
 			return Path.Combine (ToolPath, ToolExe.IsNullOrEmpty () ? ToolName : ToolExe);
 		}
 

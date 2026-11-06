@@ -65,33 +65,11 @@ public partial class SdkManager
 
 		logger (TraceLevel.Verbose, "Checking for pending licenses...");
 
-		var envVars = AndroidEnvironmentHelper.GetEnvironmentVariables (AndroidSdkPath, JavaSdkPath);
-
-		// Run --licenses without auto-accept to get the license text
-		var psi = ProcessUtils.CreateProcessStartInfo (sdkManagerPath, "--licenses");
-		psi.RedirectStandardInput = true;
-
-		using var stdout = new StringWriter ();
-		using var stderr = new StringWriter ();
-
-		// Send 'n' to decline all licenses so we just get the text
-		Action<Process> onStarted = process => {
-			Task.Run (async () => {
-				try {
-					while (!process.HasExited && !cancellationToken.IsCancellationRequested) {
-						process.StandardInput.WriteLine ("n");
-						await Task.Delay (StdinPollDelayMs, cancellationToken).ConfigureAwait (false);
-					}
-				}
-				catch (Exception ex) {
-					// Process may have exited - expected behavior when process completes
-					logger (TraceLevel.Verbose, $"License check loop ended: {ex.GetType ().Name}");
-				}
-			}, cancellationToken);
-		};
-
+		string stdout = "";
 		try {
-			await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, envVars, onStarted).ConfigureAwait (false);
+			// The sdkmanager owner feeds 'n' and observes the input loop while capturing both pipes.
+			var result = await RunSdkManagerAsync (sdkManagerPath, ["--licenses"], cancellationToken: cancellationToken).ConfigureAwait (false);
+			stdout = result.Stdout;
 		}
 		catch (OperationCanceledException) {
 			throw;
@@ -101,7 +79,7 @@ public partial class SdkManager
 			logger (TraceLevel.Verbose, $"License check exited non-zero (expected): {ex.GetType ().Name}");
 		}
 
-		return ParseLicenseOutput (stdout.ToString ());
+		return ParseLicenseOutput (stdout);
 	}
 
 	/// <summary>

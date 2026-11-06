@@ -185,5 +185,7 @@ try { [xml]$x = Get-Content path\to\File.targets; "ok" } catch { "INVALID: $($_.
 * `$(UndefinedProperty.Contains('x'))` safely evaluates to `false`; no null check is needed.
 * `@(X->Distinct())` is a valid item function and is the right way to dedupe overlapping item lists.
 * Add generated files to `@(FileWrites)` so `Clean` removes them.
-* Use `TaskFactory="TaskHostFactory"` and `Runtime="NET"` on `<UsingTask/>` for **internal**
-  build-time tasks (`xa-prep-tasks`, `BootstrapTasks`) only — never on tasks shipped to customers.
+* Native .NET tasks use paired `<UsingTask/>` registrations: `Runtime="NET"` and
+  `TaskFactory="TaskHostFactory"` only for `MSBuildRuntimeType == 'Full'`, and
+  `Runtime="NET"` without a factory for `MSBuildRuntimeType == 'Core'`.
+  Preserve this pattern in internal bootstrap and shipped native task registrations.

@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks
 			CodeTypeDeclaration? resources = null;
 
 			using (var reader = File.OpenText (file)) {
-				string line;
+				string? line;
 
 				while ((line = reader.ReadLine ()) != null) {
 					var info = Parser.Select (p => new { Match = p.Key.Match (line), Handler = p.Value }).FirstOrDefault (x => x.Match.Success);
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 								new CodeAttributeArgument(
 									new CodePrimitiveExpression(asm.Name)),
 								new CodeAttributeArgument(
-									new CodePrimitiveExpression(asm.Version.ToString()))
+									new CodePrimitiveExpression((asm.Version ?? throw new InvalidOperationException ("Resource parser assembly version is unavailable.")).ToString()))
 							);
 						decl.CustomAttributes.Add(codeAttrDecl);
 						return decl;

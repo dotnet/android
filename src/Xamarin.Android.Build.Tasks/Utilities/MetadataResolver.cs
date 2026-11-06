@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tasks
 		public MetadataReader GetAssemblyReader (string assemblyName)
 		{
 			var assemblyPath = Resolve (assemblyName);
-			if (!cache.TryGetValue (assemblyPath, out PEReader reader)) {
+			if (!cache.TryGetValue (assemblyPath, out var reader)) {
 				reader = new PEReader (File.OpenRead (assemblyPath));
 				if (!reader.HasMetadata) {
 					reader.Dispose ();

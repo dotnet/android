@@ -79,6 +79,7 @@ namespace Xamarin.Android.Tasks
 
 			var javaPlatformDirectory = Path.GetDirectoryName (JavaPlatformJarPath);
 
+			ArgumentNullException.ThrowIfNull (CaseMapFile);
 			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
 			// Parse out the resources from the R.java file
@@ -237,12 +238,10 @@ namespace Xamarin.Android.Tasks
 			from = NormalizeAlternative (from);
 			to = NormalizeAlternative (to);
 
-			string curTo;
-
-			if (resource_fixup.TryGetValue (from, out curTo)) {
+			if (resource_fixup.TryGetValue (from, out var curTo)) {
 				if (string.Compare (to, curTo, StringComparison.OrdinalIgnoreCase) != 0) {
 					var ext = Path.GetExtension (android);
-					var dir = Path.GetDirectoryName (user);
+					var dir = Path.GetDirectoryName (user) ?? throw new InvalidOperationException ($"Resource path has no directory: {user}");
 
 					Log.LogDebugMessage ("Resource target names differ; got '{0}', expected '{1}'.",
 						Path.Combine (dir, Path.GetFileName (to) + ext),

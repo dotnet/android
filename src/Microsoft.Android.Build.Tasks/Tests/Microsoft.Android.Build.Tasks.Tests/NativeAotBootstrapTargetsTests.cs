@@ -20,6 +20,26 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 	static string TargetsPath => Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
 		"src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.NativeAOT.targets");
 
+	[TestCase ("src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets", "Microsoft.Android.Tasks.GetAndroidPackageName")]
+	[TestCase ("src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets", "Microsoft.Android.Tasks.BuildArchive")]
+	[TestCase ("src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets", "Microsoft.Android.Tasks.CompressAssemblies")]
+	[TestCase ("src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable.targets", "Microsoft.Android.Tasks.GenerateTrimmableTypeMap")]
+	[TestCase ("src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets",
+		"Microsoft.Android.Tasks.GenerateMissingTypeMapStubs")]
+	public void NativeTaskFactoryIsOnlyUsedByFullMSBuild (string relativePath, string taskName)
+	{
+		var document = XDocument.Load (Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (), relativePath));
+		var registrations = document.Descendants ().Where (element =>
+			element.Name.LocalName == "UsingTask" && (string?)element.Attribute ("TaskName") == taskName).ToArray ();
+		Assert.AreEqual (2, registrations.Length, "Full and Core MSBuild must have separate task registrations.");
+		Assert.That (registrations.Select (registration => (string?)registration.Attribute ("Runtime")), Is.All.EqualTo ("NET"));
+		Assert.AreEqual ((string?)registrations [0].Attribute ("AssemblyFile"), (string?)registrations [1].Attribute ("AssemblyFile"));
+		var full = registrations.Single (registration => (string?)registration.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Full' ");
+		Assert.AreEqual ("TaskHostFactory", (string?)full.Attribute ("TaskFactory"));
+		var core = registrations.Single (registration => (string?)registration.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Core' ");
+		Assert.IsNull (core.Attribute ("TaskFactory"), ".NET MSBuild must load the task directly.");
+	}
+
 	[Test]
 	public void CoreClrBootstrapGenerationIsIndependentOfPackageManagerJava ()
 	{

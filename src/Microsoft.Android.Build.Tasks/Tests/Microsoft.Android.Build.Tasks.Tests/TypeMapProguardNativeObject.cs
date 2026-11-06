@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using NUnit.Framework;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -63,13 +62,16 @@ static class TypeMapProguardNativeObject
 			""");
 		File.WriteAllText (sourcePath, source.ToString (), new UTF8Encoding (false));
 
-		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-		var startInfo = ProcessUtils.CreateProcessStartInfo (clang,
-			"--target=aarch64-linux-android", "-c", "-x", "assembler", sourcePath, "-o", objectPath);
-		int exitCode = ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken.None).GetAwaiter ().GetResult ();
-		if (exitCode != 0) {
-			throw new InvalidOperationException ($"clang exited with code {exitCode}: {stderr}{stdout}");
+		var startInfo = new ProcessStartInfo (clang) {
+			ArgumentList = { "--target=aarch64-linux-android", "-c", "-x", "assembler", sourcePath, "-o", objectPath },
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		var result = Process.RunAndCaptureText (startInfo);
+		if (result.ExitStatus.ExitCode != 0) {
+			throw new InvalidOperationException ($"clang exited with code {result.ExitStatus.ExitCode}: {result.StandardError}{result.StandardOutput}");
 		}
 		return objectPath;
 	}

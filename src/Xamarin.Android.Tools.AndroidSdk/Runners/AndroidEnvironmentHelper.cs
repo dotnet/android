@@ -9,13 +9,13 @@ namespace Xamarin.Android.Tools;
 
 /// <summary>
 /// Helper for building environment variables for Android SDK tools.
-/// Returns a dictionary that can be passed to <see cref="ProcessUtils.StartProcess"/>.
+/// Returns environment overrides for <see cref="System.Diagnostics.ProcessStartInfo.Environment"/>.
 /// </summary>
 internal static class AndroidEnvironmentHelper
 {
 	/// <summary>
 	/// Builds environment variables needed to run Android SDK tools.
-	/// Pass the result to <see cref="ProcessUtils.StartProcess"/> via the environmentVariables parameter.
+	/// Apply the result to the owning tool's process start information.
 	/// </summary>
 	internal static Dictionary<string, string> GetEnvironmentVariables (string? sdkPath, string? jdkPath)
 	{

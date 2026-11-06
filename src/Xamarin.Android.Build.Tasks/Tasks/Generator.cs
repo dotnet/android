@@ -87,7 +87,7 @@ namespace Xamarin.Android.Tasks
 					try {
 						var doc = XDocument.Load (fixup.ItemSpec);
 
-						switch (doc.Root.Name.LocalName) {
+						switch ((doc.Root ?? throw new System.Xml.XmlException ($"Transform XML has no root element: {fixup.ItemSpec}")).Name.LocalName) {
 							case "metadata":
 								Log.LogDebugMessage ("Adding transform file {0} as metadata.", fixup.ItemSpec);
 								transform_files.Add (new Tuple<string, string> (fixup.ItemSpec, "fixup"));

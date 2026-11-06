@@ -8,7 +8,7 @@
   <Import Project="$(XamarinAndroidSourcePath)build-tools\banned-apis\banned-apis.targets" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
@@ -31,11 +31,7 @@
     <PackageReference Include="Irony" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
-    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
-    <PackageReference Include="System.Runtime" Version="4.3.1" />
-    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="System.Text.Json" Version="8.0.6" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
 
@@ -108,9 +104,6 @@
     </Compile>
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\utils\NullableAttributes.cs">
-      <Link>Utilities\NullableAttributes.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
       <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
