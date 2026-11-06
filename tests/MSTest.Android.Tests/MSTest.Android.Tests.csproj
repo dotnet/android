@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Shared.props" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>net.dot.android.mstestproof</ApplicationId>
+    <AndroidInstrumentation>net.dot.android.mstestproof.Instrumentation</AndroidInstrumentation>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <AndroidUseInstrumentation>true</AndroidUseInstrumentation>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Libraries\**\*.cs" />
+    <Compile Include="..\..\src\Microsoft.Android.Run\InstrumentationProtocol.cs" Link="InstrumentationProtocol.cs" />
+    <ProjectReference Include="Libraries\JavaInterop\MSTest.Android.JavaInterop.Tests.csproj" />
+    <ProjectReference Include="Libraries\TestLibrary\MSTest.Android.TestLibrary.Tests.csproj" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" Publish="true" />
+    <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
+  </ItemGroup>
+</Project>
