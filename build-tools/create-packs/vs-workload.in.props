@@ -18,7 +18,8 @@
     <WorkloadPackages Include="$(NuGetPackagePath)\Microsoft.NET.Sdk.Android.Manifest*.nupkg" Version="@WORKLOAD_VERSION@" SupportsMachineArch="true" />
   </ItemGroup>
 
-  <!-- Leave older manifest bands and previews on their existing numbering. -->
+  <!-- Adding 100 to the product major keeps stable MSIs above shipped previews.
+       MSI major <= 255 limits the product major to 155 (255 - 100). -->
   <Target Name="_AndroidSetStableManifestMsiVersion"
       BeforeTargets="_SetMsiVersionFromNuGetVersion;_CreateManifestMsiVersionsWithDateTime;_SetStableMsiVersions;_SetPreviewMsiVersions">
     <ItemGroup>
