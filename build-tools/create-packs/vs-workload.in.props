@@ -17,4 +17,29 @@
     <ComponentResources Include="android" Version="@WORKLOAD_VERSION@" Category=".NET" Title=".NET SDK for Android" Description=".NET SDK Workload for building Android applications."/>
     <WorkloadPackages Include="$(NuGetPackagePath)\Microsoft.NET.Sdk.Android.Manifest*.nupkg" Version="@WORKLOAD_VERSION@" SupportsMachineArch="true" />
   </ItemGroup>
+
+  <!-- Both MSI conversion pipelines import this file. Keep stable net11 installers
+       above the encoded RC versions without restricting the product patch to 4 bits. -->
+  <Target Name="_AndroidSetStableManifestMsiVersion"
+      BeforeTargets="_SetMsiVersionFromNuGetVersion;_CreateManifestMsiVersionsWithDateTime;_SetStableMsiVersions;_SetPreviewMsiVersions">
+    <ItemGroup>
+      <WorkloadPackages Condition="'%(WorkloadPackages.Filename)' == 'Microsoft.NET.Sdk.Android.Manifest-11.0.100.@PACK_VERSION_LONG@'
+          and '%(WorkloadPackages.MsiVersion)' == ''">
+        <_AndroidMsiMajor>$([MSBuild]::Add($([System.Version]::Parse('%(WorkloadPackages.Version)').Major), 100))</_AndroidMsiMajor>
+        <_AndroidMsiMinor>$([System.Version]::Parse('%(WorkloadPackages.Version)').Minor)</_AndroidMsiMinor>
+        <_AndroidMsiPatch>$([System.Version]::Parse('%(WorkloadPackages.Version)').Build)</_AndroidMsiPatch>
+      </WorkloadPackages>
+    </ItemGroup>
+    <Error
+        Condition="'%(WorkloadPackages._AndroidMsiMajor)' != ''
+          and (%(WorkloadPackages._AndroidMsiMajor) &gt; 255 or %(WorkloadPackages._AndroidMsiMinor) &gt; 255
+            or %(WorkloadPackages._AndroidMsiPatch) &lt; 0 or %(WorkloadPackages._AndroidMsiPatch) &gt; 65535)"
+        Text="The stable Android manifest MSI version %(WorkloadPackages._AndroidMsiMajor).%(WorkloadPackages._AndroidMsiMinor).%(WorkloadPackages._AndroidMsiPatch)
+          for %(WorkloadPackages.Identity) exceeds Windows Installer limits (major/minor: 0-255, patch: 0-65535)." />
+    <ItemGroup>
+      <WorkloadPackages Condition="'%(WorkloadPackages._AndroidMsiMajor)' != ''">
+        <MsiVersion>%(WorkloadPackages._AndroidMsiMajor).%(WorkloadPackages._AndroidMsiMinor).%(WorkloadPackages._AndroidMsiPatch)</MsiVersion>
+      </WorkloadPackages>
+    </ItemGroup>
+  </Target>
 </Project>

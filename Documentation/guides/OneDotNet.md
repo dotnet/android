@@ -329,5 +329,43 @@ This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prerelea
           referencing `*-ci.android-r.*`
 
 
+### Visual Studio manifest installer versions
+
+The stable `Microsoft.NET.Sdk.Android.Manifest-11.0.100` installer uses
+`(product major + 100).product minor.product patch` as its MSI version.
+For example, product `37.2.29` uses MSI `137.2.29`, servicing `37.2.30`
+uses `137.2.30`, and product `38.0.0` uses `138.0.0`. This keeps stable
+installers above the previously shipped encoded RC2 version `40.128.60116`,
+so Visual Studio can upgrade the manifest instead of treating GA as a downgrade.
+
+The rule lives in `build-tools/create-packs/vs-workload.in.props`, which is
+expanded into `vs-workload.props` and imported by both the shared
+`nuget-msi-convert/job/v5.yml` pipeline and the in-repository
+`build-tools/automation/dnceng/arcade/Workloads.proj` converter. It supplies
+`WorkloadPackages.MsiVersion` before either converter chooses a default.
+The converters may still calculate an encoded preview version, but do not
+use that result when `MsiVersion` is already set.
+
+Only this stable manifest installer gets the offset. Explicit MSI metadata
+overrides, preview and older manifest bands, public product/NuGet versions,
+SDK dependencies, and outer drop versions are unchanged.
+Servicing patches are preserved directly, including values above 15 or 255,
+rather than packed into the preview generator's four-bit patch field.
+MSI conversion fails if the derived MSI version exceeds the
+[Windows Installer limits][msi-product-version]: major and minor at most 255,
+patch at most 65535. With the offset, the product major must not exceed 155;
+no component is truncated or wrapped.
+
+Run the focused metadata regression checks without building Android or signing MSIs:
+
+```sh
+dotnet msbuild build-tools/create-packs/tests/ManifestMsiVersionTests.proj -v:minimal
+```
+
+These checks do not replace a signed Windows build and an RC2-to-GA Visual
+Studio upgrade check.
+
+[msi-product-version]: https://learn.microsoft.com/en-us/windows/win32/msi/productversion
+
 [0]: https://github.com/dotnet/installer#installers-and-binaries
 [1]: https://github.com/dotnet/designs/blob/master/accepted/2018/sdk-version-scheme.md
