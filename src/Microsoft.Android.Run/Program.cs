@@ -23,6 +23,7 @@ CancellationTokenSource cts = new ();
 int ctrlCRequested = 0;
 string? logcatArgs = null;
 bool isDotnetTestMode = false;
+string? serverProtocol = null;
 string? dotnetTestPipe = null;
 bool waitForExit = true;
 List<PortMapping> forwardPorts = [];
@@ -70,9 +71,14 @@ async Task<int> RunAsync (string[] args)
 			"The instrumentation {RUNNER} class name (e.g., com.example.myapp.TestInstrumentation). " +
 			"When specified, runs 'am instrument' instead of 'am start'.",
 			v => instrumentation = v },
-		{ "server=",
-			"The test {SERVER} protocol to use (e.g., 'dotnettestcli'). Used by 'dotnet test'.",
-			v => { if (v == "dotnettestcli") isDotnetTestMode = true; } },
+		{ "server:",
+			"Start the MTP test server using {PROTOCOL}: 'jsonrpc' (default) or 'dotnettestcli'.",
+			v => {
+				serverProtocol = v ?? "jsonrpc";
+				if (serverProtocol is not ("jsonrpc" or "dotnettestcli"))
+					throw new OptionException ($"Unknown test server protocol '{serverProtocol}'.", "server");
+				isDotnetTestMode = true;
+			} },
 		{ "dotnet-test-pipe=",
 			"The {PIPE} name for dotnet test communication. Used by 'dotnet test'.",
 			v => dotnetTestPipe = v },
@@ -104,7 +110,18 @@ async Task<int> RunAsync (string[] args)
 
 	List<string> remaining;
 	try {
-		remaining = options.Parse (args);
+		// Mono.Options only accepts optional values after '='. MTP also accepts
+		// '--server jsonrpc', '--server dotnettestcli', and a bare '--server'.
+		var normalizedArgs = new List<string> ();
+		for (int i = 0; i < args.Length; i++) {
+			if (args [i] == "--server" && i + 1 < args.Length && !args [i + 1].StartsWith ("-", StringComparison.Ordinal))
+				normalizedArgs.Add ("--server=" + args [++i]);
+			else
+				normalizedArgs.Add (args [i]);
+		}
+		remaining = options.Parse (normalizedArgs);
+		if (!string.IsNullOrEmpty (instrumentation) && remaining.Contains ("--list-tests"))
+			isDotnetTestMode = true;
 	} catch (OptionException e) {
 		Console.Error.WriteLine ($"Error: {e.Message}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
@@ -198,7 +215,7 @@ async Task<int> RunAsync (string[] args)
 		if (isInstrumentMode)
 			Console.WriteLine ($"Instrumentation runner: {instrumentation}");
 		if (isDotnetTestMode)
-			Console.WriteLine ($"dotnet test mode (pipe: {dotnetTestPipe})");
+			Console.WriteLine ($"MTP test mode (server: {serverProtocol ?? "console"}, pipe: {dotnetTestPipe})");
 	}
 
 	if (!await ConfigurePortMappingsAsync ())
@@ -465,7 +482,7 @@ async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
 		return 1;
 	}
 
-	if (string.IsNullOrEmpty (dotnetTestPipe)) {
+	if (serverProtocol == "dotnettestcli" && string.IsNullOrEmpty (dotnetTestPipe)) {
 		Console.Error.WriteLine ("Error: --dotnet-test-pipe must be specified when using --server dotnettestcli.");
 		return 1;
 	}
@@ -477,12 +494,14 @@ async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
 
 	var validatedAdbPath = adbPath;
 	var validatedInstrumentation = instrumentation;
-	var validatedDotnetTestPipe = dotnetTestPipe;
 	var validatedPackage = package;
 
 	// Re-add the MTP protocol args that Mono.Options consumed,
 	// since MTP needs them to set up the test communication channel.
-	mtpArgs.AddRange (["--server", "dotnettestcli", "--dotnet-test-pipe", validatedDotnetTestPipe]);
+	if (serverProtocol != null)
+		mtpArgs.AddRange (["--server", serverProtocol]);
+	if (dotnetTestPipe != null)
+		mtpArgs.AddRange (["--dotnet-test-pipe", dotnetTestPipe]);
 
 	// MTP defaults its working directory to the DLL location (SDK tools directory),
 	// not Environment.CurrentDirectory. Pass --results-directory explicitly so TRX
