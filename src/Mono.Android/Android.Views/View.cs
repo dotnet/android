@@ -46,7 +46,7 @@ namespace Android.Views {
 
 		public bool Post (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (Post (runnable)) {
 				return true;
 			}
@@ -56,7 +56,7 @@ namespace Android.Views {
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, this);
 			if (PostDelayed (runnable, delayMillis)) {
 				return true;
 			}
@@ -66,26 +66,19 @@ namespace Android.Views {
 
 		public bool RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return false;
-			bool result = RemoveCallbacks (runnable);
-			runnable.Dispose ();
+			bool result = false;
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, runnable => result |= RemoveCallbacks (runnable));
 			return result;
 		}
 
 		public void ScheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what, long when)
 		{
-			ScheduleDrawable (who, new Java.Lang.Thread.RunnableImplementor (what, true), when);
+			ScheduleDrawable (who, new Java.Lang.Thread.RunnableImplementor (what, this, who), when);
 		}
 
 		public void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (what);
-			if (runnable == null)
-				return;
-			UnscheduleDrawable (who, runnable);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (what, this, runnable => UnscheduleDrawable (who, runnable), who);
 		}
 
 #if ANDROID_11
