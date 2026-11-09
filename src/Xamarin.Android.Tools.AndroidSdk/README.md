@@ -39,8 +39,9 @@ text, and `Process.ReadAllLines[Async]` for streaming. This library provides no
 generic process facade or older-runtime implementation.
 
 ADB keeps environment overrides, structured arguments, diagnostics, and its
-per-device protocols at `AdbRunner`. Root exit is distinct from output EOF: the
-ADB owner bounds post-exit capture to 30 seconds and terminates only its owned
+per-device protocols at `AdbRunner`. Root exit is distinct from output EOF:
+`AdbRunner`, FastDeploy and the instrumentation CLI's `AdbHelper` bound
+post-exit capture to 30 seconds and terminate only their owned
 client on cancellation, never a shared server or persistent emulator.
 `EmulatorRunner.LaunchEmulator` still returns a caller-owned persistent process;
 the caller retains responsibility for terminating it.

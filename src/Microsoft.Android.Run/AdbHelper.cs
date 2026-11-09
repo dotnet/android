@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Xamarin.Android.Tools;
 
 static class AdbHelper
@@ -49,8 +53,35 @@ static class AdbHelper
 			Console.WriteLine ($"Running: adb {psi.Arguments}");
 
 		cancellationToken.ThrowIfCancellationRequested ();
-		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken);
-		cancellationToken.ThrowIfCancellationRequested ();
-		return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
+		using var process = new Process { StartInfo = psi };
+		process.Start ();
+		using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		using var reading = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+		var capture = process.ReadAllTextAsync (reading.Token);
+		using var stdout = process.StandardOutput;
+		using var stderr = process.StandardError;
+		try {
+			if (await Task.WhenAny (capture, exit).ConfigureAwait (false) == capture)
+				await capture.ConfigureAwait (false);
+			var status = await exit.WaitAsync (cancellationToken).ConfigureAwait (false);
+			reading.CancelAfter (TimeSpan.FromSeconds (30));
+			var result = await capture.ConfigureAwait (false);
+			cancellationToken.ThrowIfCancellationRequested ();
+			return (status.ExitCode, result.StandardOutput, result.StandardError);
+		} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+			throw new TimeoutException ("The adb client exited, but its redirected output did not close within 30 seconds.");
+		} catch (OperationCanceledException ex) {
+			throw new OperationCanceledException (ex.Message, ex, cancellationToken);
+		} finally {
+			reading.Cancel ();
+			execution.Cancel ();
+			try {
+				await capture.ConfigureAwait (false);
+			} catch (OperationCanceledException) when (reading.IsCancellationRequested) {
+				// Stop client reads without terminating a persistent ADB server.
+			}
+			await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+		}
 	}
 }

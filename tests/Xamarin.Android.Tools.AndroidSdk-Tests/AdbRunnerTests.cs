@@ -1313,8 +1313,9 @@ public class AdbRunnerTests
 		}
 	}
 
-	[Test]
-	public async Task GetShellPropertyAsync_CancellationReleasesInheritedPipesWithoutKillingServer ()
+	[TestCase (true)]
+	[TestCase (false)]
+	public async Task GetShellPropertyAsync_ReleasesInheritedPipesWithoutKillingServer (bool cancel)
 	{
 		var adbPath = CreateFakeAdb ("""
 			sleep 60 &
@@ -1334,11 +1335,19 @@ public class AdbRunnerTests
 			serverPid = int.Parse (File.ReadAllText (adbPath + ".server").Trim ());
 			using var server = Process.GetProcessById (serverPid);
 			Assert.IsFalse (run.IsCompleted, "The server should retain the client output handles.");
-			cancellation.Cancel ();
-			var exception = Assert.CatchAsync<OperationCanceledException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (5)));
-			Assert.IsNotNull (exception);
-			Assert.AreEqual (cancellation.Token, exception.CancellationToken);
-			Assert.IsFalse (server.HasExited, "Cancellation must stop only the owned adb client, not its persistent server.");
+			if (cancel) {
+				cancellation.Cancel ();
+				var exception = Assert.CatchAsync<OperationCanceledException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (5)));
+				Assert.IsNotNull (exception);
+				Assert.AreEqual (cancellation.Token, exception.CancellationToken);
+			} else {
+				var exception = Assert.ThrowsAsync<TimeoutException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (40)));
+				Assert.IsNotNull (exception);
+				StringAssert.Contains ("redirected output", exception.Message);
+				Assert.GreaterOrEqual (deadline.Elapsed, TimeSpan.FromSeconds (29));
+				Assert.IsFalse (cancellation.IsCancellationRequested);
+			}
+			Assert.IsFalse (server.HasExited, "Only the owned adb client may be stopped, not its persistent server.");
 		} finally {
 			if (serverPid > 0) {
 				using var server = Process.GetProcessById (serverPid);

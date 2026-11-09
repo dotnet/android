@@ -791,15 +791,42 @@ namespace Xamarin.Android.Tasks
 			LogDiagnostic ($"adb command: {psi.FileName} {commandLine}");
 
 			CancellationToken.ThrowIfCancellationRequested ();
-			var capture = await System.Diagnostics.Process.RunAndCaptureTextAsync (psi, CancellationToken);
-			CancellationToken.ThrowIfCancellationRequested ();
-			var result = new AdbCommandResult {
-				ExitCode = capture.ExitStatus.ExitCode,
-				StandardOutput = capture.StandardOutput.Trim (),
-				StandardError = capture.StandardError.Trim (),
-			};
-			LogAdbCommandResult (result);
-			return result;
+			using var process = new Process { StartInfo = psi };
+			process.Start ();
+			using var execution = CancellationTokenSource.CreateLinkedTokenSource (CancellationToken);
+			using var reading = CancellationTokenSource.CreateLinkedTokenSource (CancellationToken);
+			var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+			var capture = process.ReadAllTextAsync (reading.Token);
+			using var stdout = process.StandardOutput;
+			using var stderr = process.StandardError;
+			try {
+				if (await Task.WhenAny (capture, exit).ConfigureAwait (false) == capture)
+					await capture.ConfigureAwait (false);
+				var status = await exit.WaitAsync (CancellationToken).ConfigureAwait (false);
+				reading.CancelAfter (TimeSpan.FromSeconds (30));
+				var text = await capture.ConfigureAwait (false);
+				CancellationToken.ThrowIfCancellationRequested ();
+				var result = new AdbCommandResult {
+					ExitCode = status.ExitCode,
+					StandardOutput = text.StandardOutput.Trim (),
+					StandardError = text.StandardError.Trim (),
+				};
+				LogAdbCommandResult (result);
+				return result;
+			} catch (OperationCanceledException) when (!CancellationToken.IsCancellationRequested) {
+				throw new TimeoutException ("The adb client exited, but its redirected output did not close within 30 seconds.");
+			} catch (OperationCanceledException ex) {
+				throw new OperationCanceledException (ex.Message, ex, CancellationToken);
+			} finally {
+				reading.Cancel ();
+				execution.Cancel ();
+				try {
+					await capture.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (reading.IsCancellationRequested) {
+					// Stop client reads without terminating a persistent ADB server.
+				}
+				await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+			}
 		}
 
 		void LogAdbCommandResult (AdbCommandResult result)

@@ -127,9 +127,10 @@ namespace Xamarin.Android.Build.Tests
 			return RunApkDiffCommandAsync (args, logFilePath).GetAwaiter ().GetResult ();
 		}
 
-		static async Task<(int code, string stdOutput, string stdError)> RunApkDiffCommandAsync (string args, string logFilePath)
+		internal static async Task<(int code, string stdOutput, string stdError)> RunApkDiffCommandAsync (
+			string args, string logFilePath, string? executable = null, int? timeout = null)
 		{
-			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
+			var executableName = executable ?? (OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff");
 			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
@@ -138,7 +139,7 @@ namespace Xamarin.Android.Build.Tests
 				RedirectStandardError = true,
 				InheritedHandles = [],
 			};
-			int timeoutInSeconds = TestEnvironment.IsRunningOnCI ? 120 : 30;
+			int timeoutInSeconds = timeout ?? (TestEnvironment.IsRunningOnCI ? 120 : 30);
 			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
 			using var outputDeadline = new CancellationTokenSource ();
 			using var process = Process.Start (info) ?? throw new InvalidOperationException ("Failed to start apkdiff.");
