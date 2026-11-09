@@ -24,6 +24,10 @@ parameters:
   displayName: Run opt-in SourceWriter native MTP host tests
   type: boolean
   default: false
+- name: runNativeMtpHostTestsOnly
+  displayName: Run only SourceWriter native MTP host tests (no SDK or device stages)
+  type: boolean
+  default: false
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
 - name: skipTests                      # Skip all test stages (builds only). Default 'false' so PRs run the full test matrix.
@@ -69,11 +73,11 @@ variables:
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
-- ${{ if eq(parameters.runNativeMtpHostTests, true) }}:
+- ${{ if or(eq(parameters.runNativeMtpHostTests, true), eq(parameters.runNativeMtpHostTestsOnly, true)) }}:
   - stage: native_mtp_host_tests
     displayName: Native MTP host pilot
     dependsOn: []
-    condition: ne(variables['SkipTestStages'], 'true')
+    condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
     jobs:
     - job: sourcewriter_native_mtp
       displayName: SourceWriter native MTP
@@ -105,6 +109,7 @@ stages:
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
+  condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
@@ -141,6 +146,7 @@ stages:
 # Windows Build Stage
 - stage: win_build_test
   displayName: Windows
+  condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   dependsOn: []
   jobs:
   - job: win_build_test
@@ -163,6 +169,7 @@ stages:
 # Linux Build Stage
 - stage: linux_build
   displayName: Linux
+  condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   dependsOn: []
   jobs:
   - job: linux_build_create_sdk_pack
@@ -201,7 +208,7 @@ stages:
         use1ESTemplate: false
 
 # Package Tests Stage
-- ${{ if ne(variables.SkipTestStages, 'true') }}:
+- ${{ if and(ne(variables.SkipTestStages, 'true'), not(parameters.runNativeMtpHostTestsOnly)) }}:
   - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml
     parameters:
       macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
@@ -213,7 +220,7 @@ stages:
   dependsOn: 
   - mac_build
   - linux_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
@@ -309,7 +316,7 @@ stages:
 - stage: msbuild_dotnet
   displayName: MSBuild Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   jobs:
   - job: mac_msbuild_tests
     strategy:
@@ -413,7 +420,7 @@ stages:
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
@@ -471,6 +478,7 @@ stages:
 # Android Tools Tests Stage
 - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
   parameters:
+    condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
     windowsPool:
       name: $(NetCorePublicPoolName)
       demands:
@@ -486,7 +494,7 @@ stages:
 - stage: maui_tests
   displayName: MAUI Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   jobs:
   - job: maui_tests_integration
     displayName: MAUI Integration
