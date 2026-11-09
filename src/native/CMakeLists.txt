@@ -203,7 +203,7 @@ if(IS_CLR_RUNTIME)
     set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../..")
     set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
   else()
-    set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
+    set(RUNTIME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/clr/include/runtime)
   endif()
 endif()
 
