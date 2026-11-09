@@ -8,6 +8,10 @@
     <Nullable>enable</Nullable>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
+    <!-- Use SDK analyzer defaults instead of the repository's legacy severity overrides. -->
+    <DiscoverEditorConfigFiles>false</DiscoverEditorConfigFiles>
   </PropertyGroup>
   
   <Import Project="..\..\Configuration.props" />
