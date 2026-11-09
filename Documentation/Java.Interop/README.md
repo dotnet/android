@@ -32,10 +32,12 @@ For the Android product build, follow the enclosing repository's
 Libraries and command-line tools live in the repository's top-level `src/`,
 tooling tests in `tests/`, and the JNI source generator in
 `build-tools/java-interop-jnienv-gen/`. There is no separate bootstrap project
-or Java.Interop preparation step. Build from the repository root:
+or Java.Interop preparation step. Java.Interop projects are included in
+`Microsoft.Android.slnx`. To build just the generator tooling and its tests,
+use the solution filter from the repository root:
 
 ```
-dotnet build Java.Interop.slnx
+dotnet build src/generator/generator.slnf
 ```
 
 JNI unions and native structs use [`ExtendedLayout`][extended-layout] with
