@@ -2,23 +2,23 @@
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniTypeSignatureAttributeTest
 	{
-		[Test]
+		[TestMethod]
 		public void Constructor_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new JniTypeSignatureAttribute (null));
-			Assert.Throws<ArgumentException> (() => new JniTypeSignatureAttribute ("java.lang.Object"));
-			Assert.Throws<ArgumentException> (() => new JniTypeSignatureAttribute ("[[I"));
-			Assert.Throws<ArgumentException> (() => new JniTypeSignatureAttribute ("Ljava/lang/Object;"));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new JniTypeSignatureAttribute (null));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniTypeSignatureAttribute ("java.lang.Object"));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniTypeSignatureAttribute ("[[I"));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniTypeSignatureAttribute ("Ljava/lang/Object;"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Sanity ()
 		{
 			var a   = new JniTypeSignatureAttribute ("java/lang/Object") {
@@ -28,11 +28,11 @@ namespace Java.InteropTests
 			Assert.AreEqual (2,                     a.ArrayRank);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ArrayRank_Exceptions ()
 		{
 			var a   = new JniTypeSignatureAttribute ("I");
-			Assert.Throws<ArgumentException> (() => a.ArrayRank = -1);
+			Assert.ThrowsExactly<ArgumentException> (() => a.ArrayRank = -1);
 		}
 	}
 }

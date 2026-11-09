@@ -4,11 +4,11 @@ using System.Linq;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaInt32ArrayContractTests : JavaPrimitiveArrayContract<JavaInt32Array, int>
 	{
 		protected override ICollection<int> CreateCollection (IEnumerable<int> values)

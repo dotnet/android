@@ -2,14 +2,14 @@
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniMarshalTests
 	{
-		[Test]
+		[TestMethod]
 		public void RecursiveEquals ()
 		{
 			Assert.IsTrue (JniMarshal.RecursiveEquals (null, null));

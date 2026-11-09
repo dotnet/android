@@ -6,18 +6,18 @@ using Android.Views;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using static Java.InteropTests.TrimmableTypeMapTestHelpers;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("Export")]
-	[Category ("TrimmableTypeMapRuntimeCoverage")]
+	[TestClass]
+	[TestCategory ("Export")]
+	[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
 	public class TrimmableTypeMapExportTests
 	{
-		[Test]
+		[TestMethod]
 		public void OverloadedAndRenamedExports_DispatchByJniNameAndSignature ()
 		{
 			using var peer = new TrimmableExportOverloadPeer ();
@@ -37,7 +37,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (99, JNIEnv.CallIntMethod (peer.Handle, renamedMethod));
 		}
 
-		[Test]
+		[TestMethod]
 		public void InheritedVirtualExport_DispatchesToManagedOverride ()
 		{
 			using var peer = new TrimmableExportDerivedPeer ();
@@ -46,7 +46,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
 		}
 
-		[Test]
+		[TestMethod]
 		public void RenamedInterfaceExport_AndInterfaceCallback_ReachManagedMethod ()
 		{
 			using var listener = new TrimmableExportClickListener ();
@@ -62,7 +62,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (view.Handle, listener.LastViewHandle);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnumExports_MarshalPrimitiveArgumentsAndReturns ()
 		{
 			using var peer = new TrimmableExportEnumPeer ();
@@ -74,7 +74,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (long.MaxValue, JNIEnv.CallLongMethod (peer.Handle, longMethod, new JValue (1L)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CharSequenceAndCollectionExports_MarshalReferenceTypes ()
 		{
 			using var peer = new TrimmableExportReferencePeer ();
@@ -96,7 +96,7 @@ namespace Java.InteropTests
 			Assert.AreEqual ("alpha", list [0]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UserPeerArrayExport_UsesGeneratedElementNameAndRoundTrips ()
 		{
 			using var peer = new TrimmableExportUserArrayPeer ();
@@ -107,7 +107,7 @@ namespace Java.InteropTests
 			try {
 				var arrayName = JNIEnv.GetClassNameFromInstance (input);
 				Assert.IsNotNull (arrayName);
-				StringAssert.EndsWith ("/TrimmableExportUserPeer;", arrayName);
+				StringAssert.EndsWith (arrayName, "/TrimmableExportUserPeer;");
 
 				var method = GetRequiredMethodID (peer.Class.Handle, "echoUserPeers", $"({arrayName}){arrayName}");
 				var output = JNIEnv.CallObjectMethod (peer.Handle, method, new JValue (input));
@@ -138,7 +138,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void StreamExport_MarshalsJavaInputStream ()
 		{
 			using var peer = new TrimmableExportStreamPeer ();
@@ -148,7 +148,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method, new JValue (input.Handle)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NonPublicExports_DispatchFromJava ()
 		{
 			using var peer = new TrimmableExportNonPublicPeer ();
@@ -161,8 +161,8 @@ namespace Java.InteropTests
 			Assert.AreEqual (2, peer.Invocations);
 		}
 
-		[Test]
-		[Category ("JniUtf8Construction")]
+		[TestMethod]
+		[TestCategory ("JniUtf8Construction")]
 		public void ExportConstructor_ForwardsSuperArgumentsToJavaBase ()
 		{
 			TrimmableExportSuperArgsPeer.ConstructorInvocations = 0;

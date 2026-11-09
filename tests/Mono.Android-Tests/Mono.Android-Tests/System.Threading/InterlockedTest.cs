@@ -1,14 +1,14 @@
 using System;
 using System.Threading;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.ThreadingTests {
 
-	[TestFixture]
+	[TestClass]
 	public class InterlockedTest {
 
-		[Test]
+		[TestMethod]
 		public void CAS64 ()
 		{
 			long i = 0, j = 42;

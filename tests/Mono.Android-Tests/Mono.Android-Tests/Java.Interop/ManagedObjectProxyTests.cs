@@ -9,17 +9,17 @@ using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("ManagedObjectProxy")]
+	[TestClass]
+	[TestCategory ("ManagedObjectProxy")]
 	public class ManagedObjectProxyTests
 	{
 		static IntPtr noPinActionPointer;
 
-		[Test]
+		[TestMethod]
 		public void ManagedValueProxyUsesAndroidGCReferenceContract ()
 		{
 			var value = new ManagedValue (42);
@@ -35,7 +35,7 @@ namespace Java.InteropTests
 
 		// Managed reference identity is the common round-trip contract. Java-visible equality,
 		// hashing, and string conversion are asserted separately because they vary by typemap.
-		[Test]
+		[TestMethod]
 		public void JavaObjectArray_RoundTripPreservesManagedReferences ()
 		{
 			var value = new ManagedValue (42);
@@ -56,7 +56,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, ((ManagedValue) values [0]).Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaObjectArray_RepeatedLookupUsesSameJavaAndManagedIdentity ()
 		{
 			var value = new ManagedValue (42);
@@ -85,7 +85,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaLangObjectView_RoundTripUsesManagedProxyAssociation ()
 		{
 			var value = new ManagedValue (42);
@@ -116,7 +116,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaList_RoundTripPreservesDuplicateManagedReferencesAndNull ()
 		{
 			var value = new ManagedValue (42);
@@ -141,7 +141,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (3, values.IndexOf (null));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaDictionary_RoundTripPreservesKeysDuplicateValuesAndNull ()
 		{
 			var firstKey = new ManagedValue (1);
@@ -159,7 +159,7 @@ namespace Java.InteropTests
 			Assert.IsNull (values [null]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaDictionary_DistinctManagedEqualKeysRemainDistinct ()
 		{
 			var firstKey = new ManagedValue (42);
@@ -177,7 +177,7 @@ namespace Java.InteropTests
 			Assert.AreSame (secondValue, values [equalKey]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NestedJavaCollections_RoundTripPreservesManagedReference ()
 		{
 			var value = new ManagedValue (42);
@@ -194,7 +194,7 @@ namespace Java.InteropTests
 
 		// Managed round-trip identity is common to both typemap implementations, but the Java-visible
 		// object methods intentionally differ. See https://github.com/dotnet/android/issues/11703.
-		[Test]
+		[TestMethod]
 		public void ProxyObjectMethodsFollowConfiguredJavaSemantics ()
 		{
 			var value = new ManagedValue (42);
@@ -245,7 +245,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task JavaObjectArrayRetainsManagedValueUntilReleased ()
 		{
 			WeakReference<ManagedValue> weakValue;
@@ -333,7 +333,7 @@ namespace Java.InteropTests
 				stopwatch.Elapsed < timeout);
 
 			int finalBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			Assert.Greater (finalBridgeGeneration, initialBridgeGeneration,
+			Assert.IsGreaterThan (initialBridgeGeneration, finalBridgeGeneration,
 				$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
 				$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
 			Assert.IsTrue (predicate (), message);

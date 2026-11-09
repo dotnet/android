@@ -12,7 +12,7 @@ using Xamarin.Android.UnitTests;
 namespace Xamarin.Android.RuntimeTests
 {
 	[Instrumentation (Name = "xamarin.android.runtimetests.TestInstrumentation")]
-	public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
+	public class TestInstrumentation : MSTestInstrumentation
 	{
 		const string JniReferenceLeakCategory = "JniReferenceLeak";
 
@@ -59,12 +59,6 @@ namespace Xamarin.Android.RuntimeTests
 				var categories = GetIncludedCategories ();
 				return categories.Length > 0 ? categories : null;
 			}
-		}
-
-		static bool IsOnlyIncludedCategory (string category)
-		{
-			var categories = GetIncludedCategories ();
-			return categories.Length == 1 && string.Equals (categories [0], category, StringComparison.Ordinal);
 		}
 
 		static string [] GetIncludedCategories ()

@@ -2,14 +2,14 @@
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectExtensionsTests
 	{
-		[Test]
+		[TestMethod]
 		public void GetJniTypeName ()
 		{
 			using (var o = new JavaObject ()) {
@@ -20,14 +20,14 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetJniTypeName_Exceptions ()
 		{
 			IJavaPeerable o = null;
-			Assert.Throws<ArgumentNullException> (() => o.GetJniTypeName ());
+			Assert.ThrowsExactly<ArgumentNullException> (() => o.GetJniTypeName ());
 			o = new JavaObject ();
 			o.Dispose ();
-			Assert.Throws<ObjectDisposedException> (() => o.GetJniTypeName ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.GetJniTypeName ());
 		}
 	}
 }

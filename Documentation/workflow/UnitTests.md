@@ -9,6 +9,7 @@ Many of the BCL tests for Classic Xamarin.Android rely on an xUnit test runner.
 
  1. [NUnit](https://github.com/nunit/nunit)
  2. [xUnit](https://github.com/xunit/xunit)
+ 3. [MSTest](https://github.com/microsoft/testfx)
 
 # Project Test Types
 
@@ -26,7 +27,7 @@ There are five types of unit tests within this repo:
     MSBuild Integration Tests, these exercise an entire MSBuild "pipeline"
     *and also* install and run the resulting app on-device.
 
- 4. [On-Device Unit Tests](#device-unit-tests): A set of NUnit unit tests which
+ 4. [On-Device Unit Tests](#device-unit-tests): A set of runtime unit tests which
     run on-device.
 
  5. [Other Tests](#other-tests): Tests which don't easily fit into the previous
@@ -391,8 +392,11 @@ public void MyAppShouldRunAndRespondToClick ()
 ## On-Device Unit Tests
 
 There are a category of tests which run on the device itself, these test the
-runtime behaviour. The main runtime tests use stock `NUnit` through Microsoft
-Testing Platform (MTP). We build and install them within the repo, then run
+runtime behaviour. `Mono.Android.NET-Tests`, its referenced `Java.Interop-Tests`
+fixtures, and `Xamarin.Android.JcwGen-Tests` use native MSTest with
+`MSTest.SourceGeneration` through Microsoft Testing Platform (MTP).
+Other NUnit consumers retain their existing runner.
+We build and install them within the repo, then run
 `dotnet test` from the test project directory.
 
 These tests are generally found in:
@@ -416,11 +420,89 @@ For example:
 
 Pass the same `-c` and `-p:` properties to both commands. After running the
 tests, `.trx` result files will be created under `bin/TestDebug/TestResults`.
+Run from the project directory: its `global.json` selects MTP; running the same
+command from the repository root selects a different test command-line parser.
+
+Use `-p:IncludeCategories=Intune` (or another `TestCategory`) on **both** the
+install and test commands for pipeline category selection. The property is
+compiled into the app's runtime configuration, not forwarded as a host filter.
+The host Android adapter does not support arbitrary `--filter` expressions;
+the current project-mode CLI rejects that option. Direct instrumentation
+supports `-e include Category`, `-e exclude Category`, and
+`-e noexclusions true`. Includes are ORed, exclusions are ANDed, and the same
+effective includes govern the dedicated `JniReferenceLeak` opt-in.
+Standalone `-e list` is explicitly unsupported; do not treat it as successful
+NativeAOT discovery.
+
+The shared runner in `tests/TestRunner.MSTest.Android` registers all intended
+fixture assemblies together using `AddMSTest`. The main app registers itself
+and `Java.Interop-Tests`; `Mono.Android-Test.Library.NET` contains no fixtures.
+Packages are scoped to these projects: MSTest/SourceGeneration
+`4.6.0-preview.26524.1` and MTP `2.6.0-preview.26524.1`.
+Inherited lifecycle and `TestContext` are handled by native MSTest, and test
+execution remains nonparallel. General NUnit synchronization-context
+equivalence is not assumed; the actual Android synchronization-context,
+async, lifecycle, and JNI regressions must continue to pass.
+
+### Native metadata and trimming
+
+The runner writes `NativeTestNodes.xml` beside the native TRX under the app's
+external files `TestResults` directory. It records actual registered assembly
+names, native UIDs, method/type metadata, categories, and outcomes. Compare
+canonical discovery identities and multiplicities explicitly, including
+inherited/generic aliases and duplicate data rows; matching totals alone is
+not sufficient. Native source-generated descriptors still report incomplete
+metadata and retain a bounded reflection fallback: this is not a claim that
+all reflection has been eliminated.
+
+The migration baseline at `ba0edabb01dc1e8f0176a96981f4b44773ad1e2c` contains
+1,052 Mono rows: 1,043 selected by default and nine category-excluded rows.
+The default CoreCLR full-trim result is 1,035 passed and eight skipped;
+actual NativeAOT selects 980 rows, with 972 passed and eight skipped.
+The original discovery/streaming identities, all nine exclusions, and the
+32 inherited/generic TRX alias groups must remain accounted for.
+Runtime-dependent skip/pass outcomes are compared to an actual original
+NativeAOT run, not inferred from the CoreCLR results.
+One validation run observed missing `GlobalToWeak` events in
+`ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease`; the unchanged
+APK subsequently passed raw and project-mode execution, followed by three
+strict full-suite repetitions. The failed run is retained, no assertion is
+weakened, and its intermittent cause is not established.
+
+The Mono app and Java.Interop fixture-assembly discovery roots, NUnit
+`NativeAOT.rd.xml`, and NUnit-specific complete type metadata are removed.
+Independent library, StartupHook, converter/reflection, and JNI roots remain.
+In particular, `RegisterMeOnNewNativeThreadOne` is loaded only by its Java
+name from native code and needs its narrow `TrimmerRoots.xml` entry.
+Without that entry, rootless CoreCLR trimming removes the Java class and
+`RegisterTypeOnNewNativeThread` returns `-104`.
+
+JCW has 47 baseline rows (46 passed, one explicit JNI test skipped by
+default). Its whole-app root is intentionally retained. Both original NUnit
+and migrated MSTest NativeAOT apps abort in `JavaAbstractMethodTest` at
+`ic.NewMethod()` (`RhFailFast`), before its catch or `GetMethodBody()` check.
+That pre-existing JNI/runtime blocker is not fixed or hidden by a new
+exclusion; a completed JCW NativeAOT comparison and root removal are not
+claimed. Device evidence currently covers API 35 arm64/CoreCLR and NativeAOT,
+not other ABIs; the selected SDK's missing
+`Microsoft.Android.Sdk.Mono.targets` also prevents a Mono-runtime claim.
+
+Failures retain native messages/stacks, TRX output, test attachments, and
+native exit status (`2` for test failures). Infrastructure failures cancel
+instrumentation instead of returning a successful empty run. Project-mode
+streams results through the existing Android protocol; arbitrary attachment
+files remain in the app's external `TestResults` directory and can be pulled
+with `adb` in addition to the host TRX.
+
+When inspecting compiler-generated metadata, use
+`-p:EmitCompilerGeneratedFiles=true -p:CompilerGeneratedFilesOutputPath=obj/metadata-inspection`.
+Do not emit into Android's `generated` binding directory: its default source
+glob would compile those files again on the next build.
 
 The following is an example unit test.
 
 ```csharp
-[Test]
+[TestMethod]
 public void ApplicationContextIsApp ()
 {
     Assert.IsTrue (Application.Context is App);

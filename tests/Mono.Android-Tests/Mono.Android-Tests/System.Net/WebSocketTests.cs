@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Net.WebSockets;
 using System.Threading;
@@ -8,10 +8,10 @@ using Xamarin.Android.NetTests;
 
 namespace System.NetTests
 {
-	[TestFixture]
+	[TestClass]
 	public class WebSocketTests
 	{
-		[Test, Category ("InetAccess")]
+		[TestMethod, TestCategory ("InetAccess")]
 		public void TestSocketConnection()
 		{
 			string testMessage = "This is a test!";

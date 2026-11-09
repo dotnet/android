@@ -2,18 +2,18 @@
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JniValueMarshalerAttributeTests {
 
-		[Test]
+		[TestMethod]
 		public void Constructor ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new JniValueMarshalerAttribute (null));
-			Assert.Throws<ArgumentException> (() => new JniValueMarshalerAttribute (typeof(int)));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new JniValueMarshalerAttribute (null));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniValueMarshalerAttribute (typeof(int)));
 
 			var a   = new JniValueMarshalerAttribute (typeof (JniInt32ValueMarshaler));
 			Assert.AreEqual (a.MarshalerType, typeof (JniInt32ValueMarshaler));

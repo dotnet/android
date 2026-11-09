@@ -1,6 +1,7 @@
 ﻿<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\TestRunner.MSTest.Android\MSTest.Android.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
@@ -18,7 +19,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
-    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
   </ItemGroup>
 
   <ItemGroup>

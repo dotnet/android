@@ -7,12 +7,12 @@ using System.Threading;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
-	[Category ("PeerControlBlock")]
+	[TestClass]
+	[TestCategory ("PeerControlBlock")]
 	public class JavaPeerControlBlockTests {
 
 		public enum ReferenceState {
@@ -22,14 +22,15 @@ namespace Java.InteropTests {
 			NoBlock,
 		}
 
-		[TestCase (false, ReferenceState.Global)]
-		[TestCase (true, ReferenceState.Global)]
-		[TestCase (false, ReferenceState.Local)]
-		[TestCase (true, ReferenceState.Local)]
-		[TestCase (false, ReferenceState.Invalid)]
-		[TestCase (true, ReferenceState.Invalid)]
-		[TestCase (false, ReferenceState.NoBlock)]
-		[TestCase (true, ReferenceState.NoBlock)]
+		[TestMethod]
+		[DataRow (false, ReferenceState.Global)]
+		[DataRow (true, ReferenceState.Global)]
+		[DataRow (false, ReferenceState.Local)]
+		[DataRow (true, ReferenceState.Local)]
+		[DataRow (false, ReferenceState.Invalid)]
+		[DataRow (true, ReferenceState.Invalid)]
+		[DataRow (false, ReferenceState.NoBlock)]
+		[DataRow (true, ReferenceState.NoBlock)]
 		public unsafe void FinalizePeer_ReleasesControlBlock (bool exception, ReferenceState state)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
@@ -63,8 +64,9 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public unsafe void FinalizePeer_AfterExplicitDisposeDoesNotDoubleFree (bool exception)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
@@ -83,8 +85,9 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void FinalizePeer_ThrowingCallbackReleasesControlBlock (bool exception)
 		{
 			var observation = new FinalizationObservation { ThrowOnFinalize = true };
@@ -92,7 +95,7 @@ namespace Java.InteropTests {
 			var peer = CreatePeer (exception, ref reference, JniObjectReferenceOptions.None, observation);
 			peer.SetPeerReference (default);
 			try {
-				Assert.Throws<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
+				Assert.ThrowsExactly<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
 				Assert.AreEqual (1, observation.FinalizedCount);
 				Assert.IsFalse (observation.ReferenceWasValid);
 				Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
@@ -101,10 +104,11 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
+		[DataRow (true, true)]
 		public unsafe void FinalizePeer_RetainsReferenceReattachedByCallback (bool exception, bool throwingCallback)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
@@ -114,7 +118,7 @@ namespace Java.InteropTests {
 			var peer = CreatePeer (exception, ref reference, JniObjectReferenceOptions.None, observation);
 			try {
 				if (throwingCallback)
-					Assert.Throws<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
+					Assert.ThrowsExactly<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
 				else
 					JniEnvironment.Runtime.ValueManager.FinalizePeer (peer);
 				Assert.AreEqual (1, observation.FinalizedCount);
@@ -133,14 +137,15 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false, false, false)]
-		[TestCase (true, false, false)]
-		[TestCase (false, true, false)]
-		[TestCase (true, true, false)]
-		[TestCase (false, false, true)]
-		[TestCase (true, false, true)]
-		[TestCase (false, true, true)]
-		[TestCase (true, true, true)]
+		[TestMethod]
+		[DataRow (false, false, false)]
+		[DataRow (true, false, false)]
+		[DataRow (false, true, false)]
+		[DataRow (true, true, false)]
+		[DataRow (false, false, true)]
+		[DataRow (true, false, true)]
+		[DataRow (false, true, true)]
+		[DataRow (true, true, true)]
 		public void ActualFinalizer_ReleasesControlBlock (bool exception, bool invalid, bool throwingConstructor)
 		{
 			var observation = new FinalizationObservation ();
@@ -170,8 +175,9 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public unsafe void ExplicitDispose_PreservesCallbackAndReleasesControlBlock (bool exception)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
@@ -191,11 +197,12 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (true, true)]
-		[Category ("JniReferenceLeak")]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
+		[DataRow (true, true)]
+		[TestCategory ("JniReferenceLeak")]
 		public unsafe void ReleasePeer_ReleasesGlobalReference (bool exception, bool finalize)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");

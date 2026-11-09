@@ -11,14 +11,14 @@ using Android.Views;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class ConstructorActivationTests
 	{
-		[Test]
+		[TestMethod]
 		public void JavaSideDefaultConstructorRunsOnceAndRegistersPeer ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -31,9 +31,9 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		[Category ("ManagedConstruction")]
-		[Category ("JniUtf8Construction")]
+		[TestMethod]
+		[TestCategory ("ManagedConstruction")]
+		[TestCategory ("JniUtf8Construction")]
 		public void JavaSideExceptionConstructorCapturesStackFromPreinstalledPeer ()
 		{
 			ConstructorActivationJavaException.Reset ();
@@ -54,15 +54,15 @@ namespace Java.InteropTests
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, instance.PeerReference));
 				Assert.AreEqual (JniObjectReferenceType.Global, instance.PeerReference.Type);
 				Assert.IsNotEmpty (instance.StackAtConstruction, "The base constructor must capture the preinstalled peer's stack.");
-				StringAssert.Contains (ConstructorActivationJavaException.JavaName.Replace ('/', '.'), instance.JavaStackTrace);
+				StringAssert.Contains (instance.JavaStackTrace, ConstructorActivationJavaException.JavaName.Replace ('/', '.'));
 				Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
 			} finally {
 				JNIEnv.DeleteLocalRef (handle);
 			}
 		}
 
-		[Test]
-		[Category ("UnicodeJavaIdentifiers")]
+		[TestMethod]
+		[TestCategory ("UnicodeJavaIdentifiers")]
 		public void JavaSideUnicodeIdentifierConstructorsRunAndRegisterPeers ()
 		{
 			UnicodeLetterIdentifierPeer.Reset ();
@@ -74,7 +74,7 @@ namespace Java.InteropTests
 
 		}
 
-		[Test]
+		[TestMethod]
 		public void ManagedConstructionDoesNotReenterThroughJavaConstructorActivation ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -87,7 +87,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateInstanceDoesNotActivateManagedConstructorInsideNewObjectScope ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -103,8 +103,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		[Category ("InheritedActivationCreateInstance")]
+		[TestMethod]
+		[TestCategory ("InheritedActivationCreateInstance")]
 		public void CreateInstanceWithInheritedActivationCtorDoesNotRegisterPeerInsideNewObjectScope ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -120,8 +120,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		[Category ("JniUtf8Construction")]
+		[TestMethod]
+		[TestCategory ("JniUtf8Construction")]
 		public void JavaSideConstructorReinvokesExistingActivatablePeer ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -138,19 +138,19 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideThrowingConstructorPropagatesException ()
 		{
 			ConstructorActivationThrowing.Reset ();
 
-			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+			var exception = Assert.Throws<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
 			Assert.IsNotNull (exception);
 			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
 			Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
 		}
 
-		[Test]
-		[Category ("ConstructorParity")]
+		[TestMethod]
+		[TestCategory ("ConstructorParity")]
 		public void JavaSideExportConstructorWithThrowsRunsOnce ()
 		{
 			ConstructorActivationWithThrows.Reset ();
@@ -161,7 +161,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideContextConstructorForwardsArgument ()
 		{
 			ConstructorActivationContextView.Reset ();
@@ -175,7 +175,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideContextAttributeSetConstructorForwardsArguments ()
 		{
 			ConstructorActivationAttributeSetView.Reset ();
@@ -191,7 +191,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideContextAttributeSetStyleConstructorForwardsArguments ()
 		{
 			ConstructorActivationStyledView.Reset ();
@@ -209,7 +209,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideBooleanConstructorForwardsTrue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -220,7 +220,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideBooleanConstructorForwardsFalse ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -231,7 +231,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideByteConstructorForwardsSignedValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -242,7 +242,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideCharConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -253,7 +253,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideShortConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -264,7 +264,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -275,7 +275,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideLongConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -286,7 +286,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideFloatConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -297,7 +297,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideDoubleConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -308,7 +308,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSidePrimitiveMixedConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -325,7 +325,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -337,7 +337,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -348,7 +348,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideTwoStringConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -365,7 +365,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideTwoStringConstructorForwardsNullSecondValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -381,7 +381,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringIntConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -397,7 +397,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -406,11 +406,11 @@ namespace Java.InteropTests
 					"([I)V",
 					JNIEnv.NewArray (new [] { 1, 2, 3, 5 }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
+				CollectionAssert.AreEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntArrayConstructorForwardsEmptyArray ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -424,7 +424,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -435,7 +435,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -450,7 +450,7 @@ namespace Java.InteropTests
 							new JValue (array))) {
 						Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
 						Assert.AreEqual ("string-array", instance.StringArrayLabel);
-						Assert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
+						CollectionAssert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
 					}
 				} finally {
 					JNIEnv.DeleteLocalRef (array);
@@ -458,7 +458,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideBooleanArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -467,11 +467,11 @@ namespace Java.InteropTests
 					"([Z)V",
 					JNIEnv.NewArray (new [] { true, false, true }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { true, false, true }, instance.BooleanArrayValue);
+				CollectionAssert.AreEqual (new [] { true, false, true }, instance.BooleanArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideByteArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -480,11 +480,11 @@ namespace Java.InteropTests
 					"([B)V",
 					JNIEnv.NewArray (new byte [] { 1, 127, 255 }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
+				CollectionAssert.AreEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -493,11 +493,11 @@ namespace Java.InteropTests
 					"([Ljava/lang/String;)V",
 					JNIEnv.NewArray (new [] { "red", "green", "blue" }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
+				CollectionAssert.AreEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringArrayConstructorForwardsNullElement ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -506,11 +506,11 @@ namespace Java.InteropTests
 					"([Ljava/lang/String;)V",
 					JNIEnv.NewArray (new [] { "red", null, "blue" }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
+				CollectionAssert.AreEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -521,7 +521,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideObjectArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -538,7 +538,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideObjectArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -549,7 +549,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideNestedIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -562,8 +562,8 @@ namespace Java.InteropTests
 					}))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
 				Assert.IsNotNull (instance.NestedIntArrayValue);
-				Assert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
-				Assert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
+				CollectionAssert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
+				CollectionAssert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
 			}
 		}
 

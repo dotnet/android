@@ -10,18 +10,21 @@ using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[NonParallelizable]
-	[Category ("TransferredReferences")]
+	[TestClass]
+	[DoNotParallelize]
+	[TestCategory ("TransferredReferences")]
 	public class TransferredReferenceTests
 	{
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		public TestContext TestContext { get; set; }
+
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void ObjectConstructionConsumesOnlyTransferredInput (JniHandleOwnership ownership)
 		{
 			WithInput ("java/lang/Object", ownership, (handle, transfer) => {
@@ -33,14 +36,15 @@ namespace Java.InteropTests
 			});
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void ObjectConstructionFailureReleasesInput (JniHandleOwnership ownership)
 		{
 			WithInput ("java/lang/Object", ownership, (handle, transfer) => {
 				try {
-					Assert.Throws<InvalidOperationException> (() => new ConstructionFailurePeer (handle, transfer));
+					Assert.ThrowsExactly<InvalidOperationException> (() => new ConstructionFailurePeer (handle, transfer));
 				} finally {
 					ConstructionFailurePeer.PartialPeer?.Dispose ();
 					ConstructionFailurePeer.PartialPeer = null;
@@ -48,9 +52,10 @@ namespace Java.InteropTests
 			});
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void GetObjectExistingPeerConsumesInput (JniHandleOwnership ownership)
 		{
 			using var existing = new Java.Lang.String ("existing");
@@ -59,12 +64,13 @@ namespace Java.InteropTests
 			});
 		}
 
-		[TestCase (false, JniHandleOwnership.DoNotTransfer)]
-		[TestCase (false, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (false, JniHandleOwnership.TransferGlobalRef)]
-		[TestCase (true, JniHandleOwnership.DoNotTransfer)]
-		[TestCase (true, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (true, JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (false, JniHandleOwnership.DoNotTransfer)]
+		[DataRow (false, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (false, JniHandleOwnership.TransferGlobalRef)]
+		[DataRow (true, JniHandleOwnership.DoNotTransfer)]
+		[DataRow (true, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (true, JniHandleOwnership.TransferGlobalRef)]
 		public void ThrowingJavaInteropActivationReleasesInput (bool directProxy, JniHandleOwnership ownership)
 		{
 			WithInput ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer", ownership, (handle, transfer) => {
@@ -93,22 +99,24 @@ namespace Java.InteropTests
 			});
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void LookupFailureReleasesInput (JniHandleOwnership ownership)
 		{
 			WithInput ("java/lang/Object", ownership, (handle, transfer) => {
-				Assert.Throws<ArgumentException> (() => Java.Lang.Object.GetObject<UnmappedPeer> (handle, transfer));
+				Assert.ThrowsExactly<ArgumentException> (() => Java.Lang.Object.GetObject<UnmappedPeer> (handle, transfer));
 			});
 		}
 
-		[TestCase (false, JniHandleOwnership.DoNotTransfer)]
-		[TestCase (false, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (false, JniHandleOwnership.TransferGlobalRef)]
-		[TestCase (true, JniHandleOwnership.DoNotTransfer)]
-		[TestCase (true, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (true, JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (false, JniHandleOwnership.DoNotTransfer)]
+		[DataRow (false, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (false, JniHandleOwnership.TransferGlobalRef)]
+		[DataRow (true, JniHandleOwnership.DoNotTransfer)]
+		[DataRow (true, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (true, JniHandleOwnership.TransferGlobalRef)]
 		public void ThrowingJavaInteropInvokerReleasesInput (bool inherited, JniHandleOwnership ownership)
 		{
 			WithInput (inherited ? "java/util/ArrayList" : "java/util/HashSet", ownership, (handle, transfer) => {
@@ -127,7 +135,7 @@ namespace Java.InteropTests
 					var type = inherited ? typeof (IInheritedJavaInteropList) : typeof (IJavaInteropCollection);
 					var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (handle, type);
 					Assert.IsNotNull (proxy);
-					Assert.Throws<InvalidOperationException> (() => proxy.CreateInstance (handle, transfer));
+					Assert.ThrowsExactly<InvalidOperationException> (() => proxy.CreateInstance (handle, transfer));
 					Assert.IsNotNull (partial);
 					Assert.IsTrue (partial.PeerReference.IsValid);
 				} finally {
@@ -138,22 +146,24 @@ namespace Java.InteropTests
 			});
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void IncompatibleLookupConsumesInput (JniHandleOwnership ownership)
 		{
 			if (!RuntimeFeature.IsAssignableFromCheck) {
-				Assert.Ignore ("This configuration intentionally disables incompatible-cast checking.");
+				Assert.Inconclusive ("This configuration intentionally disables incompatible-cast checking.");
 			}
 			WithInput ("java/lang/Object", ownership, (handle, transfer) => {
 				Assert.IsNull (Java.Lang.Object.GetObject<Java.Lang.String> (handle, transfer));
 			});
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void JavaInteropProxySuccessCopiesInput (JniHandleOwnership ownership)
 		{
 			WithInput ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer", ownership, (handle, transfer) => {
@@ -168,32 +178,34 @@ namespace Java.InteropTests
 			});
 		}
 
-		[TestCase (1, JniHandleOwnership.TransferGlobalRef)]
-		[TestCase (2, JniHandleOwnership.TransferGlobalRef)]
-		[TestCase (3, JniHandleOwnership.TransferGlobalRef)]
-		[TestCase (4, JniHandleOwnership.TransferGlobalRef)]
-		[TestCase (1, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (2, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (3, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (4, JniHandleOwnership.TransferLocalRef)]
-		[TestCase (1, JniHandleOwnership.DoNotTransfer)]
-		[TestCase (2, JniHandleOwnership.DoNotTransfer)]
-		[TestCase (3, JniHandleOwnership.DoNotTransfer)]
-		[TestCase (4, JniHandleOwnership.DoNotTransfer)]
+		[TestMethod]
+		[DataRow (1, JniHandleOwnership.TransferGlobalRef)]
+		[DataRow (2, JniHandleOwnership.TransferGlobalRef)]
+		[DataRow (3, JniHandleOwnership.TransferGlobalRef)]
+		[DataRow (4, JniHandleOwnership.TransferGlobalRef)]
+		[DataRow (1, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (2, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (3, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (4, JniHandleOwnership.TransferLocalRef)]
+		[DataRow (1, JniHandleOwnership.DoNotTransfer)]
+		[DataRow (2, JniHandleOwnership.DoNotTransfer)]
+		[DataRow (3, JniHandleOwnership.DoNotTransfer)]
+		[DataRow (4, JniHandleOwnership.DoNotTransfer)]
 		public void ThrowableExtractionFailureReleasesInput (int stage, JniHandleOwnership ownership)
 		{
 			AssertThrowableExtractionFailureReleasesInput (stage, ownership, throughRuntime: false);
 		}
 
-		[Test]
+		[TestMethod]
+		[Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialData]
 		public void RuntimeExceptionLookupFailureReleasesInput (
-			[Values (1, 2, 3, 4)] int stage,
-			[Values (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef, JniHandleOwnership.TransferGlobalRef)] JniHandleOwnership ownership)
+			[Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValues (1, 2, 3, 4)] int stage,
+			[Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValues (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef, JniHandleOwnership.TransferGlobalRef)] JniHandleOwnership ownership)
 		{
 			AssertThrowableExtractionFailureReleasesInput (stage, ownership, throughRuntime: true);
 		}
 
-		static void AssertThrowableExtractionFailureReleasesInput (int stage, JniHandleOwnership ownership, bool throughRuntime)
+		void AssertThrowableExtractionFailureReleasesInput (int stage, JniHandleOwnership ownership, bool throughRuntime)
 		{
 			var source = JNIEnv.CreateInstance ("net/dot/android/test/TransferFailureThrowable", "(I)V", new JValue (stage));
 			try {
@@ -212,14 +224,14 @@ namespace Java.InteropTests
 								? JniObjectReferenceType.Global : JniObjectReferenceType.Local);
 							var options = transfer == JniHandleOwnership.DoNotTransfer
 								? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.CopyAndDispose;
-							failure = Assert.Throws<Java.Lang.IllegalStateException> (() =>
+							failure = Assert.ThrowsExactly<Java.Lang.IllegalStateException> (() =>
 								JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, options));
 							Assert.AreEqual (transfer == JniHandleOwnership.DoNotTransfer, reference.IsValid,
 								"Only the borrowed throwable reference should remain valid after extraction fails.");
 						} else {
-							failure = Assert.Throws<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
+							failure = Assert.ThrowsExactly<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
 						}
-						StringAssert.Contains ("transfer-extraction-" + stage, failure.Message);
+						StringAssert.Contains (failure.Message, "transfer-extraction-" + stage);
 						if (stage == 4) {
 							Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (source)),
 								"Failed stack-trace extraction must release the partially constructed wrapper.");
@@ -233,22 +245,24 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void ThrowableSuccessDoesNotDeleteInputPrematurely (JniHandleOwnership ownership)
 		{
 			WithInput ("java/lang/Throwable", ownership, (handle, transfer) => {
 				using var peer = new Java.Lang.Throwable (handle, transfer);
 				Assert.IsTrue (peer.PeerReference.IsValid);
-				StringAssert.Contains ("java.lang.Throwable", peer.StackTrace);
+				StringAssert.Contains (peer.StackTrace, "java.lang.Throwable");
 			});
 		}
 
-		[Test]
+		[TestMethod]
+		[Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialData]
 		public void ThrowableExtractionPreservesEscapingPeer (
-			[Values (5, 6)] int stage,
-			[Values (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef,
+			[Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValues (5, 6)] int stage,
+			[Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValues (JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef,
 				JniHandleOwnership.TransferGlobalRef, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister)] JniHandleOwnership ownership)
 		{
 			var source = JNIEnv.CreateInstance ("net/dot/android/test/TransferFailureThrowable", "(I)V", new JValue (stage));
@@ -260,12 +274,12 @@ namespace Java.InteropTests
 					} finally {
 						JNIEnv.DeleteLocalRef (sourceClass);
 					}
-					var failure = Assert.Catch<System.Exception> (() => new Java.Lang.Throwable (handle, transfer));
+					var failure = Assert.Throws<System.Exception> (() => new Java.Lang.Throwable (handle, transfer));
 					var escaped = (stage == 5 ? failure : failure?.InnerException) as Java.Lang.Throwable;
 					try {
 						Assert.IsNotNull (escaped, "The Java failure must surface the source throwable directly or as its cause.");
 						if (escaped == null)
-							throw new AssertionException ("The escaping Throwable peer is missing.");
+							throw new AssertFailedException ("The escaping Throwable peer is missing.");
 						Assert.IsTrue (escaped.PeerReference.IsValid, "Constructor cleanup must not dispose an escaping peer.");
 						Assert.IsTrue (JNIEnv.IsSameObject (source, escaped.Handle));
 						Assert.AreSame (escaped, JniEnvironment.Runtime.ValueManager.PeekPeer (escaped.PeerReference));
@@ -300,12 +314,13 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
-		[TestCase (JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister)]
-		[TestCase (JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef | JniHandleOwnership.DoNotRegister)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
+		[DataRow (JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister)]
+		[DataRow (JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef | JniHandleOwnership.DoNotRegister)]
 		public void ThrowableConstructionHonorsDoNotRegister (JniHandleOwnership ownership)
 		{
 			WithInput ("java/lang/Throwable", ownership, (handle, transfer) => {
@@ -320,7 +335,7 @@ namespace Java.InteropTests
 			});
 		}
 
-		[Test]
+		[TestMethod]
 		public void ThrowableActivationPreservesExistingReplaceablePeer ()
 		{
 			WithInput ("java/lang/Throwable", JniHandleOwnership.DoNotTransfer, (handle, _) => {
@@ -340,9 +355,10 @@ namespace Java.InteropTests
 			});
 		}
 
-		[TestCase (JniHandleOwnership.DoNotTransfer)]
-		[TestCase (JniHandleOwnership.TransferLocalRef)]
-		[TestCase (JniHandleOwnership.TransferGlobalRef)]
+		[TestMethod]
+		[DataRow (JniHandleOwnership.DoNotTransfer)]
+		[DataRow (JniHandleOwnership.TransferLocalRef)]
+		[DataRow (JniHandleOwnership.TransferGlobalRef)]
 		public void ThrowableDoNotRegisterPreservesReentrantAlias (JniHandleOwnership ownership)
 		{
 			WithInput ("java/lang/Throwable", ownership, (handle, transfer) => {
@@ -364,7 +380,7 @@ namespace Java.InteropTests
 			});
 		}
 
-		[Test]
+		[TestMethod]
 		public void NullHandleReturnsNull ()
 		{
 			foreach (var ownership in new [] { JniHandleOwnership.DoNotTransfer, JniHandleOwnership.TransferLocalRef, JniHandleOwnership.TransferGlobalRef }) {
@@ -372,7 +388,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void WithInput (string className, JniHandleOwnership ownership, Action<IntPtr, JniHandleOwnership> exercise)
+		void WithInput (string className, JniHandleOwnership ownership, Action<IntPtr, JniHandleOwnership> exercise)
 		{
 			var source = JNIEnv.CreateInstance (className, "()V");
 			try {
@@ -382,7 +398,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void WithInput (IntPtr source, JniHandleOwnership ownership, Action<IntPtr, JniHandleOwnership> exercise)
+		void WithInput (IntPtr source, JniHandleOwnership ownership, Action<IntPtr, JniHandleOwnership> exercise)
 		{
 			// Warm class, method, proxy and exception caches without transferring the source.
 			exercise (source, JniHandleOwnership.DoNotTransfer);

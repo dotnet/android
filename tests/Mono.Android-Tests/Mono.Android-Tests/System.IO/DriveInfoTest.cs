@@ -1,14 +1,14 @@
 using System;
 using System.IO;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.IOTests {
 
-	[TestFixture]
+	[TestClass]
 	public class DriveInfoTest {
 
-		[Test]
+		[TestMethod]
 		public void TotalFreeSpace_IsNotInt64_MaxValue ()
 		{
 			foreach (DriveInfo drive in DriveInfo.GetDrives()) {

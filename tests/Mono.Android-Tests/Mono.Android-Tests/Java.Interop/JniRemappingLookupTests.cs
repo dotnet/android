@@ -2,39 +2,41 @@ using System;
 
 using Android.Runtime;
 using Java.Interop;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("NativeAOTIgnore")]
-	[Category ("JniRemapping")]
+	[TestClass]
+	[TestCategory ("NativeAOTIgnore")]
+	[TestCategory ("JniRemapping")]
 	public class JniRemappingLookupTests
 	{
-		[Test]
+		[TestMethod]
 		public void RuntimeFeatureIsEnabledForRemappingInputs ()
 		{
 			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.JniRemapping);
 		}
 
-		[TestCase ("net/dot/android/remap/AsciiFirst", "net/dot/android/remap/TargetFirst")]
-		[TestCase ("net/dot/android/remap/Middle", "net/dot/android/remap/TargetMiddle")]
-		[TestCase ("net/dot/android/remap/Zebra", "net/dot/android/remap/TargetLast")]
-		[TestCase ("net/dot/android/remap/Źródło", "net/dot/android/remap/UnicodeTarget")]
+		[TestMethod]
+		[DataRow ("net/dot/android/remap/AsciiFirst", "net/dot/android/remap/TargetFirst")]
+		[DataRow ("net/dot/android/remap/Middle", "net/dot/android/remap/TargetMiddle")]
+		[DataRow ("net/dot/android/remap/Zebra", "net/dot/android/remap/TargetLast")]
+		[DataRow ("net/dot/android/remap/Źródło", "net/dot/android/remap/UnicodeTarget")]
 		public void ReplacementTypeLookupUsesGeneratedTable (string source, string target)
 		{
 			Assert.AreEqual (target, JniEnvironment.Runtime.TypeManager.GetReplacementType (source));
 		}
 
-		[TestCase ("0/net/dot/android/remap/Before")]
-		[TestCase ("net/dot/android/remap/Between")]
-		[TestCase ("\ue000/net/dot/android/remap/After")]
+		[TestMethod]
+		[DataRow ("0/net/dot/android/remap/Before")]
+		[DataRow ("net/dot/android/remap/Between")]
+		[DataRow ("\ue000/net/dot/android/remap/After")]
 		public void ReplacementTypeLookupReturnsNullOutsideTable (string source)
 		{
 			Assert.IsNull (JniEnvironment.Runtime.TypeManager.GetReplacementType (source));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IncomingRenamedPeerUsesReverseTypeWithTrimmableTypeMap ()
 		{
 			Assert.AreEqual (
@@ -49,27 +51,28 @@ namespace Java.InteropTests
 			try {
 				using var renamedPeer = Java.Lang.Object.GetObject<Java.Lang.Object> (renamedHandle, JniHandleOwnership.DoNotTransfer);
 				using var overlappingPeer = Java.Lang.Object.GetObject<Java.Lang.Object> (overlappingHandle, JniHandleOwnership.DoNotTransfer);
-				Assert.IsInstanceOf<IncomingDeclaredPeer> (renamedPeer);
-				Assert.IsInstanceOf<IncomingWrongPeer> (overlappingPeer);
+				Assert.IsInstanceOfType<IncomingDeclaredPeer> (renamedPeer);
+				Assert.IsInstanceOfType<IncomingWrongPeer> (overlappingPeer);
 			} finally {
 				JNIEnv.DeleteLocalRef (renamedHandle);
 				JNIEnv.DeleteLocalRef (overlappingHandle);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExplicitRuntimeRegistrationIsNotSupported ()
 		{
 #pragma warning disable CS0618 // Verify the retained obsolete API still rejects explicit registration.
-			Assert.Throws<NotSupportedException> (() => global::Java.Interop.TypeManager.RegisterType (
+			Assert.ThrowsExactly<NotSupportedException> (() => global::Java.Interop.TypeManager.RegisterType (
 				ExplicitRegisteredPeer.RuntimeJniName,
 				typeof (ExplicitRegisteredPeer)));
 #pragma warning restore CS0618
 		}
 
-		[TestCase ("(I)I", "exact", "(I)I")]
-		[TestCase ("(I)V", "parameters", "(I)V")]
-		[TestCase ("(J)I", "wildcard", "(J)I")]
+		[TestMethod]
+		[DataRow ("(I)I", "exact", "(I)I")]
+		[DataRow ("(I)V", "parameters", "(I)V")]
+		[DataRow ("(J)I", "wildcard", "(J)I")]
 		public void ReplacementMethodLookupPrefersSpecificSignature (string sourceSignature, string targetName, string targetSignature)
 		{
 			var info = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (
@@ -93,8 +96,9 @@ namespace Java.InteropTests
 			Assert.AreEqual (sourceSignature, replacement.SourceJniMethodSignature);
 		}
 
-		[TestCase ("I", "exactValue", "J")]
-		[TestCase ("J", "wildcardValue", "J")]
+		[TestMethod]
+		[DataRow ("I", "exactValue", "J")]
+		[DataRow ("J", "wildcardValue", "J")]
 		public void ReplacementFieldLookupPrefersSpecificSignature (string sourceSignature, string targetName, string targetSignature)
 		{
 			var info = JniEnvironment.Runtime.TypeManager.GetReplacementFieldInfo (

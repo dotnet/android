@@ -5,14 +5,14 @@ using System.Net;
 using System.Net.NetworkInformation;
 using Java.Net;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MNetworkInterface = System.Net.NetworkInformation.NetworkInterface;
 using JNetworkInterface = Java.Net.NetworkInterface;
 
 namespace System.NetTests
 {
-	[TestFixture]
+	[TestClass]
 	public class NetworkInterfacesTest
 	{
 		sealed class InterfaceInfo
@@ -110,7 +110,7 @@ namespace System.NetTests
 			}
 		}
 
-		[Test, Category ("NetworkInterfaceEquality")]
+		[TestMethod, TestCategory ("NetworkInterfaceEquality")]
 		public void InterfaceInfo_EqualValuesHaveEqualHashCodes ()
 		{
 			var first = new InterfaceInfo {
@@ -136,7 +136,7 @@ namespace System.NetTests
 			}
 		}
 
-		[Test, Category("NetworkInterfaces")]
+		[TestMethod, TestCategory("NetworkInterfaces")]
 		public void DotNetInterfacesShouldEqualJavaInterfaces ()
 		{
 			List <InterfaceInfo> dotnetInterfaces = GetInfos (MNetworkInterface.GetAllNetworkInterfaces ());
@@ -163,7 +163,7 @@ namespace System.NetTests
 				counter++;
 				Assert.IsNotNull (inf, String.Format ("#{0}.1", counter));
 				Assert.IsFalse (String.IsNullOrEmpty (inf.Name), String.Format ("#{0}.2", counter));
-				Assert.IsTrue (javaInterfaces.Contains (inf), "#{0}.3 ({1} not found in Java interfaces)", counter, inf.Name);
+				Assert.IsTrue (javaInterfaces.Contains (inf), $"#{counter}.3 ({inf.Name} not found in Java interfaces)");
 				Console.WriteLine ("Interface {0}: passed", inf.Name);
 			}
 		}

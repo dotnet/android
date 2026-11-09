@@ -9,16 +9,16 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.RuntimeTests;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaConvertTest
 	{
-		[Test]
+		[TestMethod]
 		public void Conversions ()
 		{
 			var entries = new []{
@@ -110,7 +110,7 @@ namespace Java.InteropTests
 			} while (false);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NullStringMarshalsAsIntPtrZero ()
 		{
 			var list = new JavaList<string> ();
@@ -118,7 +118,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, list [0]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void DeleteLocalRefWithDoNotRegister ()
 		{
 			int initialLocalReferenceCount = Java.Interop.Runtime.LocalReferenceCount;
@@ -132,7 +132,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (initialLocalReferenceCount, Java.Interop.Runtime.LocalReferenceCount);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MarshalInt23Array ()
 		{
 			using (var values = new JavaList<int[]>(
@@ -146,7 +146,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ValueManagerConvertsJavaListToPrimitiveIList ()
 		{
 			using (var values = new Java.Util.ArrayList ())
@@ -160,11 +160,11 @@ namespace Java.InteropTests
 				var reference = values.PeerReference;
 				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.Copy);
 
-				CollectionAssert.AreEqual (new [] { true, false }, converted);
+				CollectionAssert.AreEqual (new [] { true, false }, converted.ToArray ());
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void FromJniHandle_IListNullableInt32 ()
 		{
 			using (var source = new JavaList<int?> ()) {
@@ -187,24 +187,25 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ValueManagerConvertsPrimitiveArrayToIList ()
 		{
 			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { true, false }), JniObjectReferenceType.Local);
 			var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.CopyAndDispose);
 
-			CollectionAssert.AreEqual (new [] { true, false }, converted);
+			CollectionAssert.AreEqual (new [] { true, false }, converted.ToArray ());
 		}
 
-		[TestCase (JniObjectReferenceOptions.Copy, true)]
-		[TestCase (JniObjectReferenceOptions.CopyAndDispose, false)]
+		[TestMethod]
+		[DataRow (JniObjectReferenceOptions.Copy, true)]
+		[DataRow (JniObjectReferenceOptions.CopyAndDispose, false)]
 		public void ValueManagerRejectsNonListForPrimitiveIListAndHonorsOwnership (
 			JniObjectReferenceOptions options,
 			bool remainsValid)
 		{
 			var reference = new JniObjectReference (JNIEnv.NewString ("not a list"), JniObjectReferenceType.Local);
 			try {
-				Assert.Throws<InvalidCastException> (() =>
+				Assert.ThrowsExactly<InvalidCastException> (() =>
 					JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, options));
 				Assert.AreEqual (remainsValid, reference.IsValid);
 			} finally {
@@ -212,12 +213,12 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ValueManagerRejectsMismatchedPrimitiveArrayAndDisposesReference ()
 		{
 			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { 1, 2 }), JniObjectReferenceType.Local);
 			try {
-				Assert.Throws<InvalidCastException> (() =>
+				Assert.ThrowsExactly<InvalidCastException> (() =>
 					JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.CopyAndDispose));
 				Assert.IsFalse (reference.IsValid);
 			} finally {
@@ -225,8 +226,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		[Category ("NativeAOTTrimmable")]
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_ValueTypeDictionariesCoverFullPrimitiveProduct ()
 		{
 			AssertValueTypeDictionaryConversion<bool, bool> ();
@@ -574,8 +575,8 @@ namespace Java.InteropTests
 
 		// Keep the source and expected wrapper type open so NativeAOT must root the
 		// JavaDictionary<int?, __Canon> template through ValueTypeFactory's mixed-value exemplar.
-		[Test]
-		[Category ("NativeAOTTrimmable")]
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryNullableInt32String ()
 		{
 			using (var source = new JavaDictionary ()) {
@@ -600,8 +601,8 @@ namespace Java.InteropTests
 		// The non-generic source and assertions intentionally avoid referencing
 		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
 		// the hand-written value-type dictionary universe.
-		[Test]
-		[Category ("NativeAOTTrimmable")]
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryInt32Int64 ()
 		{
 			using (var source = new JavaDictionary ()) {
@@ -619,8 +620,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		[Category ("NativeAOTTrimmable")]
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryNullableDoubleNullableBoolean ()
 		{
 			using (var source = new JavaDictionary ()) {
@@ -638,8 +639,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		[Category ("NativeAOTTrimmable")]
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_JavaDictionaryNullableByteInt16 ()
 		{
 			using (var source = new JavaDictionary ()) {
@@ -658,7 +659,7 @@ namespace Java.InteropTests
 		// Regression: byte-element collections must stay supported on the trimmable typemap path
 		// (ValueTypeFactory maps byte alongside sbyte). byte marshals to java.lang.Byte bitwise, so
 		// values above 127 round-trip through the signed Java byte.
-		[Test]
+		[TestMethod]
 		public void FromJniHandle_IListByte ()
 		{
 			using (var source = new JavaList<byte> ()) {
@@ -681,9 +682,13 @@ namespace Java.InteropTests
 
 		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
 		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
-		[TestCase (typeof (IList<string>), typeof (JavaList<>), false)]
-		[TestCase (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
-		[TestCase (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]
+		[TestMethod]
+
+		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
+		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
+		[DataRow (typeof (IList<string>), typeof (JavaList<>), false)]
+		[DataRow (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
+		[DataRow (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]
 		public void FromJniHandle_ReferenceArgumentsUseCanonicalTemplate (
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type targetType, Type expectedWrapperDefinition, bool dictionary)
@@ -702,15 +707,16 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestCase (typeof (IList<DateTime>), false)]
-		[TestCase (typeof (ICollection<DateTime>), false)]
-		[TestCase (typeof (IDictionary<DateTime, string>), true)]
-		[TestCase (typeof (IDictionary<string, DateTime>), true)]
-		[TestCase (typeof (IList<UnsupportedValueType>), false)]
-		[TestCase (typeof (ICollection<UnsupportedValueType>), false)]
-		[TestCase (typeof (IDictionary<UnsupportedValueType, string>), true)]
-		[TestCase (typeof (IDictionary<string, UnsupportedValueType>), true)]
-		[Category ("NativeAOTTrimmable")]
+		[TestMethod]
+		[DataRow (typeof (IList<DateTime>), false)]
+		[DataRow (typeof (ICollection<DateTime>), false)]
+		[DataRow (typeof (IDictionary<DateTime, string>), true)]
+		[DataRow (typeof (IDictionary<string, DateTime>), true)]
+		[DataRow (typeof (IList<UnsupportedValueType>), false)]
+		[DataRow (typeof (ICollection<UnsupportedValueType>), false)]
+		[DataRow (typeof (IDictionary<UnsupportedValueType, string>), true)]
+		[DataRow (typeof (IDictionary<string, UnsupportedValueType>), true)]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_UnsupportedValueTypeUsesRuntimeSpecificPath (
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type targetType, bool dictionary)

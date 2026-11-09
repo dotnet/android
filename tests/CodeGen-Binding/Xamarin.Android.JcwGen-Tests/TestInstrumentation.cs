@@ -6,7 +6,7 @@ using Xamarin.Android.UnitTests;
 namespace Xamarin.Android.JcwGenTests
 {
 	[Instrumentation (Name = "xamarin.android.jcwgentests.TestInstrumentation")]
-	public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
+	public class TestInstrumentation : MSTestInstrumentation
 	{
 		public TestInstrumentation (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
