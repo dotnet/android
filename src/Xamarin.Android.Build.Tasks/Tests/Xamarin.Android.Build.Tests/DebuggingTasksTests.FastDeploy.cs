@@ -12,8 +12,7 @@ namespace Xamarin.Android.Build.Tests
 				"rm -f files/.__override__/stale.dll",
 				"rm -f files/.__override__/arm64-v8a/Foo.dll",
 				"mkdir -p files/.__override__",
-				"cp -p",
-				"if test -f")] string command,
+				"cp -p")] string command,
 			[Values ("", "error: closed")] string output)
 		{
 			using var device = new FakeAdbDevice ();
