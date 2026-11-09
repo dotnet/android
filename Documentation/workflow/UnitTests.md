@@ -481,6 +481,13 @@ In particular, `RegisterMeOnNewNativeThreadOne` is loaded only by its Java
 name from native code and needs its narrow `TrimmerRoots.xml` entry.
 Without that entry, rootless CoreCLR trimming removes the Java class and
 `RegisterTypeOnNewNativeThread` returns `-104`.
+The three `ExportField` initializers on `ExportStaticField` and
+`ExportInstanceField` also have method-only roots: Java field initialization
+calls them without a managed caller. These preserve JNI behavior, not test
+discovery. Without the primitive static initializer, trimming removes
+`GetAnswer` and the generated Java `ANSWER` field. Check linked IL and Java
+output as well as fresh installed APKs; the Android project test path can
+perform linking, packaging and installation even with `dotnet test --no-build`.
 
 JCW has 47 baseline rows (46 passed, one explicit JNI test skipped by
 default). Its whole-app root is intentionally retained. Both original NUnit
