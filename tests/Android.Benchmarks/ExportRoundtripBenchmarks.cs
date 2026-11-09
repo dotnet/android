@@ -6,7 +6,7 @@ using Java.Interop;
 namespace Xamarin.Android.Benchmarks;
 
 [MemoryDiagnoser]
-public unsafe class ExportRoundtripBenchmarks
+public class ExportRoundtripBenchmarks
 {
 	const int Value = 42;
 	const long State = 0x123456789;
@@ -55,19 +55,27 @@ public unsafe class ExportRoundtripBenchmarks
 	public long JniPrimitiveRoundtrip ()
 	{
 		JValue* arguments = stackalloc JValue [2];
-		arguments [0] = new JValue (Value);
-		arguments [1] = new JValue (State);
-		return JNIEnv.CallLongMethod (peer.Handle, primitiveRoundtripMethod, arguments);
+		unsafe {
+			// SAFETY: both entries fit the stack buffer and match the cached (IJ)J method.
+			// The peer and buffer remain live throughout this synchronous JNI call.
+			arguments [0] = new JValue (Value);
+			arguments [1] = new JValue (State);
+			return JNIEnv.CallLongMethod (peer.Handle, primitiveRoundtripMethod, arguments);
+		}
 	}
 
 	[Benchmark]
 	public long JniStringRoundtrip ()
 	{
 		JValue* arguments = stackalloc JValue [3];
-		arguments [0] = new JValue (Value);
-		arguments [1] = new JValue (State);
-		arguments [2] = new JValue (text);
-		return JNIEnv.CallLongMethod (peer.Handle, stringRoundtripMethod, arguments);
+		unsafe {
+			// SAFETY: all entries fit the stack buffer and match the cached (IJLjava/lang/String;)J method.
+			// The peer, text and buffer remain live throughout this synchronous JNI call.
+			arguments [0] = new JValue (Value);
+			arguments [1] = new JValue (State);
+			arguments [2] = new JValue (text);
+			return JNIEnv.CallLongMethod (peer.Handle, stringRoundtripMethod, arguments);
+		}
 	}
 }
 
