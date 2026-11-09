@@ -1056,18 +1056,50 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 	var timeout = TimeSpan.FromMinutes (5);
 	var timer = Stopwatch.StartNew ();
 	using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{file}'.");
+	using var readCancellation = new CancellationTokenSource ();
+	var stdout = new StringBuilder ();
+	var stderr = new StringBuilder ();
+	// ReadAllText cannot return the captured prefix when EOF times out.
+	var readers = Task.WhenAll (
+		ReadOutputAsync (process.StandardOutput, stdout),
+		ReadOutputAsync (process.StandardError, stderr));
+	int exitCode = -1;
+	bool timedOut = false;
 	try {
-		var (stdout, stderr) = process.ReadAllText (timeout);
 		var remaining = timeout - timer.Elapsed;
-		return process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status)
-			? (status.ExitCode, stdout, stderr)
-			: (-1, stdout, $"{stderr}\n{file} timed out after 5 minutes.");
+		if (process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status)) {
+			exitCode = status.ExitCode;
+			remaining = timeout - timer.Elapsed;
+			readers.WaitAsync (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero).GetAwaiter ().GetResult ();
+		} else {
+			timedOut = true;
+		}
 	} catch (TimeoutException) {
-		return (-1, "", $"{file} timed out after 5 minutes.");
+		timedOut = true;
 	} finally {
-		if (!process.HasExited) {
-			process.Kill (entireProcessTree: true);
-			process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
+		try {
+			if (!process.HasExited) {
+				process.Kill (entireProcessTree: true);
+				process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
+			}
+		} finally {
+			readCancellation.Cancel ();
+			try {
+				readers.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
+			}
+		}
+	}
+	return timedOut
+		? (-1, stdout.ToString (), $"{stderr}\n{file} timed out after 5 minutes.")
+		: (exitCode, stdout.ToString (), stderr.ToString ());
+
+	async Task ReadOutputAsync (StreamReader reader, StringBuilder output)
+	{
+		var buffer = new char [4096];
+		int count;
+		while ((count = await reader.ReadAsync (buffer.AsMemory (), readCancellation.Token).ConfigureAwait (false)) > 0) {
+			output.Append (buffer, 0, count);
 		}
 	}
 }
