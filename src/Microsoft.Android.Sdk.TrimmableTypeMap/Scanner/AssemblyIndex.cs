@@ -174,6 +174,9 @@ sealed class AssemblyIndex : IDisposable
 		// with the wrong AttributeName.
 		List<IntentFilterInfo>? intentFilters = null;
 		List<MetaDataInfo>? metaData = null;
+		List<PropertyInfo>? properties = null;
+		List<UsesLibraryInfo>? usesLibraries = null;
+		List<GrantUriPermissionInfo>? grantUriPermissions = null;
 		Dictionary<string, object?>? layoutProperties = null;
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
@@ -184,13 +187,20 @@ sealed class AssemblyIndex : IDisposable
 				continue;
 			}
 
-			if (attrName == "RegisterAttribute") {
+			if (IsCustomAttributeMatch (ca, Reader, "Android.Runtime", "RegisterAttribute")) {
 				registerInfo = ParseRegisterAttribute (ca);
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
-			} else if (attrName == "JniTypeSignatureAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Java.Interop", "JniTypeSignatureAttribute")) {
 				registerInfo = ParseJniTypeSignatureAttribute (ca);
-			} else if (IsKnownComponentAttribute (attrName)) {
-				attrInfo ??= CreateTypeAttributeInfo (attrName);
+			} else if (IsKnownComponentAttribute (attrName) &&
+			           IsCustomAttributeMatch (ca, Reader,
+			               attrName is "BroadcastReceiverAttribute" or "ContentProviderAttribute" ? "Android.Content" : "Android.App",
+			               attrName)) {
+				if (attrInfo is null || !attrInfo.IsComponentAttribute) {
+					var jniName = attrInfo?.JniName;
+					attrInfo = CreateTypeAttributeInfo (attrName);
+					attrInfo.JniName = jniName;
+				}
 				var value = DecodeAttribute (ca);
 
 				if (attrName == "ContentProviderAttribute") {
@@ -216,21 +226,39 @@ sealed class AssemblyIndex : IDisposable
 						applicationAttributeInfo.ManageSpaceActivity = manageSpace;
 					}
 				}
-			} else if (attrName == "IntentFilterAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "IntentFilterAttribute")) {
 				intentFilters ??= new List<IntentFilterInfo> ();
 				intentFilters.Add (ParseIntentFilterAttribute (ca));
-			} else if (attrName == "MetaDataAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "MetaDataAttribute")) {
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
 				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
-			} else if (attrName == "LayoutAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "PropertyAttribute")) {
+				properties ??= new List<PropertyInfo> ();
+				var (propertyName, propertyProps) = ParseNameAndProperties (ca);
+				properties.Add (CreatePropertyInfo (propertyName, propertyProps));
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "UsesLibraryAttribute")) {
+				usesLibraries ??= new List<UsesLibraryInfo> ();
+				var (libraryName, libraryProps) = ParseNameAndProperties (ca);
+				usesLibraries.Add (CreateUsesLibraryInfo (libraryName, libraryProps));
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.Content", "GrantUriPermissionAttribute")) {
+				grantUriPermissions ??= new List<GrantUriPermissionInfo> ();
+				var (_, grantProps) = ParseNameAndProperties (ca);
+				grantUriPermissions.Add (new GrantUriPermissionInfo {
+					Path = grantProps.TryGetValue ("Path", out var path) && path is string pathValue ? pathValue : null,
+					PathPattern = grantProps.TryGetValue ("PathPattern", out var pattern) && pattern is string patternValue ? patternValue : null,
+					PathPrefix = grantProps.TryGetValue ("PathPrefix", out var prefix) && prefix is string prefixValue ? prefixValue : null,
+				});
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "LayoutAttribute")) {
 				layoutProperties = ParseLayoutAttribute (ca);
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
 				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
 				var name = TryGetNameProperty (ca);
 				if (name is not null) {
-					attrInfo = new TypeAttributeInfo (attrName);
-					attrInfo.JniName = name.Replace ('.', '/');
+					attrInfo = new TypeAttributeInfo (attrName) {
+						IsComponentAttribute = false,
+						JniName = name.Replace ('.', '/'),
+					};
 				}
 			}
 		}
@@ -242,6 +270,15 @@ sealed class AssemblyIndex : IDisposable
 			}
 			if (metaData is not null) {
 				attrInfo.MetaData.AddRange (metaData);
+			}
+			if (properties is not null) {
+				attrInfo.ManifestProperties.AddRange (properties);
+			}
+			if (usesLibraries is not null) {
+				attrInfo.UsesLibraries.AddRange (usesLibraries);
+			}
+			if (grantUriPermissions is not null) {
+				attrInfo.GrantUriPermissions.AddRange (grantUriPermissions);
 			}
 			if (layoutProperties is not null) {
 				attrInfo.LayoutProperties = layoutProperties;
@@ -906,6 +943,7 @@ sealed class AssemblyIndex : IDisposable
 		"UsesConfigurationAttribute",
 		"MetaDataAttribute",
 		"PropertyAttribute",
+		"InstrumentationAttribute",
 		"SupportsGLTextureAttribute",
 		"ApplicationAttribute",
 	};
@@ -916,7 +954,9 @@ sealed class AssemblyIndex : IDisposable
 		foreach (var caHandle in asmDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
 			var attrName = GetCustomAttributeName (ca);
-			if (attrName is null || !KnownAssemblyAttributes.Contains (attrName)) {
+			if (attrName is null ||
+			    !KnownAssemblyAttributes.Contains (attrName) ||
+			    !IsCustomAttributeMatch (ca, Reader, "Android.App", attrName)) {
 				continue;
 			}
 
@@ -950,12 +990,16 @@ sealed class AssemblyIndex : IDisposable
 			case "PropertyAttribute":
 				info.Properties.Add (CreatePropertyInfo (name, props));
 				break;
+			case "InstrumentationAttribute":
+				info.Instrumentations.Add (new InstrumentationInfo { Name = name, Properties = props });
+				break;
 			case "SupportsGLTextureAttribute":
 				if (name.Length > 0) {
 					info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = name });
 				}
 				break;
 			case "ApplicationAttribute":
+				info.ApplicationAttributeCount++;
 				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
 				foreach (var kvp in props) {
 					info.ApplicationProperties [kvp.Key] = kvp.Value;
@@ -1077,6 +1121,7 @@ sealed record ExportInfo
 class TypeAttributeInfo (string attributeName)
 {
 	public string AttributeName { get; } = attributeName;
+	public bool IsComponentAttribute { get; init; } = true;
 	public string? JniName { get; set; }
 
 	/// <summary>
@@ -1093,6 +1138,9 @@ class TypeAttributeInfo (string attributeName)
 	/// Metadata entries declared on this type via [MetaData] attributes.
 	/// </summary>
 	public List<MetaDataInfo> MetaData { get; } = [];
+	public List<PropertyInfo> ManifestProperties { get; } = [];
+	public List<UsesLibraryInfo> UsesLibraries { get; } = [];
+	public List<GrantUriPermissionInfo> GrantUriPermissions { get; } = [];
 
 	/// <summary>
 	/// Named property values from a [Layout] attribute on this type, or null if none.
