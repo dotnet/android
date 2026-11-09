@@ -5,6 +5,10 @@
     <Version>11.0.0</Version>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IsPackable>False</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
+    <!-- Use SDK analyzer defaults instead of the repository's legacy severity overrides. -->
+    <DiscoverEditorConfigFiles>false</DiscoverEditorConfigFiles>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
