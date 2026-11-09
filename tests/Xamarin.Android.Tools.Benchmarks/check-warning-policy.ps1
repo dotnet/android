@@ -37,7 +37,7 @@ function Invoke-PolicyBuild {
         $env:DOTNET_CLI_UI_LANGUAGE = $previousLanguage
     }
 
-    $diagnostics = [regex]::Matches($output, '(?im)\b(error|warning)\s*(?:([a-z]+\d+)\s*)?:')
+    $diagnostics = [regex]::Matches($output, '(?im)^[ \t]*(?:.*?:[ \t]+)?(error|warning)[ \t]*(?:([a-z]+\d+)[ \t]*)?:')
     if ($ExpectedCode) {
         $unexpected = @($diagnostics | Where-Object {
             $_.Groups[1].Value -ne 'error' -or $_.Groups[2].Value -ne $ExpectedCode
