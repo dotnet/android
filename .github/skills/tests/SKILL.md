@@ -77,7 +77,7 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
-### On-device runtime tests (stock NUnit/MTP, full-build + device)
+### On-device runtime tests (native MSTest/MTP, full-build + device)
 
 Build and install the APK first, then run `dotnet test` from the test project directory so the project-local `global.json` enables Microsoft Testing Platform:
 ```bash

@@ -126,7 +126,10 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-Mono.Android device tests use stock NUnit through Microsoft Testing Platform (MTP), not NUnitLite. This changed in dotnet/android#11224.
+`Mono.Android.NET-Tests`, its referenced Java.Interop fixtures, and
+`Xamarin.Android.JcwGen-Tests` use native MSTest with `MSTest.SourceGeneration`
+through Microsoft Testing Platform (MTP). Other NUnit consumers keep their
+existing runner; do not select a mixed solution with the native host adapter.
 
 Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
@@ -152,9 +155,18 @@ Device: **Yes**
 
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
-- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
+- **NativeAOT runtime**: Also excludes `NativeAOTIgnore`, `SSL`
+- **Both runtimes**: Excludes `JniReferenceLeak` unless it is the only explicitly included category
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
+
+Pass `-p:IncludeCategories=JniReferenceLeak` on **both** install and test to
+exercise the dedicated six-case Mono JNI lane; the JCW project has its own
+one-case JNI lane using the same property. Includes are compiled into the
+app's runtime configuration, not forwarded as arbitrary host name filters.
+The project-mode Android CLI does not support `--filter`; direct
+instrumentation accepts `include`, `exclude`, and `noexclusions` extras.
+Standalone instrumentation listing (`-e list`) is explicitly unsupported.
 
 Command:
 ```bash
@@ -167,6 +179,13 @@ Command:
 
 Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
 
+The Android CI `apk-instrumentation.yaml` template uses this project-local MTP
+entry point and the existing Android streaming protocol. It does not use the
+host-only SourceWriter UID slicer or NUnit runsettings. Native TRX,
+`NativeTestNodes.xml`, and arbitrary attachments remain in the app's external
+`TestResults` directory; pull that directory separately when validating
+attachment contents, since the host does not automatically copy every file.
+
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash
 ./dotnet-local.sh build -t:Install -c Debug tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
@@ -175,6 +194,19 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
   ../../../dotnet-local.sh test Xamarin.Android.JcwGen-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
 )
 ```
+
+For Release full-trim validation on API 35 arm64, the accepted exact matrices
+are Mono CoreCLR 1,043 rows (1,035 passed/eight skipped), Mono actual NativeAOT
+980 rows (972 passed/eight skipped), and JCW CoreCLR 47 rows (46 passed/one
+skipped). Check identities, category sets, duplicate multiplicity, native
+UID/TRX agreement, and installed APK runtime contents, not totals or flags
+alone. Generated descriptors retain bounded reflection fallback.
+JCW retains its whole-app root: both original NUnit and migrated MSTest
+NativeAOT abort in `JavaAbstractMethodTest` at `ic.NewMethod()` (`RhFailFast`);
+do not exclude/weaken that test or claim completed JCW NativeAOT coverage.
+These results do not certify other ABIs or the Mono runtime, whose import is
+absent from the selected SDK. See [runtime migration details](../../../../Documentation/workflow/UnitTests.md#native-metadata-and-trimming)
+for root boundaries and retained historical failures.
 
 ## Java.Interop Tests — Mixed Tiers
 

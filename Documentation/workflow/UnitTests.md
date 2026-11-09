@@ -468,6 +468,11 @@ One validation run observed missing `GlobalToWeak` events in
 APK subsequently passed raw and project-mode execution, followed by three
 strict full-suite repetitions. The failed run is retained, no assertion is
 weakened, and its intermittent cause is not established.
+An independent CoreCLR run also reached the proxy-cancellation test's
+existing timing-inconclusive branch (1,034 passed/nine skipped). It was
+rejected by exact baseline verification, not normalized into the accepted
+1,035/eight result; the unchanged APK's later raw and project-mode runs
+matched the baseline.
 
 The Mono app and Java.Interop fixture-assembly discovery roots, NUnit
 `NativeAOT.rd.xml`, and NUnit-specific complete type metadata are removed.
@@ -493,6 +498,21 @@ instrumentation instead of returning a successful empty run. Project-mode
 streams results through the existing Android protocol; arbitrary attachment
 files remain in the app's external `TestResults` directory and can be pulled
 with `adb` in addition to the host TRX.
+
+### Android CI entry point
+
+The existing `apk-instrumentation.yaml` template runs `dotnet test` from the
+app's directory, selects its local MTP configuration, and passes
+`--report-trx-filename` plus the lane's build properties. The dedicated Mono
+and JCW JNI lanes already pass `IncludeCategories=JniReferenceLeak`; keep
+that build/runtime-configuration path rather than introducing NUnit filters,
+worker arguments, or host UID slicing for Android.
+
+The separate opt-in [native host pilot](../../build-tools/automation/native-mtp-ci.md)
+builds and slices only SourceWriter. Its Azure result publication does not
+validate Android installation, instrumentation, JNI, trimming, or NativeAOT.
+Conversely, device runs do not establish remote Azure publication or
+cross-platform host contracts. Keep those acceptance gates independent.
 
 When inspecting compiler-generated metadata, use
 `-p:EmitCompilerGeneratedFiles=true -p:CompilerGeneratedFilesOutputPath=obj/metadata-inspection`.
