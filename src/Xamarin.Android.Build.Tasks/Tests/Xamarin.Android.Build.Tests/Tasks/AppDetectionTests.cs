@@ -37,6 +37,54 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("WaitForAppDetection"),
 					new XElement ("Error", new XAttribute ("Condition", "Exists('upload.flag')"),
 						new XAttribute ("Text", "The waiter returned before the package query deleted the flag."))));
+			var log = await RunMSBuild (detection, project, multithreaded, "-warnaserror:MSB4286,MSB4287,MSB4288");
+			StringAssert.DoesNotContain ("TaskHostFactory", log);
+			StringAssert.Contains ("--user 10", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
+		}
+
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public async Task DeviceSelectionSurvivesDeviceOrderChanges (bool multithreaded, bool embedAssemblies)
+		{
+			using var detection = new Detection ("switching");
+			var project = new XElement ("Project",
+				new XElement ("PropertyGroup",
+					new XElement ("AndroidApplication", "true"),
+					new XElement ("EmbedAssembliesIntoApk", embedAssemblies),
+					new XElement ("_AndroidPackage", "com.example.app"),
+					new XElement ("RuntimeIdentifiers", "android-arm64"),
+					new XElement ("AndroidLaunchActivity", "MainActivity"),
+					new XElement ("_AndroidComputeRunArgumentsDependsOn", "_AndroidAdbToolPath"),
+					new XElement ("_XamarinAndroidBuildTasksAssembly", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll")),
+					new XElement ("AdbToolPath", Path.Combine (detection.Directory, "tools")),
+					new XElement ("AdbToolExe", detection.Executable)),
+				new XElement ("Import", new XAttribute ("Project",
+					Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"))),
+				new XElement ("Import", new XAttribute ("Project",
+					Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "targets", "Microsoft.Android.Sdk.Application.targets"))),
+				new XElement ("Target", new XAttribute ("Name", "_SetLatestTargetFrameworkVersion")),
+				new XElement ("Target", new XAttribute ("Name", "_ValidateAndroidPackageProperties")),
+				new XElement ("Target", new XAttribute ("Name", "DetectionStarted"),
+					new XAttribute ("AfterTargets", "_DetectIfAppWasUninstalled"),
+					new XElement ("Touch", new XAttribute ("Files", "producer-returned"), new XAttribute ("AlwaysCreate", "true"))),
+				new XElement ("Target", new XAttribute ("Name", "Probe"),
+					new XAttribute ("DependsOnTargets", "_GetPrimaryCpuAbi;_DetectIfAppWasUninstalled;_GetUploadInputs;_AndroidComputeRunArguments"),
+					new XElement ("Error", new XAttribute ("Condition", "Exists('upload.flag')"),
+						new XAttribute ("Text", "Detection checked the installed app on the wrong device.")),
+					new XElement ("Error", new XAttribute ("Condition", "'$(_AndroidResolvedAdbTarget)' != '-s emulator-5554'"),
+						new XAttribute ("Text", "Deployment did not receive the selected serial.")),
+					new XElement ("Error", new XAttribute ("Condition", "'$(AdbTarget)' != '-e'"),
+						new XAttribute ("Text", "The caller's device selector changed.")),
+					new XElement ("Error", new XAttribute ("Condition", "!$(RunArguments.Contains('-s emulator-5554'))"),
+						new XAttribute ("Text", "Run arguments lost the selected serial."))));
+			// GetPrimaryCpuAbi is still hosted; only the detector and waiter are MT tasks.
+			await RunMSBuild (detection, project, multithreaded, "-p:AdbTarget=-e");
+			StringAssert.StartsWith ("-s emulator-5554 ", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
+		}
+
+		static async Task<string> RunMSBuild (Detection detection, XElement project, bool multithreaded, params string [] arguments)
+		{
 			project.Save (Path.Combine (detection.Directory, "detection.proj"));
 			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
 				WorkingDirectory = detection.Directory,
@@ -48,9 +96,9 @@ namespace Xamarin.Android.Build.Tests
 				startInfo.Environment [pair.Key] = pair.Value;
 			startInfo.Environment.Remove ("WAIT_TEST_ISOLATED");
 			string binlog = Path.Combine (TestContext.CurrentContext.WorkDirectory,
-				$"app-detection-{(multithreaded ? "mt" : "ordinary")}.binlog");
+				$"{TestContext.CurrentContext.Test.Name}.binlog");
 			foreach (var argument in new [] { "msbuild", "detection.proj", "-t:Probe", "-m", "-nr:false", "-v:diag",
-				"-warnaserror:MSB4286,MSB4287,MSB4288", $"-bl:{binlog}" })
+				$"-bl:{binlog}" }.Concat (arguments))
 				startInfo.ArgumentList.Add (argument);
 			if (multithreaded)
 				startInfo.ArgumentList.Add ("-mt");
@@ -72,9 +120,8 @@ namespace Xamarin.Android.Build.Tests
 				TestContext.Out.WriteLine ($"Binlog: {binlog}");
 				Assert.AreEqual (0, process.ExitCode, log);
 				StringAssert.Contains ("DetectIfAppWasUninstalled Completed.", log);
-				StringAssert.DoesNotContain ("TaskHostFactory", log);
 				Assert.IsFalse (File.Exists (detection.Flag));
-				StringAssert.Contains ("--user 10", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
+				return log;
 			} finally {
 				detection.Release ();
 				if (!process.HasExited) {
@@ -206,7 +253,26 @@ namespace Xamarin.Android.Build.Tests
 					if "%WAIT_TEST_ISOLATED%"=="true" if defined USERNAME exit /b 43
 					if "%1"=="devices" (
 					    echo List of devices attached
+					    if "%WAIT_TEST_RESULT%"=="switching" (
+					        if exist "%WAIT_TEST_ROOT%\devices-listed" (
+					            echo emulator-5556 device model:Test
+					            echo emulator-5554 device model:Test
+					        ) else (
+					            echo emulator-5554 device model:Test
+					            echo emulator-5556 device model:Test
+					        )
+					        echo listed > "%WAIT_TEST_ROOT%\devices-listed"
+					        exit /b 0
+					    )
 					    echo %WAIT_TEST_RESULT% device model:Test
+					    exit /b 0
+					)
+					if "%~4"=="getprop" (
+					    if "%~5"=="ro.build.version.sdk" (echo 34) else (echo arm64-v8a)
+					    exit /b 0
+					)
+					if "%~4"=="getprop ro.product.cpu.abilist64" (
+					    echo arm64-v8a
 					    exit /b 0
 					)
 					echo %* > "%WAIT_TEST_ROOT%\query-arguments"
@@ -219,15 +285,32 @@ namespace Xamarin.Android.Build.Tests
 					    exit /b 42
 					)
 					if "%WAIT_TEST_RESULT%"=="installed" echo package:com.example.app
+					if "%WAIT_TEST_RESULT%"=="switching" if "%2"=="emulator-5556" echo package:com.example.app
 					exit /b 0
 					""" : """
 					#!/bin/sh
 					if [ "$WAIT_TEST_ISOLATED" = true ] && [ -n "$HOME" ]; then exit 43; fi
 					if [ "$1" = devices ]; then
 					    echo "List of devices attached"
+					    if [ "$WAIT_TEST_RESULT" = switching ]; then
+					        if [ -f "$WAIT_TEST_ROOT/devices-listed" ]; then
+					            echo "emulator-5556 device model:Test"
+					            echo "emulator-5554 device model:Test"
+					        else
+					            echo "emulator-5554 device model:Test"
+					            echo "emulator-5556 device model:Test"
+					        fi
+					        echo listed > "$WAIT_TEST_ROOT/devices-listed"
+					        exit 0
+					    fi
 					    echo "$WAIT_TEST_RESULT device model:Test"
 					    exit 0
 					fi
+					if [ "$4" = getprop ]; then
+					    if [ "$5" = ro.build.version.sdk ]; then echo 34; else echo arm64-v8a; fi
+					    exit 0
+					fi
+					if [ "$4" = "getprop ro.product.cpu.abilist64" ]; then echo arm64-v8a; exit 0; fi
 					echo "$*" > "$WAIT_TEST_ROOT/query-arguments"
 					echo "$PWD" > "$WAIT_TEST_ROOT/query-directory"
 					echo started > "$WAIT_TEST_ROOT/query-started"
@@ -237,6 +320,7 @@ namespace Xamarin.Android.Build.Tests
 					    exit 42
 					fi
 					if [ "$WAIT_TEST_RESULT" = installed ]; then echo "package:com.example.app"; fi
+					if [ "$WAIT_TEST_RESULT" = switching ] && [ "$2" = emulator-5556 ]; then echo "package:com.example.app"; fi
 					exit 0
 					""");
 				if (!OperatingSystem.IsWindows ())

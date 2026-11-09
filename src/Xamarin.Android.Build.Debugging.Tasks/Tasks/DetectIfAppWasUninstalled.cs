@@ -15,6 +15,7 @@ namespace Xamarin.Android.Tasks {
 		readonly CancellationTokenSource tcs = new CancellationTokenSource ();
 		public override string TaskPrefix => "DIAWI";
 
+		[Output]
 		public string? AdbTarget { get; set; }
 		public string? AdbToolPath { get; set; }
 		public string? AdbToolExe { get; set; }
@@ -45,6 +46,7 @@ namespace Xamarin.Android.Tasks {
 				return true;
 			}
 			Log.LogDebugMessage ($"Found device: {device.Serial}");
+			AdbTarget = $"-s {device.Serial}";
 			var flagFilePath = TaskEnvironment.GetAbsolutePath (UploadFlagFile);
 			var runner = AndroidHelper.CreateAdbRunner (AdbToolPath, AdbToolExe, TaskEnvironment);
 			var task = QueryPackages (runner, device.Serial, flagFilePath);

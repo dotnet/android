@@ -25,6 +25,7 @@ namespace Xamarin.Android.Tasks
 
 		public override string TaskPrefix => "GCPU";
 
+		[Output]
 		public string AdbTarget { get; set; }
 		/// <summary>
 		/// IDEs set $(AdbTargetArchitecture) when an emulator is closed, as a performance optimization.
@@ -65,6 +66,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LogDebugMessage ($"Found device: {device.Serial}");
+			AdbTarget = $"-s {device.Serial}";
 			FoundDevices = true;
 			return base.Execute ();
 		}

@@ -94,7 +94,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	</PropertyGroup>
 	<GetPrimaryCpuAbi
 			AndroidPackage="$(_AndroidPackage)"
-			AdbTarget="$(AdbTarget)"
+			AdbTarget="$([MSBuild]::ValueOrDefault('$(_AndroidResolvedAdbTarget)', '$(AdbTarget)'))"
 			AdbTargetArchitecture="$(AdbTargetArchitecture)"
 			AdbOptions="$(AdbOptions)"
 			AdbToolPath="$(AdbToolPath)"
@@ -105,6 +105,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 		<Output TaskParameter="ResultingAbi" PropertyName="_PrimaryCpuAbi" />
 		<Output TaskParameter="RuntimeIdentifier" PropertyName="_PrimaryRuntimeIdentifier" />
 		<Output TaskParameter="SdkVersion" PropertyName="_DeviceSdkVersion" />
+		<Output TaskParameter="AdbTarget" PropertyName="_AndroidResolvedAdbTarget" />
 	</GetPrimaryCpuAbi>
 	<PropertyGroup>
 		<_PrimaryCpuAbi Condition="$(_PrimaryCpuAbi) == ''">@(_BuildTargetAbis)</_PrimaryCpuAbi>
@@ -122,13 +123,15 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	>
 	<DetectIfAppWasUninstalled
 			ContinueOnError="true"
-			AdbTarget="$(AdbTarget)"
+			AdbTarget="$([MSBuild]::ValueOrDefault('$(_AndroidResolvedAdbTarget)', '$(AdbTarget)'))"
 			AdbToolPath="$(AdbToolPath)"
 			AdbToolExe="$(AdbToolExe)"
 			PackageName="$(_AndroidPackage)"
 			UploadFlagFile="$(_UploadFlag)"
 			UserID="$(AndroidDeviceUserId)"
-	/>
+	>
+		<Output TaskParameter="AdbTarget" PropertyName="_AndroidResolvedAdbTarget" />
+	</DetectIfAppWasUninstalled>
 </Target>
 
 <Target Name="_lldb"
@@ -145,7 +148,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Target Name="_CheckForConfigurationChange">
 	<ItemGroup>
-		<_ConfigurationCacheItems Include="$(Configuration)|$(Platform)|$(AdbTarget)|$(_AndroidFastDeployAppFileTransferMode)" />
+		<_ConfigurationCacheItems Include="$(Configuration)|$(Platform)|$([MSBuild]::ValueOrDefault('$(_AndroidResolvedAdbTarget)', '$(AdbTarget)'))|$(_AndroidFastDeployAppFileTransferMode)" />
 	</ItemGroup>
 	<ReadLinesFromFile File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag"
 			Condition="Exists('$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag')">
@@ -238,7 +241,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
         <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" />
     </ItemGroup>
     <FastDeploy
-      AdbTarget="$(AdbTarget)"
+      AdbTarget="$([MSBuild]::ValueOrDefault('$(_AndroidResolvedAdbTarget)', '$(AdbTarget)'))"
       DiagnosticLogging="$(_FastDeploymentDiagnosticLogging)"
       FastDevFiles="@(_FilteredFastDevFiles);@(_ResolvedConfigFiles)"
       EmbedAssembliesIntoApk="$(EmbedAssembliesIntoApk)"
@@ -305,7 +308,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 		<Output TaskParameter="ActivityName" PropertyName="TargetTestActivity" />
 	</GetAndroidActivityName>
 	<RunTests
-		AdbTarget="$(AdbTarget)"
+		AdbTarget="$([MSBuild]::ValueOrDefault('$(_AndroidResolvedAdbTarget)', '$(AdbTarget)'))"
 		AdbOptions="$(AdbOptions)"
 		AndroidPackage="$(_AndroidPackage)"
 		TargetTestActivity="$(TargetTestActivity)"
