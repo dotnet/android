@@ -72,15 +72,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Generator_BG4500" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA['lang-features=default-interface-methods' is not compatible with 'codegen-target=xamarinandroid'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA["lang-features=default-interface-methods" no es compatible con "codegen-target=xamarinandroid".]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";Generator_BG8101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected class child {0}.]]></Val>
@@ -355,7 +346,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Metadata.xml element '{0}' is missing the 'path' attribute.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Falta el atributo 'path' en el elemento Metadata.xml '{0}'.]]></Val>
+            <Val><![CDATA[Metadata.xml elemento '{0}' no tiene el atributo 'path'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -387,38 +378,20 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Generator_BG8C02" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.]]></Val>
+          <Val><![CDATA[For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[No se puede generar el contenedor de Java para el tipo '{0}'. Solo se admiten tipos "class".]]></Val>
+            <Val><![CDATA[Para el tipo "{0}", el método de Kotlin con el nombre modificado "{1}" (originalmente "{2}") tiene varios métodos hermanos con sufijo hash que dan lugar a la misma firma de C#. Solo se emitirá el primero; quite el duplicado mediante Metadata.xml para suprimir esta advertencia.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4201" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Generator_BG8C03" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot determine JNI name for type '{0}'.]]></Val>
+          <Val><![CDATA[JNI signature override '{0}' is invalid or does not match the parameter count for member '{1}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[No se puede determinar el nombre JNI para el tipo "{0}".]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4203" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[La propiedad "Name" debe ser un tipo completamente calificado como "com.example.MyClass" y no se encontró ningún paquete para "{0}".]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4204" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unable to resolve interface type '{0}'. Are you missing an assembly reference?]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[No se puede resolver el tipo de interfaz "{0}". ¿Le falta una referencia de ensamblaje?]]></Val>
+            <Val><![CDATA[La '{0}' de invalidación de firma JNI no es válida o no coincide con el recuento de parámetros para el miembro '{1}'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -455,15 +428,6 @@
           <Val><![CDATA[[ExportField]5D; cannot be used on a method returning 'void'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[No se puede utilizar [ExportField]5D; en un método que devuelve "void".]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4217" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[El método generado por Kotlin "{0}" no puede ser anulado debido a que no es un nombre de método Java válido. Este método sólo puede ser anulado desde Kotlin.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

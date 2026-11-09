@@ -16,6 +16,7 @@ namespace Java.InteropTests
 	// Naming: each test is named Export_<Group>_<Feature>_<Behaviour> so the
 	// runner output is greppable.
 	[TestClass]
+	[TestCategory ("GeneratedJniDebuggerBoundary")]
 	public class ExportTests
 	{
 		// ---------------------------------------------------------------
@@ -183,10 +184,15 @@ namespace Java.InteropTests
 			// must catch it and route it through OnUserUnhandledException so the
 			// process survives; the exception then re-surfaces on the calling
 			// thread when the JNI call returns to managed code.
-			var ex = Assert.Throws<global::System.Exception> (() => JNIEnv.CallIntMethod (e.Handle, m));
-			Assert.IsNotNull (ex, "expected an exception, got null");
-			Assert.AreSame (e.PrimitiveException, ex);
-			StringAssert.Contains (ex.Message, "boom", "exception message should preserve 'boom'");
+			// A user-code catch avoids another debugger stop when JNI rethrows into an external assertion helper.
+			try {
+				JNIEnv.CallIntMethod (e.Handle, m);
+			} catch (Exception ex) {
+				Assert.AreSame (e.PrimitiveException, ex);
+				StringAssert.Contains (ex.Message, "boom", "exception message should preserve 'boom'");
+				return;
+			}
+			Assert.Fail ("Expected the original export exception.");
 		}
 
 		[TestMethod, TestCategory ("Export")]

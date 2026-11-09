@@ -94,7 +94,7 @@ debuggable, or a system application. It runs (via `run-as`, falling back to `su`
 for system apps):
 
 ```
-adb shell run-as <package> sh -c 'pwd; pidof <package> 2>/dev/null || true'
+adb shell run-as <package> sh -c 'pwd && (pidof <package> 2>/dev/null || true)'
 ```
 
 Depending on the output it may force a re-install (package not debuggable) or
@@ -122,6 +122,8 @@ adb install -r -d [-t] [--user <id>] <path-to-apk>
 
 If `$(EmbedAssembliesIntoApk)` is `true`, the override directory is removed and
 deployment stops here — there are no separate files to push.
+Cleanup is skipped for uninstalled or non-debuggable packages; other cleanup
+failures abort deployment.
 
 ### 5. Terminate the running app
 
@@ -173,11 +175,14 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
      ```
      adb shell run-as <package> sh -c \
        'd=<override-dir>;s=<staging-dir>;mkdir -p "$d"&&cd "$d"&& \
-        for e in ./*;do [ -d "$e" ]||rm -f "$e";done&& \
-        for f in "$s"/*;do [ -d "$f" ]||ln -sf "$f" .;done'
+        for e in ./*;do [ -d "$e" ]||rm -f "$e"||exit 1;done&& \
+        for f in "$s"/*;do [ -d "$f" ]||ln -sf "$f" .||exit 1;done'
      ```
      If the device does not support symlinking into the override directory, the
      task automatically falls back to `Copy`.
+
+     Nonzero `run-as` exits fail deployment, or trigger copy fallback for symlink
+     updates, even without recognizable error text. Missing listing roots remain empty.
    * **`Copy`:** the staged files are copied into the override directory instead
      of symlinked.
 7. **Mark success.** When the override directory is up to date, one
