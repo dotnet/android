@@ -422,6 +422,94 @@ class NativeMtpIntegration(unittest.TestCase):
 
 
 class AdapterContractTests(unittest.TestCase):
+    def evaluate_condition(self, expression, additive, only, skip, succeeded):
+        values = {
+            "parameters.runNativeMtpHostTests": additive,
+            "parameters.runNativeMtpHostTestsOnly": only,
+            "variables.SkipTestStages": str(skip).lower(),
+            "variables['SkipTestStages']": str(skip).lower(),
+            "true": True, "false": False,
+        }
+        expression = expression.replace("${{ ", "").replace(" }}", "")
+        tokens = iter(re.findall(r"variables\['SkipTestStages'\]|[A-Za-z][A-Za-z.]*|'[^']*'|[(),]", expression))
+        token = next(tokens, None)
+
+        def parse():
+            nonlocal token
+            name = token
+            token = next(tokens, None)
+            if token != "(":
+                return name[1:-1] if name.startswith("'") else values[name]
+            token = next(tokens, None)
+            arguments = []
+            while token != ")":
+                arguments.append(parse())
+                if token != ")":
+                    self.assertEqual(",", token)
+                    token = next(tokens, None)
+            token = next(tokens, None)
+            operations = {
+                "and": lambda: all(arguments), "or": lambda: any(arguments),
+                "not": lambda: not arguments[0],
+                "eq": lambda: arguments[0] == arguments[1],
+                "ne": lambda: arguments[0] != arguments[1],
+                "succeeded": lambda: succeeded,
+            }
+            return operations[name]()
+
+        result = parse()
+        self.assertIsNone(token)
+        return result
+
+    def test_isolation_option_preserves_additive_and_default_stage_gates(self):
+        pipeline = (ROOT / "build-tools/automation/azure-pipelines-public.yaml").read_text()
+        for name in ("runNativeMtpHostTests", "runNativeMtpHostTestsOnly"):
+            self.assertRegex(pipeline, rf"- name: {name}\n(?:  .*\n)*?  type: boolean\n  default: false\n")
+        self.assertIn(
+            "- ${{ if or(eq(parameters.runNativeMtpHostTests, true), "
+            "eq(parameters.runNativeMtpHostTestsOnly, true)) }}:", pipeline)
+        self.assertIn(
+            "- ${{ if and(ne(variables.SkipTestStages, 'true'), "
+            "not(parameters.runNativeMtpHostTestsOnly)) }}:", pipeline)
+        guard = "${{ not(parameters.runNativeMtpHostTestsOnly) }}"
+        expected = {
+            "mac_build": f"and(succeeded(), {guard})",
+            "win_build_test": f"and(succeeded(), {guard})",
+            "linux_build": f"and(succeeded(), {guard})",
+            "linux_tests": f"and(succeeded(), ne(variables['SkipTestStages'], 'true'), {guard})",
+            "msbuild_dotnet": f"and(succeeded(), ne(variables['SkipTestStages'], 'true'), {guard})",
+            "msbuilddevice_tests": f"and(succeeded(), ne(variables['SkipTestStages'], 'true'), {guard})",
+            "maui_tests": f"and(succeeded(), ne(variables['SkipTestStages'], 'true'), {guard})",
+        }
+        for stage, condition in expected.items():
+            block = pipeline.split(f"- stage: {stage}\n", 1)[1].split("\n- stage:", 1)[0]
+            actual = re.search(r"^  condition: (.+)$", block, re.MULTILINE)
+            self.assertIsNotNone(actual, stage)
+            self.assertEqual(condition, actual.group(1), stage)
+        tools = pipeline.split(
+            "- template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self\n", 1)[1]
+        self.assertTrue(tools.startswith(f"  parameters:\n    condition: and(succeeded(), {guard})\n"))
+        for additive in (False, True):
+            for only in (False, True):
+                for skip in (False, True):
+                    for succeeded in (False, True):
+                        with self.subTest(additive=additive, only=only, skip=skip, succeeded=succeeded):
+                            evaluate = lambda expression: self.evaluate_condition(
+                                expression, additive, only, skip, succeeded)
+                            inclusion = re.search(r"^- \$\{\{ if (or\(.+)\) \}\}:$", pipeline, re.MULTILINE)
+                            self.assertIsNotNone(inclusion)
+                            pilot_condition = "and(succeeded(), ne(variables['SkipTestStages'], 'true'))"
+                            self.assertEqual((additive or only) and not skip and succeeded,
+                                             evaluate(inclusion.group(1) + ")") and evaluate(pilot_condition))
+                            for stage, condition in expected.items():
+                                needs_tests = stage not in ("mac_build", "win_build_test", "linux_build")
+                                self.assertEqual(not only and succeeded and (not needs_tests or not skip),
+                                                 evaluate(condition), stage)
+                            self.assertEqual(not only and succeeded, evaluate(f"and(succeeded(), {guard})"))
+                            package = re.search(r"^- \$\{\{ if (and\(ne\(.+)\) \}\}:$", pipeline, re.MULTILINE)
+                            self.assertIsNotNone(package)
+                            self.assertEqual(not only and not skip, evaluate(package.group(1) + ")"))
+
     def yaml_scripts(self):
         text = (ROOT / "build-tools/automation/yaml-templates/run-native-mtp-tests.yaml").read_text()
         blocks = text.split("- task: Bash@3\n")[1:]

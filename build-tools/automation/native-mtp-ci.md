@@ -5,7 +5,26 @@ The public pipeline's **Run opt-in SourceWriter native MTP host tests**
 job. `skipTests` still skips it. Only `tests/Xamarin.SourceWriter-Tests` is built
 and selected. No Android SDK, emulator, instrumentation runner, global runner
 switch, or product package change is involved. Internal/nightly and existing
-NUnit jobs are unchanged.
+NUnit jobs are unchanged unless the separate isolation option is selected.
+
+**Run only SourceWriter native MTP host tests**
+(`runNativeMtpHostTestsOnly`, default `false`) enables the same pilot and disables
+every unrelated stage, including template-defined package and Android Tools
+tests. Use this option for pilot-only validation without `stagesToSkip`.
+It does not repurpose `runNativeMtpHostTests`: that flag still adds the pilot
+to the existing matrix when the isolation option is false.
+
+| Additive flag | Only flag | `skipTests` | Selection |
+| --- | --- | --- | --- |
+| false | false | false | Unchanged legacy matrix; no pilot |
+| true | false | false | Legacy matrix plus pilot |
+| either | true | false | Three-slice pilot only |
+| either | true | true | No tests or builds; pilot is skipped too |
+| either | false | true | Existing skip-tests behavior; pilot skipped |
+
+Both true is valid and means pilot-only. `skipTests` always wins for the
+pilot, so use `skipTests='false'` for an isolated acceptance run. The defaults
+and additive mode preserve all existing non-pilot stage conditions.
 
 ## Prerequisites and build boundary
 
