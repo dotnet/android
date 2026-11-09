@@ -18,9 +18,11 @@ namespace Xamarin.Android.Tasks {
 
 		private const int MAX_PATH = 260;
 		private static readonly int DefaultMaxAapt2Daemons = 6;
-		protected Dictionary<string, string> _resource_name_case_map = null!;
+		Dictionary<string, string>? _resource_name_case_map;
 
-		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.ItemGroupToCaseMap (ResourceCaseMap);
+
+		public ITaskItem [] ResourceCaseMap { get; set; } = [];
 
 		protected virtual int ProcessorCount => Environment.ProcessorCount;
 
