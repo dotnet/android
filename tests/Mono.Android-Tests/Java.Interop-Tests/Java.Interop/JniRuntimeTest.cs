@@ -12,7 +12,8 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void CreateJavaVM ()
 		{
-			Assert.AreSame (JniRuntime.CurrentRuntime, JniRuntime.CurrentRuntime);
+			var runtime = JniRuntime.CurrentRuntime;
+			Assert.AreSame (runtime, JniRuntime.CurrentRuntime);
 			Assert.IsTrue (JniRuntime.CurrentRuntime.InvocationPointer != IntPtr.Zero);
 			Assert.IsTrue (JniEnvironment.EnvironmentPointer != IntPtr.Zero);
 		}

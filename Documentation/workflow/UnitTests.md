@@ -455,6 +455,24 @@ not sufficient. Native source-generated descriptors still report incomplete
 metadata and retain a bounded reflection fallback: this is not a claim that
 all reflection has been eliminated.
 
+Normal builds keep migration diagnostics visible; they are not strict
+warning-clean acceptance. Package-generated metadata reports generic-helper
+fallback diagnostics and direct calls to existing trim-unsafe test methods.
+Converter lookup retains its explicit converter roots; JSON tests use the
+built-in `Int32` converter; XML and stack-trace regression tests keep their
+original metadata-sensitive operations and annotations. Generated object-row
+calls also lose static annotation flow: the JavaConvert rows pass interface
+types (which have no constructors), while AppContext's two reflected types
+have explicit `DynamicDependency` and descriptor roots. These contracts still
+require actual trimmed-runtime comparison, not a blanket warning suppression.
+
+Some original test diagnostics deliberately remain for behavioral and identity
+parity: `JniTypeManagerTests.GetType` keeps its canonical method name despite
+MSTEST0036, three boxed `JniObjectReference` `AreNotSame` checks retain their
+value-type warning, and three TimeZone non-null assertions on non-nullable
+values remain vacuous inside the unchanged `DoesNotThrow` checks. None is
+silently strengthened, removed, renamed, or suppressed by this migration.
+
 The migration baseline at `ba0edabb01dc1e8f0176a96981f4b44773ad1e2c` contains
 1,052 Mono rows: 1,043 selected by default and nine category-excluded rows.
 The default CoreCLR full-trim result is 1,035 passed and eight skipped;
@@ -473,6 +491,14 @@ existing timing-inconclusive branch (1,034 passed/nine skipped). It was
 rejected by exact baseline verification, not normalized into the accepted
 1,035/eight result; the unchanged APK's later raw and project-mode runs
 matched the baseline.
+
+After reconciliation with main `598780a62f` and SDK
+`12.0.100-alpha.1.26551.101`, fresh original NUnit discovery measures 1,055 Mono
+rows, including three added upstream cases. Original CoreCLR selects 1,046
+(1,038 passed/eight skipped); original NativeAOT selects 983 (975 passed/eight
+skipped). Keep the historical manifests unchanged and compare migrated output
+to this freshly executed runtime authority, including changed category
+intersections and exact identities/multiplicities, not a source-derived count.
 
 The Mono app and Java.Interop fixture-assembly discovery roots, NUnit
 `NativeAOT.rd.xml`, and NUnit-specific complete type metadata are removed.

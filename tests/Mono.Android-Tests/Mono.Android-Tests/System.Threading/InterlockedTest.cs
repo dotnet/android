@@ -15,8 +15,8 @@ namespace System.ThreadingTests {
 
 			j = Interlocked.CompareExchange (ref i, 42, 0);
 
-			Assert.AreEqual (i, 42);
-			Assert.AreEqual (j, 0);
+			Assert.AreEqual (42, i);
+			Assert.AreEqual (0, j);
 		}
 	}
 }

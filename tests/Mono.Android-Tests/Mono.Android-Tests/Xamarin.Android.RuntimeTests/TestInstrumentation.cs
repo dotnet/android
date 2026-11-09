@@ -1,5 +1,7 @@
 #nullable enable
 
+extern alias JavaInteropTests;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -84,7 +86,7 @@ namespace Xamarin.Android.RuntimeTests
 		{
 			return [
 				Assembly.GetExecutingAssembly (),
-				typeof (Java.InteropTests.JavaInterop_Tests_Reference).Assembly,
+				typeof (JavaInteropTests::Java.InteropTests.JavaInterop_Tests_Reference).Assembly,
 			];
 		}
 	}
