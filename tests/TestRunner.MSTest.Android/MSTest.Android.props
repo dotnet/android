@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <MSTestVersion>4.6.0-preview.26524.1</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>2.6.0-preview.26524.1</MicrosoftTestingPlatformVersion>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" PrivateAssets="all" Publish="true" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" PrivateAssets="all" Publish="true" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestVersion)" PrivateAssets="all" />
+    <AssemblyAttribute Include="Microsoft.VisualStudio.TestTools.UnitTesting.DoNotParallelizeAttribute" />
+  </ItemGroup>
+</Project>
