@@ -96,6 +96,7 @@ namespace Xamarin.Android.BuildTools
 					new XElement ("ItemGroup", downloads.Select (d => new XElement ("PackageDownload",
 						new XAttribute ("Include", d.Key), new XAttribute ("Version", string.Join (";", d.Value))))), installs,
 					new XElement ("Target", new XAttribute ("Name", "Install"),
+						new XAttribute ("Condition", "'@(_WorkloadPack->Count())' != '0'"),
 						new XAttribute ("Inputs", $"@(_WorkloadPack);$(MSBuildThisFileFullPath);{toolPath}"),
 						new XAttribute ("Outputs", "%(_WorkloadPack.Destination)/%(_WorkloadPack.PackageFileName).installed"),
 						new XElement ("Unzip", new XAttribute ("SourceFiles", "@(_WorkloadPack)"),
