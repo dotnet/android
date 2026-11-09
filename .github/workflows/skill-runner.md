@@ -175,6 +175,12 @@ steps:
       # that skill is selected. Add an `elif` here for future skills that need
       # their own bootstrap step, rather than special-casing it in the prompt.
       if [ "$SKILL_NAME" = "update-androidsdk-packages" ]; then
+        # Use the repository-pinned SDK, not the runner's preinstalled SDKs.
+        CONFIGURATION=Debug bash eng/install-dotnet.sh
+        export DOTNET_ROOT="$GITHUB_WORKSPACE/bin/Debug/dotnet"
+        export PATH="$DOTNET_ROOT:$PATH"
+        echo "$DOTNET_ROOT" >> "$GITHUB_PATH"
+        echo "DOTNET_ROOT=$DOTNET_ROOT" >> "$GITHUB_ENV"
         dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
       fi
 description: Weekly (or on-demand) runner that executes a selectable repository Copilot skill end to end, opens a PR for validated changes, and always reports outcome/errors on a tracking issue
