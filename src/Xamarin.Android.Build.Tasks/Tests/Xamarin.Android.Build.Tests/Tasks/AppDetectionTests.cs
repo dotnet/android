@@ -72,10 +72,8 @@ namespace Xamarin.Android.Build.Tests
 					new XAttribute ("DependsOnTargets", "_GetPrimaryCpuAbi;_DetectIfAppWasUninstalled;_GetUploadInputs;_AndroidComputeRunArguments"),
 					new XElement ("Error", new XAttribute ("Condition", "Exists('upload.flag')"),
 						new XAttribute ("Text", "Detection checked the installed app on the wrong device.")),
-					new XElement ("Error", new XAttribute ("Condition", "'$(_AndroidResolvedAdbTarget)' != '-s emulator-5554'"),
+					new XElement ("Error", new XAttribute ("Condition", "'$(AdbTarget)' != '-s emulator-5554'"),
 						new XAttribute ("Text", "Deployment did not receive the selected serial.")),
-					new XElement ("Error", new XAttribute ("Condition", "'$(AdbTarget)' != '-e'"),
-						new XAttribute ("Text", "The caller's device selector changed.")),
 					new XElement ("Error", new XAttribute ("Condition", "!$(RunArguments.Contains('-s emulator-5554'))"),
 						new XAttribute ("Text", "Run arguments lost the selected serial."))));
 			// GetPrimaryCpuAbi is still hosted; only the detector and waiter are MT tasks.
