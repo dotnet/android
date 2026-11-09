@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias JavaInteropTests;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -88,7 +90,7 @@ namespace Java.InteropTests {
 		[TestMethod]
 		public void JavaAs ()
 		{
-			using var v     = new Java.InteropTests.MyJavaInterfaceImpl ();
+			using var v     = new JavaInteropTests::Java.InteropTests.MyJavaInterfaceImpl ();
 			using var c     = v.JavaAs<Java.Lang.ICloneable>();
 			Assert.IsNotNull (c);
 		}
