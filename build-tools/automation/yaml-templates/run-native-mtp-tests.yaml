@@ -1,0 +1,95 @@
+# Execution only. Restore/build exactly the converted project before calling this template.
+# Do not pass NUnit filters, worker flags, or runsettings to this path.
+parameters:
+  testModule: ''
+  testFilter: '' # Native MSTest --filter syntax, evaluated during discovery.
+  testRunTitle: Native MTP host tests
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  resultsDirectory: $(Agent.TempDirectory)/native-mtp-$(System.JobPositionInPhase)
+  sliceNumber: $(System.JobPositionInPhase)
+  totalSlices: $(System.TotalJobsInPhase)
+  retries: 1
+  timeoutSeconds: 600
+  dotnet: dotnet
+
+steps:
+- task: Bash@3
+  displayName: Select Python 3 and require a fresh native MTP results directory
+  inputs:
+    targetType: inline
+    script: |
+      set -euo pipefail
+      echo "##vso[task.setvariable variable=NativeMtpResultsEligible]false"
+      echo "##vso[task.setvariable variable=NativeMtpResultsAvailable]false"
+      if [ -e "$MTP_RESULTS_DIRECTORY" ] || [ -L "$MTP_RESULTS_DIRECTORY" ]; then
+        echo "##vso[task.logissue type=error]Native MTP results directory must be new: $MTP_RESULTS_DIRECTORY"
+        exit 1
+      fi
+      if ! python=$(command -v python3); then
+        echo "##vso[task.logissue type=error]Native MTP requires an installed Python 3.9 or later."
+        exit 1
+      fi
+      if ! "$python" -c 'import sys; print(sys.version); sys.exit(0 if sys.version_info >= (3, 9) else 1)'; then
+        echo "##vso[task.logissue type=error]Native MTP requires Python 3.9 or later: $python"
+        exit 1
+      fi
+      echo "##vso[task.setvariable variable=NativeMtpPythonInterpreter]$python"
+      echo "##vso[task.setvariable variable=NativeMtpResultsEligible]true"
+  env:
+    MTP_RESULTS_DIRECTORY: ${{ parameters.resultsDirectory }}
+
+- task: PythonScript@0
+  displayName: Discover, slice and run ${{ parameters.testRunTitle }}
+  inputs:
+    scriptSource: filePath
+    scriptPath: ${{ parameters.xaSourcePath }}/build-tools/automation/scripts/run-native-mtp-tests.py
+    pythonInterpreter: $(NativeMtpPythonInterpreter)
+    workingDirectory: ${{ parameters.xaSourcePath }}
+  env:
+    MTP_MODULE: ${{ parameters.testModule }}
+    MTP_FILTER: ${{ parameters.testFilter }}
+    MTP_RESULTS_DIRECTORY: ${{ parameters.resultsDirectory }}
+    MTP_SLICE_NUMBER: ${{ parameters.sliceNumber }}
+    MTP_TOTAL_SLICES: ${{ parameters.totalSlices }}
+    MTP_RETRIES: ${{ parameters.retries }}
+    MTP_TIMEOUT_SECONDS: ${{ parameters.timeoutSeconds }}
+    MTP_DOTNET: ${{ parameters.dotnet }}
+
+- task: Bash@3
+  displayName: Check whether this native MTP invocation produced results
+  condition: succeededOrFailed()
+  inputs:
+    targetType: inline
+    script: |
+      set -euo pipefail
+      available=false
+      if [ "$MTP_RESULTS_ELIGIBLE" = true ] && [ -d "$MTP_RESULTS_DIRECTORY" ]; then
+        available=true
+      else
+        echo "##vso[task.logissue type=warning]No fresh native MTP results were produced; skipping test and artifact publication. Earlier task failures remain failures."
+      fi
+      echo "##vso[task.setvariable variable=NativeMtpResultsAvailable]$available"
+  env:
+    MTP_RESULTS_DIRECTORY: ${{ parameters.resultsDirectory }}
+    MTP_RESULTS_ELIGIBLE: $(NativeMtpResultsEligible)
+
+- task: PublishTestResults@2
+  displayName: Publish final native MTP outcomes
+  condition: and(succeededOrFailed(), eq(variables['NativeMtpResultsAvailable'], 'true'))
+  inputs:
+    testResultsFormat: VSTest
+    searchFolder: ${{ parameters.resultsDirectory }}
+    testResultsFiles: '**/effective.trx'
+    testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
+    mergeTestResults: true
+    failTaskOnFailedTests: true
+    # A verified empty slice has no TRX. Unexpected zero discovery already fails the adapter.
+    failTaskOnMissingResultsFile: false
+    publishRunAttachments: true
+
+- task: PublishPipelineArtifact@1
+  displayName: Retain native MTP discovery, attempts and diagnostics
+  condition: and(succeededOrFailed(), eq(variables['NativeMtpResultsAvailable'], 'true'))
+  inputs:
+    targetPath: ${{ parameters.resultsDirectory }}
+    artifact: native-mtp-$(System.JobId)-$(System.JobAttempt)

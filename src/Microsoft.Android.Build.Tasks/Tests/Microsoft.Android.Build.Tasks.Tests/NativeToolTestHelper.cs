@@ -7,12 +7,15 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests;
 
-static class NativeToolTestHelper
+static partial class NativeToolTestHelper
 {
+	private static partial void AssertDirectoryExists (string path, string message);
+	private static partial void AssertFileExists (string path, string message);
+	private static partial void AssertExitCode (int exitCode, string message);
+
 	public static string GetToolPath (string name)
 	{
 		string? runtimeDirectory = Environment.GetEnvironmentVariable ("TEST_ANDROID_NDK_PATH");
@@ -23,7 +26,7 @@ static class NativeToolTestHelper
 			.Single (attribute => attribute.Key == "AndroidNdkDirectory").Value;
 		string directory = ResolveNdkDirectory (
 			runtimeDirectory, Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), buildDirectory);
-		DirectoryAssert.Exists (directory, "The configured NDK must exist on the executing test host.");
+		AssertDirectoryExists (directory, "The configured NDK must exist on the executing test host.");
 
 		string host = OperatingSystem.IsMacOS () ? "darwin-x86_64" :
 			OperatingSystem.IsLinux () ? "linux-x86_64" :
@@ -31,7 +34,7 @@ static class NativeToolTestHelper
 			throw new PlatformNotSupportedException ("No Android NDK toolchain is configured for this host.");
 		string executable = name + (OperatingSystem.IsWindows () ? ".exe" : "");
 		string path = Path.Combine (directory, "toolchains", "llvm", "prebuilt", host, "bin", executable);
-		FileAssert.Exists (path, "The configured NDK must contain the host's LLVM inspection tools.");
+		AssertFileExists (path, "The configured NDK must contain the host's LLVM inspection tools.");
 		return path;
 	}
 
@@ -59,7 +62,7 @@ static class NativeToolTestHelper
 			startInfo.ArgumentList.Add (argument);
 		}
 		var result = Capture (startInfo, TimeSpan.FromSeconds (30));
-		Assert.AreEqual (0, result.ExitCode, $"{name} failed for {string.Join (" ", arguments)}:\n{result.StandardError}\n{result.StandardOutput}");
+		AssertExitCode (result.ExitCode, $"{name} failed for {string.Join (" ", arguments)}:\n{result.StandardError}\n{result.StandardOutput}");
 		return result.StandardOutput;
 	}
 

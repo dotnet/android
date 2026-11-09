@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
-using NUnit.Framework;
 
 namespace Xamarin.ProjectTools
 {
-	public static class ProcessExtensions
+	public static partial class ProcessExtensions
 	{
 		/// <summary>
 		/// Sets environment variables on ProcessStartInfo with retries to work around a Mono Legacy bug.
 		/// https://github.com/mono/mono/issues/16607
+		/// The inconclusive callback must throw the calling framework's inconclusive exception.
 		/// </summary>
-		public static void SetEnvironmentVariable (this ProcessStartInfo psi, string key, string value)
+		public static void SetEnvironmentVariable (this ProcessStartInfo psi, string key, string value, Action<string> inconclusive)
 		{
+			if (inconclusive == null)
+				throw new ArgumentNullException (nameof (inconclusive));
 			var retries = 3;
 
 			while (retries-- > 0) {
@@ -32,7 +34,8 @@ namespace Xamarin.ProjectTools
 				}
 			}
 
-			Assert.Inconclusive ("Could not set ProcessStartInfo environment variable.");
+			inconclusive ("Could not set ProcessStartInfo environment variable.");
+			throw new InvalidOperationException ("The inconclusive callback must throw to stop the test.");
 		}
 
 		/// <summary>

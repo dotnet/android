@@ -62,17 +62,7 @@ namespace Xamarin.Android.Build.Tests
 			return value;
 		}
 
-		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '|' };
-
-		public string TestName {
-			get {
-				var result = TestContext.CurrentContext.Test.Name;
-				foreach (var c in invalidChars.Concat (Path.GetInvalidPathChars ().Concat (Path.GetInvalidFileNameChars ()))) {
-					result = result.Replace (c, '_');
-				}
-				return result.Replace ("_", string.Empty);
-			}
-		}
+		public string TestName => TestNameUtilities.GetDirectoryName (TestContext.CurrentContext.Test.Name);
 
 		public static string AndroidSdkPath {
 			get {
@@ -721,31 +711,10 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
 					return;
-			// find the "root" directory just below "temp" and clean from there because
-			// some tests create multiple subdirectories
-			var output = Path.GetFullPath (outputDir);
-			while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
-					output = Directory.GetParent (output).FullName;
-			}
-			if (!Directory.Exists (output))
-				return;
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
-			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
-				FileSystemUtils.SetDirectoryWriteable (output);
-				try {
-					Directory.Delete (output, recursive: true);
-				} catch (Exception ex) {
-					// This happens on CI occasionally, let's not fail the test
-					TestContext.Out.WriteLine ($"Failed to delete '{output}': {ex}");
-				}
-			} else {
-				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (file, Path.GetFileName (output));
-				}
-				foreach (var bl in Directory.GetFiles (Path.Combine (output), "*.binlog", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (bl, Path.GetFileName (output));
-				}
-			}
+			FileSystemUtils.CleanupTestOutputDirectory (outputDir,
+				TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
+				TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped,
+				TestContext.Out, (file, description) => TestContext.AddTestAttachment (file, description));
 		}
 	}
 }

@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <_LegacyHelpers>$(MSBuildThisFileDirectory)..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\</_LegacyHelpers>
+    <_ProjectTools>$(MSBuildThisFileDirectory)..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\</_ProjectTools>
+    <_ModernHelpers>$(MSBuildThisFileDirectory)..\..\src\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\</_ModernHelpers>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(_LegacyHelpers)EnvironmentHelper.cs;$(_LegacyHelpers)EnvironmentHelper.NUnit.cs" Link="Helpers\%(Filename)%(Extension)" />
+    <Compile Include="$(_LegacyHelpers)MockBuildEngine.cs" Link="Helpers\MockBuildEngine.cs" />
+    <Compile Include="$(_ModernHelpers)NativeToolTestHelper.cs;$(_ModernHelpers)NativeToolTestHelper.NUnit.cs" Link="Helpers\%(Filename)%(Extension)" />
+    <ProjectReference Include="$(_ProjectTools)Xamarin.ProjectTools.csproj" />
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="18.9.6" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(HostBoundaryFramework)' == 'MSTest' ">
+    <Compile Remove="$(_LegacyHelpers)EnvironmentHelper.NUnit.cs;$(_ModernHelpers)NativeToolTestHelper.NUnit.cs" />
+  </ItemGroup>
+</Project>

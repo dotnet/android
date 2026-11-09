@@ -41,6 +41,41 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
+		/// Deletes or retains the test root below a directory whose name ends in "temp".
+		/// The caller supplies its outcome policy and framework's attachment callback.
+		/// </summary>
+		public static void CleanupTestOutputDirectory (string outputDirectory, bool delete, TextWriter outputWriter, Action<string, string> addAttachment)
+		{
+			if (outputWriter == null)
+				throw new ArgumentNullException (nameof (outputWriter));
+			if (addAttachment == null)
+				throw new ArgumentNullException (nameof (addAttachment));
+
+			// Some tests create multiple subdirectories under one test's temp directory.
+			var output = Path.GetFullPath (outputDirectory);
+			while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
+				output = Directory.GetParent (output).FullName;
+			}
+			if (!Directory.Exists (output))
+				return;
+			if (delete) {
+				SetDirectoryWriteable (output);
+				try {
+					Directory.Delete (output, recursive: true);
+				} catch (Exception ex) {
+					outputWriter.WriteLine ($"Failed to delete '{output}': {ex}");
+				}
+			} else {
+				foreach (var file in Directory.GetFiles (output, "*.log", SearchOption.AllDirectories)) {
+					addAttachment (file, Path.GetFileName (output));
+				}
+				foreach (var file in Directory.GetFiles (output, "*.binlog", SearchOption.AllDirectories)) {
+					addAttachment (file, Path.GetFileName (output));
+				}
+			}
+		}
+
+		/// <summary>
 		/// Recursively deletes a directory, retrying on transient failures.
 		/// </summary>
 		/// <param name="directory">The directory path to delete.</param>
