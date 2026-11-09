@@ -26,12 +26,13 @@ namespace Java.Interop {
 	/// Blittable JNI native method registration for use with raw function pointers.
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
-	[StructLayout (LayoutKind.Sequential)]
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	public struct JniNativeMethod
 	{
-		byte* name;
-		byte* signature;
-		IntPtr functionPointer;
+		// SAFETY: Field access stores or copies addresses; pointee access and callback invocation have separate contracts.
+		safe byte* name;
+		safe byte* signature;
+		safe IntPtr functionPointer;
 
 		/// <remarks>
 		/// This constructor stores addresses without reading their memory or invoking the callback.

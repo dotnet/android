@@ -6,19 +6,19 @@ using System.Runtime.InteropServices;
 namespace Java.Interop
 {
 
-	[StructLayout(LayoutKind.Explicit)]
+	[ExtendedLayout (ExtendedLayoutKind.CUnion)]
 	public struct JniArgumentValue : IEquatable<JniArgumentValue> {
 #pragma warning disable 0414
 		// SAFETY: Only reference-free scalar values overlap; reading another view cannot manufacture a managed reference.
-		[FieldOffset(0)] safe bool z;
-		[FieldOffset(0)] safe sbyte b;
-		[FieldOffset(0)] safe char c;
-		[FieldOffset(0)] safe short s;
-		[FieldOffset(0)] safe int i;
-		[FieldOffset(0)] safe long j;
-		[FieldOffset(0)] safe float f;
-		[FieldOffset(0)] safe double d;
-		[FieldOffset(0)] safe IntPtr l;
+		safe bool z;
+		safe sbyte b;
+		safe char c;
+		safe short s;
+		safe int i;
+		safe long j;
+		safe float f;
+		safe double d;
+		safe IntPtr l;
 #pragma warning restore 0414
 
 		public JniArgumentValue (bool value)
