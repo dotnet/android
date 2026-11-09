@@ -12,9 +12,9 @@ steps:
     useAgentJdkPath: false
     jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
-- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+- template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
   parameters:
-    remove_dotnet: true
+    xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - task: NuGetAuthenticate@1
   displayName: authenticate with azure artifacts
@@ -31,9 +31,9 @@ steps:
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: dotnetup dotnet build Microsoft.Android.slnx -c $(XA.Build.Configuration) ${{ parameters.makeMSBuildArgs }} -bl:bin/Build$(XA.Build.Configuration)/build.binlog
   workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make jenkins
+  displayName: build solution
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
   parameters:
@@ -44,18 +44,17 @@ steps:
   displayName: CodeQL 3000 Finalize
   condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-- task: DotNetCoreCLI@2
+- script: >-
+    dotnetup dotnet build build-tools/installers/sign-content.proj
+    /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
+    /bl:bin/Build$(XA.Build.Configuration)/sign-content.binlog
+  workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: macOS signing - add runtime entitlements
   condition: and(succeeded(), and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')))
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    arguments: >-
-      /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: dotnetup dotnet pack Microsoft.Android.slnx --no-build -c $(XA.Build.Configuration) ${{ parameters.makeMSBuildArgs }} -bl:bin/Build$(XA.Build.Configuration)/pack.binlog
   workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make create-installers
+  displayName: create workload packages
 
 - task: CopyFiles@2
   inputs:

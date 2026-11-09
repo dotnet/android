@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="XAVersionInfo.targets" />
   <PropertyGroup>
     <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
     <_BinlogPathPrefix>$(_Root)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogPathPrefix>
@@ -17,14 +18,6 @@
     />
   </Target>
 
-  <Target Name="BuildDotNet"
-      DependsOnTargets="PrepareOpenJDK">
-    <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <MSBuild Projects="$(_Root)Microsoft.Android.slnx" Properties="DisableApiCompatibilityCheck=true" />
-    <CallTarget Targets="BuildExtraApiLevels" />
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ConfigureLocalWorkload" />
-  </Target>
-
   <!-- Build Mono.Android.dll for additional API levels if necessary -->
   <Target Name="BuildExtraApiLevels"
       Inputs="@(AndroidBuildApiLevel)"
@@ -34,18 +27,6 @@
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
          Properties="AndroidApiLevel=%(AndroidBuildApiLevel.Identity);AndroidPlatformId=%(AndroidBuildApiLevel.PlatformId);AndroidFrameworkVersion=%(AndroidBuildApiLevel.FrameworkVersion);IsUnstableVersion=%(AndroidBuildApiLevel.Unstable)"
     />
-  </Target>
-
-  <Target Name="PackDotNet"
-      DependsOnTargets="BuildExtraApiLevels">
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
-    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
-    <!-- Clean up old, previously restored packages -->
-    <ItemGroup>
-      <_OldPackages Include="$(_Root)packages\microsoft.android.*\**\*.nupkg" />
-      <_DirectoriesToRemove Include="%(_OldPackages.RootDir)%(_OldPackages.Directory)" />
-    </ItemGroup>
-    <RemoveDir Directories="@(_DirectoriesToRemove)" />
   </Target>
 
   <Target Name="UpdateMauiWorkloadsProj">
@@ -75,11 +56,14 @@
     />
   </Target>
 
-  <Target Name="InstallMaui">
+  <Target Name="InstallMaui" DependsOnTargets="GetXAVersionInfo">
     <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' and '$(MauiUseLocalPacks)' != 'true' " />
     <PropertyGroup>
-      <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
+      <_TempDirectory>$(BootstrapOutputDirectory).xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
+      <_MauiWorkloadRoot>$(BuildOutputDirectory)lib</_MauiWorkloadRoot>
+      <_MauiWorkloadRoot Condition=" Exists('$(BuildOutputDirectory)workload/sdk-manifests') ">$(BuildOutputDirectory)workload</_MauiWorkloadRoot>
+      <_MauiAndroidManifestFolder>$(_MauiWorkloadRoot)/sdk-manifests/$(DotNetSdkManifestsFolder)/microsoft.net.sdk.android/$(AndroidPackVersionLong)/</_MauiAndroidManifestFolder>
     </PropertyGroup>
     <MakeDir Directories="$(_TempDirectory)" />
 
@@ -112,35 +96,10 @@
     </ItemGroup>
     <!-- Copy manifest to diagnostics folder if specified -->
     <Copy Condition=" '$(MauiManifestDiagnosticsPath)' != '' " SourceFiles="@(_WLManifest)" DestinationFolder="$(MauiManifestDiagnosticsPath)" />
-    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
-
-    <!-- Parse NuGet.config -->
-    <XmlPeek
-        Condition=" '$(MauiUseLocalPacks)' == 'true' "
-        XmlInputPath="$(MauiSourcePath)\NuGet.config"
-        Query="/configuration/packageSources/add/@value">
-      <Output TaskParameter="Result" ItemName="_NuGetSources" />
-    </XmlPeek>
-    <XmlPeek
-        XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
-        Query="/configuration/packageSources/add/@value">
-      <Output TaskParameter="Result" ItemName="_NuGetSources" />
-    </XmlPeek>
-
-    <!-- dotnet workload install maui-android -->
-    <ItemGroup>
-      <_NuGetSources Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(MauiPackagePath.TrimEnd('\'))" />
-      <_InstallArguments Include="--skip-manifest-update" />
-      <_InstallArguments Include="--skip-sign-check" />
-      <_InstallArguments Include="--verbosity diag" />
-      <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
-      <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
-    </ItemGroup>
-    <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install $(MauiWorkloadToInstall) @(_InstallArguments, ' ')"
-        WorkingDirectory="$(_TempDirectory)"
-        EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0"
-    />
+    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(_MauiWorkloadRoot)/sdk-manifests/$(DotNetSdkManifestsFolder)/microsoft.net.sdk.maui/$(MauiVersion)/" />
+    <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools/create-packs/Microsoft.Android.Sdk.proj"
+        Targets="InstallWorkloadPacks"
+        Properties="_WorkloadPackRoot=$(_MauiWorkloadRoot);_LocalAndroidManifestFolder=$(_MauiAndroidManifestFolder);_WorkloadToInstall=$(MauiWorkloadToInstall);MauiUseLocalPacks=$(MauiUseLocalPacks);MauiPackagePath=$(MauiPackagePath);MauiSourcePath=$(MauiSourcePath)" />
     <RemoveDir Directories="$(_TempDirectory)" />
   </Target>
 </Project>

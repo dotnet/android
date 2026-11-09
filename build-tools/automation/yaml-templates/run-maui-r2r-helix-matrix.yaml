@@ -141,6 +141,7 @@ steps:
 - ${{ each testCase in parameters.testCases }}:
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
     parameters:
+      useLocalWorkload: true
       project: ${{ parameters.matrixDirectory }}/${{ testCase.name }}/MauiTestProj.csproj
       arguments: >-
         -f $(DotNetTargetFramework)-android -c Release
@@ -258,20 +259,9 @@ steps:
 
     . (Join-Path $xaSourcePath 'build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.ps1')
 
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-      $dotnetRoot = Join-Path $xaSourcePath 'bin/$(XA.Build.Configuration)/dotnet'
-      $dotnetPath = Join-Path $dotnetRoot 'dotnet'
-    } else {
-      $dotnetRoot = Join-Path $xaSourcePath 'bin\$(XA.Build.Configuration)\dotnet'
-      $dotnetPath = Join-Path $dotnetRoot 'dotnet.exe'
-    }
-
-    if (-not (Test-Path $dotnetPath)) {
-      throw "Could not find dotnet at '$dotnetPath'."
-    }
+    $dotnetupPath = (Get-Command dotnetup -CommandType Application).Source
 
     $helixProject = Join-Path $xaSourcePath 'build-tools/automation/MauiR2RHelix.proj'
-    $pathSeparator = [IO.Path]::PathSeparator
     $powerShellExe = (Get-Process -Id $PID).Path
     if (-not $powerShellExe) {
       $powerShellExe = 'powershell.exe'
@@ -294,8 +284,7 @@ steps:
 
       $scriptLines = @(
         '$ErrorActionPreference = ''Stop'''
-        "`$env:DOTNET_ROOT = '$dotnetRoot'"
-        "`$env:PATH = '$dotnetRoot$pathSeparator' + `$env:PATH"
+        "Set-Location '$xaSourcePath'"
         "`$env:BuildConfig = '$(XA.Build.Configuration)'"
         "`$env:HelixSource = 'pr/dotnet/android'"
         "`$env:HelixType = 'tests/android/maui-r2r/$($case.name)/'"
@@ -311,7 +300,7 @@ steps:
         "`$env:WorkItemTimeout = '00:10:00'"
         "`$env:WaitForWorkItemCompletion = 'true'"
         "`$env:Creator = 'dotnet-android'"
-        "& '$dotnetPath' msbuild '$helixProject' /p:TreatWarningsAsErrors=false /t:Test /bl:'$binlogPath'"
+        "& '$dotnetupPath' dotnet msbuild '$helixProject' /p:TreatWarningsAsErrors=false /t:Test /bl:'$binlogPath'"
         'exit $LASTEXITCODE'
       )
       Set-Content -LiteralPath $scriptPath -Value $scriptLines -Encoding ASCII

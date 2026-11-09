@@ -93,8 +93,8 @@ namespace Xamarin.ProjectTools
 
 		/// <summary>
 		/// The MonoAndroid reference assemblies directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net8.0/<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
-		///    bin/Debug/dotnet/packs/Microsoft.Android.Ref.34/$(Latest)/ref/net$(Latest)/
+		/// Extracted distribution packages are resolved from the worktree instead:<br/>
+		///    bin/Debug/workload/packs/Microsoft.Android.Ref.34/$(Latest)/ref/net$(Latest)/
 		/// </summary>
 		public static string MonoAndroidFrameworkDirectory {
 			get {
@@ -117,9 +117,9 @@ namespace Xamarin.ProjectTools
 
 		/// <summary>
 		/// The MonoAndroidTools directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Sdk.Darwin/34.99.0/tools/<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the .NET sandbox location instead:<br/>
-		///	Windows:  bin\Debug\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
-		///	macOS:    bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
+		/// Extracted distribution packages are resolved from the worktree instead:<br/>
+		///	Windows:  bin\Debug\workload\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
+		///	macOS:    bin/Debug/workload/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
 		/// </summary>
 		public static string AndroidMSBuildDirectory {
 			get {
@@ -130,17 +130,19 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public static string DotNetPreviewDirectory => Path.Combine (XABuildPaths.PrefixDirectory, "dotnet");
+		public static string DotNetPreviewDirectory => Path.GetFullPath (Path.Combine (System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory (), "..", "..", ".."));
 
 		public static string DotNetPreviewPacksDirectory => UseLocalBuildOutput ? LocalPacksDir : DefaultPacksDir;
 
 		public static string DotNetPreviewAndroidSdkDirectory => UseLocalBuildOutput ? LocalDotNetAndroidSdkDirectory : DefaultDotNetAndroidSdkDirectory;
 
-		public static string WorkloadPackOverridePath => Path.Combine (XABuildPaths.PrefixDirectory, "lib");
+		public static string WorkloadPackOverridePath => Directory.Exists (Path.Combine (XABuildPaths.PrefixDirectory, "workload", "sdk-manifests"))
+			? Path.Combine (XABuildPaths.PrefixDirectory, "workload")
+			: Path.Combine (XABuildPaths.PrefixDirectory, "lib");
 
 		public static string WorkloadManifestOverridePath => Path.Combine (WorkloadPackOverridePath, "sdk-manifests");
 
-		static string DefaultPacksDir => Path.Combine (DotNetPreviewDirectory, "packs");
+		static string DefaultPacksDir => Path.Combine (XABuildPaths.PrefixDirectory, "workload", "packs");
 
 		static string LocalPacksDir => Path.Combine (WorkloadPackOverridePath, "packs");
 
@@ -184,8 +186,7 @@ namespace Xamarin.ProjectTools
 
 		/// <summary>
 		/// Tests will attempt to run against local build output directories by default,
-		///  and fall back to `dotnet/packs` if a local build does not exist.
-		/// This will always return false for our tests running in CI.
+		///  or against extracted packages under the worktree's `workload/packs`.
 		/// </summary>
 		public static bool UseLocalBuildOutput {
 			get {
