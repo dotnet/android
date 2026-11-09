@@ -14,8 +14,9 @@ Building .NET for Android requires:
 
 [dotnetsdk]: https://docs.microsoft.com/de-de/dotnet/core/install/sdk
 
-The `make prepare` build step (or `/t:Prepare` on Windows) will
-check that all required dependencies are present. If a dependency is
+Run `dotnetup sdk install` to install the `global.json` SDK.
+`dotnetup dotnet build Microsoft.Android.slnx` provisions build tools and
+checks required dependencies automatically. If a dependency is
 missing, the build will fail and an error message will be displayed
 attempting to provide install instructions to obtain the missing
 dependency. Install missing dependencies using your platform's package manager.

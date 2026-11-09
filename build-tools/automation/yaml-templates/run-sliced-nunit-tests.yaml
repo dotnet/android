@@ -13,7 +13,7 @@ steps:
     if ($env:TEST_FILTER) {
       $filterArgs = @('--filter', $env:TEST_FILTER)
     }
-    & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" `
+    & dotnetup dotnet -- `
     run build-tools/automation/scripts/RunSlicedTests.cs -- `
     --test-assembly "${{ parameters.testAssembly }}" `
     --results-directory "$(Agent.TempDirectory)/TestResults" `

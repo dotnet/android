@@ -19,21 +19,21 @@ steps:
     $projectDir = Split-Path -Parent "${{ parameters.project }}"
     $projectFile = Split-Path -Leaf "${{ parameters.project }}"
     $resultsDir = "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
-    Push-Location $projectDir
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
-        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}/dotnet"
-    } else {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.buildConfiguration }}\dotnet"
-        $env:PATH = "${DOTNET_ROOT};$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
-    }
-    & $dotnetPath test $projectFile -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
+    # Resolve the root pin before entering the project-local MTP global.json.
+    Push-Location "${{ parameters.xaSourcePath }}"
+    $sdkDirectory = & dotnetup dotnet msbuild build-tools/workload-tools/workload-tools.csproj -getProperty:MSBuildBinPath
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $sdkCli = Join-Path $sdkDirectory 'dotnet.dll'
+    $wrapper = if ($env:OS -eq 'Windows_NT') { 'dotnet-local.cmd' } else { 'dotnet-local.sh' }
+    $dotnet = Join-Path "${{ parameters.xaSourcePath }}" $wrapper
+    Set-Location $projectDir
+    & $dotnet exec $sdkCli test $projectFile -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
     Pop-Location
   displayName: run ${{ parameters.testName }}
   condition: ${{ parameters.condition }}
   continueOnError: true
+  env:
+    CONFIGURATION: ${{ parameters.buildConfiguration }}
 
   # If the install above failed, snapshot device state so we can classify WHY on
   # the next iteration instead of guessing: connectivity (adb devices/get-state),
@@ -174,6 +174,7 @@ steps:
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
+    useLocalWorkload: true
     configuration: ${{ parameters.buildConfiguration }}
     xaSourcePath: ${{ parameters.xaSourcePath }}
     project: ${{ parameters.project }}
