@@ -137,8 +137,9 @@
       DependsOnTargets="_ResolveWorkloadPacksInputs"
       Inputs="$(MSBuildThisFileFullPath);@(_WorkloadPlanInput)"
       Outputs="$(_WorkloadPackagesProject)">
+    <!-- A directory's trailing backslash must not escape the closing quote on Windows. -->
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_WorkloadToolAssembly)&quot; &quot;$(DotNetPreviewPath)&quot; &quot;$(MicrosoftDotnetSdkInternalPackageVersion)&quot; &quot;$(_WorkloadManifestDirectory)&quot; &quot;$(_WorkloadDestination)&quot; &quot;$(_WorkloadPackageDirectory)&quot; &quot;$(_WorkloadPackagesProject)&quot; $(_WorkloadToInstall) &quot;@(_WorkloadSources, ';')&quot;"
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_WorkloadToolAssembly)&quot; &quot;$(DotNetPreviewPath).&quot; &quot;$(MicrosoftDotnetSdkInternalPackageVersion)&quot; &quot;$(_WorkloadManifestDirectory).&quot; &quot;$(_WorkloadDestination).&quot; &quot;$(_WorkloadPackageDirectory).&quot; &quot;$(_WorkloadPackagesProject)&quot; $(_WorkloadToInstall) &quot;@(_WorkloadSources, ';')&quot;"
         EnvironmentVariables="DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=;DOTNETSDK_WORKLOAD_PACK_ROOTS="
     />
   </Target>
@@ -151,7 +152,7 @@
   </Target>
 
   <PropertyGroup>
-    <ConfigureLocalWorkloadDependsOn Condition="'$(RunningOnCI)' != 'true'">DeleteExtractedWorkloadPacks;CreateLocalFrameworkLists;CreateLocalRuntimeLists;InstallManifestAndDependencies;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
+    <ConfigureLocalWorkloadDependsOn>DeleteExtractedWorkloadPacks;CreateLocalFrameworkLists;CreateLocalRuntimeLists;InstallManifestAndDependencies;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
   </PropertyGroup>
   <Target Name="ConfigureLocalWorkload" DependsOnTargets="$(ConfigureLocalWorkloadDependsOn)" />
 

@@ -10,7 +10,7 @@ parameters:
 
 steps:
 - pwsh: >-
-    dotnetup dotnet test "${{ parameters.testAssembly }}" --logger trx
+    dotnetup dotnet -- test "${{ parameters.testAssembly }}" --logger trx
     --results-directory "$(Agent.TempDirectory)/${{ parameters.testRunTitle }}"
     ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
   workingDirectory: ${{ parameters.xaSourcePath }}
