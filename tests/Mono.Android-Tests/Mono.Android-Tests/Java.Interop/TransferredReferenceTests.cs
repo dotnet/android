@@ -81,7 +81,7 @@ namespace Java.InteropTests
 					throw new InvalidOperationException ("Transferred input activation failed.");
 				};
 				try {
-					Assert.Throws<InvalidOperationException> (() => {
+					Assert.ThrowsExactly<InvalidOperationException> (() => {
 						if (directProxy) {
 							var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (handle, typeof (TrimmableRuntimeJavaInteropPeer));
 							Assert.IsNotNull (proxy);

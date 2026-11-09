@@ -193,10 +193,10 @@ namespace Android.RuntimeTests
 			var managedToJava = GetConstant<string> (eventSourceType, "ManagedToJavaTypeMapDirection");
 
 			using var listener = new CapturingEventListener ();
-			var javaException = Assert.Throws<InvalidOperationException> (() =>
+			var javaException = Assert.ThrowsExactly<InvalidOperationException> (() =>
 				instance.TryGetTargetType ("net/dot/android/test/ThrowingType", out _));
 			Assert.AreEqual (ThrowingTypeMap.ExceptionMessage, javaException?.Message);
-			var managedException = Assert.Throws<InvalidOperationException> (() =>
+			var managedException = Assert.ThrowsExactly<InvalidOperationException> (() =>
 				instance.TryGetJniNameForManagedType (typeof (RuntimeEventSourceTests), out _));
 			Assert.AreEqual (ThrowingTypeMap.ExceptionMessage, managedException?.Message);
 
