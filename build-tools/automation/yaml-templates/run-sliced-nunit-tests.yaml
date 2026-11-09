@@ -45,7 +45,7 @@ steps:
 - ${{ if eq(parameters.retryFailedTests, 'true') }}:
   # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
   - pwsh: |
-      dotnetup dotnet `
+      dotnetup dotnet -- `
         test `
         ${{ parameters.testAssembly }} `
         --settings "${{ parameters.testAssembly }}.runsettings" `

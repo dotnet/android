@@ -57,6 +57,8 @@ or `dotnet-local.cmd` with `CONFIGURATION` selecting the SDK build configuration
 The `run-dotnet-preview.yaml` template opts into that behavior with
 `useLocalWorkload: true`; its `configuration` parameter selects workload paths,
 independently of the application's `-c` argument.
+The wrappers disable the MSBuild server so workload resolution does not reuse
+manifests cached by a build outside the wrapper.
 
 Build and packaging commands are documented for [Unix](../Documentation/building/unix/instructions.md)
 and [Windows](../Documentation/building/windows/instructions.md).

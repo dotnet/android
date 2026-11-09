@@ -132,7 +132,7 @@ extends:
           inputs:
             forceReinstallCredentialProvider: true
 
-        - script: dotnetup dotnet tool exec boots@1.1.0.36 --allow-roll-forward -- https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
+        - script: dotnetup dotnet -- tool exec boots@1.1.0.36 --allow-roll-forward -- https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
           displayName: Install Mono
 
         - script: dotnetup dotnet build build-tools/scripts/Prepare.proj -c $(XA.Build.Configuration) -bl:bin/Build$(XA.Build.Configuration)/prepare.binlog
