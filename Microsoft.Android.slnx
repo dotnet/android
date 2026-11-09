@@ -7,7 +7,6 @@
   <Folder Name="/Build-Tools/">
     <Project Path="build-tools/api-merge/api-merge.csproj" />
     <Project Path="build-tools/api-xml-adjuster/api-xml-adjuster.csproj" />
-    <Project Path="build-tools/check-boot-times/check-boot-times.csproj" />
     <Project Path="build-tools/create-android-api/create-android-api.csproj" />
     <Project Path="build-tools/jnienv-gen/jnienv-gen.csproj" />
   </Folder>
@@ -66,7 +65,6 @@
     <Project Path="src/Xamarin.Android.Tools.ApiXmlAdjuster/Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
     <Project Path="src/class-parse/class-parse.csproj" />
     <Project Path="src/java-source-utils/java-source-utils.csproj" />
-    <Project Path="tools/relnote-gen/relnote-gen.csproj" />
   </Folder>
   <Project Path="src/Microsoft.Android.Run/Microsoft.Android.Run.csproj" />
   <Project Path="src/Microsoft.Android.Sdk.TrimmableTypeMap/Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />

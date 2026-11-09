@@ -16,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[Category ("Node-2")]
 	[TestFixture, NonParallelizable]
-	public class DebuggingTasksTests : BaseTest
+	public partial class DebuggingTasksTests : BaseTest
 	{
 		[OneTimeSetUp]
 		public void SetUp ()
@@ -457,8 +457,11 @@ namespace Xamarin.Android.Build.Tests
 				overrideListing ? 0 : 1,
 				overrideListing ? $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000" : listing,
 				overrideListing ? listing : $"{FakeAdbDevice.OverrideRoot}/.fastdeploy-manifest-hash|64|1700000000");
+			if (transferMode == "Symlink") {
+				device.FailCommand ("ln -sf", "ln: Operation not permitted");
+			}
 
-			Assert.IsFalse (device.RunFastDeploy (transferMode), "Partial listings must fail deployment.");
+			Assert.IsFalse (device.RunFastDeploy (symlink: transferMode == "Symlink"), "Partial listings must fail deployment.");
 
 			Assert.AreEqual (1, device.Errors.Count);
 			Assert.AreEqual ("XA0129", device.Errors [0].Code);
@@ -568,11 +571,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// Runs the real FastDeploy task in Copy mode against a fake `adb` script, so the tests depend
-		// only on the task's public properties and on the adb command lines it issues. The script
-		// answers `adb devices` and the staging file listing with canned output, records every command
-		// line, and succeeds silently for everything else. It is a bash script, so the tests that use
-		// it are not supported on Windows.
+		// Runs FastDeploy against a fake adb with configurable command results.
 		sealed class FakeAdbDevice : IDisposable
 		{
 			public const string PackageName = "com.example.app";
@@ -583,24 +582,41 @@ namespace Xamarin.Android.Build.Tests
 				#!/bin/bash
 				dir="$(dirname "$0")"
 				printf '%s\n' "$*" >> "$dir/adb.log"
+				for fault in fault second-fault; do
+					if [ -f "$dir/$fault" ] && [[ "$*" == *"$(cat "$dir/$fault")"* ]]; then
+						cat "$dir/$fault.out" >&2
+						exit "$(cat "$dir/$fault.exit")"
+					fi
+				done
 				case "$*" in
 					"devices -l")
 						echo "List of devices attached"
 						echo "emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1"
 						;;
-					*"pwd; pidof"*)
+					*"pwd"*"pidof"*)
+						cat "$dir/package.out"
+						exit "$(cat "$dir/package.exit")"
+						;;
+					*"readlink -f ."*)
 						echo "/data/user/0/com.example.app"
 						;;
 					*"shell find "*"-exec stat"*)
 						cat "$dir/staging-listing.out"
 						exit "$(cat "$dir/staging-listing.exit")"
 						;;
-					*"find "*"-exec stat"*)
-						cat "$dir/override-listing.out"
+					*"run-as"*"find "*)
+						cat "$dir/override.out"
+						exit "$(cat "$dir/override.exit")"
 						;;
-					*"ln -sf"*)
-						echo "ln: Operation not permitted" >&2
-						exit 1
+					*"remote="*"override="*)
+						hash="$(cat "$dir/hash" 2>/dev/null)"
+						echo "remote=$hash"
+						echo "override=$hash"
+						;;
+					*"printf %s '"*)
+						if [[ "$*" =~ printf\ %s\ \'([0-9a-fA-F]+)\' ]]; then
+							printf '%s' "${BASH_REMATCH[1]}" > "$dir/hash"
+						fi
 						;;
 				esac
 				exit 0
@@ -608,16 +624,23 @@ namespace Xamarin.Android.Build.Tests
 
 			readonly string directory = Path.Combine (Path.GetTempPath (), "fake-adb-" + Guid.NewGuid ().ToString ("N"));
 			readonly List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
+			readonly List<ITaskItem> files = [];
 
-			public FakeAdbDevice (int stagingListingExitCode, string stagingListing, string overrideListing = "")
+			public FakeAdbDevice ()
+				: this (0, $"{StagingRoot}/arm64-v8a/Foo.dll|3|1700000000")
 			{
-				if (TestEnvironment.IsWindows) {
+			}
+
+			public FakeAdbDevice (int stagingListingExitCode, string stagingListing, string overrideListing = "files/.__override__/stale.dll|1|1700000000")
+			{
+				if (OperatingSystem.IsWindows ()) {
 					Assert.Ignore ("The fake adb is a bash script, which is not supported on Windows.");
 				} else {
 					Directory.CreateDirectory (Path.Combine (directory, "obj"));
-					File.WriteAllText (Path.Combine (directory, "Foo.dll"), "foo");
-					SetStagingListing (stagingListingExitCode, stagingListing);
-					File.WriteAllText (Path.Combine (directory, "override-listing.out"), overrideListing);
+					AddFile ("Foo.dll");
+					WriteResult ("staging-listing", stagingListingExitCode, stagingListing);
+					WriteResult ("package", 0, "/data/user/0/com.example.app");
+					WriteResult ("override", 0, overrideListing);
 
 					var adb = Path.Combine (directory, "adb");
 					File.WriteAllText (adb, AdbScript);
@@ -633,8 +656,7 @@ namespace Xamarin.Android.Build.Tests
 
 			public void SetStagingListing (int exitCode, string output)
 			{
-				File.WriteAllText (Path.Combine (directory, "staging-listing.out"), output);
-				File.WriteAllText (Path.Combine (directory, "staging-listing.exit"), exitCode.ToString ());
+				WriteResult ("staging-listing", exitCode, output);
 			}
 
 			public void TouchPayload ()
@@ -646,21 +668,84 @@ namespace Xamarin.Android.Build.Tests
 			// One entry per adb invocation, without the adb executable itself.
 			public IReadOnlyList<string> Commands => File.ReadAllLines (Path.Combine (directory, "adb.log"));
 
-			public bool RunFastDeploy (string transferMode = "Copy")
+			public void AddFile (string name)
 			{
-				var foo = new TaskItem (Path.Combine (directory, "Foo.dll"));
-				foo.SetMetadata ("TargetPath", "arm64-v8a/Foo.dll");
+				string path = Path.Combine (directory, name);
+				File.WriteAllText (path, "foo");
+				var item = new TaskItem (path);
+				item.SetMetadata ("TargetPath", "arm64-v8a/" + name);
+				files.Add (item);
+				File.WriteAllLines (Path.Combine (directory, "staging-listing.out"),
+					files.Select (file => $"{StagingRoot}/{file.GetMetadata ("TargetPath")}|3|1700000000"));
+			}
+
+			public void FailCommand (string command, string output, bool second = false, int exitCode = 1)
+			{
+				string fault = second ? "second-fault" : "fault";
+				File.WriteAllText (Path.Combine (directory, fault), command);
+				WriteResult (fault, exitCode, output);
+			}
+
+			public void WriteResult (string name, int exitCode, string output)
+			{
+				File.WriteAllText (Path.Combine (directory, name + ".exit"), exitCode.ToString ());
+				File.WriteAllText (Path.Combine (directory, name + ".out"), output);
+			}
+
+			public bool RunFastDeploy (bool symlink = false, bool embedded = false, bool install = false)
+			{
+				string apk = Path.Combine (directory, "app.apk");
+				if (install) {
+					File.WriteAllText (apk, "");
+				}
 				var task = new FastDeploy {
 					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
 					AdbToolPath = directory,
-					AppFileTransferMode = transferMode,
-					FastDevFiles = new ITaskItem [] { foo },
+					AppFileTransferMode = symlink ? "Symlink" : "Copy",
+					EmbedAssembliesIntoApk = embedded,
+					FastDevFiles = files.ToArray (),
 					IntermediateOutputPath = Path.Combine (directory, "obj") + Path.DirectorySeparatorChar,
 					PackageName = PackageName,
+					PackageFile = install ? apk : null,
 					PrimaryCpuAbi = "arm64-v8a",
 					UploadFlagFile = Path.Combine (directory, "obj", "upload.flag"),
 				};
 				return task.Execute ();
+			}
+
+			public int RunGlobScript (string failingCommand)
+			{
+				string staging = Path.Combine (directory, "staging");
+				string target = Path.Combine (directory, "override");
+				Directory.CreateDirectory (staging);
+				Directory.CreateDirectory (target);
+				foreach (string name in new [] { "Bar.dll", "Foo.dll", "Zoo.dll" }) {
+					File.WriteAllText (Path.Combine (staging, name), "foo");
+					File.WriteAllText (Path.Combine (target, name), "old");
+				}
+				string executable = Path.Combine (directory, failingCommand);
+				File.WriteAllText (executable, $"""
+					#!/bin/sh
+					case "$*" in *Foo.dll*) exit 137;; esac
+					exec /bin/{failingCommand} "$@"
+					""");
+				if (!OperatingSystem.IsWindows ()) {
+					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				}
+
+				string invocation = Commands.Single (c => c.Contains ("for f in"));
+				const string shellPrefix = "'sh' '-c' ";
+				string script = invocation.Substring (invocation.IndexOf (shellPrefix, StringComparison.Ordinal) + shellPrefix.Length)
+					.Replace (StagingRoot + "/arm64-v8a", staging)
+					.Replace ("files/.__override__/arm64-v8a", target);
+				var startInfo = new ProcessStartInfo ("/bin/sh") { UseShellExecute = false };
+				startInfo.ArgumentList.Add ("-c");
+				startInfo.ArgumentList.Add ("/bin/sh -c " + script);
+				startInfo.Environment ["PATH"] = directory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH");
+				using var process = Process.Start (startInfo);
+				Assert.IsNotNull (process);
+				process.WaitForExit ();
+				return process.ExitCode;
 			}
 
 			public void Dispose ()
