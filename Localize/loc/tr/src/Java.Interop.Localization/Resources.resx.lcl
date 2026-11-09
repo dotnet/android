@@ -72,15 +72,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Generator_BG4500" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA['lang-features=default-interface-methods' is not compatible with 'codegen-target=xamarinandroid'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['lang-features=default-interface-methods', 'codegen-target=xamarinandroid' ile uyumlu değil.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";Generator_BG8101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected class child {0}.]]></Val>
@@ -387,38 +378,20 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Generator_BG8C02" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.]]></Val>
+          <Val><![CDATA[For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' türü için Java sarmalayıcı oluşturulamıyor. Yalnızca 'class' türleri desteklenir.]]></Val>
+            <Val><![CDATA['{0}' türü için Kotlin tarafından adı değiştirilmiş '{1}' yöntemi (özgün adı '{2}'), silme işlemi sonucunda aynı C# imzasına sahip birden çok karma değer son ekli eşdüzey yönteme sahiptir. Yalnızca ilk yöntem sunulacak; bu uyarıyı durdurmak için yinelenen yöntemi Metadata.xml aracılığıyla kaldırın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4201" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Generator_BG8C03" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot determine JNI name for type '{0}'.]]></Val>
+          <Val><![CDATA[JNI signature override '{0}' is invalid or does not match the parameter count for member '{1}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' türü için JNI adı belirlenemiyor.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4203" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['Name' özelliği 'com.example.MyClass' gibi tam bir tür olmalıdır ve '{0}' için paket bulunamadı.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4204" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unable to resolve interface type '{0}'. Are you missing an assembly reference?]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' arabirim türü çözümlenemiyor. Derleme başvurusu eksik mi?]]></Val>
+            <Val><![CDATA[JNI imzasını geçersiz kılma '{0}' geçersiz veya '{1}' üyesinin parametre sayısıyla eşleşmiyor.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -455,15 +428,6 @@
           <Val><![CDATA[[ExportField]5D; cannot be used on a method returning 'void'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[[ExportField]5D; 'void' döndüren bir yöntemde kullanılamaz.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4217" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Geçerli bir Java yöntem adı olmadığından Kotlin’de oluşturulan '{0}' yöntemi geçersiz kılınamıyor. Bu yöntem yalnızca Kotlin'den geçersiz kılınabilir.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
