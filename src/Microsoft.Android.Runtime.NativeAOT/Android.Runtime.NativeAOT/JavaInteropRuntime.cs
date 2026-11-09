@@ -26,20 +26,24 @@ static partial class JavaInteropRuntime
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 	private static unsafe partial int AndroidCryptoNative_InitLibraryOnLoad (IntPtr vm, IntPtr reserved);
 
+	/// <safety>
+	/// The VM must invoke this callback with its live JavaVM on an attached thread and the JNI_OnLoad
+	/// reserved argument. The VM must remain live for the lifetime of the loaded library.
+	/// </safety>
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
-	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
+	static unsafe int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
 			// SAFETY: the VM invokes JNI_OnLoad with its live JavaVM; the stub pins the matching descriptor.
-			int hostVersion = unsafe(NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs));
+			int hostVersion = unsafe (NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs));
 			if (hostVersion < 0) {
 				return hostVersion;
 			}
 			// The crypto initializer caches Java classes using JNI_OnLoad's application class loader.
 			// SAFETY: the same VM-owned JavaVM remains live while the library caches its JNI classes.
-			int cryptoVersion = unsafe(AndroidCryptoNative_InitLibraryOnLoad (vm, reserved));
+			int cryptoVersion = unsafe (AndroidCryptoNative_InitLibraryOnLoad (vm, reserved));
 			if (cryptoVersion < 0) {
 				AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", "Cryptography JNI initialization failed");
 				return cryptoVersion;
@@ -62,6 +66,7 @@ static partial class JavaInteropRuntime
 	}
 
 	/// <safety>
+	/// <paramref name="jnienv"/> must be the current thread's live JNI environment.
 	/// <paramref name="language"/>, <paramref name="filesDir"/> and <paramref name="cacheDir"/> must be null
 	/// or live JNI string references on the current thread for the call. <paramref name="initArgs"/> must match
 	/// the native descriptor layout; its native data and global references have runtime/process lifetimes.
@@ -71,8 +76,12 @@ static partial class JavaInteropRuntime
 	private static unsafe partial void NativeAOT_OnInit (IntPtr jnienv, IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
+	/// <safety>
+	/// JNI must supply the current thread's live environment and live borrowed class and class-loader references
+	/// for this callback. String references must be null or live for the callback. The VM must outlive the runtime created here.
+	/// </safety>
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
-	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader, IntPtr language, IntPtr filesDir, IntPtr cacheDir, int localDateTimeOffset)
+	static unsafe void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader, IntPtr language, IntPtr filesDir, IntPtr cacheDir, int localDateTimeOffset)
 	{
 		JniTransition   transition  = default;
 		try {
@@ -98,7 +107,7 @@ static partial class JavaInteropRuntime
 				ValueManager                = new TrimmableTypeMapValueManager (),
 			};
 			// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation duplicates the loader and the VM outlives the runtime.
-			runtime = unsafe(options.CreateJreVM ());
+			runtime = unsafe (options.CreateJreVM ());
 
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
 			unsafe {
@@ -106,7 +115,10 @@ static partial class JavaInteropRuntime
 				JNIEnvInit.InitializeNativeAotRuntime (runtime, initArgs);
 			}
 
-			SetAppContextBaseDirectory (filesDir);
+			unsafe {
+				// SAFETY: JNI keeps the borrowed filesDir string live until this callback returns.
+				SetAppContextBaseDirectory (filesDir);
+			}
 
 			transition  = new JniTransition (jnienv);
 
@@ -123,9 +135,13 @@ static partial class JavaInteropRuntime
 	// MonoVM and CoreCLR hand `APP_CONTEXT_BASE_DIRECTORY` to the runtime as a host property, but
 	// NativeAOT has no such property bag: without this, `AppContext.BaseDirectory` falls back to the
 	// directory of `Environment.ProcessPath`, which is `/system/bin/` (where `app_process64` lives).
-	static void SetAppContextBaseDirectory (IntPtr filesDir)
+	/// <safety>
+	/// <paramref name="filesDir"/> must be null or a live JNI string reference on the current thread for the call.
+	/// </safety>
+	static unsafe void SetAppContextBaseDirectory (IntPtr filesDir)
 	{
-		string? baseDirectory = JniEnvironment.Strings.ToString (filesDir);
+		// SAFETY: the caller keeps the JNI string live while ToString copies its contents.
+		string? baseDirectory = unsafe (JniEnvironment.Strings.ToString (filesDir));
 		if (string.IsNullOrEmpty (baseDirectory)) {
 			return;
 		}
