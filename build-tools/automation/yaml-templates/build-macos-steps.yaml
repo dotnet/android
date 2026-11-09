@@ -24,9 +24,9 @@ steps:
     useAgentJdkPath: false
     jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
-- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+- template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
   parameters:
-    remove_dotnet: true
+    xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - task: NuGetAuthenticate@1
   displayName: authenticate with azure artifacts
@@ -44,9 +44,9 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: dotnetup dotnet build Microsoft.Android.slnx -c $(XA.Build.Configuration) ${{ parameters.makeMSBuildArgs }} -bl:bin/Build$(XA.Build.Configuration)/build.binlog
   workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make jenkins
+  displayName: build solution
   retryCountOnTaskFailure: 1
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
@@ -54,9 +54,9 @@ steps:
     configuration: $(XA.Build.Configuration)
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: dotnetup dotnet pack Microsoft.Android.slnx --no-build -c $(XA.Build.Configuration) ${{ parameters.makeMSBuildArgs }} -bl:bin/Build$(XA.Build.Configuration)/pack.binlog
   workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make create-installers
+  displayName: create workload packages
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 

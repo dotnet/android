@@ -1,8 +1,10 @@
 # Building .NET for Android on Linux and macOS
 
-Building .NET for Android on Linux and macOS relies on GNU make and
-MSBuild via the `msbuild` command (within Mono). MSBuild via `xbuild`
-can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
+Building .NET for Android on Linux and macOS uses the .NET SDK and MSBuild.
+Install [dotnetup](https://learn.microsoft.com/dotnet/core/tools/dotnetup/getting-started)
+and put `dotnetup` on `PATH`. No shell-profile activation, SDK `PATH` changes,
+or global `DOTNET_ROOT` setting is required. SDK binaries are shared across
+worktrees; Android packs and manifests stay inside each worktree.
 
 # Building .NET for Android
 
@@ -16,49 +18,35 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. Prepare the project:
+ 5. Install the pinned SDK:
 
-        make prepare
-        # -or-
-        make prepare MSBUILD=msbuild
+        dotnetup sdk install
 
-    This will ensure that the build dependencies are installed, perform
-    `git submodule update`, download NuGet dependencies, and other
-    "preparatory" and pre-build tasks that need to be performed.
+ 6. Build the project:
 
- 7. Build the project:
+        dotnetup dotnet build Microsoft.Android.slnx
 
-        make
-        # -or-
-        make MSBUILD=msbuild
+    The solution prepares build dependencies, builds the configured Android
+    API levels and ABIs, and configures the local Android workload. No separate
+    preparation command is needed. Workload setup runs for command-line
+    solution builds, not IDE builds or individual project builds.
 
-    The default `make all` target builds a *subset* of everything, in
-    the interests of build speed: it builds only one
-    `$(TargetFrameworkVersion)`, and only supports the `armeabi-v7a`
-    and `x86` ABIs (for hardware and emulator testing).
+    For a Release build:
 
-    If you want to build *everything* -- support for *all*
-    `$(TargetFrameworkVersion)`s, all ABIs, Windows cross-compilers, etc. --
-    then use the `make jenkins` target:
+        dotnetup dotnet build Microsoft.Android.slnx -c Release
 
-        make jenkins
-        # -or-
-        make jenkins MSBUILD=msbuild
+    Use `-bl` on `dotnetup dotnet build` to capture a binary log.
 
-@jonathanpeppers gave a talk at [Xamarin Developer Summit
-2019][xamdevsummit] with a full walkthrough. Even though the demo was
-on Windows, many of the concepts should still apply:
+    Building the solution does not create distribution packages or run tests.
 
-[![Build .NET for Android](https://img.youtube.com/vi/8qaQleb6Tbk/maxresdefault.jpg)][xamdevsummit]
-
-[xamdevsummit]: https://youtu.be/8qaQleb6Tbk
+To check the selected version, run `dotnetup dotnet -- --version`.
+The separator also forwards help options: `dotnetup dotnet -- build --help`.
+See [SDK selection and CI](../../../eng/README.md#sdk-selection-and-ci) for
+dependency-update and CI setup details.
 
 # Creating a local .NET for Android Workload
 
-`make prepare` provisions a specific build of .NET to
-`bin/$(Configuration)/dotnet`.
-
-Once `make all` or `make jenkins` have completed, your local
+Once `dotnetup dotnet build Microsoft.Android.slnx` has completed, your local
 `bin/$(Configuration)/lib/packs` directory will be populated with a
 local Android "workload" in `Microsoft.Android.Sdk.$(HostOS)` matching
 your operating system.
@@ -78,27 +66,32 @@ Build the project with:
 
     $ ./dotnet-local.sh build foo.csproj
 
-Using the `dotnet-local` script will execute the `dotnet` provisioned in
-`bin/$(Configuration)/dotnet` and will use the locally built binaries.
+The `dotnet-local` script sets worktree-local workload overrides and forwards
+arguments unchanged through `dotnetup dotnet`, using normal `global.json` lookup.
+It defaults to Debug workload paths. Set `CONFIGURATION=Release` to select Release
+packs; `-c Release` only controls the forwarded build/test command.
+Extracted distribution workloads are preferred over source-build packs when present.
+Dependencies are restored through the NuGet cache and extracted locally.
+Build and packaging operations never install or remove workloads in the
+shared SDK.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
 # Creating installers
 
-Once `make all` or `make jenkins` have completed, macOS (.pkg),
-Windows (.vsix), and .NET for Android workload .nupkg files
-can be built with:
+Build and create the .NET for Android workload packages with:
 
-    make create-installers
+    dotnetup dotnet pack Microsoft.Android.slnx
 
-Alternatively, .NET for Android workload packs can be built with:
-
-    make create-nupkgs
-    # -or-
-    make pack-dotnet
+Packing defaults to Release. Use `--no-build -c Debug` to package an existing
+Debug build without rebuilding it.
 
 Several `.nupkg` files will be output in `./bin/Build$(Configuration)/nuget-unsigned`.
-
+Packing creates the distribution artifacts; it does not install workloads.
+CI extracts these packages into `bin/$(Configuration)/workload` for testing,
+separate from source-build packs in `bin/$(Configuration)/lib`.
+`dotnet-local` uses the extracted workload when present; rebuilding the solution
+switches back to source-build output.
 
 # Running Unit Tests
 
@@ -110,54 +103,34 @@ The `dotnet/android` repo contains several unit tests:
   * `.apk`/instrumentation-based unit tests, which need to execute on an
     Android device.
 
-All unit tests can be executed via the `make run-all-tests` target:
+Run the host-side build tests with:
 
-	$ make run-all-tests
+    ./dotnet-local.sh test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll
 
-All NUnit-based tests can be executed via the `make run-nunit-tests` target:
+Standalone test projects can be run with `dotnetup dotnet test <project>.csproj`.
 
-	$ make run-nunit-tests
-
-All `.apk`-based (on-device) unit tests are run with `dotnet test`; see
+All `.apk`-based (on-device) unit tests are run with `dotnetup dotnet test`; see
 [Running On-Device Tests](#running-on-device-tests) below.
 
 
-## Running Individual NUnit Tests
-
-Individual NUnit-based tests can be executed by overriding the `$(NUNIT_TESTS)`
-make variable:
-
-	$ make run-nunit-tests NUNIT_TESTS=bin/TestDebug/Xamarin.Android.Build.Tests.dll
-
 ## Listing Nunit Tests
 
-In order to get a list of the tests you can use the `list-nunit-tests` make target
+    ./dotnet-local.sh test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --list-tests
 
-    make list-nunit-tests
-
-or via the `ListNUnitTests` target
-
-    msbuild Microsoft.Android.slnx /t:ListNUnitTests
-
-This will produce a list of the tests in all of the test assemblies.
+This lists the tests in the specified assembly.
 
 ## Running Specific Nunit Tests
 
-You can run then a single (or a group) of tests using the `$(TEST)` make variable
-or msbuild property.
-
-    make run-nunit-tests TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
-
-or via
-
-    msbuild Microsoft.Android.slnx /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    ./dotnet-local.sh test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll \
+        --filter "FullyQualifiedName~Aapt2Tests.Aapt2Compile"
 
 ## Running On-Device Tests
 
-The on-device test apps are ordinary `dotnet test` projects that run their
+The on-device test apps are ordinary `dotnetup dotnet test` projects that run their
 NUnit tests inside an Android instrumentation. Install the app, then run the
 tests against the attached device or emulator:
 
+    $ export CONFIGURATION=Release
     $ ./dotnet-local.sh build -t:Install -c Release \
         tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     $ (cd tests/Mono.Android-Tests/Mono.Android-Tests && \
@@ -177,7 +150,7 @@ not establish that every intended test ran. Normal TRX reporting is unchanged.
 
 ### Running Specific On-Device Tests
 
-`dotnet test` filtering options apply, for example:
+`dotnetup dotnet test` filtering options apply, for example:
 
     $ ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build \
         --filter-class "Xamarin.Android.RuntimeTests.JnienvTest"
@@ -192,6 +165,7 @@ building the test app. These flow to the on-device instrumentation through
 
 For example, to exclude tests that use the internet (`InetAccess`) category:
 
+    $ export CONFIGURATION=Release
     $ ./dotnet-local.sh build -t:Install -c Release \
         -p:ExcludeCategories=InetAccess \
         tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
@@ -204,6 +178,7 @@ Run `JniReferenceLeak` separately from unrelated tests: reference counts are
 process-wide. `JavaSideActivation` in `Xamarin.Android.JcwGen-Tests` is an explicit
 test; the category filter selects it without adding it to ordinary full-suite runs.
 
+    $ export CONFIGURATION=Debug
     $ ./dotnet-local.sh build -t:Install -c Debug \
         -p:IncludeCategories=JniReferenceLeak -p:RuntimeIdentifier=android-arm64 \
         -p:AdbTarget="-s emulator-PORT" \
@@ -257,112 +232,26 @@ GC workers. Restart the test process instead of retrying in the same process.
 
 # How do I build `Mono.Android.dll` for a given API Level?
 
-There are a few ways to do it:
+The solution builds every configured `AndroidBuildApiLevel`. To build one
+binding assembly directly after building the solution, pass its API properties:
 
-  * Use [`Configuration.Override.props`][override-props], and override
-    `$(AndroidApiLevel)` and `$(AndroidFrameworkVersion)`.
+    dotnetup dotnet build src/Mono.Android/Mono.Android.csproj \
+        -p:AndroidApiLevel=37.1 -p:AndroidPlatformId=37.1 -p:AndroidFrameworkVersion=v17.1
 
-  * Build all the platforms with:
-
-        make framework-assemblies
-
-  * Build several platforms other than the default
-
-        make framework-assemblies API_LEVELS="LEVEL1 LEVEL2"
-
-    where *LEVEL1* and *LEVEL2* are [API levels from the `$(API_LEVELS)` variable][api-levels].
-
-  * Build just the platform you want, other than the default one with
-
-        make API_LEVEL=LEVEL
-
-    where *LEVEL* is one of the [API levels from the `$(API_LEVELS)` variable][api-levels].
+Use the matching values from `AndroidBuildApiLevel` in `Configuration.props`.
+Alternatively, use [`Configuration.Override.props`][override-props] to change
+the default API configuration.
 
 [override-props]: ../../README.md#build-configuration
-[api-levels]: ../../../build-tools/scripts/BuildEverything.mk#L31
 
-# How do I rebuild the Mono Runtime and Native Binaries?
+# How do I rebuild native binaries?
 
-## The short way
+`dotnetup dotnet build Microsoft.Android.slnx` invokes the CMake-backed native projects
+for the configured ABIs and tracks native source changes. The CoreCLR and
+NativeAOT wrappers can also be built directly after preparation:
 
-From the top of the .NET for Android source tree you can run make for the following
-targets, which implement the steps to rebuild the runtime and BCL described further
-down in the document:
+    dotnetup dotnet build src/native/native-clr.csproj
+    dotnetup dotnet build src/native/native-nativeaot.csproj
 
-    # Show help on all the rebuild targets
-    make rebuild-help
-
-    # Rebuild Mono runtime for all configured architectures regardless
-    # of whether a cached copy was used.
-    rebuild-mono
-
-    # Rebuild and install Mono runtime for the armeabi-v7a architecture only regardless
-    # of whether a cached copy was used.
-    rebuild-armeabi-v7a-mono
-
-    # Rebuild and install Mono runtime for the arm64-v8a architecture only regardless
-    # of whether a cached copy was used.
-    rebuild-arm64-v8a-mono
-
-    # Rebuild and install Mono runtime for the x86 architecture only regardless
-    # of whether a cached copy was used.
-    rebuild-x86-mono
-
-    # Rebuild and install Mono runtime for the x86_64 architecture only regardless
-    # of whether a cached copy was used.
-    rebuild-x86_64-mono
-
-    # Rebuild and install a specific BCL assembly. Assembly name must be passed in the ASSEMBLY Make variable
-    rebuild-bcl-assembly ASSEMBLY=bcl_assembly_name
-
-    # Rebuild and install all the BCL assemblies
-    rebuild-all-bcl
-
-Note that rebuilding Mono using the targets above will modify the commit at the git HEAD by resetting
-its date to the current one (see below for more info) - do *NOT* commit the change to Mono as it rewrites
-history.
-
-
-## The long way
-The various Mono runtimes -- over *20* of them (!) -- all store object code
-within `src/mono-runtimes/obj/$(Configuration)/TARGET`.
-
-If you change sources within `external/mono`, a top-level `make`/`msbuild`
-invocation may not rebuild those mono native binaries. To explicitly rebuild
-*all* Mono runtimes, you must do two things:
-
- 1. Ensure that the timestamp of the HEAD commit in `external/mono` has changed.
- 2. Use the `ForceBuild` target on `mono-runtimes.csproj`.
-
-Changing the timestamp of the HEAD commit can be done with `git pull`,
-`git commit` or `git commit --amend`. *How* the timestamp changes isn't
-important; it needs to change in order for `ForceBuild` to do anything.
-(This is admittedly annoying for those working directly on Mono; it requires
-an "intermediate" commit in order to trigger a rebuild.)
-
-The `ForceBuild` target can be executed as:
-
-	# Build and install all runtimes
-	$ msbuild /t:ForceBuild src/mono-runtimes/mono-runtimes.csproj
-
-The `ForceBuild` target will build mono for *all* configured architectures,
-then invoke the `_InstallRuntimes` target when all the mono's have finished
-building; see the `$(AndroidSupportedTargetJitAbis)`
-MSBuild properties within [README.md](../../README.md). This may not always be
-desirable, for example if you're trying to fix a Mono runtime bug for a
-specific ABI, and improving turnaround time is paramount.
-(Building for all ABIs can be time consuming.)
-
-To build Mono for a specific target, run `make` from the relevant directory,
-where the "relevant directory" is the target of interest within
-`src/mono-runtimes/obj/$(Configuration)`. When `make` has completed,
-invoke the `_InstallRuntimes` target so that the updated native libraries
-are copied into `bin/$(Configuration)/lib`, which will allow subsequent
-top-level `make` invocations to use them.
-
-For example, to rebuild Mono for armeabi-v7a:
-
-	$ make -C src/mono-runtimes/obj/Debug/armeabi-v7a
-
-	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
-	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
+Runtime and reference assemblies from `dotnet/runtime` are restored as NuGet
+dependencies; the old `external/mono` rebuild shortcuts no longer apply.

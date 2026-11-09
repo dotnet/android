@@ -153,7 +153,7 @@ Existing `CheckAppBundle`, `UniversalApkFromBundleIsIncremental`, and
 `AssetPackTests` in `Xamarin.Android.Build.Tests`, plus `BundleToolTests` and
 `BundleToolNoAbiSplitTests` in `MSBuildDeviceIntegration`, cover bundle creation,
 configuration, signing, APK generation, and installation. Run them against the
-locally built SDK after `PackDotNet`; use `JAVA_TOOL_OPTIONS=-Xverify:all` to also
+locally built SDK after `dotnetup dotnet build Microsoft.Android.slnx`; use `JAVA_TOOL_OPTIONS=-Xverify:all` to also
 check JVM verification during these integration tests.
 When several devices are connected, set both `ADB_TARGET` (the test harness)
 and `AdbTarget` (MSBuild) to `-s <device-serial>`.

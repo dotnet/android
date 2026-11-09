@@ -1,0 +1,23 @@
+<Project>
+  <Target Name="_AndroidBuildForPack"
+      Condition=" '$(NoBuild)' != 'true' "
+      DependsOnTargets="Build" />
+
+  <Target Name="Pack" DependsOnTargets="_AndroidBuildForPack">
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)build-tools\create-packs\Microsoft.Android.Sdk.proj"
+        Targets="CreateAllPacks"
+        Properties="Configuration=$(Configuration)"
+    />
+  </Target>
+
+  <Target Name="_AndroidConfigureLocalWorkload"
+      AfterTargets="Build;Rebuild"
+      DependsOnTargets="BuildExtraApiLevels">
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)build-tools\create-packs\Microsoft.Android.Sdk.proj"
+        Targets="Restore;ConfigureLocalWorkload"
+        Properties="Configuration=$(Configuration)"
+    />
+  </Target>
+</Project>

@@ -184,9 +184,9 @@ Run these in order — do not skip the BootstrapTasks build; `androidsdk.csproj`
 `UnzipDirectoryChildren`, a task defined in that assembly, and fails at evaluation time without it:
 
 ```bash
-dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
-dotnet restore src/androidsdk/androidsdk.csproj
-dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal
+dotnetup dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
+dotnetup dotnet restore src/androidsdk/androidsdk.csproj
+dotnetup dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal
 ```
 
 The second build downloads and extracts the whole SDK for the current host — expect it to take a
@@ -194,11 +194,11 @@ few minutes and use real disk space/network. If that's not acceptable in your en
 least confirm MSBuild evaluation succeeds without downloading anything:
 
 ```bash
-dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPlatformPackagesToInstall
+dotnetup dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPlatformPackagesToInstall
 ```
 
 Also check:
-- **XML validity** — both edited files still parse (`dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
+- **XML validity** — both edited files still parse (`dotnetup dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
 - **Diff cleanliness** — no unrelated files or stray temp downloads. Routine families remain scoped to `Configuration.props` and `src/androidsdk/androidsdk.targets`; command-line-tools updates additionally require the two shipped-product files in hard rule 5. Never edit `package.xml.in` during a routine refresh.
 - **The seven hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set, verify every `IsLatestStable` platform has its own sources package, verify selected releases are stable, and verify extraction outputs remain archive/hash-specific.
 - **Command-line tools compatibility** — test with `licenses/android-sdk-license` and `.licenses-accepted` absent, with a pre-existing unrelated valid fingerprint, and with malformed content. Confirm the expected pinned fingerprint is created, the unrelated fingerprint is preserved, malformed content fails, writes are atomic/locked, and Gradle recognizes the Build Tools and platform licenses. No license-acceptance path may execute a network-capable Android CLI.

@@ -252,6 +252,8 @@ stages:
 
     - task: ShellScript@2
       displayName: Test dotnet-local.sh
+      env:
+        CONFIGURATION: $(XA.Build.Configuration)
       inputs:
         scriptPath: dotnet-local.sh
         args: >-
@@ -523,11 +525,11 @@ stages:
         -androidVersion $(ANDROID_PACK_VERSION)
       displayName: Update MAUI's Android dependency
 
-    - task: DotNetCoreCLI@2
+    - pwsh: >-
+        dotnetup dotnet build Microsoft.Android.slnx
+        -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
       displayName: Update Android SDK band in Workloads.csproj
-      inputs:
-        projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
-        arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
+      workingDirectory: $(Build.SourcesDirectory)/android
 
     - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Install .NET
@@ -577,12 +579,12 @@ stages:
         _SkipUpdateBuildNumber: 'true'
         NoWarn: CS0618
 
-    - task: DotNetCoreCLI@2
+    - pwsh: >-
+        dotnetup dotnet build Microsoft.Android.slnx
+        -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
       displayName: Install MAUI workload packs
       retryCountOnTaskFailure: 3
-      inputs:
-        projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
-        arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
+      workingDirectory: $(Build.SourcesDirectory)/android
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -590,6 +592,7 @@ stages:
         arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Create MAUI template
+        useLocalWorkload: true
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml
@@ -606,6 +609,7 @@ stages:
           -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Build MAUI template - Debug
+        useLocalWorkload: true
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -617,6 +621,7 @@ stages:
           -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Build MAUI template - Release
+        useLocalWorkload: true
 
     - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml
       parameters:

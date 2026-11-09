@@ -22,6 +22,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		}
 
 		static readonly Regex GitHeadRegex = new Regex ("(?<=refs/heads/).+$", RegexOptions.Compiled);
+		bool useNameRev;
 
 		public override bool Execute ()
 		{
@@ -45,7 +46,12 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			if (string.IsNullOrEmpty (Branch)) {
 				Log.LogMessage ("Using git command");
+				useNameRev = false;
 				base.Execute ();
+				if (Branch == "HEAD") {
+					useNameRev = true;
+					base.Execute ();
+				}
 			}
 
 done:
@@ -54,7 +60,7 @@ done:
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			return "name-rev --name-only --exclude=tags/* HEAD";
+			return useNameRev ? "name-rev --name-only --exclude=tags/* HEAD" : "rev-parse --abbrev-ref HEAD";
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
@@ -72,4 +78,3 @@ done:
 		}
 	}
 }
-

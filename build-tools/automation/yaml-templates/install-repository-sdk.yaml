@@ -1,0 +1,37 @@
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  toolingSdkVersion: $(DotNetSdkVersion)
+  retryCountOnTaskFailure: 3
+
+steps:
+# Hosted macOS images can have a non-writable ~/.dotnet. Isolate CLI state,
+# retaining the existing NuGet configuration and credential-provider cache.
+- bash: |
+    set -euo pipefail
+    cli_home="$(mktemp -d "$(Agent.TempDirectory)/dotnet-cli-home.XXXXXX")"
+    mkdir -p "$HOME/.nuget" "$HOME/.local/share"
+    ln -s "$HOME/.nuget" "$cli_home/.nuget"
+    ln -s "$HOME/.local" "$cli_home/.local"
+    echo "##vso[task.setvariable variable=DOTNET_CLI_HOME]$cli_home"
+  displayName: configure writable CLI state
+  condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))
+
+- pwsh: |
+    $env:PATH = (Join-Path $HOME '.dotnetup') + [IO.Path]::PathSeparator + $env:PATH
+    if (-not (Get-Command dotnetup -ErrorAction SilentlyContinue)) {
+      $installer = "$(Agent.TempDirectory)/get-dotnetup.ps1"
+      Invoke-WebRequest -Uri 'https://aka.ms/dotnetup/get-dotnetup.ps1' -OutFile $installer
+      & pwsh -NoProfile -File $installer
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    $dotnetupDirectory = Split-Path -Parent (Get-Command dotnetup -CommandType Application).Source
+    Write-Host "##vso[task.prependpath]$dotnetupDirectory"
+    Set-Location "${{ parameters.xaSourcePath }}"
+    & dotnetup sdk install --no-progress
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    # Older host-side test/tool assemblies still need their runtime.
+    & dotnetup sdk install "${{ parameters.toolingSdkVersion }}" --no-progress
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    & dotnetup dotnet -- --info
+  displayName: install shared repository and tooling SDKs with dotnetup
+  retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}

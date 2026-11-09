@@ -19,9 +19,7 @@ steps:
     useAgentJdkPath: false
     jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
-- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
-  parameters:
-    remove_dotnet: true
+- template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
 
 - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
   parameters:
@@ -31,12 +29,10 @@ steps:
   parameters:
     xaSourcePath: $(System.DefaultWorkingDirectory)
 
-- task: DotNetCoreCLI@2
+- pwsh: |
+    dotnetup dotnet build Microsoft.Android.slnx -c $(XA.Build.Configuration) -t:Prepare --no-restore -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog
   displayName: Prepare Solution
   retryCountOnTaskFailure: 1
-  inputs:
-    projects: Microsoft.Android.slnx
-    arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
   parameters:
@@ -47,18 +43,9 @@ steps:
   parameters:
     project: Microsoft.Android.slnx
     arguments: >-
-      -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
+      -c $(XA.Build.Configuration) -v:n
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
     displayName: Build Solution
-    continueOnError: false
-
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-  parameters:
-    project: build-tools/create-packs/Microsoft.Android.Sdk.proj
-    arguments: >-
-      -t:ConfigureLocalWorkload -c $(XA.Build.Configuration) -v:n -p:RunningOnCI=false
-      -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\local-workload.binlog
-    displayName: Run ConfigureLocalWorkload target
     continueOnError: false
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
@@ -107,12 +94,16 @@ steps:
 
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - create template
+  env:
+    CONFIGURATION: $(XA.Build.Configuration)
   inputs:
     filename: dotnet-local.cmd
     arguments: new android -o "$(Build.StagingDirectory)\LocalWorkloadTest"
 
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - build template
+  env:
+    CONFIGURATION: $(XA.Build.Configuration)
   inputs:
     filename: dotnet-local.cmd
     arguments: >-
@@ -123,18 +114,22 @@ steps:
 
 - task: BatchScript@1
   displayName: Shut down build servers
+  env:
+    CONFIGURATION: $(XA.Build.Configuration)
   inputs:
     filename: dotnet-local.cmd
     arguments: build-server shutdown
 
-# Pack .nupkgs and extract workload packs to dotnet preview test directory
+# Pack the already-built SDK.
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
+    command: pack
     project: Microsoft.Android.slnx
     arguments: >-
-      -t:PackDotNet -c $(XA.Build.Configuration) -v:n
+      --no-build -c $(XA.Build.Configuration) -v:n
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
-    displayName: Test PackDotNet
+    displayName: Pack Solution
+    continueOnError: false
 
 - template: /build-tools/automation/yaml-templates/upload-results.yaml
   parameters:

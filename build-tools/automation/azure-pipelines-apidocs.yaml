@@ -123,22 +123,21 @@ extends:
           - script: echo "##vso[task.setvariable variable=AndroidJavadocVerbosity]-p:AndroidJavadocVerbosity=${{ parameters.javadocVerbosity }}"
             displayName: set AndroidJavadocVerbosity
 
-        - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
+        - template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml@self
+          parameters:
+            xaSourcePath: $(Build.SourcesDirectory)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
           inputs:
             forceReinstallCredentialProvider: true
 
-        - script: dotnet tool update -v:n boots --version 1.1.0.36 --global
-          displayName: Install boots
-
-        - script: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
+        - script: dotnetup dotnet tool exec boots@1.1.0.36 --allow-roll-forward -- https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
           displayName: Install Mono
 
-        - script: make prepare CONFIGURATION=$(XA.Build.Configuration)
+        - script: dotnetup dotnet build build-tools/scripts/Prepare.proj -c $(XA.Build.Configuration) -bl:bin/Build$(XA.Build.Configuration)/prepare.binlog
           workingDirectory: $(Build.SourcesDirectory)
-          displayName: make prepare
+          displayName: prepare documentation tooling
 
         - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml@self
           parameters:
@@ -146,10 +145,11 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)
 
         - script: >-
-            make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
-            MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity)'
+            dotnetup dotnet build src/Mono.Android/Mono.Android.csproj -t:UpdateExternalDocumentation -c $(XA.Build.Configuration)
+            $(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity)
+            -bl:bin/Build$(XA.Build.Configuration)/UpdateApiDocs-$(Build.BuildId).binlog
           workingDirectory: $(Build.SourcesDirectory)
-          displayName: make update-api-docs
+          displayName: update API documentation
 
         - script: >
             mkdir -p $(Build.StagingDirectory)/api-doc-diff &&
@@ -166,7 +166,7 @@ extends:
         - powershell: |
             $docsUpdateBinlog = Get-ChildItem -Path "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)" -Filter *UpdateApiDocs-*.binlog | Select-Object -First 1
             $buildLog = "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/temp-UpdateApiDocs-build.log"
-            & "$(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet" build $docsUpdateBinlog > $buildLog
+            & dotnetup dotnet msbuild $docsUpdateBinlog > $buildLog
 
             $issueContent = & {
                 Get-Content -Path $buildLog | Select-String "## Exception translating remarks" -Context 0, 3

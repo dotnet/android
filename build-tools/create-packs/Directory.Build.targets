@@ -20,6 +20,7 @@
   <Target Name="_SetGlobalProperties">
     <ItemGroup>
       <_GlobalProperties Include="-p:Configuration=$(Configuration)" />
+      <_GlobalProperties Include="-p:NoBuild=true" Condition=" '$(NoBuild)' == 'true' " />
     </ItemGroup>
     <PropertyGroup>
       <_BinlogPrefix>-bl:$(XamarinAndroidSourcePath)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString('yyyyMMddThhmmss'))-</_BinlogPrefix>
@@ -62,7 +63,7 @@
   </Target>
 
   <Target Name="CreateAllPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreateItemGroups;_CreateAdditionalApiLevelPacks;_CreateDefaultRefPack">
+      DependsOnTargets="_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreateItemGroups;_CreateAdditionalApiLevelPacks;_CreateDefaultRefPack">
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.%(_AndroidRIDs.Runtime).$(AndroidLatestStableApiLevel).%(_AndroidRIDs.Identity).binlog&quot; -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.Managed.$(AndroidLatestStableApiLevel).binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.$(AndroidLatestStableApiLevel).binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
@@ -85,8 +86,12 @@
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
     </ItemGroup>
     <PropertyGroup>
-      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
+      <_WorkloadPackRoot>$(BuildOutputDirectory)workload</_WorkloadPackRoot>
+      <_WorkloadToInstall>android</_WorkloadToInstall>
+      <_SdkManifestsFolder>$(_WorkloadPackRoot)\sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
+      <_LocalAndroidManifestFolder>$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
     </PropertyGroup>
+    <Error Condition=" '@(_WLManifest->Count())' != '1' " Text="Expected exactly one Android workload manifest package, found @(_WLManifest->Count())." />
     <Unzip
         SourceFiles="@(_WLManifest)"
         DestinationFolder="$(_SdkManifestsFolder)temp"
@@ -115,54 +120,12 @@
     </ItemGroup>
     <Touch Files="@(_WLExtractedDestFiles)" />
 
-    <!-- Parse NuGet.config -->
-    <XmlPeek
-        XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
-        Query="/configuration/packageSources/add/@value">
-      <Output TaskParameter="Result" ItemName="_NuGetSources" />
-    </XmlPeek>
-
-    <!-- dotnet workload install android -->
-    <PropertyGroup>
-      <_TempDirectory>$(IntermediateOutputPath).xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
-    </PropertyGroup>
-    <ItemGroup>
-      <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
-      <_PreviewPacks
-          Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity).*.nupkg"
-          Condition=" '%(AndroidBuildApiLevel.Unstable)' == 'true' "
-      />
-      <_InstallArguments Include="android" />
-      <_InstallArguments Include="--skip-manifest-update" />
-      <_InstallArguments Include="--skip-sign-check" />
-      <_InstallArguments Include="--verbosity diag" />
-      <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
-      <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
-    </ItemGroup>
-    <MakeDir Directories="$(_TempDirectory);$(BuildOutputDirectory)lib\sdk-manifests" />
-    <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
-        WorkingDirectory="$(_TempDirectory)"
-    />
-    <RemoveDir Directories="$(_TempDirectory)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="InstallWorkloadPacks"
+        Properties="_WorkloadPackRoot=$(_WorkloadPackRoot);_WorkloadToInstall=$(_WorkloadToInstall);_LocalAndroidManifestFolder=$(_LocalAndroidManifestFolder)" />
   </Target>
 
   <Target Name="DeleteExtractedWorkloadPacks" >
-    <ItemGroup>
-      <_PackApiLevels Include="$(AndroidDefaultTargetDotnetApiLevel)" />
-      <_PackApiLevels Include="@(AndroidBuildApiLevel)" />
-    </ItemGroup>
-    <ItemGroup>
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\workloadsets" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Darwin" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Linux" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Windows" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)template-packs" />
-    </ItemGroup>
-    <RemoveDir Directories="@(_PackFoldersToDelete)" />
+    <RemoveDir Directories="$(BuildOutputDirectory)workload" />
   </Target>
 
   <!-- https://github.com/dotnet/arcade/blob/00d6decc59f5030c2399a64fd3e4f6e8e11bacca/Documentation/DependencyFlowOnboardingWithoutArcade.md -->

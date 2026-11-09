@@ -1,16 +1,10 @@
 #!/bin/bash
-ROOT="$(dirname "${BASH_SOURCE}")"
-FULLROOT="$(cd "${ROOT}"; pwd)"
-for config in Release Debug ; do
-    if [[ ! -x "${ROOT}/bin/${config}/dotnet/dotnet" ]] ; then
-        continue
-    fi
-    XA_DOTNET_ROOT="${FULLROOT}/bin/${config}/dotnet"
-    export PATH="${XA_DOTNET_ROOT}:${PATH}"
-    export DOTNETSDK_WORKLOAD_MANIFEST_ROOTS="${FULLROOT}/bin/${config}/lib/sdk-manifests"
-    export DOTNETSDK_WORKLOAD_PACK_ROOTS="${FULLROOT}/bin/${config}/lib"
-    exec "${ROOT}/bin/${config}/dotnet/dotnet" "$@"
-done
-
-echo "You need to run 'make prepare' first." >&2
-exit 1
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+export DOTNETSDK_WORKLOAD_PACK_ROOTS="${ROOT}/bin/${CONFIGURATION:-Debug}/lib"
+if [[ -d "${ROOT}/bin/${CONFIGURATION:-Debug}/workload/sdk-manifests" ]]; then
+    export DOTNETSDK_WORKLOAD_PACK_ROOTS="${ROOT}/bin/${CONFIGURATION:-Debug}/workload"
+fi
+export DOTNETSDK_WORKLOAD_MANIFEST_ROOTS="${DOTNETSDK_WORKLOAD_PACK_ROOTS}/sdk-manifests"
+[[ -d "${DOTNETSDK_WORKLOAD_MANIFEST_ROOTS}" ]] || { echo "Build the local workload first: dotnetup dotnet build Microsoft.Android.slnx -c ${CONFIGURATION:-Debug}" >&2; exit 1; }
+exec dotnetup dotnet -- "$@"

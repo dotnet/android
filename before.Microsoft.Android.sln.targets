@@ -3,4 +3,5 @@
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Prepare.proj" />
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\ImportExportDocs.targets" />
   <Import Project="$(MSBuildThisFileDirectory)tests\api-compatibility\api-compatibility.targets" />
+  <Target Name="_PrepareAndroidSolution" BeforeTargets="Build;Rebuild" DependsOnTargets="Prepare" />
 </Project>

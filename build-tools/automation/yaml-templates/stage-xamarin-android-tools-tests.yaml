@@ -69,29 +69,38 @@ stages:
     - checkout: self
       clean: true
 
-    - task: UseDotNet@2
-      displayName: Use .NET SDK $(DotNetSdkVersion)
-      inputs:
-        version: $(DotNetSdkVersion)
-        includePreviewVersions: true
+    - template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
 
-    - task: DotNetCoreCLI@2
+    - pwsh: |
+        foreach ($project in @(
+          'src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj',
+          'tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj'
+        )) {
+          dotnetup dotnet build $project -c Debug $(XatBuildProperties) "-bl:$(Build.ArtifactStagingDirectory)/$([IO.Path]::GetFileNameWithoutExtension($project))-windows.binlog"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
       displayName: Build Android tools projects
-      inputs:
-        command: build
-        projects: |
-          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
-        arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
+      workingDirectory: $(System.DefaultWorkingDirectory)
 
-    - task: DotNetCoreCLI@2
+    - pwsh: |
+        $result = 0
+        foreach ($project in @(
+          'tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj',
+          'tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj'
+        )) {
+          dotnetup dotnet test $project -c Debug $(XatBuildProperties) --logger trx --results-directory "$(Agent.TempDirectory)/android-tools-tests"
+          if ($LASTEXITCODE -ne 0) { $result = $LASTEXITCODE }
+        }
+        exit $result
       displayName: Run Tests
+      workingDirectory: $(System.DefaultWorkingDirectory)
+
+    - task: PublishTestResults@2
+      condition: always()
       inputs:
-        command: test
-        projects: |
-          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: -c Debug $(XatBuildProperties)
+        testResultsFormat: VSTest
+        testResultsFiles: $(Agent.TempDirectory)/android-tools-tests/*.trx
+        testRunTitle: Android tools tests - Windows
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
@@ -121,29 +130,38 @@ stages:
     - checkout: self
       clean: true
 
-    - task: UseDotNet@2
-      displayName: Use .NET SDK $(DotNetSdkVersion)
-      inputs:
-        version: $(DotNetSdkVersion)
-        includePreviewVersions: true
+    - template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
 
-    - task: DotNetCoreCLI@2
+    - pwsh: |
+        foreach ($project in @(
+          'src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj',
+          'tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj'
+        )) {
+          dotnetup dotnet build $project -c Debug $(XatBuildProperties) "-bl:$(Build.ArtifactStagingDirectory)/$([IO.Path]::GetFileNameWithoutExtension($project))-mac.binlog"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
       displayName: Build Android tools projects
-      inputs:
-        command: build
-        projects: |
-          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
-        arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
+      workingDirectory: $(System.DefaultWorkingDirectory)
 
-    - task: DotNetCoreCLI@2
+    - pwsh: |
+        $result = 0
+        foreach ($project in @(
+          'tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj',
+          'tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj'
+        )) {
+          dotnetup dotnet test $project -c Debug $(XatBuildProperties) --logger trx --results-directory "$(Agent.TempDirectory)/android-tools-tests"
+          if ($LASTEXITCODE -ne 0) { $result = $LASTEXITCODE }
+        }
+        exit $result
       displayName: Run Tests
+      workingDirectory: $(System.DefaultWorkingDirectory)
+
+    - task: PublishTestResults@2
+      condition: always()
       inputs:
-        command: test
-        projects: |
-          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: -c Debug $(XatBuildProperties)
+        testResultsFormat: VSTest
+        testResultsFiles: $(Agent.TempDirectory)/android-tools-tests/*.trx
+        testRunTitle: Android tools tests - macOS
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1

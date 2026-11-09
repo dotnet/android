@@ -35,6 +35,34 @@ To update all dependencies, use the [`darc update-dependencies`][4] command:
 darc update-dependencies --channel ".NET 6"
 ```
 
+## SDK selection and CI
+
+`global.json` selects the shared SDK. `tools.pinned` prevents Arcade's toolset
+updater from replacing the produced SDK pin with Arcade's bootstrap SDK.
+After SDK dependency updates (manual or Maestro), set `sdk.version` and
+`tools.dotnet` in `global.json` to the `Microsoft.NET.Sdk` version in
+`Version.Details.xml`, commit the updated file to the dependency PR, and install it:
+```
+dotnetup sdk install
+```
+
+Use `dotnetup dotnet` to launch the managed installation without changing the
+shell's SDK `PATH` or `DOTNET_ROOT`. CI bootstraps dotnetup using Microsoft's
+official scripts, then installs the pinned SDK and the older tooling SDK needed
+by host-side tests. Only dotnetup is added to the job's `PATH`.
+
+CI preparation, packaging, and standalone tools use `dotnetup dotnet` directly.
+Commands that consume this checkout's Android/MAUI workloads use `dotnet-local.sh`
+or `dotnet-local.cmd` with `CONFIGURATION` selecting the SDK build configuration.
+The `run-dotnet-preview.yaml` template opts into that behavior with
+`useLocalWorkload: true`; its `configuration` parameter selects workload paths,
+independently of the application's `-c` argument.
+
+Build and packaging commands are documented for [Unix](../Documentation/building/unix/instructions.md)
+and [Windows](../Documentation/building/windows/instructions.md).
+
+## Subscriptions
+
 To configure automatic updates, use the [`darc add-subscription`][5] command
 to enroll a target repo/branch into updates from a particular channel:
 ```

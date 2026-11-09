@@ -1,6 +1,13 @@
 {
   "sdk": {
-    "allowPrerelease": true
+    "version": "12.0.100-alpha.1.26551.101",
+    "rollForward": "disable",
+    "allowPrerelease": true,
+    "errorMessage": "Install the repository SDK with: dotnetup sdk install"
+  },
+  "tools": {
+    "dotnet": "12.0.100-alpha.1.26551.101",
+    "pinned": true
   },
   "msbuild-sdks": {
     "Microsoft.Build.NoTargets": "3.7.134",
