@@ -15,7 +15,7 @@ Android device (hardware or emulator).  There are *lots* of tests in here, and
 running them all can take a significant amount of time.
 
 If you need to run only *one* `[Test]` method, you can use
-[`dotnet test --filter`](https://docs.microsoft.com/dotnet/core/testing/selective-unit-tests?pivots=mstest):
+[`dotnetup dotnet test --filter`](https://docs.microsoft.com/dotnet/core/testing/selective-unit-tests?pivots=mstest):
 
     ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net6.0/MSBuildDeviceIntegration.dll --filter "Name~TypeAndMemberRemapping"
 
@@ -439,16 +439,8 @@ A second (better) way is to add this MSBuild target to your Android
 `6.0.0-preview.7.21364.3` is a version from the `dotnet6` feed above,
 and so you would also need an accompanying `nuget.config` file.
 
-This could also be used with local or CI builds of dotnet/runtime by
-copying `.nupkg` files to the `library-packs` directory of a given
-.NET install:
-
-* `C:\Program Files\dotnet\library-packs`
-* `/usr/local/share/dotnet/library-packs`
-* `bin/$(Configuration)/dotnet/library-packs`
-
-The `library-packs` directory is simply an implicit NuGet feed that is
-automatically picked up by the .NET SDK.
+For local or CI builds of dotnet/runtime, put the `.nupkg` files in a local
+NuGet feed and add it to the app's `NuGet.config`. Do not modify the shared SDK.
 
 ## Enabling Runtime Logging
 
@@ -458,7 +450,7 @@ A quick way to enable Mono logging is to use the `RunWithLogging`
 target:
 
 ```bash
-$ dotnet build -t:RunWithLogging
+$ dotnetup dotnet build -t:RunWithLogging
 ```
 
 If successful, messages printed to the screen will show location
@@ -503,30 +495,31 @@ be preferred if it is not blank.
 
 ## Installing .NET MAUI
 
-`make pack-dotnet` or `msbuild Microsoft.Android.slnx -t:PackDotNet`
-provisions a .NET SDK and locally built Android workload in:
+`dotnetup dotnet build Microsoft.Android.slnx`
+configures the locally built Android workload under:
 
-    bin/$(Configuration)/dotnet/
+    bin/$(Configuration)/lib/
+
+`dotnetup dotnet pack Microsoft.Android.slnx` creates distribution packages
+without installing them. CI can also extract packages into
+`bin/$(Configuration)/workload/` for testing.
 
 If you *also* want .NET MAUI, you don't want to `dotnet workload
-install maui`, because it will blow away your local build of the
-Android workload.
+install maui` into the shared SDK. Keep development packs isolated instead.
 
 To simplify things, we have an MSBuild target to install .NET MAUI:
 
-    # or dotnet-local.cmd on Windows
-    dotnet-local.sh build Microsoft.Android.slnx -t:InstallMaui -p:MauiVersion=9.0.0
+    dotnetup dotnet build Microsoft.Android.slnx -t:InstallMaui -p:MauiVersion=MAUI_VERSION
 
-To find the version number of .NET MAUI you want to install, find the
-package on the [nightly Azure DevOps feed][maui-feed]. Or look for the
-`Microsoft.NET.Sdk.Maui.Manifest-9.0.100` package on NuGet.org for
-public releases. Note that you may have to pass
-`-p:MauiVersionBand=9.0.100`, if the `InstallMaui` target is trying to
-download the incorrect manifest pack.
+Replace `MAUI_VERSION` with a version compatible with the repository's .NET SDK.
+Find the `Microsoft.NET.Sdk.Maui.Manifest-<feature-band>` package on the
+[nightly feed][maui-feed] or NuGet.org. Pass `-p:MauiVersionBand=FEATURE_BAND`
+if the manifest uses a different feature band. Use `dotnet-local.sh` or
+`dotnet-local.cmd` to build MAUI apps against the installed local workload.
 
 Note that this will not provision the `maui-ios`, `maui-maccatalyst`,
 or `maui-windows` parts of .NET MAUI. Simply specify a single
 `<TargetFramework>net12.0-android</TargetFramework>` in MAUI projects
 to build them.
 
-[maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6%40Local
+[maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet12

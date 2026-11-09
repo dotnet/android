@@ -18,7 +18,7 @@ Overridable MSBuild properties include:
 * `$(Configuration)`: Build configuration, normally `Debug` or `Release`.
 * `$(JavaSdkDirectory)`, `$(JavaCPath)`, and `$(JarPath)`: JDK directory and paths
     to `javac` and `jar`, supplied by the shared `Configuration.props`.
-    `make prepare` provisions the configured Microsoft OpenJDK. For standalone
+    `dotnetup dotnet build Microsoft.Android.slnx` provisions the configured Microsoft OpenJDK. For standalone
     tooling builds, pass `-p:JavaSdkDirectory=/path/to/jdk` to use an installed JDK.
     These are used for Java tooling and test fixtures, not a desktop JNI test host.
 * `$(MicrosoftAndroidSdkOutDir)`: Output directory for tools such as
@@ -53,7 +53,7 @@ proxy implementation or `java-interop.jar`.
 ## Tests
 
 Tooling tests remain under `tests/` and run with
-`dotnet test` on the individual test `.csproj` files. They do not require a
+`dotnetup dotnet test` on the individual test `.csproj` files. They do not require a
 locally built Android SDK; Java/Gradle fixtures still require the configured JDK.
 
 Core JNI interop sources and Java fixtures live in
