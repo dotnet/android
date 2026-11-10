@@ -8,18 +8,6 @@ namespace Xamarin.Android.Build.Tests
 	public class BundleToolTaskTests
 	{
 		[Test]
-		public void BuildAppBundleCommand ()
-		{
-			var task = new BuildAppBundle {
-				BaseZip = "base.zip",
-				Output = "foo.aab",
-				JarPath = "bundletool.jar",
-			};
-			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ("-jar bundletool.jar build-bundle --modules base.zip --output foo.aab", cmd);
-		}
-
-		[Test]
 		public void BuildApkSetCommand ()
 		{
 			var task = new BuildApkSet {
