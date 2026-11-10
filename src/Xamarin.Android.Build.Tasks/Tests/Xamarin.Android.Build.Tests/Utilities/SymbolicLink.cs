@@ -1,7 +1,5 @@
-#nullable enable
 using System;
 using System.IO;
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build
 {
@@ -12,9 +10,7 @@ namespace Xamarin.Android.Build
 			if (Directory.Exists (source))
 				return true;
 
-			string? parent = Path.GetDirectoryName (source);
-			if (!parent.IsNullOrEmpty ())
-				Directory.CreateDirectory (parent);
+			Directory.CreateDirectory (Path.GetDirectoryName (source));
 
 			// Unix symlink targets are relative to the link's directory, so resolve them against the current directory;
 			// Windows previously passed the target through unchanged.
@@ -23,7 +19,7 @@ namespace Xamarin.Android.Build
 				// On Windows this uses SYMBOLIC_LINK_FLAG_DIRECTORY and, on builds that support it,
 				// SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE (Developer Mode).
 				Directory.CreateSymbolicLink (source, linkTarget);
-			} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
+			} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || (OperatingSystem.IsWindows () && e is ArgumentException)) {
 				if (!Directory.Exists (source)) {
 					Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {e.Message}");
 					return false;
