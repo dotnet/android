@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -18,6 +19,49 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class MultiThreadedMigrationTests
 	{
+		[Test]
+		public void LinkAssembliesNoShrinkDoesNotChangeNamingPolicy ()
+		{
+			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			Directory.CreateDirectory (directory);
+			try {
+				var sourcePath = Path.Combine (directory, "Library.dll");
+				using (var assembly = AssemblyDefinition.CreateAssembly (
+					new AssemblyNameDefinition ("Library", new Version (1, 0)), "Library", ModuleKind.Dll)) {
+					assembly.Write (sourcePath);
+				}
+				var source = new TaskItem (sourcePath);
+				source.SetMetadata ("Abi", "arm64-v8a");
+				var policy = JavaNativeTypeManager.PackageNamingPolicy;
+				var first = CreateTask ("Lowercase");
+				var second = CreateTask ("LowercaseWithAssemblyName");
+
+				foreach (var task in new [] { first, second, first }) {
+					Assert.IsTrue (task.Execute ());
+					Assert.AreEqual (policy, JavaNativeTypeManager.PackageNamingPolicy,
+						"Assembly modification must not change another operation's Java naming policy.");
+					CollectionAssert.AreEqual (File.ReadAllBytes (sourcePath), File.ReadAllBytes (task.DestinationFiles [0].ItemSpec));
+				}
+
+				LinkAssembliesNoShrink CreateTask (string namingPolicy)
+				{
+					var destination = new TaskItem (Path.Combine (directory, namingPolicy, "Library.dll"));
+					destination.SetMetadata ("Abi", "arm64-v8a");
+					return new LinkAssembliesNoShrink {
+						BuildEngine = new MockBuildEngine (TextWriter.Null),
+						PackageNamingPolicy = namingPolicy,
+						SourceFiles = [source],
+						DestinationFiles = [destination],
+						ResolvedAssemblies = [source],
+						ResolvedUserAssemblies = [source],
+						TargetName = "Library",
+					};
+				}
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
 		[TestCase ("activity", ".First")]
 		[TestCase ("activity-alias", ".First")]
 		[TestCase ("service", null)]

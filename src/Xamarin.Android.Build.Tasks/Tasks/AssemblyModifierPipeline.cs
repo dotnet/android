@@ -5,14 +5,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using MonoDroid.Tuner;
 using Xamarin.Android.Tools;
-using PackageNamingPolicyEnum = Java.Interop.Tools.TypeNameMappings.PackageNamingPolicy;
 
 namespace Xamarin.Android.Tasks;
 
@@ -34,6 +32,7 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	public bool Deterministic { get; set; }
 
+	// Retained for task compatibility; assembly modification no longer generates Java names.
 	public string? PackageNamingPolicy { get; set; }
 
 	/// <summary>
@@ -61,8 +60,6 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	public override bool RunTask ()
 	{
-		JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicyEnum pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
-
 		if (SourceFiles.Length != DestinationFiles.Length)
 			throw new ArgumentException ("source and destination count mismatch");
 
