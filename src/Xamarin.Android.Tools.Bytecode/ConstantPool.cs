@@ -245,15 +245,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public ConstantPoolFloatItem (ConstantPool constantPool, Stream stream)
 			: base (constantPool, stream)
 		{
-			var data = new byte[]{
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-			};
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse (data);
-			value   = BitConverter.ToSingle (data, 0);
+			value   = BitConverter.UInt32BitsToSingle (stream.ReadNetworkUInt32 ());
 		}
 
 		public override ConstantPoolItemType Type {
@@ -306,19 +298,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public ConstantPoolDoubleItem (ConstantPool constantPool, Stream stream)
 			: base (constantPool, stream)
 		{
-			var data = new byte[]{
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-			};
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse (data);
-			value   = BitConverter.ToDouble (data, 0);
+			value   = BitConverter.Int64BitsToDouble (stream.ReadNetworkInt64 ());
 		}
 
 		public override ConstantPoolItemType Type {
