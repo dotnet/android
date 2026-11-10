@@ -31,8 +31,8 @@ namespace Xamarin.Android.Tools
 			need_chown = true;
 		}
 
-		public AndroidSdkUnix (Action<TraceLevel, string> logger)
-			: base (logger)
+		public AndroidSdkUnix (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+			: base (logger, environmentVariables)
 		{
 		}
 
@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tools
 			}
 
 			// Look in PATH
-			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb)) {
+			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb, EnvironmentVariables)) {
 				var path = Path.GetDirectoryName (adb);
 				// Strip off "platform-tools"
 				var dir = Path.GetDirectoryName (path);

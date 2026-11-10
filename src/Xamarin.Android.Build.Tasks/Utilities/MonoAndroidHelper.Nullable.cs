@@ -39,12 +39,16 @@ public partial class MonoAndroidHelper
 	}
 
 	public static JdkInfo? GetJdkInfo (Action<TraceLevel, string> logger, string? javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
+		=> GetJdkInfo (logger, javaSdkPath, minSupportedVersion, maxSupportedVersion, null);
+
+	internal static JdkInfo? GetJdkInfo (Action<TraceLevel, string> logger, string? javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion,
+		IDictionary<string, string>? environmentVariables)
 	{
 		JdkInfo? info = null;
 		try {
-			info = new JdkInfo (javaSdkPath ?? "", logger:logger);
+			info = new JdkInfo (javaSdkPath ?? "", locator: null, logger, environmentVariables);
 		} catch {
-			info = JdkInfo.GetKnownSystemJdkInfos (logger)
+			info = JdkInfo.GetKnownSystemJdkInfos (logger, environmentVariables)
 				.Where (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion)
 				.FirstOrDefault ();
 		}

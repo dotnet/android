@@ -9,9 +9,9 @@ namespace Xamarin.Android.Tools {
 
 	class XAPrepareJdkLocations : JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetXAPrepareJdks (Action<TraceLevel, string> logger)
+		internal static IEnumerable<JdkInfo> GetXAPrepareJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
 		{
-			return FromPaths (GetXAPrepareJdkPaths (), logger, "android-toolchain");
+			return FromPaths (GetXAPrepareJdkPaths (), logger, "android-toolchain", environmentVariables);
 		}
 
 		static IEnumerable<string> GetXAPrepareJdkPaths ()

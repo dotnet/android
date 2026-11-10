@@ -10,17 +10,17 @@ namespace Xamarin.Android.Tools {
 
 	partial class JdkLocations {
 
-		internal static string? GetWindowsPreferredJdkPath ()
+		internal static string? GetWindowsPreferredJdkPath (IDictionary<string, string>? environmentVariables = null)
 		{
 			var wow = RegistryEx.Wow64.Key32;
-			var regKey = AndroidSdkWindows.GetMDRegistryKey ();
-			if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow, "bin", "java.exe"))
+			var regKey = AndroidSdkWindows.GetMDRegistryKey (environmentVariables);
+			if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow, "bin", "java.exe", environmentVariables))
 				return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow);
 			return null;
 
 		}
 
-		protected static IEnumerable<JdkInfo> GetWindowsFileSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null)
+		protected static IEnumerable<JdkInfo> GetWindowsFileSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null, IDictionary<string, string>? environmentVariables = null)
 		{
 			if (!OS.IsWindows) {
 				yield break;
@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tools {
 
 			var roots = new List<string>() {
 				// "Compatibility" with existing codebases; should probably be avoided…
-				Environment.ExpandEnvironmentVariables ("%ProgramW6432%"),
+				ProcessUtils.GetEnvironmentVariable ("ProgramW6432", environmentVariables) ?? "%ProgramW6432%",
 				Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles),
 				Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86),
 			};
@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tools {
 					if (!File.Exists (Path.Combine (home, "bin", "java.exe")))
 						continue;
 					var loc = locator ?? $"{pattern} via {root}";
-					var jdk = JdkInfo.TryGetJdkInfo (home, logger, loc);
+					var jdk = JdkInfo.TryGetJdkInfo (home, logger, loc, environmentVariables);
 					if (jdk == null)
 						continue;
 					yield return jdk;
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tools {
 			}
 		}
 
-		protected static IEnumerable<JdkInfo> GetWindowsUserFileSystemJdks (Action<TraceLevel, string> logger)
+		protected static IEnumerable<JdkInfo> GetWindowsUserFileSystemJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
 		{
 			if (!OS.IsWindows) {
 				yield break;
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tools {
 			}
 
 			foreach (var home in homes) {
-				var jdk = JdkInfo.TryGetJdkInfo (home, logger, @"%LocalAppData%\Android\*jdk*");
+				var jdk = JdkInfo.TryGetJdkInfo (home, logger, @"%LocalAppData%\Android\*jdk*", environmentVariables);
 				if (jdk == null)
 					continue;
 				yield return jdk;
@@ -88,7 +88,8 @@ namespace Xamarin.Android.Tools {
 				string  childKeyGlob,
 				string? grandChildKey,
 				string  valueName,
-				string? locator = null)
+				string? locator = null,
+				IDictionary<string, string>? environmentVariables = null)
 		{
 			if (!OS.IsWindows) {
 				yield break;
@@ -110,7 +111,7 @@ namespace Xamarin.Android.Tools {
 					if (path == null) {
 						continue;
 					}
-					var jdk     = JdkInfo.TryGetJdkInfo (path, logger, locator ?? $"Windows Registry @ {parentKey}");
+					var jdk     = JdkInfo.TryGetJdkInfo (path, logger, locator ?? $"Windows Registry @ {parentKey}", environmentVariables);
 					if (jdk == null) {
 						continue;
 					}

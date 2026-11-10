@@ -1,4 +1,7 @@
 #nullable enable
+Xamarin.Android.Tools.AndroidSdkInfo.AndroidSdkInfo(System.Action<System.Diagnostics.TraceLevel, string!>? logger, string? androidSdkPath, string? androidNdkPath, string? javaSdkPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables) -> void
+Xamarin.Android.Tools.JdkInfo.JdkInfo(string! homePath, string? locator, System.Action<System.Diagnostics.TraceLevel, string!>? logger, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables) -> void
+static Xamarin.Android.Tools.JdkInfo.GetKnownSystemJdkInfos(System.Action<System.Diagnostics.TraceLevel, string!>? logger, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables) -> System.Collections.Generic.IEnumerable<Xamarin.Android.Tools.JdkInfo!>!
 static Xamarin.Android.Tools.AndroidSdkInfo.GetBuildToolsPaths(string! androidSdkPath, string! preferredBuildToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
 static Xamarin.Android.Tools.AndroidSdkInfo.GetCommandLineToolsPaths(string! androidSdkPath, string! preferredCommandLineToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
 static Xamarin.Android.Tools.AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel(string! androidSdkPath, string! idOrApiLevel, Xamarin.Android.Tools.AndroidVersions! versions) -> string?

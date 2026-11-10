@@ -106,6 +106,60 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void EnvironmentDiscoveryPreservesPrecedenceAndProcessEnvironment ()
+		{
+			CreateSdks (out var root, out var jdk, out var ndk, out var sdk);
+			var path = Environment.GetEnvironmentVariable ("PATH");
+			var javaHome = Environment.GetEnvironmentVariable ("JAVA_HOME");
+			try {
+				var environment = new Dictionary<string, string> {
+					["JI_JAVA_HOME"] = jdk,
+					["PATHEXT"] = $".EXE{Path.PathSeparator}.CMD",
+				};
+				var info = new AndroidSdkInfo (null, sdk, ndk, null, environment);
+				Assert.AreEqual (jdk, info.JavaSdkPath);
+				Assert.AreEqual (sdk, info.AndroidSdkPath);
+				Assert.AreEqual (path, Environment.GetEnvironmentVariable ("PATH"));
+				Assert.AreEqual (javaHome, Environment.GetEnvironmentVariable ("JAVA_HOME"));
+
+				environment ["JI_JAVA_HOME"] = Path.Combine (root, "missing");
+				info = new AndroidSdkInfo (null, sdk, ndk, jdk, environment);
+				Assert.AreEqual (jdk, info.JavaSdkPath, "An explicit JDK must precede the environment override.");
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
+		public void EnvironmentDiscoveryUsesSnapshotExtensionsAndSdkFallback ()
+		{
+			var root = CreateRoot ();
+			try {
+				var sdks = new [] { Path.Combine (root, "first"), Path.Combine (root, "second") };
+				var jdk = Path.Combine (root, "jdk");
+				CreateFauxJavaSdkDirectory (jdk, "21.0.8", out _, out _);
+				for (int i = 0; i < sdks.Length; i++) {
+					Directory.CreateDirectory (Path.Combine (sdks [i], "platform-tools"));
+					File.WriteAllText (Path.Combine (sdks [i], "platform-tools", $"adb.MT{i}"), "");
+				}
+				System.Threading.Tasks.Parallel.For (0, 2, i => {
+					var messages = new List<string> ();
+					var environment = new Dictionary<string, string> {
+						["ANDROID_HOME"] = Path.Combine (root, "missing"),
+						["ANDROID_SDK_ROOT"] = sdks [i],
+						["PATHEXT"] = $".MT{i}",
+						["XAMARIN_ANDROID_REGKEY"] = $@"Software\AndroidSdkInfoTests\{Guid.NewGuid ():N}",
+					};
+					var discovery = new AndroidSdkInfo ((_, message) => messages.Add (message), null, null, jdk, environment);
+					Assert.AreEqual (sdks [i], discovery.AndroidSdkPath);
+					Assert.IsTrue (messages.Any (message => message.Contains ("missing") && message.Contains ("result=False")));
+				});
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void DiscoverInstallationPaths_WithMissingPreferredJdk ()
 		{
 			CreateSdks (out string root, out string jdk, out _, out string sdk);

@@ -10,11 +10,23 @@ namespace Xamarin.Android.Tools
 	{
 		AndroidSdkBase sdk;
 
+#pragma warning disable RS0027 // Keep the original constructor for existing callers.
 		public AndroidSdkInfo (Action<TraceLevel, string>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
+#pragma warning restore RS0027
+			: this (logger, androidSdkPath, androidNdkPath, javaSdkPath, null)
+		{
+		}
+
+		/// <summary>
+		/// Discovers tools using a complete environment snapshot. Missing variables do not fall back
+		/// to the process environment. A null snapshot preserves the original process-based behavior.
+		/// </summary>
+		public AndroidSdkInfo (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath, string? javaSdkPath,
+			IDictionary<string, string>? environmentVariables)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 
-			sdk = CreateSdk (logger);
+			sdk = CreateSdk (logger, environmentVariables);
 			sdk.Initialize (androidSdkPath, androidNdkPath, javaSdkPath);
 
 			// shouldn't happen, in that sdk.Initialize() should throw instead
@@ -44,11 +56,11 @@ namespace Xamarin.Android.Tools
 			javaSdkPath = sdk.JavaSdkPath;
 		}
 
-		static AndroidSdkBase CreateSdk (Action<TraceLevel, string> logger)
+		static AndroidSdkBase CreateSdk (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
 		{
 			return OS.IsWindows
-				? (AndroidSdkBase) new AndroidSdkWindows (logger)
-				: (AndroidSdkBase) new AndroidSdkUnix (logger);
+				? (AndroidSdkBase) new AndroidSdkWindows (logger, environmentVariables)
+				: (AndroidSdkBase) new AndroidSdkUnix (logger, environmentVariables);
 		}
 
 		public IEnumerable<string> GetBuildToolsPaths (string preferredBuildToolsVersion)

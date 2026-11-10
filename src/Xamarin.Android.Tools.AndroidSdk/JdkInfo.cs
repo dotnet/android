@@ -43,13 +43,22 @@ namespace Xamarin.Android.Tools
 		Lazy<Version?>                              javaVersion;
 
 		Action<TraceLevel, string>                  logger;
+		readonly IDictionary<string, string>? environmentVariables;
 
 		public JdkInfo (string homePath)
 			: this (homePath, null, null)
 		{
 		}
 
+#pragma warning disable RS0027 // Keep the original constructor for existing callers.
 		public JdkInfo (string homePath, string? locator = null, Action<TraceLevel, string>? logger = null)
+#pragma warning restore RS0027
+			: this (homePath, locator, logger, null)
+		{
+		}
+
+		/// <summary>Uses a complete environment snapshot for executable lookup and Java probes.</summary>
+		public JdkInfo (string homePath, string? locator, Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
 		{
 			if (homePath == null)
 				throw new ArgumentNullException (nameof (homePath));
@@ -59,6 +68,7 @@ namespace Xamarin.Android.Tools
 			HomePath            = homePath;
 			Locator             = locator;
 			this.logger         = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+			this.environmentVariables = environmentVariables;
 
 			var binPath         = Path.Combine (HomePath, "bin");
 			JarPath             = RequireExecutableInDirectory (binPath, "jar");
@@ -158,7 +168,7 @@ namespace Xamarin.Android.Tools
 
 		string RequireExecutableInDirectory (string binPath, string fileName)
 		{
-			var file = ProcessUtils.FindExecutablesInDirectory (binPath, fileName).FirstOrDefault ();
+			var file = ProcessUtils.FindExecutablesInDirectory (binPath, fileName, environmentVariables).FirstOrDefault ();
 
 			ValidateFile (fileName, file);
 
@@ -237,7 +247,8 @@ namespace Xamarin.Android.Tools
 		{
 			return GetJavaProperties (
 					logger,
-					ProcessUtils.FindExecutablesInDirectory (Path.Combine (HomePath, "bin"), "java").First ());
+					ProcessUtils.FindExecutablesInDirectory (Path.Combine (HomePath, "bin"), "java", environmentVariables).First (),
+					environmentVariables);
 		}
 
 		static bool AnySystemJavasInstalled ()
@@ -257,12 +268,13 @@ namespace Xamarin.Android.Tools
 			return true;
 		}
 
-		static Dictionary<string, List<string>> GetJavaProperties (Action<TraceLevel, string> logger, string java)
+		static Dictionary<string, List<string>> GetJavaProperties (Action<TraceLevel, string> logger, string java, IDictionary<string, string>? environmentVariables = null)
 		{
 			var javaProps   = new ProcessStartInfo {
 				FileName    = java,
 				Arguments   = "-XshowSettings:properties -version",
 			};
+			SetProcessEnvironment (javaProps, environmentVariables);
 
 			var     props   = new Dictionary<string, List<string>> ();
 			string? curKey  = null;
@@ -326,23 +338,32 @@ namespace Xamarin.Android.Tools
 		}
 
 		// Keep ordering in sync w/ GetSupportedJdkInfos
+#pragma warning disable RS0027 // Keep the original method for existing callers.
 		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger = null)
+#pragma warning restore RS0027
+			=> GetKnownSystemJdkInfos (logger, null);
+
+		/// <summary>
+		/// Discovers JDKs in the usual order using a complete environment snapshot.
+		/// Missing variables do not fall back to the process environment; null preserves the original behavior.
+		/// </summary>
+		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 
-			return GetEnvironmentVariableJdks (EnvironmentVariableNames.JiJavaHome, logger)
-				.Concat (JdkLocations.GetPreferredJdks (logger))
-				.Concat (XAPrepareJdkLocations.GetXAPrepareJdks (logger))
-				.Concat (MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger))
-				.Concat (EclipseAdoptiumJdkLocations.GetEclipseAdoptiumJdks (logger))
-				.Concat (AzulJdkLocations.GetAzulJdks (logger))
-				.Concat (OracleJdkLocations.GetOracleJdks (logger))
-				.Concat (VSAndroidJdkLocations.GetVSAndroidJdks (logger))
-				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger))
-				.Concat (GetEnvironmentVariableJdks (EnvironmentVariableNames.JavaHome, logger))
-				.Concat (GetPathEnvironmentJdks (logger))
-				.Concat (GetLibexecJdks (logger))
-				.Concat (GetJavaAlternativesJdks (logger))
+			return GetEnvironmentVariableJdks (EnvironmentVariableNames.JiJavaHome, logger, environmentVariables)
+				.Concat (JdkLocations.GetPreferredJdks (logger, environmentVariables))
+				.Concat (XAPrepareJdkLocations.GetXAPrepareJdks (logger, environmentVariables))
+				.Concat (MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger, environmentVariables))
+				.Concat (EclipseAdoptiumJdkLocations.GetEclipseAdoptiumJdks (logger, environmentVariables))
+				.Concat (AzulJdkLocations.GetAzulJdks (logger, environmentVariables))
+				.Concat (OracleJdkLocations.GetOracleJdks (logger, environmentVariables))
+				.Concat (VSAndroidJdkLocations.GetVSAndroidJdks (logger, environmentVariables))
+				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger, environmentVariables))
+				.Concat (GetEnvironmentVariableJdks (EnvironmentVariableNames.JavaHome, logger, environmentVariables))
+				.Concat (GetPathEnvironmentJdks (logger, environmentVariables))
+				.Concat (GetLibexecJdks (logger, environmentVariables))
+				.Concat (GetJavaAlternativesJdks (logger, environmentVariables))
 				;
 		}
 
@@ -357,11 +378,11 @@ namespace Xamarin.Android.Tools
 				;
 		}
 
-		internal static JdkInfo? TryGetJdkInfo (string path, Action<TraceLevel, string> logger, string locator)
+		internal static JdkInfo? TryGetJdkInfo (string path, Action<TraceLevel, string> logger, string locator, IDictionary<string, string>? environmentVariables = null)
 		{
 			JdkInfo? jdk = null;
 			try {
-				jdk = new JdkInfo (path, locator);
+				jdk = new JdkInfo (path, locator, logger: null, environmentVariables);
 			}
 			catch (Exception e) {
 				logger (TraceLevel.Warning, string.Format (Resources.InvalidJdkDirectory_path_locator_message, path, locator, e.Message));
@@ -370,28 +391,28 @@ namespace Xamarin.Android.Tools
 			return jdk;
 		}
 
-		static IEnumerable<JdkInfo> GetEnvironmentVariableJdks (string envVar, Action<TraceLevel, string> logger)
+		static IEnumerable<JdkInfo> GetEnvironmentVariableJdks (string envVar, Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables)
 		{
-			var java_home = Environment.GetEnvironmentVariable (envVar);
-			if (string.IsNullOrEmpty (java_home))
+			var java_home = ProcessUtils.GetEnvironmentVariable (envVar, environmentVariables);
+			if (java_home is not { Length: > 0 })
 				yield break;
-			var jdk = TryGetJdkInfo (java_home, logger, $"${envVar}");
+			var jdk = TryGetJdkInfo (java_home, logger, $"${envVar}", environmentVariables);
 			if (jdk != null)
 				yield return jdk;
 		}
 
 		// macOS
-		static IEnumerable<JdkInfo> GetLibexecJdks (Action<TraceLevel, string> logger)
+		static IEnumerable<JdkInfo> GetLibexecJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables)
 		{
-			return GetLibexecJdkPaths (logger)
+			return GetLibexecJdkPaths (logger, environmentVariables)
 				.Distinct ()
-				.Select (p => TryGetJdkInfo (p, logger, "`/usr/libexec/java_home -X`"))
+				.Select (p => TryGetJdkInfo (p, logger, "`/usr/libexec/java_home -X`", environmentVariables))
 				.Where (jdk => jdk != null)
 				.Select (jdk => jdk!)
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
-		static IEnumerable<string> GetLibexecJdkPaths (Action<TraceLevel, string> logger)
+		static IEnumerable<string> GetLibexecJdkPaths (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables)
 		{
 			if (!OS.IsMac) {
 				yield break;
@@ -405,6 +426,7 @@ namespace Xamarin.Android.Tools
 				FileName    = java_home,
 				Arguments   = "-X",
 			};
+			SetProcessEnvironment (jhp, environmentVariables);
 			var xml = new StringBuilder ();
 			ProcessUtils.Exec (jhp, (o, e) => {
 					if (string.IsNullOrEmpty (e.Data))
@@ -432,16 +454,16 @@ namespace Xamarin.Android.Tools
 		}
 
 		// Linux; Ubuntu & Derivatives
-		static IEnumerable<JdkInfo> GetJavaAlternativesJdks (Action<TraceLevel, string> logger)
+		static IEnumerable<JdkInfo> GetJavaAlternativesJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables)
 		{
-			return GetJavaAlternativesJdkPaths ()
+			return GetJavaAlternativesJdkPaths (environmentVariables)
 				.Distinct ()
-				.Select (p => TryGetJdkInfo (p, logger, "`/usr/sbin/update-java-alternatives -l`"))
+				.Select (p => TryGetJdkInfo (p, logger, "`/usr/sbin/update-java-alternatives -l`", environmentVariables))
 				.Where (jdk => jdk != null)
 				.Select (jdk => jdk!);
 		}
 
-		static IEnumerable<string> GetJavaAlternativesJdkPaths ()
+		static IEnumerable<string> GetJavaAlternativesJdkPaths (IDictionary<string, string>? environmentVariables)
 		{
 			if (!OS.IsLinux) {
 				return Enumerable.Empty<string> ();
@@ -455,6 +477,7 @@ namespace Xamarin.Android.Tools
 				FileName    = alternatives,
 				Arguments   = "-l",
 			};
+			SetProcessEnvironment (psi, environmentVariables);
 			var paths   = new List<string> ();
 			ProcessUtils.Exec (psi, (o, e) => {
 					if (string.IsNullOrWhiteSpace (e.Data))
@@ -470,18 +493,18 @@ namespace Xamarin.Android.Tools
 		}
 
 		// Last-ditch fallback!
-		static IEnumerable<JdkInfo> GetPathEnvironmentJdks (Action<TraceLevel, string> logger)
+		static IEnumerable<JdkInfo> GetPathEnvironmentJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables)
 		{
-			return GetPathEnvironmentJdkPaths (logger)
-				.Select (p => TryGetJdkInfo (p, logger, "$PATH"))
+			return GetPathEnvironmentJdkPaths (logger, environmentVariables)
+				.Select (p => TryGetJdkInfo (p, logger, "$PATH", environmentVariables))
 				.Where (jdk => jdk != null)
 				.Select (jdk => jdk!);
 		}
 
-		static IEnumerable<string> GetPathEnvironmentJdkPaths (Action<TraceLevel, string> logger)
+		static IEnumerable<string> GetPathEnvironmentJdkPaths (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables)
 		{
-			foreach (var java in ProcessUtils.FindExecutablesInPath ("java")) {
-				var props   = GetJavaProperties (logger, java);
+			foreach (var java in ProcessUtils.FindExecutablesInPath ("java", environmentVariables)) {
+				var props   = GetJavaProperties (logger, java, environmentVariables);
 				if (props.TryGetValue ("java.home", out var java_homes)) {
 					var java_home   = java_homes [0];
 					// `java -XshowSettings:properties -version 2>&1 | grep java.home` ends with `/jre` on macOS.
@@ -492,6 +515,15 @@ namespace Xamarin.Android.Tools
 					yield return java_home;
 				}
 			}
+		}
+
+		static void SetProcessEnvironment (ProcessStartInfo psi, IDictionary<string, string>? environmentVariables)
+		{
+			if (environmentVariables == null)
+				return;
+			psi.EnvironmentVariables.Clear ();
+			foreach (var pair in environmentVariables)
+				psi.EnvironmentVariables [pair.Key] = pair.Value;
 		}
 	}
 

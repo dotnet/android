@@ -9,10 +9,10 @@ namespace Xamarin.Android.Tools {
 
 	class MicrosoftDistJdkLocations : JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetMicrosoftDistJdks (Action<TraceLevel, string> logger)
+		internal static IEnumerable<JdkInfo> GetMicrosoftDistJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
 		{
-			return FromPaths (GetMacOSMicrosoftDistJdkPaths (), logger, "$HOME/Library/Developer/Xamarin/jdk")
-				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Android", "jdk", "microsoft_dist_openjdk_*"), logger, locator: "legacy microsoft_dist_openjdk"))
+			return FromPaths (GetMacOSMicrosoftDistJdkPaths (), logger, "$HOME/Library/Developer/Xamarin/jdk", environmentVariables)
+				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Android", "jdk", "microsoft_dist_openjdk_*"), logger, locator: "legacy microsoft_dist_openjdk", environmentVariables: environmentVariables))
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 

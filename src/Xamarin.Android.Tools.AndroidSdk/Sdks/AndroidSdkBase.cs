@@ -36,11 +36,15 @@ namespace Xamarin.Android.Tools
 		}
 
 		public readonly Action<TraceLevel, string> Logger;
+		protected readonly IDictionary<string, string>? EnvironmentVariables;
 
-		public AndroidSdkBase (Action<TraceLevel, string> logger)
+		public AndroidSdkBase (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
 		{
 			Logger  = logger;
+			EnvironmentVariables = environmentVariables;
 		}
+
+		protected string? GetEnvironmentVariable (string name) => ProcessUtils.GetEnvironmentVariable (name, EnvironmentVariables);
 
 		public  string?     AndroidSdkPath                  { get; private set; }
 		public  string?     AndroidNdkPath                  { get; private set; }
@@ -67,7 +71,7 @@ namespace Xamarin.Android.Tools
 		{
 			AndroidSdkPath = GetValidPath (ValidateAndroidSdkLocation,  androidSdkPath, () => PreferedAndroidSdkPath,   () => GetAllAvailableAndroidSdks ());
 			JavaSdkPath    = GetValidPath (ValidateJavaSdkLocation,     javaSdkPath,    () => PreferedJavaSdkPath,      () => GetJavaSdkPaths (),
-				() => Environment.GetEnvironmentVariable (EnvironmentVariableNames.JiJavaHome));
+				() => GetEnvironmentVariable (EnvironmentVariableNames.JiJavaHome));
 
 			AndroidNdkPath = GetValidNdkPath (androidNdkPath);
 
@@ -148,8 +152,8 @@ namespace Xamarin.Android.Tools
 		protected IEnumerable<string> GetSdkFromEnvironmentVariables ()
 		{
 			foreach (string envVar in AndroidSdkEnvVars) {
-				var ev = Environment.GetEnvironmentVariable (envVar);
-				if (String.IsNullOrEmpty (ev)) {
+				var ev = GetEnvironmentVariable (envVar);
+				if (ev is not { Length: > 0 }) {
 					continue;
 				}
 
@@ -160,7 +164,7 @@ namespace Xamarin.Android.Tools
 		protected virtual IEnumerable<string> GetAllAvailableAndroidNdks ()
 		{
 			// Look in PATH
-			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
+			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack, EnvironmentVariables)) {
 				var ndkDir  = Path.GetDirectoryName (ndkStack);
 				if (string.IsNullOrEmpty (ndkDir))
 					continue;
@@ -243,7 +247,7 @@ namespace Xamarin.Android.Tools
 
 		protected virtual IEnumerable<string> GetJavaSdkPaths ()
 		{
-			return JdkInfo.GetKnownSystemJdkInfos (Logger)
+			return JdkInfo.GetKnownSystemJdkInfos (Logger, EnvironmentVariables)
 				.Select (jdk => jdk.HomePath);
 		}
 
@@ -255,7 +259,7 @@ namespace Xamarin.Android.Tools
 			bool result = !string.IsNullOrEmpty (loc);
 			if (result) {
 				bool foundAdb = false;
-				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "platform-tools"), Adb)) {
+				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "platform-tools"), Adb, EnvironmentVariables)) {
 					Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: for locator={locator}, path=`{loc}`, found adb `{p}`");
 					foundAdb = true;
 				}
@@ -273,7 +277,7 @@ namespace Xamarin.Android.Tools
 			bool result = !string.IsNullOrEmpty (loc);
 			if (result) {
 				bool foundSigner = false;
-				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "bin"), JarSigner)) {
+				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "bin"), JarSigner, EnvironmentVariables)) {
 					Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: for locator={locator}, path=`{loc}`, found jarsigner `{p}`");
 					foundSigner = true;
 				}
@@ -289,7 +293,7 @@ namespace Xamarin.Android.Tools
 		public bool ValidateAndroidNdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
 			bool result = !string.IsNullOrEmpty (loc) &&
-				ProcessUtils.FindExecutablesInDirectory (loc!, NdkStack).Any ();
+				ProcessUtils.FindExecutablesInDirectory (loc!, NdkStack, EnvironmentVariables).Any ();
 			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidNdkLocation)}: for locator={locator}, path=`{loc}`, result={result}");
 			return result;
 		}
@@ -302,12 +306,12 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
-		static string GetExecutablePath (string? dir, string exe)
+		string GetExecutablePath (string? dir, string exe)
 		{
 			if (string.IsNullOrEmpty (dir))
 				return exe;
 
-			foreach (var e in ProcessUtils.ExecutableFiles (exe)) {
+			foreach (var e in ProcessUtils.ExecutableFiles (exe, EnvironmentVariables)) {
 				try {
 					if (File.Exists (Path.Combine (dir, e)))
 						return e;
