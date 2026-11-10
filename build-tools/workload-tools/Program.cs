@@ -105,7 +105,7 @@ namespace Xamarin.Android.BuildTools
 							new XAttribute ("DestinationFolder", "%(_WorkloadPack.Destination)"),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' != 'true'")),
 						new XElement ("Copy", new XAttribute ("SourceFiles", "@(_WorkloadPack)"),
-							new XAttribute ("DestinationFolder", "%(_WorkloadPack.Destination)"),
+							new XAttribute ("DestinationFiles", "%(_WorkloadPack.Destination)/%(_WorkloadPack.PackageFileName)"),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' == 'true'")),
 						new XElement ("Exec", new XAttribute ("Command", $"\"{dotnetPath}\" \"{toolPath}\" --finalize-pack \"%(_WorkloadPack.Destination)\""),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' != 'true'")),
