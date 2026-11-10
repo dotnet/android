@@ -13,15 +13,13 @@ namespace Java.Lang {
 
 		static char[] ValidateData (char[] data)
 		{
-			if (data == null)
-				throw new ArgumentNullException ("data");
+			ArgumentNullException.ThrowIfNull (data);
 			return data;
 		}
 
 		static int GetLength (char[] data)
 		{
-			if (data == null)
-				throw new ArgumentNullException ("data");
+			ArgumentNullException.ThrowIfNull (data);
 			return data.Length;
 		}
 

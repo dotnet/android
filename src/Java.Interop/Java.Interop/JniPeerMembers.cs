@@ -59,8 +59,7 @@ namespace Java.Interop {
 
 		static JniPeerTypeNameInfo GetReplacementType (string jniPeerTypeName)
 		{
-			if (jniPeerTypeName == null)
-				throw new ArgumentNullException (nameof (jniPeerTypeName));
+			ArgumentNullException.ThrowIfNull (jniPeerTypeName);
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			unsafe {
 				// SAFETY: the type-manager producer supplies runtime-lived immutable storage; the descriptor preserves that borrow.
@@ -77,8 +76,7 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
 
 			if (checkManagedPeerType) {
-				if (managedPeerType == null)
-					throw new ArgumentNullException (nameof (managedPeerType));
+				ArgumentNullException.ThrowIfNull (managedPeerType);
 				if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
@@ -437,8 +435,7 @@ namespace Java.Interop {
 
 		internal static void AssertSelf (IJavaPeerable self)
 		{
-			if (self == null)
-				throw new ArgumentNullException (nameof (self));
+			ArgumentNullException.ThrowIfNull (self);
 
 			var peer    = self.PeerReference;
 			if (!peer.IsValid)
@@ -448,8 +445,7 @@ namespace Java.Interop {
 
 		internal static int GetSignatureSeparatorIndex (string encodedMember)
 		{
-			if (encodedMember == null)
-				throw new ArgumentNullException (nameof (encodedMember));
+			ArgumentNullException.ThrowIfNull (encodedMember);
 			int n = encodedMember.IndexOf (".", StringComparison.Ordinal);
 			if (n < 0)
 				throw new ArgumentException (

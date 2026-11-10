@@ -93,8 +93,7 @@ namespace Java.Interop {
 				[DynamicallyAccessedMembers (Constructors)]
 				Type resultType)
 		{
-			if (resultType == null)
-				throw new ArgumentNullException ("resultType");
+			ArgumentNullException.ThrowIfNull (resultType);
 
 			if (instance == null)
 				return null;

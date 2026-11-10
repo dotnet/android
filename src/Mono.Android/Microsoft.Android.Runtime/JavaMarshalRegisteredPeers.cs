@@ -191,8 +191,7 @@ static class JavaMarshalRegisteredPeers
 		// Remove any collected contexts before modifying RegisteredInstances
 		CollectPeers ();
 
-		if (value == null)
-			throw new ArgumentNullException (nameof (value));
+		ArgumentNullException.ThrowIfNull (value);
 
 		lock (s_instancesLock) {
 			int key = value.JniIdentityHashCode;
