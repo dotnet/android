@@ -133,6 +133,16 @@ namespace Xamarin.Installer.AndroidSDK
 			return totalSize;
 		}
 
+		internal static ulong CalculateTotalSize (ZipCentralDirectory.Entry [] entries)
+		{
+			ulong totalSize = 0;
+			foreach (var entry in entries)
+				totalSize += entry.Size;
+			Logger.Debug ($"[DirectorySizeMonitoringTimer] ZipFile totalSize: {totalSize}");
+
+			return totalSize;
+		}
+
 		/// <summary>
 		/// Move operation will take different time depending on number of files in an archive
 		/// so we split the 100% installation progress according these values (unzip + move = 100%)
@@ -142,8 +152,8 @@ namespace Xamarin.Installer.AndroidSDK
 		public static int CalculateMoveProgressSplit (string archivePath)
 		{
 			long filesCount;
-			using (var zip = ZipFile.OpenRead (archivePath)) {
-				filesCount = zip.Entries.Count;
+			using (var archiveStream = new FileStream (archivePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+				filesCount = ZipCentralDirectory.Read (archiveStream).LongLength;
 			}
 
 			return (int) Remap (filesCount, SMALL_NUMBER_OF_FILES, BIG_NUMBER_OF_FILES, MIN_MOVE_PROGRESS_SPLIT, MAX_MOVE_PROGRESS_SPLIT);

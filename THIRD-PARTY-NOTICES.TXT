@@ -15,11 +15,12 @@ implication, estoppel or otherwise.
 4.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
 5.  google/bundletool (https://github.com/google/bundletool)
 6.  google/r8 (https://r8.googlesource.com/r8/)
-7.  IronyProject/Irony (https://github.com/IronyProject/Irony)
-8.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
-9.  mono/cecil (https://github.com/mono/cecil/)
-10.  mono/linker (https://github.com/mono/linker/)
-11.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
+7.  icsharpcode/SharpZipLib (https://github.com/icsharpcode/SharpZipLib)
+8.  IronyProject/Irony (https://github.com/IronyProject/Irony)
+9.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
+10.  mono/cecil (https://github.com/mono/cecil/)
+11.  mono/linker (https://github.com/mono/linker/)
+12.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
 
 %% Android API documentation NOTICES AND INFORMATION BEGIN HERE
 ================================================================
@@ -1112,6 +1113,30 @@ https://opensource.org/licenses/BSD-3-Clause
 
 ===============================================
 END OF google/r8 NOTICES AND INFORMATION
+
+
+%% icsharpcode/SharpZipLib NOTICES AND INFORMATION BEGIN HERE
+=================================================
+Copyright © 2000-2018 SharpZipLib Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software"), to deal in the Software
+without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+=================================================
+END OF icsharpcode/SharpZipLib NOTICES AND INFORMATION
 
 
 %% IronyProject/Irony NOTICES AND INFORMATION BEGIN HERE
