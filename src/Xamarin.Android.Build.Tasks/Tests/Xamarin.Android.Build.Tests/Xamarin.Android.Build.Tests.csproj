@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
-    <PackageReference Include="Polly" Version="$(PollyVersion)" />
   </ItemGroup>
 
   <ItemGroup>

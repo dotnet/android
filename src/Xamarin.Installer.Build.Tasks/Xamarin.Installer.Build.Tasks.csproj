@@ -28,9 +28,6 @@
   </ItemGroup>
   <Import Project="..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <ItemGroup>
-    <PackageReference Include="Polly" Version="$(PollyVersion)" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
