@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class VSAndroidJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetVSAndroidJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		internal IEnumerable<JdkInfo> GetVSAndroidJdks (Action<TraceLevel, string> logger)
 		{
 			if (!OS.IsWindows) {
 				yield break;

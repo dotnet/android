@@ -7,12 +7,12 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class MicrosoftDistJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetMicrosoftDistJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		internal IEnumerable<JdkInfo> GetMicrosoftDistJdks (Action<TraceLevel, string> logger)
 		{
-			return FromPaths (GetMacOSMicrosoftDistJdkPaths (), logger, "$HOME/Library/Developer/Xamarin/jdk", environmentVariables)
-				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Android", "jdk", "microsoft_dist_openjdk_*"), logger, locator: "legacy microsoft_dist_openjdk", environmentVariables: environmentVariables))
+			return FromPaths (GetMacOSMicrosoftDistJdkPaths (), logger, "$HOME/Library/Developer/Xamarin/jdk")
+				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Android", "jdk", "microsoft_dist_openjdk_*"), logger, locator: "legacy microsoft_dist_openjdk"))
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 

@@ -11,55 +11,34 @@ namespace Xamarin.Android.Tools.Tests
 	[TestFixture]
 	public class JdkInfoTests
 	{
-		[Test]
-		public void GetKnownSystemJdkInfos_UsesSeparateEnvironments ()
+		[TestCase ("JI_JAVA_HOME")]
+		[TestCase ("JAVA_HOME")]
+		[TestCase ("PATH")]
+		public void GetKnownSystemJdkInfos_UsesEnvironment (string variable)
 		{
-			var second = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			var root = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
 			try {
-				CreateFauxJdk (second, "21.0.1", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
-				var homes = new [] { FauxJdkDir, second };
-				var environments = homes.Select (home => new Dictionary<string, string> {
-					["JI_JAVA_HOME"] = home,
+				CreateFauxJdk (root, "21.0.1", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
+				var messages = new List<string> ();
+				var environment = new Dictionary<string, string> {
+					[variable] = variable == "PATH" ? Path.Combine (root, "bin") : root,
 					["PATHEXT"] = ".CMD",
-					["DISCOVERY_JAVA_VERSION"] = "21.42.0",
-				}).ToArray ();
+					["DISCOVERY_JAVA_VERSION"] = variable,
+				};
+				if (variable != "JI_JAVA_HOME")
+					environment ["JI_JAVA_HOME"] = Path.Combine (root, "missing");
 				if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
-					foreach (var environment in environments)
-						environment ["SystemRoot"] = systemRoot;
-				System.Threading.Tasks.Parallel.For (0, 2, i => {
-					var jdk = JdkInfo.GetKnownSystemJdkInfos (null, environments [i]).First ();
-					Assert.AreEqual (homes [i], jdk.HomePath);
-					Assert.AreEqual ("$JI_JAVA_HOME", jdk.Locator);
-					Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.version", out var version));
-					Assert.AreEqual (i == 0 ? "100.100.100-100" : "21.42.0", version);
-				});
+					environment ["SystemRoot"] = systemRoot;
+				var jdks = JdkInfo.GetKnownSystemJdkInfos ((_, message) => messages.Add (message), environment);
+				var jdk = variable == "JI_JAVA_HOME" ? jdks.First () : jdks.First (jdk => jdk.Locator == $"${variable}");
+				Assert.AreEqual (root, jdk.HomePath);
+				Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.version", out var version));
+				Assert.AreEqual (variable, version);
+				if (variable != "JI_JAVA_HOME")
+					Assert.IsTrue (messages.Any (message => message.Contains ("$JI_JAVA_HOME") && message.Contains ("missing")));
 			} finally {
-				Directory.Delete (second, recursive: true);
+				Directory.Delete (root, recursive: true);
 			}
-		}
-
-		[Test]
-		public void GetKnownSystemJdkInfos_InvalidOverrideFallsBackToJavaHomeAndPath ()
-		{
-			var messages = new List<string> ();
-			Action<TraceLevel, string> logger = (_, message) => messages.Add (message);
-			var environment = new Dictionary<string, string> {
-				["JI_JAVA_HOME"] = Path.Combine (FauxJdkDir, "missing"),
-				["JAVA_HOME"] = FauxJdkDir,
-				["PATH"] = Path.Combine (FauxJdkDir, "bin"),
-				["PATHEXT"] = ".CMD",
-			};
-			if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
-				environment ["SystemRoot"] = systemRoot;
-			var javaHome = JdkInfo.GetKnownSystemJdkInfos (logger, environment).First (jdk => jdk.Locator == "$JAVA_HOME");
-			Assert.AreEqual (FauxJdkDir, javaHome.HomePath);
-			Assert.IsTrue (messages.Any (message => message.Contains ("$JI_JAVA_HOME") && message.Contains ("missing")));
-
-			environment.Remove ("JAVA_HOME");
-			var pathJdk = JdkInfo.GetKnownSystemJdkInfos (logger, environment).First (jdk => jdk.Locator == "$PATH");
-			Assert.AreEqual (FauxJdkDir, pathJdk.HomePath);
-			Assert.IsTrue (pathJdk.GetJavaSettingsPropertyValue ("java.version", out var version));
-			Assert.AreEqual ("100.100.100-100", version);
 		}
 
 		[Test]

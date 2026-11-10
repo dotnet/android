@@ -65,10 +65,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static string GetMDRegistryKey ()
-			=> GetMDRegistryKey (null);
-
-		internal static string GetMDRegistryKey (IDictionary<string, string>? environmentVariables)
+		internal static string GetMDRegistryKey (IDictionary<string, string>? environmentVariables = null)
 		{
 			var regKey = ProcessUtils.GetEnvironmentVariable ("XAMARIN_ANDROID_REGKEY", environmentVariables);
 			return regKey == null || string.IsNullOrWhiteSpace (regKey) ? MDREG_KEY : regKey;

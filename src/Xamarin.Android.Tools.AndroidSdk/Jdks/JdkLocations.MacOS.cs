@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools {
 
 	partial class JdkLocations {
 
-		static IEnumerable<JdkInfo> GetUnixPreferredJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables)
+		IEnumerable<JdkInfo> GetUnixPreferredJdks (Action<TraceLevel, string> logger)
 		{
 			return GetUnixConfiguredJdkPaths (logger)
 				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, "monodroid-config.xml", environmentVariables))
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools {
 
 		const   string  MacOSJavaVirtualMachinesRoot    = "/Library/Java/JavaVirtualMachines";
 
-		protected static IEnumerable<JdkInfo> GetMacOSUserFileSystemJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		IEnumerable<JdkInfo> GetMacOSUserFileSystemJdks (Action<TraceLevel, string> logger)
 		{
 			if (!OS.IsMac) {
 				return Array.Empty<JdkInfo> ();
@@ -63,16 +63,16 @@ namespace Xamarin.Android.Tools {
 				}
 			}
 
-			return FromPaths (paths, logger, "~/Library/Android/*jdk*/", environmentVariables);
+			return FromPaths (paths, logger, "~/Library/Android/*jdk*/");
 		}
 
-		protected static IEnumerable<JdkInfo> GetMacOSSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null, IDictionary<string, string>? environmentVariables = null)
+		IEnumerable<JdkInfo> GetMacOSSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null)
 		{
 			if (!OS.IsMac) {
 				return Array.Empty<JdkInfo>();
 			}
 			locator = locator ?? Path.Combine (MacOSJavaVirtualMachinesRoot, pattern);
-			return FromPaths (GetMacOSSystemJvmPaths (pattern), logger, locator, environmentVariables);
+			return FromPaths (GetMacOSSystemJvmPaths (pattern), logger, locator);
 		}
 
 		static IEnumerable<string> GetMacOSSystemJvmPaths (string pattern)

@@ -10,7 +10,7 @@ namespace Xamarin.Android.Tools {
 
 	partial class JdkLocations {
 
-		internal static string? GetWindowsPreferredJdkPath (IDictionary<string, string>? environmentVariables = null)
+		string? GetWindowsPreferredJdkPath ()
 		{
 			var wow = RegistryEx.Wow64.Key32;
 			var regKey = AndroidSdkWindows.GetMDRegistryKey (environmentVariables);
@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tools {
 
 		}
 
-		protected static IEnumerable<JdkInfo> GetWindowsFileSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null, IDictionary<string, string>? environmentVariables = null)
+		IEnumerable<JdkInfo> GetWindowsFileSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null)
 		{
 			if (!OS.IsWindows) {
 				yield break;
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tools {
 			}
 		}
 
-		protected static IEnumerable<JdkInfo> GetWindowsUserFileSystemJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		IEnumerable<JdkInfo> GetWindowsUserFileSystemJdks (Action<TraceLevel, string> logger)
 		{
 			if (!OS.IsWindows) {
 				yield break;
@@ -82,14 +82,13 @@ namespace Xamarin.Android.Tools {
 			}
 		}
 
-		protected static IEnumerable<JdkInfo> GetWindowsRegistryJdks (
+		IEnumerable<JdkInfo> GetWindowsRegistryJdks (
 				Action<TraceLevel, string> logger,
 				string  parentKey,
 				string  childKeyGlob,
 				string? grandChildKey,
 				string  valueName,
-				string? locator = null,
-				IDictionary<string, string>? environmentVariables = null)
+				string? locator = null)
 		{
 			if (!OS.IsWindows) {
 				yield break;

@@ -7,11 +7,11 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class XAPrepareJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetXAPrepareJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		internal IEnumerable<JdkInfo> GetXAPrepareJdks (Action<TraceLevel, string> logger)
 		{
-			return FromPaths (GetXAPrepareJdkPaths (), logger, "android-toolchain", environmentVariables);
+			return FromPaths (GetXAPrepareJdkPaths (), logger, "android-toolchain");
 		}
 
 		static IEnumerable<string> GetXAPrepareJdkPaths ()

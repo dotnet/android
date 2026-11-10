@@ -320,10 +320,7 @@ namespace Xamarin.Android.Tools
 				logger: logger)?.Path;
 		}
 
-		internal static IEnumerable<string> FindExecutablesInPath (string executable)
-			=> FindExecutablesInPath (executable, null);
-
-		internal static IEnumerable<string> FindExecutablesInPath (string executable, IDictionary<string, string>? environmentVariables)
+		internal static IEnumerable<string> FindExecutablesInPath (string executable, IDictionary<string, string>? environmentVariables = null)
 		{
 			var path        = GetEnvironmentVariable (EnvironmentVariableNames.Path, environmentVariables) ?? "";
 			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
@@ -335,10 +332,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable)
-			=> FindExecutablesInDirectory (dir, executable, null);
-
-		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable, IDictionary<string, string>? environmentVariables)
+		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable, IDictionary<string, string>? environmentVariables = null)
 		{
 			if (!Directory.Exists (dir))
 				yield break;
@@ -354,14 +348,11 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static IEnumerable<string> ExecutableFiles (string executable)
-			=> ExecutableFiles (executable, null);
-
 		internal static string? GetEnvironmentVariable (string name, IDictionary<string, string>? environmentVariables)
 			=> environmentVariables == null ? Environment.GetEnvironmentVariable (name) :
 				environmentVariables.TryGetValue (name, out var value) ? value : null;
 
-		internal static IEnumerable<string> ExecutableFiles (string executable, IDictionary<string, string>? environmentVariables)
+		internal static IEnumerable<string> ExecutableFiles (string executable, IDictionary<string, string>? environmentVariables = null)
 		{
 			var extensions = environmentVariables == null ? ExecutableFileExtensions :
 				GetEnvironmentVariable (EnvironmentVariableNames.PathExt, environmentVariables)?.Split (new [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);

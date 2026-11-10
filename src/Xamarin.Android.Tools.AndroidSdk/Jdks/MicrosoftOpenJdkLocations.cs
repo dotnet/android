@@ -7,16 +7,16 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class MicrosoftOpenJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetMicrosoftOpenJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		internal IEnumerable<JdkInfo> GetMicrosoftOpenJdks (Action<TraceLevel, string> logger)
 		{
-			return GetMacOSSystemJdks ("microsoft-*.jdk", logger, environmentVariables: environmentVariables)
-				.Concat (GetMacOSUserFileSystemJdks (logger, environmentVariables))
-				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Android", "openjdk", "jdk-*"), logger, environmentVariables: environmentVariables))
-				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Microsoft", "jdk-*"), logger, environmentVariables: environmentVariables))
-				.Concat (GetWindowsRegistryJdks (logger, @"SOFTWARE\Microsoft\JDK", "*", @"hotspot\MSI", "Path", environmentVariables: environmentVariables))
-				.Concat (GetWindowsUserFileSystemJdks (logger, environmentVariables))
+			return GetMacOSSystemJdks ("microsoft-*.jdk", logger)
+				.Concat (GetMacOSUserFileSystemJdks (logger))
+				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Android", "openjdk", "jdk-*"), logger))
+				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Microsoft", "jdk-*"), logger))
+				.Concat (GetWindowsRegistryJdks (logger, @"SOFTWARE\Microsoft\JDK", "*", @"hotspot\MSI", "Path"))
+				.Concat (GetWindowsUserFileSystemJdks (logger))
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 	}

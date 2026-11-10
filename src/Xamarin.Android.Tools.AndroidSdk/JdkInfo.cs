@@ -350,16 +350,17 @@ namespace Xamarin.Android.Tools
 		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+			var locations = new JdkLocations (environmentVariables);
 
 			return GetEnvironmentVariableJdks (EnvironmentVariableNames.JiJavaHome, logger, environmentVariables)
-				.Concat (JdkLocations.GetPreferredJdks (logger, environmentVariables))
-				.Concat (XAPrepareJdkLocations.GetXAPrepareJdks (logger, environmentVariables))
-				.Concat (MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger, environmentVariables))
-				.Concat (EclipseAdoptiumJdkLocations.GetEclipseAdoptiumJdks (logger, environmentVariables))
-				.Concat (AzulJdkLocations.GetAzulJdks (logger, environmentVariables))
-				.Concat (OracleJdkLocations.GetOracleJdks (logger, environmentVariables))
-				.Concat (VSAndroidJdkLocations.GetVSAndroidJdks (logger, environmentVariables))
-				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger, environmentVariables))
+				.Concat (locations.GetPreferredJdks (logger))
+				.Concat (locations.GetXAPrepareJdks (logger))
+				.Concat (locations.GetMicrosoftOpenJdks (logger))
+				.Concat (locations.GetEclipseAdoptiumJdks (logger))
+				.Concat (locations.GetAzulJdks (logger))
+				.Concat (locations.GetOracleJdks (logger))
+				.Concat (locations.GetVSAndroidJdks (logger))
+				.Concat (locations.GetMicrosoftDistJdks (logger))
 				.Concat (GetEnvironmentVariableJdks (EnvironmentVariableNames.JavaHome, logger, environmentVariables))
 				.Concat (GetPathEnvironmentJdks (logger, environmentVariables))
 				.Concat (GetLibexecJdks (logger, environmentVariables))
@@ -371,10 +372,11 @@ namespace Xamarin.Android.Tools
 		public static IEnumerable<JdkInfo> GetSupportedJdkInfos (Action<TraceLevel, string>? logger = null)
 		{
 			logger = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+			var locations = new JdkLocations ();
 
-			return MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger)
-				.Concat (EclipseAdoptiumJdkLocations.GetEclipseAdoptiumJdks (logger))
-				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger))
+			return locations.GetMicrosoftOpenJdks (logger)
+				.Concat (locations.GetEclipseAdoptiumJdks (logger))
+				.Concat (locations.GetMicrosoftDistJdks (logger))
 				;
 		}
 

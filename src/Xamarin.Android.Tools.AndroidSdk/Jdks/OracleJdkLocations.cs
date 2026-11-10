@@ -7,14 +7,14 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class OracleJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetOracleJdks (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		internal IEnumerable<JdkInfo> GetOracleJdks (Action<TraceLevel, string> logger)
 		{
 			if (!OS.IsWindows) {
 				yield break;
 			}
-			foreach (var path in GetOracleJdkPaths (environmentVariables)) {
+			foreach (var path in GetOracleJdkPaths ()) {
 				var jdk = JdkInfo.TryGetJdkInfo (path, logger, "Oracle Registry", environmentVariables);
 				if (jdk == null) {
 					continue;
@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tools {
 			}
 		}
 
-		static IEnumerable<string> GetOracleJdkPaths (IDictionary<string, string>? environmentVariables)
+		IEnumerable<string> GetOracleJdkPaths ()
 		{
 			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
 
