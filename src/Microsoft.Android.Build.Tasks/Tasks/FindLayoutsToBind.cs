@@ -9,7 +9,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public partial class FindLayoutsToBind : AndroidTask
 	{

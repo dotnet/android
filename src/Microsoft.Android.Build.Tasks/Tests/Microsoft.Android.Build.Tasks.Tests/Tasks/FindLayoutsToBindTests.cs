@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Xml.Linq;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -71,15 +71,17 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		[Test]
-		public void ShortAndQualifiedTaskNamesResolve ()
+		public void ShortTaskNameResolves ()
 		{
 			string repo = NativeAotBootstrapTestTools.FindRepositoryRoot ();
 			var common = XDocument.Load (Path.Combine (repo, "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
 			var usingTasks = common.Descendants ()
-				.Where (e => e.Name.LocalName == "UsingTask" && (string?) e.Attribute ("TaskName") == "Xamarin.Android.Tasks.FindLayoutsToBind")
+				.Where (e => e.Name.LocalName == "UsingTask" && (string?) e.Attribute ("TaskName") == "Microsoft.Android.Tasks.FindLayoutsToBind")
 				.Select (e => new XElement (e.Name.LocalName, e.Attributes ()))
 				.ToArray ();
 			Assert.AreEqual (2, usingTasks.Length);
+			Assert.AreEqual ("TaskHostFactory", (string?) usingTasks.Single (u => ((string?) u.Attribute ("Condition"))?.Contains ("'Full'") == true).Attribute ("TaskFactory"));
+			Assert.IsNull (usingTasks.Single (u => ((string?) u.Attribute ("Condition"))?.Contains ("'Core'") == true).Attribute ("TaskFactory"));
 
 			string layout = CreateFile ("Resources", "layout", "main.xml");
 			XElement Invoke (string taskName, string itemName) =>
@@ -94,19 +96,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 						new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (FindLayoutsToBind).Assembly.Location)),
 					usingTasks,
 					new XElement ("Target", new XAttribute ("Name", "Bind"),
-						Invoke ("FindLayoutsToBind", "Short"),
-						Invoke ("Xamarin.Android.Tasks.FindLayoutsToBind", "Qualified"))))
+						Invoke ("FindLayoutsToBind", "Short"))))
 				.Save (projectFile);
 
 			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
-			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:Bind", "-getItem:Short;Qualified", "-v:quiet", "-nr:false");
+			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:Bind", "-getItem:Short", "-v:quiet", "-nr:false");
 			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 			using var json = JsonDocument.Parse (result.Output);
-			foreach (string item in new [] { "Short", "Qualified" }) {
-				var identities = json.RootElement.GetProperty ("Items").GetProperty (item).EnumerateArray ()
-					.Select (i => i.GetProperty ("Identity").GetString ()).ToArray ();
-				CollectionAssert.AreEqual (new [] { layout }, identities, item);
-			}
+			var identities = json.RootElement.GetProperty ("Items").GetProperty ("Short").EnumerateArray ()
+				.Select (i => i.GetProperty ("Identity").GetString ()).ToArray ();
+			CollectionAssert.AreEqual (new [] { layout }, identities);
 		}
 
 		[Test]
