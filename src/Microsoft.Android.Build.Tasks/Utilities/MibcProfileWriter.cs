@@ -79,10 +79,8 @@ class MibcProfileWriter
 	/// <returns>The number of methods written into the profile.</returns>
 	public static int Write (IEnumerable<string> assemblies, string outputPath, TaskEnvironment taskEnvironment, Action<string>? log = null)
 	{
-		if (assemblies is null)
-			throw new ArgumentNullException (nameof (assemblies));
-		if (outputPath is null)
-			throw new ArgumentNullException (nameof (outputPath));
+		ArgumentNullException.ThrowIfNull (assemblies);
+		ArgumentNullException.ThrowIfNull (outputPath);
 
 		return new MibcProfileWriter (taskEnvironment, log).WriteCore (assemblies, outputPath);
 	}

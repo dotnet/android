@@ -42,12 +42,8 @@ static class ModelBuilder
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
 	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
-		if (peers is null) {
-			throw new ArgumentNullException (nameof (peers));
-		}
-		if (outputPath is null) {
-			throw new ArgumentNullException (nameof (outputPath));
-		}
+		ArgumentNullException.ThrowIfNull (peers);
+		ArgumentNullException.ThrowIfNull (outputPath);
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
 
 		var model = new TypeMapAssemblyData {

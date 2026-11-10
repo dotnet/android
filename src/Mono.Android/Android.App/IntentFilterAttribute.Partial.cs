@@ -8,7 +8,8 @@ public sealed partial class IntentFilterAttribute
 {
 	public IntentFilterAttribute (string [] actions)
 	{
-		ArgumentNullException.ThrowIfNull (actions);
+		if (actions == null)
+			throw new ArgumentNullException ("actions");
 		if (actions.Length < 1)
 			throw new ArgumentException ("At least one action must be specified.", "actions");
 		Actions = actions;
