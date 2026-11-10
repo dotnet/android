@@ -75,8 +75,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 		public JavaTypeReference (JavaTypeReference referencedType, string? arrayPart, string? wildcardBoundsType, IEnumerable<JavaTypeReference>? wildcardConstraints)
 		{
-			if (referencedType == null)
-				throw new ArgumentNullException ("referencedType");
+			ArgumentNullException.ThrowIfNull (referencedType);
 			SpecialName = referencedType.SpecialName;
 			WildcardBoundsType = wildcardBoundsType;
 			WildcardConstraints = wildcardConstraints?.ToList ();
@@ -88,16 +87,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		public JavaTypeReference (JavaTypeParameter referencedTypeParameter, string? arrayPart)
 		{
-			if (referencedTypeParameter == null)
-				throw new ArgumentNullException ("referencedTypeParameter");
+			ArgumentNullException.ThrowIfNull (referencedTypeParameter);
 			ReferencedTypeParameter = referencedTypeParameter;
 			ArrayPart = arrayPart;
 		}
 		
 		public JavaTypeReference (JavaType referencedType, IList<JavaTypeReference>? typeParameters, string? arrayPart)
 		{
-			if (referencedType == null)
-				throw new ArgumentNullException ("referencedType");
+			ArgumentNullException.ThrowIfNull (referencedType);
 			ReferencedType = referencedType;
 			TypeParameters = typeParameters;
 			ArrayPart = arrayPart;

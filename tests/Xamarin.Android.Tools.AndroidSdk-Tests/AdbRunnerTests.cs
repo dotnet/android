@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -1604,6 +1605,49 @@ public class AdbRunnerTests
 			Assert.That (error?.Message, Does.Contain ("exit code 42"));
 			Assert.That (error?.Message, Does.Contain ("Package manager unavailable"));
 		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task AdbCommandsCopySuppliedProcessEnvironment ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ -n "$HOME" ]]; then exit 43; fi
+			echo "$ADB_TEST_VALUE" > environment.txt
+			if [[ "$1" == "devices" ]]; then
+			    echo "List of devices attached"
+			else
+			    echo "package:$ADB_TEST_VALUE"
+			fi
+			""", """
+			if defined USERNAME exit /b 43
+			echo %ADB_TEST_VALUE% > environment.txt
+			if "%1"=="devices" (
+			    echo List of devices attached
+			) else (
+			    echo package:%ADB_TEST_VALUE%
+			)
+			""");
+		var directory = Path.GetDirectoryName (adbPath) ?? throw new InvalidOperationException ("The fake adb directory is missing.");
+		var marker = Path.Combine (directory, "environment.txt");
+		try {
+			var startInfo = new ProcessStartInfo { WorkingDirectory = directory };
+			startInfo.EnvironmentVariables.Clear ();
+			if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
+				startInfo.EnvironmentVariables ["SystemRoot"] = systemRoot;
+			startInfo.EnvironmentVariables ["ADB_TEST_VALUE"] = "com.example.app";
+			var runner = AdbRunner.CreateWithProcessEnvironment (adbPath, startInfo);
+			startInfo.WorkingDirectory = Path.GetTempPath ();
+			startInfo.EnvironmentVariables ["ADB_TEST_VALUE"] = "changed";
+			await runner.ListDevicesWithoutAvdNamesAsync ();
+			Assert.AreEqual ("com.example.app", File.ReadAllText (marker).Trim ());
+			File.Delete (marker);
+			Assert.AreEqual ("package:com.example.app",
+				await runner.ExecuteShellCommandAsync ("device", "pm", new [] { "list", "packages" }));
+			Assert.AreEqual ("com.example.app", File.ReadAllText (marker).Trim ());
+		} finally {
+			File.Delete (marker);
 			CleanupFakeAdb (adbPath);
 		}
 	}

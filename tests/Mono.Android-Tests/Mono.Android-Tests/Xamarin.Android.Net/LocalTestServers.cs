@@ -21,6 +21,7 @@ namespace Xamarin.Android.NetTests {
 		protected const string LoopbackHost = "127.0.0.1";
 
 		readonly string name;
+		readonly Lock handlerExceptionsLock = new ();
 		readonly List<Exception> handlerExceptions = new List<Exception> ();
 
 		protected LocalTestServer (string name)
@@ -33,7 +34,7 @@ namespace Xamarin.Android.NetTests {
 		public void AssertNoUnhandledExceptions ()
 		{
 			Exception exception;
-			lock (handlerExceptions) {
+			lock (handlerExceptionsLock) {
 				if (handlerExceptions.Count == 0) {
 					return;
 				}
@@ -46,7 +47,7 @@ namespace Xamarin.Android.NetTests {
 
 		protected void AddHandlerException (Exception ex)
 		{
-			lock (handlerExceptions) {
+			lock (handlerExceptionsLock) {
 				handlerExceptions.Add (ex);
 			}
 		}

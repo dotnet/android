@@ -272,6 +272,11 @@ namespace Xamarin.Android.Tools
 			if (!AnySystemJavasInstalled () && (java == "/usr/bin/java" || java == "java"))
 				return props;
 
+#if NET9_0_OR_GREATER
+			var outputLock = new Lock ();
+#else
+			var outputLock = output;
+#endif
 			const string PropertySettings = "Property settings:";
 
 			try {
@@ -279,7 +284,7 @@ namespace Xamarin.Android.Tools
 					const string ContinuedValuePrefix   = "        ";
 					const string NewValuePrefix         = "    ";
 					const string NameValueDelim         = " = ";
-					lock (output) {
+					lock (outputLock) {
 						output.AppendLine (e.Data);
 					}
 					if (string.IsNullOrEmpty (e.Data))

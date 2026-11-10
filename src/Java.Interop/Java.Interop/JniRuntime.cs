@@ -170,15 +170,15 @@ namespace Java.Interop
 
 		public static void SetCurrent (JniRuntime newCurrent)
 		{
-			if (newCurrent == null)
-				throw new ArgumentNullException (nameof (newCurrent));
+			ArgumentNullException.ThrowIfNull (newCurrent);
 			lock (Runtimes) {
 				Runtimes [newCurrent.InvocationPointer] = newCurrent;
 			}
 			current = newCurrent;
 		}
 
-		Dictionary<IntPtr, IDisposable>                 TrackedInstances    = new Dictionary<IntPtr, IDisposable> ();
+		readonly Lock                                   TrackedInstancesLock = new ();
+		readonly Dictionary<IntPtr, IDisposable>        TrackedInstances     = new Dictionary<IntPtr, IDisposable> ();
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyRuntimeOnDispose;
@@ -204,8 +204,7 @@ namespace Java.Interop
 		/// </safety>
 		protected unsafe JniRuntime (CreationOptions options)
 		{
-			if (options == null)
-				throw new ArgumentNullException (nameof (options));
+			ArgumentNullException.ThrowIfNull (options);
 			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer == IntPtr.Zero)
 				throw new ArgumentException ("Need either options.InvocationPointer or options.EnvironmentPointer!", nameof (options));
 
@@ -428,7 +427,7 @@ namespace Java.Interop
 
 		internal void Track (JniType value)
 		{
-			lock (TrackedInstances) {
+			lock (TrackedInstancesLock) {
 				if (!TrackedInstances.ContainsKey (value.PeerReference.Handle))
 					TrackedInstances [value.PeerReference.Handle] = value;
 			}
@@ -436,7 +435,7 @@ namespace Java.Interop
 
 		internal void UnTrack (IntPtr key)
 		{
-			lock (TrackedInstances) {
+			lock (TrackedInstancesLock) {
 				if (TrackedInstances.ContainsKey (key))
 					TrackedInstances.Remove (key);
 			}
@@ -445,7 +444,7 @@ namespace Java.Interop
 		void ClearTrackedReferences ()
 		{
 			List<IDisposable> values;
-			lock (TrackedInstances) {
+			lock (TrackedInstancesLock) {
 				// Dispose untracks each owner only after successful unregistration.
 				// Pre-clearing would drop callback roots if unregistration fails.
 				values = new List<IDisposable> (TrackedInstances.Values);
@@ -476,8 +475,7 @@ namespace Java.Interop
 
 		public virtual void RaisePendingException (Exception pendingException)
 		{
-			if (pendingException == null)
-				throw new ArgumentNullException (nameof (pendingException));
+			ArgumentNullException.ThrowIfNull (pendingException);
 			if (pendingException is not JavaException throwable)
 				throw new NotSupportedException ($"Runtime '{GetType ().FullName}' must override {nameof (RaisePendingException)} to marshal managed exceptions to Java.");
 

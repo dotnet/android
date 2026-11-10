@@ -45,8 +45,7 @@ namespace Java.Interop
 
 			static JniObjectReference TryFindClass (string classname, bool throwOnError)
 			{
-				if (classname == null)
-					throw new ArgumentNullException (nameof (classname));
+				ArgumentNullException.ThrowIfNull (classname);
 				if (classname.Length == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
@@ -208,8 +207,7 @@ namespace Java.Interop
 
 			public static bool TryFindClass (string classname, out JniObjectReference instance)
 			{
-				if (classname == null)
-					throw new ArgumentNullException (nameof (classname));
+				ArgumentNullException.ThrowIfNull (classname);
 				if (classname.Length == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 

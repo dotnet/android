@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		}
 
 		List<string>            lines = new List <string> ();
-		object                  linesLock = new object ();
+		readonly Lock           linesLock = new Lock ();
 
 		public                  string          AdbTarget             { get; set; }
 		public                  string          AdbOptions            { get; set; }

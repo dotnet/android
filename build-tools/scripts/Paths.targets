@@ -19,10 +19,4 @@
         Importance="High"
     />
   </Target>
-  <Target Name="GetMonoSourceFullPath">
-    <Message
-        Text="$(MonoSourceFullPath)"
-        Importance="High"
-    />
-  </Target>
 </Project>

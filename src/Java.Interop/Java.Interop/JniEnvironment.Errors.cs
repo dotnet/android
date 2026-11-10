@@ -22,8 +22,7 @@ namespace Java.Interop {
 			{
 				if (!klass.IsValid)
 					throw new ArgumentException (nameof (klass));
-				if (message == null)
-					throw new ArgumentNullException (nameof (message));
+				ArgumentNullException.ThrowIfNull (message);
 
 				int r = _ThrowNew (klass, message);
 				if (r != 0)
@@ -32,8 +31,7 @@ namespace Java.Interop {
 
 			public static void Throw (Exception e)
 			{
-				if (e == null)
-					throw new ArgumentNullException (nameof (e));
+				ArgumentNullException.ThrowIfNull (e);
 				Runtime.RaisePendingException (e);
 			}
 		}

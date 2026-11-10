@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 using Android.Runtime;
 using Java.Interop;
@@ -213,6 +214,7 @@ namespace Xamarin.Android.RuntimeTests {
 		static ulong Handle (IntPtr handle) => unchecked((ulong)(nuint)handle);
 
 		internal sealed class ReferenceListener : EventListener {
+			readonly Lock eventsLock = new ();
 			readonly List<(int Id, int ThreadId, object?[] Payload, string [] Names, EventLevel Level, EventKeywords Keywords)> events = [];
 
 			public ReferenceListener (EventKeywords keyword, EventLevel level = EventLevel.Verbose)
@@ -227,7 +229,7 @@ namespace Xamarin.Android.RuntimeTests {
 
 			public (int Id, int ThreadId, object?[] Payload, string [] Names, EventLevel Level, EventKeywords Keywords) [] GetEvents ()
 			{
-				lock (events) {
+				lock (eventsLock) {
 					return events.ToArray ();
 				}
 			}
@@ -237,7 +239,7 @@ namespace Xamarin.Android.RuntimeTests {
 				if (eventData.EventId != 0 && (eventData.EventId < 11 || eventData.EventId > 21)) {
 					return;
 				}
-				lock (events) {
+				lock (eventsLock) {
 					events.Add ((eventData.EventId, Environment.CurrentManagedThreadId,
 						eventData.Payload?.ToArray () ?? [], eventData.PayloadNames?.ToArray () ?? [],
 						eventData.Level, eventData.Keywords));

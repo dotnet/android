@@ -73,9 +73,7 @@ sealed class BlobBuilderStream : Stream
 
 	public override int Read (byte [] buffer, int offset, int count)
 	{
-		if (buffer is null) {
-			throw new ArgumentNullException (nameof (buffer));
-		}
+		ArgumentNullException.ThrowIfNull (buffer);
 		if (offset < 0) {
 			throw new ArgumentOutOfRangeException (nameof (offset));
 		}
