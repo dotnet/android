@@ -260,6 +260,81 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Execute_RelativePathsUseTaskDirectory ()
+		{
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			for (int i = 0; i < 2; i++) {
+				var directory = Path.Combine (Root, "temp", TestName, $"project{i}");
+				Directory.CreateDirectory (Path.Combine (directory, "input"));
+				File.Copy (monoAndroidItem.ItemSpec, Path.Combine (directory, "input", "Mono.Android.dll"));
+				File.WriteAllText (Path.Combine (directory, "input", "AndroidManifest.xml"),
+					$"""<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Project{i}" /></manifest>""");
+				File.WriteAllText (Path.Combine (directory, "input", "custom-view-map.txt"), "Android.Views.View;android.view.View\n");
+				var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ());
+				var output = Path.Combine ($"obj{i}", "typemap");
+				var java = Path.Combine ($"obj{i}", "java");
+				var linkedJava = Path.Combine ($"obj{i}", "linked-java");
+				var assemblies = new ITaskItem [] { new TaskItem (Path.Combine ("input", "Mono.Android.dll")) };
+				var first = CreateTask (assemblies, output, java);
+				first.TaskEnvironment = environment;
+				first.ResolvedFrameworkAssemblies = [new TaskItem (Path.Combine ("input", ".", "Mono.Android.dll"))];
+				first.ManifestTemplate = Path.Combine ("input", "AndroidManifest.xml");
+				first.CustomViewMapFile = Path.Combine ("input", "custom-view-map.txt");
+				first.MergedAndroidManifestOutput = Path.Combine (output, "AndroidManifest.xml");
+				first.AcwMapOutputFile = Path.Combine (output, "acw-map.txt");
+				first.ApplicationRegistrationOutputFile = Path.Combine (output, "ApplicationRegistration.java");
+				first.GeneratedAssembliesListFile = Path.Combine (output, "assemblies.txt");
+				first.PackageName = $"com.project{i}";
+				first.AndroidApiLevel = "35";
+				first.SupportedOSPlatformVersion = "24";
+				first.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
+
+				Assert.IsTrue (first.Execute ());
+				CollectionAssert.AreEqual (first.GeneratedAssemblies.Select (item => item.ItemSpec),
+					File.ReadAllLines (Path.Combine (directory, first.GeneratedAssembliesListFile)));
+				Assert.IsTrue (first.GeneratedAssemblies.All (item => !Path.IsPathRooted (item.ItemSpec)));
+				FileAssert.Exists (Path.Combine (directory, first.AcwMapOutputFile));
+				FileAssert.Exists (Path.Combine (directory, first.ApplicationRegistrationOutputFile));
+				StringAssert.Contains ($"Project{i}", File.ReadAllText (Path.Combine (directory, first.MergedAndroidManifestOutput)));
+				using (var typeMap = Mono.Cecil.AssemblyDefinition.ReadAssembly (Path.Combine (directory, output, "_Mono.Android.TypeMap.dll"))) {
+					var view = typeMap.CustomAttributes.Single (attribute =>
+						attribute.AttributeType.Name == "TypeMapAttribute`1" &&
+						(string) attribute.ConstructorArguments [0].Value == "android/view/View");
+					Assert.AreEqual (2, view.ConstructorArguments.Count, "The custom-view map must root View.");
+				}
+
+				var javaItem = first.GeneratedJavaFiles.First ();
+				Assert.IsFalse (Path.IsPathRooted (javaItem.ItemSpec));
+				File.AppendAllText (Path.Combine (directory, javaItem.ItemSpec), "\n// copied input");
+				var staleRelativePath = Path.Combine ("old", "Stale.java");
+				var stalePath = Path.Combine (directory, linkedJava, staleRelativePath);
+				Directory.CreateDirectory (Path.GetDirectoryName (stalePath));
+				File.WriteAllText (stalePath, "stale");
+				var messages = new List<BuildMessageEventArgs> ();
+				var second = CreateTask (assemblies, output, linkedJava, messages: messages);
+				second.TaskEnvironment = environment;
+				second.ResolvedFrameworkAssemblies = first.ResolvedFrameworkAssemblies;
+				second.CustomViewMapFile = first.CustomViewMapFile;
+				second.JavaSourceInputDirectory = java;
+				second.CleanJavaSourceOutputDirectory = i == 1;
+
+				Assert.IsTrue (second.Execute ());
+				Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: unchanged, skipping emission", StringComparison.Ordinal) == true));
+				var copiedPath = Path.Combine (directory, linkedJava, Path.GetRelativePath (java, javaItem.ItemSpec));
+				StringAssert.Contains ("// copied input", File.ReadAllText (copiedPath));
+				FileAssert.DoesNotExist (stalePath);
+				var deleted = second.DeletedJavaFiles.Single ();
+				Assert.AreEqual (stalePath, deleted.ItemSpec);
+				Assert.AreEqual (staleRelativePath, deleted.GetMetadata ("RelativePath"));
+			}
+		}
+
+		[Test]
 		public void Execute_InvalidTargetFrameworkVersion_Fails ()
 		{
 			var path = Path.Combine ("temp", TestName);
