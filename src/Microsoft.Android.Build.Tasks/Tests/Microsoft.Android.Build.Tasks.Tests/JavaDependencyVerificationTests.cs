@@ -10,6 +10,7 @@ using System.Xml;
 using Java.Interop.Tools.Maven.Models;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
+using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;

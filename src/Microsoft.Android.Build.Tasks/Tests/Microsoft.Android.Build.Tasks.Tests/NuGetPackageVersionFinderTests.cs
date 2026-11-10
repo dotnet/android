@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json.Nodes;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
