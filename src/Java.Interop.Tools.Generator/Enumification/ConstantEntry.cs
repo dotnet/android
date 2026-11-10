@@ -211,7 +211,6 @@ namespace Java.Interop.Tools.Generator.Enumification
 
 		static FieldAction FromFieldActionString (string value)
 		{
-			// Not OrdinalIgnoreCase: ToLowerInvariant maps KELVIN SIGN (U+212A) to 'k', so "\u212Aeep" must remain "keep".
 			return value.ToLowerInvariant () switch
 			{
 				"" => FieldAction.None,
