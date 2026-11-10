@@ -139,3 +139,11 @@ namespace Microsoft.Android.Tasks
 		}
 	}
 }
+
+namespace Xamarin.Android.Tasks
+{
+	// Preserves the `Xamarin.Android.Tasks.BuildAppBundle` MSBuild task name used before the task moved here.
+	public class BuildAppBundle : Microsoft.Android.Tasks.BuildAppBundle
+	{
+	}
+}
