@@ -389,8 +389,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("com/example/Outer$for", "for")]
-	[InlineData ("com/example/Outer$record", "record")]
+	[InlineData ("com/example/for", "for")]
+	[InlineData ("com/example/record", "record")]
 	public void ValidateJavaNames_ReservedDeferredRegistrationTypeIdentifier_LogsError (string javaName, string invalidIdentifier)
 	{
 		var peers = new List<JavaPeerInfo> {
@@ -463,7 +463,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void ValidateJavaNames_AfterDeferredRegistrationPropagation_ValidatesRegistrationName ()
+	public void ValidateJavaNames_AfterDeferredRegistrationPropagation_PreservesGeneratedIdentifier ()
 	{
 		var basePeer = new JavaPeerInfo {
 			JavaName = "com/example/Outer$for",
@@ -488,9 +488,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		TrimmableTypeMapGenerator.PropagateDeferredRegistrationToBaseClasses (peers);
 
 		Assert.True (basePeer.CannotRegisterInStaticConstructor);
-		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
-		Assert.Contains (logMessages, message =>
-			message.Contains ("Java name 'com/example/Outer$for' contains invalid or unsupported Java identifier 'for'."));
+		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
 	}
 
 	[Fact]
