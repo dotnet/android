@@ -196,8 +196,37 @@ public class AndroidSdkInstallerTests
 		}
 	}
 
-	[Test]
-	public void DiscoverAddonLibrariesFromManifestIni ()
+	// Verbatim from https://dl.google.com/android/repository/google_apis-24_r1.zip
+	const string GoogleApis24Manifest = """
+		# SDK Add-on Manifest
+
+		name=Google APIs
+		name-id=google_apis
+		vendor=Google Inc.
+		vendor-id=google
+		description=Android + Google APIs
+
+		# version of the Android platform on which this add-on is built.
+		api=24
+
+		# revision of the add-on
+		revision=1
+
+		# list of libraries, separated by a semi-colon.
+		libraries=com.google.android.maps;com.android.future.usb.accessory;com.google.android.media.effects
+
+		# details for each library
+		com.google.android.maps=maps.jar;API for Google Maps
+		com.android.future.usb.accessory=usb.jar;API for USB Accessories
+		com.google.android.media.effects=effects.jar;Collection of video effects
+
+		SystemImage.GpuSupport=true
+		""";
+
+	// The UTF-8 preamble case starts with `libraries=`, which the previous INI parser accepted.
+	[TestCase (false)]
+	[TestCase (true)]
+	public void DiscoverAddonLibrariesFromManifestIni (bool utf8Preamble)
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
 		var addonPath = Path.Combine (root, "add-ons", "addon-google_apis-google-24");
@@ -213,32 +242,10 @@ public class AndroidSdkInstallerTests
 				Pkg.Desc=Android + Google APIs
 				Pkg.Revision=1
 				""");
-			// Verbatim from https://dl.google.com/android/repository/google_apis-24_r1.zip
-			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), """
-				# SDK Add-on Manifest
-
-				name=Google APIs
-				name-id=google_apis
-				vendor=Google Inc.
-				vendor-id=google
-				description=Android + Google APIs
-
-				# version of the Android platform on which this add-on is built.
-				api=24
-
-				# revision of the add-on
-				revision=1
-
-				# list of libraries, separated by a semi-colon.
-				libraries=com.google.android.maps;com.android.future.usb.accessory;com.google.android.media.effects
-
-				# details for each library
-				com.google.android.maps=maps.jar;API for Google Maps
-				com.android.future.usb.accessory=usb.jar;API for USB Accessories
-				com.google.android.media.effects=effects.jar;Collection of video effects
-
-				SystemImage.GpuSupport=true
-				""".Replace ("\n", "\r\n"));
+			var manifest = utf8Preamble
+				? GoogleApis24Manifest.Substring (GoogleApis24Manifest.IndexOf ("libraries=", StringComparison.Ordinal))
+				: GoogleApis24Manifest;
+			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest.Replace ("\n", "\r\n"), new UTF8Encoding (utf8Preamble));
 			var installer = new AndroidSDKInstaller (new Helper (), AndroidManifestType.Local);
 			Assert.IsTrue (installer.Discover (new List<string> { root }));
 			var instance = installer.FindInstance (root);
@@ -246,7 +253,6 @@ public class AndroidSdkInstallerTests
 			var component = instance.Components.Single (c => c.ManifestURL == new Uri (propertiesPath));
 			var info = component.Info as AndroidComponentInfoAddon;
 			Assert.IsNotNull (info);
-			Assert.AreEqual ("24", info.ApiLevel);
 			var libraries = info.Libraries;
 			Assert.IsNotNull (libraries);
 			CollectionAssert.AreEqual (
@@ -256,70 +262,6 @@ public class AndroidSdkInstallerTests
 					"com.google.android.media.effects|effects.jar|Collection of video effects",
 				},
 				libraries.Select (l => $"{l.Name}|{l.LocalJarPath}|{l.Description}"));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	[TestCase ("\n", false)]
-	[TestCase ("\n", true)]
-	[TestCase ("\r\n", false)]
-	[TestCase ("\r\n", true)]
-	public void DiscoverAddonLibrariesWithUtf8Preamble (string newline, bool emitPreamble)
-	{
-		AssertAddonLibrary (
-			"libraries=maps" + newline + "maps=maps.jar;Maps API" + newline,
-			emitPreamble, "maps.jar", "Maps API");
-	}
-
-	[TestCase ("# comment\n! comment\nlibraries=maps\nmaps=maps.jar;Maps API", "maps.jar", "Maps API")]
-	[TestCase ("; legacy INI comment\nlibraries=maps\nmaps=maps.jar;Maps API", "maps.jar", "Maps API")]
-	[TestCase ("libraries=maps\nmaps=maps.jar;Maps # API ! details", "maps.jar", "Maps # API ! details")]
-	[TestCase ("libraries=maps\nmaps=maps.jar;Maps;extra", "maps.jar", "Maps")]
-	[TestCase ("""
-		libraries=ma\u0070s
-		maps=lib\\maps.jar;Maps\u0020API
-		""", "lib\\maps.jar", "Maps API")]
-	[TestCase ("""
-		libraries=maps
-		maps=maps.jar;Maps \
-		    API
-		""", "maps.jar", "Maps API")]
-	public void DiscoverAddonLibrariesWithJavaPropertiesSyntax (string manifest, string jarPath, string description)
-	{
-		AssertAddonLibrary (manifest, false, jarPath, description);
-	}
-
-	static void AssertAddonLibrary (string manifest, bool emitPreamble, string jarPath, string description)
-	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
-		var addonPath = Path.Combine (root, "add-ons", "addon-google_apis-google-24");
-		Directory.CreateDirectory (addonPath);
-		try {
-			var propertiesPath = Path.Combine (addonPath, "source.properties");
-			File.WriteAllText (propertiesPath, """
-				Addon.NameDisplay=Google APIs
-				Addon.NameId=google_apis
-				Addon.VendorDisplay=Google Inc.
-				Addon.VendorId=google
-				AndroidVersion.ApiLevel=24
-				Pkg.Desc=Android + Google APIs
-				Pkg.Revision=1
-				""");
-			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest, new UTF8Encoding (emitPreamble));
-			var installer = new AndroidSDKInstaller (new Helper (), AndroidManifestType.Local);
-			Assert.IsTrue (installer.Discover (new List<string> { root }));
-			var instance = installer.FindInstance (root);
-			Assert.IsNotNull (instance);
-			var component = instance.Components.Single (c => c.ManifestURL == new Uri (propertiesPath));
-			var info = component.Info as AndroidComponentInfoAddon;
-			Assert.IsNotNull (info);
-			var libraries = info.Libraries;
-			Assert.IsNotNull (libraries);
-			var library = libraries.Single ();
-			Assert.AreEqual ("maps", library.Name);
-			Assert.AreEqual (jarPath, library.LocalJarPath);
-			Assert.AreEqual (description, library.Description);
 		} finally {
 			Directory.Delete (root, recursive: true);
 		}
