@@ -223,10 +223,11 @@ public class AndroidSdkInstallerTests
 		SystemImage.GpuSupport=true
 		""";
 
-	// The UTF-8 preamble case starts with `libraries=`, which the previous INI parser accepted.
-	[TestCase (false)]
-	[TestCase (true)]
-	public void DiscoverAddonLibrariesFromManifestIni (bool utf8Preamble)
+	[TestCase ("UTF-8", false)]
+	[TestCase ("UTF-8", true)]
+	[TestCase ("UTF-16LE", true)]
+	[TestCase ("UTF-16BE", true)]
+	public void DiscoverAddonLibrariesFromManifestIni (string manifestEncoding, bool writePreamble)
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
 		var addonPath = Path.Combine (root, "add-ons", "addon-google_apis-google-24");
@@ -242,10 +243,16 @@ public class AndroidSdkInstallerTests
 				Pkg.Desc=Android + Google APIs
 				Pkg.Revision=1
 				""");
-			var manifest = utf8Preamble
+			Encoding encoding = manifestEncoding switch {
+				"UTF-8" => new UTF8Encoding (writePreamble),
+				"UTF-16LE" => new UnicodeEncoding (bigEndian: false, byteOrderMark: writePreamble),
+				"UTF-16BE" => new UnicodeEncoding (bigEndian: true, byteOrderMark: writePreamble),
+				_ => throw new ArgumentOutOfRangeException (nameof (manifestEncoding), manifestEncoding, null),
+			};
+			var manifest = writePreamble
 				? "libraries=maps\nmaps=maps.jar;M\u00fcnchen Maps\n"
 				: GoogleApis24Manifest;
-			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest.Replace ("\r\n", "\n").Replace ("\n", "\r\n"), new UTF8Encoding (utf8Preamble));
+			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest.Replace ("\r\n", "\n").Replace ("\n", "\r\n"), encoding);
 			var installer = new AndroidSDKInstaller (new Helper (), AndroidManifestType.Local);
 			Assert.IsTrue (installer.Discover (new List<string> { root }));
 			var instance = installer.FindInstance (root);
@@ -255,7 +262,7 @@ public class AndroidSdkInstallerTests
 			Assert.IsNotNull (info);
 			var libraries = info.Libraries;
 			Assert.IsNotNull (libraries);
-			var expected = utf8Preamble
+			var expected = writePreamble
 				? new [] { "maps|maps.jar|M\u00fcnchen Maps" }
 				: new [] {
 					"com.google.android.maps|maps.jar|API for Google Maps",
