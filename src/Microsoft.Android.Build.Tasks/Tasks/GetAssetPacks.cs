@@ -2,21 +2,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
-using Irony;
 using System.Text.RegularExpressions;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	// We have a list of files, we want to get the
 	// ones that actually exist on disk.
 	public class GetAssetPacks : AndroidTask
 	{
+		// Not [GeneratedRegex]: with IgnoreCase this runtime regex uses CurrentCulture case mappings
+		// (e.g. tr-TR rejects 'i'), while a generated regex would bake in invariant case mappings.
 		readonly Regex validAssetPackName = new Regex ("^[A-Z0-9_]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		public override string TaskPrefix => "GAP";
 
@@ -40,10 +44,10 @@ namespace Xamarin.Android.Tasks
 				if (assetPack.IsNullOrEmpty () || string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) == 0)
 					continue;
 				if (!IsAssetPackNameValid (assetPack)) {
-					Log.LogCodedError ("XA0140", string.Format (Properties.Resources.XA0140, asset.ItemSpec, assetPack));
+					Log.LogCodedError ("XA0140", string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA0140, asset.ItemSpec, assetPack));
 					continue;
 				}
-				if (!assetPacks.TryGetValue (assetPack, out ITaskItem item)) {
+				if (!assetPacks.TryGetValue (assetPack, out ITaskItem? item)) {
 					item = new TaskItem (assetPack);
 					item.SetMetadata ("AssetPack", assetPack);
 					item.SetMetadata ("AssetPackCacheFile", Path.Combine (IntermediateDir.ItemSpec, assetPack, "assetpack.cache"));
