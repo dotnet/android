@@ -3,6 +3,7 @@ using System.IO;
 
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Tasks;
 

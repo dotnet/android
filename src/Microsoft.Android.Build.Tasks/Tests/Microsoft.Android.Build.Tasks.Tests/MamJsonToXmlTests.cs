@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -12,6 +14,28 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 
 		static string ResourcePath (string name) =>
 			Path.Combine (TestContext.CurrentContext.TestDirectory, "Resources", "MamJsonToXml", name);
+
+		[Test]
+		public void TaskRegistrationsUseAttributeFreeCoreAndNonCoreSplit ()
+		{
+			var source = XDocument.Load (Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
+				"src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+			var registrations = source.Descendants ()
+				.Where (element => element.Name.LocalName == "UsingTask" &&
+					((string?) element.Attribute ("TaskName"))?.EndsWith (".MamJsonToXml") == true)
+				.ToArray ();
+			Assert.AreEqual (2, registrations.Length);
+			var modern = registrations.Single (element => (string?) element.Attribute ("TaskName") == "Microsoft.Android.Tasks.MamJsonToXml");
+			var legacy = registrations.Single (element => (string?) element.Attribute ("TaskName") == "Xamarin.Android.Tasks.MamJsonToXml");
+			Assert.AreEqual ("'$(MSBuildRuntimeType)' == 'Core'", ((string?) modern.Attribute ("Condition"))?.Trim ());
+			Assert.AreEqual ("'$(MSBuildRuntimeType)' != 'Core'", ((string?) legacy.Attribute ("Condition"))?.Trim ());
+			Assert.AreEqual ("$(_MicrosoftAndroidBuildTasksAssembly)", (string?) modern.Attribute ("AssemblyFile"));
+			Assert.AreEqual ("Xamarin.Android.Build.Tasks.dll", (string?) legacy.Attribute ("AssemblyFile"));
+			foreach (var registration in registrations) {
+				Assert.IsNull (registration.Attribute ("TaskFactory"));
+				Assert.IsNull (registration.Attribute ("Runtime"));
+			}
+		}
 
 		[Test]
 		public void TestMamJsonIsParsedToXml ()

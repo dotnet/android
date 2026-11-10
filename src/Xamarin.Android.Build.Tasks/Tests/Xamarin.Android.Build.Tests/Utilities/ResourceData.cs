@@ -42,6 +42,8 @@ namespace Xamarin.Android.Build.Tests
 		public  static  string JavaSourceTestInterface => Encoding.ASCII.GetString (javaSourceTestInterface.Value);
 		public  static  string RemapActivityJava => Encoding.UTF8.GetString (remapActivityJava.Value);
 		public  static  string RemapActivityXml => Encoding.UTF8.GetString (remapActivityXml.Value);
+		public static  string RemapMamJson => Encoding.UTF8.GetString (GetResourceData ("mam.json"));
+		public static  string RemapMamXml => Encoding.UTF8.GetString (GetResourceData ("mam.xml"));
 		public static string InterfaceMethods => Encoding.UTF8.GetString (interfaceMethods.Value);
 		public static string InterfaceMethodPeer => Encoding.UTF8.GetString (interfaceMethodPeer.Value);
 		public static string ConcreteInterfaceMethodPeer => Encoding.UTF8.GetString (concreteInterfaceMethodPeer.Value);

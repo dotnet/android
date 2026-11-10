@@ -17,7 +17,7 @@ using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
 	(string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool IsStatic)
 >;
 
-namespace Microsoft.Android.Tasks
+namespace Xamarin.Android.Tasks
 {
 	class MamJsonParser
 	{
@@ -29,6 +29,12 @@ namespace Microsoft.Android.Tasks
 		public MamJsonParser (Action<TraceLevel, string> logger)
 		{
 			Logger  = logger;
+		}
+
+		public void Load (string jsonPath)
+		{
+			using var stream = File.OpenRead (jsonPath);
+			Load (stream);
 		}
 
 		public void Load (Stream jsonStream)
