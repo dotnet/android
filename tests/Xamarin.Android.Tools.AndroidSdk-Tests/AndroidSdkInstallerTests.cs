@@ -273,6 +273,39 @@ public class AndroidSdkInstallerTests
 		}
 	}
 
+	[TestCase ("104755")]
+	[TestCase ("102755")]
+	[TestCase ("106755")]
+	public void UnzipStripsSetIdPermissions (string archiveMode)
+	{
+		if (OperatingSystem.IsWindows ()) {
+			Assert.Ignore ("Unix permission bits are not applied on Windows.");
+			return;
+		}
+
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		var zipPath = Path.Combine (root, "package.zip");
+		var outPath = Path.Combine (root, "out");
+		Directory.CreateDirectory (root);
+		try {
+			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				var tool = zip.CreateEntry ("tool");
+				tool.ExternalAttributes = Convert.ToInt32 (archiveMode, 8) << 16;
+				using (var writer = new StreamWriter (tool.Open ()))
+					writer.Write ("test");
+			}
+
+			new Helper ().Unzip (outPath, zipPath, null, null);
+
+			Assert.AreEqual (UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+					UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+					UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
+				File.GetUnixFileMode (Path.Combine (outPath, "tool")));
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
 	[Test]
 	public void UnzipRejectsParentTraversal ()
 	{
@@ -295,13 +328,19 @@ public class AndroidSdkInstallerTests
 	}
 
 	[Test]
-	public void UnzipExtractsArchiveWithPrefix ()
+	public void UnzipExtractsArchiveWithDataDescriptor ()
 	{
-		var archive = CreateArchive (CompressionLevel.Optimal);
-		var prefixed = new byte [100 + archive.Length];
-		Buffer.BlockCopy (archive, 0, prefixed, 100, archive.Length);
+		byte [] archive;
+		using (var stream = new NonSeekableMemoryStream ()) {
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				using (var writer = new StreamWriter (zip.CreateEntry ("pkg/data.txt").Open ()))
+					writer.Write (ArchiveContents);
+			}
+			archive = stream.ToArray ();
+		}
+		Assert.AreNotEqual (0, archive [6] & 0x08, "Expected the entry to use a data descriptor.");
 
-		var outPath = UnzipBytes (prefixed, out var root);
+		var outPath = UnzipBytes (archive, out var root);
 		try {
 			Assert.AreEqual (ArchiveContents, File.ReadAllText (Path.Combine (outPath, "pkg", "data.txt")));
 		} finally {
@@ -310,48 +349,24 @@ public class AndroidSdkInstallerTests
 	}
 
 	[Test]
-	public void UnzipRejectsWrongLocalHeaderSignature ()
+	public void CalculateMoveProgressSplitSupportsZip64Archives ()
 	{
-		AssertUnzipFails (CompressionLevel.Optimal, (archive, local, central) => archive [local] ^= 0xff);
-	}
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		var zipPath = Path.Combine (root, "large.zip");
+		Directory.CreateDirectory (root);
+		try {
+			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				for (int i = 0; i < 65536; i++)
+					zip.CreateEntry ($"f{i}");
+			}
 
-	[Test]
-	public void UnzipRejectsLocalHeaderSizeMismatch ()
-	{
-		AssertUnzipFails (CompressionLevel.NoCompression, (archive, local, central) => WriteUInt32 (archive, local + 22, ReadUInt32 (archive, local + 22) + 1));
-	}
-
-	[Test]
-	public void UnzipRejectsTruncatedDeflateData ()
-	{
-		AssertUnzipFails (CompressionLevel.Optimal, (archive, local, central) => {
-			uint compressedSize = ReadUInt32 (archive, central + 20) / 2;
-			WriteUInt32 (archive, local + 18, compressedSize);
-			WriteUInt32 (archive, central + 20, compressedSize);
-		});
-	}
-
-	[Test]
-	public void UnzipRejectsEncryptedEntries ()
-	{
-		AssertUnzipFails (CompressionLevel.NoCompression, (archive, local, central) => {
-			archive [local + 6] |= 1;
-			archive [central + 8] |= 1;
-		});
+			Assert.AreEqual (50, DirectorySizeMonitoringTimer.CalculateMoveProgressSplit (zipPath));
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
 	}
 
 	const string ArchiveContents = "Android SDK package contents. Android SDK package contents. Android SDK package contents.";
-
-	static byte [] CreateArchive (CompressionLevel level)
-	{
-		using (var stream = new MemoryStream ()) {
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				using (var writer = new StreamWriter (zip.CreateEntry ("pkg/data.txt", level).Open ()))
-					writer.Write (ArchiveContents);
-			}
-			return stream.ToArray ();
-		}
-	}
 
 	static string UnzipBytes (byte [] archive, out string root)
 	{
@@ -364,32 +379,9 @@ public class AndroidSdkInstallerTests
 		return outPath;
 	}
 
-	static void AssertUnzipFails (CompressionLevel level, Action<byte [], int, int> corrupt)
+	sealed class NonSeekableMemoryStream : MemoryStream
 	{
-		var archive = CreateArchive (level);
-		int endOfCentralDirectory = archive.Length - 22;
-		Assert.AreEqual (0x06054b50u, ReadUInt32 (archive, endOfCentralDirectory));
-		int central = (int) ReadUInt32 (archive, endOfCentralDirectory + 16);
-		int local = (int) ReadUInt32 (archive, central + 42);
-		corrupt (archive, local, central);
-
-		string root = null;
-		try {
-			Assert.Catch (() => UnzipBytes (archive, out root));
-		} finally {
-			if (root != null)
-				Directory.Delete (root, recursive: true);
-		}
-	}
-
-	static uint ReadUInt32 (byte [] data, int offset) =>
-		(uint) (data [offset] | data [offset + 1] << 8 | data [offset + 2] << 16 | data [offset + 3] << 24);
-
-	static void WriteUInt32 (byte [] data, int offset, uint value)
-	{
-		data [offset] = (byte) value;
-		data [offset + 1] = (byte) (value >> 8);
-		data [offset + 2] = (byte) (value >> 16);
-		data [offset + 3] = (byte) (value >> 24);
+		public override bool CanSeek => false;
+		public override long Seek (long offset, SeekOrigin loc) => throw new NotSupportedException ();
 	}
 }

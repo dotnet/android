@@ -9,6 +9,7 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using Xamarin.Installer.Common;
@@ -218,15 +219,13 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 
 			try
 			{
-				using (var archiveStream = new FileStream (archivePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-					var zipEntries = ZipCentralDirectory.Read (archiveStream);
-
+				using (var zipFile = ZipFile.OpenRead (archivePath)) {
 					float minProgressDelta = 5f; // percents
 					float lastProgress = 0f;
 					float progress;
 
-					ulong totalSize = DirectorySizeMonitoringTimer.CalculateTotalSize (zipEntries);
-					ulong currentSize = 0, gradualSize;
+					ulong totalSize = DirectorySizeMonitoringTimer.CalculateTotalSize (zipFile);
+					ulong currentSize = 0;
 					try {
 						progressCallback?.Invoke (0f);
 					} catch (Exception ex) {
@@ -234,54 +233,30 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 					}
 
 					string fullBaseDirectory = Path.GetFullPath (baseDirectory).TrimEnd (Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-					byte [] buf = new byte [4096];
 
-					for (int i = 0; i < zipEntries.Length; i++) {
-						var metadata = zipEntries [i];
-						string destPath = Path.Combine (baseDirectory, metadata.Name);
+					foreach (var entry in zipFile.Entries) {
+						string destPath = Path.Combine (baseDirectory, entry.FullName);
 						lastDestPath = destPath;
 
 						if (!Path.GetFullPath (destPath).StartsWith (fullBaseDirectory, StringComparison.OrdinalIgnoreCase)) {
 							throw new Exception ($"Archive file '{archivePath}' has parent traversal in paths");
 						}
 
-						if (metadata.IsDirectory) {
+						if (entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal)) {
 							Directory.CreateDirectory (destPath);
-							SafeSetLastWriteTime (destPath, metadata.DateTime);
+							SafeSetLastWriteTime (destPath, entry.LastWriteTime.LocalDateTime);
 							continue;
 						}
 
 						Directory.CreateDirectory (Path.GetDirectoryName (destPath));
-
-						int n = 0;
-						gradualSize = 0;
-						ulong iteration = 0;
-						using (var fs = new FileStream (destPath, FileMode.Create, FileAccess.Write, FileShare.None)) {
-							using (var inZip = ZipCentralDirectory.OpenEntry (archiveStream, metadata)) {
-								while ((n = inZip.Read (buf, 0, buf.Length)) > 0) {
-									fs.Write (buf, 0, n);
-									gradualSize += (ulong) n;
-									iteration++;
-
-									if (iteration % 1000 == 0 && progressCallback != null) {
-										progress = (currentSize + gradualSize) * 100f / totalSize;
-										if (progress - lastProgress > minProgressDelta) {
-											try {
-												progressCallback?.Invoke (progress);
-											} catch (Exception ex) {
-												Logger.Error ($"[Unzip] progress callback exception: {ex}");
-											}
-											lastProgress = progress;
-										}
-									}
-								}
-							}
-							currentSize += (ulong) fs.Length;
-						}
-						SafeSetLastWriteTime (destPath, metadata.DateTime);
-						SetFileAttributes (destPath, metadata.IsDOSEntry, metadata.ExternalFileAttributes);
+						// Delete first: the create mode applies only to new files, so an overwrite would keep the old permissions.
+						if (File.Exists (destPath))
+							File.Delete (destPath);
+						entry.ExtractToFile (destPath, overwrite: false);
+						SetUnixPermissions (destPath, entry);
 						// TODO: set owner
 
+						currentSize += (ulong) entry.Length;
 						progress = currentSize * 100f / totalSize;
 						if (progress - lastProgress > minProgressDelta) {
 							try {
@@ -320,6 +295,30 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			return ret;
 		}
 
+		// ZipArchiveEntry.ExternalAttributes exists at runtime on .NET and .NET Framework 4.7.2+, but not in the netstandard2.0 reference assemblies.
+		static readonly System.Reflection.PropertyInfo ExternalAttributesProperty = typeof (ZipArchiveEntry).GetProperty ("ExternalAttributes");
+
+		static void SetUnixPermissions (string filePath, ZipArchiveEntry entry)
+		{
+#if !WINDOWS
+			if (Platform.IsWindows)
+				return;
+			if (ExternalAttributesProperty == null)
+				throw new PlatformNotSupportedException ("ZIP entry permissions are not available on this runtime.");
+
+			int mode = (int) ExternalAttributesProperty.GetValue (entry) >> 16;
+			if (mode == -1)
+				return;
+
+			var permissions = mode == 0
+				? FilePermissions.S_IRUSR | FilePermissions.S_IWUSR | FilePermissions.S_IRGRP | FilePermissions.S_IROTH // 0644
+				: (FilePermissions) (mode & 0x1FF) | FilePermissions.S_IRUSR; // drop setuid/setgid/sticky; owner must be able to read
+
+			if (Syscall.chmod (filePath, permissions) == -1)
+				throw new InvalidOperationException ($"Failed to set file attributes for '{filePath}'. {Stdlib.strerror (Stdlib.GetLastError ())}");
+#endif
+		}
+
 		static void SafeSetLastWriteTime (string path, DateTime stamp)
 		{
 			try {
@@ -330,42 +329,6 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			} catch {
 				// Just ignoring this exception, time stamp is not THAT important...
 			}
-		}
-
-		static void SetFileAttributes (string filePath, bool dosAttributes, int zipAttributes)
-		{
-			if (String.IsNullOrEmpty(filePath) || !File.Exists(filePath))
-				return;
-			if (dosAttributes && zipAttributes != -1) {
-				var fileAttributes = (FileAttributes)zipAttributes;
-				fileAttributes &= (FileAttributes.Archive | FileAttributes.Normal | FileAttributes.ReadOnly | FileAttributes.Hidden);
-				File.SetAttributes(filePath, fileAttributes);
-			} else
-				File.SetAttributes(filePath, FileAttributes.Normal);
-
-			#if !WINDOWS
-			if (Platform.IsWindows)
-				return;
-			
-			zipAttributes = (zipAttributes >> 16);
-
-			if (zipAttributes == -1)
-				return;
-
-			FilePermissions permissions = unchecked((FilePermissions)zipAttributes);
-			if (permissions == 0) {
-				// 644 octal
-				permissions = FilePermissions.S_IRUSR |
-					      FilePermissions.S_IWUSR |
-					      FilePermissions.S_IRGRP |
-					      FilePermissions.S_IROTH;
-			} else if ((permissions & FilePermissions.S_IRUSR) == 0)
-				permissions |= FilePermissions.S_IRUSR; // owner must be able to read the file
-
-			if (Syscall.chmod(filePath, permissions) == -1)
-				throw new InvalidOperationException (String.Format("Failed to set file attributes for '{0}'. {1}",
-				                                                   filePath, Stdlib.strerror(Stdlib.GetLastError())));
-			#endif
 		}
 
 		public bool URLExists (Uri url)
