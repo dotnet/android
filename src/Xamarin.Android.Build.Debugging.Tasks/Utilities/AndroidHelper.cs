@@ -28,8 +28,15 @@ namespace Xamarin.Android.Tasks
 			return taskEnvironment == null ? key : (key, taskEnvironment.ProjectDirectory);
 		}
 
-		static void RegisterDevice (IBuildEngine4 engine, object key, AdbDeviceInfo device) =>
+		// Microsoft.Android.Build.Tasks.dll (FastDeploy) cannot read this assembly's assembly-local
+		// cache or AdbDeviceInfo type, so also share the selected serial ("" when there is no device).
+		static object GetSharedKey (object key) => ($"{nameof (AndroidHelper)}_AndroidDeviceSerial", key);
+
+		static void RegisterDevice (IBuildEngine4 engine, object key, AdbDeviceInfo device)
+		{
 			engine?.RegisterTaskObjectAssemblyLocal (key, device ?? NullDevice, Lifetime, allowEarlyCollection: false);
+			engine?.RegisterTaskObject (GetSharedKey (key), device?.Serial ?? "", Lifetime, allowEarlyCollection: false);
+		}
 
 		public static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe)
 		{
@@ -95,6 +102,10 @@ namespace Xamarin.Android.Tasks
 			var key = GetKey (target, adbPath, taskEnvironment);
 			try {
 				var device = engine4?.GetRegisteredTaskObjectAssemblyLocal (key, Lifetime);
+#if MICROSOFT_ANDROID_BUILD_TASKS
+				if (device == null && engine4?.GetRegisteredTaskObject (GetSharedKey (key), Lifetime) is string serial)
+					device = serial.Length == 0 ? NullDevice : new AdbDeviceInfo { Serial = serial };
+#endif
 				if (device != null) {
 					logMessage ("Using cached value from RegisterTaskObject");
 					if (ReferenceEquals (device, NullDevice))
