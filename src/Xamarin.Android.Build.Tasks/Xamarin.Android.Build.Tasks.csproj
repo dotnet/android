@@ -108,6 +108,9 @@
     <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
       <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\..\src\utils\LowercaseComparison.cs">
+      <Link>Utilities\LowercaseComparison.cs</Link>
+    </Compile>
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
     </Compile>

@@ -11,6 +11,7 @@ using Java.Interop.Tools.Maven.Repositories;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using MonoDroid.Utils;
 
 namespace Xamarin.Android.Tasks;
 
@@ -151,12 +152,15 @@ public class MavenDownload : AsyncTask
 	/// Returns <see langword="null"/> if <paramref name="type"/> is not a known shorthand,
 	/// in which case it is treated as a repository URL.
 	/// </summary>
-	internal static MavenRepository? GetKnownRepository (string type) =>
-		type.ToLowerInvariant () switch {
-			"central" => MavenRepository.Central,
-			"google" => MavenRepository.Google,
-			_ => null
-		};
+	internal static MavenRepository? GetKnownRepository (string type)
+	{
+		var comparison = LowercaseComparison.PrepareInvariant (ref type);
+		if (type.Equals ("central", comparison))
+			return MavenRepository.Central;
+		if (type.Equals ("google", comparison))
+			return MavenRepository.Google;
+		return null;
+	}
 
 	CachedMavenRepository? GetRepository (ITaskItem item, out string repositoryUrl)
 	{

@@ -6,6 +6,7 @@ using Mono.Options;
 using Java.Interop.Tools.JavaSource;
 
 using MonoDroid.Generation;
+using MonoDroid.Utils;
 using Java.Interop.Tools.Generator;
 
 namespace Xamarin.Android.Binder
@@ -211,20 +212,26 @@ namespace Xamarin.Android.Binder
 
 		static CodeGenerationTarget ParseCodeGenerationTarget (string value)
 		{
-			switch (value.ToLowerInvariant ()) {
-			case "xajavainterop1":
+			var name = value;
+			var comparison = LowercaseComparison.PrepareInvariant (ref name);
+			if (name.Equals ("xajavainterop1", comparison))
 				return CodeGenerationTarget.XAJavaInterop1;
-			case "javainterop1":
+			if (name.Equals ("javainterop1", comparison))
 				throw new NotSupportedException ("The JavaInterop1 code generation target is no longer supported. Use XAJavaInterop1 instead.");
-			}
 			throw new NotSupportedException ($"Don't know how to convert '{value}' to a CodeGenerationTarget value!");
 		}
 
-		static XmldocStyle ParseXmldocStyle (string style) => style?.ToLowerInvariant () switch {
-			"intellisense" => XmldocStyle.IntelliSense,
-			"intellisense+extraremarks" => XmldocStyle.IntelliSenseAndExtraRemarks,
-			"full" => XmldocStyle.Full,
-			_ => XmldocStyle.Full,
-		};
+		static XmldocStyle ParseXmldocStyle (string style)
+		{
+			if (style == null)
+				return XmldocStyle.Full;
+
+			var comparison = LowercaseComparison.PrepareInvariant (ref style);
+			if (style.Equals ("intellisense", comparison))
+				return XmldocStyle.IntelliSense;
+			if (style.Equals ("intellisense+extraremarks", comparison))
+				return XmldocStyle.IntelliSenseAndExtraRemarks;
+			return XmldocStyle.Full;
+		}
 	}
 }

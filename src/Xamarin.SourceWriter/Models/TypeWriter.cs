@@ -56,20 +56,20 @@ namespace Xamarin.SourceWriter
 
 		public void SetVisibility (string visibility)
 		{
-			switch (visibility?.ToLowerInvariant ().Trim ()) {
-				case "public":
+			switch (VisibilityParser.Parse (visibility, trim: true)) {
+				case Visibility.Public:
 					IsPublic = true;
 					break;
-				case "internal":
+				case Visibility.Internal:
 					IsInternal = true;
 					break;
-				case "protected":
+				case Visibility.Protected:
 					IsProtected = true;
 					break;
-				case "protected internal":
+				case Visibility.Protected | Visibility.Internal:
 					this.visibility = Visibility.Protected | Visibility.Internal;
 					break;
-				case "private":
+				case Visibility.Private:
 					IsPrivate = true;
 					break;
 			}

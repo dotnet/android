@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using MonoDroid.Utils;
 
 namespace Xamarin.Android.Tasks
 {
@@ -44,14 +45,12 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			XDocument doc = new XDocument ();
-			switch (FeatureType.ToLowerInvariant ()) {
-				case "assetpack":
-					GenerateAssetPackManifest (doc);
-					break;
-				default:
-					GenerateFeatureManifest (doc);
-					break;
-			}
+			var type = FeatureType;
+			var comparison = LowercaseComparison.PrepareInvariant (ref type);
+			if (type.Equals ("assetpack", comparison))
+				GenerateAssetPackManifest (doc);
+			else
+				GenerateFeatureManifest (doc);
 			doc.SaveIfChanged (OutputFile.ItemSpec);
 			return !Log.HasLoggedErrors;
 		}
@@ -117,21 +116,13 @@ namespace Xamarin.Android.Tasks
 
 		XElement GetDistribution ()
 		{
-			XElement distribution;
-			switch (FeatureDeliveryType.ToLowerInvariant ())
-			{
-				case "ondemand":
-					distribution = new XElement (distNS + "on-demand");
-					break;
-				case "fastfollow":
-					distribution = new XElement (distNS + "fast-follow");
-					break;
-				case "installtime":
-				default:
-					distribution = new XElement (distNS + "install-time");
-					break;
-			}
-			return distribution;
+			var deliveryType = FeatureDeliveryType;
+			var comparison = LowercaseComparison.PrepareInvariant (ref deliveryType);
+			if (deliveryType.Equals ("ondemand", comparison))
+				return new XElement (distNS + "on-demand");
+			if (deliveryType.Equals ("fastfollow", comparison))
+				return new XElement (distNS + "fast-follow");
+			return new XElement (distNS + "install-time");
 		}
 	}
 }

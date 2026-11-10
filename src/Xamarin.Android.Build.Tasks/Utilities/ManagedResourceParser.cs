@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
+using MonoDroid.Utils;
 
 
 namespace Xamarin.Android.Tasks
@@ -438,12 +439,24 @@ namespace Xamarin.Android.Tasks
 				"add-resource",
 			};
 
+		static readonly Dictionary<string, string> invariantResourceNames = new [] {
+			"animator", "bool", "color", "drawable", "dimen", "font", "fraction", "integer",
+			"interpolator", "anim", "attr", "layout", "menu", "mipmap", "raw", "plurals",
+			"string", "enum", "flag", "id", "array", "integer-array", "string-array",
+			"add-resource", "declare-styleable", "style", "transition", "xml",
+		}.ToDictionary (name => name, StringComparer.OrdinalIgnoreCase);
+
 		void CreateResourceField (string root, string fieldName, XmlReader element = null)
 		{
 			var i = root.IndexOf ('-');
 			var item = i < 0 ? root : root.Substring (0, i);
 			item = resourceNamesToUseDirectly.Contains (root) ? root : item;
-			switch (item.ToLower ()) {
+			var normalized = item;
+			var comparison = LowercaseComparison.PrepareCurrentCulture (ref normalized);
+			if (comparison == StringComparison.OrdinalIgnoreCase)
+				normalized = invariantResourceNames.TryGetValue (normalized, out var name) ? name : item.ToLower ();
+
+			switch (normalized) {
 			case "animator":
 				CreateIntField (animator, fieldName);
 				break;

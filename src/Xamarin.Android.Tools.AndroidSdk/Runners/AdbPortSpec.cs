@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using MonoDroid.Utils;
 
 namespace Xamarin.Android.Tools;
 
@@ -37,12 +38,8 @@ public record AdbPortSpec (AdbProtocol Protocol, int Port)
 		if (!int.TryParse (portStr, out var port) || port <= 0 || port > 65535)
 			return null;
 
-		var protocol = protocolStr.ToLowerInvariant () switch {
-			"tcp" => (AdbProtocol?) AdbProtocol.Tcp,
-			_ => null,
-		};
-
-		return protocol.HasValue ? new AdbPortSpec (protocol.Value, port) : null;
+		var comparison = LowercaseComparison.PrepareInvariant (ref protocolStr);
+		return protocolStr.Equals ("tcp", comparison) ? new AdbPortSpec (AdbProtocol.Tcp, port) : null;
 	}
 
 	public override string ToString () => ToSocketSpec ();

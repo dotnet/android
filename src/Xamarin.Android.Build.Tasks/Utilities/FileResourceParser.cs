@@ -14,6 +14,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using MonoDroid.Utils;
 using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks
@@ -247,20 +248,16 @@ namespace Xamarin.Android.Tasks
 			var i = root.IndexOf ('-');
 			var item = i < 0 ? root : root.Substring (0, i);
 			item = resourceNamesToUseDirectly.Contains (root) ? root : item;
-			switch (item.ToLowerInvariant ()) {
-				case "animation":
-					item = "anim";
-					break;
-				case "array":
-				case "string-array":
-				case "integer-array":
-					item = "array";
-					break;
-				case "enum":
-				case "flag":
-					item = "id";
-					break;
-			}
+			var normalized = item;
+			var comparison = LowercaseComparison.PrepareInvariant (ref normalized);
+			if (normalized.Equals ("animation", comparison))
+				item = "anim";
+			else if (normalized.Equals ("array", comparison) ||
+					normalized.Equals ("string-array", comparison) ||
+					normalized.Equals ("integer-array", comparison))
+				item = "array";
+			else if (normalized.Equals ("enum", comparison) || normalized.Equals ("flag", comparison))
+				item = "id";
 			var r = new R () {
 				ResourceTypeName = item,
 				Identifier = id,
