@@ -11,19 +11,21 @@ using System.Threading;
 
 namespace Java.Interop
 {
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	[SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Fields preserve the unmanaged JavaVM vtable layout.")]
 	// These fields are populated from native memory and some are only present to preserve the JavaVM vtable layout.
 #pragma warning disable CS0169, CS0649
 	struct JavaVMInterface {
-		IntPtr reserved0;
-		IntPtr reserved1;
-		IntPtr reserved2;
+		// SAFETY: Field access only copies addresses; vtable invocation is confined to the unsafe blocks below.
+		safe IntPtr reserved0;
+		safe IntPtr reserved1;
+		safe IntPtr reserved2;
 
-		delegate* unmanaged<IntPtr, int> destroyJavaVM;
-		delegate* unmanaged<IntPtr, IntPtr*, JavaVMThreadAttachArgs*, int> attachCurrentThread;
-		delegate* unmanaged<IntPtr, int> detachCurrentThread;
-		delegate* unmanaged<IntPtr, IntPtr*, int, int> getEnv;
-		delegate* unmanaged<IntPtr, IntPtr*, IntPtr, int> attachCurrentThreadAsDaemon;
+		safe delegate* unmanaged<IntPtr, int> destroyJavaVM;
+		safe delegate* unmanaged<IntPtr, IntPtr*, JavaVMThreadAttachArgs*, int> attachCurrentThread;
+		safe delegate* unmanaged<IntPtr, int> detachCurrentThread;
+		safe delegate* unmanaged<IntPtr, IntPtr*, int, int> getEnv;
+		safe delegate* unmanaged<IntPtr, IntPtr*, IntPtr, int> attachCurrentThreadAsDaemon;
 
 		public int DestroyJavaVM (IntPtr javavm)
 		{
@@ -65,10 +67,12 @@ namespace Java.Interop
 		v1_6	= 0x00010006,
 	}
 
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	struct JavaVMThreadAttachArgs {
-		public  JniVersion 	        version;    /*		 must be >= JNI_VERSION_1_2 */
-		public  IntPtr              name;       /*		 NULL or name of thread as modified UTF-8 str */
-		public  IntPtr              group;      /*		 global ref of a ThreadGroup object, or NULL */
+		// SAFETY: Non-overlapping scalar storage; attachment retains its separate caller contract for referenced memory.
+		public  safe JniVersion     version;    /*		 must be >= JNI_VERSION_1_2 */
+		public  safe IntPtr         name;       /*		 NULL or name of thread as modified UTF-8 str */
+		public  safe IntPtr         group;      /*		 global ref of a ThreadGroup object, or NULL */
 	}
 
 

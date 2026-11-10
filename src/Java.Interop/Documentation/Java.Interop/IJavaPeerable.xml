@@ -111,6 +111,15 @@ partial class ExampleBinding : IJavaPeerable {
         collectable as soon as possible, but not if the current instance
         is referenced anywhere else.
       </para>
+      <para>
+        An unregistered instance follows the normal disposal path, including
+        its managed disposal callback with a valid peer reference. The value
+        manager then deletes the JNI reference and clears the peer reference.
+        <see cref="T:Java.Interop.JavaObject" /> and
+        <see cref="T:Java.Interop.JavaException" /> release their cleared native
+        control blocks before finalization is suppressed. A different registered
+        wrapper for the same Java instance remains usable.
+      </para>
       <block subset="none" type="note">
         "not referenced anywhere else" may mean "is not registered".
       </block>

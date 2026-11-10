@@ -53,7 +53,6 @@ namespace Xamarin.Android.Tasks
 				}
 				// Both lib{mono,net}-android.debug.so and lib{mono,net}-android.release.so are in InputLibraries.
 				// Use IncludeDebugSymbols to determine which one to include.
-				// We may eventually have files such as `lib{mono,net}-android-checked+asan.release.so` as well.
 				var fileName = Path.GetFileNameWithoutExtension (library.ItemSpec);
 				if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName, StringComparer.OrdinalIgnoreCase)) {
 					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}'");

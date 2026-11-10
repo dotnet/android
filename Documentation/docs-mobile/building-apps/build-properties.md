@@ -1029,7 +1029,7 @@ configured Android development environment.
 In .NET 11 and later, NativeAOT builds require an installed Android NDK.
 The final native link uses the NDK's `ld.lld`, `llvm-objcopy`, CRT objects,
 sysroot libraries, and compiler runtime. CoreCLR builds do not require an NDK
-unless native library stripping or a checked build is enabled.
+unless native library stripping is enabled.
 
 ## AndroidPackageFormat
 

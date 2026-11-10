@@ -138,7 +138,7 @@ An address-only `JniNativeMethod` constructor stores descriptor addresses; it
 does not read their contents or invoke a callback. Registration, not address
 storage, owns the ABI, provenance, and lifetime obligations described above.
 
-Java.Interop enables `updated-memory-safety-rules`: modules carry
+Java.Interop sets `MemorySafetyRulesVersion=2`: modules carry
 `MemorySafetyRulesAttribute (2)` and caller-unsafe members carry
 `RequiresUnsafeAttribute`. Updated-rule consumers need unsafe call contexts,
 including for pointer-free APIs with JNI ABI obligations. Legacy consumers retain

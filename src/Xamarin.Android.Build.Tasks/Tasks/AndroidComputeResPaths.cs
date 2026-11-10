@@ -69,6 +69,10 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string? FilesHash { get; set; }
 
+		// Generated logical name as identity, original logical name as OriginalName metadata.
+		[Output]
+		public ITaskItem [] ResourceCaseMap { get; set; } = [];
+
 		public override bool RunTask ()
 		{
 			var intermediateFiles = new List<ITaskItem> (ResourceFiles.Length);
@@ -171,9 +175,15 @@ namespace Xamarin.Android.Tasks
 			IntermediateFiles = intermediateFiles.ToArray ();
 			ResolvedResourceFiles = resolvedFiles.ToArray ();
 			FilesHash = Files.HashString (sb.ToString ());
-			MonoAndroidHelper.SaveResourceCaseMap (BuildEngine4, nameCaseMap, ProjectSpecificTaskObjectKey);
+			// Escape logical keys without normalizing them as physical paths.
+			ITaskItem2 escapedName = new TaskItem ("");
+			ResourceCaseMap = nameCaseMap.Select (entry => {
+				escapedName.SetMetadataValueLiteral ("Name", entry.Key);
+				var item = new TaskItem (escapedName.GetMetadataValueEscaped ("Name"), treatAsFilePath: false);
+				((ITaskItem2) item).SetMetadataValueLiteral ("OriginalName", entry.Value);
+				return (ITaskItem) item;
+			}).ToArray ();
 			return !Log.HasLoggedErrors;
 		}
 	}
 }
-

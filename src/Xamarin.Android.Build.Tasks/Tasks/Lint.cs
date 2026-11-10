@@ -51,7 +51,9 @@ namespace Xamarin.Android.Tasks
 		string? text;
 		string? type;
 
-		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.ItemGroupToCaseMap (ResourceCaseMap);
+
+		public ITaskItem [] ResourceCaseMap { get; set; } = [];
 
 		[Required]
 		public string TargetDirectory { get; set; } = "";

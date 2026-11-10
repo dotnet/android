@@ -36,9 +36,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				FileAssert.Exists (expected);
 			}
 			string runtime = ndk.GetClangDeviceLibraryPath () ?? throw new InvalidOperationException ("Clang runtime libraries must be available.");
-			foreach (string library in new [] { "libclang_rt.builtins-aarch64-android.a", "libclang_rt.asan-aarch64-android.so", "libclang_rt.ubsan_standalone-aarch64-android.so" }) {
-				FileAssert.Exists (Path.Combine (runtime, library));
-			}
+			FileAssert.Exists (Path.Combine (runtime, "libclang_rt.builtins-aarch64-android.a"));
 			Assert.IsEmpty (errors);
 		}
 
@@ -98,23 +96,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				StringAssert.Contains (olderRoot, error.Message);
 				errors.Clear ();
 			}
-		}
-
-		[TestCase (false, "AndroidIncludeWrapSh")]
-		[TestCase (true, "Please add `wrap.sh`")]
-		public void CheckedBuildRequiresWrapper (bool includeWrapSh, string diagnostic)
-		{
-			var task = new CollectNativeFilesForArchive {
-				BuildEngine = engine,
-				ApkOutputPath = Path.Combine (Root, "temp", TestName, "test.apk"),
-				IntermediateOutputPath = Path.Combine (Root, "temp", TestName, "obj"),
-				SupportedAbis = ["arm64-v8a"],
-				CheckedBuild = "asan",
-				IncludeWrapSh = includeWrapSh,
-			};
-			Assert.IsFalse (task.Execute ());
-			StringAssert.Contains (diagnostic, errors.Single ().Message);
-			Assert.IsEmpty (task.FilesToAddToArchive);
 		}
 
 		AndroidNdkTools CreateNdk ()

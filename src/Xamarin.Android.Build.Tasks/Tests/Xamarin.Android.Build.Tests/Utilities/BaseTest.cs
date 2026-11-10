@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,17 @@ namespace Xamarin.Android.Build.Tests
 			(true, AndroidRuntime.CoreCLR),
 			(true, AndroidRuntime.NativeAOT),
 		];
+
+		protected static string GetPreviousWorkloadJavaSdkPath ()
+		{
+			var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
+			var variableName = $"JAVA_HOME_21_{architecture}";
+			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
+			if (string.IsNullOrEmpty (javaSdkPath)) {
+				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
+			}
+			return javaSdkPath;
+		}
 
 		protected bool IsWindows => TestEnvironment.IsWindows;
 

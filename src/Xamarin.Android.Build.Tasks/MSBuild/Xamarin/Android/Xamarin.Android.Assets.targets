@@ -49,6 +49,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     DependsOnTargets="$(CoreResolveReferencesDependsOn);_ComputeAndroidAssetsPaths;_CalculateAssetPacks;_GenerateAndroidAssetsDir" />
 
 <Target Name="_ComputeAndroidAssetsPaths">
+  <!-- Each computation replaces the previous map, including an empty asset map. -->
+  <ItemGroup>
+    <_AndroidResourceCaseMap Remove="@(_AndroidResourceCaseMap)" />
+  </ItemGroup>
   <AndroidComputeResPaths
       ResourceFiles="@(AndroidAsset)"
       IntermediateDir="$(MonoAndroidAssetsDirIntermediate)"
@@ -59,6 +63,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   >
     <Output ItemName="_AndroidAssetsDest" TaskParameter="IntermediateFiles" />
     <Output ItemName="_AndroidResolvedAssets" TaskParameter="ResolvedResourceFiles" />
+    <Output ItemName="_AndroidResourceCaseMap" TaskParameter="ResourceCaseMap" />
   </AndroidComputeResPaths>
 </Target>
 
@@ -134,6 +139,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Outputs="@(_AssetPacks->'%(AssetPackOutput)')">
 
   <Aapt2LinkAssetPack
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
       OutputArchive="%(_AssetPacks.AssetPackOutput)"

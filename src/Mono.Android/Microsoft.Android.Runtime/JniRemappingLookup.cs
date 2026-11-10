@@ -137,10 +137,12 @@ static class JniRemappingLookup
 		public uint                              fields;
 	}
 
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	readonly struct NativeBinaryBlobPayload
 	{
-		public readonly IntPtr data;
-		public readonly uint size;
+		// SAFETY: Descriptor fields copy scalar values; reading the native body retains Initialize's caller contract.
+		public safe readonly IntPtr data;
+		public safe readonly uint size;
 
 		public bool IsValid () => data != IntPtr.Zero && size >= HeaderSize && size <= 256 * 1024 * 1024;
 	}

@@ -177,19 +177,19 @@ namespace Xamarin.Android.Tasks
 					// staging subdirectories; processing those children would then follow the symlink
 					// back into the shell-owned staging area and fail with "Permission denied" under
 					// run-as. Each subdirectory is handled by its own iteration instead.
-					string script = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&for e in ./*;do [ -d \"$e\" ]||rm -f \"$e\";done&&for f in \"$s\"/*;do [ -d \"$f\" ]||ln -sf \"$f\" .;done";
-					string output = await RunAsShell (script);
-					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
-						LogDiagnostic ($"Shell symlink glob update failed with '{output}'.");
+					string script = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&for e in ./*;do [ -d \"$e\" ]||rm -f \"$e\"||exit 1;done&&for f in \"$s\"/*;do [ -d \"$f\" ]||ln -sf \"$f\" .||exit 1;done";
+					var result = await RunAsShell (script);
+					if (RaiseRunAsError (result.Output) || result.ExitCode != 0 || IsShellError (result.Output, "rm") || IsShellError (result.Output, "mkdir") || IsShellError (result.Output, "ln")) {
+						LogDiagnostic ($"Shell symlink glob update failed (exit code {result.ExitCode}) with '{result.Output}'.");
 						return false;
 					}
 					continue;
 				}
 
 				foreach (string script in CreateShellSymlinkScripts (remoteStagingPath, overridePath, newInDirectory, removedInDirectory)) {
-					string output = await RunAsShell (script);
-					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
-						LogDiagnostic ($"Shell symlink batch update failed with '{output}'.");
+					var result = await RunAsShell (script);
+					if (RaiseRunAsError (result.Output) || result.ExitCode != 0 || IsShellError (result.Output, "rm") || IsShellError (result.Output, "mkdir") || IsShellError (result.Output, "ln")) {
+						LogDiagnostic ($"Shell symlink batch update failed (exit code {result.ExitCode}) with '{result.Output}'.");
 						return false;
 					}
 				}
@@ -258,14 +258,6 @@ namespace Xamarin.Android.Tasks
 
 		async Task<bool> UpdateOverrideCopies (string remoteStagingPath, string overridePath, bool clearOverrideDirectory = false)
 		{
-			if (clearOverrideDirectory) {
-				if (!await ClearOverrideDirectory (overridePath)) {
-					return false;
-				}
-			} else if (!await ClearOverrideSymlinkState (overridePath)) {
-				return false;
-			}
-
 			var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
 			if (stagedFileData == null) {
 				return false;
@@ -275,6 +267,14 @@ namespace Xamarin.Android.Tasks
 			var overrideFileData = await GetRemoteFileData (overridePath, runAs: true);
 			if (overrideFileData == null) {
 				return false;
+			}
+
+			// Validate both listings before clearing the override directory.
+			if (clearOverrideDirectory || overrideFileData.ContainsKey (ManifestHashMarker)) {
+				if (!await ClearOverrideDirectory (overridePath)) {
+					return false;
+				}
+				overrideFileData.Clear ();
 			}
 
 			if (!await RemoveStaleOverrideFiles (overridePath, stagedFileData, overrideFileData)) {
@@ -449,25 +449,10 @@ namespace Xamarin.Android.Tasks
 			return ParseDeviceManifestState (result.Output);
 		}
 
-		async Task<bool> ClearOverrideSymlinkState (string overridePath)
-		{
-			string markerPath = CombineRemotePath (overridePath, ManifestHashMarker);
-			string output = await RunAsShell ($"if test -f {QuoteShellArgument (markerPath)}; then rm -rf {QuoteShellArgument (overridePath)}; else rm -f {QuoteShellArgument (markerPath)}; fi");
-			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-				LogFastDeployError ("XA0129", output, overridePath);
-				return false;
-			}
-			return true;
-		}
-
 		async Task<bool> ClearOverrideDirectory (string overridePath)
 		{
-			string output = await RunAs ("rm", "-rf", overridePath);
-			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-				LogFastDeployError ("XA0129", output, overridePath);
-				return false;
-			}
-			return true;
+			var result = await RunAs ("rm", "-rf", overridePath);
+			return !ReportRunAsCommandError (result, overridePath, "rm");
 		}
 
 		async Task<bool> MarkRemoteManifests (string remoteStagingPath, string overridePath, string manifestHash)

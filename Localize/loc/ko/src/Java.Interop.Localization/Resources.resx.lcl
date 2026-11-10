@@ -72,15 +72,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Generator_BG4500" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA['lang-features=default-interface-methods' is not compatible with 'codegen-target=xamarinandroid'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['lang-features=default-interface-methods'는 'codegen-target=xamarinandroid'와 호환되지 않습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";Generator_BG8101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected class child {0}.]]></Val>
@@ -387,38 +378,20 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4200" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Generator_BG8C02" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.]]></Val>
+          <Val><![CDATA[For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[형식 '{0}'에 대한 Java 래퍼를 생성할 수 없습니다. '클래스' 형식만 지원됩니다.]]></Val>
+            <Val><![CDATA['{0}' 형식의 Kotlin 이름이 맹글링된 메서드 '{1}'(원래 이름: '{2}')에 동일한 C# 시그니처로 소거되는 해시 접미사가 붙은 형제 메서드가 여러 개 있습니다. 첫 번째 메서드만 내보냅니다. 이 경고를 표시하지 않으려면 Metadata.xml에서 중복 항목을 제거하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4201" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Generator_BG8C03" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot determine JNI name for type '{0}'.]]></Val>
+          <Val><![CDATA[JNI signature override '{0}' is invalid or does not match the parameter count for member '{1}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[형식 '{0}'에 대한 JNI 이름을 결정할 수 없습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4203" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['이름' 속성은 'com.example.MyClass'와 같은 정규화된 형식이어야 하며 '{0}'에 대한 패키지를 찾을 수 없습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4204" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unable to resolve interface type '{0}'. Are you missing an assembly reference?]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[인터페이스 형식 '{0}'을(를) 확인할 수 없습니다. 어셈블리 참조가 누락되었습니까?]]></Val>
+            <Val><![CDATA[JNI 시그니처 재정의 '{0}'이(가) 잘못되었거나 멤버 '{1}'의 매개 변수 수와 일치하지 않습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -455,15 +428,6 @@
           <Val><![CDATA[[ExportField]5D; cannot be used on a method returning 'void'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[[ExportField]5D;은(는) 'void'를 반환하는 메서드에 사용할 수 없습니다.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";JavaCallableWrappers_XA4217" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[유효한 Java 메소드 이름이 아니기 때문에 Kotlin 생성 메소드 '{0}'을(를) 재정의할 수 없습니다. 이 메서드는 Kotlin에서만 재정의할 수 있습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

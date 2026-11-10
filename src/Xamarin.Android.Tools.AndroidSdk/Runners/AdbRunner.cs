@@ -22,6 +22,8 @@ public class AdbRunner
 	readonly string adbPath;
 	readonly IDictionary<string, string>? environmentVariables;
 	readonly Action<TraceLevel, string> logger;
+	readonly IDictionary<string, string>? processEnvironment;
+	readonly string workingDirectory = "";
 
 	// Pattern to match device lines: <serial> <state> [key:value ...]
 	// Uses \s+ to match one or more whitespace characters (spaces or tabs) between fields.
@@ -46,6 +48,27 @@ public class AdbRunner
 		this.logger = logger ?? RunnerDefaults.NullLogger;
 	}
 
+	/// <summary>
+	/// Creates a runner with a copy of the supplied working directory and environment.
+	/// </summary>
+	/// <param name="adbPath">Executable path resolved by the caller.</param>
+	/// <param name="processStartInfo">Only the working directory and environment are copied.</param>
+	public static AdbRunner CreateWithProcessEnvironment (string adbPath, ProcessStartInfo processStartInfo) =>
+		new AdbRunner (adbPath, processStartInfo);
+
+	AdbRunner (string adbPath, ProcessStartInfo processStartInfo)
+		: this (adbPath)
+	{
+		if (processStartInfo == null)
+			throw new ArgumentNullException (nameof (processStartInfo));
+		workingDirectory = processStartInfo.WorkingDirectory;
+		processEnvironment = new Dictionary<string, string> ();
+		foreach (string name in processStartInfo.EnvironmentVariables.Keys) {
+			if (processStartInfo.EnvironmentVariables [name] is string value)
+				processEnvironment.Add (name, value);
+		}
+	}
+
 	ProcessStartInfo CreateAdbProcessStartInfo (params string[] args)
 	{
 		var psi = new ProcessStartInfo (adbPath) {
@@ -61,8 +84,15 @@ public class AdbRunner
 			foreach (var value in environmentVariables)
 				psi.Environment [value.Key] = value.Value;
 		}
-		// The adb server can outlive its client and retain its working directory on Windows.
-		psi.WorkingDirectory = Path.GetTempPath ();
+		if (processEnvironment != null) {
+			psi.WorkingDirectory = workingDirectory;
+			psi.EnvironmentVariables.Clear ();
+			foreach (var pair in processEnvironment)
+				psi.EnvironmentVariables [pair.Key] = pair.Value;
+		} else {
+			// The adb server can outlive its client and retain its working directory on Windows.
+			psi.WorkingDirectory = Path.GetTempPath ();
+		}
 		return psi;
 	}
 

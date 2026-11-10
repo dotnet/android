@@ -28,7 +28,6 @@ ensure_variable_set(CMAKE_ANDROID_NDK)
 ensure_variable_set(CMAKE_BUILD_TYPE)
 ensure_variable_set(OUTPUT_PATH)
 ensure_variable_set(XA_BUILD_CONFIGURATION)
-ensure_variable_set(XA_LIB_TOP_DIR)
 ensure_variable_set(RUNTIME_FLAVOR)
 ensure_variable_set(XA_TEST_OUTPUT_DIR)
 
@@ -76,25 +75,8 @@ if(XA_NO_STRIP OR DEBUG_BUILD)
   set(STRIP_DEBUG_DEFAULT OFF)
 endif()
 
-option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
-option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
-
-if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
-  message(FATAL_ERROR "Both ASAN and UBSAN builds cannot be enabled at the same time")
-endif()
-
-if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
-  if(BUILD_TEST_JNI_LIBRARY)
-    message(FATAL_ERROR "ASAN/UBSAN builds aren't supported by the test JNI library target")
-  endif()
-
-  set(STRIP_DEBUG_DEFAULT OFF)
-  set(ANALYZERS_ENABLED ON)
-else()
-  if(NOT XA_NO_STRIP)
-    set(STRIP_DEBUG_DEFAULT ON)
-  endif()
-  set(ANALYZERS_ENABLED OFF)
+if(NOT XA_NO_STRIP)
+  set(STRIP_DEBUG_DEFAULT ON)
 endif()
 
 option(COMPILER_DIAG_COLOR "Show compiler diagnostics/errors in color" ON)
@@ -103,16 +85,10 @@ option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ON)
 option(DONT_INLINE "Do not inline any functions which are usually inlined, to get better stack traces" ${DONT_INLINE_DEFAULT})
 
-if(ENABLE_CLANG_ASAN)
-  set(STATIC_LIB_NAME_SUFFIX "-asan")
-elseif(ENABLE_CLANG_UBSAN)
-  set(STATIC_LIB_NAME_SUFFIX "-ubsan")
-endif()
-
 if(DEBUG_BUILD)
-  set(STATIC_LIB_NAME_SUFFIX "${STATIC_LIB_NAME_SUFFIX}-debug")
+  set(STATIC_LIB_NAME_SUFFIX "-debug")
 else()
-  set(STATIC_LIB_NAME_SUFFIX "${STATIC_LIB_NAME_SUFFIX}-release")
+  set(STATIC_LIB_NAME_SUFFIX "-release")
 endif()
 
 if(USE_CCACHE)
@@ -129,11 +105,8 @@ if(USE_CCACHE)
 endif()
 
 if(ANDROID_STL STREQUAL none)
-  set(USES_LIBSTDCPP False)
   # Clang otherwise adds libunwind even when the C++ standard library is disabled.
   add_link_options(--unwindlib=none)
-else()
-  set(USES_LIBSTDCPP True)
 endif()
 
 set(SHARED_LIB_NAME xa::shared)
@@ -141,8 +114,6 @@ set(SHARED_LIB_NAME xa::shared)
 #
 # Needed modules
 #
-# include(CheckIncludeFile)
-# include(CheckCXXSymbolExists)
 include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
 include(CheckLinkerFlag)
@@ -176,16 +147,12 @@ endif()
 
 if(ANDROID_ABI MATCHES "^arm64-v8a")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_ARM64}")
-  set(TOOLCHAIN_TRIPLE "${NDK_ABI_arm64-v8a_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_ARM}")
-  set(TOOLCHAIN_TRIPLE "${NDK_ABI_armeabi-v7a_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^x86_64")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_X86_64}")
-  set(TOOLCHAIN_TRIPLE "${NDK_ABI_x86_64_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^x86")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_X86}")
-  set(TOOLCHAIN_TRIPLE "${NDK_ABI_x86_TRIPLE}")
 else()
   message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
 endif()
@@ -203,7 +170,7 @@ if(IS_CLR_RUNTIME)
     set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../..")
     set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
   else()
-    set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
+    set(RUNTIME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/clr/include/runtime)
   endif()
 endif()
 
@@ -376,19 +343,6 @@ macro(xa_check_cxx_linker_args VARNAME _CHECK_ARGS)
   set(${VARNAME} "${_CHECKED_ARGS}")
 endmacro()
 
-set(CLANG_CHECK_SOURCES "")
-macro(add_clang_check_sources SOURCES)
-  foreach(_source ${SOURCES})
-    cmake_path(IS_RELATIVE _source _relative_path)
-    if(${_relative_path})
-      list(APPEND _LOCAL_CLANG_CHECK_SOURCES_ ${CMAKE_CURRENT_SOURCE_DIR}/${_source})
-    else()
-      list(APPEND _LOCAL_CLANG_CHECK_SOURCES_ ${_source})
-    endif()
-  endforeach()
-  set(CLANG_CHECK_SOURCES "${_LOCAL_CLANG_CHECK_SOURCES_};${CLANG_CHECK_SOURCES}" PARENT_SCOPE)
-endmacro()
-
 #
 # Compiler args
 #
@@ -501,36 +455,10 @@ set(POTENTIAL_XA_CXX_COMPILER_ARGS
   ${POTENTIAL_XA_COMMON_COMPILER_ARGS}
 )
 
-if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
-  list(APPEND POTENTIAL_XA_COMMON_COMPILER_ARGS
-    -fno-omit-frame-pointer
-    -fno-optimize-sibling-calls
-  )
-endif()
-
 set(POTENTIAL_XA_DSO_LINKER_ARGS
   -fpic
   -fstack-clash-protection
 )
-
-unset(SANITIZER_FLAGS)
-if (ENABLE_CLANG_ASAN)
-  set(SANITIZER_FLAGS -fsanitize=address)
-  set(CHECKED_BUILD_INFIX "-checked+asan")
-elseif(ENABLE_CLANG_UBSAN)
-  set(SANITIZER_FLAGS -fsanitize=undefined)
-  set(CHECKED_BUILD_INFIX "-checked+ubsan")
-endif()
-
-if(SANITIZER_FLAGS)
-  message(STATUS)
-  message(STATUS "Got sanitizer: ${SANITIZER_FLAGS}")
-  message(STATUS)
-
-  list(APPEND POTENTIAL_XA_COMMON_COMPILER_ARGS ${SANITIZER_FLAGS})
-  list(APPEND POTENTIAL_XA_COMMON_LINKER_ARGS ${SANITIZER_FLAGS})
-  list(APPEND CMAKE_REQUIRED_LINK_OPTIONS ${SANITIZER_FLAGS})
-endif()
 
 message(STATUS)
 message(STATUS "Checking support for common compiler and linker args")

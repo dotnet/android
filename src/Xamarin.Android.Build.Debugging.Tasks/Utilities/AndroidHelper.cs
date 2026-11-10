@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -16,20 +17,39 @@ namespace Xamarin.Android.Tasks
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.Build;
 		static readonly object NullDevice = new object ();
 
-		static Tuple<string, string, string> GetKey (string target, string adbPath) =>
-			new Tuple<string, string, string> ($"{nameof (AndroidHelper)}_AndroidDevice", target ?? "", adbPath);
-
-		static void RegisterDevice (IBuildEngine4 engine, string target, string adbPath, AdbDeviceInfo device)
+		static object GetKey (string target, string adbPath, TaskEnvironment taskEnvironment)
 		{
-			engine?.RegisterTaskObjectAssemblyLocal (GetKey (target, adbPath), device ?? NullDevice, Lifetime, allowEarlyCollection: false);
+			var key = Tuple.Create ($"{nameof (AndroidHelper)}_AndroidDevice", target ?? "", adbPath);
+			return taskEnvironment == null ? key : (key, taskEnvironment.ProjectDirectory);
 		}
 
-		static object GetRegisteredDevice (IBuildEngine4 engine, string target, string adbPath) =>
-			engine?.GetRegisteredTaskObjectAssemblyLocal (GetKey (target, adbPath), Lifetime);
+		static void RegisterDevice (IBuildEngine4 engine, object key, AdbDeviceInfo device) =>
+			engine?.RegisterTaskObjectAssemblyLocal (key, device ?? NullDevice, Lifetime, allowEarlyCollection: false);
 
 		public static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe)
 		{
 			return new AdbRunner (GetAdbPath (adbToolPath, adbToolExe));
+		}
+
+		internal static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
+		{
+			var path = GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
+			var temp = OS.IsWindows ?
+				new [] { "TMP", "TEMP", "USERPROFILE" }.Select (taskEnvironment.GetEnvironmentVariable)
+					.FirstOrDefault (value => !string.IsNullOrEmpty (value)) ??
+					Path.Combine (taskEnvironment.GetEnvironmentVariable ("SystemRoot") ??
+						throw new InvalidOperationException ("The task environment has no temporary directory."), "Temp") :
+				taskEnvironment.GetEnvironmentVariable ("TMPDIR");
+			if (string.IsNullOrEmpty (temp))
+				temp = "/tmp";
+			var psi = taskEnvironment.GetProcessStartInfo ();
+			// The adb server must not retain the project directory on Windows.
+			psi.WorkingDirectory = taskEnvironment.GetAbsolutePath (temp);
+			// GetProcessStartInfo overlays the process environment in older MSBuild versions.
+			psi.EnvironmentVariables.Clear ();
+			foreach (var pair in taskEnvironment.GetEnvironmentVariables ())
+				psi.EnvironmentVariables [pair.Key] = pair.Value;
+			return AdbRunner.CreateWithProcessEnvironment (path, psi);
 		}
 
 		static string GetAdbPath (string adbToolPath, string adbToolExe)
@@ -38,26 +58,52 @@ namespace Xamarin.Android.Tasks
 			return string.IsNullOrEmpty (adbToolPath) ? exe : Path.Combine (adbToolPath, exe);
 		}
 
+		static string GetAdbPath (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
+		{
+			var path = GetAdbPath (adbToolPath, adbToolExe);
+			if (OS.IsWindows && string.IsNullOrEmpty (Path.GetExtension (path)))
+				path += ".exe";
+			var projectPath = taskEnvironment.GetAbsolutePath (path);
+			if (string.IsNullOrEmpty (Path.GetDirectoryName (path)) && !File.Exists (projectPath)) {
+				foreach (var directory in (taskEnvironment.GetEnvironmentVariable ("PATH") ?? "").Split (Path.PathSeparator)) {
+					var candidate = taskEnvironment.GetAbsolutePath (Path.Combine (directory.Trim ('"'), path));
+					if (File.Exists (candidate))
+						return candidate;
+				}
+			}
+			return projectPath;
+		}
+
 		public static AdbDeviceInfo ParseTarget (string target, TaskLoggingHelper log, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null) =>
 			ParseTarget (target, m => log.LogDebugMessage (m), (c, m) => log.LogCodedError (c, m), logErrors, engine4, adbToolPath, adbToolExe);
 
-		public static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null)
+		internal static AdbDeviceInfo ParseTarget (string target, TaskLoggingHelper log, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken) =>
+			ParseTarget (target, m => log.LogDebugMessage (m), (c, m) => log.LogCodedError (c, m), logErrors, engine4, adbToolPath, adbToolExe, taskEnvironment, cancellationToken);
+
+		public static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null) =>
+			ParseTarget (target, logMessage, logError, logErrors, engine4, adbToolPath, adbToolExe, null, default);
+
+		static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken)
 		{
-			string adbPath = GetAdbPath (adbToolPath, adbToolExe);
+			string adbPath = taskEnvironment == null ? GetAdbPath (adbToolPath, adbToolExe) :
+				GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
+			var key = GetKey (target, adbPath, taskEnvironment);
 			try {
-				var device = GetRegisteredDevice (engine4, target, adbPath);
+				var device = engine4?.GetRegisteredTaskObjectAssemblyLocal (key, Lifetime);
 				if (device != null) {
 					logMessage ("Using cached value from RegisterTaskObject");
 					if (ReferenceEquals (device, NullDevice))
-						NoDeviceFound (target, adbPath, logError, logErrors, engine4);
+						NoDeviceFound (target, key, logError, logErrors, engine4);
 					return device as AdbDeviceInfo;
 				}
-				var devices = CreateAdbRunner (adbToolPath, adbToolExe).ListDevicesWithoutAvdNamesAsync ().GetAwaiter ().GetResult ();
+				var runner = taskEnvironment == null ? CreateAdbRunner (adbToolPath, adbToolExe) :
+					CreateAdbRunner (adbToolPath, adbToolExe, taskEnvironment);
+				var devices = runner.ListDevicesWithoutAvdNamesAsync (cancellationToken).GetAwaiter ().GetResult ();
 				var selected = SelectDevice (devices, target);
 				if (selected != null) {
-					RegisterDevice (engine4, target, adbPath, selected);
+					RegisterDevice (engine4, key, selected);
 					if (string.IsNullOrEmpty (target))
-						RegisterDevice (engine4, $"-s {selected.Serial}", adbPath, selected);
+						RegisterDevice (engine4, GetKey ($"-s {selected.Serial}", adbPath, taskEnvironment), selected);
 					return selected;
 				}
 				if (target != null && target.Length > 0 && !target.StartsWith ("-e", StringComparison.Ordinal) &&
@@ -65,10 +111,10 @@ namespace Xamarin.Android.Tasks
 					if (logErrors)
 						logError (DefaultErrorCode, string.Format (Resources.XA0010_AdbTarget, target));
 				} else {
-					NoDeviceFound (target, adbPath, logError, logErrors, engine4);
+					NoDeviceFound (target, key, logError, logErrors, engine4);
 				}
 			} catch (Exception ex) {
-				RegisterDevice (engine4, target, adbPath, null);
+				RegisterDevice (engine4, key, null);
 				if (logErrors)
 					logError (DefaultErrorCode, string.Format (Resources.XA0010_Adb, ex));
 				else
@@ -92,9 +138,9 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		static void NoDeviceFound (string target, string adbPath, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4)
+		static void NoDeviceFound (string target, object key, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4)
 		{
-			RegisterDevice (engine4, target, adbPath, null);
+			RegisterDevice (engine4, key, null);
 			if (logErrors)
 				logError (DefaultErrorCode, string.IsNullOrEmpty (target) ? Resources.XA0010_NoDevice : Resources.XA0010_Selected);
 		}
