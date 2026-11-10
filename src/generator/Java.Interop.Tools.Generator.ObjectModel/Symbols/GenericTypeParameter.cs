@@ -76,13 +76,15 @@ namespace MonoDroid.Generation {
 
 		public string GetGenericType (Dictionary<string, string> mappings)
 		{
-			var mapped = mappings != null && mappings.ContainsKey (parm.Name) ? mappings [parm.Name] : null;
+			string mapped = null;
+			mappings?.TryGetValue (parm.Name, out mapped);
 			return mapped ?? parm.Name;
 		}
 
 		public string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
 		{
-			var mapped = mappings != null && mappings.ContainsKey (parm.Name) ? mappings [parm.Name] : null;
+			string mapped = null;
+			mappings?.TryGetValue (parm.Name, out mapped);
 			string targetType = opt.GetOutputName (mappings == null ? parm.Name : mapped);
 			if (targetType == "string")
 				return string.Format ("new global::Java.Lang.String ({0})", varname);

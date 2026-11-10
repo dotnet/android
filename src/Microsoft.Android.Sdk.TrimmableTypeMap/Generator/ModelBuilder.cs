@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -406,9 +407,9 @@ static class ModelBuilder
 					continue;
 				}
 
-				var reuseKey = CreateUcoWrapperReuseKey (uco);
-				if (!sharedWrapperTargets.ContainsKey (reuseKey)) {
-					sharedWrapperTargets.Add (reuseKey, UcoWrapperTargetData.From (proxy, uco.WrapperName));
+				ref var target = ref CollectionsMarshal.GetValueRefOrAddDefault (sharedWrapperTargets, CreateUcoWrapperReuseKey (uco), out bool exists);
+				if (!exists) {
+					target = UcoWrapperTargetData.From (proxy, uco.WrapperName);
 				}
 			}
 		}
