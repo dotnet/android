@@ -20,7 +20,7 @@ namespace generator.SourceWriters
 			IsAutoProperty = true;
 
 			// Allow user to force adding the 'abstract' keyword for "reabstraction"
-			if ((property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "reabstract")
+			if (string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "reabstract", StringComparison.OrdinalIgnoreCase))
 				IsAbstract = true;
 
 			if (property.Getter != null) {
