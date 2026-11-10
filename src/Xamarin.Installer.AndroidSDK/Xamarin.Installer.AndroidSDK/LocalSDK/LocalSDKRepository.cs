@@ -12,8 +12,6 @@ using System.IO;
 using System.Xml.Linq;
 using System.Linq;
 
-using IniParser;
-using IniParser.Model;
 using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.AndroidSDK.GoogleV2;
 using Xamarin.Installer.AndroidSDK.GoogleV2.Parsing;
@@ -237,9 +235,10 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			if (!File.Exists (manifestIni))
 				return null;
 
-			var parser = new FileIniDataParser ();
-			IniData data = parser.ReadFile (manifestIni);
-			string libs = data.GetKey ("libraries")?.Trim ();
+			// Android SDK tools read add-on manifest.ini with java.util.Properties.load().
+			var data = AndroidUtilities.ReadAndroidProperties (manifestIni);
+			data.TryGetValue ("libraries", out string libs);
+			libs = libs?.Trim ();
 			if (String.IsNullOrEmpty (libs))
 				return null;
 
@@ -249,7 +248,8 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 				string id = lid.Trim ();
 				if (String.IsNullOrEmpty (lid))
 					continue;
-				AddPackageLibrary (id, data.GetKey (id), ref libraries);
+				data.TryGetValue (id, out string details);
+				AddPackageLibrary (id, details, ref libraries);
 			}
 
 			return libraries;

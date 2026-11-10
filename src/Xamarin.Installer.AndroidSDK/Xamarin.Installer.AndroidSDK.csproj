@@ -53,7 +53,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GitInfo" Version="$(GitInfoVersion)" />
-    <PackageReference Include="ini-parser-netstandard" Version="$(IniParserNetstandardVersion)" />
     <PackageReference Include="Mono.Unix" Version="$(MonoUnixVersion)" Condition=" '$(OS)' != 'Windows_NT' " />
     <PackageReference Include="Polly" Version="$(PollyVersion)">
       <ExcludeAssets Condition=" '$(PublicPolly)' == '' ">runtime</ExcludeAssets>

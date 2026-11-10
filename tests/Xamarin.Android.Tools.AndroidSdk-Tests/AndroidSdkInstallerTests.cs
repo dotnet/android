@@ -195,6 +195,71 @@ public class AndroidSdkInstallerTests
 		}
 	}
 
+	[Test]
+	public void DiscoverAddonLibrariesFromManifestIni ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
+		var addonPath = Path.Combine (root, "add-ons", "addon-google_apis-google-24");
+		Directory.CreateDirectory (addonPath);
+		try {
+			var propertiesPath = Path.Combine (addonPath, "source.properties");
+			File.WriteAllText (propertiesPath, """
+				Addon.NameDisplay=Google APIs
+				Addon.NameId=google_apis
+				Addon.VendorDisplay=Google Inc.
+				Addon.VendorId=google
+				AndroidVersion.ApiLevel=24
+				Pkg.Desc=Android + Google APIs
+				Pkg.Revision=1
+				""");
+			// Verbatim from https://dl.google.com/android/repository/google_apis-24_r1.zip
+			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), """
+				# SDK Add-on Manifest
+
+				name=Google APIs
+				name-id=google_apis
+				vendor=Google Inc.
+				vendor-id=google
+				description=Android + Google APIs
+
+				# version of the Android platform on which this add-on is built.
+				api=24
+
+				# revision of the add-on
+				revision=1
+
+				# list of libraries, separated by a semi-colon.
+				libraries=com.google.android.maps;com.android.future.usb.accessory;com.google.android.media.effects
+
+				# details for each library
+				com.google.android.maps=maps.jar;API for Google Maps
+				com.android.future.usb.accessory=usb.jar;API for USB Accessories
+				com.google.android.media.effects=effects.jar;Collection of video effects
+
+				SystemImage.GpuSupport=true
+				""".Replace ("\n", "\r\n"));
+			var installer = new AndroidSDKInstaller (new Helper (), AndroidManifestType.Local);
+			Assert.IsTrue (installer.Discover (new List<string> { root }));
+			var instance = installer.FindInstance (root);
+			Assert.IsNotNull (instance);
+			var component = instance.Components.Single (c => c.ManifestURL == new Uri (propertiesPath));
+			var info = component.Info as AndroidComponentInfoAddon;
+			Assert.IsNotNull (info);
+			Assert.AreEqual ("24", info.ApiLevel);
+			var libraries = info.Libraries;
+			Assert.IsNotNull (libraries);
+			CollectionAssert.AreEqual (
+				new [] {
+					"com.google.android.maps|maps.jar|API for Google Maps",
+					"com.android.future.usb.accessory|usb.jar|API for USB Accessories",
+					"com.google.android.media.effects|effects.jar|Collection of video effects",
+				},
+				libraries.Select (l => $"{l.Name}|{l.LocalJarPath}|{l.Description}"));
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
 	[TestCase ("JAVA_VERSION=\"21.0.3\"")]
 	[TestCase ("JAVA_VERSION='21.0.3'")]
 	[TestCase ("JAVA_VERSION=21.0.3")]

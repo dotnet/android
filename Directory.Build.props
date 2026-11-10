@@ -51,7 +51,6 @@
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.3</MdocPackageVersion>
     <!-- Used by the installer-side projects under src/Xamarin.Installer.* -->
     <GitInfoVersion>2.3.0</GitInfoVersion>
-    <IniParserNetstandardVersion>2.5.2</IniParserNetstandardVersion>
     <MicrosoftWin32RegistryVersion>5.0.0</MicrosoftWin32RegistryVersion>
     <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
     <PollyVersion>7.2.4</PollyVersion>
