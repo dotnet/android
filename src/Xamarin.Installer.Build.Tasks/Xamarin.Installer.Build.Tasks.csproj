@@ -20,9 +20,6 @@
     <None Update="Xamarin.Installer.Common.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(PkgSharpZipLib)\lib\$(TargetFramework)\ICSharpCode.SharpZipLib.pdb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Installer.AndroidSDK\Xamarin.Installer.AndroidSDK.csproj" />
@@ -31,7 +28,7 @@
   </ItemGroup>
   <Import Project="..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <ItemGroup>
-    <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" GeneratePathProperty="true" />
+    <PackageReference Include="Polly" Version="$(PollyVersion)" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

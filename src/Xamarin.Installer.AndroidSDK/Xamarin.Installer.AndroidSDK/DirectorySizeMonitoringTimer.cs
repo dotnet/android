@@ -1,6 +1,6 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
-using System;
+﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Android.Tools;
@@ -123,11 +123,11 @@ namespace Xamarin.Installer.AndroidSDK
 			return mapping;
 		}
 
-		public static ulong CalculateTotalSize (ZipFile zipFile)
+		public static ulong CalculateTotalSize (ZipArchive zipFile)
 		{
 			ulong totalSize = 0;
-			foreach (ZipEntry entry in zipFile)
-				totalSize += (ulong) entry.Size;
+			foreach (ZipArchiveEntry entry in zipFile.Entries)
+				totalSize += (ulong) entry.Length;
 			Logger.Debug ($"[DirectorySizeMonitoringTimer] ZipFile totalSize: {totalSize}");
 
 			return totalSize;
@@ -141,13 +141,9 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <returns>Amount of percents for the Move part of the installation</returns>
 		public static int CalculateMoveProgressSplit (string archivePath)
 		{
-			ZipFile zip = null;
 			long filesCount;
-			try {
-				zip = new ZipFile (archivePath);
-				filesCount = zip.Count;
-			} finally {
-				zip?.Close ();
+			using (var zip = ZipFile.OpenRead (archivePath)) {
+				filesCount = zip.Entries.Count;
 			}
 
 			return (int) Remap (filesCount, SMALL_NUMBER_OF_FILES, BIG_NUMBER_OF_FILES, MIN_MOVE_PROGRESS_SPLIT, MAX_MOVE_PROGRESS_SPLIT);

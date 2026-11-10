@@ -55,9 +55,9 @@
     <PackageReference Include="GitInfo" Version="$(GitInfoVersion)" />
     <PackageReference Include="ini-parser-netstandard" Version="$(IniParserNetstandardVersion)" />
     <PackageReference Include="Mono.Unix" Version="$(MonoUnixVersion)" Condition=" '$(OS)' != 'Windows_NT' " />
-    <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)">
-      <ExcludeAssets Condition=" '$(PublicSharpZipLib)' == '' ">runtime</ExcludeAssets>
-      <PrivateAssets Condition=" '$(PublicSharpZipLib)' == '' ">All</PrivateAssets>
+    <PackageReference Include="Polly" Version="$(PollyVersion)">
+      <ExcludeAssets Condition=" '$(PublicPolly)' == '' ">runtime</ExcludeAssets>
+      <PrivateAssets Condition=" '$(PublicPolly)' == '' ">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core">
       <Version>1.0.0</Version>

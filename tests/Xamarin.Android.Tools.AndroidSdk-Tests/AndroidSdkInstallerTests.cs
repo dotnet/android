@@ -227,4 +227,70 @@ public class AndroidSdkInstallerTests
 			Directory.Delete (root, recursive: true);
 		}
 	}
+
+	[Test]
+	public void UnzipPreservesContentsTimestampsAndPermissions ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		var zipPath = Path.Combine (root, "package.zip");
+		var outPath = Path.Combine (root, "out");
+		Directory.CreateDirectory (root);
+		var timestamp = new DateTime (2024, 5, 6, 7, 8, 10, DateTimeKind.Local);
+		try {
+			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				var dir = zip.CreateEntry ("pkg/bin/");
+				dir.LastWriteTime = timestamp;
+				var tool = zip.CreateEntry ("pkg/bin/tool");
+				tool.LastWriteTime = timestamp;
+				tool.ExternalAttributes = Convert.ToInt32 ("100755", 8) << 16;
+				using (var writer = new StreamWriter (tool.Open ()))
+					writer.Write ("#!/bin/sh\necho hi\n");
+				var data = zip.CreateEntry ("pkg/data.txt", CompressionLevel.NoCompression);
+				data.LastWriteTime = timestamp;
+				data.ExternalAttributes = Convert.ToInt32 ("100600", 8) << 16;
+				using (var writer = new StreamWriter (data.Open ()))
+					writer.Write ("data");
+			}
+
+			new Helper ().Unzip (outPath, zipPath, null, null);
+
+			var toolPath = Path.Combine (outPath, "pkg", "bin", "tool");
+			var dataPath = Path.Combine (outPath, "pkg", "data.txt");
+			Assert.AreEqual ("#!/bin/sh\necho hi\n", File.ReadAllText (toolPath));
+			Assert.AreEqual ("data", File.ReadAllText (dataPath));
+			Assert.AreEqual (timestamp, File.GetLastWriteTime (toolPath));
+			Assert.AreEqual (timestamp, File.GetLastWriteTime (dataPath));
+			Assert.IsTrue (Directory.Exists (Path.Combine (outPath, "pkg", "bin")));
+			if (!OperatingSystem.IsWindows ()) {
+				Assert.AreEqual (UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+						UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+						UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
+					File.GetUnixFileMode (toolPath));
+				Assert.AreEqual (UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode (dataPath));
+			}
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
+	[Test]
+	public void UnzipRejectsParentTraversal ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		var zipPath = Path.Combine (root, "package.zip");
+		var outPath = Path.Combine (root, "out");
+		Directory.CreateDirectory (root);
+		try {
+			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				using (var writer = new StreamWriter (zip.CreateEntry ("../evil.txt").Open ()))
+					writer.Write ("evil");
+			}
+
+			var ex = Assert.Throws<Exception> (() => new Helper ().Unzip (outPath, zipPath, null, null));
+			StringAssert.Contains ("parent traversal", ex?.Message);
+			Assert.IsFalse (File.Exists (Path.Combine (root, "evil.txt")));
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
 }

@@ -136,8 +136,6 @@
   <!-- monodroid: in-tree installer/debugging projects under src/Xamarin.Installer.*
        and src/Xamarin.Android.Build.Debugging.Tasks. -->
   <ItemGroup>
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)INIFileParser.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.pdb" />

@@ -11,7 +11,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using ICSharpCode.SharpZipLib.Zip;
+using System.IO.Compression;
 using Xamarin.Installer.Common;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -216,80 +216,83 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			}
 
 			string lastDestPath = String.Empty;
-			ZipFile zip = null;
 
 			try
 			{
-				zip = new ZipFile (archivePath);
+				using (var archiveStream = new FileStream (archivePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+				using (var zip = new ZipArchive (archiveStream, ZipArchiveMode.Read, leaveOpen: true)) {
+					var zipEntries = GetEntries (zip, archiveStream, archivePath);
 
-				float minProgressDelta = 5f; // percents
-				float lastProgress = 0f;
-				float progress;
+					float minProgressDelta = 5f; // percents
+					float lastProgress = 0f;
+					float progress;
 
-				ulong totalSize = DirectorySizeMonitoringTimer.CalculateTotalSize (zip);
-				ulong currentSize = 0, gradualSize;
-				try {
-					progressCallback?.Invoke (0f);
-				} catch (Exception ex) {
-					Logger.Error ($"[Unzip] progress callback exception: {ex}");
-				}
-
-				string fullBaseDirectory = Path.GetFullPath (baseDirectory).TrimEnd (Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-
-				foreach (ZipEntry entry in zip) {
-					string destPath = Path.Combine (baseDirectory, entry.Name);
-					lastDestPath = destPath;
-
-					if (!Path.GetFullPath (destPath).StartsWith (fullBaseDirectory, StringComparison.OrdinalIgnoreCase)) {
-						throw new Exception ($"Archive file '{archivePath}' has parent traversal in paths");
+					ulong totalSize = DirectorySizeMonitoringTimer.CalculateTotalSize (zip);
+					ulong currentSize = 0, gradualSize;
+					try {
+						progressCallback?.Invoke (0f);
+					} catch (Exception ex) {
+						Logger.Error ($"[Unzip] progress callback exception: {ex}");
 					}
 
-					if (entry.IsDirectory) {
-						Directory.CreateDirectory (destPath);
-						SafeSetLastWriteTime (destPath, entry.DateTime);
-						continue;
-					}
-
-					Directory.CreateDirectory (Path.GetDirectoryName (destPath));
-
+					string fullBaseDirectory = Path.GetFullPath (baseDirectory).TrimEnd (Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 					byte [] buf = new byte [4096];
-					int n = 0;
-					gradualSize = 0;
-					ulong iteration = 0;
-					using (var fs = new FileStream (destPath, FileMode.Create, FileAccess.Write, FileShare.None)) {
-						using (var inZip = zip.GetInputStream (entry)) {
-							while ((n = inZip.Read (buf, 0, buf.Length)) > 0) {
-								fs.Write (buf, 0, n);
-								gradualSize += (ulong) n;
-								iteration++;
 
-								if (iteration % 1000 == 0 && progressCallback != null) {
-									progress = (currentSize + gradualSize) * 100f / totalSize;
-									if (progress - lastProgress > minProgressDelta) {
-										try {
-											progressCallback?.Invoke (progress);
-										} catch (Exception ex) {
-											Logger.Error ($"[Unzip] progress callback exception: {ex}");
+					for (int i = 0; i < zipEntries.Length; i++) {
+						var metadata = zipEntries [i];
+						string destPath = Path.Combine (baseDirectory, metadata.Name);
+						lastDestPath = destPath;
+
+						if (!Path.GetFullPath (destPath).StartsWith (fullBaseDirectory, StringComparison.OrdinalIgnoreCase)) {
+							throw new Exception ($"Archive file '{archivePath}' has parent traversal in paths");
+						}
+
+						if (metadata.IsDirectory) {
+							Directory.CreateDirectory (destPath);
+							SafeSetLastWriteTime (destPath, metadata.DateTime);
+							continue;
+						}
+
+						Directory.CreateDirectory (Path.GetDirectoryName (destPath));
+
+						int n = 0;
+						gradualSize = 0;
+						ulong iteration = 0;
+						using (var fs = new FileStream (destPath, FileMode.Create, FileAccess.Write, FileShare.None)) {
+							using (var inZip = zip.Entries [i].Open ()) {
+								while ((n = inZip.Read (buf, 0, buf.Length)) > 0) {
+									fs.Write (buf, 0, n);
+									gradualSize += (ulong) n;
+									iteration++;
+
+									if (iteration % 1000 == 0 && progressCallback != null) {
+										progress = (currentSize + gradualSize) * 100f / totalSize;
+										if (progress - lastProgress > minProgressDelta) {
+											try {
+												progressCallback?.Invoke (progress);
+											} catch (Exception ex) {
+												Logger.Error ($"[Unzip] progress callback exception: {ex}");
+											}
+											lastProgress = progress;
 										}
-										lastProgress = progress;
 									}
 								}
 							}
+							currentSize += (ulong) fs.Length;
 						}
-						currentSize += (ulong) fs.Length;
-					}
-					SafeSetLastWriteTime (destPath, entry.DateTime);
-					SetFileAttributes (destPath, entry.IsDOSEntry, entry.ExternalFileAttributes);
-					// TODO: set owner
+						SafeSetLastWriteTime (destPath, metadata.DateTime);
+						SetFileAttributes (destPath, metadata.IsDOSEntry, metadata.ExternalFileAttributes);
+						// TODO: set owner
 
-					progress = currentSize * 100f / totalSize;
-					if (progress - lastProgress > minProgressDelta) {
-						try {
-							progressCallback?.Invoke (progress);
-						} catch (Exception ex) {
-							Logger.Error ($"[Unzip] progress callback exception: {ex}");
+						progress = currentSize * 100f / totalSize;
+						if (progress - lastProgress > minProgressDelta) {
+							try {
+								progressCallback?.Invoke (progress);
+							} catch (Exception ex) {
+								Logger.Error ($"[Unzip] progress callback exception: {ex}");
+							}
+							lastProgress = progress;
 						}
-						lastProgress = progress;
 					}
 				}
 
@@ -305,8 +308,6 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 					throw new CustomTooLongPathException { OriginalException = ex };
 				}
 				throw;
-			} finally {
-				zip?.Close ();
 			}
 
 			string topDirectory = string.Empty;
@@ -319,6 +320,23 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			Logger.Info ($"Archive unzipped to '{ret}'");
 
 			return ret;
+		}
+
+		// System.IO.Compression does not expose the host system, external attributes or extended
+		// timestamps on netstandard2.0, so read them from the central directory and pair them with
+		// the ZipArchive entries, which use the same central directory order.
+		static ZipCentralDirectory.Entry [] GetEntries (ZipArchive zip, Stream archiveStream, string archivePath)
+		{
+			var entries = ZipCentralDirectory.Read (archiveStream);
+			var archiveEntries = zip.Entries;
+			if (entries.Length != archiveEntries.Count)
+				throw new InvalidDataException ($"Archive file '{archivePath}' has an inconsistent central directory.");
+			for (int i = 0; i < entries.Length; i++) {
+				var entry = archiveEntries [i];
+				if ((ulong) entry.Length != entries [i].Size || (ulong) entry.CompressedLength != entries [i].CompressedSize)
+					throw new InvalidDataException ($"Archive file '{archivePath}' has an inconsistent central directory entry '{entry.FullName}'.");
+			}
+			return entries;
 		}
 
 		static void SafeSetLastWriteTime (string path, DateTime stamp)
