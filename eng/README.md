@@ -50,6 +50,9 @@ Use `dotnetup dotnet` to launch the managed installation without changing the
 shell's SDK `PATH` or `DOTNET_ROOT`. CI bootstraps dotnetup using Microsoft's
 official scripts, then installs the pinned SDK and the older tooling SDK needed
 by host-side tests. Only dotnetup is added to the job's `PATH`.
+Local workload resolution uses the running SDK's version rather than the SDK
+dependency's package version, which may differ after dependency updates or SDK
+stabilization.
 
 CI preparation, packaging, and standalone tools use `dotnetup dotnet` directly.
 Commands that consume this checkout's Android/MAUI workloads use `dotnet-local.sh`
