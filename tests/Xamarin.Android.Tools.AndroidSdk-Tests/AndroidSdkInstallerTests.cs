@@ -243,9 +243,9 @@ public class AndroidSdkInstallerTests
 				Pkg.Revision=1
 				""");
 			var manifest = utf8Preamble
-				? GoogleApis24Manifest.Substring (GoogleApis24Manifest.IndexOf ("libraries=", StringComparison.Ordinal))
+				? "libraries=maps\nmaps=maps.jar;API for Google Maps\n"
 				: GoogleApis24Manifest;
-			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest.Replace ("\n", "\r\n"), new UTF8Encoding (utf8Preamble));
+			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest.Replace ("\r\n", "\n").Replace ("\n", "\r\n"), new UTF8Encoding (utf8Preamble));
 			var installer = new AndroidSDKInstaller (new Helper (), AndroidManifestType.Local);
 			Assert.IsTrue (installer.Discover (new List<string> { root }));
 			var instance = installer.FindInstance (root);
@@ -255,13 +255,14 @@ public class AndroidSdkInstallerTests
 			Assert.IsNotNull (info);
 			var libraries = info.Libraries;
 			Assert.IsNotNull (libraries);
-			CollectionAssert.AreEqual (
-				new [] {
+			var expected = utf8Preamble
+				? new [] { "maps|maps.jar|API for Google Maps" }
+				: new [] {
 					"com.google.android.maps|maps.jar|API for Google Maps",
 					"com.android.future.usb.accessory|usb.jar|API for USB Accessories",
 					"com.google.android.media.effects|effects.jar|Collection of video effects",
-				},
-				libraries.Select (l => $"{l.Name}|{l.LocalJarPath}|{l.Description}"));
+				};
+			CollectionAssert.AreEqual (expected, libraries.Select (l => $"{l.Name}|{l.LocalJarPath}|{l.Description}"));
 		} finally {
 			Directory.Delete (root, recursive: true);
 		}
