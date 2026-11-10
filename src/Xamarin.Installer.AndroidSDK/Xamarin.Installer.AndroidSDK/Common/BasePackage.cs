@@ -593,8 +593,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 
             // LogDebug ($"unzipSplitPercents: {unzipSplitPercents} | moveSplitPercents: {moveSplitPercents}");
 
-            // A small race here but I think we can accept the risks :)
-            string temporaryPath = IOPath.Combine(IOPath.GetTempPath(), IOPath.GetRandomFileName());
+            string temporaryPath = TemporaryDirectory.Create();
             try
             {
                 componentUnzippedPath = CommonUtilities.Helpers.Unzip(temporaryPath, archivePath, AndroidSDKContext.Instance.UserName, (progress) =>
@@ -612,6 +611,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
             catch (Exception ex)
             {
                 LogError($"Exception caught while unzipping '{archivePath}' in '{temporaryPath}'. {ex}");
+                CommonUtilities.DeleteDirectoryRecursively(temporaryPath);
                 throw;
             }
 

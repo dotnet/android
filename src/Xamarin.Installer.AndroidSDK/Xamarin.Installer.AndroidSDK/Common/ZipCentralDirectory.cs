@@ -24,6 +24,7 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			public int ExternalFileAttributes { get; set; }
 			public DateTime? LastWriteTime { get; set; }
 			public bool IsDosEntry { get; set; }
+			public bool IsUnixSymlink { get; set; }
 
 			public bool IsDirectory (string name) =>
 				(name.Length > 0 && (name [name.Length - 1] == '/' || name [name.Length - 1] == '\\')) ||
@@ -42,15 +43,43 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 				reader.BaseStream.Position = endOfCentralDirectoryPosition;
 				byte [] endOfCentralDirectory = ReadExactly (reader, EndOfCentralDirectorySize);
 
-				ulong centralDirectorySize = ReadUInt32 (endOfCentralDirectory, 12);
-				ulong centralDirectoryOffset = ReadUInt32 (endOfCentralDirectory, 16);
-				if (centralDirectorySize == uint.MaxValue || centralDirectoryOffset == uint.MaxValue)
-					ReadZip64CentralDirectoryLocation (reader, endOfCentralDirectoryPosition, out centralDirectoryOffset, out centralDirectorySize);
+				ushort diskNumber = ReadUInt16 (endOfCentralDirectory, 4);
+				ushort directoryDisk = ReadUInt16 (endOfCentralDirectory, 6);
+				ushort entriesOnDisk = ReadUInt16 (endOfCentralDirectory, 8);
+				ushort entryCount = ReadUInt16 (endOfCentralDirectory, 10);
+				uint size32 = ReadUInt32 (endOfCentralDirectory, 12);
+				uint offset32 = ReadUInt32 (endOfCentralDirectory, 16);
+				ulong centralDirectorySize = size32;
+				ulong centralDirectoryOffset = offset32;
+				long directoryEndLimit = endOfCentralDirectoryPosition;
+
+				bool hasZip64Locator = false;
+				if (endOfCentralDirectoryPosition >= Zip64EndOfCentralDirectoryLocatorSize) {
+					stream.Position = endOfCentralDirectoryPosition - Zip64EndOfCentralDirectoryLocatorSize;
+					hasZip64Locator = reader.ReadUInt32 () == Zip64EndOfCentralDirectoryLocatorSignature;
+				}
+				if (hasZip64Locator && (diskNumber == ushort.MaxValue || entryCount == ushort.MaxValue ||
+					size32 == uint.MaxValue || offset32 == uint.MaxValue)) {
+					ReadZip64CentralDirectoryLocation (reader, endOfCentralDirectoryPosition,
+						out centralDirectoryOffset, out centralDirectorySize, out ulong zip64EntryCount, out directoryEndLimit);
+					if ((diskNumber != 0 && diskNumber != ushort.MaxValue) ||
+						(directoryDisk != 0 && directoryDisk != ushort.MaxValue) ||
+						(entriesOnDisk != ushort.MaxValue && entriesOnDisk != zip64EntryCount) ||
+						(entryCount != ushort.MaxValue && entryCount != zip64EntryCount) ||
+						(size32 != uint.MaxValue && size32 != centralDirectorySize) ||
+						(offset32 != uint.MaxValue && offset32 != centralDirectoryOffset) ||
+						zip64EntryCount != (ulong) expectedEntryCount)
+						throw new InvalidDataException ("ZIP and ZIP64 central directory records do not agree.");
+				} else if (diskNumber != 0 || directoryDisk != 0 ||
+					entriesOnDisk != entryCount || entryCount != expectedEntryCount ||
+					size32 == uint.MaxValue || offset32 == uint.MaxValue) {
+					throw new InvalidDataException ("Invalid ZIP central directory record.");
+				}
 
 				if (centralDirectoryOffset > (ulong) stream.Length || centralDirectorySize > (ulong) stream.Length - centralDirectoryOffset)
 					throw new InvalidDataException ("Invalid ZIP central directory location.");
 				long centralDirectoryEnd = checked ((long) (centralDirectoryOffset + centralDirectorySize));
-				if (centralDirectoryEnd > endOfCentralDirectoryPosition)
+				if (centralDirectoryEnd > directoryEndLimit)
 					throw new InvalidDataException ("ZIP central directory overlaps its end record.");
 
 				reader.BaseStream.Position = (long) centralDirectoryOffset;
@@ -83,6 +112,7 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 						ExternalFileAttributes = externalFileAttributes,
 						LastWriteTime = ReadExtendedModificationTime (extraData),
 						IsDosEntry = hostSystem == HostSystemMsdos || hostSystem == HostSystemWindowsNT,
+						IsUnixSymlink = hostSystem == 3 && ((externalFileAttributes >> 16) & 0xf000) == 0xa000,
 					});
 				}
 
@@ -104,33 +134,42 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			stream.Position = searchStart;
 			byte [] tail = ReadExactly (reader, searchLength);
 			for (int i = searchLength - EndOfCentralDirectorySize; i >= 0; i--) {
-				if (ReadUInt32 (tail, i) == EndOfCentralDirectorySignature &&
-					i + EndOfCentralDirectorySize + ReadUInt16 (tail, i + 20) == tail.Length)
+				if (ReadUInt32 (tail, i) == EndOfCentralDirectorySignature) {
+					if (i + EndOfCentralDirectorySize + ReadUInt16 (tail, i + 20) != tail.Length)
+						throw new InvalidDataException ("Ambiguous ZIP end of central directory record.");
 					return searchStart + i;
+				}
 			}
 
 			throw new InvalidDataException ("Cannot find ZIP central directory.");
 		}
 
-		static void ReadZip64CentralDirectoryLocation (BinaryReader reader, long endOfCentralDirectoryPosition, out ulong centralDirectoryOffset, out ulong centralDirectorySize)
+		static void ReadZip64CentralDirectoryLocation (BinaryReader reader, long endOfCentralDirectoryPosition,
+			out ulong centralDirectoryOffset, out ulong centralDirectorySize, out ulong entryCount, out long recordPosition)
 		{
 			if (endOfCentralDirectoryPosition < Zip64EndOfCentralDirectoryLocatorSize)
 				throw new InvalidDataException ("Cannot find ZIP64 central directory locator.");
 
 			reader.BaseStream.Position = endOfCentralDirectoryPosition - Zip64EndOfCentralDirectoryLocatorSize;
 			byte [] locator = ReadExactly (reader, Zip64EndOfCentralDirectoryLocatorSize);
-			if (ReadUInt32 (locator, 0) != Zip64EndOfCentralDirectoryLocatorSignature)
+			if (ReadUInt32 (locator, 0) != Zip64EndOfCentralDirectoryLocatorSignature ||
+				ReadUInt32 (locator, 4) != 0 || ReadUInt32 (locator, 16) != 1)
 				throw new InvalidDataException ("Cannot find ZIP64 central directory locator.");
 
 			ulong zip64EndOfCentralDirectoryOffset = ReadUInt64 (locator, 8);
-			if (reader.BaseStream.Length < 56 || zip64EndOfCentralDirectoryOffset > (ulong) reader.BaseStream.Length - 56)
+			long locatorPosition = endOfCentralDirectoryPosition - Zip64EndOfCentralDirectoryLocatorSize;
+			if (locatorPosition < 56 || zip64EndOfCentralDirectoryOffset > (ulong) (locatorPosition - 56))
 				throw new InvalidDataException ("Invalid ZIP64 central directory location.");
-			reader.BaseStream.Position = (long) zip64EndOfCentralDirectoryOffset;
+			recordPosition = (long) zip64EndOfCentralDirectoryOffset;
+			reader.BaseStream.Position = recordPosition;
 			byte [] zip64EndOfCentralDirectory = ReadExactly (reader, 56);
 			if (ReadUInt32 (zip64EndOfCentralDirectory, 0) != Zip64EndOfCentralDirectorySignature ||
-				ReadUInt64 (zip64EndOfCentralDirectory, 4) < 44)
+				ReadUInt64 (zip64EndOfCentralDirectory, 4) != (ulong) (locatorPosition - recordPosition - 12) ||
+				ReadUInt32 (zip64EndOfCentralDirectory, 16) != 0 || ReadUInt32 (zip64EndOfCentralDirectory, 20) != 0 ||
+				ReadUInt64 (zip64EndOfCentralDirectory, 24) != ReadUInt64 (zip64EndOfCentralDirectory, 32))
 				throw new InvalidDataException ("Invalid ZIP64 end of central directory record.");
 
+			entryCount = ReadUInt64 (zip64EndOfCentralDirectory, 32);
 			centralDirectorySize = ReadUInt64 (zip64EndOfCentralDirectory, 40);
 			centralDirectoryOffset = ReadUInt64 (zip64EndOfCentralDirectory, 48);
 		}

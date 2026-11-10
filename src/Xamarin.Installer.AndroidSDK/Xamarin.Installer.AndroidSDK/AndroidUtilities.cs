@@ -212,12 +212,12 @@ namespace Xamarin.Installer.AndroidSDK
 			var rnd = new Random ();
 			string componentUnzippedPath = null;
 
-			// A small race here but I think we can accept the risks :)
-			string temporaryPath = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			string temporaryPath = TemporaryDirectory.Create ();
 			try {
 				componentUnzippedPath = CommonUtilities.Helpers.Unzip (temporaryPath, archivePath, AndroidSDKContext.Instance.UserName).RemoveTrailingDirectorySeparator ();
 			} catch (Exception ex) {
 				Logger.Exception (String.Format ("Exception caught while unzipping '{0}' in '{1}'", archivePath, temporaryPath), ex);
+				CommonUtilities.DeleteDirectoryRecursively (temporaryPath);
 				componentUnzippedPath = null;
 			}
 

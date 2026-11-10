@@ -87,9 +87,12 @@ namespace Xamarin.Installer.Common
 
 			var sourceDir = new DirectoryInfo (sourceDirName);
 			var destDir = new DirectoryInfo (destDirName);
+			IHelpers helpers = Helpers;
 
 			if (!sourceDir.Exists)
 				throw new DirectoryNotFoundException ("The path specified by sourceDirName is invalid: " + sourceDirName);
+			if (helpers.IsSpecialFile (destDirName) || (destDir.Exists && (destDir.Attributes & FileAttributes.ReparsePoint) != 0))
+				throw new IOException ("The destination directory is a symbolic link or reparse point: " + destDirName);
 			bool destExists = destDir.Exists;
 			if (!overwrite && destExists)
 				throw new IOException ("The path specified by destDirName already exists: " + destDirName);
@@ -99,11 +102,10 @@ namespace Xamarin.Installer.Common
 
 			//Copy the files in the current directory.
 			FileInfo[] files = sourceDir.GetFiles ();
-			IHelpers helpers = Helpers;
 			foreach (FileInfo file in files) {
 				string newPath = Path.Combine (destDirName, file.Name);
 				if (helpers.IsSpecialFile (file.FullName))
-					helpers.CopySpecialFile (file.FullName, newPath);
+					CopySpecialFile (helpers, file.FullName, newPath, overwrite);
 				else
 					Copy (file, newPath, overwrite);
 
@@ -113,7 +115,10 @@ namespace Xamarin.Installer.Common
 			DirectoryInfo[] subDirs = sourceDir.GetDirectories ();
 			foreach (DirectoryInfo subDir in subDirs) {
 				string newPath = Path.Combine (destDirName, subDir.Name);
-				MoveDirectory (subDir.FullName, newPath, move, overwrite);
+				if (helpers.IsSpecialFile (subDir.FullName))
+					CopySpecialFile (helpers, subDir.FullName, newPath, overwrite);
+				else
+					MoveDirectory (subDir.FullName, newPath, move, overwrite);
 			}
 
 			if (move) {
@@ -126,6 +131,13 @@ namespace Xamarin.Installer.Common
 					Logger.Warning ("You will need to delete the source directory '{0}' manually", sourceDirName);
 				}
 			}
+		}
+
+		static void CopySpecialFile (IHelpers helpers, string source, string target, bool overwrite)
+		{
+			if (overwrite && (helpers.IsSpecialFile (target) || File.Exists (target)))
+				File.Delete (target);
+			helpers.CopySpecialFile (source, target);
 		}
 
 		static void Copy (FileInfo source, string target, bool overwrite)
@@ -166,6 +178,10 @@ namespace Xamarin.Installer.Common
 			if (fi == null)
 				return;
 
+			if ((fi.Attributes & FileAttributes.ReparsePoint) != 0) {
+				fi.Delete ();
+				return;
+			}
 			fi.Attributes = FileAttributes.Normal;
 			var di = fi as DirectoryInfo;
 			string kind;

@@ -80,8 +80,7 @@ namespace Xamarin.Installer.AndroidSDK
 
 		public void InstallJdk (JdkArchive archive)
 		{
-			var unzipDestination = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
-			Directory.CreateDirectory (unzipDestination);
+			var unzipDestination = TemporaryDirectory.Create ();
 
 			if (Platform.IsWindows) {
 				CommonUtilities.Helpers.Unzip (unzipDestination, archive.DownloadedFilePath, null, null);
