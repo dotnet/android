@@ -52,6 +52,8 @@ Reference official Android documentation where helpful:
 
 - Use `MultithreadedAndroidTask` for new managed tasks. Do not derive new tasks from `AndroidTask`, `AsyncTask`, or `AndroidToolTask`, whose constructors capture the process working directory.
 - Use the engine-supplied `TaskEnvironment` for project-relative paths, environment access, and child processes. Keep constructors free of process-state dependencies; initialize `TaskEnvironment` to `Fallback` when implementing the interface directly so direct instantiation also works.
+- Before adding wrappers or workarounds, check the public APIs in the pinned dependency's reference assembly. XML documentation can include internal methods.
+- `TaskEnvironment.GetAbsolutePath (path)` roots a path but does not collapse `.` or `..`. When canonicalization is needed, call `.GetCanonicalForm ()` on the returned `AbsolutePath`; use `.Value` for string operations. Do not construct `FileInfo` or `DirectoryInfo` just to normalize paths.
 - Review helpers, exception paths, and static state for thread safety. Do not mutate shared process state or use process isolation as a substitute for MT support. For asynchronous tasks, preserve the `Yield()`/`Reacquire()` contract with `try`/`finally`.
 - Use `XA####` error codes and test in isolation. Validate ordinary and strict `-m -mt -nr:false -warnaserror:MSB4286,MSB4287,MSB4288` builds. See [MSBuild best practices](../Documentation/guides/MSBuildBestPractices.md#multithreaded-tasks).
 
