@@ -14,8 +14,8 @@ namespace Xamarin.Android.BuildTools
 		static int Main (string [] args)
 		{
 			try {
-				if (args.Length == 2 && args [0] == "--permissions") {
-					ApplyPermissions (args [1]);
+				if (args.Length == 2 && args [0] == "--finalize-pack") {
+					FinalizePack (args [1]);
 					return 0;
 				}
 				if (args.Length < 7 || args.Length > 8)
@@ -107,7 +107,7 @@ namespace Xamarin.Android.BuildTools
 						new XElement ("Copy", new XAttribute ("SourceFiles", "@(_WorkloadPack)"),
 							new XAttribute ("DestinationFolder", "%(_WorkloadPack.Destination)"),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' == 'true'")),
-						new XElement ("Exec", new XAttribute ("Command", $"\"{dotnetPath}\" \"{toolPath}\" --permissions \"%(_WorkloadPack.Destination)\""),
+						new XElement ("Exec", new XAttribute ("Command", $"\"{dotnetPath}\" \"{toolPath}\" --finalize-pack \"%(_WorkloadPack.Destination)\""),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' != 'true'")),
 						new XElement ("Touch", new XAttribute ("Files", "%(_WorkloadPack.Destination)/%(_WorkloadPack.PackageFileName).installed"),
 							new XAttribute ("AlwaysCreate", "true")))));
@@ -120,8 +120,14 @@ namespace Xamarin.Android.BuildTools
 			}
 		}
 
-		static void ApplyPermissions (string directory)
+		static void FinalizePack (string directory)
 		{
+			// ZIP timestamps have no time zone and can become future inputs after extraction on another host.
+			var now = DateTime.UtcNow;
+			foreach (var file in Directory.EnumerateFiles (directory, "*", SearchOption.AllDirectories)) {
+				if (File.GetLastWriteTimeUtc (file) > now)
+					File.SetLastWriteTimeUtc (file, now);
+			}
 			if (OperatingSystem.IsWindows ())
 				return;
 			var permissionsFile = Path.Combine (directory, "data", "UnixFilePermissions.xml");
