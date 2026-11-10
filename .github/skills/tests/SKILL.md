@@ -96,7 +96,7 @@ Tooling tests are standalone (`dotnetup dotnet test` on `.csproj`). Core JNI int
 live in `tests/Mono.Android-Tests/Java.Interop-Tests/` and run on Android as part
 of `Mono.Android.NET-Tests.csproj`, using the on-device commands above.
 
-To build the Java.Interop tooling solution:
+To build the generator tooling and its tests using the main solution's filter:
 ```bash
-dotnetup dotnet build Java.Interop.slnx -c Debug
+dotnetup dotnet build src/generator/generator.slnf -c Debug
 ```

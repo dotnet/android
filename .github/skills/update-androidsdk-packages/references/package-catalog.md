@@ -54,5 +54,5 @@ Some platform API levels ship as a numbered "extension" (e.g. `platform-34-ext12
 a bare `platform-NN_rMM`. The extension number tracks Google's Extension SDK program, independent
 of the base API level's own revision counter. When refreshing an API level that already uses an
 extension suffix, look up the current extension level and revision for that exact API in the
-manifest (`dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "platforms;android-34"`) rather than assuming the extension
+manifest (`dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "platforms;android-34"`) rather than assuming the extension
 number increments in lockstep with anything else in the catalog.

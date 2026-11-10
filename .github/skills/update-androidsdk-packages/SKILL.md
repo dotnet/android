@@ -95,12 +95,12 @@ It does not list every package in the catalog. Query Android Support Repository 
 Use the bundled helper with the correct manifest for each family:
 
 ```bash
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path build-tools
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "platforms;android-37" --archives
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path emulator --archives
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path build-tools
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "platforms;android-37" --archives
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path emulator --archives
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
 ```
 
 (These are C# file-based apps, matching the `ci_failures.cs` convention used by the `ci-status` skill — first run restores/builds, so allow a few extra seconds.)
@@ -137,7 +137,7 @@ guess a SHA-256** — either:
 - Compute it yourself by downloading the exact archive URL and hashing it:
 
 ```bash
-dotnet run .github/skills/update-androidsdk-packages/scripts/sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip --sha1 <manifest-sha1> --size <manifest-size>
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip --sha1 <manifest-sha1> --size <manifest-size>
 ```
 
 This script downloads into a scratch temp file (not `$(AndroidToolchainCacheDirectory)`,

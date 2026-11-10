@@ -50,6 +50,9 @@ namespace xamarin::android {
 			.bundle_probe = nullptr,
 			.pinvoke_override = PinvokeOverride::load_symbol,
 			.external_assembly_probe = clr_external_assembly_probe,
+			.get_native_code_data = nullptr,
+			.get_assembly_names = nullptr,
+			.resolve_assembly_to_path = nullptr,
 		};
 
 		// Enough to fit 0xffffffffffffffff + terminating NUL

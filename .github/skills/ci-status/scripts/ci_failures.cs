@@ -1,7 +1,9 @@
 #!/usr/bin/env dotnet
+#:property TargetFramework=net11.0
 // Evidence-based failure analysis for one dnceng-public `dotnet-android` build.
 // This tool is read-only: it never retries Azure stages or mutates GitHub issues.
 //
+// Needs a .NET 11 SDK and `az login`.
 // Live:
 //   dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android] [--format markdown|json]
 
@@ -1047,27 +1049,59 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		RedirectStandardOutput = true,
 		RedirectStandardError = true,
 		UseShellExecute = false,
+		InheritedHandles = [],
 	};
 	foreach (var arg in cliArgs)
 		psi.ArgumentList.Add (arg);
-	using var process = Process.Start (psi);
-	if (process is null)
-		return (-1, "", $"failed to start {file}");
-	var stdoutTask = process.StandardOutput.ReadToEndAsync ();
-	var stderrTask = process.StandardError.ReadToEndAsync ();
-	using var timeout = new CancellationTokenSource (TimeSpan.FromMinutes (5));
+	var timeout = TimeSpan.FromMinutes (5);
+	var timer = Stopwatch.StartNew ();
+	using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{file}'.");
+	using var readCancellation = new CancellationTokenSource ();
+	var stdout = new StringBuilder ();
+	var stderr = new StringBuilder ();
+	// ReadAllText cannot return the captured prefix when EOF times out.
+	var readers = Task.WhenAll (
+		ReadOutputAsync (process.StandardOutput, stdout),
+		ReadOutputAsync (process.StandardError, stderr));
+	int exitCode = -1;
+	bool timedOut = false;
 	try {
-		process.WaitForExitAsync (timeout.Token).GetAwaiter ().GetResult ();
-	} catch (OperationCanceledException) {
-		if (!process.HasExited)
-			process.Kill (entireProcessTree: true);
-		Task.WhenAll (stdoutTask, stderrTask).GetAwaiter ().GetResult ();
-		return (-1, stdoutTask.Result, $"{stderrTask.Result}\n{file} timed out after 5 minutes.");
+		var remaining = timeout - timer.Elapsed;
+		if (process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status)) {
+			exitCode = status.ExitCode;
+			remaining = timeout - timer.Elapsed;
+			readers.WaitAsync (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero).GetAwaiter ().GetResult ();
+		} else {
+			timedOut = true;
+		}
+	} catch (TimeoutException) {
+		timedOut = true;
+	} finally {
+		try {
+			if (!process.HasExited) {
+				process.Kill (entireProcessTree: true);
+				process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
+			}
+		} finally {
+			readCancellation.Cancel ();
+			try {
+				readers.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
+			}
+		}
 	}
-	Task.WhenAll (stdoutTask, stderrTask).GetAwaiter ().GetResult ();
-	string stdout = stdoutTask.Result;
-	string stderr = stderrTask.Result;
-	return (process.ExitCode, stdout, stderr);
+	return timedOut
+		? (-1, stdout.ToString (), $"{stderr}\n{file} timed out after 5 minutes.")
+		: (exitCode, stdout.ToString (), stderr.ToString ());
+
+	async Task ReadOutputAsync (StreamReader reader, StringBuilder output)
+	{
+		var buffer = new char [4096];
+		int count;
+		while ((count = await reader.ReadAsync (buffer.AsMemory (), readCancellation.Token).ConfigureAwait (false)) > 0) {
+			output.Append (buffer, 0, count);
+		}
+	}
 }
 
 static JsonArray GetArray (JsonNode? root, string key)

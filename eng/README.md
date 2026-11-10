@@ -53,6 +53,9 @@ by host-side tests. Only dotnetup is added to the job's `PATH`.
 Local workload resolution uses the running SDK's version rather than the SDK
 dependency's package version, which may differ after dependency updates or SDK
 stabilization.
+Host-only solution filters skip Android preparation and local workload
+configuration; `dotnetup dotnet build src/generator/generator.slnf` builds the
+standalone generator tooling and its tests.
 
 CI preparation, packaging, and standalone tools use `dotnetup dotnet` directly.
 Commands that consume this checkout's Android/MAUI workloads use `dotnet-local.sh`

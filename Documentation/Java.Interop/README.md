@@ -23,7 +23,7 @@ and [Architecture][architecture] pages.
 
 ## Building
 
-- The standalone tooling and test target framework on `main` is .NET 10, available [here][net-10].
+- The standalone tooling and test target framework on `main` is .NET 11, available [here][net-11].
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
 
 The standalone tooling build does not require a locally built Android SDK.
@@ -32,14 +32,21 @@ For the Android product build, follow the enclosing repository's
 Libraries and command-line tools live in the repository's top-level `src/`,
 tooling tests in `tests/`, and the JNI source generator in
 `build-tools/java-interop-jnienv-gen/`. There is no separate bootstrap project
-or Java.Interop preparation step. Build from the repository root:
+or Java.Interop preparation step. Java.Interop projects are included in
+`Microsoft.Android.slnx`. To build just the generator tooling and its tests,
+use the solution filter from the repository root:
 
 ```
-dotnet build Java.Interop.slnx
+dotnetup sdk install
+dotnetup dotnet build src/generator/generator.slnf
 ```
 
-[net-10]: https://dotnet.microsoft.com/en-us/download/dotnet/10.0
+JNI unions and native structs use [`ExtendedLayout`][extended-layout] with
+`CUnion` and `CStruct`, requiring .NET 11 or later.
+
+[net-11]: https://dotnet.microsoft.com/en-us/download/dotnet/11.0
 [net-6]: https://github.com/dotnet/java-interop/tree/release/6.0.3xx
+[extended-layout]: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.extendedlayoutattribute?view=net-11.0
 
 Additional build options are documented [here][build-configuration].
 
