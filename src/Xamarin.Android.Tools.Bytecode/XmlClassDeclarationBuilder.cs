@@ -26,8 +26,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public XmlClassDeclarationBuilder (ClassFile classFile, ClassFile? packageInfo)
 		{
-			if (classFile == null)
-				throw new ArgumentNullException ("classFile");
+			ArgumentNullException.ThrowIfNull (classFile);
 
 			this.classFile      = classFile;
 			this.packageInfo    = packageInfo;

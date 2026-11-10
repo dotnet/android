@@ -150,8 +150,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		protected AndroidDocScraper (string dir, String patternHead, String? resetPatternHead, String parameterPairSplitter, bool continuousParamLines, string openMethod, string paramSep, string closeMethod, string? postCloseMethodParens)
 		{
-			if (dir == null)
-				throw new ArgumentNullException ("dir");
+			ArgumentNullException.ThrowIfNull (dir);
 	
 			pattern_head = patternHead;
 			reset_pattern_head = resetPatternHead;
