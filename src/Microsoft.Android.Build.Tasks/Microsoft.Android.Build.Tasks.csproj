@@ -71,6 +71,7 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\PackageFileListBuilder.cs" Link="Utilities\PackageFileListBuilder.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
   </ItemGroup>
 
   <!--

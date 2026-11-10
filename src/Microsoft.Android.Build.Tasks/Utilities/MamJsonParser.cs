@@ -17,7 +17,7 @@ using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
 	(string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool IsStatic)
 >;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	class MamJsonParser
 	{
@@ -31,9 +31,9 @@ namespace Xamarin.Android.Tasks
 			Logger  = logger;
 		}
 
-		public void Load (string jsonPath)
+		public void Load (Stream jsonStream)
 		{
-			var json    = ReadJson (jsonPath);
+			var json    = ReadJson (jsonStream);
 
 			var classRewrites = json["ClassRewrites"];
 			if (classRewrites != null) {
@@ -53,12 +53,10 @@ namespace Xamarin.Android.Tasks
 				GetReplacementMethods ());
 		}
 
-		static JsonNode ReadJson (string path)
+		static JsonNode ReadJson (Stream stream)
 		{
-			using (var fs = File.OpenRead (path)) {
-				using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
-				return doc.RootElement.ToNode () ?? new JsonObject ();
-			}
+			using JsonDocument doc = JsonDocument.Parse (stream, new JsonDocumentOptions { AllowTrailingCommas = true });
+			return doc.RootElement.ToNode () ?? new JsonObject ();
 		}
 
 		void ReadClassRewrites (JsonNode classRewrites)
