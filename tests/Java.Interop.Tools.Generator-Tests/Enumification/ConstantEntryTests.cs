@@ -120,6 +120,5 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.False (entry.IsFlags);
 			Assert.AreEqual (33, entry.DeprecatedSince?.ApiLevel ?? 0);
 		}
-
 	}
 }
