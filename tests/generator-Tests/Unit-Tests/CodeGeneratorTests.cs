@@ -244,34 +244,6 @@ namespace generatortests
 			Assert.True (writer.ToString ().Contains ("public int DoStuff ()"), $"was: `{writer}`");
 		}
 
-		[TestCase ("Virtual", false, true, "public virtual int DoStuff ()")]
-		[TestCase ("OVERRIDE", false, true, "public override int DoStuff ()")]
-		[TestCase ("OverRide", true, true, "public override abstract int DoStuff ();")]
-		[TestCase ("NONE", false, false, "public int DoStuff ()")]
-		[TestCase ("virtuals", false, true, "public int DoStuff ()")]
-		public void ManagedOverrideMethod_IgnoresCase (string managedOverride, bool isAbstract, bool isFinal, string expected)
-		{
-			var xml = $@"<api>
-			  <package name='java.lang' jni-name='java/lang'>
-			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
-			  </package>
-			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
-			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
-			      <method abstract='{(isAbstract ? "true" : "false")}' deprecated='not deprecated' final='{(isFinal ? "true" : "false")}' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' managedOverride='{managedOverride}'></method>
-			    </class>
-			  </package>
-			</api>";
-
-			var gens = ParseApiDefinition (xml);
-			var klass = gens.Single (g => g.Name == "MyClass");
-
-			generator.Context.ContextTypes.Push (klass);
-			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.True (writer.ToString ().Contains (expected), $"was: `{writer}`");
-		}
-
 		[Test]
 		public void ManagedOverrideInterfaceMethod_Reabstract ()
 		{

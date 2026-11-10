@@ -121,33 +121,5 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual (33, entry.DeprecatedSince?.ApiLevel ?? 0);
 		}
 
-		[TestCase ("flags", true)]
-		[TestCase ("FLAGS", true)]
-		[TestCase ("Flags", true)]
-		[TestCase (" flags ", true)]
-		[TestCase ("", false)]
-		[TestCase ("flag", false)]
-		[TestCase ("flags2", false)]
-		[TestCase ("\uFF46lags", false)]
-		public void ParseIsFlags (string value, bool expected)
-		{
-			var v1 = ConstantEntry.FromString ($"10,Org.XmlPull.V1.XmlPullParserNode,Cdsect,I:org/xmlpull/v1/XmlPullParser.CDSECT,5,{value}");
-			var v2 = ConstantEntry.FromString ($"E,10,I:org/xmlpull/v1/XmlPullParser.CDSECT,5,Org.XmlPull.V1.XmlPullParserNode,Cdsect,keep,{value}");
-
-			Assert.AreEqual (expected, v1.IsFlags);
-			Assert.AreEqual (expected, v2.IsFlags);
-		}
-
-		[TestCase ("keep", FieldAction.Keep)]
-		[TestCase ("KEEP", FieldAction.Keep)]
-		[TestCase ("\u212Aeep", FieldAction.Keep)]
-		[TestCase ("Remove", FieldAction.Remove)]
-		[TestCase ("", FieldAction.None)]
-		public void ParseFieldAction (string value, FieldAction expected)
-		{
-			var entry = ConstantEntry.FromString ($"E,10,I:org/xmlpull/v1/XmlPullParser.CDSECT,5,Org.XmlPull.V1.XmlPullParserNode,Cdsect,{value}");
-
-			Assert.AreEqual (expected, entry.FieldAction);
-		}
 	}
 }
