@@ -74,7 +74,7 @@ namespace Xamarin.Android.BuildTools
 							downloads.Add (pack.ResolvedPackageId, versions);
 						}
 						versions.Add ($"[{pack.Version}]");
-						source = $"$(NuGetPackageRoot){id}/{version}/{fileName}";
+						source = $"$([MSBuild]::EnsureTrailingSlash('$(NuGetPackageRoot)')){id}/{version}/{fileName}";
 					}
 					var packed = pack.Kind == WorkloadPackKind.Template || pack.Kind == WorkloadPackKind.Library;
 					var destination = pack.Kind switch {
