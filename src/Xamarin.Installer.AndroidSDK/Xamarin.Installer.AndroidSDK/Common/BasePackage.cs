@@ -718,6 +718,10 @@ namespace Xamarin.Installer.AndroidSDK.Common
         {
             LogDebug($"Generating {path}");
 
+            // Archives can contain symbolic links; never write through one.
+            if (CommonUtilities.Helpers.IsSpecialFile(path))
+                File.Delete(path);
+
             var settings = new XmlWriterSettings
             {
                 CloseOutput = true,

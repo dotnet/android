@@ -522,8 +522,10 @@ public class AndroidSdkInstallerTests
 	}
 
 	[TestCase ("../../outside")]
-	[TestCase ("/etc/passwd")]
+	[TestCase ("../pkg/data")]
 	[TestCase ("directory/../../outside")]
+	[TestCase ("missing")]
+	[TestCase ("link")]
 	public void UnzipRejectsUnsafeUnixLinkTargets (string target)
 	{
 		if (OperatingSystem.IsWindows ())
@@ -540,6 +542,28 @@ public class AndroidSdkInstallerTests
 			File.WriteAllBytes (zipPath, SetUnixAttributes (File.ReadAllBytes (zipPath), "pkg/link", Convert.ToUInt32 ("120777", 8) << 16));
 			Assert.Throws<InvalidDataException> (() => new Helper ().Unzip (outPath, zipPath, null, null));
 			Assert.IsFalse (File.Exists (Path.Combine (root, "outside")));
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
+	[Test]
+	public void UnzipStoresAbsoluteUnixLinkTargetAsFile ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		var zipPath = Path.Combine (root, "package.zip");
+		var outPath = Path.Combine (root, "out");
+		Directory.CreateDirectory (root);
+		try {
+			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				WriteEntry (zip, "pkg/data", "data");
+				WriteEntry (zip, "pkg/bin/as", "/buildbot/out/bin/as");
+			}
+			File.WriteAllBytes (zipPath, SetUnixAttributes (File.ReadAllBytes (zipPath), "pkg/bin/as", Convert.ToUInt32 ("120777", 8) << 16));
+			new Helper ().Unzip (outPath, zipPath, null, null);
+			var path = Path.Combine (outPath, "pkg", "bin", "as");
+			Assert.IsNull (new FileInfo (path).LinkTarget);
+			Assert.AreEqual ("/buildbot/out/bin/as", File.ReadAllText (path));
 		} finally {
 			Directory.Delete (root, recursive: true);
 		}

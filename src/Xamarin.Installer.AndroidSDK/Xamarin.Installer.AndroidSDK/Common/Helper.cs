@@ -287,27 +287,35 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 						}
 						EnsureNoReparsePoints (fullBaseDirectory, fullDestPath);
 
-						if (metadata.IsUnixSymlink) {
 #if !WINDOWS
-							if (!Platform.IsWindows) {
-								using var input = entry.Open ();
-								byte [] linkBytes = new byte [4097];
-								int length = 0;
+						// On Windows, and for absolute targets, keep the previous behavior: store the target text as a regular file.
+						if (metadata.IsUnixSymlink && !Platform.IsWindows) {
+							byte [] linkBytes = new byte [4097];
+							int length = 0;
+							using (var input = entry.Open ()) {
 								int read;
 								while (length < linkBytes.Length && (read = input.Read (linkBytes, length, linkBytes.Length - length)) > 0)
 									length += read;
-								if (length == 0 || length == linkBytes.Length)
-									throw new InvalidDataException ($"Invalid symbolic link target in '{entry.FullName}'.");
-								string linkTarget = new UTF8Encoding (false, true).GetString (linkBytes, 0, length);
-								Directory.CreateDirectory (Path.GetDirectoryName (destPath));
+							}
+							if (length == 0 || length == linkBytes.Length)
+								throw new InvalidDataException ($"Invalid symbolic link target in '{entry.FullName}'.");
+							string linkTarget = new UTF8Encoding (false, true).GetString (linkBytes, 0, length);
+							Directory.CreateDirectory (Path.GetDirectoryName (destPath));
+							currentSize += (ulong) length;
+							UpdateProgress ();
+							if (!Path.IsPathRooted (linkTarget)) {
 								symbolicLinks.Add ((fullDestPath, linkTarget));
-								currentSize += (ulong) length;
-								UpdateProgress ();
 								continue;
 							}
-#endif
-							throw new PlatformNotSupportedException ($"Cannot extract Unix symbolic link '{entry.FullName}' on this platform.");
+							if (File.Exists (destPath))
+								File.Delete (destPath);
+							using (var output = new FileStream (destPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+								output.Write (linkBytes, 0, length);
+							SafeSetLastWriteTime (destPath, metadata.LastWriteTime ?? entry.LastWriteTime.LocalDateTime);
+							SetFileAttributes (destPath, metadata);
+							continue;
 						}
+#endif
 
 						if (metadata.IsDirectory (entry.FullName)) {
 							Directory.CreateDirectory (destPath);
@@ -350,7 +358,8 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 								throw new IOException ($"Failed to create symbolic link '{link.Path}': {Stdlib.strerror (Stdlib.GetLastError ())}");
 						}
 						foreach (var link in symbolicLinks) {
-							if (!File.Exists (link.Path) && !Directory.Exists (link.Path))
+							// File.Exists uses lstat on Unix and is true for dangling links; stat follows the link.
+							if (Syscall.stat (link.Path, out _) != 0)
 								throw new InvalidDataException ($"Symbolic link '{link.Path}' has a missing or cyclic target.");
 						}
 					}
@@ -447,17 +456,24 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 				throw new InvalidDataException ($"Invalid symbolic link target in '{linkPath}'.");
 
 			// A later '..' could traverse through another link before resolving the parent.
+			// Leading '..' must not climb above the install root: the root's name is archive-controlled,
+			// so climbing out and re-entering by name would point elsewhere once the root is moved.
+			string linkDirectory = Path.GetDirectoryName (linkPath);
+			int depth = linkDirectory.Length <= installRootPrefix.Length
+				? 0
+				: linkDirectory.Substring (installRootPrefix.Length).Split (new [] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries).Length;
 			bool sawName = false;
+			int parents = 0;
 			foreach (string part in target.Split ('/')) {
 				if (part == "..") {
-					if (sawName)
-						throw new InvalidDataException ($"Ambiguous symbolic link target in '{linkPath}'.");
+					if (sawName || ++parents > depth)
+						throw new InvalidDataException ($"Symbolic link '{linkPath}' points outside the archive's install root.");
 				} else if (part.Length > 0 && part != ".") {
 					sawName = true;
 				}
 			}
 
-			string resolved = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (linkPath), target));
+			string resolved = Path.GetFullPath (Path.Combine (linkDirectory, target));
 			if (!resolved.Equals (installRoot, StringComparison.Ordinal) && !resolved.StartsWith (installRootPrefix, StringComparison.Ordinal))
 				throw new InvalidDataException ($"Symbolic link '{linkPath}' points outside the archive's install root.");
 			return resolved;
