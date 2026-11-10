@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Installer.AndroidSDK;
@@ -273,6 +274,66 @@ public class AndroidSdkInstallerTests
 		}
 	}
 
+	[Test]
+	public void UnzipPreservesExtendedTimestamp ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		var zipPath = Path.Combine (root, "package.zip");
+		var outPath = Path.Combine (root, "out");
+		var timestamp = new DateTimeOffset (2024, 5, 6, 7, 8, 11, TimeSpan.Zero);
+		Directory.CreateDirectory (root);
+		try {
+			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create))
+			using (var writer = new StreamWriter (zip.CreateEntry ("pkg/data.txt").Open ()))
+				writer.Write ("timestamp");
+
+			var archive = AddExtendedTimestampToCentralDirectory (File.ReadAllBytes (zipPath), timestamp.ToUnixTimeSeconds ());
+			File.WriteAllBytes (zipPath, archive);
+
+			new Helper ().Unzip (outPath, zipPath, null, null);
+
+			var filePath = Path.Combine (outPath, "pkg", "data.txt");
+			Assert.AreEqual ("timestamp", File.ReadAllText (filePath));
+			Assert.AreEqual (timestamp.UtcDateTime, File.GetLastWriteTimeUtc (filePath));
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
+	[Test]
+	public void UnzipRecognizesDosDirectoryAndFileAttributes ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		var zipPath = Path.Combine (root, "package.zip");
+		var outPath = Path.Combine (root, "out");
+		Directory.CreateDirectory (root);
+		try {
+			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				zip.CreateEntry ("pkg/dos-dir");
+				using (var writer = new StreamWriter (zip.CreateEntry ("pkg/readme.txt").Open ()))
+					writer.Write ("dos attributes");
+			}
+
+			byte [] archive = File.ReadAllBytes (zipPath);
+			archive = SetDosAttributes (archive, "pkg/dos-dir", 0x10);
+			archive = SetDosAttributes (archive, "pkg/readme.txt", 0x21);
+			File.WriteAllBytes (zipPath, archive);
+
+			new Helper ().Unzip (outPath, zipPath, null, null);
+
+			Assert.IsTrue (Directory.Exists (Path.Combine (outPath, "pkg", "dos-dir")));
+			var filePath = Path.Combine (outPath, "pkg", "readme.txt");
+			Assert.AreEqual ("dos attributes", File.ReadAllText (filePath));
+			if (OperatingSystem.IsWindows ())
+				Assert.IsTrue ((File.GetAttributes (filePath) & FileAttributes.ReadOnly) != 0);
+		} finally {
+			var readOnlyFile = Path.Combine (outPath, "pkg", "readme.txt");
+			if (File.Exists (readOnlyFile))
+				File.SetAttributes (readOnlyFile, FileAttributes.Normal);
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
 	[TestCase ("104755")]
 	[TestCase ("102755")]
 	[TestCase ("106755")]
@@ -377,6 +438,85 @@ public class AndroidSdkInstallerTests
 		File.WriteAllBytes (zipPath, archive);
 		new Helper ().Unzip (outPath, zipPath, null, null);
 		return outPath;
+	}
+
+	static byte [] AddExtendedTimestampToCentralDirectory (byte [] archive, long timestamp)
+	{
+		const uint EndOfCentralDirectorySignature = 0x06054b50;
+		const uint CentralDirectoryHeaderSignature = 0x02014b50;
+		const int TimestampExtraFieldSize = 9;
+		int endOfCentralDirectory = FindSignature (archive, EndOfCentralDirectorySignature);
+		int centralDirectoryOffset = checked ((int) ReadUInt32 (archive, endOfCentralDirectory + 16));
+		Assert.AreEqual (CentralDirectoryHeaderSignature, ReadUInt32 (archive, centralDirectoryOffset));
+
+		int nameLength = ReadUInt16 (archive, centralDirectoryOffset + 28);
+		int extraLength = ReadUInt16 (archive, centralDirectoryOffset + 30);
+		int extraDataOffset = centralDirectoryOffset + 46 + nameLength;
+		int insertOffset = extraDataOffset + extraLength;
+		var updatedArchive = new byte [archive.Length + TimestampExtraFieldSize];
+		Buffer.BlockCopy (archive, 0, updatedArchive, 0, insertOffset);
+		updatedArchive [insertOffset] = 0x55;
+		updatedArchive [insertOffset + 1] = 0x54;
+		updatedArchive [insertOffset + 2] = 5;
+		updatedArchive [insertOffset + 4] = 1;
+		WriteUInt32 (updatedArchive, insertOffset + 5, unchecked ((uint) (int) timestamp));
+		Buffer.BlockCopy (archive, insertOffset, updatedArchive, insertOffset + TimestampExtraFieldSize, archive.Length - insertOffset);
+		WriteUInt16 (updatedArchive, centralDirectoryOffset + 30, (ushort) (extraLength + TimestampExtraFieldSize));
+		WriteUInt32 (updatedArchive, endOfCentralDirectory + TimestampExtraFieldSize + 12,
+			ReadUInt32 (archive, endOfCentralDirectory + 12) + TimestampExtraFieldSize);
+		return updatedArchive;
+	}
+
+	static byte [] SetDosAttributes (byte [] archive, string entryName, uint attributes)
+	{
+		const uint EndOfCentralDirectorySignature = 0x06054b50;
+		const uint CentralDirectoryHeaderSignature = 0x02014b50;
+		int endOfCentralDirectory = FindSignature (archive, EndOfCentralDirectorySignature);
+		int centralDirectoryOffset = checked ((int) ReadUInt32 (archive, endOfCentralDirectory + 16));
+		while (ReadUInt32 (archive, centralDirectoryOffset) == CentralDirectoryHeaderSignature) {
+			int nameLength = ReadUInt16 (archive, centralDirectoryOffset + 28);
+			int extraLength = ReadUInt16 (archive, centralDirectoryOffset + 30);
+			int commentLength = ReadUInt16 (archive, centralDirectoryOffset + 32);
+			string name = Encoding.ASCII.GetString (archive, centralDirectoryOffset + 46, nameLength);
+			if (name == entryName) {
+				var updatedArchive = (byte []) archive.Clone ();
+				WriteUInt16 (updatedArchive, centralDirectoryOffset + 4, (ushort) (ReadUInt16 (archive, centralDirectoryOffset + 4) & 0x00ff));
+				WriteUInt32 (updatedArchive, centralDirectoryOffset + 38, attributes);
+				return updatedArchive;
+			}
+			centralDirectoryOffset += 46 + nameLength + extraLength + commentLength;
+		}
+
+		throw new InvalidDataException ($"ZIP entry '{entryName}' not found.");
+	}
+
+	static int FindSignature (byte [] data, uint signature)
+	{
+		for (int i = data.Length - 4; i >= 0; i--) {
+			if (ReadUInt32 (data, i) == signature)
+				return i;
+		}
+		throw new InvalidDataException ("ZIP signature not found.");
+	}
+
+	static ushort ReadUInt16 (byte [] data, int position) =>
+		(ushort) (data [position] | (data [position + 1] << 8));
+
+	static uint ReadUInt32 (byte [] data, int position) =>
+		(uint) (data [position] | (data [position + 1] << 8) | (data [position + 2] << 16) | (data [position + 3] << 24));
+
+	static void WriteUInt16 (byte [] data, int position, ushort value)
+	{
+		data [position] = (byte) value;
+		data [position + 1] = (byte) (value >> 8);
+	}
+
+	static void WriteUInt32 (byte [] data, int position, uint value)
+	{
+		data [position] = (byte) value;
+		data [position + 1] = (byte) (value >> 8);
+		data [position + 2] = (byte) (value >> 16);
+		data [position + 3] = (byte) (value >> 24);
 	}
 
 	sealed class NonSeekableMemoryStream : MemoryStream

@@ -219,7 +219,9 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 
 			try
 			{
-				using (var zipFile = ZipFile.OpenRead (archivePath)) {
+				using (var stream = File.OpenRead (archivePath))
+				using (var zipFile = new ZipArchive (stream, ZipArchiveMode.Read)) {
+					var entryMetadata = ZipCentralDirectory.Read (stream, zipFile.Entries.Count);
 					float minProgressDelta = 5f; // percents
 					float lastProgress = 0f;
 
@@ -249,7 +251,9 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 					string fullBaseDirectory = Path.GetFullPath (baseDirectory).TrimEnd (Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 					byte [] buffer = new byte [81920];
 
-					foreach (var entry in zipFile.Entries) {
+					for (int i = 0; i < zipFile.Entries.Count; i++) {
+						var entry = zipFile.Entries [i];
+						var metadata = entryMetadata [i];
 						string destPath = Path.Combine (baseDirectory, entry.FullName);
 						lastDestPath = destPath;
 
@@ -257,9 +261,9 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 							throw new Exception ($"Archive file '{archivePath}' has parent traversal in paths");
 						}
 
-						if (entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal)) {
+						if (metadata.IsDirectory (entry.FullName)) {
 							Directory.CreateDirectory (destPath);
-							SafeSetLastWriteTime (destPath, entry.LastWriteTime.LocalDateTime);
+							SafeSetLastWriteTime (destPath, metadata.LastWriteTime ?? entry.LastWriteTime.LocalDateTime);
 							continue;
 						}
 
@@ -276,8 +280,8 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 								UpdateProgress ();
 							}
 						}
-						SafeSetLastWriteTime (destPath, entry.LastWriteTime.LocalDateTime);
-						SetUnixPermissions (destPath, entry);
+						SafeSetLastWriteTime (destPath, metadata.LastWriteTime ?? entry.LastWriteTime.LocalDateTime);
+						SetFileAttributes (destPath, metadata);
 						// TODO: set owner
 					}
 				}
@@ -308,18 +312,24 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			return ret;
 		}
 
-		// ZipArchiveEntry.ExternalAttributes exists at runtime on .NET and .NET Framework 4.7.2+, but not in the netstandard2.0 reference assemblies.
-		static readonly System.Reflection.PropertyInfo ExternalAttributesProperty = typeof (ZipArchiveEntry).GetProperty ("ExternalAttributes");
-
-		static void SetUnixPermissions (string filePath, ZipArchiveEntry entry)
+		static void SetFileAttributes (string filePath, ZipCentralDirectory.Entry entry)
 		{
+			if (string.IsNullOrEmpty (filePath) || !File.Exists (filePath))
+				return;
+
+			if (entry.IsDosEntry && entry.ExternalFileAttributes != -1) {
+				var fileAttributes = (FileAttributes) entry.ExternalFileAttributes;
+				fileAttributes &= FileAttributes.Archive | FileAttributes.Normal | FileAttributes.ReadOnly | FileAttributes.Hidden;
+				File.SetAttributes (filePath, fileAttributes);
+			} else {
+				File.SetAttributes (filePath, FileAttributes.Normal);
+			}
+
 #if !WINDOWS
 			if (Platform.IsWindows)
 				return;
-			if (ExternalAttributesProperty == null)
-				throw new PlatformNotSupportedException ("ZIP entry permissions are not available on this runtime.");
 
-			int mode = (int) ExternalAttributesProperty.GetValue (entry) >> 16;
+			int mode = entry.ExternalFileAttributes >> 16;
 			if (mode == -1)
 				return;
 
