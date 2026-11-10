@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Tools
 {
-	class FileUtil
+	partial class FileUtil
 	{
 		public static string GetTempFilenameForWrite (string fileName)
 		{
@@ -265,8 +265,13 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
+#if NET
+		[LibraryImport ("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+		private static partial int rename (string old, string @new);
+#else
 		[DllImport ("libc", SetLastError=true)]
 		static extern int rename (string old, string @new);
+#endif
 
 #if !NET7_0_OR_GREATER
 		[DllImport ("libc", SetLastError = true)]

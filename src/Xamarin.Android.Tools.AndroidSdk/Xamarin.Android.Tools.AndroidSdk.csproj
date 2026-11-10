@@ -36,6 +36,8 @@
   <PropertyGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
     <IsTrimmable>true</IsTrimmable>
     <IsAotCompatible>true</IsAotCompatible>
+    <!-- Required by LibraryImport-generated marshalling stubs. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">

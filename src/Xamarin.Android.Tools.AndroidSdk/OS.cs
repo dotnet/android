@@ -33,28 +33,18 @@ namespace Xamarin.Android.Tools
 				NativeLibraryFormat = "lib{0}.so";
 		}
 
-		//From Managed.Windows.Forms/XplatUI
+		// uname() reports the "Darwin" sysname on every Apple platform, so match all of them.
 		static bool IsRunningOnMac ()
 		{
-			IntPtr buf = IntPtr.Zero;
-			try {
-				buf = Marshal.AllocHGlobal (8192);
-				// This is a hacktastic way of getting sysname from uname ()
-				if (uname (buf) == 0) {
-					string? os = System.Runtime.InteropServices.Marshal.PtrToStringAnsi (buf);
-					if (os == "Darwin")
-						return true;
-				}
-			} catch {
-			} finally {
-				if (buf != IntPtr.Zero)
-					System.Runtime.InteropServices.Marshal.FreeHGlobal (buf);
-			}
-			return false;
+#if NET
+			return OperatingSystem.IsMacOS () || OperatingSystem.IsMacCatalyst () || OperatingSystem.IsIOS () || OperatingSystem.IsTvOS ();
+#else
+			return RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ||
+				RuntimeInformation.IsOSPlatform (OSPlatform.Create ("MACCATALYST")) ||
+				RuntimeInformation.IsOSPlatform (OSPlatform.Create ("IOS")) ||
+				RuntimeInformation.IsOSPlatform (OSPlatform.Create ("TVOS"));
+#endif
 		}
-
-		[DllImport ("libc")]
-		static extern int uname (IntPtr buf);
 
 		static string GetProgramFilesX86 ()
 		{
