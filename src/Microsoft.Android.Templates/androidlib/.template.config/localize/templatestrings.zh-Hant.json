@@ -3,7 +3,7 @@
   "name": "Android 類別庫",
   "description": "用於建立 Android 版 .NET 類別庫的專案",
   "symbols/Framework/description": "專案的目標架構。",
-  "symbols/Framework/choices/net12.0-android/description": "Target net12.0-android",
+  "symbols/Framework/choices/net12.0-android/description": "目標 net12.0-android",
   "symbols/Framework/choices/net11.0-android/description": "目標為 net11.0-android",
   "symbols/supportedOSVersion/description": "覆寫專案中的 $(SupportedOSPlatformVersion)",
   "symbols/skipRestore/description": "如果指定，則會在建立時跳過專案的自動還原。"

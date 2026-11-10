@@ -3,7 +3,7 @@
   "name": "Aplicación Android Wear",
   "description": "A project for creating a Wear OS app using .NET for Android",
   "symbols/Framework/description": "Marco de destino del proyecto.",
-  "symbols/Framework/choices/net12.0-android/description": "Target net12.0-android",
+  "symbols/Framework/choices/net12.0-android/description": "Net12.0-android de destino",
   "symbols/Framework/choices/net11.0-android/description": "Destino net11.0-android",
   "symbols/packageName/description": "Invalida el nombre del paquete en AndroidManifest.xml",
   "symbols/supportedOSVersion/description": "Invalida $(SupportedOSPlatformVersion) en el proyecto",

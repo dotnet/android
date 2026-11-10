@@ -3,7 +3,7 @@
   "name": "Android 应用程序",
   "description": "用于创建 .NET for Android 应用程序的项目",
   "symbols/Framework/description": "项目的目标框架。",
-  "symbols/Framework/choices/net12.0-android/description": "Target net12.0-android",
+  "symbols/Framework/choices/net12.0-android/description": "目标 net12.0-android",
   "symbols/Framework/choices/net11.0-android/description": "目标 net11.0-android",
   "symbols/packageName/description": "重写 AndroidManifest.xml 中的包名称",
   "symbols/supportedOSVersion/description": "替代项目中的 $(SupportedOSPlatformVersion)",
