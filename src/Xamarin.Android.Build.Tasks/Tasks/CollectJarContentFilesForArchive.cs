@@ -74,6 +74,7 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		foreach (var jarFile in jarFilePaths) {
 			using (var stream = File.OpenRead (jarFile))
 			using (var jar = new ZipArchive (stream, ZipArchiveMode.Read)) {
+				entries:
 				foreach (var jarItem in jar.Entries) {
 					if (jarItem.IsDirectory ())
 						continue;
@@ -84,7 +85,6 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 					var path = rootPath + name;
 					// check for ignored items
-					bool exclude = false;
 					bool forceInclude = false;
 					foreach (var include in includePatterns) {
 						if (include.IsMatch (path)) {
@@ -97,14 +97,10 @@ public class CollectJarContentFilesForArchive : AndroidTask
 						foreach (var pattern in excludePatterns) {
 							if (pattern.IsMatch (path)) {
 								Log.LogDebugMessage ($"Ignoring jar entry '{name}' from '{Path.GetFileName (jarFile)}'. Filename matched the exclude pattern '{pattern}'.");
-								exclude = true;
-								break;
+								continue entries;
 							}
 						}
 					}
-
-					if (exclude)
-						continue;
 
 					if (AndroidRuntime == "CoreCLR" && IsNativeLibrary (name)) {
 						string normalizedName = name.Replace ('\\', '/');

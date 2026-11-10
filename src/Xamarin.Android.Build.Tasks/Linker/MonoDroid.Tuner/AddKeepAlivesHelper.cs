@@ -50,6 +50,7 @@ namespace MonoDroid.Tuner
 		static bool AddKeepAlives (TypeDefinition type, ref MethodDefinition? methodKeepAlive, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
 		{
 			bool changed = false;
+			methods:
 			foreach (MethodDefinition method in type.Methods) {
 				if (method.Parameters.Count == 0)
 					continue;
@@ -59,17 +60,12 @@ namespace MonoDroid.Tuner
 
 				var instructions = method.Body.Instructions;
 
-				var found = false;
 				for (int off = Math.Max (0, instructions.Count - 6); off < instructions.Count; off++) {
 					var current = instructions [off];
 					if (current.OpCode == OpCodes.Call && current.Operand.ToString ().Contains ("System.GC::KeepAlive")) {
-						found = true;
-						break;
+						continue methods;
 					}
 				}
-
-				if (found)
-					continue;
 
 				var processor = method.Body.GetILProcessor ();
 				var module = method.DeclaringType.Module;

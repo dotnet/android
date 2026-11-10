@@ -91,6 +91,7 @@ namespace MonoDroid.Tuner {
 		public static MethodDefinition GetMethod (TypeDefinition type, string name, string [] parameters)
 		{
 			MethodDefinition method = null;
+			methods:
 			foreach (var md in type.Methods) {
 				if (md.Name != name)
 					continue;
@@ -98,16 +99,11 @@ namespace MonoDroid.Tuner {
 				if (md.Parameters.Count != parameters.Length)
 					continue;
 
-				var equal = true;
 				for (int i = 0; i < parameters.Length; i++) {
 					if (md.Parameters [i].ParameterType.FullName != parameters [i]) {
-						equal = false;
-						break;
+						continue methods;
 					}
 				}
-
-				if (!equal)
-					continue;
 
 				method = md;
 				break;

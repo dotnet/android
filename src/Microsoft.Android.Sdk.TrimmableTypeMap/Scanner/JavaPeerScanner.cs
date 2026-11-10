@@ -1203,6 +1203,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		// Check each ctor on this type for additional constructors not yet covered
+		constructors:
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if (!index.Reader.StringComparer.Equals (methodDef.Name, ".ctor")) {
@@ -1215,15 +1216,10 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			// Check if this ctor's params are already covered by a base registered ctor
-			bool alreadyCovered = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
 				if (HaveIdenticalParameterTypes (methodDef, index, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType)) {
-					alreadyCovered = true;
-					break;
+					continue constructors;
 				}
-			}
-			if (alreadyCovered) {
-				continue;
 			}
 
 			// Fallback: if any base registered ctor is parameterless, accept this ctor
@@ -1927,8 +1923,8 @@ public sealed class JavaPeerScanner : IDisposable
 		var javaCallableWrapperInterfaces = new List<string> ();
 		var addedJavaNames = new HashSet<string> (StringComparer.Ordinal);
 		var assignabilityVisited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
+		interfaces:
 		foreach (var iface in interfaces) {
-			var isRedundant = false;
 			foreach (var other in interfaces) {
 				if (IsSameTypeDefinition (iface.Type, other.Type)) {
 					continue;
@@ -1936,13 +1932,8 @@ public sealed class JavaPeerScanner : IDisposable
 
 				assignabilityVisited.Clear ();
 				if (IsInterfaceAssignableFrom (iface.Type, other.Type, assignabilityVisited)) {
-					isRedundant = true;
-					break;
+					continue interfaces;
 				}
-			}
-
-			if (isRedundant) {
-				continue;
 			}
 
 			if (addedJavaNames.Add (iface.JavaName)) {
@@ -2938,6 +2929,7 @@ public sealed class JavaPeerScanner : IDisposable
 	List<PublicConstructorInfo> GetSupportedPublicConstructors (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var constructors = new List<PublicConstructorInfo> ();
+		constructors:
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if ((methodDef.Attributes & MethodAttributes.Static) != 0 ||
@@ -2947,22 +2939,18 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, genericContext: index);
-			bool unsupported = false;
 			foreach (var parameter in sig.ParameterTypes) {
 				if (IsOwnedByConstructorDiagnostics (parameter)) {
-					unsupported = true;
-					break;
+					continue constructors;
 				}
 			}
-			if (!unsupported) {
-				var signature = new StringBuilder ();
-				signature.Append ('(');
-				foreach (var parameter in sig.ParameterTypes) {
-					signature.Append (ManagedTypeToJniDescriptor (parameter));
-				}
-				signature.Append (')');
-				constructors.Add (new (sig.ParameterTypes, signature.ToString ()));
+			var signature = new StringBuilder ();
+			signature.Append ('(');
+			foreach (var parameter in sig.ParameterTypes) {
+				signature.Append (ManagedTypeToJniDescriptor (parameter));
 			}
+			signature.Append (')');
+			constructors.Add (new (sig.ParameterTypes, signature.ToString ()));
 		}
 		return constructors;
 	}
