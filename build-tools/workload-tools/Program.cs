@@ -23,6 +23,8 @@ namespace Xamarin.Android.BuildTools
 
 				var sdkRoot = Path.GetFullPath (args [0]);
 				var sdkVersion = args [1];
+				if (!Directory.Exists (Path.Combine (sdkRoot, "sdk", sdkVersion)))
+					throw new DirectoryNotFoundException ($"The .NET SDK '{sdkVersion}' is not installed in '{sdkRoot}'.");
 				var manifestDirectory = Path.GetFullPath (args [2]);
 				var packRoot = Path.GetFullPath (args [3]);
 				var packageDirectories = args [4].Split (Path.PathSeparator).Select (Path.GetFullPath).ToArray ();
