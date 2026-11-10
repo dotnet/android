@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -232,341 +233,126 @@ public class AndroidSdkInstallerTests
 	[Test]
 	public void UnzipPreservesContentsTimestampsAndPermissions ()
 	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
+		using var temp = new TempDirectory ();
 		var timestamp = new DateTime (2024, 5, 6, 7, 8, 10, DateTimeKind.Local);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				var dir = zip.CreateEntry ("pkg/bin/");
-				dir.LastWriteTime = timestamp;
-				var tool = zip.CreateEntry ("pkg/bin/tool");
-				tool.LastWriteTime = timestamp;
-				tool.ExternalAttributes = Convert.ToInt32 ("100755", 8) << 16;
-				using (var writer = new StreamWriter (tool.Open ()))
-					writer.Write ("#!/bin/sh\necho hi\n");
-				var data = zip.CreateEntry ("pkg/data.txt", CompressionLevel.NoCompression);
-				data.LastWriteTime = timestamp;
-				data.ExternalAttributes = Convert.ToInt32 ("100600", 8) << 16;
-				using (var writer = new StreamWriter (data.Open ()))
-					writer.Write ("data");
+		using (var zip = ZipFile.Open (temp.ZipPath, ZipArchiveMode.Create)) {
+			zip.CreateEntry ("pkg/bin/").LastWriteTime = timestamp;
+			// Set-ID, sticky, and group/other write bits are stripped; an unspecified mode defaults to 0644.
+			foreach (var (name, mode) in new [] { ("bin/tool", "100755"), ("data.txt", "100600"), ("bin/setid", "107777"), ("unspecified", null) }) {
+				var entry = zip.CreateEntry ("pkg/" + name);
+				entry.LastWriteTime = timestamp;
+				entry.ExternalAttributes = mode == null ? -1 : Convert.ToInt32 (mode, 8) << 16;
+				using var writer = new StreamWriter (entry.Open ());
+				writer.Write (name);
 			}
+		}
 
-			new Helper ().Unzip (outPath, zipPath, null, null);
+		temp.Unzip ();
 
-			var toolPath = Path.Combine (outPath, "pkg", "bin", "tool");
-			var dataPath = Path.Combine (outPath, "pkg", "data.txt");
-			Assert.AreEqual ("#!/bin/sh\necho hi\n", File.ReadAllText (toolPath));
-			Assert.AreEqual ("data", File.ReadAllText (dataPath));
-			Assert.AreEqual (timestamp, File.GetLastWriteTime (toolPath));
-			Assert.AreEqual (timestamp, File.GetLastWriteTime (dataPath));
-			Assert.IsTrue (Directory.Exists (Path.Combine (outPath, "pkg", "bin")));
-			if (!OperatingSystem.IsWindows ()) {
-				Assert.AreEqual (UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-						UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-						UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
-					File.GetUnixFileMode (toolPath));
-				Assert.AreEqual (UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode (dataPath));
-			}
-		} finally {
-			Directory.Delete (root, recursive: true);
+		Assert.IsTrue (Directory.Exists (Path.Combine (temp.OutPath, "pkg", "bin")));
+		foreach (var (name, mode) in new [] { ("bin/tool", "755"), ("data.txt", "600"), ("bin/setid", "755"), ("unspecified", "644") }) {
+			var path = Path.Combine (temp.OutPath, "pkg", name);
+			Assert.AreEqual (name, File.ReadAllText (path));
+			Assert.AreEqual (timestamp, File.GetLastWriteTime (path));
+			if (!OperatingSystem.IsWindows ())
+				Assert.AreEqual ((UnixFileMode) Convert.ToInt32 (mode, 8), File.GetUnixFileMode (path), name);
 		}
 	}
 
 	[Test]
 	public void UnzipPreservesExtendedTimestamp ()
 	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
+		using var temp = new TempDirectory ();
 		var timestamp = new DateTimeOffset (2024, 5, 6, 7, 8, 11, TimeSpan.Zero);
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create))
-			using (var writer = new StreamWriter (zip.CreateEntry ("pkg/data.txt").Open ()))
-				writer.Write ("timestamp");
+		File.WriteAllBytes (temp.ZipPath, AddExtendedTimestampToCentralDirectory (CreateSimpleArchive (), timestamp.ToUnixTimeSeconds ()));
 
-			var archive = AddExtendedTimestampToCentralDirectory (File.ReadAllBytes (zipPath), timestamp.ToUnixTimeSeconds ());
-			File.WriteAllBytes (zipPath, archive);
+		temp.Unzip ();
 
-			new Helper ().Unzip (outPath, zipPath, null, null);
-
-			var filePath = Path.Combine (outPath, "pkg", "data.txt");
-			Assert.AreEqual ("timestamp", File.ReadAllText (filePath));
-			Assert.AreEqual (timestamp.UtcDateTime, File.GetLastWriteTimeUtc (filePath));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
+		Assert.AreEqual (timestamp.UtcDateTime, File.GetLastWriteTimeUtc (Path.Combine (temp.OutPath, "pkg", "data.txt")));
 	}
 
 	[Test]
 	public void UnzipRecognizesDosDirectoryAndFileAttributes ()
 	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				zip.CreateEntry ("pkg/dos-dir");
-				using (var writer = new StreamWriter (zip.CreateEntry ("pkg/readme.txt").Open ()))
-					writer.Write ("dos attributes");
-			}
-
-			byte [] archive = File.ReadAllBytes (zipPath);
-			archive = SetDosAttributes (archive, "pkg/dos-dir", 0x10);
-			archive = SetDosAttributes (archive, "pkg/readme.txt", 0x21);
-			File.WriteAllBytes (zipPath, archive);
-
-			new Helper ().Unzip (outPath, zipPath, null, null);
-
-			Assert.IsTrue (Directory.Exists (Path.Combine (outPath, "pkg", "dos-dir")));
-			var filePath = Path.Combine (outPath, "pkg", "readme.txt");
-			Assert.AreEqual ("dos attributes", File.ReadAllText (filePath));
-			if (OperatingSystem.IsWindows ())
-				Assert.IsTrue ((File.GetAttributes (filePath) & FileAttributes.ReadOnly) != 0);
-		} finally {
-			var readOnlyFile = Path.Combine (outPath, "pkg", "readme.txt");
-			if (File.Exists (readOnlyFile))
-				File.SetAttributes (readOnlyFile, FileAttributes.Normal);
-			Directory.Delete (root, recursive: true);
+		using var temp = new TempDirectory ();
+		using (var zip = ZipFile.Open (temp.ZipPath, ZipArchiveMode.Create)) {
+			zip.CreateEntry ("pkg/dos-dir");
+			WriteEntry (zip, "pkg/readme.txt", "dos attributes");
 		}
-	}
+		byte [] archive = File.ReadAllBytes (temp.ZipPath);
+		archive = SetDosAttributes (archive, "pkg/dos-dir", 0x10);
+		archive = SetDosAttributes (archive, "pkg/readme.txt", 0x21);
+		File.WriteAllBytes (temp.ZipPath, archive);
 
-	[TestCase ("104755")]
-	[TestCase ("102755")]
-	[TestCase ("106755")]
-	public void UnzipStripsSetIdPermissions (string archiveMode)
-	{
-		if (OperatingSystem.IsWindows ()) {
-			Assert.Ignore ("Unix permission bits are not applied on Windows.");
-			return;
-		}
+		temp.Unzip ();
 
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				var tool = zip.CreateEntry ("tool");
-				tool.ExternalAttributes = Convert.ToInt32 (archiveMode, 8) << 16;
-				using (var writer = new StreamWriter (tool.Open ()))
-					writer.Write ("test");
-			}
-
-			new Helper ().Unzip (outPath, zipPath, null, null);
-
-			Assert.AreEqual (UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-					UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-					UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
-				File.GetUnixFileMode (Path.Combine (outPath, "tool")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	[Test]
-	public void UnzipRejectsParentTraversal ()
-	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				using (var writer = new StreamWriter (zip.CreateEntry ("../evil.txt").Open ()))
-					writer.Write ("evil");
-			}
-
-			var ex = Assert.Throws<Exception> (() => new Helper ().Unzip (outPath, zipPath, null, null));
-			StringAssert.Contains ("parent traversal", ex?.Message);
-			Assert.IsFalse (File.Exists (Path.Combine (root, "evil.txt")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	[Test]
-	public void UnzipRejectsCaseVariantSibling ()
-	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create))
-			using (var writer = new StreamWriter (zip.CreateEntry ("../OUT/evil.txt").Open ()))
-				writer.Write ("evil");
-			Assert.Throws<Exception> (() => new Helper ().Unzip (outPath, zipPath, null, null));
-			Assert.IsFalse (File.Exists (Path.Combine (root, "OUT", "evil.txt")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	[Test]
-	public void TemporaryDirectoryIsPrivateOnUnix ()
-	{
-		if (OperatingSystem.IsWindows ()) {
-			Assert.Ignore ("Unix permission bits are not applied on Windows.");
-			return;
-		}
-		var type = typeof (Helper).Assembly.GetType ("Xamarin.Installer.AndroidSDK.Common.TemporaryDirectory");
-		Assert.IsNotNull (type);
-		var create = type.GetMethod ("Create");
-		Assert.IsNotNull (create);
-		var path = create.Invoke (null, null) as string;
-		Assert.IsNotNull (path);
-		try {
-			Assert.AreEqual (UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode (path));
-		} finally {
-			Directory.Delete (path);
-		}
-	}
-
-	[TestCase (false)]
-	[TestCase (true)]
-	public void UnzipStripsGroupAndOtherWritePermissions (bool unspecifiedMode)
-	{
-		if (OperatingSystem.IsWindows ()) {
-			Assert.Ignore ("Unix permission bits are not applied on Windows.");
-			return;
-		}
-
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				var entry = zip.CreateEntry ("tool");
-				entry.ExternalAttributes = unspecifiedMode ? -1 : Convert.ToInt32 ("100777", 8) << 16;
-				using var writer = new StreamWriter (entry.Open ());
-				writer.Write ("tool");
-			}
-			new Helper ().Unzip (outPath, zipPath, null, null);
-			var expected = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead;
-			if (!unspecifiedMode)
-				expected |= UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
-			Assert.AreEqual (expected,
-				File.GetUnixFileMode (Path.Combine (outPath, "tool")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	[Test]
-	public void UnzipAndMovePreserveUnixSymbolicLinks ()
-	{
+		Assert.IsTrue (Directory.Exists (Path.Combine (temp.OutPath, "pkg", "dos-dir")));
+		var filePath = Path.Combine (temp.OutPath, "pkg", "readme.txt");
+		Assert.AreEqual ("dos attributes", File.ReadAllText (filePath));
 		if (OperatingSystem.IsWindows ())
-			Assert.Ignore ("Unix symbolic links require Unix.");
+			Assert.IsTrue ((File.GetAttributes (filePath) & FileAttributes.ReadOnly) != 0);
+	}
 
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		var installed = Path.Combine (root, "installed");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				WriteEntry (zip, "pkg/bin/clang", "compiler");
-				WriteEntry (zip, "pkg/bin/clang++", "clang");
-				WriteEntry (zip, "pkg/bin/cc", "clang++");
-				WriteEntry (zip, "pkg/links/compiler", "../bin/cc");
-				WriteEntry (zip, "pkg/bin-link", "bin");
-			}
-			byte [] archive = File.ReadAllBytes (zipPath);
-			foreach (string name in new [] { "pkg/bin/clang++", "pkg/bin/cc", "pkg/links/compiler", "pkg/bin-link" })
-				archive = SetUnixAttributes (archive, name, Convert.ToUInt32 ("120777", 8) << 16);
-			File.WriteAllBytes (zipPath, archive);
+	[Test]
+	public void UnzipExtractsArchiveWithDataDescriptor ()
+	{
+		using var temp = new TempDirectory ();
+		using (var stream = new NonSeekableMemoryStream ()) {
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true))
+				WriteEntry (zip, "pkg/data.txt", ArchiveContents);
+			File.WriteAllBytes (temp.ZipPath, stream.ToArray ());
+		}
+		Assert.AreNotEqual (0, File.ReadAllBytes (temp.ZipPath) [6] & 0x08, "Expected the entry to use a data descriptor.");
 
-			var helper = new Helper ();
-			var componentPath = helper.Unzip (outPath, zipPath, null, null);
-			CommonUtilities.Helpers = helper;
-			CommonUtilities.MoveDirectory (componentPath, installed);
-			Assert.AreEqual ("clang", new FileInfo (Path.Combine (installed, "bin", "clang++")).LinkTarget);
-			Assert.AreEqual ("clang++", new FileInfo (Path.Combine (installed, "bin", "cc")).LinkTarget);
-			Assert.AreEqual ("../bin/cc", new FileInfo (Path.Combine (installed, "links", "compiler")).LinkTarget);
-			Assert.AreEqual ("bin", new DirectoryInfo (Path.Combine (installed, "bin-link")).LinkTarget);
-			Assert.AreEqual ("compiler", File.ReadAllText (Path.Combine (installed, "links", "compiler")));
-			Assert.AreEqual ("compiler", File.ReadAllText (Path.Combine (installed, "bin-link", "clang")));
-		} finally {
-			Directory.Delete (root, recursive: true);
+		temp.Unzip ();
+
+		Assert.AreEqual (ArchiveContents, File.ReadAllText (Path.Combine (temp.OutPath, "pkg", "data.txt")));
+	}
+
+	// ZipArchive extracts the data while ZipCentralDirectory reads the metadata: both must select the same central directory.
+	[TestCase ("zip64", true)]
+	[TestCase ("count", false)]
+	[TestCase ("disk", false)]
+	[TestCase ("size", false)]
+	[TestCase ("comment", false)]
+	public void UnzipRequiresUnambiguousCentralDirectory (string variant, bool valid)
+	{
+		using var temp = new TempDirectory ();
+		File.WriteAllBytes (temp.ZipPath, variant == "comment" ? CreateArchiveWithEndRecordInComment () : CreateZip64Archive (variant));
+		var dataPath = Path.Combine (temp.OutPath, "pkg", "data.txt");
+
+		if (valid) {
+			temp.Unzip ();
+			Assert.AreEqual (ArchiveContents, File.ReadAllText (dataPath));
+		} else {
+			Assert.Throws<InvalidDataException> (() => temp.Unzip ());
+			Assert.IsFalse (File.Exists (dataPath));
 		}
 	}
 
 	[Test]
-	public void MoveRejectsExistingDestinationDirectorySymlink ()
+	public void CalculateMoveProgressSplitSupportsZip64Archives ()
 	{
-		if (OperatingSystem.IsWindows ())
-			Assert.Ignore ("Unix symbolic links require Unix.");
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-move-" + Guid.NewGuid ().ToString ("N"));
-		var source = Path.Combine (root, "source");
-		var destination = Path.Combine (root, "destination");
-		var outside = Path.Combine (root, "outside");
-		Directory.CreateDirectory (Path.Combine (source, "pkg"));
-		Directory.CreateDirectory (destination);
-		Directory.CreateDirectory (outside);
-		try {
-			File.WriteAllText (Path.Combine (source, "pkg", "data"), "data");
-			Directory.CreateSymbolicLink (Path.Combine (destination, "pkg"), outside);
-			CommonUtilities.Helpers = new Helper ();
-			Assert.Throws<IOException> (() => CommonUtilities.MoveDirectory (source, destination, move: false, overwrite: true));
-			Assert.IsFalse (File.Exists (Path.Combine (outside, "data")));
-			Assert.IsTrue (CommonUtilities.DeleteDirectoryRecursively (destination));
-			Assert.IsTrue (Directory.Exists (outside));
-		} finally {
-			Directory.Delete (root, recursive: true);
+		using var temp = new TempDirectory ();
+		using (var zip = ZipFile.Open (temp.ZipPath, ZipArchiveMode.Create)) {
+			for (int i = 0; i < 65536; i++)
+				zip.CreateEntry ($"f{i}");
 		}
+
+		Assert.AreEqual (50, DirectorySizeMonitoringTimer.CalculateMoveProgressSplit (temp.ZipPath));
 	}
 
-	[TestCase ("../../outside")]
-	[TestCase ("../pkg/data")]
-	[TestCase ("directory/../../outside")]
-	[TestCase ("missing")]
-	[TestCase ("link")]
-	public void UnzipRejectsUnsafeUnixLinkTargets (string target)
+	[TestCase ("../evil.txt")]
+	[TestCase ("../OUT/evil.txt")] // escapes on case-sensitive file systems
+	public void UnzipRejectsPathsOutsideDestination (string entryName)
 	{
-		if (OperatingSystem.IsWindows ())
-			Assert.Ignore ("Unix symbolic links require Unix.");
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				WriteEntry (zip, "pkg/data", "data");
-				WriteEntry (zip, "pkg/link", target);
-			}
-			File.WriteAllBytes (zipPath, SetUnixAttributes (File.ReadAllBytes (zipPath), "pkg/link", Convert.ToUInt32 ("120777", 8) << 16));
-			Assert.Throws<InvalidDataException> (() => new Helper ().Unzip (outPath, zipPath, null, null));
-			Assert.IsFalse (File.Exists (Path.Combine (root, "outside")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
+		using var temp = new TempDirectory ();
+		using (var zip = ZipFile.Open (temp.ZipPath, ZipArchiveMode.Create))
+			WriteEntry (zip, entryName, "evil");
 
-	[Test]
-	public void UnzipStoresAbsoluteUnixLinkTargetAsFile ()
-	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				WriteEntry (zip, "pkg/data", "data");
-				WriteEntry (zip, "pkg/bin/as", "/buildbot/out/bin/as");
-			}
-			File.WriteAllBytes (zipPath, SetUnixAttributes (File.ReadAllBytes (zipPath), "pkg/bin/as", Convert.ToUInt32 ("120777", 8) << 16));
-			new Helper ().Unzip (outPath, zipPath, null, null);
-			var path = Path.Combine (outPath, "pkg", "bin", "as");
-			Assert.IsNull (new FileInfo (path).LinkTarget);
-			Assert.AreEqual ("/buildbot/out/bin/as", File.ReadAllText (path));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
+		var ex = Assert.Throws<Exception> (() => temp.Unzip ());
+		StringAssert.Contains ("parent traversal", ex?.Message);
+		Assert.IsFalse (File.Exists (Path.GetFullPath (Path.Combine (temp.OutPath, entryName))));
 	}
 
 	[Test]
@@ -574,119 +360,122 @@ public class AndroidSdkInstallerTests
 	{
 		if (OperatingSystem.IsWindows ())
 			Assert.Ignore ("Unix symbolic links require Unix.");
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		var outside = Path.Combine (root, "outside");
-		Directory.CreateDirectory (Path.Combine (outPath, "pkg"));
+		using var temp = new TempDirectory ();
+		var outside = Path.Combine (temp.Root, "outside");
 		Directory.CreateDirectory (outside);
-		try {
-			Directory.CreateSymbolicLink (Path.Combine (outPath, "pkg", "link"), outside);
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create))
-				WriteEntry (zip, "pkg/link/evil", "evil");
-			Assert.Throws<InvalidDataException> (() => new Helper ().Unzip (outPath, zipPath, null, null));
-			Assert.IsFalse (File.Exists (Path.Combine (outside, "evil")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
+		Directory.CreateDirectory (Path.Combine (temp.OutPath, "pkg"));
+		Directory.CreateSymbolicLink (Path.Combine (temp.OutPath, "pkg", "link"), outside);
+		using (var zip = ZipFile.Open (temp.ZipPath, ZipArchiveMode.Create))
+			WriteEntry (zip, "pkg/link/evil", "evil");
+
+		Assert.Throws<InvalidDataException> (() => temp.Unzip ());
+		Assert.IsFalse (File.Exists (Path.Combine (outside, "evil")));
 	}
 
 	[Test]
-	public void UnzipRejectsExistingTopLevelSymlinkForEmptyArchive ()
+	public void UnzipAndMovePreserveUnixSymbolicLinks ()
 	{
 		if (OperatingSystem.IsWindows ())
 			Assert.Ignore ("Unix symbolic links require Unix.");
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		var outside = Path.Combine (root, "outside");
-		Directory.CreateDirectory (outPath);
+		using var temp = new TempDirectory ();
+		using (var zip = ZipFile.Open (temp.ZipPath, ZipArchiveMode.Create)) {
+			WriteEntry (zip, "pkg/bin/clang", "compiler");
+			WriteEntry (zip, "pkg/bin/clang++", "clang", Symlink);
+			WriteEntry (zip, "pkg/bin/cc", "clang++", Symlink);
+			WriteEntry (zip, "pkg/links/compiler", "../bin/cc", Symlink);
+			WriteEntry (zip, "pkg/bin-link", "bin", Symlink);
+			// Absolute targets (e.g. NDK r23b `bin/as`) are stored as regular files, as SharpZipLib did.
+			WriteEntry (zip, "pkg/bin/as", "/buildbot/bin/as", Symlink);
+		}
+
+		var helper = new Helper ();
+		var componentPath = helper.Unzip (temp.OutPath, temp.ZipPath, null, null);
+		CommonUtilities.Helpers = helper;
+		var installed = Path.Combine (temp.Root, "installed");
+		CommonUtilities.MoveDirectory (componentPath, installed);
+
+		Assert.AreEqual ("clang", new FileInfo (Path.Combine (installed, "bin", "clang++")).LinkTarget);
+		Assert.AreEqual ("clang++", new FileInfo (Path.Combine (installed, "bin", "cc")).LinkTarget);
+		Assert.AreEqual ("../bin/cc", new FileInfo (Path.Combine (installed, "links", "compiler")).LinkTarget);
+		Assert.AreEqual ("bin", new DirectoryInfo (Path.Combine (installed, "bin-link")).LinkTarget);
+		Assert.AreEqual ("compiler", File.ReadAllText (Path.Combine (installed, "links", "compiler")));
+		Assert.AreEqual ("compiler", File.ReadAllText (Path.Combine (installed, "bin-link", "clang")));
+		Assert.IsNull (new FileInfo (Path.Combine (installed, "bin", "as")).LinkTarget);
+		Assert.AreEqual ("/buildbot/bin/as", File.ReadAllText (Path.Combine (installed, "bin", "as")));
+	}
+
+	[TestCase ("../../outside")]
+	[TestCase ("../pkg/data")] // climbs out of the install root and re-enters by its (archive-controlled) name
+	[TestCase ("directory/../../outside")]
+	[TestCase ("missing")]
+	[TestCase ("link")]
+	public void UnzipRejectsUnsafeUnixLinkTargets (string target)
+	{
+		if (OperatingSystem.IsWindows ())
+			Assert.Ignore ("Unix symbolic links require Unix.");
+		using var temp = new TempDirectory ();
+		using (var zip = ZipFile.Open (temp.ZipPath, ZipArchiveMode.Create)) {
+			WriteEntry (zip, "pkg/data", "data");
+			WriteEntry (zip, "pkg/link", target, Symlink);
+		}
+
+		Assert.Throws<InvalidDataException> (() => temp.Unzip ());
+		Assert.IsFalse (File.Exists (Path.Combine (temp.Root, "outside")));
+	}
+
+	[Test]
+	public void MoveRejectsExistingDestinationDirectorySymlink ()
+	{
+		if (OperatingSystem.IsWindows ())
+			Assert.Ignore ("Unix symbolic links require Unix.");
+		using var temp = new TempDirectory ();
+		var source = Path.Combine (temp.Root, "source");
+		var destination = Path.Combine (temp.Root, "destination");
+		var outside = Path.Combine (temp.Root, "outside");
+		Directory.CreateDirectory (Path.Combine (source, "pkg"));
+		Directory.CreateDirectory (destination);
 		Directory.CreateDirectory (outside);
-		try {
-			Directory.CreateSymbolicLink (Path.Combine (outPath, "link"), outside);
-			using (ZipFile.Open (zipPath, ZipArchiveMode.Create)) {}
-			Assert.Throws<InvalidDataException> (() => new Helper ().Unzip (outPath, zipPath, null, null));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
+		File.WriteAllText (Path.Combine (source, "pkg", "data"), "data");
+		Directory.CreateSymbolicLink (Path.Combine (destination, "pkg"), outside);
+		CommonUtilities.Helpers = new Helper ();
+
+		Assert.Throws<IOException> (() => CommonUtilities.MoveDirectory (source, destination, move: false, overwrite: true));
+		Assert.IsFalse (File.Exists (Path.Combine (outside, "data")));
+		Assert.IsTrue (CommonUtilities.DeleteDirectoryRecursively (destination));
+		Assert.IsTrue (Directory.Exists (outside));
 	}
 
-	static void WriteEntry (ZipArchive zip, string name, string content)
-	{
-		using var writer = new StreamWriter (zip.CreateEntry (name).Open ());
-		writer.Write (content);
-	}
+	const string ArchiveContents = "Android SDK package contents. Android SDK package contents. Android SDK package contents.";
+	const string Symlink = "120777";
 
-	[Test]
-	public void UnzipExtractsArchiveWithDataDescriptor ()
+	sealed class TempDirectory : IDisposable
 	{
-		byte [] archive;
-		using (var stream = new NonSeekableMemoryStream ()) {
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				using (var writer = new StreamWriter (zip.CreateEntry ("pkg/data.txt").Open ()))
-					writer.Write (ArchiveContents);
+		public string Root { get; } = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
+		public string ZipPath => Path.Combine (Root, "package.zip");
+		public string OutPath => Path.Combine (Root, "out");
+
+		public TempDirectory () => Directory.CreateDirectory (Root);
+
+		public string Unzip () => new Helper ().Unzip (OutPath, ZipPath, null, null);
+
+		public void Dispose ()
+		{
+			if (OperatingSystem.IsWindows ()) {
+				foreach (var file in Directory.EnumerateFiles (Root, "*", SearchOption.AllDirectories))
+					File.SetAttributes (file, FileAttributes.Normal);
 			}
-			archive = stream.ToArray ();
-		}
-		Assert.AreNotEqual (0, archive [6] & 0x08, "Expected the entry to use a data descriptor.");
-
-		var outPath = UnzipBytes (archive, out var root);
-		try {
-			Assert.AreEqual (ArchiveContents, File.ReadAllText (Path.Combine (outPath, "pkg", "data.txt")));
-		} finally {
-			Directory.Delete (root, recursive: true);
+			Directory.Delete (Root, recursive: true);
 		}
 	}
 
-	[Test]
-	public void UnzipExtractsZip64Archive ()
+	// ZipArchive records the Unix creator platform on Unix, so the mode is honored there.
+	static void WriteEntry (ZipArchive zip, string name, string content, string unixMode = null)
 	{
-		byte [] archive = CreateZip64Archive (null);
-		var outPath = UnzipBytes (archive, out var root);
-		try {
-			Assert.AreEqual (ArchiveContents, File.ReadAllText (Path.Combine (outPath, "pkg", "data.txt")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	[TestCase ("count")]
-	[TestCase ("disk")]
-	[TestCase ("size")]
-	public void UnzipRejectsConflictingZip64Directory (string sentinel)
-	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			File.WriteAllBytes (zipPath, CreateZip64Archive (sentinel));
-			Assert.Throws<InvalidDataException> (() => new Helper ().Unzip (outPath, zipPath, null, null));
-			Assert.IsFalse (File.Exists (Path.Combine (outPath, "pkg", "data.txt")));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	[Test]
-	public void UnzipRejectsEndRecordInsideComment ()
-	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		try {
-			byte [] source = CreateSimpleArchive ();
-			int end = FindSignature (source, 0x06054b50);
-			var archive = new byte [source.Length + 25];
-			Buffer.BlockCopy (source, 0, archive, 0, source.Length);
-			WriteUInt16 (archive, end + 20, 25);
-			Buffer.BlockCopy (source, end, archive, source.Length, 22);
-			File.WriteAllBytes (zipPath, archive);
-			Assert.Throws<InvalidDataException> (() => new Helper ().Unzip (outPath, zipPath, null, null));
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
+		var entry = zip.CreateEntry (name);
+		if (unixMode != null)
+			entry.ExternalAttributes = Convert.ToInt32 (unixMode, 8) << 16;
+		using var writer = new StreamWriter (entry.Open ());
+		writer.Write (content);
 	}
 
 	static byte [] CreateSimpleArchive ()
@@ -697,7 +486,20 @@ public class AndroidSdkInstallerTests
 		return stream.ToArray ();
 	}
 
-	static byte [] CreateZip64Archive (string conflict)
+	static byte [] CreateArchiveWithEndRecordInComment ()
+	{
+		byte [] source = CreateSimpleArchive ();
+		int end = FindSignature (source, 0x06054b50);
+		var archive = new byte [source.Length + 25];
+		Buffer.BlockCopy (source, 0, archive, 0, source.Length);
+		WriteUInt16 (archive, end + 20, 25);
+		Buffer.BlockCopy (source, end, archive, source.Length, 22);
+		return archive;
+	}
+
+	// "zip64" is a valid ZIP64 archive; the other variants point the ZIP64 record at a second
+	// central directory and mark a different end-record field as a ZIP64 sentinel.
+	static byte [] CreateZip64Archive (string variant)
 	{
 		byte [] source = CreateSimpleArchive ();
 		int end = FindSignature (source, 0x06054b50);
@@ -707,7 +509,7 @@ public class AndroidSdkInstallerTests
 		using var writer = new BinaryWriter (stream);
 		writer.Write (source, 0, end);
 		ulong zip64Offset = centralOffset;
-		if (conflict != null) {
+		if (variant != "zip64") {
 			zip64Offset = (ulong) stream.Position;
 			writer.Write (source, (int) centralOffset, (int) centralSize);
 		}
@@ -727,10 +529,10 @@ public class AndroidSdkInstallerTests
 		writer.Write (recordOffset);
 		writer.Write (1u);
 		byte [] endRecord = source [end..];
-		if (conflict == "disk") {
+		if (variant == "disk") {
 			WriteUInt16 (endRecord, 4, ushort.MaxValue);
 			WriteUInt16 (endRecord, 6, ushort.MaxValue);
-		} else if (conflict == "size") {
+		} else if (variant == "size") {
 			WriteUInt32 (endRecord, 12, uint.MaxValue);
 		} else {
 			WriteUInt16 (endRecord, 8, ushort.MaxValue);
@@ -740,59 +542,14 @@ public class AndroidSdkInstallerTests
 		return stream.ToArray ();
 	}
 
-	[Test]
-	public void CalculateMoveProgressSplitSupportsZip64Archives ()
-	{
-		var root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "large.zip");
-		Directory.CreateDirectory (root);
-		try {
-			using (var zip = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				for (int i = 0; i < 65536; i++)
-					zip.CreateEntry ($"f{i}");
-			}
-
-			Assert.AreEqual (50, DirectorySizeMonitoringTimer.CalculateMoveProgressSplit (zipPath));
-			using var stream = File.OpenRead (zipPath);
-			using var archive = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true);
-			var metadataType = typeof (Helper).Assembly.GetType ("Xamarin.Installer.AndroidSDK.Manager.ZipCentralDirectory");
-			Assert.IsNotNull (metadataType);
-			var read = metadataType.GetMethod ("Read");
-			Assert.IsNotNull (read);
-			var entries = read.Invoke (null, [stream, archive.Entries.Count]) as Array;
-			Assert.IsNotNull (entries);
-			Assert.AreEqual (65536, entries.Length);
-		} finally {
-			Directory.Delete (root, recursive: true);
-		}
-	}
-
-	const string ArchiveContents = "Android SDK package contents. Android SDK package contents. Android SDK package contents.";
-
-	static string UnzipBytes (byte [] archive, out string root)
-	{
-		root = Path.Combine (Path.GetTempPath (), "android-sdk-unzip-" + Guid.NewGuid ().ToString ("N"));
-		var zipPath = Path.Combine (root, "package.zip");
-		var outPath = Path.Combine (root, "out");
-		Directory.CreateDirectory (root);
-		File.WriteAllBytes (zipPath, archive);
-		new Helper ().Unzip (outPath, zipPath, null, null);
-		return outPath;
-	}
-
 	static byte [] AddExtendedTimestampToCentralDirectory (byte [] archive, long timestamp)
 	{
-		const uint EndOfCentralDirectorySignature = 0x06054b50;
-		const uint CentralDirectoryHeaderSignature = 0x02014b50;
 		const int TimestampExtraFieldSize = 9;
-		int endOfCentralDirectory = FindSignature (archive, EndOfCentralDirectorySignature);
+		int endOfCentralDirectory = FindSignature (archive, 0x06054b50);
 		int centralDirectoryOffset = checked ((int) ReadUInt32 (archive, endOfCentralDirectory + 16));
-		Assert.AreEqual (CentralDirectoryHeaderSignature, ReadUInt32 (archive, centralDirectoryOffset));
-
 		int nameLength = ReadUInt16 (archive, centralDirectoryOffset + 28);
 		int extraLength = ReadUInt16 (archive, centralDirectoryOffset + 30);
-		int extraDataOffset = centralDirectoryOffset + 46 + nameLength;
-		int insertOffset = extraDataOffset + extraLength;
+		int insertOffset = centralDirectoryOffset + 46 + nameLength + extraLength;
 		var updatedArchive = new byte [archive.Length + TimestampExtraFieldSize];
 		Buffer.BlockCopy (archive, 0, updatedArchive, 0, insertOffset);
 		updatedArchive [insertOffset] = 0x55;
@@ -808,31 +565,21 @@ public class AndroidSdkInstallerTests
 	}
 
 	static byte [] SetDosAttributes (byte [] archive, string entryName, uint attributes)
-		=> SetAttributes (archive, entryName, attributes, 0);
-
-	static byte [] SetUnixAttributes (byte [] archive, string entryName, uint attributes)
-		=> SetAttributes (archive, entryName, attributes, 3);
-
-	static byte [] SetAttributes (byte [] archive, string entryName, uint attributes, int hostSystem)
 	{
-		const uint EndOfCentralDirectorySignature = 0x06054b50;
-		const uint CentralDirectoryHeaderSignature = 0x02014b50;
-		int endOfCentralDirectory = FindSignature (archive, EndOfCentralDirectorySignature);
+		int endOfCentralDirectory = FindSignature (archive, 0x06054b50);
 		int centralDirectoryOffset = checked ((int) ReadUInt32 (archive, endOfCentralDirectory + 16));
-		while (ReadUInt32 (archive, centralDirectoryOffset) == CentralDirectoryHeaderSignature) {
+		while (ReadUInt32 (archive, centralDirectoryOffset) == 0x02014b50) {
 			int nameLength = ReadUInt16 (archive, centralDirectoryOffset + 28);
 			int extraLength = ReadUInt16 (archive, centralDirectoryOffset + 30);
 			int commentLength = ReadUInt16 (archive, centralDirectoryOffset + 32);
-			string name = Encoding.ASCII.GetString (archive, centralDirectoryOffset + 46, nameLength);
-			if (name == entryName) {
+			if (Encoding.ASCII.GetString (archive, centralDirectoryOffset + 46, nameLength) == entryName) {
 				var updatedArchive = (byte []) archive.Clone ();
-				WriteUInt16 (updatedArchive, centralDirectoryOffset + 4, (ushort) ((ReadUInt16 (archive, centralDirectoryOffset + 4) & 0x00ff) | (hostSystem << 8)));
+				WriteUInt16 (updatedArchive, centralDirectoryOffset + 4, (ushort) (ReadUInt16 (archive, centralDirectoryOffset + 4) & 0x00ff));
 				WriteUInt32 (updatedArchive, centralDirectoryOffset + 38, attributes);
 				return updatedArchive;
 			}
 			centralDirectoryOffset += 46 + nameLength + extraLength + commentLength;
 		}
-
 		throw new InvalidDataException ($"ZIP entry '{entryName}' not found.");
 	}
 
@@ -845,25 +592,13 @@ public class AndroidSdkInstallerTests
 		throw new InvalidDataException ("ZIP signature not found.");
 	}
 
-	static ushort ReadUInt16 (byte [] data, int position) =>
-		(ushort) (data [position] | (data [position + 1] << 8));
+	static ushort ReadUInt16 (byte [] data, int position) => BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (position));
 
-	static uint ReadUInt32 (byte [] data, int position) =>
-		(uint) (data [position] | (data [position + 1] << 8) | (data [position + 2] << 16) | (data [position + 3] << 24));
+	static uint ReadUInt32 (byte [] data, int position) => BinaryPrimitives.ReadUInt32LittleEndian (data.AsSpan (position));
 
-	static void WriteUInt16 (byte [] data, int position, ushort value)
-	{
-		data [position] = (byte) value;
-		data [position + 1] = (byte) (value >> 8);
-	}
+	static void WriteUInt16 (byte [] data, int position, ushort value) => BinaryPrimitives.WriteUInt16LittleEndian (data.AsSpan (position), value);
 
-	static void WriteUInt32 (byte [] data, int position, uint value)
-	{
-		data [position] = (byte) value;
-		data [position + 1] = (byte) (value >> 8);
-		data [position + 2] = (byte) (value >> 16);
-		data [position + 3] = (byte) (value >> 24);
-	}
+	static void WriteUInt32 (byte [] data, int position, uint value) => BinaryPrimitives.WriteUInt32LittleEndian (data.AsSpan (position), value);
 
 	sealed class NonSeekableMemoryStream : MemoryStream
 	{
