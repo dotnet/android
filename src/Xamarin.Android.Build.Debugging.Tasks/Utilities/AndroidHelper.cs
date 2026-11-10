@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +12,11 @@ using Xamarin.Android.Build.Debugging.Tasks.Properties;
 
 namespace Xamarin.Android.Tasks
 {
+#if MICROSOFT_ANDROID_BUILD_TASKS
+	internal class AndroidHelper
+#else
 	public class AndroidHelper
+#endif
 	{
 		const string DefaultErrorCode = "XA0010";
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.Build;
@@ -109,16 +114,16 @@ namespace Xamarin.Android.Tasks
 				if (target != null && target.Length > 0 && !target.StartsWith ("-e", StringComparison.Ordinal) &&
 					!target.StartsWith ("-d", StringComparison.Ordinal) && !target.StartsWith ("-s", StringComparison.Ordinal)) {
 					if (logErrors)
-						logError (DefaultErrorCode, string.Format (Resources.XA0010_AdbTarget, target));
+						logError (DefaultErrorCode, string.Format (System.Globalization.CultureInfo.CurrentCulture, Resources.XA0010_AdbTarget, target));
 				} else {
 					NoDeviceFound (target, key, logError, logErrors, engine4);
 				}
 			} catch (Exception ex) {
 				RegisterDevice (engine4, key, null);
 				if (logErrors)
-					logError (DefaultErrorCode, string.Format (Resources.XA0010_Adb, ex));
+					logError (DefaultErrorCode, string.Format (System.Globalization.CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
 				else
-					logMessage (string.Format (Resources.XA0010_Adb, ex));
+					logMessage (string.Format (System.Globalization.CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
 			}
 			return null;
 		}
