@@ -53,20 +53,17 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <param name="sourcePropertiesPath">path to the properties file</param>
 		/// <returns>collection of property names and values.</returns>
 		public static Dictionary<string, string> ReadAndroidProperties (string sourcePropertiesPath)
-			=> ReadAndroidProperties (sourcePropertiesPath, skipUtf8Preamble: false);
+			=> ReadAndroidProperties (sourcePropertiesPath, detectEncodingFromByteOrderMarks: false);
 
-		internal static Dictionary<string, string> ReadAndroidProperties (string sourcePropertiesPath, bool skipUtf8Preamble)
+		internal static Dictionary<string, string> ReadAndroidProperties (string sourcePropertiesPath, bool detectEncodingFromByteOrderMarks)
 		{
 			if (String.IsNullOrEmpty (sourcePropertiesPath) || !File.Exists (sourcePropertiesPath))
 				return new Dictionary<string, string> (StringComparer.Ordinal);
 			
 			try {
-				using (var fs = File.Open (sourcePropertiesPath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-					if (skipUtf8Preamble && !(fs.ReadByte () == 0xef && fs.ReadByte () == 0xbb && fs.ReadByte () == 0xbf))
-						fs.Position = 0;
-					using (var reader = new StreamReader (fs, Encoding.GetEncoding (28591), detectEncodingFromByteOrderMarks: false)) {
-						return ReadProperties (reader);
-					}
+				using (var fs = File.Open (sourcePropertiesPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+				using (var reader = new StreamReader (fs, Encoding.GetEncoding (28591), detectEncodingFromByteOrderMarks)) {
+					return ReadProperties (reader);
 				}
 			} catch (Exception ex) {
 				Logger.Exception ("Failed to read Android properties from {0}", ex, sourcePropertiesPath);

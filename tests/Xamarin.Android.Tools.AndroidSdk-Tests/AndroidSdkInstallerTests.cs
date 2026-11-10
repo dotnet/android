@@ -243,7 +243,7 @@ public class AndroidSdkInstallerTests
 				Pkg.Revision=1
 				""");
 			var manifest = utf8Preamble
-				? "libraries=maps\nmaps=maps.jar;API for Google Maps\n"
+				? "libraries=maps\nmaps=maps.jar;M\u00fcnchen Maps\n"
 				: GoogleApis24Manifest;
 			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest.Replace ("\r\n", "\n").Replace ("\n", "\r\n"), new UTF8Encoding (utf8Preamble));
 			var installer = new AndroidSDKInstaller (new Helper (), AndroidManifestType.Local);
@@ -256,7 +256,7 @@ public class AndroidSdkInstallerTests
 			var libraries = info.Libraries;
 			Assert.IsNotNull (libraries);
 			var expected = utf8Preamble
-				? new [] { "maps|maps.jar|API for Google Maps" }
+				? new [] { "maps|maps.jar|M\u00fcnchen Maps" }
 				: new [] {
 					"com.google.android.maps|maps.jar|API for Google Maps",
 					"com.android.future.usb.accessory|usb.jar|API for USB Accessories",
