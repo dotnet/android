@@ -939,8 +939,7 @@ namespace Xamarin.Android.Net
 		{
 			started = true;
 			AssertSelf ();
-			if (request == null)
-				throw new ArgumentNullException (nameof (request));
+			ArgumentNullException.ThrowIfNull (request);
 
 			if (request.RequestUri is null || !request.RequestUri.IsAbsoluteUri)
 				throw new ArgumentException ("Must represent an absolute URI", "request");
@@ -1603,8 +1602,7 @@ namespace Xamarin.Android.Net
 
 		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
-			if (conn == null)
-				throw new ArgumentNullException (nameof (conn));
+			ArgumentNullException.ThrowIfNull (conn);
 			var httpConnection = conn.JavaCast <HttpURLConnection> ();
 			if (httpConnection == null)
 				throw new InvalidOperationException ($"Unsupported URL scheme {conn.URL?.Protocol}");

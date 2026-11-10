@@ -13,8 +13,4 @@
     <OutputPath>$(TestOutputDirectory)$(DotNetStableTargetFramework)\</OutputPath>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-  </ItemGroup>
-
 </Project>

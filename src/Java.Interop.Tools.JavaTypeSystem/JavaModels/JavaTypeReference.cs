@@ -46,8 +46,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 
 		public JavaTypeReference (JavaTypeReference referencedType, string? arrayPart, string? wildcardBoundsType, IEnumerable<JavaTypeReference>? wildcardConstraints)
 		{
-			if (referencedType == null)
-				throw new ArgumentNullException (nameof (referencedType));
+			ArgumentNullException.ThrowIfNull (referencedType);
 
 			SpecialName = referencedType.SpecialName;
 			WildcardBoundsType = wildcardBoundsType;

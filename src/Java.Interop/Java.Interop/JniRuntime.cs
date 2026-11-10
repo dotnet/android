@@ -170,8 +170,7 @@ namespace Java.Interop
 
 		public static void SetCurrent (JniRuntime newCurrent)
 		{
-			if (newCurrent == null)
-				throw new ArgumentNullException (nameof (newCurrent));
+			ArgumentNullException.ThrowIfNull (newCurrent);
 			lock (Runtimes) {
 				Runtimes [newCurrent.InvocationPointer] = newCurrent;
 			}
@@ -204,8 +203,7 @@ namespace Java.Interop
 		/// </safety>
 		protected unsafe JniRuntime (CreationOptions options)
 		{
-			if (options == null)
-				throw new ArgumentNullException (nameof (options));
+			ArgumentNullException.ThrowIfNull (options);
 			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer == IntPtr.Zero)
 				throw new ArgumentException ("Need either options.InvocationPointer or options.EnvironmentPointer!", nameof (options));
 
@@ -476,8 +474,7 @@ namespace Java.Interop
 
 		public virtual void RaisePendingException (Exception pendingException)
 		{
-			if (pendingException == null)
-				throw new ArgumentNullException (nameof (pendingException));
+			ArgumentNullException.ThrowIfNull (pendingException);
 			if (pendingException is not JavaException throwable)
 				throw new NotSupportedException ($"Runtime '{GetType ().FullName}' must override {nameof (RaisePendingException)} to marshal managed exceptions to Java.");
 

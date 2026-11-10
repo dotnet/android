@@ -13,10 +13,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public Interfaces (ConstantPool constantPool, Stream stream)
 		{
-			if (constantPool == null)
-				throw new ArgumentNullException ("constantPool");
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+			ArgumentNullException.ThrowIfNull (constantPool);
+			ArgumentNullException.ThrowIfNull (stream);
 
 			ConstantPool    = constantPool;
 			var count   = stream.ReadNetworkUInt16 ();

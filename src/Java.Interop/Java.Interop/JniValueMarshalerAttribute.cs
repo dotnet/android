@@ -19,8 +19,7 @@ namespace Java.Interop {
 				[DynamicallyAccessedMembers (ParameterlessConstructors)]
 				Type marshalerType)
 		{
-			if (marshalerType == null)
-				throw new ArgumentNullException (nameof (marshalerType));
+			ArgumentNullException.ThrowIfNull (marshalerType);
 			if (!typeof (JniValueMarshaler).IsAssignableFrom (marshalerType))
 				throw new ArgumentException (
 						string.Format ("`{0}` must inherit from JniValueMarshaler!", marshalerType.FullName),

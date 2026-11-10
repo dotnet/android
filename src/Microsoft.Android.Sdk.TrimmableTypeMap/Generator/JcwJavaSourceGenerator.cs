@@ -47,7 +47,7 @@ public sealed class JcwJavaSourceGenerator
 	/// </summary>
 	public IReadOnlyList<GeneratedJavaSource> GenerateContent (IReadOnlyList<JavaPeerInfo> types, string? applicationJavaClass = null)
 	{
-		if (types is null) throw new ArgumentNullException (nameof (types));
+		ArgumentNullException.ThrowIfNull (types);
 		var results = new List<GeneratedJavaSource> ();
 		var generatedPeerNames = types.Where (type => !type.DoNotGenerateAcw && !type.IsInterface)
 			.Select (type => type.JavaName).ToHashSet (StringComparer.Ordinal);
