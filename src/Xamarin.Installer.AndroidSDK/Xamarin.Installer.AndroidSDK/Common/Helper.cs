@@ -407,7 +407,9 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 		{
 			try {
 				return await RetryIfTimeoutAsync (CheckIfNetworkAvailable, NetworkCheckRetryCount, NetworkCheckRetryDelay);
-			} catch (Exception) {
+			} catch (TimeoutException) {
+				return false;
+			} catch (TaskCanceledException) {
 				return false;
 			}
 		}
