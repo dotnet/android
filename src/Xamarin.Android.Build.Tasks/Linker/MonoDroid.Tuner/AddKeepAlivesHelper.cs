@@ -50,8 +50,7 @@ namespace MonoDroid.Tuner
 		static bool AddKeepAlives (TypeDefinition type, ref MethodDefinition? methodKeepAlive, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
 		{
 			bool changed = false;
-			methods:
-			foreach (MethodDefinition method in type.Methods) {
+			methods: foreach (MethodDefinition method in type.Methods) {
 				if (method.Parameters.Count == 0)
 					continue;
 

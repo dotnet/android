@@ -87,8 +87,7 @@ public partial class SdkManager
 		List<SdkPackage>? target = null;
 		var parsingUpdates = false;
 
-		lines:
-		foreach (var line in output.Split (new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
+		lines: foreach (var line in output.Split (new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
 			var trimmed = line.Trim ();
 
 			// Match section headers case-insensitively: the classic sdkmanager emits

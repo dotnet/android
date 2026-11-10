@@ -74,8 +74,7 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		foreach (var jarFile in jarFilePaths) {
 			using (var stream = File.OpenRead (jarFile))
 			using (var jar = new ZipArchive (stream, ZipArchiveMode.Read)) {
-				entries:
-				foreach (var jarItem in jar.Entries) {
+				entries: foreach (var jarItem in jar.Entries) {
 					if (jarItem.IsDirectory ())
 						continue;
 					var name = jarItem.FullName;

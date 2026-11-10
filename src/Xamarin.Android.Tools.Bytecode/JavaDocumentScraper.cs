@@ -419,8 +419,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			XElement? member =
 				members.FirstOrDefault (m => info.MethodSignature == (string?) m.Attribute ("jni-signature"));
 			if (member == null) {
-				members:
-				foreach (var m in members) {
+				members: foreach (var m in members) {
 					int i       = 0;
 					foreach (var p in m.Elements ("parameter")) {
 						if (!ParameterTypesMatch (p, info.ParameterTypes [i++].JavaType)) {

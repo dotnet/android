@@ -43,8 +43,7 @@ namespace MonoDroid.Generation
 			classes = classes.Concat (classes.SelectMany (x => x.GetAllImplementedInterfaces ()));
 
 			foreach (var t in classes) {
-				candidates:
-				foreach (var candidate in t.GetAllMethods ().Where (m => m.Name == Name
+				candidates: foreach (var candidate in t.GetAllMethods ().Where (m => m.Name == Name
 					&& m.Parameters.Count == Parameters.Count
 					&& m.Parameters.Any (p => p.IsEnumified))) {
 					var ret = new string [Parameters.Count];

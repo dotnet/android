@@ -128,8 +128,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			Func<string, string> stripGenParams = s => s == null ? s : (s.Contains ('<') ? s.Substring (0, s.IndexOf ('<')) : s).Replace ("...", "[]");
 			Func<string, string, bool> cmp = (v, w) => stripGenParams (v) == stripGenParams (w);
 
-			methods:
-			for (int i = 0; i < argTypeLists.Length; i++) {
+			methods: for (int i = 0; i < argTypeLists.Length; i++) {
 				var argTypeListPair = argTypeLists [i];
 				var argTypeList = argTypeListPair.Arguments;
 				if (argTypeList == null || item.Arguments.Length != argTypeList.Length)

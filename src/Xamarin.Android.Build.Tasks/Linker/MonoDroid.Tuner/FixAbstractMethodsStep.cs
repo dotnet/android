@@ -200,8 +200,7 @@ namespace MonoDroid.Tuner
 				if (ifaceDef.HasGenericParameters)
 					continue;
 
-				methods:
-				foreach (var iMethod in ifaceDef.Methods.Where (m => m.IsAbstract)) {
+				methods: foreach (var iMethod in ifaceDef.Methods.Where (m => m.IsAbstract)) {
 					foreach (var tMethod in typeMethods) {
 						if (HaveSameSignature (iface, iMethod, tMethod)) {
 							continue methods;

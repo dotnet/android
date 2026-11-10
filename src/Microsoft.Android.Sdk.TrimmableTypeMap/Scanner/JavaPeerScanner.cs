@@ -1203,8 +1203,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		// Check each ctor on this type for additional constructors not yet covered
-		constructors:
-		foreach (var methodHandle in typeDef.GetMethods ()) {
+		constructors: foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if (!index.Reader.StringComparer.Equals (methodDef.Name, ".ctor")) {
 				continue;
@@ -1923,8 +1922,7 @@ public sealed class JavaPeerScanner : IDisposable
 		var javaCallableWrapperInterfaces = new List<string> ();
 		var addedJavaNames = new HashSet<string> (StringComparer.Ordinal);
 		var assignabilityVisited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
-		interfaces:
-		foreach (var iface in interfaces) {
+		interfaces: foreach (var iface in interfaces) {
 			foreach (var other in interfaces) {
 				if (IsSameTypeDefinition (iface.Type, other.Type)) {
 					continue;
@@ -2929,8 +2927,7 @@ public sealed class JavaPeerScanner : IDisposable
 	List<PublicConstructorInfo> GetSupportedPublicConstructors (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var constructors = new List<PublicConstructorInfo> ();
-		constructors:
-		foreach (var methodHandle in typeDef.GetMethods ()) {
+		constructors: foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if ((methodDef.Attributes & MethodAttributes.Static) != 0 ||
 			    (methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public ||

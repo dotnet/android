@@ -91,8 +91,7 @@ namespace MonoDroid.Tuner {
 		public static MethodDefinition GetMethod (TypeDefinition type, string name, string [] parameters)
 		{
 			MethodDefinition method = null;
-			methods:
-			foreach (var md in type.Methods) {
+			methods: foreach (var md in type.Methods) {
 				if (md.Name != name)
 					continue;
 

@@ -225,8 +225,7 @@ namespace generator.SourceWriters
 		// For each interface, generate either an abstract method or an explicit implementation method.
 		void AddInterfaceAbstractMembers (ClassGen klass, InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
-			methods:
-			foreach (var method in iface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
+			methods: foreach (var method in iface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
 				var sig = method.GetSignature ();
 
 				if (context.ContextGeneratedMethods.Any (_ => _.Name == method.Name && _.JniSignature == method.JniSignature))
