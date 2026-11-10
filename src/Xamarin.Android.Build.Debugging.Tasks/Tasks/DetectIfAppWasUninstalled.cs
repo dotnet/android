@@ -27,6 +27,9 @@ namespace Xamarin.Android.Tasks {
 
 		public string? UserID { get; set; }
 
+		[Output]
+		public string? DeviceSerial { get; set; }
+
 		public CancellationToken Token { get { return tcs.Token; } }
 
 		internal const string GetPackagesAsyncKey = nameof (DetectIfAppWasUninstalled) + ".QueryPackages";
@@ -49,6 +52,7 @@ namespace Xamarin.Android.Tasks {
 				return true;
 			}
 			Log.LogDebugMessage ($"Found device: {device.Serial}");
+			DeviceSerial = device.Serial;
 			var flagFilePath = Path.GetFullPath (UploadFlagFile);
 			var task = QueryPackages (device.Serial, flagFilePath);
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (

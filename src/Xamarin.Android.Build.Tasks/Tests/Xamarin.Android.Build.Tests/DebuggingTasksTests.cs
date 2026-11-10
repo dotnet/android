@@ -22,6 +22,83 @@ namespace Xamarin.Android.Build.Tests
 		{
 		}
 
+		[TestCase ("apk")]
+		[TestCase ("aab")]
+		public void PackageUploadInputs (string packageFormat)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("ApkFileSigned", "application-Signed.apk");
+			proj.SetProperty ("_ApkSetIntermediate", "application.apks");
+			proj.SetProperty ("_AndroidAppBundleInstallFlag", "appbundle-install.flag");
+			proj.Imports.Add (new Import (() => "UploadInputs.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="WriteUploadInputs" DependsOnTargets="_GetUploadInputs">
+					    <WriteLinesToFile File="upload-inputs.txt" Lines="@(_UploadInputs)" Overwrite="true" />
+					  </Target>
+					</Project>
+					""",
+			});
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.RunTarget (proj, "WriteUploadInputs"), "Collecting upload inputs should succeed without a device.");
+			var inputs = File.ReadAllLines (Path.Combine (Root, builder.ProjectDirectory, "upload-inputs.txt"));
+			CollectionAssert.AreEqual (
+				packageFormat == "aab" ? new [] { "application.apks", "appbundle-install.flag" } : new [] { "application-Signed.apk" },
+				inputs, "Upload inputs should only name files produced for the selected package format.");
+		}
+
+		[TestCase ("_AndroidDeploymentDeviceSerial", "second-device")]
+		[TestCase ("AdbTarget", "-s second-device")]
+		[TestCase ("AndroidDeviceUserId", "10")]
+		[TestCase ("AndroidPackageFormat", "apk")]
+		[TestCase ("Configuration", "Release")]
+		[TestCase ("_AndroidFastDeployAppFileTransferMode", "Copy")]
+		[TestCase ("AndroidInstallModules", "base")]
+		public void DeploymentConfigurationInvalidation (string setting, string value)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			proj.SetProperty ("_AndroidPackage", "com.xamarin.configuration");
+			proj.SetProperty ("_AndroidDeploymentDeviceSerial", "first-device");
+			proj.Imports.Add (new Import (() => "DeploymentConfiguration.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="SetDeploymentTestPaths" BeforeTargets="_CheckForConfigurationChange">
+					    <PropertyGroup>
+					      <_UploadFlag>upload.flag</_UploadFlag>
+					      <_ConfigurationCacheDirectory>deployment-cache\</_ConfigurationCacheDirectory>
+					    </PropertyGroup>
+					  </Target>
+					  <Target Name="CheckDeploymentConfiguration" DependsOnTargets="_CheckForConfigurationChange">
+					    <WriteLinesToFile File="configuration-changed.txt" Lines="$(_FastDeploymentConfigurationChanged)" Overwrite="true" />
+					    <Error Condition=" '$(_FastDeploymentConfigurationChanged)' == 'true' and Exists('$(_UploadFlag)') " Text="Stale upload state was not removed." />
+					    <MakeDir Directories="$(_ConfigurationCacheDirectory)" />
+					    <WriteLinesToFile File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag" Lines="@(_ConfigurationCacheItems)" Overwrite="true" />
+					    <Touch Files="$(_UploadFlag)" AlwaysCreate="true" />
+					  </Target>
+					</Project>
+					""",
+			});
+			using var builder = CreateApkBuilder ();
+			bool CheckConfiguration (string logFile)
+			{
+				builder.BuildLogFile = logFile;
+				Assert.IsTrue (builder.RunTarget (proj, "CheckDeploymentConfiguration", doNotCleanupOnUpdate: true));
+				return File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "configuration-changed.txt")).Trim () == "true";
+			}
+			Assert.IsTrue (CheckConfiguration ("first.log"), "The first deployment should invalidate cached state.");
+			Assert.IsFalse (CheckConfiguration ("unchanged.log"), "An unchanged deployment should retain cached state.");
+			if (setting == "AndroidInstallModules")
+				proj.OtherBuildItems.Add (new BuildItem (setting, value));
+			else if (setting == "Configuration")
+				proj.IsRelease = true;
+			else
+				proj.SetProperty (setting, value);
+			Assert.IsTrue (CheckConfiguration ("changed.log"), $"Changing {setting} should invalidate cached state.");
+			Assert.IsFalse (CheckConfiguration ("changed-unchanged.log"), "The new deployment configuration should be cached.");
+		}
+
 		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a,armeabi", "android-arm", "armeabi-v7a", "android-arm")]
 		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
 		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-x64;android-arm", "armeabi-v7a", "android-arm")]
