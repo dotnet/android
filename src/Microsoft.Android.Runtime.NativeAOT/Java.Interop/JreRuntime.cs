@@ -20,7 +20,7 @@ namespace Java.Interop {
 		public unsafe JreRuntime CreateJreVM ()
 		{
 			// SAFETY: the caller retains the supplied VM, thread environment and loader through runtime initialization.
-			return unsafe(new JreRuntime (this));
+			return unsafe (new JreRuntime (this));
 		}
 	}
 
