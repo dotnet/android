@@ -310,11 +310,11 @@ namespace Xamarin.Android.NetTests {
 
 		static Stream CreateCompressionStream (Stream stream, string encoding)
 		{
-			if (String.Compare (encoding, "gzip", StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (encoding, "gzip", StringComparison.OrdinalIgnoreCase)) {
 				return new GZipStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
 #if !NETSTANDARD2_0
-			if (String.Compare (encoding, "br", StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (encoding, "br", StringComparison.OrdinalIgnoreCase)) {
 				return new BrotliStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
 #endif

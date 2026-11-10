@@ -163,7 +163,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 			path = path.Replace ('\\', '/');
 		}
 
-		if (string.Compare (Path.GetFileName (path), "wrap.sh", StringComparison.Ordinal) == 0) {
+		if (string.Equals (Path.GetFileName (path), "wrap.sh", StringComparison.Ordinal)) {
 			return true;
 		}
 
@@ -175,7 +175,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 			link = link!.Replace ('\\', '/');
 		}
 
-		return string.Compare (Path.GetFileName (link), "wrap.sh", StringComparison.Ordinal) == 0;
+		return string.Equals (Path.GetFileName (link), "wrap.sh", StringComparison.Ordinal);
 	}
 
 	bool IncludeNativeLibrary (ITaskItem item)

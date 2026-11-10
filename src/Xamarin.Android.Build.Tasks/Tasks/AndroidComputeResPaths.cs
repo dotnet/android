@@ -147,7 +147,7 @@ namespace Xamarin.Android.Tasks
 				string dest = Path.GetFullPath (Path.Combine (IntermediateDir, baseFileName));
 				string intermediateDirFullPath = Path.GetFullPath (IntermediateDir);
 				if (!assetPack.IsNullOrEmpty () &&
-						(string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) != 0) &&
+						!string.Equals (assetPack, "base", StringComparison.OrdinalIgnoreCase) &&
 						!AssetPackIntermediateDir.IsNullOrEmpty ()) {
 					dest = Path.GetFullPath (Path.Combine (AssetPackIntermediateDir, assetPack, "assets", baseFileName));
 					intermediateDirFullPath = Path.GetFullPath (AssetPackIntermediateDir);
