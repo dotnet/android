@@ -62,8 +62,6 @@ namespace Xamarin.Android.Tasks {
 		public string MinSdkVersion { get; set; }
 		public bool Debug { get; set; }
 		public bool NeedsInternet { get; set; }
-		public bool ForceExtractNativeLibs { get; set; }
-		public bool ForceDebuggable { get; set; }
 		public string VersionName { get; set; }
 		public IVersionResolver VersionResolver { get; set; }
 		public AndroidRuntime AndroidRuntime { get; set; }
@@ -392,7 +390,7 @@ namespace Xamarin.Android.Tasks {
 					needDebuggable = true;
 			}
 
-			if (ForceDebuggable || needDebuggable) {
+			if (needDebuggable) {
 				XAttribute debuggable = app.Attribute (androidNs + "debuggable");
 				if (debuggable == null)
 					app.Add (new XAttribute (androidNs + "debuggable", "true"));
@@ -421,7 +419,7 @@ namespace Xamarin.Android.Tasks {
 			AddSupportsGLTextures (app, cache);
 
 			if (targetSdkVersionValue >= 23) {
-				if (ForceExtractNativeLibs || app.Attribute (androidNs + "extractNativeLibs") == null)
+				if (app.Attribute (androidNs + "extractNativeLibs") == null)
 					app.SetAttributeValue (androidNs + "extractNativeLibs", "true");
 			}
 
