@@ -178,7 +178,7 @@ namespace Xamarin.Android.Net
 			readonly CancellationTokenSource abortCts = new CancellationTokenSource ();
 
 			// Guards the draining state machine (inUseCount / disposeRequested / disposed).
-			readonly object stateLock = new object ();
+			readonly Lock stateLock = new ();
 			int inUseCount;          // operations (read/write/copy/flush) currently in flight (normally 0 or 1)
 			int disconnectRequested; // coalesces caller cancellation and Dispose() into one background disconnect
 			bool disposeRequested;   // Dispose() called: reject new operations; close once the last one unwinds

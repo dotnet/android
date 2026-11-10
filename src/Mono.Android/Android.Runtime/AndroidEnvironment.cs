@@ -25,7 +25,7 @@ namespace Android.Runtime {
 
 		static IX509TrustManager? sslTrustManager;
 		static KeyStore? certStore;
-		static object lock_ = new object ();
+		static readonly Lock lock_ = new ();
 
 		static void SetupTrustManager ()
 		{
