@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace Microsoft.Android.Tasks.JniRemapping
 {
@@ -41,7 +42,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 		readonly Dictionary<string, Dictionary<string, List<string>>> originalFields = new Dictionary<string, Dictionary<string, List<string>>> (StringComparer.Ordinal);
 		readonly Dictionary<string, Dictionary<string, string>> originalMethods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 		readonly HashSet<string> accessedEntries = new HashSet<string> (StringComparer.Ordinal);
-		readonly object accessedEntriesLock = new object ();
+		readonly Lock accessedEntriesLock = new Lock ();
 		HashSet<string>? allowedReverseEntries;
 
 		public IReadOnlyCollection<string> AccessedEntries {
