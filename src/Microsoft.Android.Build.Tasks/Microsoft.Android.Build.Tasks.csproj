@@ -74,6 +74,8 @@
     <!-- BuildAppBundle: the legacy BundleToolAdbTask tasks still derive from these, so they remain shared sources. -->
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
+    <!-- InstallApkSet: BuildApkSet in Xamarin.Android.Build.Tasks still derives from BundleToolAdbTask. -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleToolAdbTask.cs" Link="Tasks\BundleToolAdbTask.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
   </ItemGroup>

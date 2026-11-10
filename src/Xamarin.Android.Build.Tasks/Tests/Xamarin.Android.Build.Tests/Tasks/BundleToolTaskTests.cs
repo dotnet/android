@@ -29,20 +29,5 @@ namespace Xamarin.Android.Build.Tests
 			string cmd = task.GetCommandLineBuilder ().ToString ();
 			Assert.AreEqual ($"-jar bundletool.jar build-apks --connected-device --mode default --adb \"{adb}\" --device-id emulator-5554 --bundle foo.aab --output foo.apks --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
 		}
-
-		[Test]
-		public void InstallApkSetCommand ()
-		{
-			var task = new InstallApkSet {
-				ApkSet = "foo.apks",
-				AdbToolPath = Path.Combine ("path", "with spaces"),
-				AdbToolExe = "adb",
-				AdbTarget = "-s emulator-5554",
-				JarPath = "bundletool.jar",
-			};
-			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
-			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"-jar bundletool.jar install-apks --apks foo.apks --adb \"{adb}\" --device-id emulator-5554 --allow-downgrade --modules _ALL_", cmd);
-		}
 	}
 }

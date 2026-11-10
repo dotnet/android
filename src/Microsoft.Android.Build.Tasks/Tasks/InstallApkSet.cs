@@ -5,16 +5,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// Invokes `bundletool` to install an APK set to an attached device
 	///
 	/// Usage: bundletool install-apks --apks=foo.apks
 	/// </summary>
-	public class InstallApkSet : BundleToolAdbTask
+	public partial class InstallApkSet : BundleToolAdbTask
 	{
 		public override string TaskPrefix => "IAS";
 
@@ -44,17 +45,17 @@ namespace Xamarin.Android.Tasks
 			return cmd;
 		}
 
-		const string InstallErrorRegExString = @"(?<exception>com.android.tools.build.bundletool.model.exceptions.CommandExecutionException):(?<error>.+)";
-		static readonly Regex installErrorRegEx = new Regex (InstallErrorRegExString, RegexOptions.Compiled);
+		[GeneratedRegex (@"(?<exception>com.android.tools.build.bundletool.model.exceptions.CommandExecutionException):(?<error>.+)")]
+		private static partial Regex InstallErrorRegEx { get; }
 
 		protected override IEnumerable<Regex> GetCustomExpressions ()
 		{
-			yield return installErrorRegEx;
+			yield return InstallErrorRegEx;
 		}
 
 		internal override bool ProcessOutput (string singleLine, AssemblyIdentityMap assemblyMap)
 		{
-			var match = installErrorRegEx.Match (singleLine);
+			var match = InstallErrorRegEx.Match (singleLine);
 			if (match.Success) {
 				// error message
 				var error = match.Groups ["error"].Value;
