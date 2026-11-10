@@ -329,5 +329,18 @@ This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prerelea
           referencing `*-ci.android-r.*`
 
 
+### Visual Studio manifest installer versions
+
+The stable `Microsoft.NET.Sdk.Android.Manifest-11.0.100` installer uses
+`(product major + 100).minor.patch` as its default MSI version. For example,
+`37.2.29` becomes `137.2.29`, so GA and servicing upgrade the RC2 installer
+(`40.128.60116`). The shared `vs-workload.props` metadata applies the rule
+to both converters; explicit MSI overrides, other bands, and public package
+versions are unchanged. Derived versions outside the
+[Windows Installer limits][msi-product-version] (major/minor at most 255,
+patch at most 65535) fail conversion rather than wrap or truncate.
+
+[msi-product-version]: https://learn.microsoft.com/en-us/windows/win32/msi/productversion
+
 [0]: https://github.com/dotnet/installer#installers-and-binaries
 [1]: https://github.com/dotnet/designs/blob/master/accepted/2018/sdk-version-scheme.md
