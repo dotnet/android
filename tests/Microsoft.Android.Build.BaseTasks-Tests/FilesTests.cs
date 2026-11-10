@@ -3,12 +3,16 @@
 
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
@@ -53,6 +57,29 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			Assert.AreEqual (Files.LongPathPrefix + path, longPath, "Long path prefix should be added.");
 			Assert.AreEqual (longPath, Files.ToLongPath (longPath), "Long path prefix should not be added twice.");
+		}
+
+		[Test]
+		public void SaveXmlUsesProjectPathAndRetrySettings ()
+		{
+			Directory.CreateDirectory (tempDir);
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+				Path.GetFullPath (tempDir), new Dictionary<string, string> {
+					["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "0",
+					["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+				});
+			var doc = new XDocument (new XElement ("Devices"));
+			Assert.IsTrue (doc.SaveIfChanged ("devices.cache", environment));
+			var path = Path.Combine (tempDir, "devices.cache");
+			var timestamp = File.GetLastWriteTimeUtc (path);
+			Assert.IsFalse (doc.SaveIfChanged ("devices.cache", environment));
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (path));
+			Assert.IsFalse (doc.SaveIfChanged (path), "The existing overload must produce the same XML.");
+			Assert.IsFalse (doc.SaveIfChanged (path, null), "A null environment must use the fallback.");
+			using var locked = new FileStream (path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			var stopwatch = Stopwatch.StartNew ();
+			Assert.Throws<IOException> (() => doc.SaveIfChanged ("devices.cache", environment));
+			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (2), "The project's retry limit must be used.");
 		}
 
 		[Test]

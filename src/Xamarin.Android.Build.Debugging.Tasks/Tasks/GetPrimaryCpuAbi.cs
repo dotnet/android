@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
@@ -10,8 +11,11 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetPrimaryCpuAbi : AsyncTask
+	[MSBuildMultiThreadableTask]
+	public class GetPrimaryCpuAbi : MultithreadedAndroidTask, ICancelableTask
 	{
+		readonly CancellationTokenSource cancellation = new CancellationTokenSource ();
+
 		static readonly Dictionary<string, string> UnameAbiMapping = new Dictionary<string, string> {
 			{ "x86", "x86" },
 			{ "x86_64", "x86_64" },
@@ -24,6 +28,10 @@ namespace Xamarin.Android.Tasks
 		};
 
 		public override string TaskPrefix => "GCPU";
+
+		public CancellationToken CancellationToken => cancellation.Token;
+
+		public void Cancel () => cancellation.Cancel ();
 
 		[Output]
 		public string AdbTarget { get; set; }
@@ -47,68 +55,79 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public int SdkVersion { get; set; }
 
-		AdbDeviceInfo device;
-
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!string.IsNullOrEmpty (AdbTargetArchitecture)) {
-				LogDebugMessage ($"Using $(AdbTargetArchitecture): {AdbTargetArchitecture}");
+				Log.LogDebugMessage ($"Using $(AdbTargetArchitecture): {AdbTargetArchitecture}");
 				ResultingAbi = AdbTargetArchitecture;
 				SelectRuntimeIdentifier ();
 				return true;
 			}
 
-			device = AndroidHelper.ParseTarget (AdbTarget, LogDebugMessage, LogCodedError, logErrors: false, engine4: BuildEngine4, adbToolPath: AdbToolPath, adbToolExe: AdbToolExe);
+			var device = AndroidHelper.ParseTarget (AdbTarget, Log, logErrors: false, engine4: BuildEngine4,
+				adbToolPath: AdbToolPath, adbToolExe: AdbToolExe, taskEnvironment: TaskEnvironment, cancellationToken: CancellationToken);
 			if (device == null) {
-				LogDebugMessage ($"No device found: {nameof (AdbTarget)}=\"{AdbTarget}\"");
+				Log.LogDebugMessage ($"No device found: {nameof (AdbTarget)}=\"{AdbTarget}\"");
 				// don't stop the build if we don't have a device.
 				return true;
 			}
 
-			LogDebugMessage ($"Found device: {device.Serial}");
+			Log.LogDebugMessage ($"Found device: {device.Serial}");
 			AdbTarget = $"-s {device.Serial}";
 			FoundDevices = true;
-			return base.Execute ();
+			try {
+				QueryDeviceProperties (device);
+			} catch (OperationCanceledException) {
+				// Cancellation is not a build error.
+			}
+			return !Log.HasLoggedErrors;
 		}
 
-		public async override System.Threading.Tasks.Task RunTaskAsync ()
+		void QueryDeviceProperties (AdbDeviceInfo device)
 		{
 			int sdkver = 0;
-			var adb = AndroidHelper.CreateAdbRunner (AdbToolPath, AdbToolExe);
-			
+			var adb = AndroidHelper.CreateAdbRunner (AdbToolPath, AdbToolExe, TaskEnvironment);
+			var cachePath = TaskEnvironment.GetAbsolutePath (DevicePropertyCache);
+
+			string GetProperty (string name) =>
+				adb.GetShellPropertyAsync (device.Serial, name, CancellationToken).GetAwaiter ().GetResult ();
+
+			string RunShellCommand (string command) =>
+				adb.RunShellCommandAsync (device.Serial, command, CancellationToken).GetAwaiter ().GetResult () ?? "";
+
 			XDocument doc = null;
-			if (File.Exists (DevicePropertyCache)) {
-				LogDebugMessage ($"Using cached properties: {DevicePropertyCache}");
-				doc = XDocument.Load (DevicePropertyCache);
+			if (File.Exists (cachePath)) {
+				Log.LogDebugMessage ($"Using cached properties: {DevicePropertyCache}");
+				doc = XDocument.Load (cachePath);
 				if (DeviceCache.TryGet (doc, device.Serial, device.LongOutput, out var cachedAbi, out var cachedSdkVersion, out var cachedSupportedAbis)) {
 					ResultingAbi = cachedAbi;
 					SdkVersion = cachedSdkVersion;
 					SelectRuntimeIdentifier (cachedSupportedAbis);
 					return;
 				}
-				LogDebugMessage ($"Cache miss or stale for device {device.Serial}. Refreshing.");
+				Log.LogDebugMessage ($"Cache miss or stale for device {device.Serial}. Refreshing.");
 			} else {
-				LogDebugMessage ($"Cached properties did not exist: {DevicePropertyCache}");
+				Log.LogDebugMessage ($"Cached properties did not exist: {DevicePropertyCache}");
 			}
 
 			string sdk;
 			try {
-				sdk = await adb.GetShellPropertyAsync (device.Serial, "ro.build.version.sdk", CancellationToken);
+				sdk = GetProperty ("ro.build.version.sdk");
 			} catch (Exception ex) when (ex is not OperationCanceledException) {
-				LogDebugMessage (ex.ToString ());
+				Log.LogDebugMessage (ex.ToString ());
 				return;
 			}
 			int.TryParse (sdk, out sdkver);
 			if (sdkver <= 0) {
-				LogDebugMessage ($"ro.build.version.sdk is {sdkver}. Refreshing.");
-				sdk = await adb.GetShellPropertyAsync (device.Serial, "ro.build.version.sdk", CancellationToken);
+				Log.LogDebugMessage ($"ro.build.version.sdk is {sdkver}. Refreshing.");
+				sdk = GetProperty ("ro.build.version.sdk");
 				int.TryParse (sdk, out sdkver);
 			}
 
 			if (sdkver >= 21) {
 				string command = "getprop ro.product.cpu.abilist64";
-				string commandResult = await adb.RunShellCommandAsync (device.Serial, command, CancellationToken) ?? "";
-				LogDebugMessage ($"{command} {commandResult}");
+				string commandResult = RunShellCommand (command);
+				Log.LogDebugMessage ($"{command} {commandResult}");
 				string[] abis = commandResult.Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 				if (abis.Length > 0) {
 					ResultingAbi = abis [0].Trim ();
@@ -116,35 +135,34 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (string.IsNullOrEmpty (ResultingAbi)) {
-				ResultingAbi = await adb.GetShellPropertyAsync (device.Serial, "ro.product.cpu.abi", CancellationToken);
+				ResultingAbi = GetProperty ("ro.product.cpu.abi");
 				if (string.IsNullOrEmpty (ResultingAbi)) {
-					LogDebugMessage ("ro.product.cpu.abi is null. Refreshing.");
-					ResultingAbi = await adb.GetShellPropertyAsync (device.Serial, "ro.product.cpu.abi", CancellationToken)
-						?? await adb.GetShellPropertyAsync (device.Serial, "ro.product.cpu.abi2", CancellationToken);
+					Log.LogDebugMessage ("ro.product.cpu.abi is null. Refreshing.");
+					ResultingAbi = GetProperty ("ro.product.cpu.abi") ?? GetProperty ("ro.product.cpu.abi2");
 				}
 			}
 			if (string.IsNullOrEmpty (ResultingAbi) && device.IsEmulator) {
 				string command = "uname -m";
-				string commandResult = await adb.RunShellCommandAsync (device.Serial, command, CancellationToken) ?? "";
-				LogDebugMessage ($"{command} {commandResult}");
+				string commandResult = RunShellCommand (command);
+				Log.LogDebugMessage ($"{command} {commandResult}");
 				if (!commandResult.Contains ("adb:")) {
 					string abi = commandResult.Trim ();
 					if (!UnameAbiMapping.ContainsKey (abi)) {
-						LogDebugMessage ($"Unexpected Abi returned from `uname -m` {abi}. Ignoring result.");
+						Log.LogDebugMessage ($"Unexpected Abi returned from `uname -m` {abi}. Ignoring result.");
 					} else {
 						ResultingAbi = UnameAbiMapping [abi];
 					}
 				}
 			}
 			if (string.IsNullOrEmpty (ResultingAbi) && !string.IsNullOrEmpty (AndroidPackage)) {
-				LogDebugMessage ($"Falling back to pm dump {AndroidPackage}.");
-				ResultingAbi = await GetAbiFromPmDump (adb, device.Serial);
+				Log.LogDebugMessage ($"Falling back to pm dump {AndroidPackage}.");
+				ResultingAbi = GetAbiFromPmDump (adb, device.Serial);
 			}
-			string supportedAbiList = await adb.GetShellPropertyAsync (device.Serial, "ro.product.cpu.abilist", CancellationToken);
+			string supportedAbiList = GetProperty ("ro.product.cpu.abilist");
 			string [] supportedAbis;
 			if (string.IsNullOrWhiteSpace (supportedAbiList)) {
-				string primaryAbi = await adb.GetShellPropertyAsync (device.Serial, "ro.product.cpu.abi", CancellationToken);
-				string secondaryAbi = await adb.GetShellPropertyAsync (device.Serial, "ro.product.cpu.abi2", CancellationToken);
+				string primaryAbi = GetProperty ("ro.product.cpu.abi");
+				string secondaryAbi = GetProperty ("ro.product.cpu.abi2");
 				supportedAbis = GetSupportedAbis ([], primaryAbi, secondaryAbi);
 			} else {
 				supportedAbis = GetSupportedAbis (supportedAbiList.Split (','), null, null);
@@ -154,18 +172,18 @@ namespace Xamarin.Android.Tasks
 			SelectRuntimeIdentifier (supportedAbis);
 			SdkVersion = sdkver;
 
-			if (doc.SaveIfChanged (DevicePropertyCache)) {
-				LogDebugMessage ($"Saving: {DevicePropertyCache}");
+			if (doc.SaveIfChanged (cachePath, TaskEnvironment)) {
+				Log.LogDebugMessage ($"Saving: {DevicePropertyCache}");
 			}
 		}
 
-		async System.Threading.Tasks.Task<string> GetAbiFromPmDump (AdbRunner adb, string serial)
+		string GetAbiFromPmDump (AdbRunner adb, string serial)
 		{
 			var rex = new Regex ("primaryCpuAbi=(?<abi>([A-Za-z0-9_-])*)");
 			string command = "pm dump packages | grep primaryCpuAbi | grep -v '=null' | sort | uniq -c";
-			string result = await adb.RunShellCommandAsync (serial, command, CancellationToken) ?? "";
+			string result = adb.RunShellCommandAsync (serial, command, CancellationToken).GetAwaiter ().GetResult () ?? "";
 			result = result.Trim ();
-			LogDebugMessage ($"{command}: {result}");
+			Log.LogDebugMessage ($"{command}: {result}");
 			SortedDictionary<int, string> abis = new SortedDictionary<int, string> ();
 			foreach (var line in result.Split ('\n')) {
 				string[] items = line.Split (new char[] {' '}, StringSplitOptions.RemoveEmptyEntries);
@@ -221,7 +239,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
-			LogDebugMessage ($"No device ABI matches the requested runtime identifiers: {string.Join (", ", RuntimeIdentifiers)}");
+			Log.LogDebugMessage ($"No device ABI matches the requested runtime identifiers: {string.Join (", ", RuntimeIdentifiers)}");
 		}
 	}
 }
