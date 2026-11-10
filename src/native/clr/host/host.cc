@@ -297,8 +297,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	[[maybe_unused]] jstring runtimeNativeLibDir,
 	jobjectArray appDirs,
 
-	// TODO: MonoVM used this to improve performance of System.DateTime + friends, might not be needed anymore
-	[[maybe_unused]] jint localDateTimeOffset,
+	jint localDateTimeOffset,
 	jobject loader,
 
 	// TODO: was used in the past to pre-load assemblies (some versions of Xamarin.Forms needed that).
@@ -354,6 +353,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_LOCAL_DATE_TIME_OFFSET = 3;
 
 	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
 
@@ -377,6 +377,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
 	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
 	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
+
+	// Java calculated the device's current UTC offset in seconds; the build only reserves the slot.
+	static char local_date_time_offset_buffer[16] {};
+	std::snprintf (local_date_time_offset_buffer, sizeof (local_date_time_offset_buffer), "%d", localDateTimeOffset);
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_LOCAL_DATE_TIME_OFFSET] = local_date_time_offset_buffer;
 
 	const char **prop_names = init_runtime_property_names;
 	const char **prop_values = const_cast<const char**>(init_runtime_property_values);

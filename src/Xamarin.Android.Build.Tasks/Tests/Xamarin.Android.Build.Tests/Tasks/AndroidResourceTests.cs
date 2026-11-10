@@ -7,12 +7,72 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
+using System.Reflection.PortableExecutable;
+using Mono.Cecil;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Self)]
 	public class AndroidResourceTests : BaseTest
 	{
+		[TestCase (true, true)]
+		[TestCase (true, false)]
+		[TestCase (false, true)]
+		[TestCase (false, false)]
+		public void ResourceDesignerAssemblyDeterministic (bool deterministic, bool isApplication)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var rtxt = Path.Combine (path, "R.txt");
+			File.WriteAllText (rtxt, """
+				int string app_name 0x7f010001
+				int[] styleable TestView { 0x7f010001, 0x7f010002 }
+				int styleable TestView_text 0
+				""");
+			var output = Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
+			var start = DateTimeOffset.UtcNow.ToUnixTimeSeconds ();
+
+			void Generate ()
+			{
+				var task = new GenerateResourceDesignerAssembly {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					RTxtFile = new TaskItem (rtxt),
+					OutputFile = new TaskItem (output),
+					CaseMapFile = Path.Combine (path, "case_map.txt"),
+					ProjectDir = path,
+					ResourceDirectory = Path.Combine (path, "res"),
+					FrameworkDirectories = [new TaskItem (Path.GetDirectoryName (typeof (object).Assembly.Location))],
+					Deterministic = deterministic,
+					IsApplication = isApplication,
+					AssemblyName = "TestApp",
+				};
+				Assert.IsTrue (task.Execute (), "Designer generation should succeed.");
+				using var stream = File.OpenRead (output);
+				using var reader = new PEReader (stream);
+				var timestamp = reader.PEHeaders.CoffHeader.TimeDateStamp;
+				if (deterministic)
+					Assert.AreEqual (0, timestamp, "Deterministic output must have a fixed PE timestamp.");
+				else
+					Assert.That ((long) timestamp, Is.InRange (start, DateTimeOffset.UtcNow.ToUnixTimeSeconds ()), "Non-deterministic output must retain the current PE timestamp.");
+			}
+
+			Generate ();
+			var first = File.ReadAllBytes (output);
+			Guid firstMvid;
+			using (var firstAssembly = AssemblyDefinition.ReadAssembly (output))
+				firstMvid = firstAssembly.MainModule.Mvid;
+			File.Delete (output);
+			Generate ();
+			var second = File.ReadAllBytes (output);
+			using var secondAssembly = AssemblyDefinition.ReadAssembly (output);
+			if (deterministic) {
+				CollectionAssert.AreEqual (first, second, "Clean generations with identical inputs must be byte-identical.");
+				Assert.AreEqual (firstMvid, secondAssembly.MainModule.Mvid);
+			} else {
+				Assert.AreNotEqual (firstMvid, secondAssembly.MainModule.Mvid);
+			}
+		}
+
 		[Test]
 		public void RTxtParserTest ()
 		{

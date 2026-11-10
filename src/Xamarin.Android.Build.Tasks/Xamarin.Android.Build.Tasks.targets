@@ -227,8 +227,6 @@
   </Target>
 
   <ItemGroup>
-    <_ExtraPackageSource Include="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb" />
-    <_ExtraPackageTarget Include="$(OutputPath)\libZipSharp.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.Mdb.pdb" />
@@ -255,10 +253,6 @@
         DestinationFolder="$(OutputPath)"
         SkipUnchangedFiles="True"
     />
-  </Target>
-
-  <Target Name="_Remove32BitLinux" Condition="Exists ('$(OutputPath)lib32\libZipSharpNative.so')" AfterTargets="CopyFilesToOutputDirectory">
-    <Delete Files="$(OutputPath)lib32\libZipSharpNative.so" />
   </Target>
 
   <Target Name="_SetAssemblyVersion"

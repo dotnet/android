@@ -25,12 +25,6 @@
         Importance="High"
     />
   </Target>
-  <Target Name="GetLibZipSourceFullPath">
-    <Message
-        Text="$(LibZipSourceFullPath)"
-        Importance="High"
-    />
-  </Target>
   <Target Name="GetMonoSourceFullPath">
     <Message
         Text="$(MonoSourceFullPath)"
