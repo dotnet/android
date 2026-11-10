@@ -46,7 +46,6 @@ steps:
       bin/Build${{ parameters.configuration }}/*.targets
       bin/Build${{ parameters.configuration }}/CMakeCache.txt
       bin/Build${{ parameters.configuration }}/.ninja_log
-      bin/Build${{ parameters.configuration }}/clang-tidy*.log
     targetFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
     flattenFolders: true
 

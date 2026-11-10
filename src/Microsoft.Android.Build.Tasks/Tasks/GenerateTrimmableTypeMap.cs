@@ -126,7 +126,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? PackageNamingPolicy { get; set; }
 
 	public string? ManifestPlaceholders { get; set; }
-	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
 	public bool IncludeBuiltInValueTypeUniverses { get; set; }
@@ -227,7 +226,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					NeedsInternet: NeedsInternet,
 					EmbedAssemblies: EmbedAssemblies,
 					ManifestPlaceholders: ManifestPlaceholders,
-					CheckedBuild: CheckedBuild,
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
 

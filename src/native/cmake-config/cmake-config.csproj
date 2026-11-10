@@ -50,7 +50,6 @@
 
       <_AndroidNdkDirectorySlashes>$([System.String]::Copy('$(AndroidNdkDirectory)').Replace('\','/'))</_AndroidNdkDirectorySlashes>
       <_NinjaPathSlashes>$([System.String]::Copy('$(NinjaPath)').Replace('\','/'))</_NinjaPathSlashes>
-      <_MicrosoftAndroidSdkOutDirSlashes>$([System.String]::Copy('$(MicrosoftAndroidSdkOutDir)').Replace('\','/'))</_MicrosoftAndroidSdkOutDirSlashes>
       <_TestOutputDirectorySlashes>$([System.String]::Copy('$(TestOutputDirectory)').Replace('\','/'))</_TestOutputDirectorySlashes>
     </PropertyGroup>
 
@@ -61,7 +60,6 @@
 
       <_CMakePresetsReplacement Include="@AndroidNdkDirectory@=$(_AndroidNdkDirectorySlashes)" />
       <_CMakePresetsReplacement Include="@NinjaPath@=$(_NinjaPathSlashes)" />
-      <_CMakePresetsReplacement Include="@MicrosoftAndroidSdkOutDir@=$(_MicrosoftAndroidSdkOutDirSlashes)" />
       <_CMakePresetsReplacement Include="@NDK_ARMEABI_V7_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
       <_CMakePresetsReplacement Include="@NDK_ARM64_V8A_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
       <_CMakePresetsReplacement Include="@NDK_X86_API_NET@=$(AndroidMinimumDotNetApiLevel)" />

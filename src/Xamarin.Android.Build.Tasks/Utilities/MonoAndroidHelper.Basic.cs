@@ -35,13 +35,6 @@ partial class MonoAndroidHelper
 
 	static readonly char[] ZipPathTrimmedChars = {'/', '\\'};
 
-	static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
-		{"arm64-v8a",   "aarch64"},
-		{"armeabi-v7a", "arm"},
-		{"x86",         "i686"},
-		{"x86_64",      "x86_64"}
-	};
-
 	static readonly Dictionary<string, AndroidTargetArch> AbiToArchMap = new Dictionary<string, AndroidTargetArch> (StringComparer.OrdinalIgnoreCase) {
 		{ AndroidAbi.Arm32, AndroidTargetArch.Arm },
 		{ AndroidAbi.Arm64, AndroidTargetArch.Arm64 },
@@ -158,14 +151,6 @@ partial class MonoAndroidHelper
 		}
 
 		return Convert.ToString (obj, CultureInfo.InvariantCulture);
-	}
-
-	public static string? MapAndroidAbiToClang (string androidAbi)
-	{
-		if (ClangAbiMap.TryGetValue (androidAbi, out string? clangAbi)) {
-			return clangAbi;
-		}
-		return null;
 	}
 
 	public static string MakeZipArchivePath (string part1, params string[]? pathParts)

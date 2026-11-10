@@ -255,7 +255,6 @@
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
-        CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
         IncludeBuiltInValueTypeUniverses="$(_AndroidIncludeBuiltInValueTypeUniverses)"

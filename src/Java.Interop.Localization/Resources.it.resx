@@ -309,11 +309,11 @@ The following terms should not be translated: Metadata.xml, path.</comment>
     <comment>{0}, {1} - .NET types.</comment>
   </data>
   <data name="Generator_BG8C02" xml:space="preserve">
-    <value>For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.</value>
+    <value>Per il tipo '{0}', il metodo Kotlin con nome alterato '{1}' (originariamente '{2}') include più metodi correlati con suffisso hash che risultano nella stessa firma C#. Verrà generato solo il primo; rimuovere il duplicato tramite Metadata.xml per eliminare l'avviso.</value>
     <comment>{0} - .NET type. {1} - C# method name. {2} - Original (mangled) JVM method name.</comment>
   </data>
   <data name="Generator_BG8C03" xml:space="preserve">
-    <value>JNI signature override '{0}' is invalid or does not match the parameter count for member '{1}'.</value>
+    <value>Il '{0}' di override della firma JNI non è valido o non corrisponde al numero di parametri per il membro '{1}'.</value>
     <comment>{0} - JNI method signature. {1} - .NET member.</comment>
   </data>
   <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
