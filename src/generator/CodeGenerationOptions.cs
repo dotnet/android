@@ -277,13 +277,14 @@ namespace MonoDroid.Generation
 		}
 
 		readonly Dictionary<string,string> short_file_names = new Dictionary<string, string> ();
+		readonly Lock short_file_names_lock = new Lock ();
 
 		public string GetFileName (string fullName)
 		{
 			if (!UseShortFileNames)
 				return fullName;
 
-			lock (short_file_names) {
+			lock (short_file_names_lock) {
 				if (short_file_names.TryGetValue (fullName, out var s))
 					return s;
 

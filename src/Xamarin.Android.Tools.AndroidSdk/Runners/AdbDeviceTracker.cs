@@ -17,7 +17,11 @@ namespace Xamarin.Android.Tools;
 /// </summary>
 public sealed class AdbDeviceTracker : IDisposable
 {
+#if NET9_0_OR_GREATER
+	readonly Lock syncLock = new ();
+#else
 	readonly object syncLock = new object ();
+#endif
 	readonly int port;
 	readonly Action<TraceLevel, string> logger;
 	readonly AdbClient adbClient;
@@ -61,17 +65,7 @@ public sealed class AdbDeviceTracker : IDisposable
 		if (onDevicesChanged == null)
 			throw new ArgumentNullException (nameof (onDevicesChanged));
 
-		CancellationTokenSource cts;
-		lock (syncLock) {
-			if (disposed)
-				throw new ObjectDisposedException (nameof (AdbDeviceTracker));
-			if (isTracking)
-				throw new InvalidOperationException ("Tracking is already active. Cancel the token or dispose before starting again.");
-			isTracking = true;
-			cts = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
-			trackingCts = cts;
-		}
-
+		var cts = BeginTracking (cancellationToken);
 		var token = cts.Token;
 		var backoffMs = InitialBackoffMs;
 
@@ -104,11 +98,34 @@ public sealed class AdbDeviceTracker : IDisposable
 				}
 			}
 		} finally {
-			lock (syncLock) {
-				isTracking = false;
-				trackingCts = null;
-			}
+			EndTracking ();
 			cts.Dispose ();
+		}
+	}
+
+	CancellationTokenSource BeginTracking (CancellationToken cancellationToken)
+	{
+		lock (syncLock) {
+#if NET8_0_OR_GREATER
+			ObjectDisposedException.ThrowIf (disposed, this);
+#else
+			if (disposed)
+				throw new ObjectDisposedException (nameof (AdbDeviceTracker));
+#endif
+			if (isTracking)
+				throw new InvalidOperationException ("Tracking is already active. Cancel the token or dispose before starting again.");
+			isTracking = true;
+			var cts = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+			trackingCts = cts;
+			return cts;
+		}
+	}
+
+	void EndTracking ()
+	{
+		lock (syncLock) {
+			isTracking = false;
+			trackingCts = null;
 		}
 	}
 

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -125,6 +126,7 @@ namespace MonoDroid.Generation {
 		}
 
 		readonly Dictionary<string,string> file_name_map = new Dictionary<string, string> ();
+		readonly Lock file_name_map_lock = new Lock ();
 
 		string GetFileName (string file, bool useShortFileNames)
 		{
@@ -132,7 +134,7 @@ namespace MonoDroid.Generation {
 				return file;
 			string s;
 
-			lock (file_name_map) {
+			lock (file_name_map_lock) {
 				if (file_name_map.TryGetValue (file, out s))
 					return s;
 				s = file_name_map.Count.ToString ();
