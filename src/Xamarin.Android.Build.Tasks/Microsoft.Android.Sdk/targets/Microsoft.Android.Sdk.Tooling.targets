@@ -12,7 +12,7 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RuntimeIdentifierToAbi"     AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion"        AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ValidateJavaVersion"      AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 
   <Target Name="_ResolveAndroidTooling">
     <PropertyGroup>

@@ -7,14 +7,16 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// Validates the detected JDK against the SDK's configured supported version range.
 	/// </summary>
 	[MSBuildMultiThreadableTask]
-	public class ValidateJavaVersion : MultithreadedAndroidTask
+	public partial class ValidateJavaVersion : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "VJV";
 
@@ -53,12 +55,14 @@ namespace Xamarin.Android.Tasks
 		// `java -version` will produce values such as:
 		//  java version "9.0.4"
 		//  java version "1.8.0_77"
-		static readonly Regex JavaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_\d+)?[^""]*""");
+		[GeneratedRegex (@"version ""(?<version>[\d\.]+)(_\d+)?[^""]*""")]
+		static partial Regex JavaVersionRegex { get; }
 
 		// `javac -version` will produce values such as:
 		//  javac 9.0.4
 		//  javac 1.8.0_77
-		internal static readonly Regex JavacVersionRegex = new Regex (@"javac (?<version>\d+\.[\d\.]+)(_\d+)?");
+		[GeneratedRegex (@"javac (?<version>\d+\.[\d\.]+)(_\d+)?")]
+		internal static partial Regex JavacVersionRegex { get; }
 
 		bool ValidateJava ()
 		{
@@ -150,7 +154,7 @@ namespace Xamarin.Android.Tasks
 
 		bool GetVersionFromFile (string javaExe, out Version version)
 		{
-			var path = TaskEnvironment.GetAbsolutePath (Path.Combine (Path.GetDirectoryName (javaExe), "..", "release"));
+			var path = TaskEnvironment.GetAbsolutePath (Path.Combine (Path.GetDirectoryName (javaExe) ?? "", "..", "release"));
 			if (!File.Exists (path) && !JavaSdkPath.IsNullOrEmpty ()) {
 				path = TaskEnvironment.GetAbsolutePath (Path.Combine (JavaSdkPath, "release"));
 			}
