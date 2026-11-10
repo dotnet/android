@@ -33,8 +33,8 @@ namespace Xamarin.Android.Tools
 				NativeLibraryFormat = "lib{0}.so";
 		}
 
-		// uname() reports the "Darwin" sysname on every Apple platform, so match all that .NET
-		// identifies: macOS, Mac Catalyst, iOS, tvOS and watchOS.
+		// Match uname()'s "Darwin" sysname for Apple platforms recognized by the runtime.
+		// Equivalence is unverified on unsupported platforms such as watchOS.
 		static bool IsRunningOnMac ()
 		{
 #if NET
