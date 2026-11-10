@@ -89,7 +89,7 @@ namespace Xamarin.Android.Build.Tests
 				.Where (e => (string) e.Attribute ("TaskName") == "Microsoft.Android.Tasks.ValidateJavaVersion")
 				.Select (e => new XElement ("UsingTask", e.Attributes ()))
 				.ToList ();
-			Assert.AreEqual (1, usingTasks.Count, "Expected a single UsingTask.");
+			Assert.AreEqual (2, usingTasks.Count, "Expected the Full/Core UsingTask pair.");
 
 			XElement Invoke (string taskName) => new XElement (taskName,
 				new XAttribute ("JavaSdkPath", javaPath),
