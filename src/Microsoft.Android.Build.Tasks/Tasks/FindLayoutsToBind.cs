@@ -11,12 +11,17 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class FindLayoutsToBind : AndroidTask
+	public partial class FindLayoutsToBind : AndroidTask
 	{
 		public override string TaskPrefix => "FLB";
 
-		static readonly string DirSeparator = Path.DirectorySeparatorChar == '\\' ? @"\\" : "/";
-		static readonly Regex layoutPathRegex = new Regex ($".*{DirSeparator}+layout(-?\\w+)*{DirSeparator}+.*\\.a?xml$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		[GeneratedRegex (@".*\\+layout(-?\w+)*\\+.*\.a?xml$", RegexOptions.IgnoreCase)]
+		private static partial Regex WindowsLayoutPathRegex { get; }
+
+		[GeneratedRegex (@".*/+layout(-?\w+)*/+.*\.a?xml$", RegexOptions.IgnoreCase)]
+		private static partial Regex UnixLayoutPathRegex { get; }
+
+		static Regex LayoutPathRegex => Path.DirectorySeparatorChar == '\\' ? WindowsLayoutPathRegex : UnixLayoutPathRegex;
 
 		public bool GenerateLayoutBindings { get; set; }
 
@@ -68,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			if (String.IsNullOrEmpty (filePath) || !File.Exists (filePath))
 				return;
 
-			if (layouts.ContainsKey (filePath) || !layoutPathRegex.IsMatch (filePath))
+			if (layouts.ContainsKey (filePath) || !LayoutPathRegex.IsMatch (filePath))
 				return;
 
 			layouts.Add (filePath, new TaskItem (filePath));
