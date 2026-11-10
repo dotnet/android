@@ -346,8 +346,7 @@ namespace Java.Interop
 
 		internal void* ElementsPointer {
 			get {
-				if (IsDisposed)
-					throw new ObjectDisposedException (GetType ().FullName);
+				ObjectDisposedException.ThrowIf (IsDisposed, this);
 				// SAFETY: Read only the address; this does not synchronize with release.
 				return unsafe (elements);
 			}
@@ -355,8 +354,7 @@ namespace Java.Interop
 
 		public int Size {
 			get {
-				if (IsDisposed)
-					throw new ObjectDisposedException (GetType ().FullName);
+				ObjectDisposedException.ThrowIf (IsDisposed, this);
 				return checked (elementCount * sizeOfElement);
 			}
 		}
@@ -370,8 +368,7 @@ namespace Java.Interop
 
 		public void Release (JniReleaseArrayElementsMode releaseMode)
 		{
-			if (IsDisposed)
-				throw new ObjectDisposedException (GetType ().FullName);
+			ObjectDisposedException.ThrowIf (IsDisposed, this);
 			Synchronize (releaseMode);
 			unsafe {
 				// SAFETY: Synchronize succeeded; clearing the sentinel does not access the buffer.

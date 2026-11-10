@@ -123,8 +123,7 @@ namespace Java.Interop {
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		void AssertValid ()
 		{
-			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (GetType ().FullName);
+			ObjectDisposedException.ThrowIf (!PeerReference.IsValid, this);
 		}
 
 		public static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, string classname)

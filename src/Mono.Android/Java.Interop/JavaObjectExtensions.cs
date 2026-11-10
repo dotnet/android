@@ -78,8 +78,7 @@ namespace Java.Interop {
 			if (instance is TResult)
 				return (TResult) instance;
 
-			if (instance.Handle == IntPtr.Zero)
-				throw new ObjectDisposedException (instance.GetType ().FullName);
+			ObjectDisposedException.ThrowIf (instance.Handle == IntPtr.Zero, instance);
 
 			var result = (TResult?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, typeof (TResult));
 			GC.KeepAlive (instance);

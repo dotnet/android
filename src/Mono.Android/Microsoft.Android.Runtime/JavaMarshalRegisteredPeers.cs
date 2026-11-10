@@ -70,8 +70,7 @@ static class JavaMarshalRegisteredPeers
 		CollectPeers ();
 
 		var r = value.PeerReference;
-		if (!r.IsValid)
-			throw new ObjectDisposedException (value.GetType ().FullName);
+		ObjectDisposedException.ThrowIf (!r.IsValid, value);
 
 		if (r.Type != JniObjectReferenceType.Global) {
 			value.SetPeerReference (r.NewGlobalRef ());
