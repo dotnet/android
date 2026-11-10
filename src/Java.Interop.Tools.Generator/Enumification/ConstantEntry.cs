@@ -1,6 +1,5 @@
 using System;
 using System.Xml.Linq;
-using MonoDroid.Utils;
 
 namespace Java.Interop.Tools.Generator.Enumification
 {
@@ -212,15 +211,13 @@ namespace Java.Interop.Tools.Generator.Enumification
 
 		static FieldAction FromFieldActionString (string value)
 		{
-			var action = value;
-			var comparison = LowercaseComparison.PrepareInvariant (ref action);
-			if (action.Length == 0)
-				return FieldAction.None;
-			if (action.Equals ("remove", comparison))
-				return FieldAction.Remove;
-			if (action.Equals ("keep", comparison))
-				return FieldAction.Keep;
-			throw new ArgumentOutOfRangeException (nameof (value), $"Specified field action '{value}' is not valid");
+			return value.ToLowerInvariant () switch
+			{
+				"" => FieldAction.None,
+				"remove" => FieldAction.Remove,
+				"keep" => FieldAction.Keep,
+				_ => throw new ArgumentOutOfRangeException (nameof (value), $"Specified field action '{value}' is not valid"),
+			};
 		}
 
 		void NormalizeJavaSignature ()

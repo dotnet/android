@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation.Utilities;
-using MonoDroid.Utils;
 using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation
@@ -888,39 +887,41 @@ namespace MonoDroid.Generation
 
 		public bool RequiresNew (Property property)
 		{
-			var name = property.AdjustedName;
-			var comparison = LowercaseComparison.PrepareInvariant (ref name);
-			if (name.Equals ("handle", comparison) ||
-					name.Equals ("gethashcode", comparison) ||
-					name.Equals ("gettype", comparison) ||
-					name.Equals ("tostring", comparison) ||
-					name.Equals ("equals", comparison) ||
-					name.Equals ("referenceequals", comparison))
-				return true;
+			switch (property.AdjustedName.ToLowerInvariant ()) {
+				case "handle":
+				case "gethashcode":
+				case "gettype":
+				case "tostring":
+				case "equals":
+				case "referenceequals":
+					return true;
+			}
 
 			return IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName);
 		}
 
 		public bool RequiresNew (string memberName, Method method)
 		{
-			var name = memberName;
-			var comparison = LowercaseComparison.PrepareInvariant (ref name);
-			if (name.Equals ("handle", comparison)) {
-				// The same name as a property always requires new, no matter the parameters
-				return true;
-			}
-			if (name.Equals ("gethashcode", comparison) ||
-					name.Equals ("gettype", comparison) ||
-					name.Equals ("tostring", comparison))
-				return method.Parameters.Count == 0;
-			if (name.Equals ("equals", comparison)) {
-				if (method.Parameters.Count == 1 && method.Parameters.All (p => p.Type == "object"))
+			switch (memberName.ToLowerInvariant ()) {
+				case "handle":
+					// The same name as a property always requires new, no matter the parameters
 					return true;
-				if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
-					return true;
-			} else if (name.Equals ("referenceequals", comparison)) {
-				if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
-					return true;
+				case "gethashcode":
+				case "gettype":
+				case "tostring":
+					return method.Parameters.Count == 0;
+				case "equals":
+					if (method.Parameters.Count == 1 && method.Parameters.All (p => p.Type == "object"))
+						return true;
+					if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
+						return true;
+
+					break;
+				case "referenceequals":
+					if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
+						return true;
+
+					break;
 			}
 
 			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);

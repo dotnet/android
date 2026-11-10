@@ -15,7 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\utils\LowercaseComparison.cs" Link="Utilities\LowercaseComparison.cs" />
     <ProjectReference Include="..\Java.Interop.Localization\Java.Interop.Localization.csproj" />
   </ItemGroup>
 

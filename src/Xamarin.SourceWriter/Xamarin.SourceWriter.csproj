@@ -11,8 +11,4 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="..\utils\LowercaseComparison.cs" Link="Utilities\LowercaseComparison.cs" />
-  </ItemGroup>
-
 </Project>

@@ -10,7 +10,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using MonoDroid.Utils;
 
 namespace Xamarin.Android.Tools;
 
@@ -697,19 +696,13 @@ public class AdbRunner
 	/// Maps adb device states to status values.
 	/// Ported from dotnet/android GetAvailableAndroidDevices.MapAdbStateToStatus.
 	/// </summary>
-	public static AdbDeviceStatus MapAdbStateToStatus (string adbState)
-	{
-		var comparison = LowercaseComparison.PrepareInvariant (ref adbState);
-		if (adbState.Equals ("device", comparison))
-			return AdbDeviceStatus.Online;
-		if (adbState.Equals ("offline", comparison))
-			return AdbDeviceStatus.Offline;
-		if (adbState.Equals ("unauthorized", comparison))
-			return AdbDeviceStatus.Unauthorized;
-		if (adbState.Equals ("no permissions", comparison))
-			return AdbDeviceStatus.NoPermissions;
-		return AdbDeviceStatus.Unknown;
-	}
+	public static AdbDeviceStatus MapAdbStateToStatus (string adbState) => adbState.ToLowerInvariant () switch {
+		"device" => AdbDeviceStatus.Online,
+		"offline" => AdbDeviceStatus.Offline,
+		"unauthorized" => AdbDeviceStatus.Unauthorized,
+		"no permissions" => AdbDeviceStatus.NoPermissions,
+		_ => AdbDeviceStatus.Unknown,
+	};
 
 	/// <summary>
 	/// Builds a human-friendly description for a device.

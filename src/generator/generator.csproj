@@ -21,9 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\utils\LowercaseComparison.cs">
-      <Link>utils\LowercaseComparison.cs</Link>
-    </Compile>
     <Compile Include="..\utils\StringRocks.cs">
       <Link>utils\StringRocks.cs</Link>
     </Compile>
