@@ -865,6 +865,7 @@ because xbuild doesn't support framework reference assemblies.
 		CheckIssues="$(AndroidLintCheckIssues)"
 		ConfigFiles="@(AndroidLintConfig)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)"
+		ResourceCaseMap="@(_AndroidResourceCaseMap)"
 		SourceDirectories="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)"
 		IntermediateOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(LintToolPath)"
@@ -1000,6 +1001,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_ComputeAndroidResourcePaths">
+	<ItemGroup>
+		<_AndroidResourceCaseMap Remove="@(_AndroidResourceCaseMap)" />
+	</ItemGroup>
 	<AndroidComputeResPaths ResourceFiles="@(AndroidResource);@(AndroidBoundLayout)"
 			IntermediateDir="$(MonoAndroidResDirIntermediate)"
 			Prefixes="$(MonoAndroidResourcePrefix)"
@@ -1010,6 +1014,7 @@ because xbuild doesn't support framework reference assemblies.
 	>
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
 		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
+		<Output ItemName="_AndroidResourceCaseMap" TaskParameter="ResourceCaseMap" />
 		<Output PropertyName="_AndroidResolvedResourcesFilesHash" TaskParameter="FilesHash" />
 	</AndroidComputeResPaths>
 
@@ -1429,6 +1434,7 @@ because xbuild doesn't support framework reference assemblies.
   <ConvertCustomView
       CustomViewMapFile="$(_CustomViewMapFile)"
       AcwMapFile="$(_AcwMapFile)"
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)">
     <Output TaskParameter="Processed" ItemName="_ProcessedCustomViews" />
   </ConvertCustomView>
