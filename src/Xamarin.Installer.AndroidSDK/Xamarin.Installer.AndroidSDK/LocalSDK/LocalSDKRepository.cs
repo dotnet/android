@@ -236,7 +236,10 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 				return null;
 
 			// Android SDK tools read add-on manifest.ini with java.util.Properties.load().
-			var data = AndroidUtilities.ReadAndroidProperties (manifestIni);
+			// This intentionally decodes escapes/continuations and skips #/! comments, unlike INI.
+			// Semicolons remain value delimiters, not inline comments; standalone ; lines are unused keys.
+			// Keep the old INI reader's UTF-8 preamble tolerance without changing other properties consumers.
+			var data = AndroidUtilities.ReadAndroidProperties (manifestIni, skipUtf8Preamble: true);
 			data.TryGetValue ("libraries", out string libs);
 			libs = libs?.Trim ();
 			if (String.IsNullOrEmpty (libs))

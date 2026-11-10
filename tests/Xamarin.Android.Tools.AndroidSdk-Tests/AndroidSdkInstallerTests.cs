@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Installer.AndroidSDK;
@@ -255,6 +256,70 @@ public class AndroidSdkInstallerTests
 					"com.google.android.media.effects|effects.jar|Collection of video effects",
 				},
 				libraries.Select (l => $"{l.Name}|{l.LocalJarPath}|{l.Description}"));
+		} finally {
+			Directory.Delete (root, recursive: true);
+		}
+	}
+
+	[TestCase ("\n", false)]
+	[TestCase ("\n", true)]
+	[TestCase ("\r\n", false)]
+	[TestCase ("\r\n", true)]
+	public void DiscoverAddonLibrariesWithUtf8Preamble (string newline, bool emitPreamble)
+	{
+		AssertAddonLibrary (
+			"libraries=maps" + newline + "maps=maps.jar;Maps API" + newline,
+			emitPreamble, "maps.jar", "Maps API");
+	}
+
+	[TestCase ("# comment\n! comment\nlibraries=maps\nmaps=maps.jar;Maps API", "maps.jar", "Maps API")]
+	[TestCase ("; legacy INI comment\nlibraries=maps\nmaps=maps.jar;Maps API", "maps.jar", "Maps API")]
+	[TestCase ("libraries=maps\nmaps=maps.jar;Maps # API ! details", "maps.jar", "Maps # API ! details")]
+	[TestCase ("libraries=maps\nmaps=maps.jar;Maps;extra", "maps.jar", "Maps")]
+	[TestCase ("""
+		libraries=ma\u0070s
+		maps=lib\\maps.jar;Maps\u0020API
+		""", "lib\\maps.jar", "Maps API")]
+	[TestCase ("""
+		libraries=maps
+		maps=maps.jar;Maps \
+		    API
+		""", "maps.jar", "Maps API")]
+	public void DiscoverAddonLibrariesWithJavaPropertiesSyntax (string manifest, string jarPath, string description)
+	{
+		AssertAddonLibrary (manifest, false, jarPath, description);
+	}
+
+	static void AssertAddonLibrary (string manifest, bool emitPreamble, string jarPath, string description)
+	{
+		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
+		var addonPath = Path.Combine (root, "add-ons", "addon-google_apis-google-24");
+		Directory.CreateDirectory (addonPath);
+		try {
+			var propertiesPath = Path.Combine (addonPath, "source.properties");
+			File.WriteAllText (propertiesPath, """
+				Addon.NameDisplay=Google APIs
+				Addon.NameId=google_apis
+				Addon.VendorDisplay=Google Inc.
+				Addon.VendorId=google
+				AndroidVersion.ApiLevel=24
+				Pkg.Desc=Android + Google APIs
+				Pkg.Revision=1
+				""");
+			File.WriteAllText (Path.Combine (addonPath, "manifest.ini"), manifest, new UTF8Encoding (emitPreamble));
+			var installer = new AndroidSDKInstaller (new Helper (), AndroidManifestType.Local);
+			Assert.IsTrue (installer.Discover (new List<string> { root }));
+			var instance = installer.FindInstance (root);
+			Assert.IsNotNull (instance);
+			var component = instance.Components.Single (c => c.ManifestURL == new Uri (propertiesPath));
+			var info = component.Info as AndroidComponentInfoAddon;
+			Assert.IsNotNull (info);
+			var libraries = info.Libraries;
+			Assert.IsNotNull (libraries);
+			var library = libraries.Single ();
+			Assert.AreEqual ("maps", library.Name);
+			Assert.AreEqual (jarPath, library.LocalJarPath);
+			Assert.AreEqual (description, library.Description);
 		} finally {
 			Directory.Delete (root, recursive: true);
 		}
