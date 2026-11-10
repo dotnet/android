@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using Xamarin.Tools.Zip;
 using Microsoft.Build.Utilities;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -28,6 +28,12 @@ namespace Microsoft.Android.Build.Tasks
 
 		// NOTE: System.IO.Hashing.Crc64 produces different output than the Crc64 class in this repo
 		const int CRC64_SIZE_IN_BYTES = 8;
+
+		// Use the public CRC getter when netstandard callers are hosted by modern .NET.
+		static readonly Func<ZipArchiveEntry, uint>? getStoredZipCrc32 =
+			typeof (ZipArchiveEntry).GetProperty ("Crc32")?.GetMethod is { } getter
+				? (Func<ZipArchiveEntry, uint>) getter.CreateDelegate (typeof (Func<ZipArchiveEntry, uint>))
+				: null;
 
 		static int fileWriteRetry = -1;
 		static int fileWriteRetryDelay = -1;
@@ -401,49 +407,146 @@ namespace Microsoft.Android.Build.Tasks
 
 		static string? HashZip (Stream stream)
 		{
-			string hashes = String.Empty;
-
+			long? position = stream.CanSeek ? stream.Position : null;
 			try {
-				using (var zip = ZipArchive.Open (stream)) {
-					foreach (var item in zip) {
-						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
-					}
-				}
-			} catch {
+				if (position.HasValue)
+					stream.Position = 0;
+				using var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true);
+				return HashZip (zip);
+			} catch (InvalidDataException) {
 				return null;
+			} catch (IOException) {
+				return null;
+			} finally {
+				if (position.HasValue)
+					stream.Position = position.Value;
 			}
-			return hashes;
 		}
 
 		static string? HashZip (string filename)
 		{
-			string hashes = String.Empty;
-
 			try {
 				// check cache
 				if (File.Exists (filename + ".hash"))
 					return File.ReadAllText (filename + ".hash");
 
-				using (var zip = ReadZipFile (filename)) {
-					foreach (var item in zip) {
-						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
-					}
-				}
-			} catch {
+				using var zip = ReadZipFile (filename);
+				return HashZip (zip);
+			} catch (InvalidDataException) {
+				return null;
+			} catch (IOException) {
+				return null;
+			} catch (UnauthorizedAccessException) {
 				return null;
 			}
-			return hashes;
 		}
 
-		public static ZipArchive ReadZipFile (string filename, bool strictConsistencyChecks = false)
+		static string HashZip (ZipArchive zip)
 		{
-			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
+			var hashes = new StringBuilder ();
+			foreach (var entry in zip.Entries)
+				hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", entry.FullName, GetZipEntryCrc32 (entry));
+			return hashes.ToString ();
 		}
 
-		public static bool ZipAny (string filename, Func<ZipEntry, bool> filter)
+		public static uint GetZipEntryCrc32 (ZipArchiveEntry entry)
+		{
+			if (entry == null)
+				throw new ArgumentNullException (nameof (entry));
+			if (getStoredZipCrc32 is not null)
+				return getStoredZipCrc32 (entry);
+			var crc = new System.IO.Hashing.Crc32 ();
+			using var stream = entry.Open ();
+			crc.Append (stream);
+			return crc.GetCurrentHashAsUInt32 ();
+		}
+
+		public static ZipArchive ReadZipFile (string filename)
+		{
+			return ZipFile.OpenRead (filename);
+		}
+
+		/// <summary>
+		/// Resolves a relative archive path under the destination, rejecting parent traversal, rooted names and linked descendants.
+		/// The caller-selected destination itself may be a junction or symbolic link.
+		/// </summary>
+		public static string GetArchiveExtractionPath (string destinationDirectory, string relativePath, bool isDirectory = false)
+		{
+			if (destinationDirectory == null)
+				throw new ArgumentNullException (nameof (destinationDirectory));
+			if (relativePath == null)
+				throw new ArgumentNullException (nameof (relativePath));
+			if (destinationDirectory.Length == 0)
+				throw new ArgumentException ("The destination directory must not be empty.", nameof (destinationDirectory));
+
+			var root = Path.GetFullPath (destinationDirectory);
+			var volumeRoot = Path.GetPathRoot (root);
+			if (volumeRoot != null && root.Length > volumeRoot.Length)
+				root = root.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			var normalizedPath = relativePath.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar);
+			if (normalizedPath.Length == 0 || Path.IsPathRooted (normalizedPath) || normalizedPath.IndexOf (':') >= 0 || normalizedPath.IndexOf ('\0') >= 0)
+				throw UnsafeArchiveEntry (relativePath, root);
+			if (!isDirectory && normalizedPath.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				throw UnsafeArchiveEntry (relativePath, root);
+
+			foreach (var component in normalizedPath.Split (Path.DirectorySeparatorChar)) {
+				if (component == ".." ||
+						(Path.DirectorySeparatorChar == '\\' && component != "." &&
+							(component.EndsWith (" ", StringComparison.Ordinal) || component.EndsWith (".", StringComparison.Ordinal))))
+					throw UnsafeArchiveEntry (relativePath, root);
+			}
+
+			var path = Path.GetFullPath (Path.Combine (root, normalizedPath));
+			var pathRoot = Path.GetPathRoot (path);
+			if (pathRoot != null && path.Length > pathRoot.Length)
+				path = path.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			var prefix = root.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal) ? root : root + Path.DirectorySeparatorChar;
+			var isRootDirectoryEntry = isDirectory && path.Equals (root, comparison);
+			if (!isRootDirectoryEntry && !path.StartsWith (prefix, comparison))
+				throw UnsafeArchiveEntry (relativePath, root);
+
+			if (isRootDirectoryEntry)
+				return path;
+
+			// The caller-selected root may be a junction, but archive-controlled descendants must not follow links.
+			var current = root;
+			foreach (var component in path.Substring (prefix.Length).Split (Path.DirectorySeparatorChar)) {
+				current = Path.Combine (current, component);
+				try {
+					if ((File.GetAttributes (current) & FileAttributes.ReparsePoint) != 0)
+						throw UnsafeArchiveEntry (relativePath, root);
+				} catch (FileNotFoundException) {
+					break;
+				} catch (DirectoryNotFoundException) {
+					break;
+				}
+			}
+			return path;
+		}
+
+		static InvalidDataException UnsafeArchiveEntry (string entryName, string destination) =>
+			new InvalidDataException (string.Format (CultureInfo.CurrentCulture, Properties.Resources.UnsafeArchiveEntry, entryName, destination));
+
+		public static IEnumerable<(string FilePath, string ArchivePath)> EnumerateArchiveFiles (string folder)
+		{
+			folder = Path.GetFullPath (folder.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar));
+			var prefixLength = folder.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal) ? folder.Length : folder.Length + 1;
+			foreach (var directory in Enumerable.Repeat (folder, 1).Concat (Directory.EnumerateDirectories (folder, "*", SearchOption.AllDirectories))) {
+				if (directory != folder && (File.GetAttributes (directory) & FileAttributes.Hidden) != 0)
+					continue;
+				foreach (var file in Directory.EnumerateFiles (directory)) {
+					if ((File.GetAttributes (file) & FileAttributes.Hidden) != 0)
+						continue;
+					yield return (file, file.Substring (prefixLength).Replace ('\\', '/'));
+				}
+			}
+		}
+
+		public static bool ZipAny (string filename, Func<ZipArchiveEntry, bool> filter)
 		{
 			using (var zip = ReadZipFile (filename)) {
-				return zip.Any (filter);
+				return zip.Entries.Any (filter);
 			}
 		}
 
@@ -458,15 +561,15 @@ namespace Microsoft.Android.Build.Tasks
 			Func<string, bool>? deleteCallback = null, Func<string, bool>? skipCallback = null, TaskLoggingHelper? log = null)
 		{
 			int i = 0;
-			int total = (int)zip.EntryCount;
+			int total = zip.Entries.Count;
 			bool updated = false;
-			var files = new HashSet<string> ();
+			var files = new HashSet<string> (Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
-			var fullDestination = Path.GetFullPath (destination + Path.DirectorySeparatorChar);
 			try {
-				foreach (var entry in zip) {
+				var entries = new List<(ZipArchiveEntry Entry, string OutputName)> ();
+				foreach (var entry in zip.Entries) {
 					progressCallback?.Invoke (i++, total);
-					if (entry.IsDirectory)
+					if (entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal))
 						continue;
 					if (entry.FullName.Contains ("/__MACOSX/") ||
 							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
@@ -475,27 +578,36 @@ namespace Microsoft.Android.Build.Tasks
 						continue;
 					if (skipCallback != null && skipCallback (entry.FullName))
 						continue;
+					GetArchiveExtractionPath (destination, entry.FullName);
 					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
-					var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
-					if (!outfile.StartsWith (fullDestination, StringComparison.OrdinalIgnoreCase)) {
-						log?.LogDebugMessage ($"Skipping zip entry \"{entry.FullName}\" (resolved as \"{fullName}\") because it would extract outside the destination directory: \"{outfile}\".");
-						continue;
-					}
+					if (fullName != entry.FullName)
+						GetArchiveExtractionPath (destination, fullName);
+					entries.Add ((entry, fullName));
+				}
+
+				foreach (var (entry, outputName) in entries) {
+					var outfile = GetArchiveExtractionPath (destination, outputName);
 					files.Add (outfile);
 					memoryStream.SetLength (0); //Reuse the stream
-					entry.Extract (memoryStream);
+					using (var entryStream = entry.Open ())
+						entryStream.CopyTo (memoryStream);
+					memoryStream.Position = 0;
 					try {
 						updated |= CopyIfStreamChanged (memoryStream, outfile);
 					} catch (PathTooLongException) {
-						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
+						throw new PathTooLongException ($"Could not extract \"{entry.FullName}\" to \"{outfile}\". Path is too long.");
 					}
 				}
 			} finally {
 				MemoryStreamPool.Shared.Return (memoryStream);
 			}
 			if (Directory.Exists (destination)) {
+				var fullDestination = Path.GetFullPath (destination);
+				if (!fullDestination.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+					fullDestination += Path.DirectorySeparatorChar;
 				foreach (var file in Directory.GetFiles (destination, "*", SearchOption.AllDirectories)) {
-					var outfile = Path.GetFullPath (file);
+					var fullPath = Path.GetFullPath (file);
+					var outfile = GetArchiveExtractionPath (destination, fullPath.Substring (fullDestination.Length));
 					if (outfile.Contains ("/__MACOSX/") ||
 							outfile.EndsWith (".flat", StringComparison.OrdinalIgnoreCase) ||
 							outfile.EndsWith ("files.cache", StringComparison.OrdinalIgnoreCase) ||

@@ -8,7 +8,6 @@
   <PropertyGroup>
     <LangVersion>12</LangVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <DefineConstants>$(DefineConstants);MSBUILD</DefineConstants>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
