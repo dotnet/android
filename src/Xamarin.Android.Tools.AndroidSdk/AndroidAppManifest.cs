@@ -4,8 +4,6 @@ using System.Xml;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
-using System.Text;
-using System.IO;
 
 namespace Xamarin.Android.Tools
 {
@@ -110,35 +108,6 @@ namespace Xamarin.Android.Tools
 				usesSdk.Remove ();
 
 			doc.Save (writer);
-		}
-
-		public void WriteToFile (string fileName)
-		{
-			var xmlSettings = new XmlWriterSettings () {
-				Encoding = Encoding.UTF8,
-				CloseOutput = false,
-				Indent = true,
-				IndentChars = "\t",
-				NewLineChars = "\n",
-			};
-
-			var tempFile = FileUtil.GetTempFilenameForWrite (fileName);
-			bool success = false;
-			try {
-				using (var writer = XmlTextWriter.Create (tempFile, xmlSettings)) {
-					Write (writer);
-				}
-				FileUtil.SystemRename (tempFile, fileName);
-				success = true;
-			} finally {
-				if (!success) {
-					try {
-						File.Delete (tempFile);
-					} catch {
-						//the original exception is more important than this one
-					}
-				}
-			}
 		}
 
 		static string? NullIfEmpty (string? value)

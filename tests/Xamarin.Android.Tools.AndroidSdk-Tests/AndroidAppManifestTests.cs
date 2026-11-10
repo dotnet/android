@@ -26,30 +26,6 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.Throws<ArgumentException> (() => AndroidAppManifest.Load (XDocument.Parse ("<invalid-root/>"), versions));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void WriteToFile_UnicodeFileName (bool existingFile)
-		{
-			var directory = Path.Combine (Path.GetTempPath (), $"AndroidAppManifestTests-{Guid.NewGuid ():N}");
-			var fileName = Path.Combine (directory, "manifest-\u00e9-\u6587-\U0001F4C4.xml");
-			var versions = new AndroidVersions ([]);
-			Directory.CreateDirectory (directory);
-			try {
-				if (existingFile)
-					File.WriteAllText (fileName, "old content");
-
-				var manifest = AndroidAppManifest.Create ("com.example.app", "Example", versions);
-				manifest.WriteToFile (fileName);
-
-				var written = AndroidAppManifest.Load (fileName, versions);
-				Assert.AreEqual ("com.example.app", written.PackageName);
-				Assert.AreEqual ("Example", written.ApplicationLabel);
-				Assert.IsFalse (File.Exists (FileUtil.GetTempFilenameForWrite (fileName)));
-			} finally {
-				Directory.Delete (directory, recursive: true);
-			}
-		}
-
 		[Test]
 		public void ParsePermissions ()
 		{
