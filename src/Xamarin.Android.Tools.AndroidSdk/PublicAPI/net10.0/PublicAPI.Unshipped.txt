@@ -37,6 +37,7 @@ Xamarin.Android.Tools.AdbDeviceType
 Xamarin.Android.Tools.AdbDeviceType.Device = 0 -> Xamarin.Android.Tools.AdbDeviceType
 Xamarin.Android.Tools.AdbDeviceType.Emulator = 1 -> Xamarin.Android.Tools.AdbDeviceType
 Xamarin.Android.Tools.AdbRunner
+static Xamarin.Android.Tools.AdbRunner.CreateWithProcessEnvironment(string! adbPath, System.Diagnostics.ProcessStartInfo! processStartInfo) -> Xamarin.Android.Tools.AdbRunner!
 Xamarin.Android.Tools.AdbRunner.AdbRunner(string! adbPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
 virtual Xamarin.Android.Tools.AdbRunner.ListDevicesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>!
 Xamarin.Android.Tools.AdbRunner.ListDevicesWithoutAvdNamesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>!
