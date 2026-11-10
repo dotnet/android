@@ -222,10 +222,24 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 				using (var zipFile = ZipFile.OpenRead (archivePath)) {
 					float minProgressDelta = 5f; // percents
 					float lastProgress = 0f;
-					float progress;
 
 					ulong totalSize = DirectorySizeMonitoringTimer.CalculateTotalSize (zipFile);
 					ulong currentSize = 0;
+					void UpdateProgress ()
+					{
+						if (progressCallback == null)
+							return;
+						float progress = currentSize * 100f / totalSize;
+						if (progress - lastProgress > minProgressDelta) {
+							try {
+								progressCallback (progress);
+							} catch (Exception ex) {
+								Logger.Error ($"[Unzip] progress callback exception: {ex}");
+							}
+							lastProgress = progress;
+						}
+					}
+
 					try {
 						progressCallback?.Invoke (0f);
 					} catch (Exception ex) {
@@ -233,6 +247,7 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 					}
 
 					string fullBaseDirectory = Path.GetFullPath (baseDirectory).TrimEnd (Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+					byte [] buffer = new byte [81920];
 
 					foreach (var entry in zipFile.Entries) {
 						string destPath = Path.Combine (baseDirectory, entry.FullName);
@@ -252,20 +267,18 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 						// Delete first: the create mode applies only to new files, so an overwrite would keep the old permissions.
 						if (File.Exists (destPath))
 							File.Delete (destPath);
-						entry.ExtractToFile (destPath, overwrite: false);
+						using (var input = entry.Open ())
+						using (var output = new FileStream (destPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+							int count;
+							while ((count = input.Read (buffer, 0, buffer.Length)) > 0) {
+								output.Write (buffer, 0, count);
+								currentSize += (ulong) count;
+								UpdateProgress ();
+							}
+						}
+						SafeSetLastWriteTime (destPath, entry.LastWriteTime.LocalDateTime);
 						SetUnixPermissions (destPath, entry);
 						// TODO: set owner
-
-						currentSize += (ulong) entry.Length;
-						progress = currentSize * 100f / totalSize;
-						if (progress - lastProgress > minProgressDelta) {
-							try {
-								progressCallback?.Invoke (progress);
-							} catch (Exception ex) {
-								Logger.Error ($"[Unzip] progress callback exception: {ex}");
-							}
-							lastProgress = progress;
-						}
 					}
 				}
 
