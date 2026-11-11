@@ -21,11 +21,7 @@ pr:
 
 parameters:
 - name: runNativeMtpHostTests
-  displayName: Run opt-in SourceWriter native MTP host tests
-  type: boolean
-  default: false
-- name: runNativeMtpHostTestsOnly
-  displayName: Run only SourceWriter native MTP host tests (no SDK or device stages)
+  displayName: Run opt-in SourceWriter MSTest (Microsoft.Testing.Platform) host tests
   type: boolean
   default: false
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
@@ -73,43 +69,49 @@ variables:
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
-- ${{ if or(eq(parameters.runNativeMtpHostTests, true), eq(parameters.runNativeMtpHostTestsOnly, true)) }}:
+- ${{ if eq(parameters.runNativeMtpHostTests, true) }}:
   - stage: native_mtp_host_tests
-    displayName: Native MTP host pilot
+    displayName: MSTest host tests
     dependsOn: []
     condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
     jobs:
-    - job: sourcewriter_native_mtp
-      displayName: SourceWriter native MTP
+    - job: sourcewriter_mstest
+      displayName: SourceWriter MSTest
       pool:
         name: $(NetCorePublicPoolName)
         demands:
         - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
-      strategy:
-        parallel: 3
       steps:
       - checkout: self
         submodules: false
       - task: UseDotNet@2
-        displayName: Install native MTP pilot SDK
+        displayName: Install MSTest host SDK
         inputs:
           packageType: sdk
           version: $(NativeMtpHostSdkVersion)
           includePreviewVersions: true
           installationPath: $(Agent.TempDirectory)/native-mtp-dotnet
-      - pwsh: |
-          dotnet build tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -c Debug -v:minimal
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        displayName: Restore and build only the converted host module
-      - template: /build-tools/automation/yaml-templates/run-native-mtp-tests.yaml
-        parameters:
-          testModule: $(System.DefaultWorkingDirectory)/bin/TestDebug/$(DotNetStableTargetFramework)/Xamarin.SourceWriter-Tests.dll
-          testRunTitle: SourceWriter native MTP
+      - script: >-
+          dotnet test
+          --project tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj
+          -c Debug
+          --report-trx
+          --results-directory $(Agent.TempDirectory)/TestResults
+        displayName: Run SourceWriter MSTest
+        env:
+          DOTNET_TEST_RUNNER: Microsoft.Testing.Platform
+      - task: PublishTestResults@2
+        displayName: Publish SourceWriter MSTest results
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: VSTest
+          searchFolder: $(Agent.TempDirectory)/TestResults
+          testResultsFiles: '**/*.trx'
+          testRunTitle: SourceWriter MSTest
 
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
-  condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
@@ -146,7 +148,6 @@ stages:
 # Windows Build Stage
 - stage: win_build_test
   displayName: Windows
-  condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   dependsOn: []
   jobs:
   - job: win_build_test
@@ -169,7 +170,6 @@ stages:
 # Linux Build Stage
 - stage: linux_build
   displayName: Linux
-  condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
   dependsOn: []
   jobs:
   - job: linux_build_create_sdk_pack
@@ -208,7 +208,7 @@ stages:
         use1ESTemplate: false
 
 # Package Tests Stage
-- ${{ if and(ne(variables.SkipTestStages, 'true'), not(parameters.runNativeMtpHostTestsOnly)) }}:
+- ${{ if ne(variables.SkipTestStages, 'true') }}:
   - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml
     parameters:
       macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
@@ -220,7 +220,7 @@ stages:
   dependsOn: 
   - mac_build
   - linux_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
@@ -316,7 +316,7 @@ stages:
 - stage: msbuild_dotnet
   displayName: MSBuild Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_msbuild_tests
     strategy:
@@ -420,7 +420,7 @@ stages:
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
@@ -478,7 +478,6 @@ stages:
 # Android Tools Tests Stage
 - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
   parameters:
-    condition: and(succeeded(), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
     windowsPool:
       name: $(NetCorePublicPoolName)
       demands:
@@ -494,7 +493,7 @@ stages:
 - stage: maui_tests
   displayName: MAUI Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'), ${{ not(parameters.runNativeMtpHostTestsOnly) }})
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: maui_tests_integration
     displayName: MAUI Integration

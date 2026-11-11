@@ -1,34 +1,15 @@
 # SourceWriter host tests
 
-This project is the host-only MSTest pilot. It keeps `Microsoft.NET.Sdk` and runs
-as a native Microsoft.Testing.Platform (MTP) executable. Its MSTest and MTP preview
-versions are pinned in this project, independently of the product's MTP version.
-No Android SDK build or device is required.
-
-`MSTest.SourceGeneration` is referenced directly, with `PrivateAssets="all"`, at
-the verified `4.6.0-preview.26524.1` version available from the configured
-`dotnet-tools` feed. This package generates test metadata and invocation delegates
-for this `Microsoft.NET.Sdk` project; no `MSTest.Sdk` opt-in property is required.
-It registers the nine directly annotated test classes and eleven test methods
-with the adapter through a generated module initializer. MTP remains pinned to
-`2.6.0-preview.26524.1`.
-
-This enables generated metadata, not universally reflection-free execution:
-upstream retains bounded startup lookups and fallback paths. Unsupported test
-shapes can be omitted from the generated registry; preserve the expected eleven
-qualified test identities when changing this suite. See the upstream
-[source-generator design and limitations](https://github.com/microsoft/testfx/blob/88a31ec394abe9f5c5dcf596f0a150ff998d3a0e/docs/source-generator/design.md).
-
-`IsTestingPlatformApplication` is set explicitly so native `dotnet test` can
-identify this project before its first package restore. Starting with an empty
-project `obj/` directory does not require a separate restore or build command.
-The runner package generates the executable entry point and registers MSTest
-and the TRX extension; these settings do not apply to the referenced library.
+This host-only project uses MSTest on Microsoft.Testing.Platform (MTP). It builds
+as a native MTP executable (`EnableMSTestRunner`) and pins its own MSTest and MTP
+preview versions. `MSTest.SourceGeneration` generates the test registry; this is
+generated metadata, not fully reflection-free execution. No Android SDK, build
+of the product or device is required.
 
 ## Run from the repository root
 
-Use .NET SDK 11 Preview 6 or later. Select MTP for just this invocation rather than
-changing the repository's `global.json` or exporting the runner for other suites:
+Use .NET SDK 11 Preview 6 or later. Select MTP for this invocation only; the
+repository's `global.json` and other (NUnit/VSTest) suites are unchanged:
 
 ```sh
 DOTNET_TEST_RUNNER=Microsoft.Testing.Platform dotnet test \
@@ -37,50 +18,22 @@ DOTNET_TEST_RUNNER=Microsoft.Testing.Platform dotnet test \
   --results-directory bin/TestDebug/TestResults/SourceWriter
 ```
 
-For Release, use `-c Release` and `bin/TestRelease/TestResults/SourceWriter`.
-Use `--list-tests` to discover tests, or
+Add `--list-tests` to discover tests, or
 `--filter 'FullyQualifiedName=Xamarin.SourceWriter.Tests.ClassWriterTests.Basics'`
-to select a test. Native MTP options such as `--report-trx` go directly after the
-project options, not after a VSTest-style `--` separator.
+to select one. MTP options go directly on the command line, not after `--`.
 
-From this directory, the same command works with
-`--project Xamarin.SourceWriter-Tests.csproj`; adjust the results path accordingly.
-The process-local runner selection is still needed: `dotnet test` selects its
-runner from the working directory's `global.json` and `DOTNET_TEST_RUNNER`, not
-from the project path.
-
-An ordinary VSTest-mode `dotnet test` invocation is not supported for this
-project: MTP rejects it on the .NET 11 SDK. Use the scoped command above or execute
-the built application directly.
-
-## Run already-built tests
-
-After building the desired configuration, CI can select only this module from
-the repository root without evaluating the rest of the test projects:
+An already-built module can also be run directly:
 
 ```sh
-DOTNET_TEST_RUNNER=Microsoft.Testing.Platform dotnet test \
-  --test-modules bin/TestDebug/net11.0/Xamarin.SourceWriter-Tests.dll \
-  --report-trx --results-directory bin/TestDebug/TestResults/SourceWriter
+dotnet bin/TestDebug/net11.0/Xamarin.SourceWriter-Tests.dll --report-trx
 ```
 
-Alternatively, execute the native test application directly, without selecting a
-`dotnet test` runner:
+Caveats:
 
-```sh
-dotnet bin/TestDebug/net11.0/Xamarin.SourceWriter-Tests.dll \
-  --report-trx --results-directory bin/TestDebug/TestResults/SourceWriter
-```
+* Plain VSTest-mode `dotnet test` is rejected by MTP for this project.
+* Don't pass a solution containing unconverted NUnit projects to the MTP runner.
 
-Keep unconverted NUnit suites in separate, ordinary VSTest invocations, with no
-MTP environment override, for example:
+## CI
 
-```sh
-dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj \
-  -c Debug --logger trx
-```
-
-Do not pass a solution containing unconverted NUnit projects to the native MTP
-runner. Repository-wide runner selection remains unchanged. The separate
-[opt-in host CI path](../../build-tools/automation/native-mtp-ci.md) discovers,
-slices and retries this built module without changing legacy NUnit jobs.
+The public pipeline runs this suite only when the `runNativeMtpHostTests`
+parameter is enabled, using the command above on Linux and publishing the TRX.
