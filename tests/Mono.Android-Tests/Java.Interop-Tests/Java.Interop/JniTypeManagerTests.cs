@@ -106,7 +106,7 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public new void GetType ()
+		public void GetTypeFromSignature ()
 		{
 			var manager = JniRuntime.CurrentRuntime.TypeManager;
 			Func<string, Type> GetType = s => {

@@ -200,7 +200,6 @@ namespace Xamarin.Android.RuntimeTests
 				DateTime baseTime = new DateTime (2014, 9, 11, 0, 0, 0, 0);
 				DateTime epochTime = new DateTime (1970, 1, 1, 0, 0, 0, 0);
 				TimeSpan span = baseTime.ToLocalTime () - epochTime.ToLocalTime ();
-				Assert.IsNotNull (span);
 			}, "Regression test for #22955 failed.");
 		}
 
@@ -217,7 +216,6 @@ namespace Xamarin.Android.RuntimeTests
 #pragma warning disable CS0618 // Regression coverage for TimeZone.GetUtcOffset on historical dates.
 				var tz = TimeZone.CurrentTimeZone.GetUtcOffset (Convert.ToDateTime (timeString));
 #pragma warning restore CS0618
-				Assert.IsNotNull (tz);
 			}, "Regression test for #22955 c2 failed.");
 		}
 
@@ -242,7 +240,6 @@ namespace Xamarin.Android.RuntimeTests
 			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
 				var dt = DateTime.MinValue;
 				var dt1 = dt.ToLocalTime ();
-				Assert.IsNotNull (dt1);
 			}, "Regression test for #22955 c35 failed.");
 		}
 

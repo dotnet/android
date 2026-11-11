@@ -38,12 +38,12 @@ namespace Cadenza.Tests {
 
 	public abstract class BaseRocksFixture {
 
-		public void AssertAreSame<T> (IEnumerable<T> expected, IEnumerable<T> data)
+		protected void AssertAreSame<T> (IEnumerable<T> expected, IEnumerable<T> data)
 		{
 			Assert.IsTrue (data.SequenceEqual (expected));
 		}
 
-		public static void AssertException<TException> (Action action)
+		protected static void AssertException<TException> (Action action)
 		{
 			try {
 				action ();
@@ -58,7 +58,7 @@ namespace Cadenza.Tests {
 		}
 
 		// Exists so that you can use a variable and shut up the compiler.
-		public static void Ignore<T>(T value)
+		protected static void Ignore<T>(T value)
 		{
 		}
 	}

@@ -55,7 +55,7 @@ namespace Java.InteropTests
 				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
 				Assert.AreEqual (registeredCount+1, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount+1 should match!");
 				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-				Assert.AreNotSame (l, o.PeerReference);
+				Assert.AreNotEqual (l, o.PeerReference);
 				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			}
 			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount should match!");
@@ -170,11 +170,11 @@ namespace Java.InteropTests
 				Assert.IsTrue (lref.IsValid);
 				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.Copy)) {
 					Assert.IsTrue (lref.IsValid);
-					Assert.AreNotSame (lref, o.PeerReference);
+					Assert.AreNotEqual (lref, o.PeerReference);
 				}
 				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.CopyAndDispose)) {
 					Assert.IsFalse (lref.IsValid);
-					Assert.AreNotSame (lref, o.PeerReference);
+					Assert.AreNotEqual (lref, o.PeerReference);
 				}
 			}
 		}
