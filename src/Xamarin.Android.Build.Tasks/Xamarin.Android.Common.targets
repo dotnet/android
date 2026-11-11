@@ -1160,7 +1160,7 @@ because xbuild doesn't support framework reference assemblies.
   <XmlPoke
       XmlInputPath="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
       Query="/manifest/@package"
-      Value="$(_AndroidPackage)"
+      Value="$([MSBuild]::Escape($(_AndroidPackage)))"
   />
 
   <GetExtraPackages
