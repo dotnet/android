@@ -80,15 +80,15 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </PropertyGroup>
     <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->
     <!-- Provider names become Java file names, so accept only a nonempty ASCII-decimal suffix. -->
-    <PropertyGroup>
-      <_AndroidNativeAotProviderPrefix>net.dot.jni.nativeaot.NativeAotRuntimeProvider_</_AndroidNativeAotProviderPrefix>
-      <_AndroidNativeAotProviderSuffix>substring-after(@android:name, '$(_AndroidNativeAotProviderPrefix)')</_AndroidNativeAotProviderSuffix>
-    </PropertyGroup>
     <XmlPeek
         XmlInputPath="$(IntermediateOutputPath)AndroidManifest.xml"
         ProhibitDtd="true"
         Namespaces="&lt;Namespace Prefix='android' Uri='http://schemas.android.com/apk/res/android' /&gt;"
-        Query="//provider[starts-with(@android:name, '$(_AndroidNativeAotProviderPrefix)') and $(_AndroidNativeAotProviderSuffix) != '' and translate($(_AndroidNativeAotProviderSuffix), '0123456789', '') = '']/@android:name">
+        Query="//provider[
+          starts-with(@android:name, 'net.dot.jni.nativeaot.NativeAotRuntimeProvider_') and
+          substring-after(@android:name, 'net.dot.jni.nativeaot.NativeAotRuntimeProvider_') != '' and
+          translate(substring-after(@android:name, 'net.dot.jni.nativeaot.NativeAotRuntimeProvider_'), '0123456789', '') = ''
+        ]/@android:name">
       <Output TaskParameter="Result" ItemName="_AndroidNativeAotRuntimeProviderName" />
     </XmlPeek>
     <ItemGroup>
