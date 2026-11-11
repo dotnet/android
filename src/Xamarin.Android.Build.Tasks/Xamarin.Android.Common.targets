@@ -1147,9 +1147,13 @@ because xbuild doesn't support framework reference assemblies.
   </CreateTemporaryDirectory>
 
   <!-- Create a dummy manifest file for aapt to work with -->
+  <PropertyGroup>
+    <__ResgenManifest><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="$(_AndroidPackage)" />]]></__ResgenManifest>
+  </PropertyGroup>
   <WriteLinesToFile
       File="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
-      Lines="&lt;%3Fxml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;%3F&gt;;&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; package=&quot;$(_AndroidPackage)&quot; /&gt;"
+      Lines="$(__ResgenManifest)"
       Overwrite="true"
   />
 
