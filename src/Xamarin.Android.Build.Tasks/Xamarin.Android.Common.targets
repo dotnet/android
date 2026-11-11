@@ -1143,7 +1143,8 @@ because xbuild doesn't support framework reference assemblies.
   </PropertyGroup>
   <ItemGroup>
     <_AndroidLibraryProjectDir Include="$([System.IO.Directory]::GetDirectories('$(_AndroidLibraryProjectsDir)'))" Condition="Exists('$(_AndroidLibraryProjectsDir)')" />
-    <_AndroidLibraryImportsDir Include="@(_AndroidLibraryProjectDir->'%(Identity)/$(_LibraryProjectImportsDirectoryName)');@(_AndroidLibraryProjectDir->'%(Identity)/library_project_imports')">
+    <_AndroidLibraryImportsDir Include="%(_AndroidLibraryProjectDir.Identity)/$(_LibraryProjectImportsDirectoryName);%(_AndroidLibraryProjectDir.Identity)/library_project_imports" />
+    <_AndroidLibraryImportsDir>
       <Manifest>%(Identity)/AndroidManifest.xml</Manifest>
       <Manifest Condition="Exists('%(Identity)/bin/AndroidManifest.xml')">%(Identity)/bin/AndroidManifest.xml</Manifest>
     </_AndroidLibraryImportsDir>
