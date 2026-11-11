@@ -10,9 +10,8 @@ namespace Xamarin.Android.Tools
 	{
 		AndroidSdkBase sdk;
 
-#pragma warning disable RS0027 // Keep the original constructor for existing callers.
-		public AndroidSdkInfo (Action<TraceLevel, string>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
-#pragma warning restore RS0027
+		// Retain the original CLR signature for compiled callers.
+		public AndroidSdkInfo (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath, string? javaSdkPath)
 			: this (logger, androidSdkPath, androidNdkPath, javaSdkPath, null)
 		{
 		}
@@ -21,8 +20,8 @@ namespace Xamarin.Android.Tools
 		/// Discovers tools using a complete environment snapshot. Missing variables do not fall back
 		/// to the process environment. A null snapshot preserves the original process-based behavior.
 		/// </summary>
-		public AndroidSdkInfo (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath, string? javaSdkPath,
-			IDictionary<string, string>? environmentVariables)
+		public AndroidSdkInfo (Action<TraceLevel, string>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null,
+			IDictionary<string, string>? environmentVariables = null)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 

@@ -50,15 +50,14 @@ namespace Xamarin.Android.Tools
 		{
 		}
 
-#pragma warning disable RS0027 // Keep the original constructor for existing callers.
-		public JdkInfo (string homePath, string? locator = null, Action<TraceLevel, string>? logger = null)
-#pragma warning restore RS0027
+		// Retain the original CLR signature for compiled callers.
+		public JdkInfo (string homePath, string? locator, Action<TraceLevel, string>? logger)
 			: this (homePath, locator, logger, null)
 		{
 		}
 
 		/// <summary>Uses a complete environment snapshot for executable lookup and Java probes.</summary>
-		public JdkInfo (string homePath, string? locator, Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
+		public JdkInfo (string homePath, string? locator = null, Action<TraceLevel, string>? logger = null, IDictionary<string, string>? environmentVariables = null)
 		{
 			if (homePath == null)
 				throw new ArgumentNullException (nameof (homePath));
@@ -338,16 +337,15 @@ namespace Xamarin.Android.Tools
 		}
 
 		// Keep ordering in sync w/ GetSupportedJdkInfos
-#pragma warning disable RS0027 // Keep the original method for existing callers.
-		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger = null)
-#pragma warning restore RS0027
+		// Retain the original CLR signature for compiled callers.
+		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger)
 			=> GetKnownSystemJdkInfos (logger, null);
 
 		/// <summary>
 		/// Discovers JDKs in the usual order using a complete environment snapshot.
 		/// Missing variables do not fall back to the process environment; null preserves the original behavior.
 		/// </summary>
-		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
+		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger = null, IDictionary<string, string>? environmentVariables = null)
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 			var locations = new JdkLocations (environmentVariables);
