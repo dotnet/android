@@ -2315,13 +2315,15 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="$(_OnResolveMonoAndroidSdks)"
 	>
 	<PropertyGroup>
-		<KeytoolToolExe Condition=" '$(KeytoolToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">keytool.exe</KeytoolToolExe>
-		<KeytoolToolExe Condition=" '$(KeytoolToolExe)' == '' ">keytool</KeytoolToolExe>
+		<_KeytoolToolExe>$(KeytoolToolExe)</_KeytoolToolExe>
+		<_KeytoolToolExe Condition=" '$(_KeytoolToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">keytool.exe</_KeytoolToolExe>
+		<_KeytoolToolExe Condition=" '$(_KeytoolToolExe)' == '' ">keytool</_KeytoolToolExe>
+		<_KeytoolCommand>&quot;$([System.IO.Path]::Combine('$(KeytoolToolPath)', '$(_KeytoolToolExe)'))&quot;</_KeytoolCommand>
 	</PropertyGroup>
 	<MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_ApkDebugKeyStore)'))"
 		Condition=" '$([System.IO.Path]::GetDirectoryName('$(_ApkDebugKeyStore)'))' != '' " />
 	<Exec
-		Command="&quot;$([System.IO.Path]::Combine('$(KeytoolToolPath)', '$(KeytoolToolExe)'))&quot; -genkeypair -alias androiddebugkey -storepass android -keypass android -keystore &quot;$(_ApkDebugKeyStore)&quot; -dname &quot;CN=Android Debug,O=Android,C=US&quot; -keyalg &quot;$(AndroidDebugKeyAlgorithm)&quot; -validity &quot;$(AndroidDebugKeyValidity)&quot; -storetype &quot;$(AndroidDebugStoreType)&quot;"
+		Command="$(_KeytoolCommand) -genkeypair -alias androiddebugkey -storepass android -keypass android -keystore &quot;$(_ApkDebugKeyStore)&quot; -dname &quot;CN=Android Debug,O=Android,C=US&quot; -keyalg &quot;$(AndroidDebugKeyAlgorithm)&quot; -validity &quot;$(AndroidDebugKeyValidity)&quot; -storetype &quot;$(AndroidDebugStoreType)&quot;"
 		IgnoreExitCode="True"
 		IgnoreStandardErrorWarningFormat="True"
 		ConsoleToMSBuild="True"
