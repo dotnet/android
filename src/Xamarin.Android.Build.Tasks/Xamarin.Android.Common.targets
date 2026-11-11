@@ -1142,10 +1142,9 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(_AndroidResgenFlagFile)">
 
   <!-- Create a temporary directory to work in -->
-  <CreateProperty Value="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
-    <Output TaskParameter="ValueSetByTask" PropertyName="ResgenTemporaryDirectory" />
-  </CreateProperty>
-  <MakeDir Directories="$(ResgenTemporaryDirectory)" />
+  <MakeDir Directories="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
+    <Output TaskParameter="DirectoriesCreated" PropertyName="ResgenTemporaryDirectory" />
+  </MakeDir>
 
   <!-- Create a dummy manifest file for aapt to work with -->
   <CreateResgenManifest
@@ -1650,10 +1649,9 @@ because xbuild doesn't support framework reference assemblies.
   -->
 
   <!-- Create a temporary directory to work in, or else R.java will always get updated -->
-  <CreateProperty Value="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
-    <Output TaskParameter="ValueSetByTask" PropertyName="AaptTemporaryDirectory" />
-  </CreateProperty>
-  <MakeDir Directories="$(AaptTemporaryDirectory)" />
+  <MakeDir Directories="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
+    <Output TaskParameter="DirectoriesCreated" PropertyName="AaptTemporaryDirectory" />
+  </MakeDir>
 
   <GetExtraPackages
       IntermediateOutputPath="$(IntermediateOutputPath)"
