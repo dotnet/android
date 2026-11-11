@@ -201,15 +201,20 @@ assetpacks/
              movie3.mp4
 ```
 
-We can then call `aapt2` to build these packs into `.zip` files. A new
-task `<Aapt2LinkAssetPack/>` task takes care of this. This is a special version
-of `Aapt2Link` which implements linking for asset packs only.
-It also takes care of a few problems which `aapt2` introduces. For some
-reason the zip file that is created has the `AndroidManifest.xml` file
+We then build the `aapt2 link` arguments in `_BuildAssetPacks` and run
+`aapt2` directly with `<Exec/>` to build these packs into `.zip` files,
+without using the shared aapt2 daemon. The Windows non-ASCII asset-directory
+check still emits localized APT2265 through `<AndroidError/>`. Other tool
+output uses MSBuild's standard `<Exec/>` diagnostic parsing instead of the
+`Aapt2` base class's APT error-code mapping, line-number adjustment, and
+additional diagnostic text. A nonzero exit code fails the build.
+
+The `<FixupAssetPackArchive/>` task takes care of problems which `aapt2`
+introduces. For some reason the zip file that is created has the `AndroidManifest.xml` file
 in the wrong place. It creates it in the root of the zip file, but the
 `bundletool` expects it to be in a `manifest` directory.
 `bundletool` will error out if its not in the right place.
-So `<Aapt2LinkAssetPack/>` takes care of this for us. It also removes a
+So `<FixupAssetPackArchive/>` takes care of this for us. It also removes a
 `resources.pb` which gets added. Again, `bundletool` will error if this
 file is in the zip file.
 
