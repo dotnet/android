@@ -11,7 +11,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.AdjustJavacVersionArguments" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Microsoft.Android.Tasks.CreateJavaArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
@@ -29,15 +28,17 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
   </PropertyGroup>
 
   <Target Name="_AdjustJavacVersionArguments">
-    <AdjustJavacVersionArguments
-        Condition=" '$(JavacTargetVersion)' == '' or '$(JavacSourceVersion)' == '' "
-        JdkVersion="$(_JdkVersion)"
-        DefaultJdkVersion="$(_DefaultJdkVersion)"
-        SkipJavacVersionCheck="$(AndroidSkipJavacVersionCheck)"
-        EnableMultiDex="$(AndroidEnableMultiDex)">
-      <Output TaskParameter="TargetVersion" PropertyName="JavacTargetVersion" />
-      <Output TaskParameter="SourceVersion" PropertyName="JavacSourceVersion" />
-    </AdjustJavacVersionArguments>
+    <PropertyGroup Condition=" '$(JavacTargetVersion)' == '' or '$(JavacSourceVersion)' == '' ">
+      <_AndroidJavacSkipVersionCheck>false</_AndroidJavacSkipVersionCheck>
+      <_AndroidJavacSkipVersionCheck Condition=" '$(AndroidSkipJavacVersionCheck)' != '' and $(AndroidSkipJavacVersionCheck) ">true</_AndroidJavacSkipVersionCheck>
+      <_AndroidJavacEnableMultiDex>false</_AndroidJavacEnableMultiDex>
+      <_AndroidJavacEnableMultiDex Condition=" '$(AndroidEnableMultiDex)' != '' and $(AndroidEnableMultiDex) ">true</_AndroidJavacEnableMultiDex>
+      <_AndroidJavacVersion />
+      <_AndroidJavacVersion Condition=" $(_JdkVersion.StartsWith ('9', StringComparison.OrdinalIgnoreCase)) ">$(_DefaultJdkVersion)</_AndroidJavacVersion>
+      <_AndroidJavacVersion Condition=" '$(_AndroidJavacSkipVersionCheck)' != 'true' and '$(_AndroidJavacEnableMultiDex)' == 'true' and $(_JdkVersion.StartsWith ('1.8', StringComparison.OrdinalIgnoreCase)) ">1.7</_AndroidJavacVersion>
+      <JavacTargetVersion Condition=" '$(_AndroidJavacVersion)' != '' ">$(_AndroidJavacVersion)</JavacTargetVersion>
+      <JavacSourceVersion Condition=" '$(_AndroidJavacVersion)' != '' ">$(_AndroidJavacVersion)</JavacSourceVersion>
+    </PropertyGroup>
   </Target>
 
   <Target Name="_DetermineBindingJavaLibrariesToCompile"
