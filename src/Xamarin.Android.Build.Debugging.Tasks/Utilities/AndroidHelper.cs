@@ -12,15 +12,10 @@ using Xamarin.Android.Build.Debugging.Tasks.Properties;
 
 namespace Xamarin.Android.Tasks
 {
-#if MICROSOFT_ANDROID_BUILD_TASKS
-	internal class AndroidHelper
-#else
 	public class AndroidHelper
-#endif
 	{
 		const string DefaultErrorCode = "XA0010";
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.Build;
-		static readonly object NullDevice = new object ();
 
 		static object GetKey (string target, string adbPath, TaskEnvironment taskEnvironment)
 		{
@@ -28,15 +23,27 @@ namespace Xamarin.Android.Tasks
 			return taskEnvironment == null ? key : (key, taskEnvironment.ProjectDirectory);
 		}
 
-		// Microsoft.Android.Build.Tasks.dll (FastDeploy) cannot read this assembly's assembly-local
-		// cache or AdbDeviceInfo type, so also share the selected serial ("" when there is no device).
-		static object GetSharedKey (object key) => ($"{nameof (AndroidHelper)}_AndroidDeviceSerial", key);
+		// This file is compiled into both Xamarin.Android.Build.Debugging.Tasks.dll and
+		// Microsoft.Android.Build.Tasks.dll (FastDeploy). Cache devices as framework types so both
+		// copies share them; an empty array means no device was found.
+		static void RegisterDevice (IBuildEngine4 engine, object key, AdbDeviceInfo device) =>
+			engine?.RegisterTaskObject (key, device == null ? [] : new object [] {
+				device.Serial, device.Description, (int) device.Type, (int) device.Status, device.AvdName,
+				device.Model, device.Product, device.Device, device.TransportId, device.LongOutput,
+			}, Lifetime, allowEarlyCollection: false);
 
-		static void RegisterDevice (IBuildEngine4 engine, object key, AdbDeviceInfo device)
-		{
-			engine?.RegisterTaskObjectAssemblyLocal (key, device ?? NullDevice, Lifetime, allowEarlyCollection: false);
-			engine?.RegisterTaskObject (GetSharedKey (key), device?.Serial ?? "", Lifetime, allowEarlyCollection: false);
-		}
+		static AdbDeviceInfo ToDevice (object [] cached) => new AdbDeviceInfo {
+			Serial = (string) cached [0],
+			Description = (string) cached [1],
+			Type = (AdbDeviceType) (int) cached [2],
+			Status = (AdbDeviceStatus) (int) cached [3],
+			AvdName = (string) cached [4],
+			Model = (string) cached [5],
+			Product = (string) cached [6],
+			Device = (string) cached [7],
+			TransportId = (string) cached [8],
+			LongOutput = (string) cached [9],
+		};
 
 		public static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe)
 		{
@@ -101,16 +108,13 @@ namespace Xamarin.Android.Tasks
 				GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
 			var key = GetKey (target, adbPath, taskEnvironment);
 			try {
-				var device = engine4?.GetRegisteredTaskObjectAssemblyLocal (key, Lifetime);
-#if MICROSOFT_ANDROID_BUILD_TASKS
-				if (device == null && engine4?.GetRegisteredTaskObject (GetSharedKey (key), Lifetime) is string serial)
-					device = serial.Length == 0 ? NullDevice : new AdbDeviceInfo { Serial = serial };
-#endif
-				if (device != null) {
+				if (engine4?.GetRegisteredTaskObject (key, Lifetime) is object [] cached) {
 					logMessage ("Using cached value from RegisterTaskObject");
-					if (ReferenceEquals (device, NullDevice))
+					if (cached.Length == 0) {
 						NoDeviceFound (target, key, logError, logErrors, engine4);
-					return device as AdbDeviceInfo;
+						return null;
+					}
+					return ToDevice (cached);
 				}
 				var runner = taskEnvironment == null ? CreateAdbRunner (adbToolPath, adbToolExe) :
 					CreateAdbRunner (adbToolPath, adbToolExe, taskEnvironment);
