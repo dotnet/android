@@ -689,6 +689,85 @@ public class UsesDependency {
 			return stream.ToArray ();
 		}
 
+		static readonly DateTimeOffset FixedAarEntryTime = new DateTimeOffset (2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+		// Entries use a fixed timestamp so that only the content differs between archives of the same size.
+		static byte [] CreateAarWithFixedTimestamp (string content)
+		{
+			using var stream = new MemoryStream ();
+			using (var aar = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				var entry = aar.CreateEntry ("classes.jar");
+				entry.LastWriteTime = FixedAarEntryTime;
+				using var entryStream = entry.Open ();
+				var bytes = Encoding.ASCII.GetBytes (content);
+				entryStream.Write (bytes, 0, bytes.Length);
+			}
+			return stream.ToArray ();
+		}
+
+		[Test]
+		public void ExtractAarSyncsFinalOutputs ()
+		{
+			var content = "version-1";
+			var library = new AndroidItem.AndroidLibrary ("foo.aar") {
+				BinaryContent = () => CreateAarWithFixedTimestamp (content),
+				MetadataValues = "Bind=false",
+			};
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.OtherBuildItems.Add (library);
+			using var builder = CreateDllBuilder ();
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var classesJar = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "classes.jar"));
+			FileAssert.Exists (classesJar);
+			Assert.AreEqual ("version-1", File.ReadAllText (classesJar));
+
+			// Same size and entry timestamp, different content: the final file must still be updated.
+			content = "version-2";
+			proj.Touch ("foo.aar");
+			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false), "Second _ExtractAar should have succeeded.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_ExtractAar", defaultIfNotUsed: true), "_ExtractAar should have run.");
+			Assert.AreEqual ("version-2", File.ReadAllText (classesJar), "Changed content should be copied to the final output.");
+
+			// Re-running with unchanged content must not rewrite the final file.
+			var timestamp = new DateTime (2021, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			File.SetLastWriteTimeUtc (classesJar, timestamp);
+			proj.Touch ("foo.aar");
+			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false), "Third _ExtractAar should have succeeded.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_ExtractAar", defaultIfNotUsed: true), "_ExtractAar should have run.");
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (classesJar), "Unchanged final output should keep its timestamp.");
+
+			// Removing the last .aar must remove its stale extracted output.
+			proj.OtherBuildItems.Remove (library);
+			File.Delete (Path.Combine (Root, builder.ProjectDirectory, "foo.aar"));
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Build after removing the .aar should have succeeded.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_ExtractAar", defaultIfNotUsed: true), "_ExtractAar should have run.");
+			FileAssert.DoesNotExist (classesJar, "Stale output should be removed after the last .aar is removed.");
+		}
+
+		[Test]
+		public void ExtractAarLaterArchiveWinsBasenameCollision ()
+		{
+			// Both archives extract to `foo.aar`; their entries have the same size and timestamp.
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("first\\foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp ("first"),
+						MetadataValues = "Bind=false",
+					},
+					new AndroidItem.AndroidLibrary ("other\\foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp ("other"),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			var classesJar = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "classes.jar"));
+			Assert.AreEqual ("other", File.ReadAllText (classesJar), "The later archive should win.");
+		}
+
 		[Test]
 		public void RemoveEventHandlerResolution ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
