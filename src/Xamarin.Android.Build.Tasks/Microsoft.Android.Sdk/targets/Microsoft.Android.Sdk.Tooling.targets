@@ -106,10 +106,11 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
     <ItemGroup Condition=" '$(AndroidApplication)' == 'true' ">
       <_AndroidRuntimeIdentifierAbi Include="$([MSBuild]::ValueOrDefault('$(RuntimeIdentifiers)', '$(RuntimeIdentifier)').Split(';'))" />
       <_AndroidRuntimeIdentifierAbi>
-        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android(\.[0-9.]+)?-arm64$'))">arm64-v8a</Abi>
-        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android(\.[0-9.]+)?-arm$'))">armeabi-v7a</Abi>
-        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android(\.[0-9.]+)?-x86$'))">x86</Abi>
-        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android(\.[0-9.]+)?-x64$'))">x86_64</Abi>
+        <Abi Condition="$([System.String]::Copy('%(Identity)').EndsWith('-arm64', StringComparison.OrdinalIgnoreCase))">arm64-v8a</Abi>
+        <Abi Condition="$([System.String]::Copy('%(Identity)').EndsWith('-arm', StringComparison.OrdinalIgnoreCase))">armeabi-v7a</Abi>
+        <Abi Condition="$([System.String]::Copy('%(Identity)').EndsWith('-x86', StringComparison.OrdinalIgnoreCase))">x86</Abi>
+        <Abi Condition="$([System.String]::Copy('%(Identity)').EndsWith('-x64', StringComparison.OrdinalIgnoreCase))">x86_64</Abi>
+        <Abi Condition="!$([System.String]::Copy('%(Identity)').StartsWith('android', StringComparison.OrdinalIgnoreCase))"></Abi>
       </_AndroidRuntimeIdentifierAbi>
     </ItemGroup>
     <AndroidError
