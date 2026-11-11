@@ -110,11 +110,10 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
         <Abi Condition="$([System.String]::Copy('%(Identity)').EndsWith('-arm', StringComparison.OrdinalIgnoreCase))">armeabi-v7a</Abi>
         <Abi Condition="$([System.String]::Copy('%(Identity)').EndsWith('-x86', StringComparison.OrdinalIgnoreCase))">x86</Abi>
         <Abi Condition="$([System.String]::Copy('%(Identity)').EndsWith('-x64', StringComparison.OrdinalIgnoreCase))">x86_64</Abi>
-        <Abi Condition="!$([System.String]::Copy('%(Identity)').StartsWith('android', StringComparison.OrdinalIgnoreCase))"></Abi>
       </_AndroidRuntimeIdentifierAbi>
     </ItemGroup>
     <AndroidError
-        Condition=" '$(AndroidApplication)' == 'true' and '%(_AndroidRuntimeIdentifierAbi.Abi)' == '' "
+        Condition=" '$(AndroidApplication)' == 'true' and ('%(_AndroidRuntimeIdentifierAbi.Abi)' == '' or !$([System.String]::Copy('%(_AndroidRuntimeIdentifierAbi.Identity)').StartsWith('android', StringComparison.OrdinalIgnoreCase))) "
         Code="XA0035"
         ResourceName="XA0035"
         FormatArguments="%(_AndroidRuntimeIdentifierAbi.Identity)" />
