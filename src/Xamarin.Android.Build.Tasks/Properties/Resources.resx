@@ -211,11 +211,6 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
     <value>AAPT2 was not found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</value>
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
-  <data name="XA0116" xml:space="preserve">
-    <value>Unable to find `EmbeddedResource` named `{0}`.</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>

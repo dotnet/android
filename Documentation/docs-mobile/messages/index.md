@@ -70,7 +70,6 @@ ms.date: 04/11/2024
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
 + [XA0113](xa0113.md): Legacy Google Play target API warning; no longer emitted by current SDKs.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
-+ [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
 + [XA0117](xa0117.md): Legacy deprecated `TargetFrameworkVersion` warning; no longer emitted by current SDKs.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
@@ -324,7 +323,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
-* `CPR` - `CopyResource`
 * `CPT` - `ComputeHash`
 * `CRC` - `ConvertResourcesCases`
 * `CRM` - `CreateResgenManifest`
