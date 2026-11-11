@@ -10,8 +10,7 @@ projects.
 -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar"   AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GetNativeLibraryAbis" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_AarCacheFile>$(IntermediateOutputPath)$(TargetName).aar.cache</_AarCacheFile>
@@ -82,9 +81,25 @@ projects.
         ResourceName="XA1041"
         FormatArguments="MonoAndroidAssetsPrefix;$(MonoAndroidAssetsPrefix)"
     />
-    <GetNativeLibraryAbis NativeLibraries="@(EmbeddedNativeLibrary)">
-      <Output TaskParameter="Output" ItemName="_AarNativeLibrary" />
-    </GetNativeLibraryAbis>
+    <!--
+      Mirrors AndroidRidAbiHelper.GetNativeLibraryAbi. Replacing with "$1$2$3" yields the ABI of an ABI-named parent
+      directory (optionally prefixed with "interpreter-"), else the architecture of a RID-named parent or grandparent
+      directory, else empty.
+    -->
+    <PropertyGroup>
+      <_AarAbiFromPathPattern>(?i)^(?:.*[\\/](?:interpreter-)?(arm64-v8a|armeabi-v7a|x86_64|x86)|.*[\\/](?:interpreter-)?android[^\\/]*-(arm64|arm|x86|x64)|.*[\\/]android[^\\/]*-(arm64|arm|x86|x64)[\\/][^\\/]*)[\\/][^\\/]*$|.*</_AarAbiFromPathPattern>
+      <_AarAbiFromRidPattern>(?i)^android.*-(arm64|arm|x86|x64)$|.*</_AarAbiFromRidPattern>
+    </PropertyGroup>
+    <!-- %(Abi) wins; otherwise %(RuntimeIdentifier), else %(Link), falling back to the library's own path. -->
+    <ItemGroup>
+      <_AarNativeLibraryAbi Include="@(EmbeddedNativeLibrary)" Condition=" '%(EmbeddedNativeLibrary.RuntimeIdentifier)' != '' "
+          AbiToken="$([System.Text.RegularExpressions.Regex]::Replace('%(EmbeddedNativeLibrary.RuntimeIdentifier)', '$(_AarAbiFromRidPattern)', '$1'))" />
+      <_AarNativeLibraryAbi Include="@(EmbeddedNativeLibrary)" Condition=" '%(EmbeddedNativeLibrary.RuntimeIdentifier)' == '' and '%(EmbeddedNativeLibrary.Link)' != '' "
+          AbiToken="$([System.Text.RegularExpressions.Regex]::Replace($([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(EmbeddedNativeLibrary.Link)')), '$(_AarAbiFromPathPattern)', '$1$2$3'))" />
+      <_AarNativeLibraryAbi Include="@(EmbeddedNativeLibrary)" Condition=" '%(EmbeddedNativeLibrary.RuntimeIdentifier)' == '' and '%(EmbeddedNativeLibrary.Link)' == '' " />
+      <_AarNativeLibrary Include="@(_AarNativeLibraryAbi)" RemoveMetadata="AbiToken"
+          Abi="$([MSBuild]::ValueOrDefault('%(_AarNativeLibraryAbi.Abi)', $([System.String]::Concat('/', $([MSBuild]::ValueOrDefault('%(_AarNativeLibraryAbi.AbiToken)', $([System.Text.RegularExpressions.Regex]::Replace('%(_AarNativeLibraryAbi.FullPath)', '$(_AarAbiFromPathPattern)', '$1$2$3')))), '/').ToLowerInvariant().Replace('/arm64/', '/arm64-v8a/').Replace('/arm/', '/armeabi-v7a/').Replace('/x64/', '/x86_64/').Trim('/'))))" />
+    </ItemGroup>
     <AndroidError
         Condition=" '%(_AarNativeLibrary.Abi)' == '' "
         Code="XA4301"
