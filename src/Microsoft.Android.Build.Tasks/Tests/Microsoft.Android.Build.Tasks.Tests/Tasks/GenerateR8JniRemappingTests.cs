@@ -501,6 +501,30 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		[Test]
+		public void EquivalentOutputPathIsNotReadAsExistingRemapping ()
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string outputFile = Path.Combine (TestDirectory, "remap.xml");
+			File.WriteAllText (mappingFile, "com.contoso.Peer -> a.b:\n");
+			File.WriteAllText (outputFile, """
+				<replacements>
+				  <replace-type from="com/contoso/Peer" to="old/Peer" />
+				</replacements>
+				""");
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = engine,
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (TestDirectory, new Dictionary<string, string> ()),
+				MappingFile = "mapping.txt",
+				OutputFile = "remap.xml",
+				ExistingRemapXmlFiles = [new TaskItem (Path.Combine (".", "remap.xml"))],
+			};
+
+			Assert.IsTrue (task.Execute ());
+			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", File.ReadAllText (outputFile));
+			Assert.IsEmpty (Warnings);
+		}
+
+		[Test]
 		public void MissingLinkedAssemblyReportsXA4325 ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");

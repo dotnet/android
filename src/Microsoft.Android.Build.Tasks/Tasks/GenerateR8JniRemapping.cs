@@ -361,9 +361,10 @@ namespace Microsoft.Android.Tasks
 			var readerSettings = new XmlReaderSettings {
 				XmlResolver = null,
 			};
+			string outputFile = Path.GetFullPath (TaskEnvironment.GetAbsolutePath (OutputFile).Value);
 			foreach (ITaskItem item in ExistingRemapXmlFiles) {
-				string file = TaskEnvironment.GetAbsolutePath (item.ItemSpec);
-				if (string.Equals (file, TaskEnvironment.GetAbsolutePath (OutputFile), StringComparison.OrdinalIgnoreCase)) {
+				var file = TaskEnvironment.GetAbsolutePath (item.ItemSpec);
+				if (string.Equals (Path.GetFullPath (file.Value), outputFile, StringComparison.OrdinalIgnoreCase)) {
 					continue;
 				}
 				if (!File.Exists (file)) {

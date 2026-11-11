@@ -152,10 +152,10 @@ public class GenerateTrimmableTypeMap : MultithreadedAndroidTask
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
 		var frameworkAssemblyPaths = new HashSet<string> (
-			ResolvedFrameworkAssemblies.Select (i => TaskEnvironment.GetAbsolutePath (i.ItemSpec).ToString ()),
+			ResolvedFrameworkAssemblies.Select (i => Path.GetFullPath (TaskEnvironment.GetAbsolutePath (i.ItemSpec).Value)),
 			StringComparer.OrdinalIgnoreCase);
 		var assemblyInputs = ResolvedAssemblies
-			.GroupBy (i => TaskEnvironment.GetAbsolutePath (i.ItemSpec).ToString (), StringComparer.OrdinalIgnoreCase)
+			.GroupBy (i => Path.GetFullPath (TaskEnvironment.GetAbsolutePath (i.ItemSpec).Value), StringComparer.OrdinalIgnoreCase)
 			.Select (g => (
 				Path: g.Key,
 				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem)))
@@ -165,8 +165,8 @@ public class GenerateTrimmableTypeMap : MultithreadedAndroidTask
 			frameworkAssemblyNames.Add (assemblyName);
 		}
 		if (CleanJavaSourceOutputDirectory && !JavaSourceInputDirectory.IsNullOrEmpty ()) {
-			var inputDirectory = TaskEnvironment.GetAbsolutePath (JavaSourceInputDirectory);
-			var outputDirectory = TaskEnvironment.GetAbsolutePath (JavaSourceOutputDirectory);
+			var inputDirectory = Path.TrimEndingDirectorySeparator (Path.GetFullPath (TaskEnvironment.GetAbsolutePath (JavaSourceInputDirectory).Value));
+			var outputDirectory = Path.TrimEndingDirectorySeparator (Path.GetFullPath (TaskEnvironment.GetAbsolutePath (JavaSourceOutputDirectory).Value));
 			if (string.Equals (inputDirectory, outputDirectory, StringComparison.OrdinalIgnoreCase)) {
 				Log.LogCodedError ("XA4254", Properties.Resources.XA4254, inputDirectory, outputDirectory);
 				return false;
@@ -507,13 +507,13 @@ public class GenerateTrimmableTypeMap : MultithreadedAndroidTask
 		}
 
 		var expectedFiles = new HashSet<string> (
-			generatedJavaFiles.Select (i => TaskEnvironment.GetAbsolutePath (i.ItemSpec).ToString ()),
+			generatedJavaFiles.Select (i => Path.GetFullPath (TaskEnvironment.GetAbsolutePath (i.ItemSpec).Value)),
 			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 		var deleted = new List<ITaskItem> ();
 
 		if (priorJavaSnapshot is not null) {
 			foreach (var path in priorJavaSnapshot) {
-				var fullPath = TaskEnvironment.GetAbsolutePath (path);
+				var fullPath = Path.GetFullPath (TaskEnvironment.GetAbsolutePath (path).Value);
 				if (expectedFiles.Contains (fullPath)) {
 					continue;
 				}
@@ -526,7 +526,7 @@ public class GenerateTrimmableTypeMap : MultithreadedAndroidTask
 		}
 
 		foreach (var path in Directory.EnumerateFiles (TaskEnvironment.GetAbsolutePath (JavaSourceOutputDirectory), "*.java", SearchOption.AllDirectories)) {
-			var fullPath = TaskEnvironment.GetAbsolutePath (path);
+			var fullPath = Path.GetFullPath (TaskEnvironment.GetAbsolutePath (path).Value);
 			if (expectedFiles.Contains (fullPath)) {
 				continue;
 			}

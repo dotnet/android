@@ -259,6 +259,77 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsEmpty (task.GeneratedJavaFiles);
 		}
 
+		[TestCase ("java", "java/../java", TestName = "Execute_EquivalentJavaDirectoriesAreRejected_DotSegments")]
+		[TestCase ("java", "java/", TestName = "Execute_EquivalentJavaDirectoriesAreRejected_OutputSeparator")]
+		[TestCase ("java/", "java", TestName = "Execute_EquivalentJavaDirectoriesAreRejected_InputSeparator")]
+		public void Execute_EquivalentJavaDirectoriesAreRejected (string inputDirectory, string outputDirectory)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			var javaDirectory = Path.Combine (directory, "java");
+			Directory.CreateDirectory (javaDirectory);
+			var inputFile = Path.Combine (javaDirectory, "Input.java");
+			File.WriteAllText (inputFile, "input");
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = CreateTask ([], "typemap", outputDirectory, errors: errors);
+			task.TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ());
+			task.JavaSourceInputDirectory = inputDirectory;
+			task.CleanJavaSourceOutputDirectory = true;
+
+			Assert.IsFalse (task.Execute (), "Equivalent input and output directories must be rejected before cleanup.");
+			Assert.IsTrue (errors.Any (error => error.Code == "XA4254"));
+			FileAssert.Exists (inputFile, "Cleanup must not delete input Java sources.");
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void Execute_DeletesOnlyStaleJavaSources (bool cleanOutput)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			var assembly = CreateRegisteredPeerAssembly (directory);
+			var generatedPath = Path.Combine (directory, "java", "com", "example", "Peer.java");
+			var stalePath = Path.Combine (directory, "java", "old", "Stale.java");
+			Directory.CreateDirectory (Path.GetDirectoryName (generatedPath));
+			Directory.CreateDirectory (Path.GetDirectoryName (stalePath));
+			File.WriteAllText (generatedPath, "old generated content");
+			File.WriteAllText (stalePath, "stale");
+			var task = CreateTask ([new TaskItem (assembly)], "typemap", "java");
+			task.TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ());
+			task.GenerateTypeMapAssemblies = false;
+			task.CleanJavaSourceOutputDirectory = cleanOutput;
+
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual (1, task.GeneratedJavaFiles.Length);
+			FileAssert.Exists (generatedPath, "A regenerated Java source must not be deleted as stale.");
+			FileAssert.DoesNotExist (stalePath);
+			var deleted = task.DeletedJavaFiles.Single ();
+			Assert.AreEqual (stalePath, deleted.ItemSpec);
+			Assert.AreEqual (Path.Combine ("old", "Stale.java"), deleted.GetMetadata ("RelativePath"));
+		}
+
+		[Test]
+		public void Execute_EquivalentAssemblyPathsAreRecognized ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			CreateRegisteredPeerAssembly (directory);
+			var messages = new List<BuildMessageEventArgs> ();
+			var task = CreateTask ([
+				new TaskItem ("Fixture.dll"),
+				new TaskItem (Path.Combine (".", "Fixture.dll")),
+			], "typemap", "java", messages: messages);
+			task.TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ());
+			task.ResolvedFrameworkAssemblies = [new TaskItem (Path.Combine (".", ".", "Fixture.dll"))];
+
+			Assert.IsTrue (task.Execute ());
+			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("Scanned 1 assemblies", StringComparison.Ordinal) == true));
+			using var typeMap = Mono.Cecil.AssemblyDefinition.ReadAssembly (Path.Combine (directory, "typemap", "_Fixture.TypeMap.dll"));
+			var peer = typeMap.CustomAttributes.Single (attribute =>
+				attribute.AttributeType.Name == "TypeMapAttribute`1" &&
+				(string) attribute.ConstructorArguments [0].Value == "com/example/Peer");
+			Assert.AreEqual (3, peer.ConstructorArguments.Count, "The equivalent framework path must identify the peer as a framework type.");
+		}
+
 		[Test]
 		public void Execute_RelativePathsUseTaskDirectory ()
 		{
@@ -686,6 +757,28 @@ namespace Xamarin.Android.Build.Tests {
 				TargetFrameworkVersion = tfv,
 				TypeMapFingerprintsFile = Path.Combine (outputDir, "typemap-fingerprints.txt"),
 			};
+		}
+
+		static string CreateRegisteredPeerAssembly (string directory)
+		{
+			var path = Path.Combine (directory, "Fixture.dll");
+			using var assembly = Mono.Cecil.AssemblyDefinition.CreateAssembly (
+				new Mono.Cecil.AssemblyNameDefinition ("Fixture", new Version (1, 0)),
+				"Fixture", Mono.Cecil.ModuleKind.Dll);
+			var module = assembly.MainModule;
+			var interop = new Mono.Cecil.AssemblyNameReference ("Java.Interop", new Version (1, 0));
+			module.AssemblyReferences.Add (interop);
+			var attributeType = new Mono.Cecil.TypeReference ("Java.Interop", "JniTypeSignatureAttribute", module, interop);
+			var constructor = new Mono.Cecil.MethodReference (".ctor", module.TypeSystem.Void, attributeType) { HasThis = true };
+			constructor.Parameters.Add (new Mono.Cecil.ParameterDefinition (module.TypeSystem.String));
+			var attribute = new Mono.Cecil.CustomAttribute (constructor);
+			attribute.ConstructorArguments.Add (new Mono.Cecil.CustomAttributeArgument (module.TypeSystem.String, "com/example/Peer"));
+			var peer = new Mono.Cecil.TypeDefinition ("Example", "Peer",
+				Mono.Cecil.TypeAttributes.Public | Mono.Cecil.TypeAttributes.Class, module.TypeSystem.Object);
+			peer.CustomAttributes.Add (attribute);
+			module.Types.Add (peer);
+			assembly.Write (path);
+			return path;
 		}
 
 		static ITaskItem? FindMonoAndroidDll ()
