@@ -541,8 +541,8 @@ and JCW JNI lanes already pass `IncludeCategories=JniReferenceLeak`; keep
 that build/runtime-configuration path rather than introducing NUnit filters,
 worker arguments, or host UID slicing for Android.
 
-The separate opt-in [native host pilot](../../build-tools/automation/native-mtp-ci.md)
-builds and slices only SourceWriter. Its Azure result publication does not
+The separate opt-in [host pilot](../../tests/Xamarin.SourceWriter-Tests/README.md)
+runs SourceWriter directly through MTP and publishes its TRX. It does not
 validate Android installation, instrumentation, JNI, trimming, or NativeAOT.
 Conversely, device runs do not establish remote Azure publication or
 cross-platform host contracts. Keep those acceptance gates independent.
