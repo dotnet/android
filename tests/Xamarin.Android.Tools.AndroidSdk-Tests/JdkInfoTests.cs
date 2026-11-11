@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tools.Tests
 			var root = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
 			try {
 				CreateFauxJdk (root, "999.123.456", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
-				var messages = new List<string> ();
+				var messages    = new List<string> ();
 				var environment = new Dictionary<string, string> {
 					[variable] = variable == "PATH" ? Path.Combine (root, "bin") : root,
 					["PATHEXT"] = ".CMD",
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools.Tests
 				if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
 					environment ["SystemRoot"] = systemRoot;
 				var versionRange = new Version (999, 123, 456);
-				var jdk = JdkInfo.FindJdk ((_, message) => messages.Add (message), null, versionRange, versionRange, environment);
+				var jdk          = JdkInfo.FindJdk ((_, message) => messages.Add (message), null, versionRange, versionRange, environment);
 				Assert.IsNotNull (jdk);
 				Assert.AreEqual (root, jdk.HomePath);
 				Assert.AreEqual ($"${variable}", jdk.Locator);

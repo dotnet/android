@@ -37,9 +37,9 @@ namespace Xamarin.Android.Build.Tests {
 		[Platform ("Win")]
 		public void ResolveSdksEnvironmentPreservesMissingToolErrors (bool missingSdk)
 		{
-			var path = Path.Combine ("temp", TestName);
-			var sdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "sdk"), "37.0.0");
-			var jdk = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out _, out _);
+			var path   = Path.Combine ("temp", TestName);
+			var sdk    = CreateFauxAndroidSdkDirectory (Path.Combine (path, "sdk"), "37.0.0");
+			var jdk    = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out _, out _);
 			var errors = new List<BuildErrorEventArgs> ();
 			try {
 				File.Move (Path.Combine (sdk, "platform-tools", "adb.exe"), Path.Combine (sdk, "platform-tools", "adb.DISCOVERY"));

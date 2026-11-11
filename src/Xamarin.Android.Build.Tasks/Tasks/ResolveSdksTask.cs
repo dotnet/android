@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tasks
 
 			var environmentVariables = TaskEnvironment.GetEnvironmentVariables ()
 				.ToDictionary (pair => pair.Key, pair => pair.Value, OS.IsWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-			JavaSdkPath         = JdkInfo.FindJdk (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion, environmentVariables)?.HomePath;
+			JavaSdkPath              = JdkInfo.FindJdk (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion, environmentVariables)?.HomePath;
 
 			MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
 

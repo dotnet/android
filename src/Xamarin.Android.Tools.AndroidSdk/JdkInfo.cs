@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tools
 		Lazy<Version?>                              javaVersion;
 
 		Action<TraceLevel, string>                  logger;
-		readonly IDictionary<string, string>? environmentVariables;
+		readonly IDictionary<string, string>?       environmentVariables;
 
 		public JdkInfo (string homePath)
 			: this (homePath, null, null)
@@ -62,9 +62,9 @@ namespace Xamarin.Android.Tools
 			if (!Directory.Exists (homePath))
 				throw new ArgumentException ("Not a directory", nameof (homePath));
 
-			HomePath            = homePath;
-			Locator             = locator;
-			this.logger         = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+			HomePath                  = homePath;
+			Locator                   = locator;
+			this.logger               = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 			this.environmentVariables = environmentVariables;
 
 			var binPath         = Path.Combine (HomePath, "bin");
@@ -352,7 +352,7 @@ namespace Xamarin.Android.Tools
 
 		internal static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
 		{
-			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+			logger        = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 			var locations = new JdkLocations (environmentVariables);
 
 			return GetEnvironmentVariableJdks (EnvironmentVariableNames.JiJavaHome, logger, environmentVariables)
@@ -374,7 +374,7 @@ namespace Xamarin.Android.Tools
 		// Keep ordering in sync w/ GetKnownSystemJdkInfos
 		public static IEnumerable<JdkInfo> GetSupportedJdkInfos (Action<TraceLevel, string>? logger = null)
 		{
-			logger = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+			logger        = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 			var locations = new JdkLocations ();
 
 			return locations.GetMicrosoftOpenJdks (logger)

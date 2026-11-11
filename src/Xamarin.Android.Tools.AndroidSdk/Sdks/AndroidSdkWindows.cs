@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools
 
 		public override string? PreferedAndroidSdkPath {
 			get {
-				var wow = RegistryEx.Wow64.Key32;
+				var wow    = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey (EnvironmentVariables);
 				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb, EnvironmentVariables))
 					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, wow);
@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tools
 		}
 		public override string? PreferedAndroidNdkPath {
 			get {
-				var wow = RegistryEx.Wow64.Key32;
+				var wow    = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey (EnvironmentVariables);
 				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack, EnvironmentVariables))
 					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, wow);
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tools
 		}
 		public override string? PreferedJavaSdkPath {
 			get {
-				var wow = RegistryEx.Wow64.Key32;
+				var wow    = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey (EnvironmentVariables);
 				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, wow, "bin", JarSigner, EnvironmentVariables))
 					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, wow);
@@ -73,8 +73,8 @@ namespace Xamarin.Android.Tools
 
 		protected override IEnumerable<string> GetAllAvailableAndroidSdks ()
 		{
-			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
-			var wow = RegistryEx.Wow64.Key32;
+			var roots  = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
+			var wow    = RegistryEx.Wow64.Key32;
 			var regKey = GetMDRegistryKey (EnvironmentVariables);
 
 			Logger (TraceLevel.Info, "Looking for Android SDK...");
@@ -116,8 +116,8 @@ namespace Xamarin.Android.Tools
 		protected override IEnumerable<string> GetAllAvailableAndroidNdks ()
 		{
 
-			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
-			var wow = RegistryEx.Wow64.Key32;
+			var roots  = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
+			var wow    = RegistryEx.Wow64.Key32;
 			var regKey = GetMDRegistryKey (EnvironmentVariables);
 
 			Logger (TraceLevel.Info, "Looking for Android NDK...");

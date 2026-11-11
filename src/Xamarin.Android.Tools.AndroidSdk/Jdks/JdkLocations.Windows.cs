@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tools {
 
 		string? GetWindowsPreferredJdkPath ()
 		{
-			var wow = RegistryEx.Wow64.Key32;
+			var wow    = RegistryEx.Wow64.Key32;
 			var regKey = AndroidSdkWindows.GetMDRegistryKey (environmentVariables);
 			if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow, "bin", "java.exe", environmentVariables))
 				return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow);

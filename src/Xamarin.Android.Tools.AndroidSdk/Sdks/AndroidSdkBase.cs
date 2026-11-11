@@ -35,12 +35,12 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		public readonly Action<TraceLevel, string> Logger;
+		public    readonly Action<TraceLevel, string>   Logger;
 		protected readonly IDictionary<string, string>? EnvironmentVariables;
 
 		public AndroidSdkBase (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
 		{
-			Logger  = logger;
+			Logger               = logger;
 			EnvironmentVariables = environmentVariables;
 		}
 
