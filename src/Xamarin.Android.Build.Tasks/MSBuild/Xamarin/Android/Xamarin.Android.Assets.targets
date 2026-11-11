@@ -141,6 +141,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_AndroidAssetPackAapt2ToolExe>aapt2</_AndroidAssetPackAapt2ToolExe>
     <_AndroidAssetPackAapt2ToolExe Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">aapt2.exe</_AndroidAssetPackAapt2ToolExe>
     <_AndroidAssetPackAapt2ToolExe Condition=" '$(Aapt2ToolExe)' != '' ">$(Aapt2ToolExe)</_AndroidAssetPackAapt2ToolExe>
+    <_AndroidAssetPackAapt2ToolCommand>&quot;$([System.IO.Path]::Combine('$(Aapt2ToolPath)', '$(_AndroidAssetPackAapt2ToolExe)'))&quot;</_AndroidAssetPackAapt2ToolCommand>
     <_AndroidAssetPackLinkArguments>link</_AndroidAssetPackLinkArguments>
     <_AndroidAssetPackLinkArguments Condition=" '$([System.Environment]::GetEnvironmentVariable('__XA_LOG_ERRORS__'))' == 'icanhaz' ">$(_AndroidAssetPackLinkArguments) -v</_AndroidAssetPackLinkArguments>
   </PropertyGroup>
@@ -158,7 +159,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
   <Exec
       Condition=" '@(_AndroidAssetPackLink->Count())' != '0' "
-      Command="&quot;$([System.IO.Path]::Combine('$(Aapt2ToolPath)', '$(_AndroidAssetPackAapt2ToolExe)'))&quot; %(_AndroidAssetPackLink.Arguments)"
+      Command="$(_AndroidAssetPackAapt2ToolCommand) %(_AndroidAssetPackLink.Arguments)"
       WorkingDirectory="$(MSBuildProjectDirectory)"
   />
   <FixupAssetPackArchive
