@@ -20,7 +20,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidComputeResPaths" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidSignPackage" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.AndroidCreateDebugKey" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidError" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidMessage" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidWarning" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -72,7 +71,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2316,18 +2314,29 @@ because xbuild doesn't support framework reference assemblies.
 		Condition="!Exists ('$(_ApkDebugKeyStore)') And '$(AndroidKeyStore)' != 'True' "
 		DependsOnTargets="$(_OnResolveMonoAndroidSdks)"
 	>
-	<AndroidCreateDebugKey
-		KeyStore="$(_ApkDebugKeyStore)"
-		KeyAlias="androiddebugkey"
-		KeyPass="android"
-		StorePass="android"
-		StoreType="$(AndroidDebugStoreType)"
-		KeyAlgorithm="$(AndroidDebugKeyAlgorithm)"
-		Validity="$(AndroidDebugKeyValidity)"
-		ToolPath="$(KeytoolToolPath)"
-		ToolExe="$(KeytoolToolExe)"
-		Command="-genkeypair"
-	 />
+	<PropertyGroup>
+		<KeytoolToolExe Condition=" '$(KeytoolToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">keytool.exe</KeytoolToolExe>
+		<KeytoolToolExe Condition=" '$(KeytoolToolExe)' == '' ">keytool</KeytoolToolExe>
+	</PropertyGroup>
+	<MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_ApkDebugKeyStore)'))"
+		Condition=" '$([System.IO.Path]::GetDirectoryName('$(_ApkDebugKeyStore)'))' != '' " />
+	<Exec
+		Command="&quot;$([System.IO.Path]::Combine('$(KeytoolToolPath)', '$(KeytoolToolExe)'))&quot; -genkeypair -alias androiddebugkey -storepass android -keypass android -keystore &quot;$(_ApkDebugKeyStore)&quot; -dname &quot;CN=Android Debug,O=Android,C=US&quot; -keyalg &quot;$(AndroidDebugKeyAlgorithm)&quot; -validity &quot;$(AndroidDebugKeyValidity)&quot; -storetype &quot;$(AndroidDebugStoreType)&quot;"
+		IgnoreExitCode="True"
+		IgnoreStandardErrorWarningFormat="True"
+		ConsoleToMSBuild="True"
+		StandardOutputImportance="Low"
+		StandardErrorImportance="Low">
+		<Output TaskParameter="ExitCode" PropertyName="_AndroidDebugKeyExitCode" />
+		<Output TaskParameter="ConsoleOutput" PropertyName="_AndroidDebugKeyOutput" />
+	</Exec>
+	<!-- Another project may have created the shared debug key after the target's existence check. -->
+	<Warning Code="ANDKT0000"
+		Text="$(_AndroidDebugKeyOutput.Replace('error:', 'warning:'))"
+		Condition=" $(_AndroidDebugKeyOutput.Contains('alias &lt;androiddebugkey&gt; already exists')) or ('$(_AndroidDebugKeyExitCode)' == '0' and $(_AndroidDebugKeyOutput.Contains('Warning:'))) " />
+	<Error Code="ANDKT0000"
+		Text="keytool exited with code $(_AndroidDebugKeyExitCode): $(_AndroidDebugKeyOutput)"
+		Condition=" '$(_AndroidDebugKeyExitCode)' != '0' and !$(_AndroidDebugKeyOutput.Contains('alias &lt;androiddebugkey&gt; already exists')) " />
 </Target>
 
 <Target Name="_ResolveAndroidSigningKey" DependsOnTargets="$(_OnResolveMonoAndroidSdks);_CreateAndroidDebugSigningKey">

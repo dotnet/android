@@ -779,23 +779,10 @@ namespace UnnamedProject {
 			string keyfile = Path.Combine (Root, "temp", TestName, "keystore", "release.keystore");
 			if (File.Exists (keyfile))
 				File.Delete (keyfile);
-			string keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
-			var engine = new MockBuildEngine (Console.Out);
 			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
 			string alias = "release store";
-			var task = new AndroidCreateDebugKey {
-				BuildEngine = engine,
-				KeyStore = keyfile,
-				StorePass = pass,
-				KeyAlias = alias,
-				KeyPass = pass,
-				KeyAlgorithm="RSA",
-				Validity=30,
-				StoreType="pkcs12",
-				Command="-genkeypair",
-				ToolPath = keyToolPath,
-			};
-			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
+			Directory.CreateDirectory (Path.GetDirectoryName (keyfile));
+			ResourceData.GenerateKeystore (keyfile, storePass: pass, keyAlias: alias, keyPass: pass);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};

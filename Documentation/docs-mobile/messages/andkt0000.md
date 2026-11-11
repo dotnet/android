@@ -17,6 +17,10 @@ Errors reported by `keytool` and other Android command line tooling are
 outside of .NET for Android's control, so a general error code of
 ANDKT0000 is used to report the exact message.
 
+Debug keystore creation reports a nonzero `keytool` exit code as an error,
+including the tool output. If another build has already created the
+`androiddebugkey` alias, the output is reported as a warning instead.
+
 ## Solution
 
 To learn more about `keytool` and its usage, see the Java documentation
