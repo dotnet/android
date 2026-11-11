@@ -11,11 +11,11 @@ f1_keywords:
 ## Example messages
 
 ```
-Foo.java : error JAVAC0000: Foo.java:1: error: class, interface, or enum expected
+Foo.java : error JAVAC0000: line 1: class, interface, or enum expected
 ```
 
 ```
-Foo.java : error JAVAC0000: Foo.java:1: error: ';' expected
+Foo.java : error JAVAC0000: line 1: ';' expected
 ```
 
 ## Issue

@@ -162,7 +162,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <Error Code="JAVAC0000"
         File="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidBindingJavacError.Identity)', '^(.+\.java):(\d+):(.+)$', '$1'))"
         HelpKeyword="JAVAC0000"
-        Text="%(_AndroidBindingJavacError.Identity)"
+        Text="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidBindingJavacError.Identity)', '^.+\.java:(\d+):\s*(?:error:\s*)?', 'line $1: '))"
         Condition=" '@(_AndroidBindingJavacError->Count())' != '0' " />
     <Error Code="JAVAC0000" Text="javac exited with code $(_AndroidBindingJavacExitCode).%0A@(_AndroidBindingJavacOutput, '%0A')"
         Condition=" '$(_AndroidBindingJavacExitCode)' != '0' " />
@@ -241,7 +241,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <Error Code="JAVAC0000"
         File="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidJavacError.Identity)', '^(.+\.java):(\d+):(.+)$', '$1'))"
         HelpKeyword="JAVAC0000"
-        Text="%(_AndroidJavacError.Identity)"
+        Text="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidJavacError.Identity)', '^.+\.java:(\d+):\s*(?:error:\s*)?', 'line $1: '))"
         Condition=" '@(_AndroidJavacError->Count())' != '0' " />
     <Error Code="JAVAC0000" Text="javac exited with code $(_AndroidJavacExitCode).%0A@(_AndroidJavacOutput, '%0A')"
         Condition=" '$(_AndroidJavacExitCode)' != '0' " />
