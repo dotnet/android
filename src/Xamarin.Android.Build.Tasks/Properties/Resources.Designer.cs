@@ -302,6 +302,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to find required SDK file `{0}`..
+        /// </summary>
+        public static string XA0116 {
+            get {
+                return ResourceManager.GetString("XA0116", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations..
         /// </summary>
         public static string XA0119_ReadyToRun {

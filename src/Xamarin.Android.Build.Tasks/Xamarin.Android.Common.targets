@@ -1327,7 +1327,11 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(_RuntimeJar);$(_AndroidBuildPropertiesCache);$(_AndroidRuntimeProviderTemplate);$(MSBuildThisFileFullPath)"
 		Outputs="$(_AndroidStaticResourcesFlag);$(_AndroidRuntimeProviderSource)"
 		DependsOnTargets="_AddStaticResourcesInputs">
-  <Error Condition=" !Exists('$(_AndroidRuntimeProviderTemplate)') " Text="Unable to find '$(_AndroidRuntimeProviderTemplate)'." />
+  <AndroidError Code="XA0116"
+      ResourceName="XA0116"
+      FormatArguments="$(_AndroidRuntimeProviderTemplate)"
+      Condition=" !Exists('$(_AndroidRuntimeProviderTemplate)') "
+  />
   <CopyIfChanged
       SourceFiles="$(_AndroidRuntimeProviderTemplate)"
       DestinationFiles="$(_AndroidRuntimeProviderSource)"

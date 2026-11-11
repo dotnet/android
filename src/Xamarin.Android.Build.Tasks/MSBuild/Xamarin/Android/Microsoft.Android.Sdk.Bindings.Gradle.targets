@@ -78,9 +78,10 @@ This file contains MSBuild targets that support building and operating on Androi
 
     <!-- Create the net.android.init.gradle.kts script used to override the Gradle project output directory -->
     <!-- Skip the copy if user has overridden _AGPInitScriptPath to point to their own file -->
-    <Error
+    <AndroidError Code="XA0116"
+        ResourceName="XA0116"
+        FormatArguments="$(_AGPInitScriptTemplate)"
         Condition=" $(_AGPInitScriptPath.StartsWith('$(_AGPOutDirAbs)')) And !Exists('$(_AGPInitScriptTemplate)') "
-        Text="Unable to find '$(_AGPInitScriptTemplate)'."
     />
     <CopyIfChanged
         Condition=" $(_AGPInitScriptPath.StartsWith('$(_AGPOutDirAbs)')) "
