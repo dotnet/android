@@ -24,15 +24,6 @@ During a normal .NET for Android build, Java source code is generated
 and compiled. This message indicates that [`javac`][javac], the Java
 programming language compiler, failed to compile Java source code.
 
-The `_CompileJava` and `_CompileBindingJava` targets invoke `javac` through
-`Exec` using a UTF-8 response file. Compiler errors retain their source file
-and `JAVAC0000` code, but the line number is part of the message rather than
-a structured MSBuild location. Caret-derived columns, multiline error
-grouping, and library-project assembly-name annotations are no longer added.
-The original compiler output, including source lines and carets, remains in
-the build log. Out-of-memory failures still use the localized `XA5213`
-diagnostic.
-
 ## Solution
 
 If you have Java source code in your project with a build action of
