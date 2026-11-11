@@ -69,11 +69,6 @@ namespace Xamarin.ProjectTools
 		public const string AndroidMavenLibrary = "AndroidMavenLibrary";
 
 		/// <summary>
-		/// Build action for Android Lint configuration files.
-		/// </summary>
-		public const string AndroidLintConfig = "AndroidLintConfig";
-
-		/// <summary>
 		/// Build action for native library files (.so) for Android.
 		/// </summary>
 		public const string AndroidNativeLibrary = "AndroidNativeLibrary";

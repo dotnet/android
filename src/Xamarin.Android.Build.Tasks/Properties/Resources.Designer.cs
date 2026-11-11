@@ -347,15 +347,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Removing {0} from {1}. Lint {2} does not support this check..
-        /// </summary>
-        public static string XA0123 {
-            get {
-                return ResourceManager.GetString("XA0123", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to %(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`..
         /// </summary>
         public static string XA0138 {

@@ -59,8 +59,6 @@ ms.date: 04/11/2024
 + [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
-+ [XA0102](xa0102.md): Generic `lint` Warning.
-+ [XA0103](xa0103.md): Generic `lint` Error.
 + XA0104: Invalid value for \`$(AndroidSequencePointsMode)\`
 + [XA0105](xa0105.md): No longer emitted by current SDKs.
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
@@ -76,7 +74,6 @@ ms.date: 04/11/2024
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
 + [XA0122](xa0122.md): No longer emitted by current SDKs.
-+ XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
 + [XA0125](xa0125.md): No longer emitted by current SDKs.
 + [XA0126](xa0126.md): Error installing FastDev Tools. This device does not support Fast Deployment. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
 + [XA0127](xa0127.md): There was an issue deploying {destination} using {FastDevTool}. We encountered the following error {output}. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
@@ -359,7 +356,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `KEY` - `KeyTool`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
-* `LNT` - `Lint`
 * `MDC` - `MDoc`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
