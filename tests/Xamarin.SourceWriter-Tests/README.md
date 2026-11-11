@@ -1,8 +1,8 @@
 # SourceWriter host tests
 
 This host-only project uses MSTest on Microsoft.Testing.Platform (MTP). It builds
-as a native MTP executable (`EnableMSTestRunner`) and pins its own MSTest and MTP
-preview versions. `MSTest.SourceGeneration` generates the test registry; this is
+as a native MTP executable (`EnableMSTestRunner`); package versions come from
+`eng/Versions.props`. `MSTest.SourceGeneration` generates the test registry; this is
 generated metadata, not fully reflection-free execution. No Android SDK, build
 of the product or device is required.
 
