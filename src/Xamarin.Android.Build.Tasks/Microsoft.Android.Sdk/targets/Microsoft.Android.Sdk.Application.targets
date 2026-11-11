@@ -111,10 +111,11 @@ This file contains targets specific for Android application projects.
         ProhibitDtd="true">
       <Output TaskParameter="Result" PropertyName="AndroidInstrumentation" />
     </XmlPeek>
-    <Error
+    <AndroidError
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(AndroidUseInstrumentation)' == 'true' "
         Code="XA1048"
-        Text="'$(IntermediateOutputPath)android\AndroidManifest.xml' does not contain an &lt;instrumentation&gt; element with an android:name attribute. Add an Android.App.Instrumentation subclass to the application, or set the %24(AndroidInstrumentation) MSBuild property to the name of one."
+        ResourceName="XA1048"
+        FormatArguments="$(IntermediateOutputPath)android\AndroidManifest.xml"
     />
     <GetAndroidActivityName
         ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
@@ -134,10 +135,11 @@ This file contains targets specific for Android application projects.
         ProhibitDtd="true">
       <Output TaskParameter="Result" PropertyName="AndroidInstrumentation" />
     </XmlPeek>
-    <Error
+    <AndroidError
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' "
         Code="XA1043"
-        Text="Could not determine what to launch: '$(IntermediateOutputPath)android\AndroidManifest.xml' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element with an android:name attribute. Set the %24(AndroidLaunchActivity) or %24(AndroidInstrumentation) MSBuild property to specify one."
+        ResourceName="XA1043"
+        FormatArguments="$(IntermediateOutputPath)android\AndroidManifest.xml"
     />
     <PropertyGroup>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
