@@ -327,7 +327,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CPR` - `CopyResource`
 * `CPT` - `ComputeHash`
 * `CRC` - `ConvertResourcesCases`
-* `CRM` - `CreateResgenManifest`
 * `CRN` - `Crunch`
 * `CRP` - `AndroidComputeResPaths`
 * `CTD` - `CreateTemporaryDirectory`

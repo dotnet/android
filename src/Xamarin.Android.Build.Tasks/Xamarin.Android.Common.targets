@@ -58,7 +58,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyResource" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1148,9 +1147,10 @@ because xbuild doesn't support framework reference assemblies.
   </CreateTemporaryDirectory>
 
   <!-- Create a dummy manifest file for aapt to work with -->
-  <CreateResgenManifest
-      ManifestOutputFile="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
-      PackageName="$(_AndroidPackage)"
+  <WriteLinesToFile
+      File="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
+      Lines="&lt;%3Fxml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;%3F&gt;;&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; package=&quot;$(_AndroidPackage)&quot; /&gt;"
+      Overwrite="true"
   />
 
   <GetExtraPackages
