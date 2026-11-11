@@ -233,7 +233,8 @@ SOURCE="".:git:6171c19d2c18""
 					new XElement (ns + "JavacToolExe", javacToolExe ?? ""),
 					new XElement (ns + "MinimumSupportedJavaVersion", minimum),
 					new XElement (ns + "LatestSupportedJavaVersion", latest),
-					new XElement (ns + "_AndroidUseJavaExeVersion", useJavaExeVersion.ToString ())),
+					new XElement (ns + "_AndroidUseJavaExeVersion", useJavaExeVersion.ToString ()),
+					new XElement (ns + "_AndroidAllowMissingSdkTooling", "False")),
 				new XElement (ns + "UsingTask", new XAttribute ("TaskName", typeof (AndroidError).FullName), new XAttribute ("AssemblyFile", tasksAssembly)),
 				new XElement (ns + "UsingTask", new XAttribute ("TaskName", typeof (AndroidWarning).FullName), new XAttribute ("AssemblyFile", tasksAssembly)),
 				new XElement (ns + "Import", new XAttribute ("Project", targets)));

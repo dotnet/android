@@ -67,40 +67,18 @@ This file contains .NET 6+ Java version validation and calls to the
 
   <!--
     Validates the JDK against $(MinimumSupportedJavaVersion) and $(LatestSupportedJavaVersion).
-    The version comes from the JDK's `release` file, falling back to `java -version`.
-    $(_AndroidUseJavaExeVersion)=true always runs `java -version` and then `javac -version`.
+    The version comes from $(_JavaSdkDirectory)release, falling back to `java -version`.
+    $(_AndroidUseJavaExeVersion)=true always checks `java -version` and `javac -version`.
   -->
   <Target Name="_ValidateJavaVersion"
       Condition=" '$(_AndroidUseResolvedTooling)' != 'true' and '$(DesignTimeBuild)' != 'true' ">
     <PropertyGroup>
-      <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
-      <_AndroidJavaExe>$(JavaToolExe)</_AndroidJavaExe>
-      <_AndroidJavaExe Condition=" '$(_AndroidJavaExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">java.exe</_AndroidJavaExe>
-      <_AndroidJavaExe Condition=" '$(_AndroidJavaExe)' == '' ">java</_AndroidJavaExe>
-      <_AndroidJavacExe>$(JavacToolExe)</_AndroidJavacExe>
-      <_AndroidJavacExe Condition=" '$(_AndroidJavacExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">javac.exe</_AndroidJavacExe>
-      <_AndroidJavacExe Condition=" '$(_AndroidJavacExe)' == '' ">javac</_AndroidJavacExe>
-      <_AndroidJavaTool Condition=" '$(_JavaSdkDirectory)' != '' ">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'bin', '$(_AndroidJavaExe)'))</_AndroidJavaTool>
-      <_AndroidJavaTool Condition=" '$(_JavaSdkDirectory)' == '' ">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_AndroidJavaExe)'))</_AndroidJavaTool>
-      <_AndroidJavacTool Condition=" '$(_JavaSdkDirectory)' != '' ">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'bin', '$(_AndroidJavacExe)'))</_AndroidJavacTool>
-      <_AndroidJdkReleaseFile>$([MSBuild]::NormalizePath('$([System.IO.Path]::GetDirectoryName('$(_AndroidJavaTool)'))', '..', 'release'))</_AndroidJdkReleaseFile>
-      <_AndroidJdkReleaseFile Condition=" !Exists('$(_AndroidJdkReleaseFile)') and '$(_JavaSdkDirectory)' != '' ">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'release'))</_AndroidJdkReleaseFile>
       <_DefaultJdkVersion>$([System.Version]::Parse('$(MinimumSupportedJavaVersion)'))</_DefaultJdkVersion>
       <_JdkVersion />
-      <_AndroidJavaVersionText />
-      <_AndroidJavacVersionText />
-      <_AndroidJavacVersion />
-      <_AndroidJavacChecked />
-      <_AndroidJdkTooOld />
-      <_AndroidJdkTooNew />
-      <_JdkVersion Condition=" '$(_AndroidUseJavaExeVersion)' != 'true' and Exists('$(_AndroidJdkReleaseFile)') ">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(_AndroidJdkReleaseFile)')), '(?im)(?&lt;=JAVA_VERSION=")\d+(\.\d+){1,3}(?=(\.\d+)*")'))</_JdkVersion>
+      <_JdkVersion Condition=" '$(_JavaSdkDirectory)' != '' and '$(_AndroidUseJavaExeVersion)' != 'true' and Exists('$(_JavaSdkDirectory)/release') ">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText($([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'release')))), '(?im)(?&lt;=JAVA_VERSION=")\d+(\.\d+){1,3}(?=(\.\d+)*")'))</_JdkVersion>
     </PropertyGroup>
-    <ItemGroup>
-      <_AndroidJavaVersionOutput Remove="@(_AndroidJavaVersionOutput)" />
-      <_AndroidJavacVersionOutput Remove="@(_AndroidJavacVersionOutput)" />
-    </ItemGroup>
     <AndroidError
-        Condition=" '$(_JdkVersion)' == '' and '$(_JavaSdkDirectory)' == '' "
+        Condition=" '$(_JavaSdkDirectory)' == '' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         Code="XA5300"
         ResourceName="XA5300_Java_SDK"
@@ -108,91 +86,75 @@ This file contains .NET 6+ Java version validation and calls to the
 
     <!-- `java -version` prints e.g. `openjdk version "21.0.8" 2025-07-15` or `java version "1.8.0_77"` -->
     <Exec
-        Condition=" '$(_JdkVersion)' == '' and '$(_JavaSdkDirectory)' != '' "
+        Condition=" '$(_JavaSdkDirectory)' != '' and '$(_JdkVersion)' == '' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-        Command="&quot;$(_AndroidJavaTool)&quot; -version"
+        Command="&quot;$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'bin', '$([MSBuild]::ValueOrDefault('$(JavaToolExe)', 'java'))'))&quot; -version"
         ConsoleToMSBuild="true"
         EchoOff="true"
         IgnoreExitCode="true"
         IgnoreStandardErrorWarningFormat="true"
         StandardOutputImportance="Low"
         StandardErrorImportance="Low">
-      <Output TaskParameter="ConsoleOutput" ItemName="_AndroidJavaVersionOutput" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="_AndroidJavaVersionOutput" />
     </Exec>
-    <PropertyGroup Condition=" '$(_JdkVersion)' == '' and '$(_JavaSdkDirectory)' != '' ">
-      <_AndroidJavaVersionText>@(_AndroidJavaVersionOutput->'%(Identity)', '%0A')</_AndroidJavaVersionText>
-      <_JdkVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidJavaVersionText)', '(?&lt;=version ")\d+(\.\d+){1,3}(?=(\.\d+)*(_\d+)?[^"]*")'))</_JdkVersion>
+    <PropertyGroup Condition=" '$(_JavaSdkDirectory)' != '' and '$(_JdkVersion)' == '' ">
+      <_JdkVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidJavaVersionOutput)', '(?&lt;=version ")\d+(\.\d+){1,3}(?=(\.\d+)*(_\d+)?[^"]*")'))</_JdkVersion>
     </PropertyGroup>
     <AndroidWarning
-        Condition=" '$(_JdkVersion)' == '' and '$(_JavaSdkDirectory)' != '' "
+        Condition=" '$(_JavaSdkDirectory)' != '' and '$(_JdkVersion)' == '' "
         Code="XA0033"
         ResourceName="XA0033"
-        FormatArguments="$(_AndroidJavaExe);$([MSBuild]::Escape('$(_AndroidJavaVersionText)'))"
-    />
-    <PropertyGroup Condition=" '$(_JdkVersion)' != '' ">
-      <_AndroidJdkTooOld>$([MSBuild]::VersionLessThan('$(_JdkVersion)', '$(_DefaultJdkVersion)'))</_AndroidJdkTooOld>
-      <_AndroidJdkTooNew>$([MSBuild]::VersionGreaterThan('$(_JdkVersion)', '$(LatestSupportedJavaVersion)'))</_AndroidJdkTooNew>
-    </PropertyGroup>
-    <Message Condition=" '$(_JdkVersion)' != '' " Text="Found Java SDK version $(_JdkVersion)." />
-    <AndroidError
-        Condition=" '$(_AndroidJdkTooOld)' == 'true' "
-        ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-        Code="XA0031"
-        ResourceName="XA0031_NET"
-        FormatArguments="$(_DefaultJdkVersion)"
-    />
-    <AndroidError
-        Condition=" '$(_AndroidJdkTooNew)' == 'true' "
-        ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-        Code="XA0030"
-        ResourceName="XA0030"
-        FormatArguments="$(_JdkVersion);$([System.Version]::Parse('$(LatestSupportedJavaVersion)').ToString(2))"
+        FormatArguments="$([MSBuild]::ValueOrDefault('$(JavaToolExe)', 'java'));$([MSBuild]::Escape('$(_AndroidJavaVersionOutput)'))"
     />
 
     <!-- `javac -version` prints e.g. `javac 21.0.8` or `javac 1.8.0_77` -->
     <Exec
-        Condition=" '$(_AndroidUseJavaExeVersion)' == 'true' and '$(_JavaSdkDirectory)' != '' and '$(_AndroidJdkTooOld)' != 'true' and '$(_AndroidJdkTooNew)' != 'true' "
+        Condition=" '$(_JavaSdkDirectory)' != '' and '$(_AndroidUseJavaExeVersion)' == 'true' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-        Command="&quot;$(_AndroidJavacTool)&quot; -version"
+        Command="&quot;$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'bin', '$([MSBuild]::ValueOrDefault('$(JavacToolExe)', 'javac'))'))&quot; -version"
         ConsoleToMSBuild="true"
         EchoOff="true"
         IgnoreExitCode="true"
         IgnoreStandardErrorWarningFormat="true"
         StandardOutputImportance="Low"
         StandardErrorImportance="Low">
-      <Output TaskParameter="ConsoleOutput" ItemName="_AndroidJavacVersionOutput" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="_AndroidJavacVersionOutput" />
     </Exec>
-    <PropertyGroup Condition=" '$(_AndroidUseJavaExeVersion)' == 'true' and '$(_JavaSdkDirectory)' != '' and '$(_AndroidJdkTooOld)' != 'true' and '$(_AndroidJdkTooNew)' != 'true' ">
-      <_AndroidJavacVersionText>@(_AndroidJavacVersionOutput->'%(Identity)', '%0A')</_AndroidJavacVersionText>
-      <_AndroidJavacVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidJavacVersionText)', '(?&lt;=javac )\d+(\.\d+){1,3}'))</_AndroidJavacVersion>
-      <_AndroidJavacChecked>true</_AndroidJavacChecked>
+    <PropertyGroup Condition=" '$(_JavaSdkDirectory)' != '' and '$(_AndroidUseJavaExeVersion)' == 'true' ">
+      <_AndroidJavacVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidJavacVersionOutput)', '(?&lt;=javac )\d+(\.\d+){1,3}'))</_AndroidJavacVersion>
     </PropertyGroup>
     <AndroidWarning
-        Condition=" '$(_AndroidJavacChecked)' == 'true' and '$(_AndroidJavacVersion)' == '' "
+        Condition=" '$(_JavaSdkDirectory)' != '' and '$(_AndroidUseJavaExeVersion)' == 'true' and '$(_AndroidJavacVersion)' == '' "
         Code="XA0033"
         ResourceName="XA0033"
-        FormatArguments="$(_AndroidJavacExe);$([MSBuild]::Escape('$(_AndroidJavacVersionText)'))"
+        FormatArguments="$([MSBuild]::ValueOrDefault('$(JavacToolExe)', 'javac'));$([MSBuild]::Escape('$(_AndroidJavacVersionOutput)'))"
     />
+
+    <!-- Check every version found; with `javac -version`, $(_JdkVersion) becomes the javac version. -->
+    <ItemGroup>
+      <_AndroidJdkVersion Include="$(_JdkVersion);$(_AndroidJavacVersion)" />
+    </ItemGroup>
     <PropertyGroup Condition=" '$(_AndroidJavacVersion)' != '' ">
       <_JdkVersion>$(_AndroidJavacVersion)</_JdkVersion>
-      <_AndroidJdkTooOld>$([MSBuild]::VersionLessThan('$(_JdkVersion)', '$(_DefaultJdkVersion)'))</_AndroidJdkTooOld>
-      <_AndroidJdkTooNew>$([MSBuild]::VersionGreaterThan('$(_JdkVersion)', '$(LatestSupportedJavaVersion)'))</_AndroidJdkTooNew>
     </PropertyGroup>
-    <Message Condition=" '$(_AndroidJavacVersion)' != '' " Text="Found Java SDK version $(_JdkVersion)." />
+    <Message Condition=" '%(_AndroidJdkVersion.Identity)' != '' " Text="Found Java SDK version %(_AndroidJdkVersion.Identity)." />
     <AndroidError
-        Condition=" '$(_AndroidJavacVersion)' != '' and '$(_AndroidJdkTooOld)' == 'true' "
+        Condition=" '%(_AndroidJdkVersion.Identity)' != '' and $([MSBuild]::VersionLessThan('%(_AndroidJdkVersion.Identity)', '$(_DefaultJdkVersion)')) "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         Code="XA0031"
         ResourceName="XA0031_NET"
         FormatArguments="$(_DefaultJdkVersion)"
     />
     <AndroidError
-        Condition=" '$(_AndroidJavacVersion)' != '' and '$(_AndroidJdkTooNew)' == 'true' "
+        Condition=" '%(_AndroidJdkVersion.Identity)' != '' and $([MSBuild]::VersionGreaterThan('%(_AndroidJdkVersion.Identity)', '$(LatestSupportedJavaVersion)')) "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         Code="XA0030"
         ResourceName="XA0030"
-        FormatArguments="$(_JdkVersion);$([System.Version]::Parse('$(LatestSupportedJavaVersion)').ToString(2))"
+        FormatArguments="%(_AndroidJdkVersion.Identity);$([System.Version]::Parse('$(LatestSupportedJavaVersion)').ToString(2))"
     />
+    <ItemGroup>
+      <_AndroidJdkVersion Remove="@(_AndroidJdkVersion)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ResolveAndroidTooling" DependsOnTargets="_ComputeAndroidToolingInputs;_ValidateJavaVersion">
