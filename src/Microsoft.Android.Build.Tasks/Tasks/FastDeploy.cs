@@ -11,9 +11,10 @@ using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Build.Debugging.Tasks.Properties;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public partial class FastDeploy : AsyncTask
 	{

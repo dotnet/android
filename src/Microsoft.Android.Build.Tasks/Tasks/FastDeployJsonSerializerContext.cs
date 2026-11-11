@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	[JsonSourceGenerationOptions (WriteIndented = true)]
 	[JsonSerializable (typeof (FastDeploy.ManifestData))]

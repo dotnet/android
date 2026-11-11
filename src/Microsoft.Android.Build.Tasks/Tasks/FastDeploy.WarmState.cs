@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Xamarin.Android.Build.Debugging.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public partial class FastDeploy
 	{
