@@ -72,7 +72,7 @@ returns the original items, including their relative paths and metadata.
 Its AppDomain cache stores immutable results keyed by assembly MVID. Concurrent
 cache misses can compute the same result without a shared task-level lock.
 
-The task projects reference MSBuild 18.9.6, which supplies the attribute.
+The task projects reference MSBuild 18.12, which supplies the attribute.
 Use `TaskEnvironment` for any further project-relative path or environment
 access; the attribute alone does not make process-wide APIs safe.
 
