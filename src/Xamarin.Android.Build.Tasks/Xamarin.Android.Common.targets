@@ -82,7 +82,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1137,8 +1136,29 @@ because xbuild doesn't support framework reference assemblies.
   </_PrepareUpdateAndroidResgenDependsOnTargets>
 </PropertyGroup>
 
+<!-- Collects the `package` of each library's bin/AndroidManifest.xml or AndroidManifest.xml for aapt2 extra packages. -->
+<Target Name="_GetAaptExtraPackages">
+  <PropertyGroup>
+    <_AndroidLibraryProjectsDir>$([System.IO.Path]::Combine('$(IntermediateOutputPath)', '__library_projects__'))</_AndroidLibraryProjectsDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <_AndroidLibraryProjectDir Include="$([System.IO.Directory]::GetDirectories('$(_AndroidLibraryProjectsDir)'))" Condition="Exists('$(_AndroidLibraryProjectsDir)')" />
+    <_AndroidLibraryImportsDir Include="@(_AndroidLibraryProjectDir->'%(Identity)/$(_LibraryProjectImportsDirectoryName)');@(_AndroidLibraryProjectDir->'%(Identity)/library_project_imports')">
+      <Manifest>%(Identity)/AndroidManifest.xml</Manifest>
+      <Manifest Condition="Exists('%(Identity)/bin/AndroidManifest.xml')">%(Identity)/bin/AndroidManifest.xml</Manifest>
+    </_AndroidLibraryImportsDir>
+    <_AndroidLibraryManifest Include="%(_AndroidLibraryImportsDir.Manifest)" Condition="Exists('%(_AndroidLibraryImportsDir.Manifest)')" />
+  </ItemGroup>
+  <XmlPeek XmlInputPath="%(_AndroidLibraryManifest.Identity)" Query="/manifest/@package" Condition="'@(_AndroidLibraryManifest)' != ''">
+    <Output TaskParameter="Result" ItemName="_AndroidExtraPackage" />
+  </XmlPeek>
+  <PropertyGroup>
+    <AaptExtraPackages>@(_AndroidExtraPackage->DistinctWithCase(), ':')</AaptExtraPackages>
+  </PropertyGroup>
+</Target>
+
 <Target Name="_PrepareUpdateAndroidResgen"
-    DependsOnTargets="$(_PrepareUpdateAndroidResgenDependsOnTargets)"
+    DependsOnTargets="$(_PrepareUpdateAndroidResgenDependsOnTargets);_GetAaptExtraPackages"
     Inputs="$(_UpdateAndroidResgenInputs)"
     Outputs="$(_AndroidResgenFlagFile)">
 
@@ -1152,12 +1172,6 @@ because xbuild doesn't support framework reference assemblies.
       ManifestOutputFile="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
       PackageName="$(_AndroidPackage)"
   />
-
-  <GetExtraPackages
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      LibraryProjectImportsDirectoryName="$(_LibraryProjectImportsDirectoryName)">
-    <Output TaskParameter="ExtraPackages" PropertyName="AaptExtraPackages" />
-  </GetExtraPackages>
 </Target>
 
 <PropertyGroup>
@@ -1640,7 +1654,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareCreateBaseApk"
-    DependsOnTargets="_CreateBaseApkInputs"
+    DependsOnTargets="_CreateBaseApkInputs;_GetAaptExtraPackages"
     Inputs="$(_CreateBaseApkInputs)"
     Outputs="$(_PackagedResources)"
   >
@@ -1653,12 +1667,6 @@ because xbuild doesn't support framework reference assemblies.
   <CreateTemporaryDirectory>
     <Output TaskParameter="TemporaryDirectory" PropertyName="AaptTemporaryDirectory" />
   </CreateTemporaryDirectory>
-
-  <GetExtraPackages
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      LibraryProjectImportsDirectoryName="$(_LibraryProjectImportsDirectoryName)">
-    <Output TaskParameter="ExtraPackages" PropertyName="AaptExtraPackages" />
-  </GetExtraPackages>
 </Target>
 
 <PropertyGroup>
