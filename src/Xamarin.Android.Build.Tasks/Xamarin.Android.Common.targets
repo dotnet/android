@@ -859,13 +859,22 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AndroidMergeLintConfigInputs">
 	<PropertyGroup>
 		<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
+		<_AndroidLintConfigInputsFile>$(IntermediateOutputPath)lint.configs</_AndroidLintConfigInputsFile>
 	</PropertyGroup>
+	<MakeDir Directories="$(IntermediateOutputPath)" />
+	<!-- Track membership and order as well as the individual config timestamps. -->
+	<WriteLinesToFile File="$(_AndroidLintConfigInputsFile)"
+		Lines="@(AndroidLintConfig->'%(FullPath)')"
+		Overwrite="true" WriteOnlyWhenDifferent="true" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidLintConfigInputsFile)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_AndroidMergeLintConfig"
 	DependsOnTargets="_AndroidMergeLintConfigInputs"
 	Condition=" '@(AndroidLintConfig->Count())' != '0' "
-	Inputs="@(AndroidLintConfig);$(MSBuildProjectFullPath);$(MSBuildAllProjects)"
+	Inputs="@(AndroidLintConfig);$(_AndroidLintConfigInputsFile);$(MSBuildProjectFullPath);$(MSBuildAllProjects)"
 	Outputs="$(_AndroidLintConfigFile)">
 	<XmlPeek XmlInputPath="%(AndroidLintConfig.Identity)" Query="/lint/issue" ProhibitDtd="true">
 		<Output TaskParameter="Result" ItemName="_AndroidLintConfigIssue" />
@@ -888,6 +897,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_AndroidLintToolExe Condition=" '$(_AndroidLintToolExe)' == '' ">lint</_AndroidLintToolExe>
 		<_AndroidLintTool>$([System.IO.Path]::Combine('$(LintToolPath)', '$(_AndroidLintToolExe)'))</_AndroidLintTool>
 		<_AndroidLintCommand>&quot;$(_AndroidLintTool)&quot;</_AndroidLintCommand>
+		<_AndroidLintCommand Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">&quot;$([System.Text.RegularExpressions.Regex]::Replace('$(_AndroidLintTool)', '([\\&quot;$\x60])', '\$1'))&quot;</_AndroidLintCommand>
 	</PropertyGroup>
 	<AndroidError Condition=" '$(LintToolPath)' == '' or !Exists('$(_AndroidLintTool)') "
 		Code="XA5205" ResourceName="XA5205_Lint" FormatArguments="$(_AndroidLintToolExe)" />
@@ -945,18 +955,28 @@ because xbuild doesn't support framework reference assemblies.
 		<_AndroidLintDisabledIssues>@(_AndroidLintDefaultDisabledIssue->Reverse(), ',')</_AndroidLintDisabledIssues>
 		<_AndroidLintDisabledIssues Condition=" '$(_AndroidLintDisabledIssues)' != '' and '$(AndroidLintDisabledIssues)' != '' ">$(_AndroidLintDisabledIssues),$(AndroidLintDisabledIssues)</_AndroidLintDisabledIssues>
 		<_AndroidLintDisabledIssues Condition=" '$(_AndroidLintDisabledIssues)' == '' ">$(AndroidLintDisabledIssues)</_AndroidLintDisabledIssues>
-		<_AndroidLintArguments>--quiet</_AndroidLintArguments>
-		<_AndroidLintArguments Condition=" '@(AndroidLintConfig->Count())' != '0' ">$(_AndroidLintArguments) --config &quot;$(_AndroidLintConfigFile)&quot;</_AndroidLintArguments>
-		<_AndroidLintArguments Condition=" '$(AndroidLintEnabledIssues)' != '' ">$(_AndroidLintArguments) --enable &quot;$(AndroidLintEnabledIssues)&quot;</_AndroidLintArguments>
-		<_AndroidLintArguments Condition=" '$(_AndroidLintDisabledIssues)' != '' ">$(_AndroidLintArguments) --disable &quot;$(_AndroidLintDisabledIssues)&quot;</_AndroidLintArguments>
-		<_AndroidLintArguments Condition=" '$(AndroidLintCheckIssues)' != '' ">$(_AndroidLintArguments) --check &quot;$(AndroidLintCheckIssues)&quot;</_AndroidLintArguments>
 	</PropertyGroup>
 	<!-- Appending a dot avoids a trailing backslash escaping the closing quote on Windows. -->
-	<Exec Command="$(_AndroidLintCommand) $(_AndroidLintArguments) @(_AndroidLintResourceDirectory->'--resources &quot;%(FullPath)/.&quot;', ' ') @(_AndroidLintSourceDirectory->'--sources &quot;%(FullPath)/.&quot;', ' ') &quot;$([MSBuild]::NormalizePath('$(IntermediateOutputPath)android'))&quot;"
+	<ItemGroup>
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(_AndroidLintConfigFile)'))" Switch="--config" Condition=" '@(AndroidLintConfig->Count())' != '0' " />
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(AndroidLintEnabledIssues)'))" Switch="--enable" Condition=" '$(AndroidLintEnabledIssues)' != '' " />
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(_AndroidLintDisabledIssues)'))" Switch="--disable" Condition=" '$(_AndroidLintDisabledIssues)' != '' " />
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(AndroidLintCheckIssues)'))" Switch="--check" Condition=" '$(AndroidLintCheckIssues)' != '' " />
+		<_AndroidLintArgument Include="@(_AndroidLintResourceDirectory->'%(FullPath)/.')" Switch="--resources" />
+		<_AndroidLintArgument Include="@(_AndroidLintSourceDirectory->'%(FullPath)/.')" Switch="--sources" />
+		<_AndroidLintArgument Include="$([MSBuild]::NormalizePath('$(IntermediateOutputPath)android'))" />
+		<_AndroidLintArgument>
+			<QuotedValue>&quot;%(_AndroidLintArgument.Identity)&quot;</QuotedValue>
+			<!-- Double quotes alone do not prevent Unix shell expansion. -->
+			<QuotedValue Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">&quot;$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidLintArgument.Identity)', '([\\&quot;$\x60])', '\$1'))&quot;</QuotedValue>
+		</_AndroidLintArgument>
+	</ItemGroup>
+	<!-- Commit to the first file/line header rather than searching severity inside its message. -->
+	<Exec Command="$(_AndroidLintCommand) --quiet @(_AndroidLintArgument->'%(Switch) %(QuotedValue)', ' ')"
 		EnvironmentVariables="@(_AndroidLintEnvironment)"
 		IgnoreStandardErrorWarningFormat="true"
-		CustomErrorRegularExpression="(^|:\s*)Error:\s"
-		CustomWarningRegularExpression="(^|:\s*)Warning:\s"
+		CustomErrorRegularExpression="^(?:(?!(?:Error|Warning):\s)(?&gt;.+?:\d+(?::\d+)?:\s*))?Error:\s"
+		CustomWarningRegularExpression="^(?:(?!(?:Error|Warning):\s)(?&gt;.+?:\d+(?::\d+)?:\s*))?Warning:\s"
 		StandardOutputImportance="Low" />
 </Target>
 
@@ -2704,9 +2724,11 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="@(_OutputDeploymentFiles)"/>
 </Target>
 
-<Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive;_AndroidMergeLintConfigInputs">
+<Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
 	<PropertyGroup>
 		<_AndroidProguardIntermediateDirectory>$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))</_AndroidProguardIntermediateDirectory>
+		<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
+		<_AndroidLintConfigInputsFile>$(IntermediateOutputPath)lint.configs</_AndroidLintConfigInputsFile>
 	</PropertyGroup>
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
@@ -2748,6 +2770,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" />
 	<Delete Files="$(_AndroidLintConfigFile)" />
+	<Delete Files="$(_AndroidLintConfigInputsFile)" />
 	<Delete Files="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' " />
 	<Delete Files="$(_AdbPropertiesCache)" />
 	<Delete Files="$(_AndroidLibraryImportsCache)" />

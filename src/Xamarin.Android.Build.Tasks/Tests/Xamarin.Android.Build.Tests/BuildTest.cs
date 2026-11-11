@@ -2080,9 +2080,57 @@ namespace UnnamedProject
 					"The merged configuration should preserve the warning severity.");
 				Assert.IsFalse (b.LastBuildOutput.Any (line => line.Contains (": warning :") && line.Contains ("[MissingApplicationIcon]")),
 					"The merged configuration should suppress the missing-icon warning.");
+				Assert.IsTrue (b.Build (proj, parameters: ["AndroidManifestPlaceholders=lintReview=changed"]),
+					"A cached property change should rebuild the lint configuration after cleanup.");
+				b.Output.AssertTargetIsNotSkipped ("_CleanIntermediateIfNeeded");
+				Assert.AreEqual (2, XDocument.Load (lintFile).Element ("lint")?.Elements ("issue").Count (),
+					"Both configurations should survive cleanup through CallTarget.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsFalse (File.Exists (lintFile), "{0} should have been deleted on clean.", lintFile);
 			}
+		}
+
+		[Test]
+		public void CheckLintConfigInputChanges ([Values ("delete", "add-older", "switch")] string change)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			var first = new BuildItem.NoActionResource ("lint/one.xml") {
+				TextContent = () => """<lint><issue id="NewApi" severity="warning" /></lint>""",
+				Timestamp = DateTimeOffset.UtcNow.AddDays (-1),
+			};
+			var second = new BuildItem.NoActionResource ("lint/two.xml") {
+				TextContent = () => """<lint><issue id="MissingApplicationIcon" severity="ignore" /></lint>""",
+				Timestamp = DateTimeOffset.UtcNow.AddDays (-1),
+				Deleted = change == "add-older",
+			};
+			proj.OtherBuildItems.Add (first);
+			proj.OtherBuildItems.Add (second);
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig (
+				change == "switch" ? "lint/$(LintConfigVariant).xml" : "lint/*.xml"));
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.RunTarget (proj, "_AndroidMergeLintConfig", parameters: ["LintConfigVariant=one"]),
+				"The initial config merge should succeed.");
+			var lintFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lint.xml");
+			var timestamp = File.GetLastWriteTimeUtc (lintFile);
+			Assert.AreEqual (change == "delete" ? 2 : 1,
+				XDocument.Load (lintFile).Element ("lint")?.Elements ("issue").Count ());
+
+			Assert.IsTrue (builder.RunTarget (proj, "_AndroidMergeLintConfig", doNotCleanupOnUpdate: true,
+				parameters: ["LintConfigVariant=one"], saveProject: false), "The unchanged merge should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_AndroidMergeLintConfig");
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (lintFile), "An unchanged list should not rewrite lint.xml.");
+
+			first.Deleted = change == "delete";
+			second.Deleted = false;
+			Assert.IsTrue (builder.RunTarget (proj, "_AndroidMergeLintConfig", doNotCleanupOnUpdate: true,
+				parameters: ["LintConfigVariant=two"], saveProject: false), "The changed config list should be merged.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidMergeLintConfig");
+			var issues = XDocument.Load (lintFile).Element ("lint")?.Elements ("issue")
+				.Select (issue => (string) issue.Attribute ("id")).ToArray ();
+			CollectionAssert.AreEqual (change == "add-older" ? new [] { "NewApi", "MissingApplicationIcon" } : new [] { "MissingApplicationIcon" },
+				issues, "The merged configuration should reflect the current input list, even when all files are older.");
 		}
 
 		[Test]
@@ -2227,6 +2275,9 @@ public class ToolbarEx {
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
 			proj.SetProperty ("AndroidLintCheckIssues", "HardcodedText");
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint.xml") {
+				TextContent = () => """<lint><issue id="HardcodedText" severity="warning" /></lint>""",
+			});
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
 				TextContent = () => """
 <?xml version="1.0" encoding="utf-8"?>
@@ -2242,15 +2293,16 @@ public class ToolbarEx {
 		android:id="@+id/phone"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:hint="Hint me up."
+		android:hint="Status: Error: retry"
 	/>
 </ConstraintLayout>
 """
 			});
-			using (var b = CreateApkBuilder ()) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App$Debug`Lint"))) {
 				Assert.IsTrue (b.Build (proj), "Project should have built.");
 				Assert.IsTrue (b.LastBuildOutput.Any (line =>
-					line.Contains (": warning :") && line.Contains ("Warning:") && line.Contains ("[HardcodedText]") &&
+					line.Contains (": warning :") && line.Contains ("Warning:") && line.Contains ("Status: Error: retry") &&
+					line.Contains ("[HardcodedText]") &&
 					line.Replace ('\\', '/').Contains ("res/layout/test.xml")),
 					"The lint warning should preserve the intermediate resource path and issue text.");
 			}
