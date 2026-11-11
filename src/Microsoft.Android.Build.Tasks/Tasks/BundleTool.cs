@@ -2,8 +2,9 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public abstract class BundleTool : JavaToolTask
 	{

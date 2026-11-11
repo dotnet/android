@@ -1,6 +1,6 @@
 using System.IO;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {

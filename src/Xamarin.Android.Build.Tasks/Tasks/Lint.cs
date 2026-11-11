@@ -11,6 +11,7 @@ using Xamarin.Android.Tools;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

@@ -11,7 +11,8 @@ This file is only used by "legacy" Xamarin Android binding projects.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc"       AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.JavaDoc" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.JavaDoc" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   <UsingTask TaskName="Xamarin.Android.Tasks.MDoc"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 

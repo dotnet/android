@@ -8,10 +8,9 @@ using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using Xamarin.Android.Tools.Aidl;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 
 	public class JavaDoc : JavaToolTask

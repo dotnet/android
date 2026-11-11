@@ -1,13 +1,16 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public class AndroidApkSigner : JavaToolTask
 	{
@@ -107,10 +110,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (minSdk is not null) {
-				cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
+				cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.Value.ToString (CultureInfo.InvariantCulture));
 			}
 			if (maxSdk is not null) {
-				cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
+				cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.Value.ToString (CultureInfo.InvariantCulture));
 			}
 
 

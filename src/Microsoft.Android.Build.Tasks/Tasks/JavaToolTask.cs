@@ -9,10 +9,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public abstract class JavaToolTask : AndroidToolTask
 	{

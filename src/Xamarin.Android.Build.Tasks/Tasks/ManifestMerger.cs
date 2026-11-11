@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

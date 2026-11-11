@@ -83,5 +83,21 @@ public partial class MonoAndroidHelper
 		engine.RegisterTaskObjectAssemblyLocal (key, versions, RegisteredTaskObjectLifetime.Build);
 		return versions;
 	}
+
+	public static Dictionary<string, string> LoadMapFile (IBuildEngine4 engine, string mapFile, StringComparer comparer)
+	{
+		var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (mapFile, RegisteredTaskObjectLifetime.Build);
+		if (cachedMap != null)
+			return cachedMap;
+		var acw_map = new Dictionary<string, string> (comparer);
+		if (!File.Exists (mapFile))
+			return acw_map;
+		foreach (var s in File.ReadLines (mapFile)) {
+			var items = s.Split (new char[] { ';' }, count: 2);
+			if (!acw_map.ContainsKey (items [0]))
+				acw_map.Add (items [0], items [1]);
+		}
+		return acw_map;
+	}
 #endif  // MSBUILD
 }
