@@ -45,6 +45,8 @@
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.3.17" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageReference Include="Humanizer" Version="$(HumanizerVersion)" />
+    <!-- CI retries failed device tests once (see build-tools/automation/yaml-templates/run-mstest-tests.yaml) -->
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

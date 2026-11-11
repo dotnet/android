@@ -4,12 +4,9 @@ Unit test infrastructure for .NET for Android.
 
 # Tools
 
-Most of our unit test infrastructure uses NUnit.
-Many of the BCL tests for Classic Xamarin.Android rely on an xUnit test runner.
-
- 1. [NUnit](https://github.com/nunit/nunit)
- 2. [xUnit](https://github.com/xunit/xunit)
- 3. [MSTest](https://github.com/microsoft/testfx)
+Our unit tests use [MSTest](https://github.com/microsoft/testfx) and run on
+[Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro)
+(MTP). The repository `global.json` selects MTP for `dotnet test`.
 
 # Project Test Types
 
@@ -90,10 +87,10 @@ this does a "Contains" check for the Name.
 ./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
 ```
 
-To list all the available tests use the `-lt` argument
+To list all the available tests use the `--list-tests` argument
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll -lt
+./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --list-tests
 ```
 
 ## Running on Windows
@@ -130,10 +127,10 @@ this does a "Contains" check for the Name.
 ./dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
 ```
 
-To list all the available tests use the `-lt` argument
+To list all the available tests use the `--list-tests` argument
 
 ```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll -lt
+dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --list-tests
 ```
 
 # Writing Tests
@@ -236,7 +233,7 @@ If you are testing if a `Task` produces a specific error it will need its own
 `MockBuildEngine`, just in case the test is run in parallel.
 
 ```csharp
-var engine = new MockBuildEngine (TestContext.Out);
+var engine = new MockBuildEngine (Console.Out);
 ```
 
 Once you have a `MockBuildEngine` you can then create an instance
@@ -266,7 +263,7 @@ If you want to capture warnings and errors you need to provide the
 var errors   = new List<BuildErrorEventArgs> ();
 var warnings = new List<BuildWarningEventArgs> ();
 var messages = new List<BuildMessageEventArgs> ();
-var engine   = new MockBuildEngine (TestContext.Out, errors: errors, warnings: warnings messages: messages);
+var engine   = new MockBuildEngine (Console.Out, errors: errors, warnings: warnings messages: messages);
 ```
 
 You can then check these collections for specific output from the `Task`.
@@ -274,12 +271,12 @@ You can then check these collections for specific output from the `Task`.
 Putting it all together
 
 ```csharp
-[Test]
+[TestMethod]
 public void MyTaskShouldSucceedWithNoWarnings
 {
     var warnings = new List<BuildWarningEventArgs> ();
     var messages = new List<BuildMessageEventArgs> ();
-    var engine   = new MockBuildEngine (TestContext.Out, warnings: warnings);
+    var engine   = new MockBuildEngine (Console.Out, warnings: warnings);
     var task     = new MyTask () {
         BuildEngine = engine,
     };
@@ -293,12 +290,12 @@ properties to the Task can be done just like setting normal properties.
 This way you can test out all sorts of scenarios.
 
 ```csharp
-[Test]
+[TestMethod]
 public void MyTaskShouldSucceedWithNoWarnings
 {
     var warnings = new List<BuildWarningEventArgs> ();
     var messages = new List<BuildMessageEventArgs> ();
-    var engine   = new MockBuildEngine (TestContext.Out, warnings: warnings);
+    var engine   = new MockBuildEngine (Console.Out, warnings: warnings);
     var task     = new MyTask () {
         BuildEngine = engine,
         SomeItem    = new TaskItem ("somefile.txt"),
@@ -343,8 +340,10 @@ The `WaitForActivityToStart()` method is the one which monitors the
 `adb logcat` output to detect when the app starts.
 
 ```csharp
-[Test]
-public void MyAppShouldRun ([Values (true, false)] bool isRelease)
+[TestMethod]
+[DataRow (true)]
+[DataRow (false)]
+public void MyAppShouldRun (bool isRelease)
 {
     var proj = new XamarinAndroidApplicationProject () {
         IsRelease = isRelease,
@@ -369,7 +368,7 @@ click a specific part of the screen. While the method is called `ClickButton()`
 it actually sends a `tap` to the screen at a specific point.
 
 ```csharp
-[Test]
+[TestMethod]
 public void MyAppShouldRunAndRespondToClick ()
 {
     var proj = new XamarinAndroidApplicationProject ();
@@ -417,7 +416,7 @@ For example:
 
 Pass the same `-c` and `-p:` properties to both commands. After running the
 tests, `.trx` result files will be created under `bin/TestDebug/TestResults`.
-Run from the project directory: its `global.json` selects MTP.
+The repository `global.json` selects MTP.
 
 To run a subset, pass `-p:IncludeCategories=<Category>` to **both** the install
 and test commands; the value is compiled into the app's runtime configuration.

@@ -23,7 +23,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
-| **source writer (MSTest/MTP pilot)** | `tests/Xamarin.SourceWriter-Tests/` | `DOTNET_TEST_RUNNER=Microsoft.Testing.Platform dotnet test --project tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -c Debug --report-trx` — .NET SDK 11 Preview 6+; [details](../../../../tests/Xamarin.SourceWriter-Tests/README.md) |
+| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test --project tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -c Debug --report-trx` |
 | **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
 | **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
 | **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
@@ -62,7 +62,7 @@ Device: No
 | Test Area | Filter | Test Classes / Notes |
 |-----------|--------|---------------------|
 | **build** (general) | `--filter "FullyQualifiedName~BuildTest"` | `BuildTest`, `BuildTest2`, `BuildTest3` — core build pipeline tests |
-| **smoke** | `--filter "cat=SmokeTests"` | Quick subset of build, packaging, and asset pack tests |
+| **smoke** | `--filter "TestCategory=SmokeTests"` | Quick subset of build, packaging, and asset pack tests |
 | **native aot** | `--filter "FullyQualifiedName~NativeAotBuildTests"` | NativeAOT build and packaging tests |
 | **bindings** | `--filter "FullyQualifiedName~BindingBuildTest"` | Java binding generation and build tests |
 | **packaging** | `--filter "FullyQualifiedName~PackagingTest"` | APK/AAB packaging, signing, zipalign |
@@ -72,7 +72,7 @@ Device: No
 | **manifest** | `--filter "FullyQualifiedName~ManifestTest"` | AndroidManifest.xml generation and merging |
 | **sdk** | `--filter "FullyQualifiedName~XASdkTests"` | .NET SDK-style project tests |
 | **single project** | `--filter "FullyQualifiedName~SingleProjectTest"` | Android single-project build and packaging tests |
-| **fsharp** | `--filter "cat=FSharp"` | F# project build tests |
+| **fsharp** | `--filter "TestCategory=FSharp"` | F# project build tests |
 | **wear** | `--filter "FullyQualifiedName~WearTests"` | Wear OS build tests |
 | **code behind** | `--filter "FullyQualifiedName~CodeBehindTests"` | Layout code-behind generation |
 | **asset packs** | `--filter "FullyQualifiedName~AssetPackTests"` | Play Asset Delivery tests |
@@ -104,7 +104,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 
 Assembly: `bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll`
 Build: Full-build + device/emulator connected
-Device: **Yes** (most tests have `[Category("UsesDevice")]`)
+Device: **Yes** (most tests have `[TestCategory("UsesDevice")]`)
 
 | Test Area | Filter | Notes |
 |-----------|--------|-------|
@@ -112,10 +112,10 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **install and run** | `--filter "FullyQualifiedName~InstallAndRunTests"` | App installation and launch |
 | **install** | `--filter "FullyQualifiedName~InstallTests"` | Installation-only tests |
 | **debugging** | `--filter "FullyQualifiedName~DebuggingTest"` | Debugger attach and breakpoint tests |
-| **performance** | `--filter "cat=Performance"` | Startup time, build time measurements |
-| **localization** | `--filter "cat=Localization"` | Locale/culture device tests |
-| **timezone** | `--filter "cat=TimeZoneInfo"` | Time zone handling on device |
-| **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
+| **performance** | `--filter "TestCategory=Performance"` | Startup time, build time measurements |
+| **localization** | `--filter "TestCategory=Localization"` | Locale/culture device tests |
+| **timezone** | `--filter "TestCategory=TimeZoneInfo"` | Time zone handling on device |
+| **wear** | `--filter "TestCategory=WearOS"` | Wear OS device tests |
 | **export** | `--filter "FullyQualifiedName~ExportAttributeBuildTest"` | `[Export]` attribute tests |
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | One combined archive/signing/APK-set check per runtime, sharing a single project build per case |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Java exception handling and fatal managed main-thread process termination on CoreCLR and NativeAOT |
@@ -132,10 +132,10 @@ architecture. Local workload setup installs the previous Android SDK.
 
 `Mono.Android.NET-Tests`, its referenced Java.Interop fixtures, and
 `Xamarin.Android.JcwGen-Tests` use native MSTest with `MSTest.SourceGeneration`
-through Microsoft Testing Platform (MTP). Other NUnit consumers keep their
-existing runner; do not select a mixed solution with the native host adapter.
+through Microsoft Testing Platform (MTP), like every other test project; the
+repository `global.json` selects the MTP runner.
 
-Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
+Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory.
 
 Build: Full-build + the test project itself
 Device: **Yes**
@@ -184,8 +184,8 @@ Command:
 Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
 
 The Android CI `apk-instrumentation.yaml` template uses this project-local MTP
-entry point and the existing Android streaming protocol. It does not use the
-host-only SourceWriter UID slicer or NUnit runsettings. Native TRX,
+entry point and the existing Android streaming protocol. Host test assemblies
+use `run-mstest-tests.yaml` instead. Native TRX,
 `NativeTestNodes.xml`, and arbitrary attachments remain in the app's external
 `TestResults` directory; pull that directory separately when validating
 attachment contents, since the host does not automatically copy every file.

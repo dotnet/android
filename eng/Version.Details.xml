@@ -52,5 +52,9 @@
       <Uri>https://github.com/microsoft/testfx</Uri>
       <Sha>2a8ebadb17a3b388b62bbb0cedd407999e3ce10a</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.Testing.Extensions.Retry" Version="2.6.0-preview.26531.5">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>2a8ebadb17a3b388b62bbb0cedd407999e3ce10a</Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>

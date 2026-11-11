@@ -68,17 +68,17 @@ steps:
     toolName: apkdiff
     version: $(ApkDiffToolVersion)
 
-- template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+- template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
   parameters:
     testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
     testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
-    dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
+    testFilter: TestCategory=SmokeTests
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
   parameters:
     command: test
     project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj
-    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/analysis-tests
+    arguments: -c $(XA.Build.Configuration) --report-trx --results-directory $(Agent.TempDirectory)/analysis-tests
     displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
     continueOnError: true
 
@@ -94,7 +94,7 @@ steps:
   parameters:
     command: test
     project: src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj
-    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/microsoft-android-build-tasks-tests
+    arguments: -c $(XA.Build.Configuration) --report-trx --results-directory $(Agent.TempDirectory)/microsoft-android-build-tasks-tests
     displayName: Test Microsoft.Android.Build.Tasks.Tests $(XA.Build.Configuration)
 
 - task: PublishTestResults@2
