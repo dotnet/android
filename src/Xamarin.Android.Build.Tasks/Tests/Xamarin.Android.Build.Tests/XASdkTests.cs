@@ -63,7 +63,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (1, counts ["ResolveSdks"], "Only the outer build should discover SDKs.");
 				Assert.AreEqual (1, counts ["ResolveAndroidTooling"], "Only the outer build should resolve Android tooling.");
 				Assert.AreEqual (1, counts ["ValidateJavaVersion"], "Only the outer build should validate Java.");
-				Assert.GreaterOrEqual (counts ["RuntimeIdentifierToAbi"], 3, "Both RID-specific target bodies must still execute.");
 			}
 
 			Dictionary<string, int> GetTaskCounts ()
@@ -72,7 +71,6 @@ namespace Xamarin.Android.Build.Tests
 					["ResolveSdks"] = 0,
 					["ResolveAndroidTooling"] = 0,
 					["ValidateJavaVersion"] = 0,
-					["RuntimeIdentifierToAbi"] = 0,
 				};
 				foreach (var task in counts.Keys.ToArray ()) {
 					counts [task] = dotnet.LastBuildOutput.Count (line => line.Contains ($"Task \"{task}\" (TaskId:", StringComparison.Ordinal));
@@ -116,7 +114,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveSdks"));
 			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
 			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
-			Assert.GreaterOrEqual (CountTask (builder.LastBuildOutput, "RuntimeIdentifierToAbi"), 2);
 			builder.Output.AssertTargetIsNotSkipped ("_ResolveImplementationAssembliesForTypeMap");
 			builder.Output.AssertTargetIsNotSkipped (runtime == AndroidRuntime.CoreCLR ?
 				"_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier" : "_AndroidLinkNativeAotForRuntimeIdentifier");

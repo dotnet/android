@@ -11,7 +11,6 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.RuntimeIdentifierToAbi"     AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion"        AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Target Name="_ResolveAndroidTooling">
@@ -99,13 +98,27 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
     </ResolveAndroidTooling>
-    <RuntimeIdentifierToAbi
-        Condition=" '$(AndroidApplication)' == 'true' "
-        RuntimeIdentifier="$(RuntimeIdentifier)"
-        RuntimeIdentifiers="$(RuntimeIdentifiers)"
-        SupportedAbis="$(AndroidSupportedAbis)">
-      <Output TaskParameter="SupportedAbis" PropertyName="AndroidSupportedAbis" />
-    </RuntimeIdentifierToAbi>
+    <Warning
+        Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidSupportedAbis)' != '' "
+        Code="XA0036"
+        Text="The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead." />
+    <!-- Split() escapes each element, so glob characters in invalid RIDs are reported instead of matching files -->
+    <ItemGroup Condition=" '$(AndroidApplication)' == 'true' ">
+      <_AndroidRuntimeIdentifierAbi Include="$([MSBuild]::ValueOrDefault('$(RuntimeIdentifiers)', '$(RuntimeIdentifier)').Split(';'))" />
+      <_AndroidRuntimeIdentifierAbi>
+        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android.*-arm64$'))">arm64-v8a</Abi>
+        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android.*-arm$'))">armeabi-v7a</Abi>
+        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android.*-x86$'))">x86</Abi>
+        <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android.*-x64$'))">x86_64</Abi>
+      </_AndroidRuntimeIdentifierAbi>
+    </ItemGroup>
+    <Error
+        Condition=" '$(AndroidApplication)' == 'true' and '%(_AndroidRuntimeIdentifierAbi.Abi)' == '' "
+        Code="XA0035"
+        Text="Unable to determine the Android ABI from the value '%(_AndroidRuntimeIdentifierAbi.Identity)'. Edit the project file in a text editor and set the 'RuntimeIdentifiers' MSBuild property to contain only valid identifiers for the Android platform." />
+    <PropertyGroup Condition=" '@(_AndroidRuntimeIdentifierAbi)' != '' ">
+      <AndroidSupportedAbis>@(_AndroidRuntimeIdentifierAbi->'%(Abi)')</AndroidSupportedAbis>
+    </PropertyGroup>
     <PropertyGroup Condition=" '$(_AndroidResolvedSdkProperties)' != '' and '$(_JdkVersion)' != '' and '$(_DefaultJdkVersion)' != '' and '$(_Aapt2Version)' != '' ">
       <_AndroidResolvedToolingProperties>
         $(_AndroidResolvedSdkProperties)
