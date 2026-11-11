@@ -877,17 +877,6 @@ The following build actions may also be used:
 See [Lint Help](https://developer.android.com/studio/write/lint) for more details on
 the android `lint` tooling.
 
-Lint runs through MSBuild's `Exec` task. Warning and error lines, including
-diagnostics without a file name, are reported with the original lint text rather
-than XA0102 or XA0103 codes. Caret-based columns are not extracted, and resource
-paths refer to the intermediate files rather than being mapped back to their
-original names and casing. A nonzero lint exit code also fails the build.
-
-The lint environment preserves `JAVA_HOME` and `JAVA_OPTS`, including the
-compatibility options required by JDK 24 and later. The version-dependent
-default disabled checks are retained; explicitly enabled checks are passed
-through unchanged.
-
 ## AndroidLintEnabledIssues
 
 A string property that is a comma-separated list of lint issues to enable.
