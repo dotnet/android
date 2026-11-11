@@ -205,8 +205,7 @@ are Mono CoreCLR 1,043 rows (1,035 passed/eight skipped), Mono actual NativeAOT
 skipped). Check identities, category sets, duplicate multiplicity, native
 UID/TRX agreement, and installed APK runtime contents, not totals or flags
 alone. Generated descriptors retain bounded reflection fallback.
-JCW retains its whole-app root: both original NUnit and migrated MSTest
-NativeAOT abort in `JavaAbstractMethodTest` at `ic.NewMethod()` (`RhFailFast`);
+JCW retains its whole-app root: NativeAOT aborts in `JavaAbstractMethodTest` at `ic.NewMethod()` (`RhFailFast`);
 do not exclude/weaken that test or claim completed JCW NativeAOT coverage.
 These results do not certify other ABIs or the Mono runtime, whose import is
 absent from the selected SDK. See [runtime migration details](../../../../Documentation/workflow/UnitTests.md#native-metadata-and-trimming)
@@ -275,7 +274,7 @@ For attached CoreCLR acceptance, build with `Optimize=false` and use
 `JavaSideThrowingConstructorPropagatesException` and
 `Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException`: their catches
 remain in user code so JNI's managed rethrow does not add another user-unhandled
-stop inside NUnit's external `Assert.Catch`. Each should stop once at the original
+stop inside an external assertion helper such as `Assert.Throws`. Each should stop once at the original
 throw, then pass after Continue. The handled-policy tests above should not stop.
 Java evaluation while stopped must be checked separately.
 

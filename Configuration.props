@@ -205,7 +205,7 @@
   <Target Name="CreateManifestResourceNames" />
 
   <!-- Don't analyze code from external repos -->
-  <PropertyGroup Condition=" !$(MSBuildProjectDirectory.Contains ('external')) and !$(MSBuildProjectDirectory.Contains ('NUnitLite')) ">
+  <PropertyGroup Condition=" !$(MSBuildProjectDirectory.Contains ('external')) ">
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
   </PropertyGroup>
 

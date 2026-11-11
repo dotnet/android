@@ -841,10 +841,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void AssertExistsAndCopy (TestProjectInfo testInfo, string relativeFilePath, string destDir, bool nunitAssert = true)
+		void AssertExistsAndCopy (TestProjectInfo testInfo, string relativeFilePath, string destDir, bool assertExists = true)
 		{
 			string source = Path.Combine (testInfo.RootDirectory, relativeFilePath);
-			if (nunitAssert)
+			if (assertExists)
 				AssertExists (testInfo.TestName, source);
 			else if (!File.Exists (source))
 				return;
