@@ -124,9 +124,26 @@ projects.
       Stage the AAR layout; when two items map to the same %(ArchivePath), the last one wins.
       Asset paths drop everything up to and including the first $(MonoAndroidAssetsPrefix) directory.
     -->
+    <PropertyGroup>
+      <_AndroidAarAssetDirectory>/$(MonoAndroidAssetsPrefix)</_AndroidAarAssetDirectory>
+      <_AndroidAarAssetPrefix>$(_AndroidAarAssetDirectory)/</_AndroidAarAssetPrefix>
+    </PropertyGroup>
     <ItemGroup>
-      <_AarFile Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) "
-          ArchivePath="assets/$([System.Text.RegularExpressions.Regex]::Replace($([MSBuild]::ValueOrDefault('%(AndroidAsset.Link)', '%(AndroidAsset.Identity)')), '(?i)^(?:.*?[\\/])??$([System.Text.RegularExpressions.Regex]::Escape($(MonoAndroidAssetsPrefix)))(?:[\\/]+|$)', '').Replace('\', '/'))" />
+      <_AndroidAarAsset Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) ">
+        <_AndroidAssetPath>$([MSBuild]::ValueOrDefault('%(AndroidAsset.Link)', '%(AndroidAsset.Identity)').Replace('\', '/'))</_AndroidAssetPath>
+        <_AndroidAssetSearchPath>/%(_AndroidAssetPath)</_AndroidAssetSearchPath>
+        <_AndroidAssetPrefixIndex>$([System.String]::Copy('%(_AndroidAssetSearchPath)').IndexOf('$(_AndroidAarAssetPrefix)', System.StringComparison.OrdinalIgnoreCase))</_AndroidAssetPrefixIndex>
+        <_AndroidAssetRelativeStart>$([MSBuild]::Add(%(_AndroidAssetPrefixIndex), $(_AndroidAarAssetPrefix.Length)))</_AndroidAssetRelativeStart>
+        <_AndroidAssetRelativePath>%(_AndroidAssetPath)</_AndroidAssetRelativePath>
+        <_AndroidAssetRelativePath
+            Condition=" '%(_AndroidAssetPrefixIndex)' &gt;= '0' "
+            >$([System.String]::Copy('%(_AndroidAssetSearchPath)').Substring(%(_AndroidAssetRelativeStart)).TrimStart('/'))</_AndroidAssetRelativePath>
+        <_AndroidAssetRelativePath
+            Condition=" '%(_AndroidAssetPrefixIndex)' == '-1' and $([System.String]::Copy('%(_AndroidAssetSearchPath)').EndsWith('$(_AndroidAarAssetDirectory)', System.StringComparison.OrdinalIgnoreCase)) "
+            ></_AndroidAssetRelativePath>
+        <ArchivePath>assets/%(_AndroidAssetRelativePath)</ArchivePath>
+      </_AndroidAarAsset>
+      <_AarFile Include="@(_AndroidAarAsset)" />
       <_AarResource Include="@(_AndroidResourceDest)" Condition=" !$([System.IO.Directory]::Exists('%(_AndroidResourceDest.FullPath)')) "
           ResourcePath="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('%(_AndroidResourceDest.FullPath)'))))/%(_AndroidResourceDest.Filename)%(_AndroidResourceDest.Extension)"
           LogicalName="$([System.String]::Copy('%(_AndroidResourceDest.LogicalName)').Replace('\', '/'))" />
