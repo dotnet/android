@@ -76,6 +76,8 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
+    <!-- Lint: Aapt2, ConvertResourcesCases, ValidateJavaVersion, etc. still use these helpers. -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Shared.cs" Link="Utilities\MonoAndroidHelper.Shared.cs" />
   </ItemGroup>
 
   <!--

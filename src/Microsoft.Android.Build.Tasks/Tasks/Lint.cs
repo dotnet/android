@@ -11,10 +11,12 @@ using Xamarin.Android.Tools;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
-	public class Lint : AndroidToolTask
+	public partial class Lint : AndroidToolTask
 	{
 		public override string TaskPrefix => "LNT";
 
@@ -41,8 +43,10 @@ namespace Xamarin.Android.Tasks
 		//Warning: The resource R.string.app_name appears to be unused [UnusedResources]
 		//Warning: The resource R.string.hello appears to be unused [UnusedResources]
 		const string NoFileWarningOrErrorRegExString = @"(?<type>Warning|Error):(?<text>.+)";
-		Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
-		Regex noFileWarningOrErrorRegEx = new Regex(NoFileWarningOrErrorRegExString, RegexOptions.Compiled);
+		[GeneratedRegex (CodeErrorRegExString)]
+		private static partial Regex CodeErrorRegEx { get; }
+		[GeneratedRegex (NoFileWarningOrErrorRegExString)]
+		private static partial Regex NoFileWarningOrErrorRegEx { get; }
 		Dictionary<string, string>? _resource_name_case_map;
 		bool matched = false;
 		string? file;
@@ -187,7 +191,8 @@ namespace Xamarin.Android.Tasks
 			{ "Instantiatable", new Version (4, 2, 0) },
 		};
 
-		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)", RegexOptions.Compiled);
+		[GeneratedRegex (@"version[\t\s]+(?<version>[\d\.]+)")]
+		private static partial Regex LintVersionRegex { get; }
 
 		public override bool RunTask ()
 		{
@@ -226,7 +231,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Regex issueReplaceRegex = new Regex ($"\b{issueToRemove}\b(,)?");
 			if (!issues.IsNullOrEmpty () && issues.Contains (issueToRemove)) {
-				var match = issueReplaceRegex.Match (DisabledIssues);
+				var match = issueReplaceRegex.Match (DisabledIssues ?? throw new ArgumentNullException (nameof (DisabledIssues)));
 				if (match.Success) {
 					issues = issues.Replace (match.Value, string.Empty);
 					Log.LogCodedWarning ("XA0123", issueToRemove, issuePropertyName, lintToolVersion);
@@ -277,9 +282,9 @@ namespace Xamarin.Android.Tasks
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			var match = codeErrorRegEx.Match (singleLine);
+			var match = CodeErrorRegEx.Match (singleLine);
 			if (!match.Success)
-				match = noFileWarningOrErrorRegEx.Match (singleLine);
+				match = NoFileWarningOrErrorRegEx.Match (singleLine);
 			if (match.Success) {
 				if (matched) {
 					// we are already in a warning/error ...
@@ -347,7 +352,7 @@ namespace Xamarin.Android.Tasks
 			config.Add (lintRoot);
 			foreach (var configFile in ConfigFiles ?? []) {
 				var doc = XDocument.Load (configFile.ItemSpec);
-				var issues = doc.Element ("lint").Elements ("issue");
+				var issues = (doc.Element ("lint") ?? throw new InvalidOperationException ($"'{configFile.ItemSpec}' has no <lint> root element.")).Elements ("issue");
 				lintRoot.Add (issues);
 			}
 			return config;
@@ -378,9 +383,9 @@ namespace Xamarin.Android.Tasks
 			var versionInfo = sb.ToString ();
 			if (result != 0 || versionInfo.Contains ("unknown")) {
 				// lets try to parse the lint-xx-x-x-dev.jar filename to get the version
-				var libPath = Path.Combine (Path.GetDirectoryName (tool), "..", "lib");
+				var libPath = Path.Combine (Path.GetDirectoryName (tool) ?? "", "..", "lib");
 				if (Directory.Exists (libPath)) {
-					Version v;
+					Version? v;
 					foreach (var file in Directory.EnumerateFiles (libPath, "lint-??.?.?-dev.jar")) {
 						var split = Path.GetFileName (file).Split ('-');
 						if (split.Length != 3)
@@ -396,8 +401,8 @@ namespace Xamarin.Android.Tasks
 				return new Version (1, 0);
 			}
 			// lint: version 26.0.2
-			var versionNumberMatch = lintVersionRegex.Match (versionInfo);
-			Version versionNumber;
+			var versionNumberMatch = LintVersionRegex.Match (versionInfo);
+			Version? versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
 				return versionNumber;
 			}
