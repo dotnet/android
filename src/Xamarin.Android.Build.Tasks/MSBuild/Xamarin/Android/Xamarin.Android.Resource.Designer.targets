@@ -158,10 +158,11 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Target Name="_GenerateResourceDesignerAssemblyInputs"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
-    DependsOnTargets="_SetupDesignerProperties"
-    BeforeTargets="_UpdateAndroidResgen">
+    DependsOnTargets="_SetupDesignerProperties">
   <PropertyGroup>
     <_AndroidResourceDesignerFrameworkFile>$(_DesignerIntermediateOutputPath)resource.designer.framework</_AndroidResourceDesignerFrameworkFile>
+    <!-- Normal builds emit the designer from _UpdateAndroidResgen, which may reuse a design-time retargeted output. -->
+    <_UpdateAndroidResgenInputs>$(_UpdateAndroidResgenInputs);$(_AndroidResourceDesignerFrameworkFile)</_UpdateAndroidResgenInputs>
   </PropertyGroup>
   <WriteLinesToFile
       File="$(_AndroidResourceDesignerFrameworkFile)"

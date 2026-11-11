@@ -885,6 +885,70 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void DesignTimeRetargetingDoesNotLeakIntoNormalBuild ([Values] bool isApplication, [Values (-1, 1)] int designTimeVersionOffset)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			XamarinAndroidProject project = isApplication ? new XamarinAndroidApplicationProject () : new XamarinAndroidLibraryProject ();
+			// Retarget only the designer inputs so the design-time build shares the normal output path.
+			project.Imports.Add (new Import (() => "RetargetResourceDesigner.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="_TestRetargetResourceDesigner"
+					      BeforeTargets="_GenerateResourceDesignerAssemblyInputs"
+					      Condition=" '$(TestResourceDesignerFrameworkVersion)' != '' ">
+					    <PropertyGroup>
+					      <_TestOriginalTargetFrameworkVersion>$(TargetFrameworkVersion)</_TestOriginalTargetFrameworkVersion>
+					      <TargetFrameworkVersion>$(TestResourceDesignerFrameworkVersion)</TargetFrameworkVersion>
+					    </PropertyGroup>
+					  </Target>
+					  <Target Name="_TestRestoreResourceDesignerFramework"
+					      AfterTargets="_GenerateResourceDesignerAssembly"
+					      Condition=" '$(_TestOriginalTargetFrameworkVersion)' != '' ">
+					    <PropertyGroup>
+					      <TargetFrameworkVersion>$(_TestOriginalTargetFrameworkVersion)</TargetFrameworkVersion>
+					    </PropertyGroup>
+					  </Target>
+					</Project>
+					""",
+			});
+			int originalVersion = Version.Parse (project.TargetFramework.Split ('-') [0].Substring (3)).Major;
+			int designTimeVersion = originalVersion + designTimeVersionOffset;
+			using var builder = isApplication ? CreateApkBuilder (path) : CreateDllBuilder (path);
+			string designerPath = Path.Combine (path, project.IntermediateOutputPath, "_Microsoft.Android.Resource.Designer.dll");
+
+			Assert.IsTrue (builder.Build (project), "The initial normal build should succeed.");
+			AssertDesignerFramework (originalVersion);
+
+			builder.BuildLogFile = "designtime.log";
+			Assert.IsTrue (builder.DesignTimeBuild (project, doNotCleanupOnUpdate: true, parameters: [$"TestResourceDesignerFrameworkVersion=v{designTimeVersion}.0"]),
+				"The retargeted design-time build should succeed.");
+			AssertDesignerFramework (designTimeVersion);
+
+			builder.BuildLogFile = "build2.log";
+			Assert.IsTrue (builder.Build (project, doNotCleanupOnUpdate: true), "Returning to the original normal build should succeed.");
+			AssertDesignerFramework (originalVersion);
+			var timestamp = File.GetLastWriteTimeUtc (designerPath);
+			var image = File.ReadAllBytes (designerPath);
+
+			builder.BuildLogFile = "build3.log";
+			Assert.IsTrue (builder.Build (project, doNotCleanupOnUpdate: true), "An unchanged normal build should succeed.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "An unchanged framework should skip resource generation.");
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (designerPath), "A no-op build should preserve the designer timestamp.");
+			CollectionAssert.AreEqual (image, File.ReadAllBytes (designerPath), "A no-op build should preserve the designer contents.");
+			AssertDesignerFramework (originalVersion);
+
+			void AssertDesignerFramework (int version)
+			{
+				using var designer = AssemblyDefinition.ReadAssembly (designerPath);
+				var frameworkAttribute = designer.CustomAttributes.Single (attribute => attribute.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute");
+				Assert.AreEqual ($".NETCoreApp,Version=v{version}.0", frameworkAttribute.ConstructorArguments [0].Value, "The designer should target the expected framework.");
+				var frameworkReference = designer.MainModule.AssemblyReferences.Single ();
+				Assert.AreEqual ("System.Runtime", frameworkReference.Name);
+				Assert.AreEqual (new Version (version, 0, 0, 0), frameworkReference.Version, "The designer should reference the expected System.Runtime.");
+			}
+		}
+
+		[Test]
 		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;

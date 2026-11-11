@@ -1134,6 +1134,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
   <_PrepareUpdateAndroidResgenDependsOnTargets>
+    _GenerateResourceDesignerAssemblyInputs;
     _IncludeModifiedFilesInUpdateAndroidResgenInputs;
   </_PrepareUpdateAndroidResgenDependsOnTargets>
 </PropertyGroup>
