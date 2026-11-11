@@ -75,6 +75,7 @@ This file contains MSBuild targets that support building and operating on Androi
       <_AndroidGradleEnvironment Include="JAVA_HOME=$(JavaSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(JavaSdkDirectory)')) " />
       <AndroidGradleProject>
         <_AndroidGradleWrapper>%(RootDir)%(Directory)$(_AndroidGradleToolName)</_AndroidGradleWrapper>
+        <_AndroidGradleWrapperCommand>&quot;%(_AndroidGradleWrapper)&quot;</_AndroidGradleWrapperCommand>
         <_AndroidGradleModule Condition=" '%(ModuleName)' != '' ">%(ModuleName):</_AndroidGradleModule>
       </AndroidGradleProject>
     </ItemGroup>
@@ -107,10 +108,11 @@ This file contains MSBuild targets that support building and operating on Androi
     <ItemGroup>
       <AndroidGradleProject>
         <_AndroidGradleAssembleArguments Condition=" '%(OutputPath)' != '' and Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleAssembleArguments>
+        <_AndroidGradleAssembleCommand>%(_AndroidGradleWrapperCommand) &quot;%(_AndroidGradleModule)assemble%(Configuration)&quot; %(_AndroidGradleAssembleArguments) --no-daemon</_AndroidGradleAssembleCommand>
       </AndroidGradleProject>
     </ItemGroup>
     <Exec
-        Command="&quot;%(AndroidGradleProject._AndroidGradleWrapper)&quot; &quot;%(AndroidGradleProject._AndroidGradleModule)assemble%(AndroidGradleProject.Configuration)&quot; %(AndroidGradleProject._AndroidGradleAssembleArguments) --no-daemon"
+        Command="%(AndroidGradleProject._AndroidGradleAssembleCommand)"
         WorkingDirectory="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
         EnvironmentVariables="@(_AndroidGradleEnvironment)"
         StandardOutputImportance="Low"
@@ -152,10 +154,11 @@ This file contains MSBuild targets that support building and operating on Androi
     <ItemGroup>
       <AndroidGradleProject>
         <_AndroidGradleCleanArguments Condition=" '%(OutputPath)' != '' and Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleCleanArguments>
+        <_AndroidGradleCleanCommand>%(_AndroidGradleWrapperCommand) &quot;%(_AndroidGradleModule)clean&quot; %(_AndroidGradleCleanArguments) --no-daemon</_AndroidGradleCleanCommand>
       </AndroidGradleProject>
     </ItemGroup>
     <Exec
-        Command="&quot;%(AndroidGradleProject._AndroidGradleWrapper)&quot; &quot;%(AndroidGradleProject._AndroidGradleModule)clean&quot; %(AndroidGradleProject._AndroidGradleCleanArguments) --no-daemon"
+        Command="%(AndroidGradleProject._AndroidGradleCleanCommand)"
         WorkingDirectory="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
         EnvironmentVariables="@(_AndroidGradleEnvironment)"
         StandardOutputImportance="Low"
