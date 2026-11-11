@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Hashing;
 
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -64,11 +65,13 @@ partial class AssemblyStoreGenerator
 	const uint ASSEMBLY_STORE_ABI_X86 = 0x00040000;
 
 	readonly TaskLoggingHelper log;
+	readonly TaskEnvironment taskEnvironment;
 	readonly Dictionary<AndroidTargetArch, List<AssemblyStoreAssemblyInfo>> assemblies;
 
-	public AssemblyStoreGenerator (TaskLoggingHelper log)
+	public AssemblyStoreGenerator (TaskLoggingHelper log, TaskEnvironment? taskEnvironment = null)
 	{
 		this.log = log;
+		this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
 		assemblies = new Dictionary<AndroidTargetArch, List<AssemblyStoreAssemblyInfo>> ();
 	}
 
@@ -106,7 +109,7 @@ partial class AssemblyStoreGenerator
 
 		string androidAbi = MonoAndroidHelper.ArchToAbi (arch);
 		string outputDir = Path.Combine (baseOutputDirectory, androidAbi);
-		Directory.CreateDirectory (outputDir);
+		Directory.CreateDirectory (taskEnvironment.GetAbsolutePath (outputDir));
 
 		uint infoCount = (uint)infos.Count;
 		string storePath = Path.Combine (outputDir, "assembly-store.so");
@@ -123,7 +126,7 @@ partial class AssemblyStoreGenerator
 		// We'll start writing to the stream after we seek to the position just after the header, index, descriptors and name data.
 		ulong curPos = assemblyDataStart;
 
-		using var fs = File.Open (storePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+		using var fs = File.Open (taskEnvironment.GetAbsolutePath (storePath), FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 
 		uint mappingIndex = 0;
@@ -162,7 +165,7 @@ partial class AssemblyStoreGenerator
 		using var writer = new BinaryWriter (fs);
 		WriteHeader (writer, header);
 
-		using var manifestFs = File.Open ($"{storePath}.manifest", FileMode.Create, FileAccess.Write, FileShare.Read);
+		using var manifestFs = File.Open (taskEnvironment.GetAbsolutePath ($"{storePath}.manifest"), FileMode.Create, FileAccess.Write, FileShare.Read);
 		using var mw = new StreamWriter (manifestFs, new System.Text.UTF8Encoding (false));
 		WriteIndex (writer, mw, index, descriptors);
 		mw.Flush ();

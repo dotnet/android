@@ -17,9 +17,9 @@ namespace Microsoft.Android.Tasks;
 /// </summary>
 static class ReferenceAssemblyChecker
 {
-	public static bool LogIfReferenceAssembly (ITaskItem assembly, TaskLoggingHelper log)
+	public static bool LogIfReferenceAssembly (ITaskItem assembly, TaskLoggingHelper log, TaskEnvironment taskEnvironment)
 	{
-		if (IsReferenceAssembly (assembly.ItemSpec, log)) {
+		if (IsReferenceAssembly (taskEnvironment.GetAbsolutePath (assembly.ItemSpec), log)) {
 			log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 			return true;
 		}
@@ -27,7 +27,7 @@ static class ReferenceAssemblyChecker
 		return false;
 	}
 
-	static bool IsReferenceAssembly (string assembly, TaskLoggingHelper log)
+	static bool IsReferenceAssembly (AbsolutePath assembly, TaskLoggingHelper log)
 	{
 		using var stream = File.OpenRead (assembly);
 		using var pe = new PEReader (stream);

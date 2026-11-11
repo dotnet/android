@@ -15,7 +15,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 namespace Microsoft.Android.Tasks;
 
 /// <summary>Produces self-contained, read-only ELF data libraries from merged JNI remapping XML.</summary>
-public class GenerateJniRemappingBinaryBlobs : AndroidTask
+[MSBuildMultiThreadableTask]
+public class GenerateJniRemappingBinaryBlobs : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GJRBB";
 
@@ -43,10 +44,10 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				SupportedAbis.Any (string.IsNullOrWhiteSpace)) {
 				throw new InvalidDataException ("An output directory and at least one ABI are required.");
 			}
-			byte [] blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, Compress);
+			byte [] blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, Compress, TaskEnvironment);
 			byte []? bootstrap = null;
 			if (!string.IsNullOrWhiteSpace (BootstrapFilePath)) {
-				byte [] raw = File.ReadAllBytes (BootstrapFilePath);
+				byte [] raw = File.ReadAllBytes (TaskEnvironment.GetAbsolutePath (BootstrapFilePath));
 				CoreClrBootstrapBlob.Validate (raw);
 				bootstrap = JniRemappingBinaryBlob.Wrap (raw, Compress);
 			}
@@ -60,14 +61,15 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				}
 				libraries.Add ((abi, Path.Combine (OutputDirectory, abi, "libbinary_blobs.so"), arch));
 			}
-			string stamp = Path.Combine (OutputDirectory, "binary-blobs.stamp");
+			var stamp = TaskEnvironment.GetAbsolutePath (Path.Combine (OutputDirectory, "binary-blobs.stamp"));
 			// Failed output writes must force generation on the next build.
 			if (File.Exists (stamp))
 				File.Delete (stamp);
 			foreach (var (abi, path, arch) in libraries) {
+				var outputPath = TaskEnvironment.GetAbsolutePath (path);
 				if (blob.Length == 0 && bootstrap == null) {
-					if (File.Exists (path))
-						File.Delete (path);
+					if (File.Exists (outputPath))
+						File.Delete (outputPath);
 					continue;
 				}
 				using var source = new MemoryStream (blob, writable: false);
@@ -82,14 +84,14 @@ public class GenerateJniRemappingBinaryBlobs : AndroidTask
 				}
 				AssemblyStoreElfWriter.Write (payloads, output, arch, "libbinary_blobs.so");
 				byte [] elf = output.ToArray ();
-				Directory.CreateDirectory (Path.GetDirectoryName (path) ?? throw new InvalidDataException ("No output directory."));
-				File.WriteAllBytes (path, elf);
+				Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (path) ?? throw new InvalidDataException ("No output directory.")));
+				File.WriteAllBytes (outputPath, elf);
 				var item = new TaskItem (path);
 				item.SetMetadata ("Abi", abi);
 				item.SetMetadata ("ArchivePath", $"lib/{abi}/libbinary_blobs.so");
 				BinaryBlobLibraries = [.. BinaryBlobLibraries, item];
 			}
-			Directory.CreateDirectory (OutputDirectory);
+			Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (OutputDirectory));
 			File.WriteAllText (stamp, BinaryBlobLibraries.Length == 0 ? "false" : "true");
 		} catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException or UnauthorizedAccessException or
 			NotSupportedException or OverflowException or XmlException) {

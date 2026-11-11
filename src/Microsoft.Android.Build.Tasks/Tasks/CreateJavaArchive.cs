@@ -6,7 +6,8 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Tasks;
 
-public class CreateJavaArchive : AndroidTask
+[MSBuildMultiThreadableTask]
+public class CreateJavaArchive : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "CJA";
 
@@ -18,8 +19,8 @@ public class CreateJavaArchive : AndroidTask
 
 	public override bool RunTask ()
 	{
-		using var archive = new ZipArchiveEx (OutputFile, FileMode.OpenOrCreate);
-		archive.AddDirectory (SourceDirectory, "", CompressionLevel.NoCompression);
+		using var archive = new ZipArchiveEx (TaskEnvironment.GetAbsolutePath (OutputFile), FileMode.OpenOrCreate, TaskEnvironment);
+		archive.AddDirectory (TaskEnvironment.GetAbsolutePath (SourceDirectory), "", CompressionLevel.NoCompression);
 		return !Log.HasLoggedErrors;
 	}
 }

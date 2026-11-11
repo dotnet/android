@@ -13,7 +13,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks
 {
-	public class ExtractTypeMapKeysFromAssemblies : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ExtractTypeMapKeysFromAssemblies : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "ETMKA";
 
@@ -33,7 +34,7 @@ namespace Microsoft.Android.Tasks
 			var keys = new SortedSet<string> (StringComparer.Ordinal);
 			foreach (var assembly in LinkedAssemblies) {
 				try {
-					ReadKeys (assembly.ItemSpec, keys);
+					ReadKeys (TaskEnvironment.GetAbsolutePath (assembly.ItemSpec), keys);
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is BadImageFormatException || ex is ArgumentException) {
 					Log.LogCodedError ("XA4327", Properties.Resources.XA4327, assembly.ItemSpec, ex.Message);
 				}
@@ -44,14 +45,15 @@ namespace Microsoft.Android.Tasks
 			}
 
 			try {
-				var directory = Path.GetDirectoryName (OutputFile);
+				var outputFile = TaskEnvironment.GetAbsolutePath (OutputFile);
+				var directory = Path.GetDirectoryName (outputFile);
 				if (!directory.IsNullOrEmpty ()) {
 					Directory.CreateDirectory (directory);
 				}
-				string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+				var temporaryOutputFile = TaskEnvironment.GetAbsolutePath (outputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp");
 				try {
 					WriteOutputFile (temporaryOutputFile, keys);
-					File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+					File.Move (temporaryOutputFile, outputFile, overwrite: true);
 				} finally {
 					File.Delete (temporaryOutputFile);
 				}
@@ -64,7 +66,7 @@ namespace Microsoft.Android.Tasks
 
 		protected virtual void WriteOutputFile (string outputFile, IReadOnlyCollection<string> keys)
 		{
-			using var writer = new StreamWriter (outputFile, append: false, new UTF8Encoding (encoderShouldEmitUTF8Identifier: false)) { NewLine = "\n" };
+			using var writer = new StreamWriter (TaskEnvironment.GetAbsolutePath (outputFile), append: false, new UTF8Encoding (encoderShouldEmitUTF8Identifier: false)) { NewLine = "\n" };
 			foreach (string key in keys) {
 				writer.WriteLine (key);
 			}
@@ -72,7 +74,7 @@ namespace Microsoft.Android.Tasks
 
 		void ReadKeys (string assemblyPath, SortedSet<string> keys)
 		{
-			using var stream = File.OpenRead (assemblyPath);
+			using var stream = File.OpenRead (TaskEnvironment.GetAbsolutePath (assemblyPath));
 			using var pe = new PEReader (stream);
 			if (!pe.HasMetadata) {
 				throw new BadImageFormatException ("The input has no managed metadata.");

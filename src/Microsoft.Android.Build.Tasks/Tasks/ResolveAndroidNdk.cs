@@ -6,7 +6,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
-public class ResolveAndroidNdk : AndroidTask
+[MSBuildMultiThreadableTask]
+public class ResolveAndroidNdk : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "RANDK";
 
@@ -37,7 +38,7 @@ public class ResolveAndroidNdk : AndroidTask
 			return true;
 		}
 
-		var ndk = AndroidNdkTools.Create (AndroidNdkDirectory, Log);
+		var ndk = AndroidNdkTools.Create (AndroidNdkDirectory, Log, TaskEnvironment);
 		if (ndk == null) {
 			return false;
 		}
@@ -46,7 +47,7 @@ public class ResolveAndroidNdk : AndroidTask
 			LinkerToolPath = ndk.GetToolPath ("ld.lld");
 			ObjcopyToolPath = ndk.GetToolPath ("llvm-objcopy");
 			string libraries = Path.Combine (ToolchainDirectory, "sysroot", "usr", "lib");
-			if (!Directory.Exists (libraries)) {
+			if (!Directory.Exists (TaskEnvironment.GetAbsolutePath (libraries))) {
 				Log.LogCodedError ("XA5101", Properties.Resources.XA5101, libraries);
 			}
 		}

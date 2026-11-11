@@ -13,7 +13,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
-public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
+[MSBuildMultiThreadableTask]
+public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 {
 	const string TypeMapSymbol = "__external_type_map__";
 	const string CommonFixupsSymbol = "__external_CommonFixupsTable_references";
@@ -38,7 +39,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 				throw new BadImageFormatException ("No NativeAOT object files were supplied.");
 			}
 			currentFile = LlvmReadObjPath;
-			if (!Path.IsPathFullyQualified (LlvmReadObjPath) || !File.Exists (LlvmReadObjPath)) {
+			if (!Path.IsPathFullyQualified (LlvmReadObjPath) || !File.Exists (TaskEnvironment.GetAbsolutePath (LlvmReadObjPath))) {
 				throw new FileNotFoundException ("An existing full path to llvm-readobj is required.", LlvmReadObjPath);
 			}
 
@@ -46,7 +47,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 			foreach (var file in NativeObjectFiles) {
 				CancellationToken.ThrowIfCancellationRequested ();
 				currentFile = file.ItemSpec;
-				using var stream = File.OpenRead (currentFile);
+				using var stream = File.OpenRead (TaskEnvironment.GetAbsolutePath (currentFile));
 				string metadata = await ReadObjectMetadataAsync (currentFile).ConfigureAwait (false);
 				using var document = JsonDocument.Parse (metadata);
 				await ReadKeysAsync (currentFile, stream, document.RootElement, keys).ConfigureAwait (false);
@@ -56,12 +57,12 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 			currentFile = OutputFile;
 			string? directory = Path.GetDirectoryName (OutputFile);
 			if (!string.IsNullOrEmpty (directory)) {
-				Directory.CreateDirectory (directory);
+				Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (directory));
 			}
-			string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+			var temporaryOutputFile = TaskEnvironment.GetAbsolutePath (OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp");
 			try {
 				WriteOutputFile (temporaryOutputFile, keys);
-				File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+				File.Move (temporaryOutputFile, TaskEnvironment.GetAbsolutePath (OutputFile), overwrite: true);
 			} finally {
 				File.Delete (temporaryOutputFile);
 			}
@@ -73,7 +74,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 
 	protected virtual void WriteOutputFile (string outputFile, IReadOnlyCollection<string> keys)
 	{
-		using var writer = new StreamWriter (outputFile, append: false, new UTF8Encoding (false, true)) { NewLine = "\n" };
+		using var writer = new StreamWriter (TaskEnvironment.GetAbsolutePath (outputFile), append: false, new UTF8Encoding (false, true)) { NewLine = "\n" };
 		foreach (string key in keys) {
 			writer.WriteLine (key);
 		}
@@ -83,8 +84,11 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 	{
 		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
 		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-		var startInfo = ProcessUtils.CreateProcessStartInfo (LlvmReadObjPath,
-			"--elf-output-style=JSON", "--file-headers", "--sections", Path.GetFullPath (objectFile));
+		var startInfo = TaskEnvironment.GetProcessStartInfo ();
+		startInfo.FileName = TaskEnvironment.GetAbsolutePath (LlvmReadObjPath);
+		foreach (var argument in new [] { "--elf-output-style=JSON", "--file-headers", "--sections", TaskEnvironment.GetAbsolutePath (objectFile).ToString () }) {
+			startInfo.ArgumentList.Add (argument);
+		}
 		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
 		if (exitCode != 0) {
 			throw new InvalidOperationException ($"llvm-readobj exited with code {exitCode}: {stderr}");
@@ -112,7 +116,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 		// A real app can have hundreds of MB of symbol JSON. Keep only the two
 		// non-COMDAT .rodata symbols emitted by ILC, not a DOM of the entire symbol table.
 		using var symbols = new TypeMapSymbolWriter ();
-		await RunObjdumpAsync (symbols, "--syms", Path.GetFullPath (objectFile)).ConfigureAwait (false);
+		await RunObjdumpAsync (symbols, "--syms", TaskEnvironment.GetAbsolutePath (objectFile)).ConfigureAwait (false);
 		symbols.Flush ();
 		using var result = new MemoryStream ();
 		using (var json = new Utf8JsonWriter (result)) {
@@ -162,7 +166,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
 		await RunObjdumpAsync (stdout, "--reloc", "--section=" + section,
 			"--start-address=0x" + start.ToString ("x", CultureInfo.InvariantCulture),
-			"--stop-address=0x" + end.ToString ("x", CultureInfo.InvariantCulture), Path.GetFullPath (objectFile)).ConfigureAwait (false);
+			"--stop-address=0x" + end.ToString ("x", CultureInfo.InvariantCulture), TaskEnvironment.GetAbsolutePath (objectFile)).ConfigureAwait (false);
 		return stdout.ToString ();
 	}
 
@@ -173,11 +177,15 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 			throw new ArgumentException ("Expected a full path to llvm-readobj.", nameof (LlvmReadObjPath));
 		}
 		string objdump = Path.Combine (directory, OperatingSystem.IsWindows () ? "llvm-objdump.exe" : "llvm-objdump");
-		if (!File.Exists (objdump)) {
+		if (!File.Exists (TaskEnvironment.GetAbsolutePath (objdump))) {
 			throw new FileNotFoundException ("llvm-objdump is required alongside llvm-readobj.", objdump);
 		}
 		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-		var startInfo = ProcessUtils.CreateProcessStartInfo (objdump, arguments);
+		var startInfo = TaskEnvironment.GetProcessStartInfo ();
+		startInfo.FileName = TaskEnvironment.GetAbsolutePath (objdump);
+		foreach (var argument in arguments) {
+			startInfo.ArgumentList.Add (argument);
+		}
 		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
 		if (exitCode != 0) {
 			throw new InvalidOperationException ($"llvm-objdump exited with code {exitCode}: {stderr}");

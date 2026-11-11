@@ -13,7 +13,8 @@ namespace Microsoft.Android.Tasks;
 /// <summary>
 /// Places all embedded assemblies in a single assembly store file per target architecture.
 /// </summary>
-public class CreateAssemblyStore : AndroidTask
+[MSBuildMultiThreadableTask]
+public class CreateAssemblyStore : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "CST";
 
@@ -39,7 +40,7 @@ public class CreateAssemblyStore : AndroidTask
 		// Get all the user and framework assemblies we may need to package
 		var assemblies = ResolvedFrameworkAssemblies.Concat (ResolvedUserAssemblies).Where (asm => !(ShouldSkipAssembly (asm))).ToArray ();
 
-		var store_builder = new AssemblyStoreBuilder (Log);
+		var store_builder = new AssemblyStoreBuilder (Log, TaskEnvironment);
 		var per_arch_assemblies = MonoAndroidHelper.GetPerArchAssemblies (assemblies, SupportedAbis, true);
 
 		foreach (var kvp in per_arch_assemblies) {

@@ -11,16 +11,18 @@ using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
 using Microsoft.Android.Tasks;
+using Microsoft.Build.Framework;
 using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks.JniRemapping
 {
 	static class NativeAotJniRetention
 	{
-		public static HashSet<string> GetRequiredEntries (string objectFile, R8Mapping mapping)
+		public static HashSet<string> GetRequiredEntries (string objectFile, R8Mapping mapping, TaskEnvironment? taskEnvironment = null)
 		{
+			taskEnvironment ??= TaskEnvironment.Fallback;
 			var objectData = ReadElfData (() => {
-				var sections = ReadObjectData (objectFile, out var payloads);
+				var sections = ReadObjectData (taskEnvironment.GetAbsolutePath (objectFile), out var payloads);
 				return (Sections: sections, ClassPayloads: payloads);
 			});
 			var classes = new List<R8ClassMapping> (mapping.EnumerateClassMappings ());
@@ -96,7 +98,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 			}
 		}
 
-		static List<byte []> ReadObjectData (string path, out List<LiteralPayload> classPayloads)
+		static List<byte []> ReadObjectData (AbsolutePath path, out List<LiteralPayload> classPayloads)
 		{
 			using var stream = File.OpenRead (path);
 			using IELF elf = ReadElfData (() => ELFReader.Load (stream, shouldOwnStream: false));

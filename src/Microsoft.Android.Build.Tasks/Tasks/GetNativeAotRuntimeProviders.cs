@@ -8,7 +8,8 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Tasks;
 
-public sealed class GetNativeAotRuntimeProviders : AndroidTask
+[MSBuildMultiThreadableTask]
+public sealed class GetNativeAotRuntimeProviders : MultithreadedAndroidTask
 {
 	const string PackagePrefix = "net.dot.jni.nativeaot.";
 	const string ProviderPrefix = PackagePrefix + "NativeAotRuntimeProvider_";
@@ -23,7 +24,7 @@ public sealed class GetNativeAotRuntimeProviders : AndroidTask
 
 	public override bool RunTask ()
 	{
-		using var reader = XmlReader.Create (ManifestFile, new XmlReaderSettings {
+		using var reader = XmlReader.Create (TaskEnvironment.GetAbsolutePath (ManifestFile), new XmlReaderSettings {
 			DtdProcessing = DtdProcessing.Prohibit,
 			XmlResolver = null,
 		});

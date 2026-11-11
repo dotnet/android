@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Tasks.JniRemapping
 {
@@ -73,9 +74,10 @@ namespace Microsoft.Android.Tasks.JniRemapping
 		bool IsReverseEntryAllowed (string entry)
 			=> allowedReverseEntries == null || allowedReverseEntries.Contains (entry);
 
-		public static R8Mapping Load (string path)
+		public static R8Mapping Load (string path, TaskEnvironment? taskEnvironment = null)
 		{
-			using var reader = new StreamReader (path);
+			taskEnvironment ??= TaskEnvironment.Fallback;
+			using var reader = new StreamReader (taskEnvironment.GetAbsolutePath (path));
 			return Parse (reader, path);
 		}
 

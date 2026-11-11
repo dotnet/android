@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using Microsoft.Build.Framework;
 
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
@@ -20,24 +21,25 @@ class RuntimePropertiesParser
 	/// `coreclr_initialize()`, so the merge has to happen here instead. The .NET SDK uses the
 	/// dev file to turn on Hot Reload switches for `Debug` builds.
 	/// </summary>
-	public static Dictionary<string, string>? ParseConfig (string projectRuntimeConfigFilePath, string? projectRuntimeConfigDevFilePath = null)
+	public static Dictionary<string, string>? ParseConfig (string projectRuntimeConfigFilePath, string? projectRuntimeConfigDevFilePath = null, TaskEnvironment? taskEnvironment = null)
 	{
-		if (String.IsNullOrEmpty (projectRuntimeConfigFilePath) || !File.Exists (projectRuntimeConfigFilePath)) {
+		taskEnvironment ??= TaskEnvironment.Fallback;
+		if (String.IsNullOrEmpty (projectRuntimeConfigFilePath) || !File.Exists (taskEnvironment.GetAbsolutePath (projectRuntimeConfigFilePath))) {
 			return null;
 		}
 
 		var ret = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
-		AddConfigProperties (projectRuntimeConfigFilePath, ret);
+		AddConfigProperties (taskEnvironment.GetAbsolutePath (projectRuntimeConfigFilePath), ret);
 
-		if (!projectRuntimeConfigDevFilePath.IsNullOrEmpty () && File.Exists (projectRuntimeConfigDevFilePath)) {
+		if (!projectRuntimeConfigDevFilePath.IsNullOrEmpty () && File.Exists (taskEnvironment.GetAbsolutePath (projectRuntimeConfigDevFilePath))) {
 			// Values from the dev file win, matching `hostfxr`
-			AddConfigProperties (projectRuntimeConfigDevFilePath, ret);
+			AddConfigProperties (taskEnvironment.GetAbsolutePath (projectRuntimeConfigDevFilePath), ret);
 		}
 
 		return ret;
 	}
 
-	static void AddConfigProperties (string path, Dictionary<string, string> properties)
+	static void AddConfigProperties (AbsolutePath path, Dictionary<string, string> properties)
 	{
 		using var fs = File.OpenRead (path);
 

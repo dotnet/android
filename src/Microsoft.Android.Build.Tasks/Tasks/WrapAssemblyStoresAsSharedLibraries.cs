@@ -14,7 +14,8 @@ namespace Microsoft.Android.Tasks;
 /// <summary>
 /// Wraps raw per-ABI assembly stores as data-only ELF libraries for lib/ABI packaging.
 /// </summary>
-public class WrapAssemblyStoresAsSharedLibraries : AndroidTask
+[MSBuildMultiThreadableTask]
+public class WrapAssemblyStoresAsSharedLibraries : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "WAS";
 
@@ -40,7 +41,7 @@ public class WrapAssemblyStoresAsSharedLibraries : AndroidTask
 			}
 			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
 			string name = "lib" + Path.GetFileName (store.ItemSpec);
-			string library = DlopenAssemblyStoreGenerator.WrapIt (Log, IntermediateOutputPath, arch, store.ItemSpec, name);
+			string library = DlopenAssemblyStoreGenerator.WrapIt (Log, IntermediateOutputPath, arch, store.ItemSpec, name, TaskEnvironment);
 			files.AddItem (library, MonoAndroidHelper.MakeZipArchivePath ("lib", abi, name));
 			directories.Add (Path.GetDirectoryName (library) ?? throw new InvalidOperationException ("Assembly-store output directory is missing."));
 		}

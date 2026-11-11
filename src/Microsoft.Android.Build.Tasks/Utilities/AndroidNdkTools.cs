@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Properties = Xamarin.Android.Tasks.Properties;
@@ -12,39 +13,42 @@ namespace Microsoft.Android.Tasks;
 sealed class AndroidNdkTools
 {
 	readonly TaskLoggingHelper log;
+	readonly TaskEnvironment taskEnvironment;
 
 	public string ToolchainDirectory { get; }
 	public string BinDirectory => Path.Combine (ToolchainDirectory, "bin");
 	public static string HostTag => RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "windows-x86_64" :
 		RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "darwin-x86_64" : "linux-x86_64";
 
-	AndroidNdkTools (string directory, TaskLoggingHelper log)
+	AndroidNdkTools (string directory, TaskLoggingHelper log, TaskEnvironment taskEnvironment)
 	{
 		ToolchainDirectory = directory;
 		this.log = log;
+		this.taskEnvironment = taskEnvironment;
 	}
 
-	public static AndroidNdkTools? Create (string? ndkDirectory, TaskLoggingHelper log)
+	public static AndroidNdkTools? Create (string? ndkDirectory, TaskLoggingHelper log, TaskEnvironment? taskEnvironment = null)
 	{
+		taskEnvironment ??= TaskEnvironment.Fallback;
 		if (log == null) {
 			throw new ArgumentNullException (nameof (log));
 		}
-		if (ndkDirectory.IsNullOrEmpty () || !File.Exists (Path.Combine (ndkDirectory, "source.properties"))) {
+		if (ndkDirectory.IsNullOrEmpty () || !File.Exists (taskEnvironment.GetAbsolutePath (Path.Combine (ndkDirectory, "source.properties")))) {
 			log.LogCodedError ("XA5104", Properties.Resources.XA5104);
 			return null;
 		}
 		string toolchain = Path.Combine (ndkDirectory, "toolchains", "llvm", "prebuilt", HostTag);
-		if (!Directory.Exists (Path.Combine (toolchain, "bin"))) {
+		if (!Directory.Exists (taskEnvironment.GetAbsolutePath (Path.Combine (toolchain, "bin")))) {
 			log.LogCodedError ("XA5101", Properties.Resources.XA5101, toolchain);
 			return null;
 		}
-		return new AndroidNdkTools (Path.GetFullPath (toolchain), log);
+		return new AndroidNdkTools (taskEnvironment.GetAbsolutePath (toolchain), log, taskEnvironment);
 	}
 
 	public string? GetToolPath (string name)
 	{
 		string path = Path.Combine (BinDirectory, name + (RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? ".exe" : ""));
-		if (File.Exists (path)) {
+		if (File.Exists (taskEnvironment.GetAbsolutePath (path))) {
 			return path;
 		}
 		log.LogCodedError ("XA5105", Properties.Resources.XA5105, name, HostTag, BinDirectory);
@@ -59,13 +63,13 @@ sealed class AndroidNdkTools
 			Path.Combine (ToolchainDirectory, "lib64", "clang"),
 		];
 		foreach (string root in roots) {
-			if (!Directory.Exists (root)) {
+			if (!Directory.Exists (taskEnvironment.GetAbsolutePath (root))) {
 				continue;
 			}
-			foreach (string directory in Directory.EnumerateDirectories (root)
+			foreach (string directory in Directory.EnumerateDirectories (taskEnvironment.GetAbsolutePath (root))
 				.OrderByDescending (GetVersion).ThenByDescending (directory => directory, StringComparer.Ordinal)) {
 				string path = Path.Combine (directory, "lib", "linux");
-				if (Directory.Exists (path)) {
+				if (Directory.Exists (taskEnvironment.GetAbsolutePath (path))) {
 					return path;
 				}
 			}

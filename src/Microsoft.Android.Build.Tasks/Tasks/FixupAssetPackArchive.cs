@@ -5,7 +5,8 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Tasks;
 
-public class FixupAssetPackArchive : AndroidTask
+[MSBuildMultiThreadableTask]
+public class FixupAssetPackArchive : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "FAPA";
 
@@ -14,7 +15,7 @@ public class FixupAssetPackArchive : AndroidTask
 
 	public override bool RunTask ()
 	{
-		using var archive = new ZipArchiveEx (ArchiveFile, FileMode.Open);
+		using var archive = new ZipArchiveEx (TaskEnvironment.GetAbsolutePath (ArchiveFile), FileMode.Open, TaskEnvironment);
 		archive.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml");
 		archive.DeleteEntry ("resources.pb");
 		archive.FixupWindowsPathSeparators (Log);

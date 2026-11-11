@@ -22,7 +22,8 @@ namespace Microsoft.Android.Tasks;
 /// <c>Assembly.Load</c> succeeding (the stub contributes no type map entries) without editing the
 /// linked root assembly, so ILLink's reconciled assembly references are preserved.
 /// </summary>
-public class GenerateMissingTypeMapStubs : AndroidTask
+[MSBuildMultiThreadableTask]
+public class GenerateMissingTypeMapStubs : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GMTS";
 
@@ -48,7 +49,9 @@ public class GenerateMissingTypeMapStubs : AndroidTask
 	public override bool RunTask ()
 	{
 		var stubs = new List<ITaskItem> ();
-		if (!Directory.Exists (TypeMapDirectory) || !Directory.Exists (LinkedAssembliesDirectory)) {
+		var typeMapDirectory = TaskEnvironment.GetAbsolutePath (TypeMapDirectory);
+		var linkedAssembliesDirectory = TaskEnvironment.GetAbsolutePath (LinkedAssembliesDirectory);
+		if (!Directory.Exists (typeMapDirectory) || !Directory.Exists (linkedAssembliesDirectory)) {
 			Log.LogDebugMessage ($"TypeMap directory '{TypeMapDirectory}' or linked directory '{LinkedAssembliesDirectory}' not found; skipping stub generation.");
 			GeneratedStubs = stubs.ToArray ();
 			return true;
@@ -57,17 +60,18 @@ public class GenerateMissingTypeMapStubs : AndroidTask
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
 		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
 
-		foreach (var file in Directory.EnumerateFiles (TypeMapDirectory, "_*.TypeMap.dll")) {
+		foreach (var file in Directory.EnumerateFiles (typeMapDirectory, "_*.TypeMap.dll")) {
 			var name = Path.GetFileNameWithoutExtension (file);
 			if (string.IsNullOrEmpty (name) || string.Equals (name, RootTypeMapAssemblyName, StringComparison.Ordinal))
 				continue;
 			var linkedPath = Path.Combine (LinkedAssembliesDirectory, name + ".dll");
-			if (File.Exists (linkedPath))
+			var absoluteLinkedPath = TaskEnvironment.GetAbsolutePath (linkedPath);
+			if (File.Exists (absoluteLinkedPath))
 				continue; // survived trimming; a real typemap already ships
 
 			using var stream = new MemoryStream ();
 			generator.GenerateEmpty (stream, name);
-			Files.CopyIfStreamChanged (stream, linkedPath);
+			Files.CopyIfStreamChanged (stream, absoluteLinkedPath, TaskEnvironment);
 			Log.LogDebugMessage ($"Generated empty typemap stub for trimmed assembly '{name}'.");
 			stubs.Add (new TaskItem (linkedPath));
 		}

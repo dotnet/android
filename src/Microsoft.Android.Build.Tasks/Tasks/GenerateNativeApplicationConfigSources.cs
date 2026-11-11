@@ -17,7 +17,8 @@ namespace Microsoft.Android.Tasks
 	/// <summary>
 	/// Creates the binary CoreCLR application configuration.
 	/// </summary>
-	public class GenerateNativeApplicationConfigSources : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class GenerateNativeApplicationConfigSources : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "GCA";
 
@@ -68,7 +69,7 @@ namespace Microsoft.Android.Tasks
 
 			// Include generated environment files from the later stages of the build.
 			var envBuilder = new EnvironmentBuilder ();
-			envBuilder.Read (Environments);
+			envBuilder.Read (Environments, TaskEnvironment);
 
 			int assemblyNameWidth = 0;
 			Encoding assemblyNameEncoding = Encoding.UTF8;
@@ -164,8 +165,8 @@ namespace Microsoft.Android.Tasks
 				}
 			}
 
-			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
-			var bootstrapBuilder = new CoreClrBootstrapBuilder (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
+			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath, TaskEnvironment);
+			var bootstrapBuilder = new CoreClrBootstrapBuilder (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log, TaskEnvironment) {
 				AndroidPackageName = AndroidPackageName,
 				PackageNamingPolicy = pnp,
 				NumberOfAssembliesInApk = assemblyCount,
@@ -180,7 +181,7 @@ namespace Microsoft.Android.Tasks
 			var stream = MemoryStreamPool.Shared.Rent ();
 			try {
 				bootstrapBuilder.Write (stream);
-				Files.CopyIfStreamChanged (stream, bootstrapPath);
+				Files.CopyIfStreamChanged (stream, TaskEnvironment.GetAbsolutePath (bootstrapPath), TaskEnvironment);
 			} finally {
 				MemoryStreamPool.Shared.Return (stream);
 			}
@@ -194,7 +195,7 @@ namespace Microsoft.Android.Tasks
 				return false;
 			}
 
-			return BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (Log, CustomBundleConfigFile);
+			return BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (Log, CustomBundleConfigFile, TaskEnvironment);
 		}
 	}
 }

@@ -10,7 +10,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
-public sealed class GenerateNativeAotDataObject : AndroidTask
+[MSBuildMultiThreadableTask]
+public sealed class GenerateNativeAotDataObject : MultithreadedAndroidTask
 {
 	internal const string RemappingSymbol = "dotnet_android_nativeaot_remapping_data";
 
@@ -32,7 +33,7 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 		bool success = false;
 		try {
 			if (!string.IsNullOrEmpty (CompletionStamp)) {
-				File.Delete (CompletionStamp);
+				File.Delete (TaskEnvironment.GetAbsolutePath (CompletionStamp));
 			}
 			var arch = MonoAndroidHelper.AbiToTargetArch (Abi);
 			if (arch is not (AndroidTargetArch.Arm or AndroidTargetArch.Arm64 or AndroidTargetArch.X86_64)) {
@@ -42,27 +43,27 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 			string symbol;
 			if (Remapping) {
 				symbol = RemappingSymbol;
-				blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, compress: false);
+				blob = JniRemappingBinaryBlob.Create (RemappingXmlFilePath, compress: false, TaskEnvironment);
 			} else {
 				symbol = NativeAotBootstrapBlob.Symbol;
 				var environment = new EnvironmentBuilder ();
-				environment.Read (Environments);
+				environment.Read (Environments, TaskEnvironment);
 				blob = JniRemappingBinaryBlob.Wrap (
 					NativeAotBootstrapBlob.Create (environment.EnvironmentVariables, environment.SystemProperties), compress: false);
 			}
 			if (blob.Length == 0) {
-				File.Delete (OutputFile);
+				File.Delete (TaskEnvironment.GetAbsolutePath (OutputFile));
 			} else {
 				using var output = new MemoryStream ();
 				NativeAotDataObjectWriter.Write (blob, symbol, output, arch);
-				Directory.CreateDirectory (Path.GetDirectoryName (Path.GetFullPath (OutputFile))
-					?? throw new InvalidDataException ("No data-object output directory."));
-				File.WriteAllBytes (OutputFile, output.ToArray ());
+				Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (TaskEnvironment.GetAbsolutePath (OutputFile))
+					?? throw new InvalidDataException ("No data-object output directory.")));
+				File.WriteAllBytes (TaskEnvironment.GetAbsolutePath (OutputFile), output.ToArray ());
 			}
 			if (!string.IsNullOrEmpty (CompletionStamp)) {
-				Directory.CreateDirectory (Path.GetDirectoryName (Path.GetFullPath (CompletionStamp))
-					?? throw new InvalidDataException ("No data-object completion directory."));
-				File.WriteAllText (CompletionStamp, blob.Length == 0 ? "false" : "true");
+				Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (TaskEnvironment.GetAbsolutePath (CompletionStamp))
+					?? throw new InvalidDataException ("No data-object completion directory.")));
+				File.WriteAllText (TaskEnvironment.GetAbsolutePath (CompletionStamp), blob.Length == 0 ? "false" : "true");
 			}
 			success = true;
 		} catch (Exception ex) when (ex is ArgumentException or InvalidDataException or IOException or UnauthorizedAccessException or
@@ -83,7 +84,7 @@ public sealed class GenerateNativeAotDataObject : AndroidTask
 			return;
 		}
 		try {
-			File.Delete (path);
+			File.Delete (TaskEnvironment.GetAbsolutePath (path));
 		} catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException) {
 			Log.LogCodedError ("XA4325", Properties.Resources.XA4325, ex.Message);
 		}

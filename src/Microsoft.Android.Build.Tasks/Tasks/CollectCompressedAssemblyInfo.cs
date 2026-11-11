@@ -11,7 +11,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
-public class CollectCompressedAssemblyInfo : AndroidTask
+[MSBuildMultiThreadableTask]
+public class CollectCompressedAssemblyInfo : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "CCAI";
 
@@ -75,7 +76,7 @@ public class CollectCompressedAssemblyInfo : AndroidTask
 					continue;
 				}
 
-				if (!File.Exists (assembly.ItemSpec)) {
+				if (!File.Exists (TaskEnvironment.GetAbsolutePath (assembly.ItemSpec))) {
 					Log.LogCodedError ("XA2025", Properties.Resources.XA2025, assembly.ItemSpec);
 					continue;
 				}
@@ -85,7 +86,7 @@ public class CollectCompressedAssemblyInfo : AndroidTask
 			}
 		}
 
-		string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
+		string key = CompressedAssemblyInfo.GetKey (TaskEnvironment.GetAbsolutePath (ProjectFullPath));
 		Log.LogDebugMessage ($"Storing compression assemblies info with key '{key}'");
 		BuildEngine4.RegisterTaskObjectAssemblyLocal (key, archAssemblies, RegisteredTaskObjectLifetime.Build);
 		return !Log.HasLoggedErrors;

@@ -16,6 +16,27 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 {
 	const string JavaGroup = "_ZTV29Mono_Android_Java_Lang_Object";
 
+	[TestCase (false)]
+	[TestCase (true)]
+	public void RelativeObjectAndOutputPathsUseTaskDirectory (bool failWrite)
+	{
+		var fixture = CreateFixture ();
+		var (task, errors) = fixture.CreateTask ();
+		var directory = Path.GetDirectoryName (fixture.ObjectFile)
+			?? throw new InvalidOperationException ("Missing fixture directory.");
+		task.TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ());
+		task.NativeObjectFiles = [new TaskItem (Path.GetFileName (fixture.ObjectFile))];
+		task.OutputFile = Path.Combine ("output", "keys.txt");
+		task.FailAfterPartialWrite = failWrite;
+
+		Assert.AreEqual (!failWrite, task.Execute ());
+		Assert.AreEqual (failWrite ? 1 : 0, errors.Count);
+		if (!failWrite) {
+			Assert.AreEqual ("test/Live\n", File.ReadAllText (fixture.OutputFile));
+		}
+		Assert.IsEmpty (Directory.GetFiles (fixture.OutputDirectory, "*.tmp"));
+	}
+
 	[TestCase ("Mono_Android_Android_Runtime_JavaDictionary")]
 	[TestCase ("Mono_Android_Java_Lang_ObjectExtra")]
 	[TestCase ("ThirdParty_TypeMap___TypeMapAnchor")]

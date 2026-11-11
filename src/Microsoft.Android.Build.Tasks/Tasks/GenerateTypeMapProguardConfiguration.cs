@@ -9,7 +9,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;
 
-public class GenerateTypeMapProguardConfiguration : AndroidTask
+[MSBuildMultiThreadableTask]
+public class GenerateTypeMapProguardConfiguration : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GTMPC";
 
@@ -31,7 +32,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 
 			foreach (var file in TypeMapKeyFiles) {
 				currentFile = file.ItemSpec;
-				using var reader = new StreamReader (currentFile, new UTF8Encoding (false, true), detectEncodingFromByteOrderMarks: false);
+				using var reader = new StreamReader (TaskEnvironment.GetAbsolutePath (currentFile), new UTF8Encoding (false, true), detectEncodingFromByteOrderMarks: false);
 				string? name;
 				int lineNumber = 0;
 				while ((name = reader.ReadLine ()) != null) {
@@ -49,18 +50,19 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 			}
 
 			currentFile = OutputFile;
-			var directory = Path.GetDirectoryName (OutputFile);
+			var outputFile = TaskEnvironment.GetAbsolutePath (OutputFile);
+			var directory = Path.GetDirectoryName (outputFile);
 			if (directory != null && directory.Length > 0) {
 				Directory.CreateDirectory (directory);
 			}
-			string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+			var temporaryOutputFile = TaskEnvironment.GetAbsolutePath (outputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp");
 			try {
 				using (var writer = new StreamWriter (temporaryOutputFile, append: false, new UTF8Encoding (false)) { NewLine = "\n" }) {
 					foreach (var name in classes) {
 						WriteClassRule (writer, name);
 					}
 				}
-				File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+				File.Move (temporaryOutputFile, outputFile, overwrite: true);
 			} finally {
 				File.Delete (temporaryOutputFile);
 			}

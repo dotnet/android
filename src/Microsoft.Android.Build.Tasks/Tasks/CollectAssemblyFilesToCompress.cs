@@ -17,7 +17,8 @@ namespace Microsoft.Android.Tasks;
 /// Selects assemblies to compress before packaging, retaining the descriptor indices assigned
 /// to the untrimmed assembly list so that unchanged compressed files can be reused.
 /// </summary>
-public class CollectAssemblyFilesToCompress : AndroidTask
+[MSBuildMultiThreadableTask]
+public class CollectAssemblyFilesToCompress : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "CAF";
 
@@ -84,9 +85,10 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 				}
 
 				var compressed_assembly = AssemblyCompression.GetCompressedAssemblyOutputPath (asm, AssemblyCompressionDirectory);
-				if (File.Exists (compressed_assembly) && !AssemblyCompressor.HasDescriptorIndex (compressed_assembly, descriptor_index)) {
+				var compressedAssemblyPath = TaskEnvironment.GetAbsolutePath (compressed_assembly);
+				if (File.Exists (compressedAssemblyPath) && !AssemblyCompressor.HasDescriptorIndex (compressedAssemblyPath, descriptor_index, TaskEnvironment)) {
 					Log.LogDebugMessage ($"Discarding '{compressed_assembly}' because its compression descriptor index changed.");
-					File.Delete (compressed_assembly);
+					File.Delete (compressedAssemblyPath);
 				}
 
 				assemblies_to_compress.Add (CreateAssemblyToCompress (asm.ItemSpec, compressed_assembly, descriptor_index));
@@ -112,15 +114,13 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 
 	IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> GetCompressedAssemblyInfo ()
 	{
-		var key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
+		var key = CompressedAssemblyInfo.GetKey (TaskEnvironment.GetAbsolutePath (ProjectFullPath));
 		Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
 
-		var compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
+		var compressedAssembliesInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
 
 		if (compressedAssembliesInfo is null)
 			throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
-		BuildEngine4.RegisterTaskObjectAssemblyLocal (key, compressedAssembliesInfo, RegisteredTaskObjectLifetime.Build);
-
 		return compressedAssembliesInfo;
 	}
 
