@@ -133,7 +133,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + XA1018: Specified AndroidManifest file does not exist: {file}.
 + XA1019: No longer emitted by current SDKs.
 + XA1020: At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).
-+ XA1021: Specified source Java library not found: {file}
++ XA1021: No longer emitted by current SDKs.
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
 + XA1024: Removed in .NET 11.
@@ -353,14 +353,11 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GPM` - `GeneratePackageManagerJava`
 * `GRD` - `GenerateResourceDesigner`
 * `IAS` - `InstallApkSet`
-* `JDC` - `JavaDoc`
 * `JVC` - `Javac`
-* `JTX` - `JarToXml`
 * `KEY` - `KeyTool`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
-* `MDC` - `MDoc`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
 * `PWA` - `PrepareWearApplicationFiles`
