@@ -376,7 +376,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `RSA` - `ResolveAssemblies`
 * `RSD` - `ResolveSdks`
 * `RUF` - `RemoveUnknownFiles`
-* `SPL` - `SplitProperty`
 * `SVM` - `SetVsMonoAndroidRegistryKey`
 * `UNZ` - `Unzip`
 * `VJV` - `ValidateJavaVersion`
