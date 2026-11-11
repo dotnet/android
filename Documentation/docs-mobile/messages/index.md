@@ -149,10 +149,10 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + XA1040: Removed in .NET 12.
 + [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetsPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
-+ [XA1042](xa1042.md): The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.
-+ [XA1043](xa1043.md): Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element.
++ XA1042: Removed in .NET 12.
++ [XA1043](xa1043.md): Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element with an android:name attribute.
 + [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
-+ [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
++ [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element with an android:name attribute.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported.
 + [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
 + [XA1051](xa1051.md): The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT.
