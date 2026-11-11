@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -5,7 +6,7 @@ using System.Reflection;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.Bytecode;
 
 namespace generatortests
@@ -17,62 +18,62 @@ namespace generatortests
 	// output uses the generated `readonly partial struct` wrapper types in
 	// method signatures while keeping the JNI marshaling on the underlying
 	// primitive.
-	[TestFixture]
+	[TestClassAttribute]
 	public class KotlinInlineClassEndToEndTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratorProjectsRealKotlinInlineClassesAsStructs ()
 		{
 			var apiXml = BuildApiXmlFromKotlinFixture ();
 
 			// Sanity: api.xml carries the Phase 2 attributes class-parse emits.
-			StringAssert.Contains ("kotlin-inline-class=\"true\"", apiXml);
-			StringAssert.Contains ("kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"", apiXml);
-			StringAssert.Contains ("kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"", apiXml);
+			StringAssert.Contains (apiXml, "kotlin-inline-class=\"true\"");
+			StringAssert.Contains (apiXml, "kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"");
+			StringAssert.Contains (apiXml, "kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"");
 
 			var output = GenerateCSharp (apiXml, out var gens);
 
 			// MyColor / MyAlpha / MyDp must be projected as readonly partial structs.
-			StringAssert.Contains ("readonly partial struct MyColor", output);
-			StringAssert.Contains ("readonly partial struct MyAlpha", output);
-			StringAssert.Contains ("readonly partial struct MyDp", output);
+			StringAssert.Contains (output, "readonly partial struct MyColor");
+			StringAssert.Contains (output, "readonly partial struct MyAlpha");
+			StringAssert.Contains (output, "readonly partial struct MyDp");
 
 			// Underlying-primitive marshaling: MyColor/MyAlpha back J (long),
 			// MyDp backs F (float).
-			StringAssert.Contains ("public static implicit operator long (MyColor", output);
-			StringAssert.Contains ("public static implicit operator MyColor (long", output);
-			StringAssert.Contains ("public static implicit operator float (MyDp", output);
-			StringAssert.Contains ("public static implicit operator MyDp (float", output);
+			StringAssert.Contains (output, "public static implicit operator long (MyColor");
+			StringAssert.Contains (output, "public static implicit operator MyColor (long");
+			StringAssert.Contains (output, "public static implicit operator float (MyDp");
+			StringAssert.Contains (output, "public static implicit operator MyDp (float");
 
 			// Widgets.tint(MyColor) / tint(MyAlpha) / tint(MyDp) overloads must
 			// project the inline-class param in the C# signature. The Kotlin
 			// compiler mangles the JVM names for inline-class binary compat
 			// (e.g. `tint-Rn_QMJI`); we recover the unmangled name so they
 			// emit as plain C# overloads distinguished by struct type.
-			StringAssert.Contains ("Tint (Xat.Bytecode.Tests.MyColor color)", output);
-			StringAssert.Contains ("Tint (Xat.Bytecode.Tests.MyAlpha alpha)", output);
-			StringAssert.Contains ("Tint (Xat.Bytecode.Tests.MyDp dp)", output);
+			StringAssert.Contains (output, "Tint (Xat.Bytecode.Tests.MyColor color)");
+			StringAssert.Contains (output, "Tint (Xat.Bytecode.Tests.MyAlpha alpha)");
+			StringAssert.Contains (output, "Tint (Xat.Bytecode.Tests.MyDp dp)");
 
 			// Widgets.pad(MyDp): MyDp -> the return type uses MyDp.
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyDp Pad (Xat.Bytecode.Tests.MyDp dp)", output);
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyDp Pad (Xat.Bytecode.Tests.MyDp dp1, Xat.Bytecode.Tests.MyDp dp2)", output);
+			StringAssert.Contains (output, "Xat.Bytecode.Tests.MyDp Pad (Xat.Bytecode.Tests.MyDp dp)");
+			StringAssert.Contains (output, "Xat.Bytecode.Tests.MyDp Pad (Xat.Bytecode.Tests.MyDp dp1, Xat.Bytecode.Tests.MyDp dp2)");
 
 			// Widgets.tintColor: MyColor -> a Kotlin `var` typed as an inline
 			// class projects as a C# property typed as the wrapper struct, with
 			// the getter/setter still marshaling the underlying primitive (long)
 			// across JNI. This exercises the KotlinFixups.FixupProperty path.
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor TintColor", output);
+			StringAssert.Contains (output, "Xat.Bytecode.Tests.MyColor TintColor");
 
 			// And the JVM-mangled hash-suffix names must NOT leak into the
 			// generated C# (regression guard for the unmangling path).
-			StringAssert.DoesNotContain ("Tint_", output);
-			StringAssert.DoesNotContain ("Pad_", output);
+			Assert.DoesNotContain ("Tint_", output, StringComparison.Ordinal);
+			Assert.DoesNotContain ("Pad_", output, StringComparison.Ordinal);
 
 			// And no `Java.Lang.Object`-derived peer class for the inline classes
 			// (the wrapper struct fully replaces the peer-class binding).
-			StringAssert.DoesNotContain ("public partial class MyColor", output);
-			StringAssert.DoesNotContain ("public partial class MyAlpha", output);
-			StringAssert.DoesNotContain ("public partial class MyDp", output);
+			Assert.DoesNotContain ("public partial class MyColor", output, StringComparison.Ordinal);
+			Assert.DoesNotContain ("public partial class MyAlpha", output, StringComparison.Ordinal);
+			Assert.DoesNotContain ("public partial class MyDp", output, StringComparison.Ordinal);
 
 			// All three inline classes survived as ClassGen entries with the
 			// IsKotlinInlineClass flag set.

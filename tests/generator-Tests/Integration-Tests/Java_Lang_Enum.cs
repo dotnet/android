@@ -1,13 +1,13 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class Java_Lang_Enum : BaseGeneratorTest
 	{
 
-		[Test]
+		[TestMethodAttribute]
 		public void Generated_OK ()
 		{
 			RunTarget (

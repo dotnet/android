@@ -1,14 +1,14 @@
 using System;
 using System.Linq;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class CodeGeneratorContextTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void GetContextTypeMember ()
 		{
 			var klass = new TestClass ("Object", "java.code.MyClass");

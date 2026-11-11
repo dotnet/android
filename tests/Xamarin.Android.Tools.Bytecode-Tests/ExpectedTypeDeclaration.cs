@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NAssert   = NUnit.Framework.Assert;
+using NAssert   = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 

@@ -4,22 +4,22 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
 
-[TestFixture]
+[TestClass]
 public class AdbDeviceTrackerTests
 {
-	[Test]
+	[TestMethod]
 	public void Constructor_InvalidPort_ThrowsArgumentOutOfRangeException ()
 	{
-		Assert.Throws<ArgumentOutOfRangeException> (() => new AdbDeviceTracker (port: 0));
-		Assert.Throws<ArgumentOutOfRangeException> (() => new AdbDeviceTracker (port: -1));
-		Assert.Throws<ArgumentOutOfRangeException> (() => new AdbDeviceTracker (port: 70000));
+		Assert.ThrowsExactly<ArgumentOutOfRangeException> (() => new AdbDeviceTracker (port: 0));
+		Assert.ThrowsExactly<ArgumentOutOfRangeException> (() => new AdbDeviceTracker (port: -1));
+		Assert.ThrowsExactly<ArgumentOutOfRangeException> (() => new AdbDeviceTracker (port: 70000));
 	}
 
-	[Test]
+	[TestMethod]
 	public void Constructor_ValidPort_Succeeds ()
 	{
 		using var tracker = new AdbDeviceTracker (port: 5037);
@@ -27,22 +27,22 @@ public class AdbDeviceTrackerTests
 		Assert.AreEqual (0, tracker.CurrentDevices.Count);
 	}
 
-	[Test]
-	public void StartAsync_NullCallback_ThrowsArgumentNullException ()
+	[TestMethod]
+	public async Task StartAsync_NullCallback_ThrowsArgumentNullException ()
 	{
 		using var tracker = new AdbDeviceTracker ();
-		Assert.ThrowsAsync<ArgumentNullException> (() => tracker.StartAsync (null!));
+		await Assert.ThrowsExactlyAsync<ArgumentNullException> (() => tracker.StartAsync (null!));
 	}
 
-	[Test]
-	public void StartAsync_AfterDispose_ThrowsObjectDisposedException ()
+	[TestMethod]
+	public async Task StartAsync_AfterDispose_ThrowsObjectDisposedException ()
 	{
 		var tracker = new AdbDeviceTracker ();
 		tracker.Dispose ();
-		Assert.ThrowsAsync<ObjectDisposedException> (() => tracker.StartAsync (_ => { }));
+		await Assert.ThrowsExactlyAsync<ObjectDisposedException> (() => tracker.StartAsync (_ => { }));
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task StartAsync_CalledTwice_ThrowsInvalidOperationException ()
 	{
 		// Use a port where nothing is listening so ConnectAsync yields quickly
@@ -53,18 +53,18 @@ public class AdbDeviceTrackerTests
 		var trackingTask = tracker.StartAsync (_ => { }, cts.Token);
 
 		// Second call should throw because tracking is already active
-		Assert.ThrowsAsync<InvalidOperationException> (
+		await Assert.ThrowsExactlyAsync<InvalidOperationException> (
 			() => tracker.StartAsync (_ => { }, cts.Token));
 
 		cts.Cancel ();
 		try { await trackingTask.ConfigureAwait (false); } catch (OperationCanceledException) { }
 	}
 
-	[Test]
+	[TestMethod]
 	public void Dispose_MultipleTimes_DoesNotThrow ()
 	{
 		var tracker = new AdbDeviceTracker ();
 		tracker.Dispose ();
-		Assert.DoesNotThrow (() => tracker.Dispose ());
+		tracker.Dispose ();
 	}
 }

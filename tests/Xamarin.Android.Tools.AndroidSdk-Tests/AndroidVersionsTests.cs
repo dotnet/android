@@ -2,26 +2,26 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AndroidVersionsTests
 	{
-		[Test]
+		[TestMethod]
 		public void Constructor_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new AndroidVersions ((IEnumerable<string>) null));
-			Assert.Throws<ArgumentNullException> (() => new AndroidVersions ((IEnumerable<AndroidVersion>) null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new AndroidVersions ((IEnumerable<string>) null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new AndroidVersions ((IEnumerable<AndroidVersion>) null));
 
 			var tempDir = Path.GetTempFileName ();
 			File.Delete (tempDir);
 			// Directory not found
-			Assert.Throws<ArgumentException>(() => new AndroidVersions (new[]{tempDir}));
+			Assert.ThrowsExactly<ArgumentException>(() => new AndroidVersions (new[]{tempDir}));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_NoDirectories ()
 		{
 			var versions    = new AndroidVersions (new string [0]);
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (0,     versions.FrameworkDirectories.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_NoVersions ()
 		{
 			var versions    = new AndroidVersions (new AndroidVersion [0]);
@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (0,     versions.FrameworkDirectories.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Contructor_UnstableVersions ()
 		{
 			var versions = new AndroidVersions (
@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsNull (versions.MinStableVersion);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_FrameworkDirectories ()
 		{
 			var frameworkDir    = Path.GetTempFileName ();
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_Versions ()
 		{
 			var versions = new AndroidVersions (new []{
@@ -147,7 +147,7 @@ namespace Xamarin.Android.Tools.Tests
 			});
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetApiLevelFromFrameworkVersion ()
 		{
 			var versions    = CreateTestVersions ();
@@ -173,7 +173,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (4,     versions.GetApiLevelFromFrameworkVersion ("1.6"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetApiLevelFromId ()
 		{
 			var versions    = CreateTestVersions ();
@@ -200,7 +200,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (11,    versions.GetApiLevelFromId ("H"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetIdFromApiLevel ()
 		{
 			var versions    = CreateTestVersions ();
@@ -243,7 +243,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("11",  versions.GetIdFromApiLevel ("H"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetIdFromFrameworkVersion ()
 		{
 			var versions    = CreateTestVersions ();
@@ -271,7 +271,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("10",  versions.GetIdFromFrameworkVersion ("2.3"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetFrameworkVersionFromApiLevel ()
 		{
 			var versions    = CreateTestVersions ();
@@ -288,7 +288,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("v2.3",    versions.GetFrameworkVersionFromApiLevel (10));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetFrameworkVersionFromId ()
 		{
 			var versions    = CreateTestVersions ();

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\MSTestReferences.projitems" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
@@ -16,11 +17,6 @@
     <Compile Include="..\..\src\Microsoft.Android.Run\AdbHelper.cs" Link="AdbHelper.cs" />
     <Compile Include="..\..\src\Microsoft.Android.Run\AndroidTestAdapter.cs" Link="AndroidTestAdapter.cs" />
     <Compile Include="..\..\src\Microsoft.Android.Run\InstrumentationProtocol.cs" Link="InstrumentationProtocol.cs" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
-    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
   </ItemGroup>
 

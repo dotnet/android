@@ -6,23 +6,24 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AndroidSdkInfoTests
 	{
 		const string NdkVersion = "21.0.6113669";
 
-		string      UnixConfigDirOverridePath;
-		string      PreferredJdksOverridePath;
+		static string UnixConfigDirOverridePath;
+		static string PreferredJdksOverridePath;
 
 		static  readonly    string  GetMacOSMicrosoftJdkPathsOverrideName   = $"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}";
 		static  readonly    string  GetUnixConfigDirOverrideName            = $"UnixConfigPath directory override! {typeof (AndroidSdkInfo).AssemblyQualifiedName}";
 
-		[OneTimeSetUp]
-		public void FixtureSetUp ()
+		[ClassInitialize]
+		public static void FixtureSetUp (TestContext context)
 		{
 			UnixConfigDirOverridePath   = Path.GetTempFileName ();
 			File.Delete (UnixConfigDirOverridePath);
@@ -35,8 +36,8 @@ namespace Xamarin.Android.Tools.Tests
 			AppDomain.CurrentDomain.SetData (GetMacOSMicrosoftJdkPathsOverrideName, PreferredJdksOverridePath);
 		}
 
-		[OneTimeTearDown]
-		public void FixtureTearDown ()
+		[ClassCleanup]
+		public static void FixtureTearDown ()
 		{
 			AppDomain.CurrentDomain.SetData (GetMacOSMicrosoftJdkPathsOverrideName, null);
 			AppDomain.CurrentDomain.SetData (GetUnixConfigDirOverrideName, null);
@@ -44,7 +45,7 @@ namespace Xamarin.Android.Tools.Tests
 			Directory.Delete (PreferredJdksOverridePath, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExplicitSdkPathsAreIndependentAndDoNotRequireJdkDiscovery ()
 		{
 			var root = CreateRoot ();
@@ -68,14 +69,14 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExplicitSdkPathsValidateArguments ()
 		{
 			var versions = new AndroidVersions (frameworkDirectories: []);
-			Assert.AreEqual ("androidSdkPath", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.GetBuildToolsPaths (null, "")).ParamName);
-			Assert.AreEqual ("androidSdkPath", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.GetCommandLineToolsPaths (null, "")).ParamName);
-			Assert.AreEqual ("androidSdkPath", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (null, "37", versions)).ParamName);
-			Assert.AreEqual ("versions", Assert.Throws<ArgumentNullException> (() => AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel ("sdk", "37", null)).ParamName);
+			Assert.AreEqual ("androidSdkPath", Assert.ThrowsExactly<ArgumentNullException> (() => AndroidSdkInfo.GetBuildToolsPaths (null, "")).ParamName);
+			Assert.AreEqual ("androidSdkPath", Assert.ThrowsExactly<ArgumentNullException> (() => AndroidSdkInfo.GetCommandLineToolsPaths (null, "")).ParamName);
+			Assert.AreEqual ("androidSdkPath", Assert.ThrowsExactly<ArgumentNullException> (() => AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (null, "37", versions)).ParamName);
+			Assert.AreEqual ("versions", Assert.ThrowsExactly<ArgumentNullException> (() => AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel ("sdk", "37", null)).ParamName);
 
 			var missingSdk = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
 			Assert.IsEmpty (AndroidSdkInfo.GetBuildToolsPaths (missingSdk, ""));
@@ -83,7 +84,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsNull (AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (missingSdk, "37", versions));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_Paths ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
@@ -105,7 +106,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DiscoverInstallationPaths_WithMissingPreferredJdk ()
 		{
 			CreateSdks (out string root, out string jdk, out _, out string sdk);
@@ -115,13 +116,13 @@ namespace Xamarin.Android.Tools.Tests
 					preferredAndroidSdkPath: sdk, preferredJavaSdkPath: jdk);
 
 				Assert.AreEqual (sdk, sdkPath);
-				CollectionAssert.Contains (allSdkPaths, sdk);
+				CollectionAssert.Contains ((allSdkPaths).ToArray (), sdk);
 			} finally {
 				Directory.Delete (root, recursive: true);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DiscoverInstallationPaths_WithMissingPreferredAndroidSdk ()
 		{
 			CreateSdks (out string root, out string jdk, out _, out string sdk);
@@ -131,13 +132,13 @@ namespace Xamarin.Android.Tools.Tests
 					preferredAndroidSdkPath: sdk, preferredJavaSdkPath: jdk);
 
 				Assert.AreEqual (jdk, javaSdkPath);
-				CollectionAssert.DoesNotContain (allSdkPaths, sdk);
+				CollectionAssert.DoesNotContain ((allSdkPaths).ToArray (), sdk);
 			} finally {
 				Directory.Delete (root, recursive: true);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DiscoverInstallationPaths_WithoutSdkOrJdk ()
 		{
 			var root = CreateRoot ();
@@ -176,7 +177,7 @@ namespace Xamarin.Android.Tools.Tests
 			public override void SetPreferredJavaSdkPath (string path) => throw new NotSupportedException ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ndk_MultipleNdkVersionsInSdk ()
 		{
 			// Must match like-named constants in AndroidSdkBase
@@ -229,14 +230,14 @@ namespace Xamarin.Android.Tools.Tests
 					Assert.Fail ($"Unable to parse '{ndkVersion}' as a valid version.");
 				}
 
-				Assert.True (ver.Major >= MinimumCompatibleNDKMajorVersion, $"NDK version must be at least {MinimumCompatibleNDKMajorVersion}");
-				Assert.True (ver.Major <= MaximumCompatibleNDKMajorVersion, $"NDK version must be at most {MinimumCompatibleNDKMajorVersion}");
+				Assert.IsTrue (ver.Major >= MinimumCompatibleNDKMajorVersion, $"NDK version must be at least {MinimumCompatibleNDKMajorVersion}");
+				Assert.IsTrue (ver.Major <= MaximumCompatibleNDKMajorVersion, $"NDK version must be at most {MinimumCompatibleNDKMajorVersion}");
 			} finally {
 				Directory.Delete (root, recursive: true);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ndk_PathInSdk()
 		{
 			CreateSdks(out string root, out string jdk, out string ndk, out string sdk);
@@ -264,7 +265,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ndk_Path_InvalidChars ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
@@ -286,7 +287,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ndk_PathExt_InvalidChars ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
@@ -308,7 +309,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ndk_AndroidSdkDoesNotExist ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
@@ -330,11 +331,11 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_SetValuesFromPath ()
 		{
 			if (OS.IsWindows)
-				Assert.Ignore ("Windows does not look for values in %PATH%");
+				Assert.Inconclusive ("Windows does not look for values in %PATH%");
 
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
 			JdkInfoTests.CreateFauxJdk (jdk, releaseVersion: "1.8.0", releaseBuildNumber: "42", javaVersion: "100.100.100_100");
@@ -385,11 +386,12 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
-		public void JdkDirectory_JavaHome ([Values ("JI_JAVA_HOME", "JAVA_HOME")] string envVar)
+		[TestMethod]
+		[CombinatorialData]
+		public void JdkDirectory_JavaHome ([CombinatorialValues ("JI_JAVA_HOME", "JAVA_HOME")] string envVar)
 		{
 			if (envVar.Equals ("JAVA_HOME", StringComparison.OrdinalIgnoreCase)) {
-				Assert.Ignore ("This test will only work locally if you rename/remove your Open JDK directory.");
+				Assert.Inconclusive ("This test will only work locally if you rename/remove your Open JDK directory.");
 				return;
 			}
 
@@ -417,7 +419,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Sdk_GetCommandLineToolsPaths ()
 		{
 			CreateSdks(out string root, out string jdk, out string ndk, out string sdk);
@@ -440,17 +442,17 @@ namespace Xamarin.Android.Tools.Tests
 				CreateFauxAndroidSdkToolsDirectory (sdk, createToolsDir: true, toolsVersion: toolsVersion, createOldToolsDir: false);
 				var toolsPaths = info.GetCommandLineToolsPaths ();
 
-				Assert.AreEqual (toolsPaths.Count (), 1, "Incorrect number of elements");
-				Assert.AreEqual (toolsPaths.First (), Path.Combine (sdk, "cmdline-tools", toolsVersion), "Incorrect command line tools path");
+				Assert.AreEqual (1, toolsPaths.Count (), "Incorrect number of elements");
+				Assert.AreEqual (Path.Combine (sdk, "cmdline-tools", toolsVersion), toolsPaths.First (), "Incorrect command line tools path");
 
 				// Test that cmdline-tools is preferred over tools
 				recreateCmdlineToolsDirectory();
 				CreateFauxAndroidSdkToolsDirectory (sdk, createToolsDir: true, toolsVersion: latestToolsVersion, createOldToolsDir: true);
 				toolsPaths = info.GetCommandLineToolsPaths ();
 
-				Assert.AreEqual (toolsPaths.Count (), 2, "Incorrect number of elements");
-				Assert.AreEqual (toolsPaths.First (), Path.Combine (sdk, "cmdline-tools", latestToolsVersion), "Incorrect command line tools path");
-				Assert.AreEqual (toolsPaths.Last (), Path.Combine (sdk, "tools"), "Incorrect tools path");
+				Assert.AreEqual (2, toolsPaths.Count (), "Incorrect number of elements");
+				Assert.AreEqual (Path.Combine (sdk, "cmdline-tools", latestToolsVersion), toolsPaths.First (), "Incorrect command line tools path");
+				Assert.AreEqual (Path.Combine (sdk, "tools"), toolsPaths.Last (), "Incorrect tools path");
 
 				// Test sorting
 				recreateCmdlineToolsDirectory ();
@@ -460,18 +462,18 @@ namespace Xamarin.Android.Tools.Tests
 				toolsPaths = info.GetCommandLineToolsPaths ();
 
 				var toolsPathsList = toolsPaths.ToList ();
-				Assert.AreEqual (toolsPaths.Count (), 4, "Incorrect number of elements");
+				Assert.AreEqual (4, toolsPaths.Count (), "Incorrect number of elements");
 				bool isOrderCorrect = toolsPathsList [0].Equals (Path.Combine (sdk, "cmdline-tools", latestToolsVersion), StringComparison.Ordinal)
 					&& toolsPathsList [1].Equals (Path.Combine (sdk, "cmdline-tools", higherToolsVersion), StringComparison.Ordinal)
 					&& toolsPathsList [2].Equals (Path.Combine (sdk, "cmdline-tools", toolsVersion), StringComparison.Ordinal)
 					&& toolsPathsList [3].Equals (Path.Combine (sdk, "tools"), StringComparison.Ordinal);
 
 				Assert.IsTrue (isOrderCorrect, "Tools order is not descending");
-				CollectionAssert.AreEqual (toolsPathsList, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, ""));
-				CollectionAssert.AreEqual (toolsPathsList, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, "missing"));
+				CollectionAssert.AreEqual (toolsPathsList, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, "").ToArray ());
+				CollectionAssert.AreEqual (toolsPathsList, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, "missing").ToArray ());
 				var preferredPaths = new [] { toolsPathsList [2], toolsPathsList [0], toolsPathsList [1], toolsPathsList [3] };
-				CollectionAssert.AreEqual (preferredPaths, info.GetCommandLineToolsPaths (toolsVersion));
-				CollectionAssert.AreEqual (preferredPaths, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, toolsVersion));
+				CollectionAssert.AreEqual (preferredPaths, info.GetCommandLineToolsPaths (toolsVersion).ToArray ());
+				CollectionAssert.AreEqual (preferredPaths, AndroidSdkInfo.GetCommandLineToolsPaths (sdk, toolsVersion).ToArray ());
 			} finally {
 				Directory.Delete (root, recursive: true);
 			}
@@ -662,7 +664,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DetectAndSetPreferredJavaSdkPathToLatest ()
 		{
 			Action<TraceLevel, string> logger = (level, message) => {
@@ -672,10 +674,10 @@ namespace Xamarin.Android.Tools.Tests
 			var backupConfig    = UnixConfigPath + "." + Path.GetRandomFileName ();
 			try {
 				if (OS.IsWindows) {
-					Assert.Throws<NotImplementedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
+					Assert.ThrowsExactly<NotImplementedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
 					return;
 				}
-				Assert.Throws<NotSupportedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
+				Assert.ThrowsExactly<NotSupportedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
 				var newJdkPath  = Path.Combine (PreferredJdksOverridePath, "microsoft_dist_openjdk_1.8.999.9");
 				JdkInfoTests.CreateFauxJdk (newJdkPath, releaseVersion: "1.8.999", releaseBuildNumber: "9", javaVersion: "1.8.999-9");
 
@@ -708,8 +710,9 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
-		public void TryGetPlatformDirectoryFromApiLevel_MinorVersionDoesNotFallback ([Values (false, true)] bool explicitPath)
+		[TestMethod]
+		[CombinatorialData]
+		public void TryGetPlatformDirectoryFromApiLevel_MinorVersionDoesNotFallback ([CombinatorialValues (false, true)] bool explicitPath)
 		{
 			// Verifies that when requesting a minor API level (like 36.1), we don't fall back
 			// to the major version (36) if the minor version platform is not installed.
@@ -751,8 +754,9 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
-		public void TryGetPlatformDirectoryFromApiLevel_MajorFallsBackToMajorDotZero ([Values (false, true)] bool explicitPath)
+		[TestMethod]
+		[CombinatorialData]
+		public void TryGetPlatformDirectoryFromApiLevel_MajorFallsBackToMajorDotZero ([CombinatorialValues (false, true)] bool explicitPath)
 		{
 			// Starting with API 37, Google installs platforms to "android-37.0"
 			// instead of "android-37". Verify the fallback works.
@@ -789,8 +793,9 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
-		public void TryGetPlatformDirectoryFromApiLevel_PreviewFallback ([Values (false, true)] bool explicitPath)
+		[TestMethod]
+		[CombinatorialData]
+		public void TryGetPlatformDirectoryFromApiLevel_PreviewFallback ([CombinatorialValues (false, true)] bool explicitPath)
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
 			try {
@@ -807,7 +812,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetBuildToolsPaths_StableVersionsFirst ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
@@ -828,11 +833,11 @@ namespace Xamarin.Android.Tools.Tests
 				Assert.AreEqual (Path.Combine (sdk, "build-tools", "25.0.3"),       buildToolsPaths [1]);
 				Assert.AreEqual (Path.Combine (sdk, "build-tools", "27.0.0-rc4"),   buildToolsPaths [2]);
 				Assert.AreEqual (Path.Combine (sdk, "platform-tools"),              buildToolsPaths [3]);
-				CollectionAssert.AreEqual (buildToolsPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, ""));
-				CollectionAssert.AreEqual (buildToolsPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, "missing"));
+				CollectionAssert.AreEqual (buildToolsPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, "").ToArray ());
+				CollectionAssert.AreEqual (buildToolsPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, "missing").ToArray ());
 				var preferredPaths = new [] { buildToolsPaths [2], buildToolsPaths [0], buildToolsPaths [1], buildToolsPaths [3] };
-				CollectionAssert.AreEqual (preferredPaths, info.GetBuildToolsPaths ("27.0.0-rc4"));
-				CollectionAssert.AreEqual (preferredPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, "27.0.0-rc4"));
+				CollectionAssert.AreEqual (preferredPaths, info.GetBuildToolsPaths ("27.0.0-rc4").ToArray ());
+				CollectionAssert.AreEqual (preferredPaths, AndroidSdkInfo.GetBuildToolsPaths (sdk, "27.0.0-rc4").ToArray ());
 			}
 			finally {
 				Directory.Delete (root, recursive: true);

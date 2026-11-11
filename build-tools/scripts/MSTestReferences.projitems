@@ -1,0 +1,15 @@
+<Project>
+  <!-- This file assumes Configuration.props has been imported -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <!-- Identify the native test application even before its first package restore. -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportPackageVersion)" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

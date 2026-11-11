@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class NormalProperties : BaseGeneratorTest
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratedOK ()
 		{
 			RunTarget (
@@ -16,10 +16,10 @@ namespace generatortests
 					expectedRelativePath:   "NormalProperties");
 
 			var output = File.ReadAllText (FullPath ("out.xaji/NormalProperties/Xamarin.Test.SomeObject.cs"));
-			Assert.That (output, Does.Contain (string.Join (Environment.NewLine, new [] {
+			StringAssert.Contains (output, string.Join (Environment.NewLine, new [] {
 				"\t\t\t\t\t_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);",
 				"\t\t\t\t\tglobal::System.GC.KeepAlive (value);",
-			})));
+			}));
 		}
 	}
 }

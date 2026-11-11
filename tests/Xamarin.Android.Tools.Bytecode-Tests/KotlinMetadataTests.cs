@@ -1,14 +1,14 @@
 using System;
 using Xamarin.Android.Tools.Bytecode;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 
 namespace Xamarin.Android.Tools.BytecodeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class KotlinMetadataTests : ClassFileFixture
 	{
-		[Test]
+		[TestMethod]
 		public void PublicKotlinClassFile ()
 		{
 			var klass_meta = GetClassMetadata ("PublicClass.class");
@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassInheritability.Final, klass_meta.Inheritability);
 		}
 
-		[Test]
+		[TestMethod]
 		public void PrivateKotlinClassFile ()
 		{
 			var klass_meta = GetClassMetadata ("PrivateClass.class");
@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassInheritability.Final, klass_meta.Inheritability);
 		}
 
-		[Test]
+		[TestMethod]
 		public void InternalKotlinClassFile ()
 		{
 			var klass_meta = GetClassMetadata ("InternalClass.class");
@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassInheritability.Final, klass_meta.Inheritability);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ProtectedKotlinClassFile ()
 		{
 			var klass_meta = GetClassMetadata ("PublicClass$ProtectedClass.class");
@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassInheritability.Final, klass_meta.Inheritability);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SealedClassFile ()
 		{
 			var klass_meta = GetClassMetadata ("SealedClass.class");
@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassInheritability.Sealed, klass_meta.Inheritability);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Interface ()
 		{
 			var klass_meta = GetClassMetadata ("MyInterface.class");
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (2, klass_meta.Properties.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void InterfaceDefaultImpls ()
 		{
 			var meta = GetMetadataForClassFile ("MyInterface$DefaultImpls.class");
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// TODO: We don't support SyntheticClass yet
 		}
 
-		[Test]
+		[TestMethod]
 		public void InterfaceInheritingInterface ()
 		{
 			var klass_meta = GetClassMetadata ("MyInterface2.class");
@@ -89,7 +89,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("MyInterface;", klass_meta.SuperTypes [0].ClassName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ClassInheritingInterface ()
 		{
 			var klass_meta = GetClassMetadata ("MyInterfaceChild.class");
@@ -102,13 +102,13 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("MyInterface;", klass_meta.SuperTypes [0].ClassName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void DataClass ()
 		{
 			var klass_meta = GetClassMetadata ("DataClass.class");
 
 			Assert.AreEqual (KotlinClassVisibility.Public, klass_meta.Visibility);
-			Assert.True (klass_meta.Flags.HasFlag (KotlinClassFlags.IsData));
+			Assert.IsTrue (klass_meta.Flags.HasFlag (KotlinClassFlags.IsData));
 			Assert.AreEqual (KotlinClassInheritability.Final, klass_meta.Inheritability);
 
 			Assert.AreEqual (1, klass_meta.Constructors.Count);
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (3, klass_meta.Properties.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnumClassFile ()
 		{
 			var klass_meta = GetClassMetadata ("EnumClass.class");
@@ -129,7 +129,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (4, klass_meta.EnumEntries.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnumClassWithInterfaces ()
 		{
 			var klass_meta = GetClassMetadata ("EnumClassWithInterfaces.class");
@@ -151,7 +151,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("EnumClassWithInterfacesInterface;", klass_meta.SuperTypes [1].ClassName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnumClassWithFunction ()
 		{
 			var klass_meta = GetClassMetadata ("EnumClassWithInterfaces$PLUS.class");
@@ -166,16 +166,16 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("EnumClassWithInterfaces;", klass_meta.SuperTypes [0].ClassName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void InlineClass ()
 		{
 			var klass_meta = GetClassMetadata ("InlineClass.class");
 
 			Assert.AreEqual (KotlinClassInheritability.Final, klass_meta.Inheritability);
-			Assert.True (klass_meta.Flags.HasFlag (KotlinClassFlags.IsInlineClass));
+			Assert.IsTrue (klass_meta.Flags.HasFlag (KotlinClassFlags.IsInlineClass));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Object ()
 		{
 			var klass_meta = GetClassMetadata ("Object.class");
@@ -184,7 +184,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassType.Object, klass_meta.ObjectType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CompanionObject ()
 		{
 			var klass_meta = GetClassMetadata ("CompanionObject$Companion.class");
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassType.CompanionObject, klass_meta.ObjectType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void KotlinExtensionMethods ()
 		{
 			var klass_meta = GetClassMetadata ("ExtensionMethods.class");

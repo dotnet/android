@@ -3,43 +3,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tools.Aidl_Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AidlCompilerTests : AidlCompilerTestBase
 	{
-		[Test]
+		[TestMethod]
 		public void ListAndMap () => RunTest (nameof (ListAndMap));
 
-		[Test]
+		[TestMethod]
 		public void NamespaceResolution () => RunTest (nameof (NamespaceResolution));
 
-		[Test]
+		[TestMethod]
 		public void PrimitiveTypes () => RunTest (nameof (PrimitiveTypes));
 
-		[Test]
+		[TestMethod]
 		public void FaceService () => RunTest (nameof (FaceService));
 
-		[Test]
+		[TestMethod]
 		public void IUpdateEngine () => RunTest (nameof (IUpdateEngine));
 
-		[Test]
+		[TestMethod]
 		public void ITelephony () => RunTest (nameof (ITelephony));
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void TypeNameNullIdentifierException (bool hasGenericArguments)
 		{
-			TestDelegate action = hasGenericArguments
+			Action action = hasGenericArguments
 				? () => new TypeName (new [] { "android", null }, Array.Empty<TypeName> ())
 				: () => new TypeName (new [] { "android", null });
 
-			var exception = Assert.Throws<ArgumentException> (action);
+			var exception = Assert.ThrowsExactly<ArgumentException> (action);
 			Assert.AreEqual ("identifiers", exception.ParamName);
-			StringAssert.StartsWith ("'identifiers' contain one or more null values: android", exception.Message);
+			StringAssert.StartsWith (exception.Message, "'identifiers' contain one or more null values: android");
 		}
 	}
 }

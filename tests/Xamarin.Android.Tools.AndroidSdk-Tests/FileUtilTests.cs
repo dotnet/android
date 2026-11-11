@@ -7,32 +7,32 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class FileUtilTests
 	{
 		string tempDir = null!;
 		Action<TraceLevel, string> logger = null!;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			tempDir = Path.Combine (Path.GetTempPath (), $"FileUtilTests-{Guid.NewGuid ():N}");
 			Directory.CreateDirectory (tempDir);
-			logger = (level, msg) => TestContext.WriteLine ($"[{level}] {msg}");
+			logger = (level, msg) => Console.WriteLine ($"[{level}] {msg}");
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			if (Directory.Exists (tempDir))
 				Directory.Delete (tempDir, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MoveWithRollback_NewTarget_Succeeds ()
 		{
 			var source = Path.Combine (tempDir, "source");
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("hello", File.ReadAllText (Path.Combine (target, "file.txt")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MoveWithRollback_ExistingTarget_BacksUpAndReplaces ()
 		{
 			var source = Path.Combine (tempDir, "source");
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsFalse (File.Exists (Path.Combine (target, "old.txt")), "Old file should be gone");
 		}
 
-		[Test]
+		[TestMethod]
 		public void MoveWithRollback_SourceDoesNotExist_RestoresBackup ()
 		{
 			var source = Path.Combine (tempDir, "nonexistent");
@@ -75,24 +75,24 @@ namespace Xamarin.Android.Tools.Tests
 			Directory.CreateDirectory (target);
 			File.WriteAllText (Path.Combine (target, "original.txt"), "preserve me");
 
-			Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
+			Assert.ThrowsExactly<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
 
 			// The original target should be restored from backup
 			Assert.IsTrue (Directory.Exists (target), "Target should be restored");
 			Assert.AreEqual ("preserve me", File.ReadAllText (Path.Combine (target, "original.txt")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MoveWithRollback_SourceDoesNotExist_NoExistingTarget_Throws ()
 		{
 			var source = Path.Combine (tempDir, "nonexistent");
 			var target = Path.Combine (tempDir, "also-nonexistent");
 
-			Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
+			Assert.ThrowsExactly<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
 			Assert.IsFalse (Directory.Exists (target));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MoveWithRollback_CancelledAfterValidation_RestoresBackup ()
 		{
 			var source = Path.Combine (tempDir, "source");
@@ -105,19 +105,19 @@ namespace Xamarin.Android.Tools.Tests
 			Action validate = () => {
 				Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")));
 				var backups = Directory.GetDirectories (tempDir, "target.old-*");
-				Assert.That (backups, Has.Length.EqualTo (1), "Backup must survive through validation");
+				Assert.AreEqual (1, backups.Length, "Backup must survive through validation");
 				Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
 				cts.Cancel ();
 			};
 
-			Assert.Throws<OperationCanceledException> (() => FileUtil.MoveWithRollback (source, target, logger, validate, cts.Token));
+			Assert.ThrowsExactly<OperationCanceledException> (() => FileUtil.MoveWithRollback (source, target, logger, validate, cts.Token));
 
 			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (target, "old.txt")));
 			Assert.IsFalse (File.Exists (Path.Combine (target, "new.txt")));
 			Assert.IsEmpty (Directory.GetDirectories (tempDir, "target.old-*"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MoveWithRollback_RollbackFailure_PreservesBackupAndBothErrors ()
 		{
 			var source = Path.Combine (tempDir, "source");
@@ -127,7 +127,7 @@ namespace Xamarin.Android.Tools.Tests
 			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
 			var validationError = new InvalidOperationException ("Validation failed");
 
-			var error = Assert.Throws<AggregateException> (() => FileUtil.MoveWithRollback (source, target, logger, validate: () => {
+			var error = Assert.ThrowsExactly<AggregateException> (() => FileUtil.MoveWithRollback (source, target, logger, validate: () => {
 				Directory.Delete (target);
 				File.WriteAllText (target, "blocking file");
 				throw validationError;
@@ -136,16 +136,17 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsNotNull (error);
 			if (error is null)
 				throw new InvalidOperationException ("Expected rollback failure");
-			Assert.That (error.InnerExceptions, Has.Count.EqualTo (2));
+			Assert.AreEqual (2, error.InnerExceptions.Count);
 			Assert.AreSame (validationError, error.InnerExceptions [0]);
 			var backups = Directory.GetDirectories (tempDir, "target.old-*");
-			Assert.That (backups, Has.Length.EqualTo (1));
+			Assert.AreEqual (1, backups.Length);
 			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
 			Assert.AreEqual ("blocking file", File.ReadAllText (target));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void SystemRename_Success (bool existingTarget)
 		{
 			var source = Path.Combine (tempDir, "source");
@@ -160,7 +161,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("replacement", File.ReadAllText (target));
 		}
 
-		[Test]
+		[TestMethod]
 		public void SystemRename_DirectoryTarget_ThrowsAndPreservesSource ()
 		{
 			var source = Path.Combine (tempDir, "source");
@@ -168,19 +169,21 @@ namespace Xamarin.Android.Tools.Tests
 			File.WriteAllText (source, "preserve");
 			Directory.CreateDirectory (target);
 
-			var error = Assert.Throws<IOException> (() => FileUtil.SystemRename (source, target));
+			var error = Assert.ThrowsExactly<IOException> (() => FileUtil.SystemRename (source, target));
 
 			Assert.AreEqual ("preserve", File.ReadAllText (source));
 			Assert.IsTrue (Directory.Exists (target));
 			if (!OS.IsWindows) {
 				Assert.IsNotNull (error);
-				Assert.That (error.Message, Does.Contain (source).And.Contain (target).And.Contain ("errno"));
-				Assert.That (error.InnerException, Is.TypeOf<Win32Exception> ());
+				Assert.Contains (source, error.Message);
+				Assert.Contains (target, error.Message);
+				Assert.Contains ("errno", error.Message);
+				Assert.AreEqual (typeof (Win32Exception), ((object) error.InnerException)?.GetType ());
 				Assert.AreNotEqual (0, ((Win32Exception) error.InnerException).NativeErrorCode);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsUnderDirectory_ChildPath_ReturnsTrue ()
 		{
 			var parent = Path.Combine (tempDir, "programs");
@@ -188,14 +191,14 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsUnderDirectory_ExactMatch_ReturnsTrue ()
 		{
 			var directory = Path.Combine (tempDir, "programs");
 			Assert.IsTrue (FileUtil.IsUnderDirectory (directory, directory));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsUnderDirectory_SiblingPath_ReturnsFalse ()
 		{
 			Assert.IsFalse (FileUtil.IsUnderDirectory (
@@ -203,7 +206,7 @@ namespace Xamarin.Android.Tools.Tests
 				Path.Combine (tempDir, "programs")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsUnderDirectory_DifferentRoot_ReturnsFalse ()
 		{
 			Assert.IsFalse (FileUtil.IsUnderDirectory (
@@ -211,7 +214,7 @@ namespace Xamarin.Android.Tools.Tests
 				Path.Combine (tempDir, "programs")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
 		{
 			var parent = Path.Combine (tempDir, "programs");
@@ -219,17 +222,18 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
 		}
 
-		[TestCase (null, "/dir")]
-		[TestCase ("/dir", null)]
-		[TestCase ("", "/dir")]
-		[TestCase ("/dir", "")]
-		[TestCase (null, null)]
+		[TestMethod]
+		[DataRow (null, "/dir")]
+		[DataRow ("/dir", null)]
+		[DataRow ("", "/dir")]
+		[DataRow ("/dir", "")]
+		[DataRow (null, null)]
 		public void IsUnderDirectory_NullOrEmpty_ReturnsFalse (string path, string directory)
 		{
 			Assert.IsFalse (FileUtil.IsUnderDirectory (path, directory));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsUnderDirectory_CaseSensitive ()
 		{
 			var parent = Path.Combine (tempDir, "Programs");
@@ -237,7 +241,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsFalse (FileUtil.IsUnderDirectory (child, parent));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsUnderDirectory_CanonicalCaseMismatch_ReturnsFalse ()
 		{
 			var parent = Path.Combine (tempDir, "programs");

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.Interop.Tools.JavaSource;
 
@@ -14,7 +14,7 @@ using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class SourceJavadocToXmldocGrammarFixture {
 
 		protected const string DocRootPrefixActual = "https://developer.android.com";

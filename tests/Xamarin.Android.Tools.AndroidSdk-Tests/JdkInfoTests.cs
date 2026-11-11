@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.IO;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JdkInfoTests
 	{
-		[Test]
+		[TestMethod]
 		public void GetKnownSystemJdkInfos_PrefersJiJavaHome ()
 		{
 			var previous = Environment.GetEnvironmentVariable ("JI_JAVA_HOME", EnvironmentVariableTarget.Process);
@@ -28,26 +28,26 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_NullPath ()
 		{
-			Assert.Throws<ArgumentNullException>(() => new JdkInfo (null));
+			Assert.ThrowsExactly<ArgumentNullException>(() => new JdkInfo (null));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_InvalidPath ()
 		{
 			var dir = Path.GetTempFileName ();
 			File.Delete (dir);
 			Directory.CreateDirectory (dir);
-			Assert.Throws<ArgumentException>(() => new JdkInfo (dir));
+			Assert.ThrowsExactly<ArgumentException>(() => new JdkInfo (dir));
 			Directory.Delete (dir);
 		}
 
-		string  FauxJdkDir;
+		static string FauxJdkDir;
 
-		[OneTimeSetUp]
-		public void CreateFauxJdk ()
+		[ClassInitialize]
+		public static void CreateFauxJdk (TestContext context)
 		{
 			var dir = Path.GetTempFileName();
 			File.Delete (dir);
@@ -99,8 +99,8 @@ namespace Xamarin.Android.Tools.Tests
 			CreateShellScript (Path.Combine (jre, "jvm.dll"), "");
 		}
 
-		[OneTimeTearDown]
-		public void DeleteFauxJdk ()
+		[ClassCleanup]
+		public static void DeleteFauxJdk ()
 		{
 			Directory.Delete (FauxJdkDir, recursive: true);
 		}
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tools.Tests
 			p.WaitForExit ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void PathPropertyValidation ()
 		{
 			var jdk     = new JdkInfo (FauxJdkDir);
@@ -144,7 +144,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsTrue (Directory.Exists (jdk.IncludePath [0]));
 		}
 
-		[Test]
+		[TestMethod]
 		public void VersionPrefersRelease ()
 		{
 			var jdk     = new JdkInfo (FauxJdkDir);
@@ -153,7 +153,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (jdk.Version, new Version ("1.2.3.42"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReleaseProperties ()
 		{
 			var jdk     = new JdkInfo (FauxJdkDir);
@@ -164,7 +164,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("",        jdk.ReleaseProperties ["JUST_A_KEY"]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSettingsProperties ()
 		{
 			var jdk     = new JdkInfo (FauxJdkDir);
@@ -184,7 +184,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("Xamarin.Android Unit Tests", vendor);
 			Assert.AreEqual (vendor, jdk.Vendor);
 
-			Assert.Throws<InvalidOperationException>(() => jdk.GetJavaSettingsPropertyValue ("xamarin.multi-line", out var _));
+			Assert.ThrowsExactly<InvalidOperationException>(() => jdk.GetJavaSettingsPropertyValue ("xamarin.multi-line", out var _));
 			Assert.IsTrue (jdk.GetJavaSettingsPropertyValues ("xamarin.multi-line", out var lines));
 			Assert.AreEqual (3,                     lines.Count ());
 			Assert.AreEqual ("line the first",      lines.ElementAt (0));
@@ -192,7 +192,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (".",                   lines.ElementAt (2));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseOracleReleaseVersion ()
 		{
 			var dir = Path.GetTempFileName();
@@ -208,7 +208,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseOracleJavaVersion ()
 		{
 			var dir = Path.GetTempFileName();
@@ -224,7 +224,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseMicrosoftReleaseVersion ()
 		{
 			var dir = Path.GetTempFileName();
@@ -240,7 +240,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseMicrosoftJavaVersion()
 		{
 			var dir = Path.GetTempFileName();
@@ -256,7 +256,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Version_ThrowsNotSupportedException ()
 		{
 			var dir = Path.GetTempFileName();
@@ -265,21 +265,21 @@ namespace Xamarin.Android.Tools.Tests
 			try {
 				CreateFauxJdk (dir, releaseVersion: "", releaseBuildNumber: "", javaVersion: "");
 				var jdk     = new JdkInfo (dir);
-				Assert.Throws<NotSupportedException> (() => { var _ = jdk.Version; });
+				Assert.ThrowsExactly<NotSupportedException> (() => { var _ = jdk.Version; });
 			}
 			finally {
 				Directory.Delete (dir, recursive: true);
 			}
 		}
 
-		[Test]
-		[TestCase ("jdk-21.0.99")]
-		[TestCase ("jdk-21.0.8.1-hotspot")]
-		[TestCase ("microsoft-21.jdk")]
+		[TestMethod]
+		[DataRow ("jdk-21.0.99")]
+		[DataRow ("jdk-21.0.8.1-hotspot")]
+		[DataRow ("microsoft-21.jdk")]
 		public void GetKnownSystemJdkInfos_DiscoversWindowsUserJdk (string folderName)
 		{
 			if (!OS.IsWindows) {
-				Assert.Ignore ("This test is only valid on Windows.");
+				Assert.Inconclusive ("This test is only valid on Windows.");
 				return;
 			}
 
@@ -309,15 +309,15 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
-		[TestCase ("microsoft-21.jdk", false)]
-		[TestCase ("jdk-21", true)]
-		[TestCase ("jdk-21.0.8.1-hotspot", true)]
-		[TestCase ("temurin-21.jdk", false)]
+		[TestMethod]
+		[DataRow ("microsoft-21.jdk", false)]
+		[DataRow ("jdk-21", true)]
+		[DataRow ("jdk-21.0.8.1-hotspot", true)]
+		[DataRow ("temurin-21.jdk", false)]
 		public void GetKnownSystemJdkInfos_DiscoversMacOSUserJdk (string folderName, bool isFlat)
 		{
 			if (!OS.IsMac) {
-				Assert.Ignore ("This test is only valid on macOS.");
+				Assert.Inconclusive ("This test is only valid on macOS.");
 				return;
 			}
 

@@ -3,14 +3,13 @@ using System.IO;
 using System.Collections.Generic;
 using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Android.Build.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Build.Framework;
-using NUnit.Framework.Internal;
 using System.Linq;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AndroidToolTaskTests
 	{
 		List<BuildErrorEventArgs> errors;
@@ -57,20 +56,20 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			protected override string GenerateCommandLineCommands () => CommandLineArgs;
 		}
 
-		[SetUp]
+		[TestInitialize]
 		public void TestSetup()
 		{
 			errors = new List<BuildErrorEventArgs> ();
 			warnings = new List<BuildWarningEventArgs> ();
 			messages = new List<BuildMessageEventArgs> ();
-			engine = new MockBuildEngine (TestContext.Out, errors, warnings, messages);
+			engine = new MockBuildEngine (System.Console.Out, errors, warnings, messages);
 		}
 
-		[Test]
-		[TestCase (true, true, true)]
-		[TestCase (false, false, true)]
-		[TestCase (true, false, false)]
-		[TestCase (false, true, false)]
+		[TestMethod]
+		[DataRow (true, true, true)]
+		[DataRow (false, false, true)]
+		[DataRow (true, false, false)]
+		[DataRow (false, true, false)]
 		public void TestRegisterTaskObjectCanRetrieveCorrectItem (bool projectSpecificA, bool projectSpecificB, bool expectedResult)
 		{
 			var task = new MyAndroidTask () {
@@ -89,11 +88,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (expectedResult, string.Equals (task2.Value, task.Value, StringComparison.CurrentCultureIgnoreCase));
 		}
 
-		[Test]
-		[TestCase (true, true, false)]
-		[TestCase (false, false, true)]
-		[TestCase (true, false, false)]
-		[TestCase (false, true, false)]
+		[TestMethod]
+		[DataRow (true, true, false)]
+		[DataRow (false, false, true)]
+		[DataRow (true, false, false)]
+		[DataRow (false, true, false)]
 		public void TestRegisterTaskObjectFailsWhenDirectoryChanges (bool projectSpecificA, bool projectSpecificB, bool expectedResult)
 		{
 			MyAndroidTask task;
@@ -119,9 +118,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (expectedResult, string.Equals (task2.Value, task.Value, StringComparison.CurrentCultureIgnoreCase));
 		}
 
-		[Test]
-		[TestCase ("invalidcommand", false, "You intended to execute a .NET program, but dotnet-invalidcommand does not exist.")]
-		[TestCase ("--info", true, "")]
+		[TestMethod]
+		[DataRow ("invalidcommand", false, "You intended to execute a .NET program, but dotnet-invalidcommand does not exist.")]
+		[DataRow ("--info", true, "")]
 		public void FailedAndroidToolTaskShouldLogOutputAsError (string args, bool expectedResult, string expectedErrorText)
 		{
 			var task = new DotnetToolOutputTestTask () {

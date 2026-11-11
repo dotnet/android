@@ -3,14 +3,14 @@ using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AndroidRidAbiHelperTests
 	{
-		static object [] StringValueSource = new object [] {
+		public static IEnumerable<object []> StringValueSource { get; } = new object [] [] {
 			new[] {
 				/* input */    default (string),
 				/* expected */ default (string)
@@ -113,14 +113,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			},
 		};
 
-		[Test]
-		[TestCaseSource (nameof (StringValueSource))]
+		[TestMethod]
+		[DynamicData (nameof (StringValueSource))]
 		public void StringValue (string input, string expected)
 		{
 			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (input));
 		}
 
-		static object [] ITaskItemValueSource = new object [] {
+		public static IEnumerable<object []> ITaskItemValueSource { get; } = new object [] [] {
 			new object [] {
 				/* input */
 				new TaskItem(""),
@@ -225,19 +225,20 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			},
 		};
 
-		[Test]
-		[TestCaseSource (nameof (ITaskItemValueSource))]
+		[TestMethod]
+		[DynamicData (nameof (ITaskItemValueSource))]
 		public void ITaskItemValue (ITaskItem input, string expected)
 		{
 			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (input));
 		}
 
-		[TestCase ("arm64-v8a", "android-x64", "x86/libfoo.so", "arm64-v8a")]
-		[TestCase ("", "android-x64", "x86/libfoo.so", "x86_64")]
-		[TestCase ("", "", "x86/libfoo.so", "x86")]
-		[TestCase ("", "invalid", "x86/libfoo.so", "armeabi-v7a")]
-		[TestCase ("", "", "unknown/libfoo.so", "armeabi-v7a")]
-		[TestCase ("", "", "", "armeabi-v7a")]
+		[TestMethod]
+		[DataRow ("arm64-v8a", "android-x64", "x86/libfoo.so", "arm64-v8a")]
+		[DataRow ("", "android-x64", "x86/libfoo.so", "x86_64")]
+		[DataRow ("", "", "x86/libfoo.so", "x86")]
+		[DataRow ("", "invalid", "x86/libfoo.so", "armeabi-v7a")]
+		[DataRow ("", "", "unknown/libfoo.so", "armeabi-v7a")]
+		[DataRow ("", "", "", "armeabi-v7a")]
 		public void MetadataPrecedence (string abi, string rid, string link, string expected)
 		{
 			var library = new TaskItem (Path.Combine ("armeabi-v7a", "libfoo.so"));
@@ -248,12 +249,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (expected, AndroidRidAbiHelper.GetNativeLibraryAbi (library));
 		}
 
-		[TestCase ("libfoo.so", "arm64-v8a")]
-		[TestCase ("./libfoo.so", "arm64-v8a")]
-		[TestCase ("../x86/libfoo.so", "x86")]
-		[TestCase ("../android-x64/native/libfoo.so", "x86_64")]
-		[TestCase ("../interpreter-armeabi-v7a/libfoo.so", "armeabi-v7a")]
-		[TestCase ("../unknown/libfoo.so", null)]
+		[TestMethod]
+		[DataRow ("libfoo.so", "arm64-v8a")]
+		[DataRow ("./libfoo.so", "arm64-v8a")]
+		[DataRow ("../x86/libfoo.so", "x86")]
+		[DataRow ("../android-x64/native/libfoo.so", "x86_64")]
+		[DataRow ("../interpreter-armeabi-v7a/libfoo.so", "armeabi-v7a")]
+		[DataRow ("../unknown/libfoo.so", null)]
 		public void ProjectRelativePath (string path, string expected)
 		{
 			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (

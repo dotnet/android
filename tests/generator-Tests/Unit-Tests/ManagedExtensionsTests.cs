@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class ManagedExtensionsTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void StripArity ()
 		{
 			Assert.AreEqual ("List<string>", "List`1<string>".StripArity ());

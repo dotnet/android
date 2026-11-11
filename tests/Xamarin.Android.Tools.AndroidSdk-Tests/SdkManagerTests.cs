@@ -9,30 +9,30 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
-[TestFixture]
+[TestClass]
 public class SdkManagerTests
 {
 	SdkManager manager;
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp ()
 	{
 		manager = new SdkManager (logger: (level, message) => {
-			TestContext.WriteLine ($"[{level}] {message}");
+			Console.WriteLine ($"[{level}] {message}");
 		});
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void TearDown ()
 	{
 		manager?.Dispose ();
 		manager = null;
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseManifest_CmdlineTools_ReturnsComponents ()
 	{
 		var xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -64,14 +64,14 @@ public class SdkManagerTests
 		Assert.IsNotEmpty (cmdline.DownloadUrl!);
 		Assert.IsNotEmpty (cmdline.Checksum!);
 		Assert.AreEqual (ChecksumType.Sha1, cmdline.ChecksumType);
-		Assert.Greater (cmdline.Size, 0);
+		Assert.IsGreaterThan (0, cmdline.Size);
 
 		var platformTools = components.FirstOrDefault (c => c.ElementName == "platform-tools");
 		Assert.IsNotNull (platformTools, "Should find platform-tools component");
 		Assert.AreEqual ("36.0.0", platformTools!.Revision);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseManifest_ObsoleteComponents_AreIncluded ()
 	{
 		var xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -91,7 +91,7 @@ public class SdkManagerTests
 		Assert.IsTrue (obsolete!.IsObsolete);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseManifest_EmptyXml_ReturnsEmpty ()
 	{
 		var xml = @"<?xml version=""1.0"" encoding=""utf-8""?><xamarin-android></xamarin-android>";
@@ -100,7 +100,7 @@ public class SdkManagerTests
 		Assert.AreEqual (0, components.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseManifest_MultipleVersions_AllReturned ()
 	{
 		var xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -126,7 +126,7 @@ public class SdkManagerTests
 		Assert.AreEqual (2, cmdlineTools.Count, "Should find both cmdline-tools versions");
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseManifest_JdkElements_Parsed ()
 	{
 		var xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -148,7 +148,7 @@ public class SdkManagerTests
 		Assert.IsNotEmpty (jdk.DownloadUrl!);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseSdkManagerList_ParsesInstalledAvailableAndUpdates ()
 	{
 		var output = @"Installed packages:
@@ -192,7 +192,7 @@ Available Updates:
 		Assert.IsFalse (platformToolsUpdate.IsInstalled);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseSdkManagerList_EmptyOutput_ReturnsEmpty ()
 	{
 		var (installed, available) = SdkManager.ParseSdkManagerList ("");
@@ -200,7 +200,7 @@ Available Updates:
 		Assert.AreEqual (0, available.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseSdkManagerList_OnlyInstalledSection ()
 	{
 		var output = @"Installed packages:
@@ -215,7 +215,7 @@ Available Updates:
 		Assert.AreEqual ("platform-tools", installed[0].Path);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseSdkManagerList_AndroidCliWhitespaceFormat_ParsesInstalledAndAvailable ()
 	{
 		// sdkmanager is deprecated in cmdline-tools 23+ and replaced by the "Android CLI",
@@ -265,7 +265,7 @@ Available packages:
 		Assert.IsFalse (googleApis.IsInstalled);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseSdkManagerList_AndroidCliWhitespaceFormat_ParsesUpdates ()
 	{
 		var output = @"Installed packages:
@@ -287,7 +287,7 @@ Available Updates:
 		Assert.IsFalse (update.IsInstalled);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseSdkManagerList_SectionHeadersAreCaseInsensitive ()
 	{
 		var output = @"INSTALLED PACKAGES:
@@ -306,14 +306,14 @@ AVAILABLE UPDATES:
 		Assert.AreEqual ("37.0.2", available.Single (p => p.Path == "platform-tools").Version);
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindSdkManagerPath_NullSdkPath_ReturnsNull ()
 	{
 		manager.AndroidSdkPath = null;
 		Assert.IsNull (manager.FindSdkManagerPath ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindSdkManagerPath_CmdlineToolsLatest_Found ()
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-test-{Guid.NewGuid ()}");
@@ -328,7 +328,7 @@ AVAILABLE UPDATES:
 			var result = manager.FindSdkManagerPath ();
 
 			Assert.IsNotNull (result, "Should find sdkmanager in cmdline-tools/latest/bin");
-			Assert.That (result, Does.Contain ("sdkmanager"));
+			Assert.Contains ("sdkmanager", result);
 		}
 		finally {
 			if (Directory.Exists (sdkDir))
@@ -336,7 +336,7 @@ AVAILABLE UPDATES:
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindSdkManagerPath_VersionedDir_Found ()
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-test-{Guid.NewGuid ()}");
@@ -358,7 +358,7 @@ AVAILABLE UPDATES:
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindSdkManagerPath_NoSdkManager_ReturnsNull ()
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-test-{Guid.NewGuid ()}");
@@ -373,21 +373,21 @@ AVAILABLE UPDATES:
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void DefaultManifestFeedUrl_IsSet ()
 	{
 		Assert.AreEqual ("https://aka.ms/AndroidManifestFeed/d18-0", SdkManager.DefaultManifestFeedUrl);
 		Assert.AreEqual (SdkManager.DefaultManifestFeedUrl, manager.ManifestFeedUrl);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ManifestFeedUrl_IsConfigurable ()
 	{
 		manager.ManifestFeedUrl = "https://example.com/manifest.xml";
 		Assert.AreEqual ("https://example.com/manifest.xml", manager.ManifestFeedUrl);
 	}
 
-	[Test]
+	[TestMethod]
 	public void Constructor_DefaultLogger_DoesNotThrow ()
 	{
 		var defaultManager = new SdkManager ();
@@ -396,14 +396,14 @@ AVAILABLE UPDATES:
 
 	// --- AreLicensesAccepted ---
 
-	[Test]
+	[TestMethod]
 	public void AreLicensesAccepted_NullSdkPath_ReturnsFalse ()
 	{
 		manager.AndroidSdkPath = null;
 		Assert.IsFalse (manager.AreLicensesAccepted ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void AreLicensesAccepted_NoLicensesDir_ReturnsFalse ()
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-test-{Guid.NewGuid ()}");
@@ -418,7 +418,7 @@ AVAILABLE UPDATES:
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void AreLicensesAccepted_WithLicenseFiles_ReturnsTrue ()
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-test-{Guid.NewGuid ()}");
@@ -436,7 +436,7 @@ AVAILABLE UPDATES:
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task GetManifestComponentsAsync_ReturnsComponents ()
 	{
 		IReadOnlyList<SdkManifestComponent> components;
@@ -444,13 +444,13 @@ AVAILABLE UPDATES:
 			components = await manager.GetManifestComponentsAsync ();
 		}
 		catch (Exception ex) when (ex is System.Net.Http.HttpRequestException || ex is TaskCanceledException) {
-			Assert.Ignore ($"Network unavailable: {ex.Message}");
+			Assert.Inconclusive ($"Network unavailable: {ex.Message}");
 			return;
 		}
 
 		Assert.IsNotNull (components);
 		if (components.Count == 0) {
-			Assert.Ignore ("No components returned.");
+			Assert.Inconclusive ("No components returned.");
 			return;
 		}
 
@@ -465,77 +465,77 @@ AVAILABLE UPDATES:
 		Assert.IsNotNull (platformTools, "Manifest should contain platform-tools");
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task BootstrapAsync_NullPath_Throws ()
 	{
-		Assert.ThrowsAsync<ArgumentNullException> (
+		await Assert.ThrowsExactlyAsync<ArgumentNullException> (
 			async () => await manager.BootstrapAsync (null!));
 	}
 
-	[Test]
-	public void InstallAsync_NoSdkManager_Throws ()
+	[TestMethod]
+	public async Task InstallAsync_NoSdkManager_Throws ()
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
-		Assert.ThrowsAsync<InvalidOperationException> (
+		await Assert.ThrowsExactlyAsync<InvalidOperationException> (
 			async () => await manager.InstallAsync (new[] { "platform-tools" }));
 	}
 
-	[Test]
-	public void InstallAsync_EmptyPackages_Throws ()
+	[TestMethod]
+	public async Task InstallAsync_EmptyPackages_Throws ()
 	{
-		Assert.ThrowsAsync<ArgumentException> (
+		await Assert.ThrowsExactlyAsync<ArgumentException> (
 			async () => await manager.InstallAsync (new string[0]));
 	}
 
-	[Test]
-	public void InstallAsync_NullPackages_Throws ()
+	[TestMethod]
+	public async Task InstallAsync_NullPackages_Throws ()
 	{
-		Assert.ThrowsAsync<ArgumentException> (
+		await Assert.ThrowsExactlyAsync<ArgumentException> (
 			async () => await manager.InstallAsync (null!));
 	}
 
-	[Test]
-	public void UninstallAsync_NoSdkManager_Throws ()
+	[TestMethod]
+	public async Task UninstallAsync_NoSdkManager_Throws ()
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
-		Assert.ThrowsAsync<InvalidOperationException> (
+		await Assert.ThrowsExactlyAsync<InvalidOperationException> (
 			async () => await manager.UninstallAsync (new[] { "platform-tools" }));
 	}
 
-	[Test]
-	public void UninstallAsync_EmptyPackages_Throws ()
+	[TestMethod]
+	public async Task UninstallAsync_EmptyPackages_Throws ()
 	{
-		Assert.ThrowsAsync<ArgumentException> (
+		await Assert.ThrowsExactlyAsync<ArgumentException> (
 			async () => await manager.UninstallAsync (new string[0]));
 	}
 
-	[Test]
-	public void ListAsync_NoSdkManager_Throws ()
+	[TestMethod]
+	public async Task ListAsync_NoSdkManager_Throws ()
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
-		Assert.ThrowsAsync<InvalidOperationException> (
+		await Assert.ThrowsExactlyAsync<InvalidOperationException> (
 			async () => await manager.ListAsync ());
 	}
 
-	[Test]
-	public void UpdateAsync_NoSdkManager_Throws ()
+	[TestMethod]
+	public async Task UpdateAsync_NoSdkManager_Throws ()
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
-		Assert.ThrowsAsync<InvalidOperationException> (
+		await Assert.ThrowsExactlyAsync<InvalidOperationException> (
 			async () => await manager.UpdateAsync ());
 	}
 
-	[Test]
-	public void AcceptLicensesAsync_NoSdkManager_Throws ()
+	[TestMethod]
+	public async Task AcceptLicensesAsync_NoSdkManager_Throws ()
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
-		Assert.ThrowsAsync<InvalidOperationException> (
+		await Assert.ThrowsExactlyAsync<InvalidOperationException> (
 			async () => await manager.AcceptLicensesAsync ());
 	}
 
 	// --- License Parsing ---
 
-	[Test]
+	[TestMethod]
 	public void ParseLicenseOutput_SingleLicense_Parsed ()
 	{
 		var output = @"
@@ -552,11 +552,11 @@ Accept? (y/N): ";
 
 		Assert.AreEqual (1, licenses.Count, "Should parse one license");
 		Assert.AreEqual ("android-sdk-license", licenses[0].Id);
-		Assert.That (licenses[0].Text, Does.Contain ("Terms and Conditions"));
-		Assert.That (licenses[0].Text, Does.Contain ("This is the license text"));
+		Assert.Contains ("Terms and Conditions", licenses[0].Text);
+		Assert.Contains ("This is the license text", licenses[0].Text);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseLicenseOutput_MultipleLicenses_Parsed ()
 	{
 		var output = @"
@@ -578,7 +578,7 @@ Accept? (y/N): ";
 		Assert.AreEqual ("android-sdk-preview-license", licenses[1].Id);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseLicenseOutput_NoLicenses_ReturnsEmpty ()
 	{
 		var output = "All SDK package licenses accepted.";

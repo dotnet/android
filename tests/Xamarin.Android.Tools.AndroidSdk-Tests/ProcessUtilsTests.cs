@@ -1,3 +1,4 @@
+using System.Linq;
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
@@ -5,21 +6,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class ProcessUtilsTests
 	{
-		[Test]
+		[TestMethod]
 		public void CreateProcessStartInfo_SetsFileName ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("myapp");
 			Assert.AreEqual ("myapp", psi.FileName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateProcessStartInfo_SetsShellAndWindow ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("myapp");
@@ -27,14 +28,14 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsTrue (psi.CreateNoWindow, "CreateNoWindow should be true");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateProcessStartInfo_NoArgs ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("myapp");
 			Assert.AreEqual (0, psi.ArgumentList.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateProcessStartInfo_SingleArg ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("myapp", "--version");
@@ -42,7 +43,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("--version", psi.ArgumentList [0]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateProcessStartInfo_MultipleArgs ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("tar", "-xzf", "archive.tar.gz", "-C", "/tmp/output");
@@ -53,7 +54,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("/tmp/output", psi.ArgumentList [3]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateProcessStartInfo_ArgWithSpaces ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("cmd", "/c", "path with spaces");
@@ -61,15 +62,15 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("path with spaces", psi.ArgumentList [1]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsElevated_DoesNotThrow ()
 		{
 			// Smoke test: just verify it returns without crashing
 			bool result = ProcessUtils.IsElevated ();
-			Assert.That (result, Is.TypeOf<bool> ());
+			Assert.AreEqual (typeof (bool), ((object) result)?.GetType ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_WindowsPathIsNotDoubleEscaped ()
 		{
 			// Regression test: escaping every backslash produced `C:\\dir\\file.dll`, which
@@ -77,56 +78,56 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (@"C:\Users\me\obj\a.dll", ProcessUtils.JoinArguments (@"C:\Users\me\obj\a.dll"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_PathWithSpacesIsQuotedButNotDoubleEscaped ()
 		{
 			Assert.AreEqual ("\"C:\\path with spaces\\a.dll\"", ProcessUtils.JoinArguments (@"C:\path with spaces\a.dll"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_EmbeddedQuoteIsEscaped ()
 		{
 			Assert.AreEqual ("\"he said \\\"hi\\\"\"", ProcessUtils.JoinArguments ("he said \"hi\""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_BackslashBeforeQuoteIsDoubled ()
 		{
 			Assert.AreEqual ("\"a\\\\\\\"b\"", ProcessUtils.JoinArguments ("a\\\"b"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_TrailingBackslashWithSpacesIsDoubled ()
 		{
 			// The trailing backslash precedes the closing quote, so it must be doubled.
 			Assert.AreEqual ("\"C:\\a b\\\\\"", ProcessUtils.JoinArguments (@"C:\a b\"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_TrailingBackslashWithoutSpacesNeedsNoQuoting ()
 		{
 			Assert.AreEqual (@"C:\dir\", ProcessUtils.JoinArguments (@"C:\dir\"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_EmptyArgument ()
 		{
 			Assert.AreEqual ("\"\"", ProcessUtils.JoinArguments (""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_NullArgument ()
 		{
 			Assert.AreEqual ("\"\"", ProcessUtils.JoinArguments (default (string)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_NoArguments ()
 		{
 			Assert.AreEqual ("", ProcessUtils.JoinArguments ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_MultipleArgumentsAreSpaceSeparated ()
 		{
 			Assert.AreEqual (
@@ -134,7 +135,7 @@ namespace Xamarin.Android.Tools.Tests
 				ProcessUtils.JoinArguments ("push", "-z", "any", @"C:\a b\x.dll", @"C:\y.dll", "/data/local/tmp"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_RoundTripsThroughArgumentParsing ()
 		{
 			var args = new [] {
@@ -155,27 +156,28 @@ namespace Xamarin.Android.Tools.Tests
 		/// stripped by argument parsing), but <see cref="AdbRunner"/> passes many such arguments,
 		/// so assert the shapes it uses still arrive unchanged.
 		/// </summary>
-		[TestCase ("devices")]
-		[TestCase ("-l")]
-		[TestCase ("-s")]
-		[TestCase ("58230DLCR0013R")]
-		[TestCase ("emulator-5554")]
-		[TestCase ("tcp:5555")]
-		[TestCase ("localabstract:org.example_debug")]
-		[TestCase ("--remove-all")]
-		[TestCase ("ro.product.cpu.abilist")]
-		[TestCase ("getprop")]
+		[TestMethod]
+		[DataRow ("devices")]
+		[DataRow ("-l")]
+		[DataRow ("-s")]
+		[DataRow ("58230DLCR0013R")]
+		[DataRow ("emulator-5554")]
+		[DataRow ("tcp:5555")]
+		[DataRow ("localabstract:org.example_debug")]
+		[DataRow ("--remove-all")]
+		[DataRow ("ro.product.cpu.abilist")]
+		[DataRow ("getprop")]
 		public void JoinArguments_AdbArgumentShapesRoundTrip (string argument)
 		{
-			CollectionAssert.AreEqual (new [] { argument }, SplitCommandLine (ProcessUtils.JoinArguments (argument)));
+			CollectionAssert.AreEqual (new [] { argument }, SplitCommandLine (ProcessUtils.JoinArguments (argument)).ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void JoinArguments_AdbShellCommandRoundTrips ()
 		{
 			// `AdbRunner.RunShellCommandAsync` passes an entire shell command as one argument.
 			var args = new [] { "-s", "58230DLCR0013R", "shell", "echo \"remote=$(cat /data/local/tmp/x)\"" };
-			CollectionAssert.AreEqual (args, SplitCommandLine (ProcessUtils.JoinArguments (args)));
+			CollectionAssert.AreEqual (args, SplitCommandLine (ProcessUtils.JoinArguments (args)).ToArray ());
 		}
 
 		/// <summary>
@@ -184,11 +186,12 @@ namespace Xamarin.Android.Tools.Tests
 		/// argument is always safe, so erring towards quoting keeps the two implementations
 		/// in agreement.
 		/// </summary>
-		[TestCase ("a\rb")]
-		[TestCase ("a\fb")]
-		[TestCase ("a\nb")]
-		[TestCase ("a\vb")]
-		[TestCase ("a\u00a0b")]
+		[TestMethod]
+		[DataRow ("a\rb")]
+		[DataRow ("a\fb")]
+		[DataRow ("a\nb")]
+		[DataRow ("a\vb")]
+		[DataRow ("a\u00a0b")]
 		public void JoinArguments_AllWhitespaceIsQuoted (string argument)
 		{
 			var joined = ProcessUtils.JoinArguments (argument);

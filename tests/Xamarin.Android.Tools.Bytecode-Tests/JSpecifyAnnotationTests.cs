@@ -7,11 +7,11 @@ using System.Xml.Linq;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.BytecodeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JSpecifyAnnotationTests : ClassFileFixture
 	{
 		static XElement BuildXml (string classResource, string? packageInfoResource = null)
@@ -38,12 +38,12 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		static XElement FirstParameter (XElement method)
 		{
 			return method.Element ("parameter")
-				?? throw new AssertionException ($"method '{method.Attribute ("name")?.Value}' has no <parameter>");
+				?? throw new AssertFailedException ($"method '{method.Attribute ("name")?.Value}' has no <parameter>");
 		}
 
 		static string? Attr (XElement e, string name) => e.Attribute (name)?.Value;
 
-		[Test]
+		[TestMethod]
 		public void PackageMarked_DefaultReferenceMembers_AreNotNull ()
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"unannotated reference field in @NullMarked package must be not-null");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PackageMarked_PrimitiveMembers_HaveNoNotNullAttribute ()
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
@@ -74,7 +74,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"primitive field must not get a not-null attribute");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PackageMarked_NullableAnnotationOverridesScope ()
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		// `@NullUnmarked` on a method is intentionally not honored yet
 		// (only class- and package-level scope are). This test pins the
 		// current behavior so the limitation is visible.
-		[Test]
+		[TestMethod]
 		public void PackageMarked_MethodLevelNullUnmarked_IsNotYetHonored ()
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
@@ -104,7 +104,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"method-level @NullUnmarked is not yet honored; the package-level @NullMarked scope still applies");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PackageMarked_TypeVariableUsage_HasParametricNullness ()
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"unannotated type-variable parameter must not gain not-null from the scope default");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ClassMarked_DefaultReferenceMembers_AreNotNull ()
 		{
 			var xml = BuildXml ("JSpecifyClassMarked.class");
@@ -134,7 +134,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"unannotated reference field in @NullMarked class must be not-null");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ClassMarked_NullableOverrides ()
 		{
 			var xml = BuildXml ("JSpecifyClassMarked.class");
@@ -151,7 +151,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"@Nullable field must override the class-level @NullMarked default");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Unmarked_NoScope_NoDefaultNotNull ()
 		{
 			var xml = BuildXml ("JSpecifyUnmarked.class");
@@ -168,7 +168,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"outside a @NullMarked scope, unannotated reference fields must not gain not-null");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Unmarked_ExplicitNonNullAnnotation_IsHonored ()
 		{
 			var xml = BuildXml ("JSpecifyUnmarked.class");
@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"explicit @NonNull field must produce not-null even outside a @NullMarked scope");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PackageMarked_DeclarationNullable_OverridesScope ()
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
@@ -202,7 +202,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"declaration-level @Nullable field must override the @NullMarked default");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PackageMarked_NestedNullable_DoesNotLeakToContainer ()
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
@@ -213,28 +213,31 @@ namespace Xamarin.Android.Tools.BytecodeTests
 					+ "the field's List type is non-null in a @NullMarked scope");
 		}
 
-		[TestCase ("nullableMember", null)]
-		[TestCase ("nullableDeepMember", null)]
-		[TestCase ("nullableMemberArgument", "true")]
-		[TestCase ("nullableMemberTypeArgument", "true")]
-		[TestCase ("nullableArray", null)]
-		[TestCase ("nullableArrayElement", "true")]
-		[TestCase ("nullableMemberArrayElement", "true")]
-		[TestCase ("javaxCheckForNull", null)]
-		[TestCase ("findbugsCheckForNull", null)]
+		[TestMethod]
+		[DataRow ("nullableMember", null)]
+		[DataRow ("nullableDeepMember", null)]
+		[DataRow ("nullableMemberArgument", "true")]
+		[DataRow ("nullableMemberTypeArgument", "true")]
+		[DataRow ("nullableArray", null)]
+		[DataRow ("nullableArrayElement", "true")]
+		[DataRow ("nullableMemberArrayElement", "true")]
+		[DataRow ("javaxCheckForNull", null)]
+		[DataRow ("findbugsCheckForNull", null)]
 		public void PackageMarked_ReferenceNullness (string memberPrefix, string? expected)
 		{
 			var xml = BuildXml ("JSpecifyPackageMarked.class", "package-info.class");
 			var method = Method (xml, memberPrefix + "Return");
 
-			Assert.Multiple (() => {
+#pragma warning disable MSTESTEXP // Preserve grouped assertions with the native preview API.
+			using (Assert.Scope ()) {
 				Assert.AreEqual (expected, Attr (Field (xml, memberPrefix + "Field"), "not-null"), "field");
 				Assert.AreEqual (expected, Attr (method, "return-not-null"), "return");
 				Assert.AreEqual (expected, Attr (FirstParameter (method), "not-null"), "parameter");
-			});
+			}
+#pragma warning restore MSTESTEXP
 		}
 
-		[Test]
+		[TestMethod]
 		public void TypeAnnotationsAttribute_IsParsed ()
 		{
 			var c = LoadClassFile ("JSpecifyPackageMarked.class");
@@ -242,7 +245,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			var typeAnn = method.Attributes
 				.OfType<RuntimeInvisibleTypeAnnotationsAttribute> ()
 				.FirstOrDefault ()
-				?? throw new AssertionException ("javac must emit a RuntimeInvisibleTypeAnnotations attribute for @Nullable members");
+				?? throw new AssertFailedException ("javac must emit a RuntimeInvisibleTypeAnnotations attribute for @Nullable members");
 			Assert.IsTrue (typeAnn.Annotations.Any (a =>
 				a.Annotation.Type == "Lorg/jspecify/annotations/Nullable;"
 					&& a.TargetType == TypeAnnotationTargetType.MethodReturn),
@@ -254,7 +257,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"@Nullable parameter type annotation must be parsed with MethodFormalParameter target");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PackageInfo_IsRecognized ()
 		{
 			var c = LoadClassFile ("package-info.class");

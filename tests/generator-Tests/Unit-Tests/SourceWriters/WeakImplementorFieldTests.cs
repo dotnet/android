@@ -1,13 +1,13 @@
 using generator.SourceWriters;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests.SourceWriters
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class WeakImplementorFieldTests : SourceWritersTestBase
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void WeakImplementorField_Regular ()
 		{
 			var field = new WeakImplementorField ("foo", new CodeGenerationOptions ());
@@ -15,7 +15,7 @@ namespace generatortests.SourceWriters
 			Assert.AreEqual ("WeakReference weak_implementor_foo;", GetOutput (field).Trim ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WeakImplementorField_Nullable ()
 		{
 			var field = new WeakImplementorField ("foo", new CodeGenerationOptions { SupportNullableReferenceTypes = true });

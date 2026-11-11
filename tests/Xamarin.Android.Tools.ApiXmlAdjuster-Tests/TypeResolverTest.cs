@@ -3,23 +3,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class TypeResolverTest
 	{
-		JavaApi api;
+		static JavaApi api;
 		
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 			api.Resolve ();
 		}
 		
-		[Test]
+		[TestMethod]
 		public void TypeReferenceEquals ()
 		{
 			var intRef = JavaTypeReference.Int;
@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.AreNotEqual (new JavaTypeReference (type, null, "[]"), new JavaTypeReference (type, null, "[][]"), "type: array vs. array of array");
 		}
 		
-		[Test]
+		[TestMethod]
 		public void TestResolvedTypes ()
 		{
 			var type = api.FindNonGenericType ("android.database.ContentObservable");
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.IsNotNull (kls.ResolvedExtends.ReferencedType, "referenced type is not correctly resolved");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ResolveGenericArguments ()
 		{
 			var type = api.FindNonGenericType ("java.util.concurrent.ConcurrentHashMap");
@@ -69,7 +69,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			                 "referenced type is not correctly resolved");
 		}
 
-		[Test]
+		[TestMethod]
 		public void IntentServiceHack ()
 		{
 			// https://github.com/xamarin/java.interop/issues/717

@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
@@ -17,7 +17,7 @@ namespace generatortests
 		protected StringWriter writer;
 		protected CodeGenerationOptions options;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			builder = new StringBuilder ();
@@ -27,7 +27,7 @@ namespace generatortests
 			generator = new JavaInteropCodeGenerator (writer, options);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			writer.Dispose ();

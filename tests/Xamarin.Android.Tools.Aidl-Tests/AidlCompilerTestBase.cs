@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tools.Aidl_Tests
@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 			var compiler = new AidlCompiler ();
 			var results = compiler.Run (input, out var output, parcelableHandling: parcelableHandling);
 
-			Assert.False (results.LogMessages.Any ());
+			Assert.IsFalse (results.LogMessages.Any ());
 
 #if GENERATE_OUTPUT
 			using (var sw = new StreamWriter (file)) {
@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 				sw.WriteLine (output);
 			}
 
-			Assert.Ignore ("Generating output for this test.");
+			Assert.Inconclusive ("Generating output for this test.");
 #endif  // GENERATE_OUTPUT
 
 			Assert.AreEqual (StripLineEndings (expected_output), StripLineEndings (output));

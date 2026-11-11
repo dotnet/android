@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AsyncTaskExtensionsTests
 	{
 		const int Iterations = 32;
@@ -15,7 +15,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			public override string TaskPrefix => "TEST";
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task RunTask ()
 		{
 			bool set = false;
@@ -23,7 +23,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (set);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task RunTaskOfT ()
 		{
 			bool set = false;
@@ -31,7 +31,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (set);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task WhenAll ()
 		{
 			bool set = false;
@@ -39,7 +39,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (set);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task WhenAllWithLock ()
 		{
 			var input = new int [Iterations];
@@ -50,7 +50,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (Iterations, output.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParallelForEach ()
 		{
 			bool set = false;
@@ -58,7 +58,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (set);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParallelForEachWithLock ()
 		{
 			var input = new int [Iterations];

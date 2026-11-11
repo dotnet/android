@@ -1,13 +1,13 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class GenericArguments : BaseGeneratorTest
 	{
 
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratedOK ()
 		{
 			RunTarget (

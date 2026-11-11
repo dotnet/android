@@ -8,15 +8,16 @@ using System.Xml.Linq;
 using generator.SourceWriters;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.SourceWriter;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	class XAJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void WriteMethodJniSignatureOverrides ()
 		{
 			var api = """
@@ -54,12 +55,12 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var source = writer.ToString ();
-			Assert.True (source.Contains ("addOnChangeListener.(Lcom/example/BaseListener;)V"), source);
-			Assert.True (source.Contains ("removeOnChangeListener.(Lcom/example/BaseListener;)V"), source);
-			Assert.True (source.Contains ("AddOnChangeListener (Com.Example.ITypedListener"), source);
+			Assert.IsTrue (source.Contains ("addOnChangeListener.(Lcom/example/BaseListener;)V"), source);
+			Assert.IsTrue (source.Contains ("removeOnChangeListener.(Lcom/example/BaseListener;)V"), source);
+			Assert.IsTrue (source.Contains ("AddOnChangeListener (Com.Example.ITypedListener"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteKotlinUnsignedTypeMethodsClass ()
 		{
 			var @class = new TestClass ("Object", "java.code.MyClass");
@@ -80,7 +81,7 @@ namespace generatortests
 			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedTypeMethodsClass), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteKotlinUnsignedTypePropertiesClass ()
 		{
 			var @class = new TestClass ("Object", "java.code.MyClass");
@@ -103,7 +104,7 @@ namespace generatortests
 			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedTypePropertiesClass), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteKotlinUnsignedArrayTypeMethodsClass ()
 		{
 			var @class = new TestClass ("Object", "java.code.MyClass");
@@ -124,7 +125,7 @@ namespace generatortests
 			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedArrayTypeMethodsClass), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteKotlinUnsignedArrayTypePropertiesClass ()
 		{
 			var @class = new TestClass ("Object", "java.code.MyClass");
@@ -147,7 +148,7 @@ namespace generatortests
 			AssertOriginalTargetExpected (nameof (WriteKotlinUnsignedArrayTypePropertiesClass), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideMethod_Virtual ()
 		{
 			var xml = @"<api>
@@ -168,10 +169,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public virtual int DoStuff ()"), $"was: `{writer.ToString ()}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public virtual int DoStuff ()"), $"was: `{writer.ToString ()}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideMethod_Override ()
 		{
 			var xml = @"<api>
@@ -192,10 +193,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public override int DoStuff ()"), $"was: `{writer.ToString ()}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public override int DoStuff ()"), $"was: `{writer.ToString ()}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideAbstractMethod_Override ()
 		{
 			var xml = @"<api>
@@ -216,10 +217,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public override abstract int DoStuff ();"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public override abstract int DoStuff ();"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideMethod_None ()
 		{
 			var xml = @"<api>
@@ -241,10 +242,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This would contain 'virtual' if the 'managedOverride' was not working
-			Assert.True (writer.ToString ().Contains ("public int DoStuff ()"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public int DoStuff ()"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideInterfaceMethod_Reabstract ()
 		{
 			var xml = @"<api>
@@ -266,10 +267,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This would not contain 'abstract' if the 'managedOverride' was not working
-			Assert.True (writer.ToString ().Contains ("abstract int DoStuff ()"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("abstract int DoStuff ()"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideProperty_Virtual ()
 		{
 			var xml = @"<api>
@@ -290,10 +291,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public virtual int Name {"), $"was: `{writer.ToString ()}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public virtual int Name {"), $"was: `{writer.ToString ()}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideProperty_Override ()
 		{
 			var xml = @"<api>
@@ -314,10 +315,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public override int Name {"), $"was: `{writer.ToString ()}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public override int Name {"), $"was: `{writer.ToString ()}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideProperty_None ()
 		{
 			var xml = @"<api>
@@ -339,10 +340,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This would contain 'virtual' if the 'managedOverride' was not working
-			Assert.True (writer.ToString ().Contains ("public int Name {"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public int Name {"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverrideInterfaceProperty_Reabstract ()
 		{
 			var xml = @"<api>
@@ -364,10 +365,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This would not contain 'abstract' if the 'managedOverride' was not working
-			Assert.True (writer.ToString ().Contains ("abstract int Name {"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("abstract int Name {"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void SkipInvokerMethodsMetadata ()
 		{
 			var xml = @"<api>
@@ -393,11 +394,11 @@ namespace generatortests
 
 			// `override abstract` causes both invoker methods to get generated. We use metadata
 			// to suppress the base class's method to prevent a conflict.
-			Assert.True (writer.ToString ().Contains ("public override abstract Com.Xamarin.Android.MyClass DoStuff ();"), $"was: `{writer}`");
-			Assert.False (writer.ToString ().Contains ("public abstract Com.Xamarin.Android.MyBaseClass DoStuff ();"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("public override abstract Com.Xamarin.Android.MyClass DoStuff ();"), $"was: `{writer}`");
+			Assert.IsFalse (writer.ToString ().Contains ("public abstract Com.Xamarin.Android.MyBaseClass DoStuff ();"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void SkipInterfaceInvokerMethodsMetadata ()
 		{
 			var xml = @"<api>
@@ -419,11 +420,11 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure the invoker for 'countAffectedRows' isn't generated
-			Assert.False (writer.ToString ().Contains ("static Delegate cb_countAffectedRows;"), $"was: `{writer}`");
-			Assert.False (writer.ToString ().Contains ("InvokeAbstractInt32Method"), $"was: `{writer}`");
+			Assert.IsFalse (writer.ToString ().Contains ("static Delegate cb_countAffectedRows;"), $"was: `{writer}`");
+			Assert.IsFalse (writer.ToString ().Contains ("InvokeAbstractInt32Method"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void SkipInterfaceMethodsMetadata ()
 		{
 			var xml = @"<api>
@@ -448,10 +449,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// The abstract method should not get generated because we are suppressing it with 'skipInterfaceMethods'
-			Assert.False (writer.ToString ().Contains ("public abstract int CountAffectedRows ();"), $"was: `{writer}`");
+			Assert.IsFalse (writer.ToString ().Contains ("public abstract int CountAffectedRows ();"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CompatVirtualMethod_Class ()
 		{
 			var xml = @"<api>
@@ -480,8 +481,8 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var generated = writer.ToString ();
-			Assert.True (generated.NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
-			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+			Assert.IsTrue (generated.NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			StringAssert.Contains (generated.NormalizeLineEndings (), """
 				var __result = __rm;
 				global::System.GC.KeepAlive (value);
 				return __result;
@@ -490,18 +491,18 @@ namespace generatortests
 				global::System.GC.KeepAlive (value);
 				throw new Java.Lang.AbstractMethodError (__id);
 			}
-			""".NormalizeLineEndings ()), generated);
-			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+			""".NormalizeLineEndings (), generated);
+			StringAssert.Contains (generated.NormalizeLineEndings (), """
 			}
 			catch (Java.Lang.NoSuchMethodError) {
 				throw new Java.Lang.AbstractMethodError (__id);
 			} finally {
-			""".NormalizeLineEndings ()), generated);
-			Assert.That (generated, Does.Contain ("JNIEnv.DeleteLocalRef (native_value);"));
+			""".NormalizeLineEndings (), generated);
+			StringAssert.Contains (generated, "JNIEnv.DeleteLocalRef (native_value);");
 			Assert.AreEqual (generated.Count (c => c == '{'), generated.Count (c => c == '}'), generated);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void PeerConstructorPartialMethod_Class ()
 		{
 			var xml = @"<api>
@@ -526,10 +527,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("partial void _OnMyClassCreated ();".NormalizeLineEndings ()), $"was: `{writer}`");
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("{ _OnMyClassCreated (); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("partial void _OnMyClassCreated ();".NormalizeLineEndings ()), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("{ _OnMyClassCreated (); }".NormalizeLineEndings ()), $"was: `{writer}`");
 		}
-		[Test]
+		[TestMethodAttribute]
 		public void WriteDuplicateInterfaceEventArgs ()
 		{
 			// If we have 2 methods that would each create the same EventArgs class,
@@ -549,7 +550,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteDuplicateInterfaceEventArgs), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void InheritedInterfaceAsClass ()
 		{
 			// This is a somewhat cheating way to repro a real issue.
@@ -584,10 +585,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.Pass ("WriteType did not NRE");
+			Console.WriteLine ("WriteType did not NRE");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExplicitInterfaceMetadata_InterfaceMethod ()
 		{
 			var xml = @"<api>
@@ -609,10 +610,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure explicit interface was written
-			Assert.True (writer.ToString ().Contains ("int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExplicitInterfaceMetadata_InterfaceProperty ()
 		{
 			var xml = @"<api>
@@ -634,10 +635,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure explicit interface was written
-			Assert.True (writer.ToString ().Contains ("int IHasAge.Age {"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("int IHasAge.Age {"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExplicitInterfaceMetadata_ClassMethod ()
 		{
 			var xml = @"<api>
@@ -659,10 +660,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure explicit interface was written
-			Assert.True (writer.ToString ().Contains ("int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExplicitInterfaceMetadata_ClassProperty ()
 		{
 			var xml = @"<api>
@@ -684,10 +685,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure explicit interface was written
-			Assert.True (writer.ToString ().Contains ("int IHasAge.Age {"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("int IHasAge.Age {"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExplicitInterfaceMetadata_AbstractClassMethod ()
 		{
 			var xml = @"<api>
@@ -709,10 +710,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure explicit interface was written
-			Assert.True (writer.ToString ().Contains ("abstract int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("abstract int IRowCounter.CountAffectedRows ("), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExplicitInterfaceMetadata_AbstractClassProperty ()
 		{
 			var xml = @"<api>
@@ -734,10 +735,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure explicit interface was written
-			Assert.True (writer.ToString ().Contains ("abstract int IHasAge.Age {"), $"was: `{writer}`");
+			Assert.IsTrue (writer.ToString ().Contains ("abstract int IHasAge.Age {"), $"was: `{writer}`");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteBoundMethodAbstractDeclaration ()
 		{
 			var xml = @"<api>
@@ -759,10 +760,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure [Obsolete] was written
-			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is so old!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is so old!\")]"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoletedOSPlatformAttributeSupport ()
 		{
 			var xml = @"<api>
@@ -792,15 +793,15 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// Ensure [ObsoletedOSPlatform] was written
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a class deprecated since 25!\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a field deprecated since 25!\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a constructor deprecated since 25!\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a method deprecated since 25!\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a property getter deprecated since 25!\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a property setter deprecated since 25!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a class deprecated since 25!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a field deprecated since 25!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a constructor deprecated since 25!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a method deprecated since 25!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a property getter deprecated since 25!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\", @\"This is a property setter deprecated since 25!\")]"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoletedOSPlatformAttributeUnneededSupport ()
 		{
 			var xml = @"<api>
@@ -831,21 +832,21 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (24+)
-			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a field deprecated since 0!\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a constructor deprecated since empty string!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a field deprecated since 0!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a constructor deprecated since empty string!\")]"), writer.ToString ());
 
 			// getCount/setCount were deprecated-since 22, which is below MINIMUM_API_LEVEL (24), so they
 			// should use [Obsolete] rather than [ObsoletedOSPlatform] since they have always been obsolete.
-			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"deprecated\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Obsolete (@\"deprecated\")]"), writer.ToString ());
 
 			// This should not have a message because the default "deprecated" message isn't useful
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\")]"), writer.ToString ());
 
 			// This should use [Obsolete] because the 'deprecated-since' attribute could not be parsed
-			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This method has an invalid deprecated-since!\")]"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Contains ("[global::System.Obsolete (@\"This method has an invalid deprecated-since!\")]"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoletedOSPlatformAttributeInterfaceInfrastructureSupport ()
 		{
 			var xml = @"<api>
@@ -875,7 +876,7 @@ namespace generatortests
 			Assert.AreEqual (25, extensions_attribute.Version.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteGetterOnlyProperty ()
 		{
 			var xml = @"<api>
@@ -897,13 +898,13 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use [Obsolete] on the entire property because the getter is obsolete and there is no setter
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual int Count".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsTrue (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual int Count".NormalizeLineEndings ()), writer.ToString ());
 
 			// Ensure we don't write getter attribute
-			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
+			Assert.IsFalse (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoletePropertyGetter ()
 		{
 			var xml = @"<api>
@@ -928,10 +929,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use [Obsolete] on just the property getter since the setter is not obsolete
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
+			Assert.IsTrue (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoletePropertySetter ()
 		{
 			var xml = @"<api>
@@ -956,10 +957,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use [Obsolete] on just the property setter since the getter is not obsolete
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]set"), writer.ToString ());
+			Assert.IsTrue (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]set"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteBothPropertyMethods ()
 		{
 			var xml = @"<api>
@@ -984,11 +985,11 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use [Obsolete] on both property methods because the deprecation messages are different
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"getter_message\")]get"), writer.ToString ());
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"setter_message\")]set"), writer.ToString ());
+			Assert.IsTrue (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"getter_message\")]get"), writer.ToString ());
+			Assert.IsTrue (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"setter_message\")]set"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteEntireProperty ()
 		{
 			var xml = @"<api>
@@ -1013,14 +1014,14 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use [Obsolete] on the entire property because the getter and setter are both obsoleted with the same message
-			Assert.True (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual int Count".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsTrue (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete (@\"deprecated\")]public virtual int Count".NormalizeLineEndings ()), writer.ToString ());
 
 			// Ensure we don't write getter/setter attributes
-			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
-			Assert.False (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]set"), writer.ToString ());
+			Assert.IsFalse (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]get"), writer.ToString ());
+			Assert.IsFalse (StripRegisterAttributes (writer.ToString ()).NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]set"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RestrictToType ()
 		{
 			options.UseRestrictToAttributes = true;
@@ -1042,10 +1043,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use a special [Obsolete] describing the "internal" nature of this API
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this type is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this type is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RestrictToField ()
 		{
 			options.UseRestrictToAttributes = true;
@@ -1069,10 +1070,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use a special [Obsolete] describing the "internal" nature of this API
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RestrictToMethod ()
 		{
 			options.UseRestrictToAttributes = true;
@@ -1096,10 +1097,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use a special [Obsolete] describing the "internal" nature of this API
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RestrictToProperty ()
 		{
 			options.UseRestrictToAttributes = true;
@@ -1126,10 +1127,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// This should use a special [Obsolete] describing the "internal" nature of this API
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void DoNotWriteObsoleteAndRestrictTo ()
 		{
 			options.UseRestrictToAttributes = true;
@@ -1154,12 +1155,12 @@ namespace generatortests
 
 			// This method is both @Deprecated and @RestrictTo. We cannot write 2 [Obsolete] attributes, so
 			// only write the deprecated one.
-			Assert.True (writer.ToString ().Replace (" (@\"deprecated\")", "").NormalizeLineEndings ().Contains ("[global::System.Obsolete]".NormalizeLineEndings ()), writer.ToString ());
-			Assert.False (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().Replace (" (@\"deprecated\")", "").NormalizeLineEndings ().Contains ("[global::System.Obsolete]".NormalizeLineEndings ()), writer.ToString ());
+			Assert.IsFalse (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
 		}
 
-		[Test]
-		[NonParallelizable]     // We are setting a static property on Report
+		[TestMethodAttribute]
+		[DoNotParallelize]     // We are setting a static property on Report
 		public void WarnIfTypeNameMatchesNamespace ()
 		{
 			var @class = new TestClass ("Object", "java.myclass.MyClass");
@@ -1175,11 +1176,11 @@ namespace generatortests
 			Report.OutputDelegate = null;
 
 			// Ensure the warning was raised
-			Assert.True (sb.ToString ().Contains ("warning BG8403"));
+			Assert.IsTrue (sb.ToString ().Contains ("warning BG8403"));
 		}
 
-		[Test]
-		[NonParallelizable]     // We are setting a static property on Report
+		[TestMethodAttribute]
+		[DoNotParallelize]     // We are setting a static property on Report
 		public void DontWarnIfNestedTypeNameMatchesNamespace ()
 		{
 			var @class = new TestClass ("Object", "java.myclass.MyParentClass");
@@ -1196,11 +1197,11 @@ namespace generatortests
 			Report.OutputDelegate = null;
 
 			// The warning should not be raised if the nested type matches enclosing namespace
-			Assert.False (sb.ToString ().Contains ("warning BG8403"));
+			Assert.IsFalse (sb.ToString ().Contains ("warning BG8403"));
 		}
 
 
-		[Test]
+		[TestMethodAttribute]
 		public void AvoidNREOnInvalidBaseMethod ()
 		{
 			// We copy methods from the package-private base class to the public class, however
@@ -1248,7 +1249,7 @@ namespace generatortests
 			Assert.AreEqual (true, base_class.Methods [0].IsValid);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FixupDeprecatedBaseMethods ()
 		{
 			var xml = @"<api>
@@ -1276,7 +1277,7 @@ namespace generatortests
 			Assert.AreEqual ("deprecated", gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").Deprecated);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FixupDeprecatedSinceBaseMethods ()
 		{
 			var xml = @"<api>
@@ -1323,7 +1324,7 @@ namespace generatortests
 			return str;
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteClassPeerMembers ()
 		{
 			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
@@ -1336,11 +1337,11 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
-			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
+			Assert.IsTrue (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.IsFalse (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteFinalClassPeerMembers ()
 		{
 			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
@@ -1354,11 +1355,11 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
-			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
+			Assert.IsTrue (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.IsFalse (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void SupportedOSPlatform ()
 		{
 			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
@@ -1368,10 +1369,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+			StringAssert.Contains (builder.ToString (), "[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", "Should contain SupportedOSPlatform!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void SupportedOSPlatformConstFields ()
 		{
 			// Ensure we write [SupportedOSPlatform] for const fields
@@ -1386,18 +1387,18 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+			StringAssert.Contains (builder.ToString (), "[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", "Should contain SupportedOSPlatform!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		// CodeGenerationOptions.MinimumApiLevel defaults to 24 (matches $(AndroidMinimumDotNetApiLevel)
 		// in Configuration.props), so there's no sense writing [SupportedOSPlatform] for an API
 		// available at or below that floor: it's available in every version we support. Only API
 		// levels above the floor need it.
-		[TestCase (22, false)]
-		[TestCase (23, false)]
-		[TestCase (24, false)]
-		[TestCase (25, true)]
+		[DataRow (22, false)]
+		[DataRow (23, false)]
+		[DataRow (24, false)]
+		[DataRow (25, true)]
 		public void SupportedOSPlatformOmittedAtOrBelowMinimumApiLevel (int apiLevel, bool expectAttribute)
 		{
 			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
@@ -1410,18 +1411,18 @@ namespace generatortests
 			var attribute = $"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{apiLevel}.0\")]";
 
 			if (expectAttribute)
-				StringAssert.Contains (attribute, builder.ToString (), $"Should contain SupportedOSPlatform for android{apiLevel}!");
+				StringAssert.Contains (builder.ToString (), attribute, $"Should contain SupportedOSPlatform for android{apiLevel}!");
 			else
-				StringAssert.DoesNotContain (attribute, builder.ToString (), $"Should NOT contain SupportedOSPlatform for android{apiLevel}!");
+				Assert.DoesNotContain (attribute, builder.ToString (), StringComparison.Ordinal, $"Should NOT contain SupportedOSPlatform for android{apiLevel}!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		// Confirms MinimumApiLevel is actually wired through, not just defaulted: overriding it to a
 		// non-default value moves the floor below which [SupportedOSPlatform] is omitted.
-		[TestCase (21, 22, true)]
-		[TestCase (21, 21, false)]
-		[TestCase (30, 25, false)]
-		[TestCase (30, 31, true)]
+		[DataRow (21, 22, true)]
+		[DataRow (21, 21, false)]
+		[DataRow (30, 25, false)]
+		[DataRow (30, 31, true)]
 		public void SupportedOSPlatformRespectsMinimumApiLevelOverride (int minimumApiLevel, int apiLevel, bool expectAttribute)
 		{
 			options.MinimumApiLevel = minimumApiLevel;
@@ -1436,12 +1437,12 @@ namespace generatortests
 			var attribute = $"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{apiLevel}.0\")]";
 
 			if (expectAttribute)
-				StringAssert.Contains (attribute, builder.ToString (), $"Should contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
+				StringAssert.Contains (builder.ToString (), attribute, $"Should contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
 			else
-				StringAssert.DoesNotContain (attribute, builder.ToString (), $"Should NOT contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
+				Assert.DoesNotContain (attribute, builder.ToString (), StringComparison.Ordinal, $"Should NOT contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void UnsupportedOSPlatform ()
 		{
 			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
@@ -1451,10 +1452,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			StringAssert.Contains ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain UnsupportedOSPlatform!");
+			StringAssert.Contains (builder.ToString (), "[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", "Should contain UnsupportedOSPlatform!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void UnsupportedOSPlatformConstFields ()
 		{
 			var klass = new TestClass ("java.lang.Object", "com.mypackage.foo");
@@ -1468,11 +1469,11 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			StringAssert.Contains ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain UnsupportedOSPlatform!");
+			StringAssert.Contains (builder.ToString (), "[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", "Should contain UnsupportedOSPlatform!");
 		}
 
 
-		[Test]
+		[TestMethodAttribute]
 		public void UnsupportedOSPlatformIgnoresMethodOverrides ()
 		{
 			// Given:
@@ -1523,15 +1524,15 @@ namespace generatortests
 			// Test class inheritance scenario
 			var klass = gens.Single (g => g.Name == "TextView2");
 			var actual = GetGeneratedTypeOutput (klass);
-			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, "Should not contain UnsupportedOSPlatform on class override!");
+			Assert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, StringComparison.Ordinal, "Should not contain UnsupportedOSPlatform on class override!");
 
 			// Test interface inheritance scenario  
 			var iface = gens.OfType<InterfaceGen> ().Single (g => g.Name == "IBar");
 			var ifaceActual = GetGeneratedTypeOutput (iface);
-			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", ifaceActual, "Should not contain UnsupportedOSPlatform on interface override!");
+			Assert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", ifaceActual, StringComparison.Ordinal, "Should not contain UnsupportedOSPlatform on interface override!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void UnsupportedOSPlatformIgnoresPropertyOverrides ()
 		{
 			// Given:
@@ -1590,15 +1591,15 @@ namespace generatortests
 			// Test class inheritance scenario
 			var klass = gens.Single (g => g.Name == "TextView2");
 			var actual = GetGeneratedTypeOutput (klass);
-			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, "Should not contain UnsupportedOSPlatform on class property override!");
+			Assert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, StringComparison.Ordinal, "Should not contain UnsupportedOSPlatform on class property override!");
 
 			// Test interface inheritance scenario  
 			var iface = gens.OfType<InterfaceGen> ().Single (g => g.Name == "IExtendedProvider");
 			var ifaceActual = GetGeneratedTypeOutput (iface);
-			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", ifaceActual, "Should not contain UnsupportedOSPlatform on interface property override!");
+			Assert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", ifaceActual, StringComparison.Ordinal, "Should not contain UnsupportedOSPlatform on interface property override!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void UnsupportedOSPlatformIgnoresPropertySetterMovedToStandaloneBaseMethod ()
 		{
 			var xml = @$"<api>
@@ -1626,12 +1627,12 @@ namespace generatortests
 			var actual = GetGeneratedTypeOutput (klass);
 
 			Assert.IsNotNull (property.Setter, "The removed setter must be tested as a property accessor.");
-			StringAssert.Contains ("public virtual Java.Lang.Object Value {", actual);
-			StringAssert.Contains ("set {", actual);
-			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
+			StringAssert.Contains (actual, "public virtual Java.Lang.Object Value {");
+			StringAssert.Contains (actual, "set {");
+			Assert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual, StringComparison.Ordinal);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void UnsupportedOSPlatformIgnoresSpecializedGenericBasePropertySetter ()
 		{
 			var xml = @$"<api>
@@ -1671,11 +1672,11 @@ namespace generatortests
 			var actual = GetGeneratedTypeOutput (klass);
 
 			Assert.IsNotNull (property.Setter, "The specialized setter must be tested as a property accessor.");
-			StringAssert.Contains ("set {", actual);
-			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
+			StringAssert.Contains (actual, "set {");
+			Assert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual, StringComparison.Ordinal);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void UnsupportedOSPlatformPreservesPropertySetterForDifferentGenericBaseParameter ()
 		{
 			var xml = @$"<api>
@@ -1711,12 +1712,13 @@ namespace generatortests
 
 			Assert.IsTrue (baseSetter.Parameters [0].IsGeneric, $"Expected a concrete generic parameter, but found {baseSetter.Parameters [0].Symbol.GetType ().FullName}.");
 			Assert.IsNotNull (property.Setter, "The removed setter must be tested as a property accessor.");
-			StringAssert.Contains ("set {", actual);
-			StringAssert.Contains ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
+			StringAssert.Contains (actual, "set {");
+			StringAssert.Contains (actual, "[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]");
 		}
 
-		[Test]
-		public void StringPropertyOverride ([Values ("true", "false")] string final)
+		[TestMethodAttribute]
+		[CombinatorialData]
+		public void StringPropertyOverride ([CombinatorialValues ("true", "false")] string final)
 		{
 			var xml = @$"<api>
 			  <package name='java.lang' jni-name='java/lang'>
@@ -1745,7 +1747,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			if (final == "true") {
-				Assert.True (writer.ToString ().Contains (
+				Assert.IsTrue (writer.ToString ().Contains (
 		@"set {
 			const string __id = ""setText.(Ljava/lang/CharSequence;)V"";
 			global::Java.Interop.JniObjectReference native_text = global::Java.Interop.JniEnvironment.Strings.NewString (value);
@@ -1761,7 +1763,7 @@ namespace generatortests
 			}
 		}"), $"was: `{writer}`");
 			} else {
-				Assert.True (writer.ToString ().Contains (
+				Assert.IsTrue (writer.ToString ().Contains (
 		@"set {
 			global::Java.Lang.String jls;
 			unsafe {
@@ -1774,7 +1776,7 @@ namespace generatortests
 			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CallbackVariableNamesShouldntCollide ()
 		{
 			var xml = @"<api>
@@ -1811,7 +1813,7 @@ namespace generatortests
 
 	abstract class CodeGeneratorTests : CodeGeneratorTestBase
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void WriteClass ()
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
@@ -1823,7 +1825,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteClass), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteObjectField ()
 		{
 			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
@@ -1843,7 +1845,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteObjectField), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteInterface ()
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
@@ -1856,7 +1858,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteInterface), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteMethodWithCharSequenceArrays ()
 		{
 			var gens = ParseApiDefinition (@"<api>
@@ -1883,7 +1885,7 @@ namespace generatortests
 			AssertOriginalTargetExpected (nameof (WriteMethodWithCharSequenceArrays), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WritePropertyExplicitInterfaceParameterName ()
 		{
 			// Fix a case where we were not overriding a property setter's parameter name ("p0")
@@ -1929,10 +1931,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.False (result.Contains ("p0"));
+			Assert.IsFalse (result.Contains ("p0"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteBoundMethodAbstractDeclarationWithGenericReturn ()
 		{
 			// Fix a case where the ReturnType of a class method implementing a generic interface method

@@ -1,12 +1,12 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class Android_Graphics_Color : BaseGeneratorTest
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratedOK ()
 		{
 			RunTarget (
