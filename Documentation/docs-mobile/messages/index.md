@@ -317,7 +317,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CGJ` - `CopyGeneratedJavaResourceClasses`
 * `CIC` - `CopyIfChanged`
 * `CLC` - `CalculateLayoutCodeBehind`
-* `CLP` - `ClassParse`
 * `CLR` - `CreateLibraryResourceArchive`
 * `CMD` - `CreateMultiDexMainDexClassList`
 * `CML` - `CreateManagedLibraryResourceArchive`
