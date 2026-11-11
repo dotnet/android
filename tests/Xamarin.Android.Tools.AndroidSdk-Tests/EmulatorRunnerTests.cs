@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -94,7 +95,7 @@ public class EmulatorRunnerTests
 			startInfo.WorkingDirectory = Path.GetTempPath ();
 			startInfo.EnvironmentVariables ["EMULATOR_TEST_VALUE"] = "changed";
 
-			CollectionAssert.AreEqual (new [] { "TestAVD" }, await runner.ListAvdNamesAsync ());
+			CollectionAssert.AreEqual (new [] { "TestAVD" }, (await runner.ListAvdNamesAsync ()).ToArray ());
 			CollectionAssert.AreEqual (new [] { "original", "" }, File.ReadAllLines (marker));
 			File.Delete (marker);
 
@@ -121,7 +122,7 @@ public class EmulatorRunnerTests
 			var inheritedValue = Environment.GetEnvironmentVariable (OS.IsWindows ? "USERNAME" : "HOME") ?? "";
 			var expected = new [] { "override", inheritedValue };
 
-			CollectionAssert.AreEqual (new [] { "TestAVD" }, await runner.ListAvdNamesAsync ());
+			CollectionAssert.AreEqual (new [] { "TestAVD" }, (await runner.ListAvdNamesAsync ()).ToArray ());
 			CollectionAssert.AreEqual (expected, File.ReadAllLines (marker));
 			File.Delete (marker);
 

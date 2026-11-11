@@ -66,10 +66,10 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 		}
 
 		[TestMethod]
-		[DataRow (4, 0)]
-		[DataRow (4, 3)]
-		[DataRow (6, 0)]
-		[DataRow (6, 7)]
+		[DataRow ((byte) 4, 0)]
+		[DataRow ((byte) 4, 3)]
+		[DataRow ((byte) 6, 0)]
+		[DataRow ((byte) 6, 7)]
 		public void TruncatedFloatingPointThrowsBadImageFormatException (byte tag, int availableBytes)
 		{
 			var stream = CreatePool (tag, new byte [availableBytes], constantPoolCount: tag == 6 ? (ushort) 3 : (ushort) 2);

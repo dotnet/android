@@ -240,6 +240,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (waiter.Execute ());
 			Assert.IsTrue (File.Exists (detection.Flag));
 			var failure = messages.Single (m => m.Message?.StartsWith ("DetectIfAppWasUninstalled failed with", StringComparison.Ordinal) == true);
+			Assert.IsNotNull (failure.Message);
 			Assert.Contains ("Package manager unavailable", failure.Message);
 			Assert.Contains (Path.Combine (detection.Directory, "temp"),
 				File.ReadAllText (Path.Combine (detection.Directory, "query-directory")).Trim ());
