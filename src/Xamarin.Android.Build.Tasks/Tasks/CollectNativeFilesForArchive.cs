@@ -46,7 +46,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	public bool IncludeWrapSh { get; set; }
 
-	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
+	public int ZipAlignmentPages { get; set; } = 16;
 
 	[Required]
 	public string IntermediateOutputPath { get; set; } = "";

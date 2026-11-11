@@ -21,7 +21,6 @@ ms.date: 04/11/2024
 + [ANDAS0000](andas0000.md): Generic `apksigner` error/warning.
 + [ANDJS0000](andjs0000.md): Generic `jarsigner` error/warning.
 + [ANDKT0000](andkt0000.md): Generic `keytool` error/warning.
-+ [ANDZA0000](andza0000.md): Generic `zipalign` error/warning.
 
 ## APTxxxx: AAPT tooling
 
@@ -303,7 +302,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `AOT` - `Aot`
 * `APT` - `Aapt`
 * `ASP` - `AndroidSignPackage`
-* `AZA` - `AndroidZipAlign`
 * `BAB` - `BuildAppBundle`
 * `BAS` - `BuildApkSet`
 * `BBA` - `BuildBaseAppBundle`

@@ -24,7 +24,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidError" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidMessage" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidWarning" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.AndroidZipAlign" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AppendCustomMetadataToItemGroup" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AssemblyModifierPipeline" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2363,6 +2362,11 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareForSign">
+  <PropertyGroup>
+    <_AndroidZipAlignToolExe Condition=" '$(OS)' == 'Windows_NT' ">zipalign.exe</_AndroidZipAlignToolExe>
+    <_AndroidZipAlignToolExe Condition=" '$(OS)' != 'Windows_NT' ">zipalign</_AndroidZipAlignToolExe>
+    <_AndroidZipAlignCommand>&quot;$([System.IO.Path]::Combine('$(ZipAlignToolPath)', $([MSBuild]::ValueOrDefault('$(ZipalignToolExe)', '$(_AndroidZipAlignToolExe)'))))&quot;</_AndroidZipAlignCommand>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_SignInputs>
       @(_AndroidMSBuildAllProjects);
@@ -2418,12 +2422,9 @@ because xbuild doesn't support framework reference assemblies.
 		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' == 'true' " Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
 	</ItemGroup>
 	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
-	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' == 'true' "
-		Source="%(ApkAbiFilesIntermediate.Identity)"
-		Alignment="$(AndroidZipAlignment)"
-		DestinationDirectory="$(OutDir)"
-		ToolPath="$(ZipAlignToolPath)"
-		ToolExe="$(ZipalignToolExe)"
+	<Exec Condition=" '$(AndroidUseApkSigner)' == 'true' "
+		Command="$(_AndroidZipAlignCommand) -p $(AndroidZipAlignment) &quot;%(ApkAbiFilesIntermediate.Identity)&quot; &quot;$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)@(ApkAbiFilesIntermediate->'$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')&quot;"
+		StandardOutputImportance="Low"
 	/>
 	<ItemGroup>
 		<ApkAbiFilesAligned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' == 'true'" />
@@ -2457,12 +2458,9 @@ because xbuild doesn't support framework reference assemblies.
 		<ApkAbiFilesUnaligned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" />
 	</ItemGroup>
 	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "/>
-	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "
-		Source="%(ApkAbiFilesUnaligned.Identity)"
-		Alignment="$(AndroidZipAlignment)"
-		DestinationDirectory="$(OutDir)"
-		ToolPath="$(ZipAlignToolPath)"
-		ToolExe="$(ZipalignToolExe)"
+	<Exec Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "
+		Command="$(_AndroidZipAlignCommand) -p $(AndroidZipAlignment) &quot;%(ApkAbiFilesUnaligned.Identity)&quot; &quot;$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)@(ApkAbiFilesUnaligned->'$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')&quot;"
+		StandardOutputImportance="Low"
 	/>
 	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)" />
 </Target>
