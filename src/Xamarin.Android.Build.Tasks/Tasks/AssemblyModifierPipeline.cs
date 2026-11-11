@@ -32,9 +32,6 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	public bool Deterministic { get; set; }
 
-	// Retained for task compatibility; assembly modification no longer generates Java names.
-	public string? PackageNamingPolicy { get; set; }
-
 	/// <summary>
 	/// Defaults to false, enables Mono.Cecil to load symbols
 	/// </summary>
