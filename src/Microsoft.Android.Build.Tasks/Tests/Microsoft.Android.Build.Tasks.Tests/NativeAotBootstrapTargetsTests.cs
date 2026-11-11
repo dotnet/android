@@ -317,37 +317,68 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		FileAssert.Exists (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_9.java"), "An added provider must be generated on an incremental build.");
 	}
 
-	[TestCase ("missing")]
-	[TestCase ("malformed")]
-	[TestCase ("internal-dtd")]
-	[TestCase ("external-dtd")]
-	public void ProviderManifestErrorsFailTheBuild (string input)
+	[Test]
+	public void MissingProviderManifestFailsTheBuild ()
+	{
+		AssertProviderManifestError (null);
+	}
+
+	[Test]
+	public void MalformedProviderManifestFailsTheBuild ()
+	{
+		AssertProviderManifestError ("<manifest>");
+	}
+
+	[Test]
+	public void ProviderManifestWithInternalDtdFailsTheBuild ()
+	{
+		AssertProviderManifestError ("""<!DOCTYPE manifest [<!ENTITY value "123">]><manifest>&value;</manifest>""");
+	}
+
+	[Test]
+	public void ProviderManifestWithExternalDtdFailsTheBuild ()
+	{
+		string path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		string dtd = Path.Combine (path, "external.dtd");
+		try {
+			File.WriteAllText (dtd, "<!ELEMENT manifest ANY>");
+			AssertProviderManifestError ($"""
+				<!DOCTYPE manifest SYSTEM "{new Uri (dtd).AbsoluteUri}">
+				<manifest />
+				""");
+		} finally {
+			File.Delete (dtd);
+		}
+	}
+
+	void AssertProviderManifestError (string? manifest)
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
 		string manifestFile = Path.Combine (path, "AndroidManifest.xml");
-		switch (input) {
-			case "missing":
-				break;
-			case "malformed":
-				File.WriteAllText (manifestFile, "<manifest>");
-				break;
-			case "internal-dtd":
-				File.WriteAllText (manifestFile, """<!DOCTYPE manifest [<!ENTITY value "123">]><manifest>&value;</manifest>""");
-				break;
-			case "external-dtd":
-				string dtd = Path.Combine (path, "external.dtd");
-				File.WriteAllText (dtd, "<!ELEMENT manifest ANY>");
-				File.WriteAllText (manifestFile, $"""
-					<!DOCTYPE manifest SYSTEM "{new Uri (dtd).AbsoluteUri}">
-					<manifest />
-					""");
-				break;
-			default:
-				throw new ArgumentOutOfRangeException (nameof (input));
+		string projectFile = Path.Combine (path, "bootstrap.proj");
+		string inputsFile = Path.Combine (path, "nativeaot-bootstrap.inputs");
+		try {
+			WriteProviderManifestProject (path, manifest);
+			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
+			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_AndroidGenerateNativeAotBootstrapSourcesInputs", "-v:quiet", "-nr:false");
+			Assert.AreNotEqual (0, result.ExitCode, result.Output + result.Error);
+			StringAssert.Contains ("MSB3733", result.Output + result.Error);
+			FileAssert.DoesNotExist (inputsFile);
+		} finally {
+			File.Delete (manifestFile);
+			File.Delete (projectFile);
+			File.Delete (inputsFile);
+		}
+	}
+
+	static void WriteProviderManifestProject (string path, string? manifest)
+	{
+		if (manifest != null) {
+			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), manifest);
 		}
 
-		string projectFile = Path.Combine (path, "bootstrap.proj");
 		new XDocument (
 			new XElement ("Project",
 				new XElement ("PropertyGroup",
@@ -357,11 +388,6 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 				new XElement ("Import", new XAttribute ("Project", TargetsPath)),
 				new XElement ("Target", new XAttribute ("Name", "_GenerateJavaStubs")),
 				new XElement ("Target", new XAttribute ("Name", "_GetGenerateJavaStubsInputs"))))
-			.Save (projectFile);
-		string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
-		var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_AndroidGenerateNativeAotBootstrapSourcesInputs", "-v:quiet", "-nr:false");
-		Assert.AreNotEqual (0, result.ExitCode, result.Output + result.Error);
-		StringAssert.Contains ("MSB3733", result.Output + result.Error);
-		FileAssert.DoesNotExist (Path.Combine (path, "nativeaot-bootstrap.inputs"));
+			.Save (Path.Combine (path, "bootstrap.proj"));
 	}
 }
