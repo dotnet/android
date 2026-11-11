@@ -230,8 +230,9 @@ public class AndroidSdkInstallerTests
 		}
 	}
 
-	[Test]
-	public void UnzipPreservesContentsTimestampsAndPermissions ()
+	[TestCase (false)]
+	[TestCase (true)]
+	public void UnzipPreservesContentsTimestampsAndPermissions (bool dosAttributes)
 	{
 		using var temp = new TempDirectory ();
 		var timestamp = new DateTime (2024, 5, 6, 7, 8, 10, DateTimeKind.Local);
@@ -247,6 +248,12 @@ public class AndroidSdkInstallerTests
 			}
 		}
 
+		// -1 contains the DOS directory bit, so associate it only with Unix creator metadata.
+		byte [] archive = File.ReadAllBytes (temp.ZipPath);
+		archive = dosAttributes
+			? SetDosAttributes (archive, "pkg/unspecified", (uint) FileAttributes.Normal)
+			: SetUnixAttributes (archive, "pkg/unspecified", uint.MaxValue);
+		File.WriteAllBytes (temp.ZipPath, archive);
 		temp.Unzip ();
 
 		Assert.IsTrue (Directory.Exists (Path.Combine (temp.OutPath, "pkg", "bin")));
@@ -565,6 +572,12 @@ public class AndroidSdkInstallerTests
 	}
 
 	static byte [] SetDosAttributes (byte [] archive, string entryName, uint attributes)
+		=> SetAttributes (archive, entryName, attributes, 0);
+
+	static byte [] SetUnixAttributes (byte [] archive, string entryName, uint attributes)
+		=> SetAttributes (archive, entryName, attributes, 3);
+
+	static byte [] SetAttributes (byte [] archive, string entryName, uint attributes, int hostSystem)
 	{
 		int endOfCentralDirectory = FindSignature (archive, 0x06054b50);
 		int centralDirectoryOffset = checked ((int) ReadUInt32 (archive, endOfCentralDirectory + 16));
@@ -574,7 +587,7 @@ public class AndroidSdkInstallerTests
 			int commentLength = ReadUInt16 (archive, centralDirectoryOffset + 32);
 			if (Encoding.ASCII.GetString (archive, centralDirectoryOffset + 46, nameLength) == entryName) {
 				var updatedArchive = (byte []) archive.Clone ();
-				WriteUInt16 (updatedArchive, centralDirectoryOffset + 4, (ushort) (ReadUInt16 (archive, centralDirectoryOffset + 4) & 0x00ff));
+				WriteUInt16 (updatedArchive, centralDirectoryOffset + 4, (ushort) ((ReadUInt16 (archive, centralDirectoryOffset + 4) & 0x00ff) | (hostSystem << 8)));
 				WriteUInt32 (updatedArchive, centralDirectoryOffset + 38, attributes);
 				return updatedArchive;
 			}
