@@ -13,6 +13,6 @@
     <Compile Include="AndroidTestAssert.cs" />
     <Compile Include="MSTestInstrumentation.cs" />
     <Compile Include="..\..\src\Microsoft.Android.Run\InstrumentationProtocol.cs" Link="InstrumentationProtocol.cs" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" Publish="true" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportPackageVersion)" PrivateAssets="all" Publish="true" />
   </ItemGroup>
 </Project>
