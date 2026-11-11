@@ -100,23 +100,23 @@ This file contains targets specific for Android application projects.
       BeforeTargets="ComputeRunArguments"
       DependsOnTargets="$(_AndroidComputeRunArgumentsDependsOn)">
     <!--
-      Read the first <instrumentation> element, and separately its android:name, so that a
-      nameless element (XA1042) can be told apart from a missing one (XA1048/XA1043).
+      Read the first <instrumentation>'s android:name. If there is none, read the element itself
+      so that a nameless element (XA1042) can be told apart from a missing one (XA1048/XA1043).
     -->
     <XmlPeek
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' "
-        XmlInputPath="$(IntermediateOutputPath)android\AndroidManifest.xml"
-        Query="/manifest/instrumentation[1]"
-        ProhibitDtd="true">
-      <Output TaskParameter="Result" PropertyName="_AndroidInstrumentationElement" />
-    </XmlPeek>
-    <XmlPeek
-        Condition=" '$(_AndroidInstrumentationElement)' != '' "
         XmlInputPath="$(IntermediateOutputPath)android\AndroidManifest.xml"
         Namespaces="&lt;Namespace Prefix='android' Uri='http://schemas.android.com/apk/res/android' /&gt;"
         Query="/manifest/instrumentation[1]/@android:name"
         ProhibitDtd="true">
       <Output TaskParameter="Result" PropertyName="_AndroidInstrumentationName" />
+    </XmlPeek>
+    <XmlPeek
+        Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(_AndroidInstrumentationName)' == '' "
+        XmlInputPath="$(IntermediateOutputPath)android\AndroidManifest.xml"
+        Query="/manifest/instrumentation[1]"
+        ProhibitDtd="true">
+      <Output TaskParameter="Result" PropertyName="_AndroidInstrumentationElement" />
     </XmlPeek>
     <!--
       $(AndroidUseInstrumentation) apps launch through their <instrumentation>, even if they
