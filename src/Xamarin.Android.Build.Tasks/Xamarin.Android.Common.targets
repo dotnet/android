@@ -2706,11 +2706,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_DeployApk"
-    Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-  <Exec
-      Command="&quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;"
-      StandardOutputImportance="Low"
-  />
+    Condition=" '$(AndroidPackageFormat)' != 'aab' "
+    DependsOnTargets="_AndroidAdbToolPath">
+  <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="_BuildApkSet"
@@ -2789,11 +2787,9 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="$(InstallDependsOnTargets)">
 </Target>
 
-<Target Name="_Uninstall">
-  <Exec
-      Command="&quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(AdbTarget) uninstall $(_AndroidPackage)"
-      StandardOutputImportance="Low"
-  />
+<Target Name="_Uninstall"
+    DependsOnTargets="_AndroidAdbToolPath">
+  <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) uninstall $(_AndroidPackage)" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="Uninstall"
