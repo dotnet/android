@@ -5,17 +5,18 @@ using Android.Content;
 using Android.Runtime;
 using Android.Views;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.LangTests {
 
-	[TestFixture]
+	[TestClass]
 	public class ObjectArrayMarshaling {
 
-		[TestCase (0, false)]
-		[TestCase (2, false)]
-		[TestCase (0, true)]
-		[TestCase (2, true)]
+		[TestMethod]
+		[DataRow (0, false)]
+		[DataRow (2, false)]
+		[DataRow (0, true)]
+		[DataRow (2, true)]
 		public void GetArrayPreservesPrimitiveArrayConversions (int length, bool generic)
 		{
 			Array[] sources = [
@@ -39,8 +40,9 @@ namespace Java.LangTests {
 			}
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArrayBoxesPrimitiveElementsForManagedInterfaces (int length)
 		{
 			var values = new int [length];
@@ -50,34 +52,36 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (values, array.ToArray<IConvertible> ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArrayRejectsNonArrayForBoxingDestinations ()
 		{
 			using var value = new Java.Lang.String ("not an array");
-			Assert.Throws<InvalidCastException> (() => value.ToArray<object> ());
-			Assert.Throws<InvalidCastException> (() => value.ToArray<IConvertible> ());
-			Assert.Throws<InvalidCastException> (() => JNIEnv.GetArray (
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<object> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<IConvertible> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => JNIEnv.GetArray (
 				value.Handle, JniHandleOwnership.DoNotTransfer, typeof (object)));
-			Assert.Throws<InvalidCastException> (() => JNIEnv.GetArray (
+			Assert.ThrowsExactly<InvalidCastException> (() => JNIEnv.GetArray (
 				value.Handle, JniHandleOwnership.DoNotTransfer));
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void GetArrayKeepsPrimitiveKindChecksForBoxingSources (int length)
 		{
 			using var array = new Java.Lang.Object (
 				JNIEnv.NewArray (new int [length]), JniHandleOwnership.TransferLocalRef);
-			Assert.Throws<InvalidCastException> (() => array.ToArray<long> ());
-			Assert.Throws<InvalidCastException> (() => array.ToArray<string> ());
-			Assert.Throws<InvalidCastException> (() => array.ToArray<Java.Lang.String> ());
-			Assert.Throws<InvalidCastException> (() => array.ToArray<Java.Lang.Object> ());
-			Assert.Throws<InvalidCastException> (() => JNIEnv.GetArray (
+			Assert.ThrowsExactly<InvalidCastException> (() => array.ToArray<long> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => array.ToArray<string> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => array.ToArray<Java.Lang.String> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => array.ToArray<Java.Lang.Object> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => JNIEnv.GetArray (
 				array.Handle, JniHandleOwnership.DoNotTransfer, typeof (string)));
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArrayConvertsObjectArrayToManagedStrings (int length)
 		{
 			using var value = new Java.Lang.String ("value");
@@ -93,8 +97,9 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (expected, array.ToArray<string> ());
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArrayConvertsObjectArrayToJavaStrings (int length)
 		{
 			using var value = new Java.Lang.String ("value");
@@ -115,7 +120,7 @@ namespace Java.LangTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToArrayPreservesNullObjectArrayElements ()
 		{
 			using var array = new Java.Lang.Object (
@@ -124,25 +129,27 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (new Java.Lang.String [1], array.ToArray<Java.Lang.String> ());
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ToArrayRejectsNonStringObjectArrayElements (bool javaStrings)
 		{
 			using var value = Java.Lang.Integer.ValueOf (42);
 			using var array = new Java.Lang.Object (
 				JNIEnv.NewArray (new Java.Lang.Object [] { value }), JniHandleOwnership.TransferLocalRef);
-			TestDelegate convert = javaStrings
+			Action convert = javaStrings
 				? () => array.ToArray<Java.Lang.String> ()
 				: () => array.ToArray<string> ();
-			Assert.Throws<InvalidCastException> (convert);
+			Assert.ThrowsExactly<InvalidCastException> (convert);
 			int localReferences = Java.Interop.Runtime.LocalReferenceCount;
 			for (int i = 0; i < 4; i++)
-				Assert.Throws<InvalidCastException> (convert);
+				Assert.ThrowsExactly<InvalidCastException> (convert);
 			Assert.AreEqual (localReferences, Java.Interop.Runtime.LocalReferenceCount);
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArrayConvertsNestedObjectArrayStrings (int length)
 		{
 			using var value = new Java.Lang.String ("value");
@@ -157,46 +164,48 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (expected, array.ToArray<string[]> ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToArrayRejectsNonArrayObjectArrayElements ()
 		{
 			using var value = new Java.Lang.String ("not an array");
 			using var array = new Java.Lang.Object (
 				JNIEnv.NewArray (new Java.Lang.Object [] { value }), JniHandleOwnership.TransferLocalRef);
-			Assert.Throws<InvalidCastException> (() => array.ToArray<string[]> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => array.ToArray<string[]> ());
 		}
 
-		[Test]
-		[Category ("JniSafetyPreparation")]
+		[TestMethod]
+		[TestCategory ("JniSafetyPreparation")]
 		public void ToArrayRejectsNonArrayBeforeNativeArrayAccess ()
 		{
 			using var value = new Java.Lang.String ("not an array");
-			Assert.Throws<InvalidCastException> (() => value.ToArray<string> ());
-			Assert.Throws<InvalidCastException> (() => value.ToArray<Java.Lang.Object> ());
-			Assert.Throws<InvalidCastException> (() => value.ToArray<IJavaObject> ());
-			Assert.Throws<InvalidCastException> (() => value.ToArray<Array> ());
-			Assert.Throws<InvalidCastException> (() => value.ToArray<IJavaObject[]> ());
-			Assert.Throws<InvalidCastException> (() => value.ToArray<Array[]> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<string> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<Java.Lang.Object> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<IJavaObject> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<Array> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<IJavaObject[]> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => value.ToArray<Array[]> ());
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
-		[Category ("JniSafetyPreparation")]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
+		[TestCategory ("JniSafetyPreparation")]
 		public void ToArrayRejectsWrongReferenceArrayKind (int length)
 		{
 			using var primitiveArray = new Java.Lang.Object (
 				JNIEnv.NewArray (new int [length]), JniHandleOwnership.TransferLocalRef);
-			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<string> ());
-			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<Java.Lang.Object> ());
-			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<IJavaObject> ());
-			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<Array> ());
-			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<IJavaObject[]> ());
-			Assert.Throws<InvalidCastException> (() => primitiveArray.ToArray<Array[]> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<string> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<Java.Lang.Object> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<IJavaObject> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<Array> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<IJavaObject[]> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<Array[]> ());
 			CollectionAssert.AreEqual (new int [length], primitiveArray.ToArray<int> ());
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArraySupportsIJavaObjectElements (int length)
 		{
 			using var value = new Java.Lang.String ("value");
@@ -208,8 +217,9 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (values, array.ToArray<IJavaObject> ());
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArraySupportsJaggedIJavaObjectElements (int length)
 		{
 			using var value = new Java.Lang.String ("value");
@@ -221,8 +231,9 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (values, array.ToArray<IJavaObject[]> ());
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArraySupportsSystemArrayElements (int length)
 		{
 			var values = new int [length][];
@@ -233,8 +244,9 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (values, array.ToArray<Array> ());
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArraySupportsJaggedSystemArrayElements (int length)
 		{
 			var values = new int [length][][];
@@ -245,8 +257,9 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (values, array.ToArray<Array[]> ());
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void ToArrayPreservesNullManagedOnlyArrayElements (int length)
 		{
 			using var array = new Java.Lang.Object (
@@ -255,22 +268,22 @@ namespace Java.LangTests {
 			CollectionAssert.AreEqual (new Array [length][], array.ToArray<Array[]> ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToArrayRejectsNonArrayManagedOnlyArrayElements ()
 		{
 			using var value = new Java.Lang.String ("not an array");
 			using var array = new Java.Lang.Object (
 				JNIEnv.NewArray (new Java.Lang.Object [] { value }), JniHandleOwnership.TransferLocalRef);
-			Assert.Throws<InvalidCastException> (() => array.ToArray<IJavaObject[]> ());
-			Assert.Throws<InvalidCastException> (() => array.ToArray<Array[]> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => array.ToArray<IJavaObject[]> ());
+			Assert.ThrowsExactly<InvalidCastException> (() => array.ToArray<Array[]> ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void CastJavaLangObjectArrayToByteArrayThrows ()
 		{
 			using (var objectArray = new Java.Lang.Object (JNIEnv.NewArray (
 						new Java.Lang.Object[]{new byte[]{0x1, 0x2, 0x3}}), JniHandleOwnership.TransferLocalRef)) {
-				Assert.Throws (typeof (InvalidCastException), () => {
+				Assert.ThrowsExactly<InvalidCastException> (() => {
 #pragma warning disable 219
 						var ignore = (byte[]) objectArray;
 #pragma warning restore 219
@@ -278,7 +291,7 @@ namespace Java.LangTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CastJavaLangObjectToJavaLangObjectArray ()
 		{
 			using (var objectArray = new Java.Lang.Object (JNIEnv.NewArray (
@@ -288,7 +301,7 @@ namespace Java.LangTests {
 				Assert.AreEqual (1, values.Length);
 				using (var dataObject = values [0]) {
 					byte[] data = (byte[]) dataObject;
-					Assert.AreEqual (new byte[]{1, 2, 3}, data);
+					CollectionAssert.AreEqual (new byte[]{1, 2, 3}, data);
 				}
 			}
 		}

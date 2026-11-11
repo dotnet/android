@@ -4,16 +4,17 @@ using System;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniTypeUtf8Test {
 
 		const string JniReferenceLeakCategory = "JniReferenceLeak";
+		public TestContext? TestContext { get; set; }
 
-		[Test]
+		[TestMethod]
 		public unsafe void Sanity_Utf8 ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer"u8)) {
@@ -34,7 +35,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void FindClass_Utf8_ReturnsValidReference ()
 		{
 			var r = JniEnvironment.Types.FindClass ("java/lang/Object"u8);
@@ -45,7 +46,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void FindClass_Utf8_UsesSameFallbackAsStringOverload ()
 		{
 			var fromString = JniEnvironment.Types.FindClass ("java.lang.Object");
@@ -58,7 +59,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ctor_Utf8_UsesSameFallbackAsStringOverload ()
 		{
 			using (var fromString = new JniType ("java.lang.Object"))
@@ -68,13 +69,13 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void FindClass_Utf8_ThrowsOnNotFound ()
 		{
-			Assert.Throws<Java.Lang.ClassNotFoundException> (() => JniEnvironment.Types.FindClass ("does/not/Exist"u8));
+			Assert.ThrowsExactly<Java.Lang.ClassNotFoundException> (() => JniEnvironment.Types.FindClass ("does/not/Exist"u8));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryFindClass_Utf8 ()
 		{
 			Assert.IsTrue (JniEnvironment.Types.TryFindClass ("java/lang/Object"u8, out var found));
@@ -88,8 +89,8 @@ namespace Java.InteropTests
 			Assert.IsFalse (notFound.IsValid);
 		}
 
-		[Test]
-		[Category (JniReferenceLeakCategory)]
+		[TestMethod]
+		[TestCategory (JniReferenceLeakCategory)]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
 			AssertNoSustainedGlobalReferenceGrowth (() => {
@@ -98,8 +99,8 @@ namespace Java.InteropTests
 			});
 		}
 
-		[Test]
-		[Category (JniReferenceLeakCategory)]
+		[TestMethod]
+		[TestCategory (JniReferenceLeakCategory)]
 		public void TryFindClass_String_DoesNotLeakGlobalRefs ()
 		{
 			AssertNoSustainedGlobalReferenceGrowth (() => {
@@ -108,12 +109,13 @@ namespace Java.InteropTests
 			});
 		}
 
-		static void AssertNoSustainedGlobalReferenceGrowth (Action action)
+		void AssertNoSustainedGlobalReferenceGrowth (Action action)
 		{
-			JniReferenceLeakMeasurement.AssertNoSustainedGlobalReferenceGrowth (action);
+			var context = TestContext ?? throw new InvalidOperationException ("The runner did not initialize TestContext.");
+			JniReferenceLeakMeasurement.AssertNoSustainedGlobalReferenceGrowth (action, context.WriteLine);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetMethodID_Utf8_MatchesStringOverload ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object"u8)) {
@@ -123,7 +125,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetStaticMethodID_Utf8_MatchesStringOverload ()
 		{
 			using (var System_class = new JniType ("java/lang/System"u8)) {
@@ -133,7 +135,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetFieldID_Utf8_MatchesStringOverload ()
 		{
 			// Integer.value is private and blocked by ART hidden API restrictions.
@@ -145,7 +147,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetStaticFieldID_Utf8_MatchesStringOverload ()
 		{
 			using (var System_class = new JniType ("java/lang/System"u8)) {
@@ -155,7 +157,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetStaticField_Utf8 ()
 		{
 			using (var System_class = new JniType ("java/lang/System"u8)) {
@@ -165,7 +167,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetStaticMethod_Utf8_Invocation ()
 		{
 			using (var System_class = new JniType ("java/lang/System"u8)) {
@@ -175,7 +177,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetCachedInstanceMethod_Utf8_ReturnsSameInstance ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object"u8)) {
@@ -186,7 +188,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetCachedStaticMethod_Utf8_ReturnsSameInstance ()
 		{
 			using (var System_class = new JniType ("java/lang/System"u8)) {
@@ -197,34 +199,34 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Dispose_Exceptions_Utf8 ()
 		{
 			var t = new JniType ("java/lang/Object"u8);
 			t.Dispose ();
 
-			Assert.Throws<ObjectDisposedException> (() => t.GetConstructor ("()V"u8));
-			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceField ("value"u8, "I"u8));
-			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceMethod ("hashCode"u8, "()I"u8));
-			Assert.Throws<ObjectDisposedException> (() => t.GetStaticField ("in"u8, "Ljava/io/InputStream;"u8));
-			Assert.Throws<ObjectDisposedException> (() => t.GetStaticMethod ("currentTimeMillis"u8, "()J"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetConstructor ("()V"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetInstanceField ("value"u8, "I"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetInstanceMethod ("hashCode"u8, "()I"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetStaticField ("in"u8, "Ljava/io/InputStream;"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetStaticMethod ("currentTimeMillis"u8, "()J"u8));
 
 			JniFieldInfo?  jif = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, "value"u8, "I"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, "value"u8, "I"u8));
 			JniMethodInfo? jim = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, "()V"u8));
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, "hashCode"u8, "()I"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, "()V"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, "hashCode"u8, "()I"u8));
 			JniFieldInfo?  jsf = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, "in"u8, "Ljava/io/InputStream;"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, "in"u8, "Ljava/io/InputStream;"u8));
 			JniMethodInfo? jsm = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, "currentTimeMillis"u8, "()J"u8));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, "currentTimeMillis"u8, "()J"u8));
 		}
 
-		[Test]
+		[TestMethod]
 		public void InvalidSignature_Utf8_ThrowsJniException ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object"u8)) {
-				Assert.Throws<Java.Lang.NoSuchMethodError> (() => Object_class.GetInstanceMethod ("bogus"u8, "(Z)V"u8));
+				Assert.ThrowsExactly<Java.Lang.NoSuchMethodError> (() => Object_class.GetInstanceMethod ("bogus"u8, "(Z)V"u8));
 			}
 		}
 	}

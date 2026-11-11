@@ -2,14 +2,14 @@ using System;
 using Com.Xamarin.Android;
 using Foo;
 using Java.Lang;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.JcwGenTests
 {
-	[TestFixture]
+	[TestClass]
 	public class KotlinUnsignedTypesTests
 	{
-		[Test]
+		[TestMethod]
 		public void TestUnsignedTypeMembers ()
 		{
 			var foo = new Foo.UnsignedInstanceMethods ();
@@ -39,7 +39,7 @@ namespace Xamarin.Android.JcwGenTests
 			Assert.AreEqual (byte.MaxValue, foo.UbyteInstanceProperty);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestUnsignedArrayTypeMembers ()
 		{
 			var foo = new Foo.UnsignedInstanceMethods ();
@@ -49,13 +49,13 @@ namespace Xamarin.Android.JcwGenTests
 			var ulong_array = new ulong [] { 1u, 2u, ulong.MaxValue };
 			var ubyte_array = new byte [] { 1, 2, byte.MaxValue };
 
-			Assert.AreEqual (uint_array, foo.UintArrayInstanceMethod (uint_array));
-			Assert.AreEqual (ushort_array, foo.UshortArrayInstanceMethod (ushort_array));
-			Assert.AreEqual (ulong_array, foo.UlongArrayInstanceMethod (ulong_array));
-			Assert.AreEqual (ubyte_array, foo.UbyteArrayInstanceMethod (ubyte_array));
+			CollectionAssert.AreEqual (uint_array, foo.UintArrayInstanceMethod (uint_array));
+			CollectionAssert.AreEqual (ushort_array, foo.UshortArrayInstanceMethod (ushort_array));
+			CollectionAssert.AreEqual (ulong_array, foo.UlongArrayInstanceMethod (ulong_array));
+			CollectionAssert.AreEqual (ubyte_array, foo.UbyteArrayInstanceMethod (ubyte_array));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestUnsignedTypeInterfaceImplementedMembers ()
 		{
 			var foo = new Foo.UnsignedInterfaceImplementedMethods ();
@@ -68,10 +68,10 @@ namespace Xamarin.Android.JcwGenTests
 			foo.UnsignedInterfaceProperty = uint.MaxValue;
 			Assert.AreEqual (uint.MaxValue, foo.UnsignedInterfaceProperty);
 
-			Assert.AreEqual (uint_array, foo.UnsignedArrayInterfaceMethod (uint_array));
+			CollectionAssert.AreEqual (uint_array, foo.UnsignedArrayInterfaceMethod (uint_array));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestUnsignedTypeAbstractImplementedMembers ()
 		{
 			var foo = new Foo.UnsignedAbstractImplementedMethods ();
@@ -83,7 +83,7 @@ namespace Xamarin.Android.JcwGenTests
 			Assert.AreEqual (uint.MaxValue, foo.UnsignedAbstractClassProperty);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestUnsignedConstant ()
 		{
 			Assert.AreEqual (3u, Foo.UnsignedMethodsKt.SubsystemDeprecated);

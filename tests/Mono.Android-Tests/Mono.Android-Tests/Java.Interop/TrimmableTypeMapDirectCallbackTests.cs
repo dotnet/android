@@ -1,6 +1,6 @@
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TrimmableTypeMapCallbacks;
 
@@ -8,11 +8,11 @@ using static Java.InteropTests.TrimmableTypeMapTestHelpers;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("TrimmableTypeMapRuntimeCoverage")]
+	[TestClass]
+	[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
 	public class TrimmableTypeMapDirectCallbackTests
 	{
-		[Test]
+		[TestMethod]
 		public void CompactConnectors_DispatchBothOverloadsToDirectCallbacks ()
 		{
 			DirectCallbackBase.LastIntValue = 0;
@@ -29,7 +29,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (3_000_000_000L, DirectCallbackBase.LastLongValue);
 		}
 
-		[Test]
+		[TestMethod]
 		public void QualifiedConnector_UsesCallbackOnDifferentType ()
 		{
 			QualifiedCallbackHost.Invocations = 0;

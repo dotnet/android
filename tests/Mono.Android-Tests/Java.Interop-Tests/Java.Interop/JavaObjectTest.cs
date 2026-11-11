@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectTest
 	{
 #if !NO_GC_BRIDGE_SUPPORT
-		[Test]
+		[TestMethod]
 		public void JavaReferencedInstanceSurvivesCollection ()
 		{
 			Console.WriteLine ("JavaReferencedInstanceSurvivesCollection");
@@ -43,7 +43,7 @@ namespace Java.InteropTests
 		}
 #endif  // !NO_GC_BRIDGE_SUPPORT
 
-		[Test]
+		[TestMethod]
 		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void UnregisterFromRuntime ()
 		{
@@ -61,10 +61,10 @@ namespace Java.InteropTests
 			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount should match!");
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			JniObjectReference.Dispose (ref l);
-			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void RegisterWithVM_PermitsAliases ()
 		{
 			using (var original = new JavaObject ()) {
@@ -75,7 +75,7 @@ namespace Java.InteropTests
 		}
 
 #if !NO_GC_BRIDGE_SUPPORT
-		[Test]
+		[TestMethod]
 		public async Task UnreferencedInstanceIsCollected ()
 		{
 			JniObjectReference  oldHandle = new JniObjectReference ();
@@ -96,7 +96,7 @@ namespace Java.InteropTests
 		}
 #endif  // !NO_GC_BRIDGE_SUPPORT
 
-		[Test]
+		[TestMethod]
 		public void Dispose ()
 		{
 			var d = false;
@@ -108,7 +108,7 @@ namespace Java.InteropTests
 		}
 
 #if !NO_GC_BRIDGE_SUPPORT
-		[Test]
+		[TestMethod]
 		public async Task Dispose_Finalized ()
 		{
 			var disposed  = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
@@ -144,7 +144,7 @@ namespace Java.InteropTests
 			Assert.IsTrue (predicate (), message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ObjectDisposed ()
 		{
 			var o = new JavaObject ();
@@ -155,13 +155,13 @@ namespace Java.InteropTests
 			var p = o.JniPeerMembers;
 
 			// These should throw
-			Assert.Throws<ObjectDisposedException> (() => o.GetHashCode ());
-			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
-			Assert.Throws<ObjectDisposedException> (() => o.ToString ());
-			Assert.Throws<ObjectDisposedException> (() => o.Equals (o));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.GetHashCode ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.ToString ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.Equals (o));
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void Ctor ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
@@ -179,16 +179,16 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ctor_Exceptions ()
 		{
 			var r   = new JniObjectReference ();
-			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.CopyAndDispose));
+			Assert.ThrowsExactly<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.CopyAndDispose));
 
-			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
+			Assert.ThrowsExactly<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void CrossThreadSharingRequresRegistration ()
 		{
 			JavaObject o = null;
@@ -199,7 +199,7 @@ namespace Java.InteropTests
 			o.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void NestedDisposeInvocations ()
 		{
 			var value = new MyDisposableObject ();
@@ -207,7 +207,7 @@ namespace Java.InteropTests
 			value.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void DisposeAccessesThis ()
 		{
 			var value = new GetThis ();

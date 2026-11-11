@@ -39,11 +39,11 @@ using System.Web;
 
 using Android.OS;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.NetTests {
-	[Category ("InetAccess")]
-	[Category ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
+	[TestCategory ("InetAccess")]
+	[TestCategory ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
 	public abstract class HttpClientHandlerTestBase
 	{
 		protected abstract HttpMessageHandler CreateHandler ();
@@ -70,7 +70,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Disposed ()
 		{
 			using var server = LocalHttpServer.Start ();
@@ -163,7 +163,7 @@ namespace Xamarin.Android.NetTests {
 			return Exceptions (e).Any (v => (v as WebException)?.Status == WebExceptionStatus.SecureChannelFailure);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Cancel_Client_Works ()
 		{
 			var cts = new CancellationTokenSource ();
@@ -181,13 +181,13 @@ namespace Xamarin.Android.NetTests {
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex) {
-					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), $"Request did not throw cancellation exception; threw: {ex}");
 					Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
 				}
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Token_Timeout_Works ()
 		{
 			var cts = new CancellationTokenSource (2000); //Cancel after 2000ms through token
@@ -204,13 +204,13 @@ namespace Xamarin.Android.NetTests {
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex) {
-					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), $"Request did not throw cancellation exception; threw: {ex}");
 					Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
 				}
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Property_Timeout_Works ()
 		{
 			using (var c = new HttpClient (CreateHandler ()))
@@ -229,12 +229,12 @@ namespace Xamarin.Android.NetTests {
 				}
 				catch (AggregateException ex)
 				{
-					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), $"Request did not throw cancellation exception; threw: {ex}");
 				}
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Redirect_Without_Protocol_Works ()
 		{
 			using var server = LocalHttpServer.Start ();
@@ -256,7 +256,7 @@ namespace Xamarin.Android.NetTests {
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void Redirect_POST_With_Content_Works ()
 		{
 			using var server = LocalHttpServer.Start ();
@@ -286,7 +286,7 @@ namespace Xamarin.Android.NetTests {
 			// These status codes all indicate a temporary network/server failure,
 			// so just ignore the test if we hit them.
 			if (ShouldIgnoreSuccessStatusCode (response.StatusCode)) {
-				Assert.Ignore ($"Ignoring network/server failure: {response.StatusCode}");
+				Assert.Inconclusive ($"Ignoring network/server failure: {response.StatusCode}");
 				return;
 			}
 

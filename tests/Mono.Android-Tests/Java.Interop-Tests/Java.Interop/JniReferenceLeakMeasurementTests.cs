@@ -3,15 +3,15 @@
 using System;
 using System.Threading;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests;
 
-[TestFixture]
-[Category ("JniReferenceLeakMeasurement")]
+[TestClass]
+[TestCategory ("JniReferenceLeakMeasurement")]
 public class JniReferenceLeakMeasurementTests
 {
-	[Test]
+	[TestMethod]
 	public void SnapshotRejectsStrongCountChangeEvenIfWeakCountsAndGenerationMatch ()
 	{
 		int reads = 0;
@@ -23,9 +23,10 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (105, reading.Sample.Global);
 	}
 
-	[TestCase (7, 8, 100, 100, 0, 0, false)]
-	[TestCase (7, 7, 100, 100, 0, 1, false)]
-	[TestCase (7, 7, 100, 100, 0, 0, true)]
+	[TestMethod]
+	[DataRow (7, 8, 100, 100, 0, 0, false)]
+	[DataRow (7, 7, 100, 100, 0, 1, false)]
+	[DataRow (7, 7, 100, 100, 0, 0, true)]
 	public void SnapshotChecksBothCountersAndGeneration (int start, int end, int globalBefore,
 		int globalAfter, int weakBefore, int weakAfter, bool stable)
 	{
@@ -38,7 +39,7 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (stable, reading.Stable);
 	}
 
-	[Test]
+	[TestMethod]
 	public void WaitsForWitnessAndCompletedStrongWeakTransition ()
 	{
 		int round = 0;
@@ -54,7 +55,7 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (105, sample.Global, "Completed growth must not be discarded as a retry.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void WaitsForCompletionNotificationAndStableSample ()
 	{
 		int round = 0;
@@ -66,7 +67,7 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (8, sample.Generation);
 	}
 
-	[Test]
+	[TestMethod]
 	public void EmptyHostDoesNotRequireBridgeGeneration ()
 	{
 		int round = 0;
@@ -78,7 +79,7 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (100, sample.Global);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DrainsFinalizersAndPeersAfterCompletionWithoutAnotherCollection ()
 	{
 		int collections = 0;
@@ -91,7 +92,7 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (100, sample.Global);
 	}
 
-	[Test]
+	[TestMethod]
 	public void RejectsStrongWeakTransitionDuringFinalDrain ()
 	{
 		int round = 0;
@@ -110,28 +111,28 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (105, sample.Global);
 	}
 
-	[Test]
+	[TestMethod]
 	public void FinalizedWitnessDoesNotBypassPendingWorkerAndTimeoutPreventsReuse ()
 	{
 		var worker = new JniReferenceLeakMeasurement.CollectionWorker ();
 		using var release = new ManualResetEventSlim ();
 		try {
 			worker.Start (() => release.Wait ());
-			Assert.Throws<AssertionException> (() => JniReferenceLeakMeasurement.WaitForCollection (
+			Assert.ThrowsExactly<AssertFailedException> (() => JniReferenceLeakMeasurement.WaitForCollection (
 				7, () => worker.HasCompletedOutcome (() => true),
 				() => (new JniReferenceLeakMeasurement.Sample (8, 100, 0), true),
 				worker.ObserveCompletion, () => {}, TimeSpan.Zero, worker.MarkTimedOut));
-			Assert.Throws<InvalidOperationException> (() => worker.Start (() => {}));
+			Assert.ThrowsExactly<InvalidOperationException> (() => worker.Start (() => {}));
 		} finally {
 			release.Set ();
 			Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
 			worker.ObserveCompletion ();
 		}
-		Assert.Throws<InvalidOperationException> (worker.EnsureAvailable,
+		Assert.ThrowsExactly<InvalidOperationException> (worker.EnsureAvailable,
 			"Even if the timed-out worker subsequently completes, the test process must not be reused.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void RetryRequiresLatestBridgeCompletionEvenIfOriginalWitnessFinalizes ()
 	{
 		var worker = new JniReferenceLeakMeasurement.CollectionWorker ();
@@ -172,7 +173,7 @@ public class JniReferenceLeakMeasurementTests
 		Assert.AreEqual (2, requests, "No further worker is needed after the original witness finalizes.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void FaultAfterLastPollRemainsOriginalExceptionAndPoisonsWorker ()
 	{
 		var worker = new JniReferenceLeakMeasurement.CollectionWorker ();
@@ -182,45 +183,46 @@ public class JniReferenceLeakMeasurementTests
 			throw new InvalidOperationException ("Late collection failure.");
 		});
 		try {
-			var error = Assert.Throws<InvalidOperationException> (() => JniReferenceLeakMeasurement.WaitForCollection (
+			var error = Assert.ThrowsExactly<InvalidOperationException> (() => JniReferenceLeakMeasurement.WaitForCollection (
 				7, () => false, () => {
 					// The worker faults after this iteration's completion observation.
 					release.Set ();
 					Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
 					return (new JniReferenceLeakMeasurement.Sample (7, 100, 0), true);
 				}, worker.ObserveCompletion, () => {}, TimeSpan.Zero, worker.MarkTimedOut));
-			Assert.That (error?.Message, Is.EqualTo ("Late collection failure."));
-			var reuse = Assert.Throws<InvalidOperationException> (worker.EnsureAvailable);
-			Assert.That (reuse?.Message, Does.Contain ("previously timed out"));
+			Assert.AreEqual ("Late collection failure.", error?.Message);
+			var reuse = Assert.ThrowsExactly<InvalidOperationException> (worker.EnsureAvailable);
+			StringAssert.Contains (reuse?.Message, "previously timed out");
 		} finally {
 			release.Set ();
 			Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void WorkerExceptionIsNotReportedAsLeakAssertion ()
 	{
 		var worker = new JniReferenceLeakMeasurement.CollectionWorker ();
 		worker.Start (() => throw new InvalidOperationException ("Collection worker failed."));
 		Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
 
-		var error = Assert.Throws<InvalidOperationException> (worker.ObserveCompletion);
-		Assert.That (error?.Message, Is.EqualTo ("Collection worker failed."));
-		Assert.Throws<InvalidOperationException> (worker.EnsureAvailable);
+		var error = Assert.ThrowsExactly<InvalidOperationException> (worker.ObserveCompletion);
+		Assert.AreEqual ("Collection worker failed.", error?.Message);
+		Assert.ThrowsExactly<InvalidOperationException> (worker.EnsureAvailable);
 	}
 
-	[TestCase (false, 8, 0)]
-	[TestCase (true, 7, 0)]
-	[TestCase (true, 8, 1)]
+	[TestMethod]
+	[DataRow (false, 8, 0)]
+	[DataRow (true, 7, 0)]
+	[DataRow (true, 8, 1)]
 	public void IncompleteCollectionTimesOut (bool collected, int generation, int weak)
 	{
-		var error = Assert.Throws<AssertionException> (() => JniReferenceLeakMeasurement.WaitForCollection (
+		var error = Assert.ThrowsExactly<AssertFailedException> (() => JniReferenceLeakMeasurement.WaitForCollection (
 			7, () => collected, () => (new JniReferenceLeakMeasurement.Sample (generation, 100, weak), true),
 			() => {}, () => {}, TimeSpan.Zero));
 
 		Assert.IsNotNull (error);
-		Assert.That (error?.Message, Does.Contain ("InitialGeneration=7"));
-		Assert.That (error?.Message, Does.Contain ($"Weak={weak}"));
+		StringAssert.Contains (error?.Message, "InitialGeneration=7");
+		StringAssert.Contains (error?.Message, $"Weak={weak}");
 	}
 }

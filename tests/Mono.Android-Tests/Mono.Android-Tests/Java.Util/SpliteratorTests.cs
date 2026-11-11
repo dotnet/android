@@ -5,20 +5,20 @@ using System.Runtime.Versioning;
 using Android.Runtime;
 using Java.Util;
 using Java.Util.Functions;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.UtilTests;
 
-[TestFixture]
-[Category ("Spliterator")]
+[TestClass]
+[TestCategory ("Spliterator")]
 [SupportedOSPlatform ("android24.0")]
 public class SpliteratorTests
 {
-	[Test]
+	[TestMethod]
 	public void AbstractInvokerTryAdvanceUsesInstanceBooleanAbi ()
 	{
 		if (!OperatingSystem.IsAndroidVersionAtLeast (24))
-			Assert.Ignore ("Spliterators requires Android API 24.");
+			Assert.Inconclusive ("Spliterators requires Android API 24.");
 
 		IntPtr klass = JNIEnv.FindClass ("net/dot/android/test/JniSpliteratorFixture");
 		Spliterators.AbstractSpliterator iterator;
@@ -43,7 +43,7 @@ public class SpliteratorTests
 			Assert.AreEqual (localReferences, Java.Interop.Runtime.LocalReferenceCount,
 				"TryAdvance must release its temporary Consumer local reference.");
 			CollectionAssert.AreEqual (new [] { "first", "second" }, consumer.Values);
-			Assert.Throws<Java.Lang.NullPointerException> (() => iterator.TryAdvance (null));
+			Assert.ThrowsExactly<Java.Lang.NullPointerException> (() => iterator.TryAdvance (null));
 		}
 	}
 

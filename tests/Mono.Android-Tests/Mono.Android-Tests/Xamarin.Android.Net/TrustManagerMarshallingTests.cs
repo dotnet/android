@@ -4,24 +4,24 @@ using System.Linq;
 using Android.Runtime;
 using Java.Security;
 using Javax.Net.Ssl;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.NetTests
 {
-	[TestFixture]
+	[TestClass]
 	public class TrustManagerMarshallingTests
 	{
-		[Test]
+		[TestMethod]
 		public void TrustManagerFactory_GetTrustManagers_ReturnsIX509TrustManager ()
 		{
 			var tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
 			if (tmf == null)
-				throw new AssertionException ("TrustManagerFactory.GetInstance returned null");
+				throw new AssertFailedException ("TrustManagerFactory.GetInstance returned null");
 			tmf.Init ((KeyStore?) null);
 
 			var trustManagers = tmf.GetTrustManagers ();
 			if (trustManagers == null)
-				throw new AssertionException ("GetTrustManagers returned null");
+				throw new AssertFailedException ("GetTrustManagers returned null");
 			Assert.IsTrue (trustManagers.Length > 0, "GetTrustManagers returned empty array");
 
 			bool foundX509 = false;
@@ -36,14 +36,14 @@ namespace Xamarin.Android.NetTests
 				$"Types found: {string.Join (", ", trustManagers.Select (t => t.GetType ().FullName))}");
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaInterfaceLookup_BaseInterfaceReturnType_UsesDerivedInterfaceProxy ()
 		{
 			// Mirrors API 21-23 TrustManagerImpl: the Java signature returns the
 			// base interface, but the concrete object advertises a derived interface.
 			using var provider = global::Net.Dot.Android.Test.InterfaceMarshalling.ExtendedValueProviderAsValueProvider;
 			if (provider == null)
-				throw new AssertionException ("Expected Java fixture to return a ValueProvider instance.");
+				throw new AssertFailedException ("Expected Java fixture to return a ValueProvider instance.");
 
 			if (provider is not global::Net.Dot.Android.Test.IExtendedValueProvider extendedProvider) {
 				Assert.Fail ($"Expected ValueProvider to be marshalled as IExtendedValueProvider. Type found: {provider.GetType ().FullName}");

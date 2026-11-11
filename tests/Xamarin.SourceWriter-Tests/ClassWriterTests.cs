@@ -2,14 +2,16 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: DoNotParallelize]
 
 namespace Xamarin.SourceWriter.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class ClassWriterTests
 	{
-		[Test]
+		[TestMethod]
 		public void Basics ()
 		{
 			var klass = new ClassWriter {

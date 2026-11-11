@@ -2,7 +2,7 @@ using System;
 
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {

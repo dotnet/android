@@ -1,15 +1,15 @@
 using System.Security.Cryptography;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Security.CryptographyTests
 {
-	[TestFixture]
+	[TestClass]
 	public class CryptographyTest
 	{
-		[Test]
-		[Category ("NativeAOTCrypto")]
+		[TestMethod]
+		[TestCategory ("NativeAOTCrypto")]
 		public void AesEncryptDecryptRoundTrip ()
 		{
 			const string plaintext = "NativeAOT crypto smoke test";

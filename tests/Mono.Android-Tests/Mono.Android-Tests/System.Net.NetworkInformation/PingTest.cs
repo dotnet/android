@@ -1,13 +1,13 @@
 using System.Net.NetworkInformation;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.NetTests {
 
-	[TestFixture]
+	[TestClass]
 	public class PingTest
 	{
-		[Test]
+		[TestMethod]
 		public void PingLocalhost ()
 		{
 			using var ping = new Ping ();

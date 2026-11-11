@@ -10,18 +10,19 @@ using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
-	[Category ("ReferenceTracing")]
-	[NonParallelizable]
+	[TestClass]
+	[TestCategory ("ReferenceTracing")]
+	[DoNotParallelize]
 	public class ManagedObjectReferenceManagerTests {
-		[TestCase (0x10, EventLevel.Verbose, true, false)]
-		[TestCase (0x20, EventLevel.Verbose, false, true)]
-		[TestCase (0x30, EventLevel.Informational, false, false)]
-		[TestCase (0x40, EventLevel.Verbose, false, false)]
+		[TestMethod]
+		[DataRow (0x10L, EventLevel.Verbose, true, false)]
+		[DataRow (0x20L, EventLevel.Verbose, false, true)]
+		[DataRow (0x30L, EventLevel.Informational, false, false)]
+		[DataRow (0x40L, EventLevel.Verbose, false, false)]
 		public void ReferenceLifecycleAndEvents (long keyword, EventLevel level, bool globalEvents, bool localEvents)
 		{
 			using var peer = new Java.Lang.String ("reference lifecycle");
@@ -67,7 +68,7 @@ namespace Xamarin.Android.RuntimeTests {
 
 			int [] expectedIds = [11, 13, 15, 16, 14, 12];
 			expectedIds = expectedIds.Where (id => id is 15 or 16 ? localEvents : globalEvents).ToArray ();
-			CollectionAssert.AreEqual (expectedIds, events.Select (e => e.Id));
+			CollectionAssert.AreEqual (expectedIds, events.Select (e => e.Id).ToArray ());
 			string [] globalNames = ["sourceHandle", "handle", "sourceType", "referenceType", "globalCount", "weakCount", "managedThreadId", "bridgeOperation"];
 			string [] localNames = ["sourceHandle", "handle", "localCount", "managedThreadId", "bridgeOperation"];
 			int threadId = Environment.CurrentManagedThreadId;
@@ -93,12 +94,12 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.AreEqual (EventLevel.Verbose, collectedEvents [0].Level);
 				Assert.AreEqual (0x10, (long)collectedEvents [0].Keywords & 0x0FFFFFFFFFFF);
 				CollectionAssert.AreEqual (new [] { "handle" }, collectedEvents [0].Names);
-				Assert.IsInstanceOf<ulong> (collectedEvents [0].Payload [0]);
+				Assert.IsInstanceOfType<ulong> (collectedEvents [0].Payload [0]);
 				CollectionAssert.AreEqual (new object [] { Handle (weakHandle) }, collectedEvents [0].Payload);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InitializesGrefLimitsFromHost ()
 		{
 			int previousThreshold = JNIEnvInit.gref_gc_threshold;
@@ -116,7 +117,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReleasedLocalReferenceRemainsUsableUntilDeleted ()
 		{
 			using var peer = new Java.Lang.String ("transferred reference");
@@ -131,7 +132,7 @@ namespace Xamarin.Android.RuntimeTests {
 			manager.CreatedLocalReference (local, ref count);
 			try {
 				CollectionAssert.AreEqual (new [] { 15, 17, 15 },
-					listener.GetEvents ().Where (e => e.ThreadId == Environment.CurrentManagedThreadId).Select (e => e.Id),
+					listener.GetEvents ().Where (e => e.ThreadId == Environment.CurrentManagedThreadId).Select (e => e.Id).ToArray (),
 					"Releasing ownership must not report JNI deletion.");
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (peer.PeerReference, local),
 					"The transferred JNI handle must still refer to the original object.");
@@ -143,8 +144,9 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (16, listener.GetEvents ().Last (e => e.ThreadId == Environment.CurrentManagedThreadId).Id);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		public void NativeAotStacksRequireExplicitOptIn (bool collectStacks)
 		{
@@ -162,7 +164,7 @@ namespace Xamarin.Android.RuntimeTests {
 			RuntimeEventSource.WeakGlobalReferenceCollected (referenceHandle);
 			var events = listener.GetEvents ().Where (e => e.ThreadId == Environment.CurrentManagedThreadId).ToArray ();
 			bool expectStacks = collectStacks && Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime;
-			CollectionAssert.AreEqual (expectStacks ? new [] { 11, 21, 12, 21, 20, 21 } : new [] { 11, 12, 20 }, events.Select (e => e.Id));
+			CollectionAssert.AreEqual (expectStacks ? new [] { 11, 21, 12, 21, 20, 21 } : new [] { 11, 12, 20 }, events.Select (e => e.Id).ToArray ());
 			foreach (var captured in events.Where (e => e.Id == 21)) {
 				CollectionAssert.AreEqual (new [] { "referenceEventId", "handle", "managedThreadId", "stackTrace" }, captured.Names);
 				Assert.AreEqual (4, captured.Payload.Length);
@@ -172,14 +174,14 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.AreEqual (handle, captured.Payload [1]);
 				Assert.AreEqual (Environment.CurrentManagedThreadId, captured.Payload [2]);
 				var stack = captured.Payload [3] as string ?? throw new InvalidOperationException ("The stack payload should be a string.");
-				StringAssert.Contains (nameof (NativeAotStacksRequireExplicitOptIn), stack,
+				StringAssert.Contains (stack, nameof (NativeAotStacksRequireExplicitOptIn),
 					$"Reference event {captured.Payload [0]} must retain the caller even when runtime wrappers are inlined.");
-				StringAssert.DoesNotContain ("RuntimeEventSource.GetReferenceStackTrace", stack,
+				Assert.IsFalse ((stack).Contains ("RuntimeEventSource.GetReferenceStackTrace", global::System.StringComparison.Ordinal),
 					"The stack capture helper itself should be omitted.");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DisabledTracingDoesNotAllocateDuringReferenceOperations ()
 		{
 			using var peer = new Java.Lang.String ("disabled tracing");

@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Java.Interop;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests;
 
@@ -92,7 +92,7 @@ static class JniReferenceLeakMeasurement
 			=> $"Generation={Generation?.ToString () ?? "none"}, Global={Global}, Weak={Weak}";
 	}
 
-	internal static void AssertNoSustainedGlobalReferenceGrowth (Action action)
+	internal static void AssertNoSustainedGlobalReferenceGrowth (Action action, Action<string> writeLine)
 	{
 		collector.EnsureAvailable ();
 		RunBatch (action);
@@ -102,11 +102,11 @@ static class JniReferenceLeakMeasurement
 
 		var message = $"JNI leak measurement: Runtime={RuntimeInformation.FrameworkDescription}, " +
 			$"Architecture={RuntimeInformation.ProcessArchitecture}, Before=({before}), After=({after})";
-		TestContext.WriteLine (message);
+		writeLine (message);
 #if __ANDROID__
 		Android.Util.Log.Info ("JniReferenceLeak", message);
 #endif
-		Assert.LessOrEqual (after.Global, before.Global,
+		Assert.IsLessThanOrEqualTo (before.Global, after.Global,
 			$"Operation should not leak global references after {Iterations} iterations. " +
 			$"Before=({before}), After=({after}), Delta={after.Global - before.Global}");
 	}

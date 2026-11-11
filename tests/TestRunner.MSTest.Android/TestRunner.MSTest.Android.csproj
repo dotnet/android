@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="MSTest.Android.props" />
+  <PropertyGroup>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
+    <OutputType>Library</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AndroidTestAssert.cs" />
+    <Compile Include="MSTestInstrumentation.cs" />
+    <Compile Include="..\..\src\Microsoft.Android.Run\InstrumentationProtocol.cs" Link="InstrumentationProtocol.cs" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportPackageVersion)" PrivateAssets="all" Publish="true" />
+  </ItemGroup>
+</Project>

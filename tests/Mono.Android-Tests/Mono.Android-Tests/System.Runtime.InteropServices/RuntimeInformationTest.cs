@@ -1,11 +1,11 @@
 using System;
 using System.Runtime.InteropServices;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class RuntimeInformationTest {
 
 		// Maps a .NET RID to the ABI name Android reports in `android.os.Build.SUPPORTED_ABIS`
@@ -18,7 +18,7 @@ namespace Xamarin.Android.RuntimeTests {
 		};
 
 		// https://github.com/dotnet/android/issues/12273
-		[Test]
+		[TestMethod]
 		public void RuntimeIdentifierMatchesAbi ()
 		{
 			string rid = RuntimeInformation.RuntimeIdentifier;

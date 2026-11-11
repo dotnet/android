@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,11 +10,11 @@ using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class TrimmableTypeMapTypeManagerTests
 	{
 		// Test subclass that allows instantiation without full TrimmableTypeMap initialization.
@@ -23,9 +24,10 @@ namespace Java.InteropTests
 		{
 		}
 
-		[TestCase ("android/app/Activity", "android/app/DesugarActivity$_CC", "android/app/Activity$-CC")]
-		[TestCase ("Activity", "DesugarActivity$_CC", "Activity$-CC")]
-		[TestCase ("com/example/package/MyInterface", "com/example/package/DesugarMyInterface$_CC", "com/example/package/MyInterface$-CC")]
+		[TestMethod]
+		[DataRow ("android/app/Activity", "android/app/DesugarActivity$_CC", "android/app/Activity$-CC")]
+		[DataRow ("Activity", "DesugarActivity$_CC", "Activity$-CC")]
+		[DataRow ("com/example/package/MyInterface", "com/example/package/DesugarMyInterface$_CC", "com/example/package/MyInterface$-CC")]
 		public void GetStaticMethodFallbackTypes_ReturnsDesugarFallbacks (string jniSimpleReference, string expectedDesugar, string expectedFallback)
 		{
 			using var manager = new TestableTrimmableTypeMapTypeManager ();
@@ -36,9 +38,10 @@ namespace Java.InteropTests
 			Assert.AreEqual (expectedFallback, fallbacks [1]);
 		}
 
-		[TestCase (typeof (byte?[][]), "[[Ljava/lang/Byte;")]
-		[TestCase (typeof (byte?[][][]), "[[[Ljava/lang/Byte;")]
-		[Category ("NativeAOTTrimmable")]
+		[TestMethod]
+		[DataRow (typeof (byte?[][]), "[[Ljava/lang/Byte;")]
+		[DataRow (typeof (byte?[][][]), "[[[Ljava/lang/Byte;")]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void GetTypeSignature_NullableByteJaggedArray_ReturnsJavaLangByte (Type type, string expected)
 		{
 			using var manager = new TestableTrimmableTypeMapTypeManager ();
@@ -47,7 +50,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (expected, signature.Name);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetType_RepeatedJavaToManagedLookup_DoesNotAllocate ()
 		{
 			const string jniName = "android/view/View";
@@ -76,14 +79,14 @@ namespace Java.InteropTests
 			Assert.AreEqual (0L, allocatedBytes, $"Expected {iterationCount} cached lookups to allocate no managed memory.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryGetTargetType_MissingEntry_ReturnsFalse ()
 		{
 			Assert.IsFalse (TrimmableTypeMap.Instance.TryGetTargetType ("net/dot/android/test/MissingType", out var targetType));
 			Assert.IsNull (targetType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JniProxyCache_SingleMappingStoresProxyDirectly ()
 		{
 			const string jniName = "android/view/View";
@@ -94,10 +97,10 @@ namespace Java.InteropTests
 			Assert.IsTrue (instance.TryGetTargetType (jniName, out var targetType));
 			Assert.AreEqual (typeof (Android.Views.View), targetType);
 			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
-			Assert.IsInstanceOf<JavaPeerProxy> (cacheEntry);
+			Assert.IsInstanceOfType<JavaPeerProxy> (cacheEntry);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JniProxyCache_AliasMappingStoresProxyArray ()
 		{
 			const string jniName = "java/util/ArrayList";
@@ -109,12 +112,12 @@ namespace Java.InteropTests
 			foreach (var targetType in instance.GetTargetTypes (jniName)) {
 				targetTypeCount++;
 			}
-			Assert.Greater (targetTypeCount, 1);
+			Assert.IsGreaterThan (1, targetTypeCount);
 			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
-			Assert.IsInstanceOf<JavaPeerProxy[]> (cacheEntry);
+			Assert.IsInstanceOfType<JavaPeerProxy[]> (cacheEntry);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JniProxyCache_MissingMappingStoresEmptyProxyArray ()
 		{
 			const string jniName = "net/dot/android/test/MissingProxyCacheEntry";
@@ -133,7 +136,7 @@ namespace Java.InteropTests
 			Assert.Fail ("A missing JNI mapping should be cached as an empty proxy array.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void JniProxyCache_UnexpectedEntryTypeThrows ()
 		{
 			const string jniName = "net/dot/android/test/InvalidProxyCacheEntry";
@@ -141,14 +144,14 @@ namespace Java.InteropTests
 			var cache = GetJniProxyCache (instance);
 			cache [jniName] = new object ();
 			try {
-				var exception = Assert.Throws<InvalidOperationException> (() => instance.TryGetTargetType (jniName, out _));
-				StringAssert.Contains ("Unexpected JNI proxy cache entry type", exception?.Message);
+				var exception = Assert.ThrowsExactly<InvalidOperationException> (() => instance.TryGetTargetType (jniName, out _));
+				StringAssert.Contains (exception?.Message, "Unexpected JNI proxy cache entry type");
 			} finally {
 				cache.TryRemove (jniName, out _);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void RegisterNativeMethods_AliasGroupRegistersEveryCallableWrapper ()
 		{
 			using var jniType = new JniType ("java/lang/Object");
@@ -164,7 +167,7 @@ namespace Java.InteropTests
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
 		// the generator emits one TypeMapAssociation per open generic peer, so a
 		// closed instantiation like JavaList<string> must resolve through its GTD.
-		[Test]
+		[TestMethod]
 		public void TryGetJniNameForManagedType_ClosedGeneric_ResolvesViaGenericTypeDefinition ()
 		{
 			var instance = TrimmableTypeMap.Instance;
@@ -182,7 +185,7 @@ namespace Java.InteropTests
 				"Different closed instantiations must map to the same JNI name.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryGetJniNameForManagedType_NonGenericType_ResolvesDirectly ()
 		{
 			// Regression: the GTD fallback must not disturb the non-generic hot path.
@@ -190,7 +193,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (string.IsNullOrEmpty (jniName));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryGetJniNameForManagedType_UnknownClosedGeneric_ReturnsFalse ()
 		{
 			// System.Collections.Generic.List<T> has no TypeMapAssociation — both the
@@ -200,7 +203,7 @@ namespace Java.InteropTests
 			Assert.IsNull (jniName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryGetJniNameForManagedType_RepeatedClosedGenericLookup_IsCached ()
 		{
 			// Closed generic peers normalize to their open generic definition, so
@@ -212,7 +215,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (first, second);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryGetJniNameForManagedType_DifferentClosedGenerics_UseGenericDefinitionCacheKey ()
 		{
 			var instance = TrimmableTypeMap.Instance;
@@ -230,7 +233,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (cache.ContainsKey (typeof (JavaList<DateTimeOffset>)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetProxyForJavaObject_SealedTarget_ReturnsProxy ()
 		{
 			using var value = new Java.Lang.String ("value");
@@ -243,7 +246,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (typeof (Java.Lang.String), proxy.TargetType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetProxyForJavaObject_IncompatibleSealedTarget_ReturnsNull ()
 		{
 #pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
@@ -254,7 +257,7 @@ namespace Java.InteropTests
 			Assert.IsNull (proxy);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateInstance_SealedClosedGenericTarget_ReturnsClosedPeer ()
 		{
 			using var value = new Java.Util.ArrayList ();
@@ -268,7 +271,7 @@ namespace Java.InteropTests
 			collection.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void RegisteredPeer_Dispose_InvokesDisposing ()
 		{
 			bool disposed = false;
@@ -284,7 +287,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (finalized);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task RegisteredPeer_Dispose_Finalized ()
 		{
 			var disposed = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
@@ -309,7 +312,7 @@ namespace Java.InteropTests
 			Assert.IsTrue (finalized.Task.IsCompleted);
 		}
 
-		[Test]
+		[TestMethod]
 		public void RegisteredPeer_NestedDisposeInvocations ()
 		{
 			var value = new TrimmableRegisteredNestedDisposableObject ();
@@ -317,7 +320,7 @@ namespace Java.InteropTests
 			value.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void RegisteredPeer_CanCreateGenericHolder ()
 		{
 			using var holder = new TrimmableRegisteredGenericHolder<int> ();
@@ -326,7 +329,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, holder.Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TrimmableJavaProxyObject_CreateLocalObjectReferenceArgumentUsesProxyType ()
 		{
 			var value = new object ();
@@ -339,7 +342,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void TrimmableJavaProxyObject_CanBeUsedInObjectArray ()
 		{
 			using var values = new JavaObjectArray<object> (1);
@@ -348,7 +351,7 @@ namespace Java.InteropTests
 			Assert.AreEqual ("[Ljava/lang/Object;", values.GetJniTypeName ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void TrimmableJavaProxyObject_ObjectMethodsUseJavaIdentitySemantics ()
 		{
 			var value = new object ();
@@ -377,7 +380,7 @@ namespace Java.InteropTests
 								JNIEnv.CallStaticIntMethod (systemClass.Handle, identityHashCode, new JValue (localProxy.Handle)),
 								JNIEnv.CallIntMethod (localProxy.Handle, hashCode));
 							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef)
-								?? throw new AssertionException ("Java proxy ToString returned null.");
+								?? throw new AssertFailedException ("Java proxy ToString returned null.");
 							Assert.IsTrue (
 								proxyString.StartsWith ("net.dot.jni.internal.TrimmableJavaProxyObject@", StringComparison.Ordinal),
 								proxyString);
@@ -400,7 +403,7 @@ namespace Java.InteropTests
 		// Regression: the runtime replacement (BuildRuntimeArrayTypes) must return the full set of array
 		// and wrapper types, not just T[]. The marshaling round-trip tests only need T[]. This is a pure
 		// function, so it runs on every config.
-		[Test]
+		[TestMethod]
 		public void BuildRuntimeArrayTypes_ReferenceLeaf_ReturnsProxyContract ()
 		{
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (Java.Lang.Object), rank: 1);
@@ -410,7 +413,7 @@ namespace Java.InteropTests
 					typeof (Java.Interop.JavaArray<Java.Lang.Object>),
 					typeof (Java.Lang.Object[]),
 				},
-				rank1);
+				rank1.ToArray ());
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (Java.Lang.Object), rank: 2);
 			CollectionAssert.AreEquivalent (
@@ -422,10 +425,10 @@ namespace Java.InteropTests
 					typeof (JavaObjectArray<Java.Lang.Object[]>),
 					typeof (Java.Lang.Object[][]),
 				},
-				rank2);
+				rank2.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void BuildRuntimeArrayTypes_PrimitiveLeaf_ReturnsProxyContract ()
 		{
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 1);
@@ -436,7 +439,7 @@ namespace Java.InteropTests
 					typeof (JavaPrimitiveArray<sbyte>),
 					typeof (JavaSByteArray),
 				},
-				rank1);
+				rank1.ToArray ());
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 2);
 			CollectionAssert.AreEquivalent (
@@ -450,26 +453,26 @@ namespace Java.InteropTests
 					typeof (JavaObjectArray<JavaSByteArray>),
 					typeof (JavaSByteArray[]),
 				},
-				rank2);
+				rank2.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void BuildRuntimeArrayTypes_NullablePrimitiveLeaf_ReturnsVector ()
 		{
 			// Nullable primitives have no array proxy and no AOT-safe Java.Interop array wrapper, so the
 			// fallback returns just the exact rooted vector (int?[]) rather than an unrooted value generic.
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 1);
-			CollectionAssert.AreEquivalent (new [] { typeof (int?[]) }, rank1);
+			CollectionAssert.AreEquivalent (new [] { typeof (int?[]) }, rank1.ToArray ());
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 2);
-			CollectionAssert.AreEquivalent (new [] { typeof (int?[][]) }, rank2);
+			CollectionAssert.AreEquivalent (new [] { typeof (int?[][]) }, rank2.ToArray ());
 		}
 
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
 			if (field == null)
-				throw new AssertionException ("Unable to find TrimmableTypeMap proxy cache field.");
+				throw new AssertFailedException ("Unable to find TrimmableTypeMap proxy cache field.");
 
 			var value = field.GetValue (instance);
 			Assert.IsNotNull (value);
@@ -486,7 +489,7 @@ namespace Java.InteropTests
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_jniProxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
 			if (field == null)
-				throw new AssertionException ("Unable to find TrimmableTypeMap JNI proxy cache field.");
+				throw new AssertFailedException ("Unable to find TrimmableTypeMap JNI proxy cache field.");
 
 			var value = field.GetValue (instance);
 			Assert.IsNotNull (value);
@@ -551,7 +554,7 @@ namespace Java.InteropTests
 		class ClosedOfIntOpenT : OpenT<int> { }
 		class DeepClosedOfOpenT : ClosedOfIntOpenT { }
 
-		[Test]
+		[TestMethod]
 		public void TargetTypeMatches_DirectAssignable_ReturnsTrue ()
 		{
 			// Non-generic direct match: proxy target IS-A hint.
@@ -559,7 +562,7 @@ namespace Java.InteropTests
 			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (string)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TargetTypeMatches_ClosedHint_OpenGenericProxy_SelfMatch_ReturnsTrue ()
 		{
 			// Hint is OpenT<int>; proxy's target is the open GTD OpenT<>.
@@ -570,7 +573,7 @@ namespace Java.InteropTests
 			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (OpenT2<int, string>), typeof (OpenT2<,>)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TargetTypeMatches_ClosedSubclassHint_OpenGenericProxy_ReturnsTrue ()
 		{
 			// Hint is a closed subclass of the open generic; the base-walk finds
@@ -579,7 +582,7 @@ namespace Java.InteropTests
 			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (DeepClosedOfOpenT), typeof (OpenT<>)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TargetTypeMatches_MismatchedOpenGeneric_ReturnsFalse ()
 		{
 			// Different open generic definitions must NOT be treated as matching.
@@ -587,7 +590,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (OpenT<>)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TargetTypeMatches_UnrelatedNonGeneric_ReturnsFalse ()
 		{
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));

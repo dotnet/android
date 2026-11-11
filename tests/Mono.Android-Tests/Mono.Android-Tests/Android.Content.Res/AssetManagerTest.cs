@@ -2,14 +2,14 @@ using System.IO;
 using Android.App;
 using Android.Graphics.Drawables;
 using Android.Widget;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.Content.ResTests
 {
-	[TestFixture]
+	[TestClass]
 	public class AssetManagerTests
 	{
-		static object [] AssetContentsSource = new object [] {
+		public static readonly object [][] AssetContentsSource = {
 			new object[] {
 				/* asset */    "asset1.txt",
 				/* expected */ "Asset1",
@@ -32,15 +32,15 @@ namespace Android.Content.ResTests
 			}
 		};
 
-		static string[] AssetPngs = {
-			"hamburger.png",
-			"subfolder/accept_request.png",
-			"problem_solving.png",
-			"LibAssetSubFolder/folder.png"
+		public static readonly object [][] AssetPngs = {
+			["hamburger.png"],
+			["subfolder/accept_request.png"],
+			["problem_solving.png"],
+			["LibAssetSubFolder/folder.png"]
 		};
 
-		[Test]
-		[TestCaseSource (nameof (AssetContentsSource))]
+		[TestMethod]
+		[DynamicData (nameof (AssetContentsSource))]
 		public void AssetContents (string asset, string expected)
 		{
 			using (var s = Application.Context.Assets.Open (asset))
@@ -50,8 +50,8 @@ namespace Android.Content.ResTests
 			}
 		}
 
-		[Test]
-		[TestCaseSource (nameof (AssetPngs))]
+		[TestMethod]
+		[DynamicData (nameof (AssetPngs))]
 		public void ConstructDrawableFromPngAsset (string assetPath)
 		{
 			using (var s = Application.Context.Assets.Open (assetPath)) {

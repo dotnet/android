@@ -1,15 +1,15 @@
 using Android.Apptests.Aidl;
 using Android.OS;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.OSTests
 {
-	[TestFixture]
-	[Category ("Aidl")]
+	[TestClass]
+	[TestCategory ("Aidl")]
 	public class AidlProxyTests
 	{
-		[Test]
+		[TestMethod]
 		public void OnewayMethodUsesOnewayTransaction ()
 		{
 			using (var binder = new TrackingBinder ())

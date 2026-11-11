@@ -30,7 +30,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -40,7 +40,8 @@ using System.Linq;
 using System.IO;
 
 namespace Xamarin.Android.NetTests {
-	[Category ("InetAccess")]
+	[TestClass]
+	[TestCategory ("InetAccess")]
 	public sealed class AndroidMessageHandlerIntegrationTests
 	{
 		class CustomStream : Stream
@@ -114,7 +115,7 @@ namespace Xamarin.Android.NetTests {
 
 		string port, TestHost, LocalServer;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetupFixture ()
 		{
 			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
@@ -127,7 +128,7 @@ namespace Xamarin.Android.NetTests {
 			LocalServer = string.Format ("http://{0}/", TestHost);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ctor_Default ()
 		{
 			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
@@ -140,7 +141,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 
-		[Test]
+		[TestMethod]
 		public void CancelRequestViaProxy ()
 		{
 			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
@@ -186,7 +187,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Properties ()
 		{
 			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
@@ -201,7 +202,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Properties_Invalid ()
 		{
 			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
@@ -220,7 +221,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task UrlEscaping_Bug43411 ()
 		{
 			await UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
@@ -254,7 +255,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Send_Invalid ()
 		{
 			var client = new HttpClient (new Xamarin.Android.Net.AndroidMessageHandler ());
@@ -272,7 +273,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetString_Many ()
 		{
 			using var server = LocalHttpServer.Start ();
@@ -283,7 +284,7 @@ namespace Xamarin.Android.NetTests {
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void DisallowAutoRedirect ()
 		{
 			var listener = CreateListener (l => {
