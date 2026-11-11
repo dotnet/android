@@ -60,7 +60,7 @@ do not update it unattended; report the ambiguity instead.
 **5. Command-line tools are a coordinated product dependency.** Do not update only the bootstrap
 pins. A command-line-tools bump must also update
 `src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.props` and the matching latest entry in
-`src/Xamarin.Installer.AndroidSDK/Feeds/AndroidManifestFeed_d18.0.xml`, including every published
+`tools/workload-dependencies/AndroidManifestFeed_d18.0.xml`, including every published
 host/architecture archive. Confirm `CodeGenerator.targets` tracks the property file that supplies
 `AndroidCommandLineToolsVersion`. If the automated workflow is not authorized to change every
 required file, stop and report the coordinated update instead of opening a partial PR.

@@ -157,6 +157,19 @@ MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
 Calls the [`GetAndroidDependencies`](#getandroiddependencies) target, then installs
 the Android SDK packages specified in the `@(AndroidDependency)` item group.
 
+The Android SDK packages are installed with Google's
+[Android CLI](https://developer.android.com/tools/agents/android-cli)
+(`android sdk install`). The target downloads a pinned version of the Android CLI
+from Google into a per-user cache. Before it runs the Android CLI, the target
+makes sure that the SHA-256 hash of the file is the same as the hash included with
+the .NET for Android SDK. The Android CLI is available for Windows x64, macOS (x64
+and Arm64), and Linux (x64 and Arm64).
+
+The Android CLI accepts the Android SDK licenses without a prompt. Thus, if Android SDK
+packages must be installed, this target fails unless you set `$(AcceptAndroidSDKLicenses)`
+to `true`. Before you set this
+property, read the [Android SDK License Agreement](https://developer.android.com/studio/terms).
+
 Before it extracts a downloaded Microsoft OpenJDK archive, this target verifies
 the archive's detached digital signature. The signing key must match the trusted
 key hash included with the .NET for Android SDK. Missing or invalid signatures
@@ -173,13 +186,16 @@ you will get the following error:
 error MSB4057: The target "InstallAndroidDependencies" does not exist in the project.
 ```
 
-The `AndroidSdkDirectory` and `JavaSdkDirectory` properties are required as we need to know where to install the required components. These directories can be empty or existing. Sdk components
-will be installed on top on an existing sdk installation.
+The `AndroidSdkDirectory` and `JavaSdkDirectory` properties set where the components are installed.
+These directories can be empty or existing. Sdk components will be installed on top of an existing sdk installation.
+If a property is not set, the build looks for an existing installation, the same as a normal build.
+If it finds no installation, `AndroidSdkDirectory` uses the `ANDROID_HOME` or `ANDROID_SDK_ROOT` environment variable.
+If those are also not set, the default is `%LOCALAPPDATA%\Android\Sdk` on Windows, `~/Library/Android/sdk` on macOS,
+and `~/Android/Sdk` on Linux.
+`JavaSdkDirectory` uses the `JAVA_HOME` or `JDK_HOME` environment variable.
+If those are also not set, the default is `%LOCALAPPDATA%\Android\jdk-<major version>` on Windows and
+`~/Library/Android/microsoft-<major version>.jdk` on macOS. On Linux, you must set `JavaSdkDirectory` or `JAVA_HOME`.
 
-The [`$(AndroidManifestType)`](build-properties.md#androidmanifesttype)
-MSBuild property controls which
-[Visual Studio SDK Manager repository](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection)
-is used for package name and package version detection, and URLs to download.
 
 ## Publish
 
