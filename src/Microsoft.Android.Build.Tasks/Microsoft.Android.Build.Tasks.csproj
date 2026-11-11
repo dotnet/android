@@ -80,8 +80,6 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
-    <!-- ValidateJavaVersion: ResolveAndroidTooling, Lint and MonoAndroidHelper still use RunProcess, so it remains a shared source. -->
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.RunProcess.cs" Link="Utilities\MonoAndroidHelper.RunProcess.cs" />
   </ItemGroup>
 
   <!--
