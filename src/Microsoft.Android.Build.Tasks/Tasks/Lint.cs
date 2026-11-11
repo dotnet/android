@@ -36,16 +36,14 @@ namespace Microsoft.Android.Tasks
 		//super (p0, p1, p2, p3);
 		//~~~~~
 		//
-		const string CodeErrorRegExString = @"(?<file>.+\.*):(?<line>\d+):(?<text>.+)";
+		[GeneratedRegex (@"(?<file>.+\.*):(?<line>\d+):(?<text>.+)")]
+		private static partial Regex CodeErrorRegEx { get; }
 		// We also need to capture warning and errors which DONOT include file information
 		//
 		//Warning: The resource R.layout.main appears to be unused [UnusedResources]
 		//Warning: The resource R.string.app_name appears to be unused [UnusedResources]
 		//Warning: The resource R.string.hello appears to be unused [UnusedResources]
-		const string NoFileWarningOrErrorRegExString = @"(?<type>Warning|Error):(?<text>.+)";
-		[GeneratedRegex (CodeErrorRegExString)]
-		private static partial Regex CodeErrorRegEx { get; }
-		[GeneratedRegex (NoFileWarningOrErrorRegExString)]
+		[GeneratedRegex (@"(?<type>Warning|Error):(?<text>.+)")]
 		private static partial Regex NoFileWarningOrErrorRegEx { get; }
 		Dictionary<string, string>? _resource_name_case_map;
 		bool matched = false;
