@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,9 +8,10 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
-using Microsoft.Android.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public class ManifestMerger : JavaToolTask
 	{
@@ -73,7 +75,7 @@ namespace Xamarin.Android.Tasks
 		public override bool Execute ()
 		{
 			tempFile = OutputManifestFile + ".tmp";
-			responseFile = Path.Combine (Path.GetDirectoryName (OutputManifestFile), "manifestmerger.rsp");
+			responseFile = Path.Combine (Path.GetDirectoryName (OutputManifestFile) ?? throw new ArgumentException ("The output manifest has no directory.", nameof (OutputManifestFile)), "manifestmerger.rsp");
 			bool result = false;
 			try {
 				result = base.Execute ();
@@ -121,19 +123,19 @@ namespace Xamarin.Android.Tasks
 			sb.AppendLine (AndroidManifest);
 			if (ManifestOverlayFiles != null) {
 				sb.AppendLine ("--overlays");
-				sb.AppendLine ($"{string.Join ($"{Path.PathSeparator}", ManifestOverlayFiles)}");
+				sb.AppendLine (string.Join ($"{Path.PathSeparator}", ManifestOverlayFiles));
 			}
 			if (LibraryManifestFiles != null) {
 				sb.AppendLine ("--libs");
-				sb.AppendLine ($"{string.Join ($"{Path.PathSeparator}", LibraryManifestFiles)}");
+				sb.AppendLine (string.Join ($"{Path.PathSeparator}", LibraryManifestFiles));
 			}
 			if (ManifestPlaceholders != null) {
 				foreach (var entry in ManifestPlaceholders.Select (e => e.Split (new char [] { '=' }, 2, StringSplitOptions.None))) {
 					if (entry.Length == 2) {
 						sb.AppendLine ("--placeholder");
-						sb.AppendLine ($"{entry [0]}={entry [1]}");
+						sb.AppendLine (entry [0] + "=" + entry [1]);
 					} else
-						Log.LogCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", ManifestPlaceholders)));
+						Log.LogCodedWarning ("XA1010", string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA1010, string.Join (";", ManifestPlaceholders)));
 				}
 			}
 			if (!ExtraArgs.IsNullOrEmpty ()) {
@@ -146,7 +148,7 @@ namespace Xamarin.Android.Tasks
 			}
 			sb.AppendLine ("--out");
 			sb.AppendLine (tempFile);
-			File.WriteAllText (responseFile, sb.ToString ());
+			File.WriteAllText (responseFile ?? throw new InvalidOperationException ("The response file has not been initialized."), sb.ToString ());
 			cmd.AppendFileNameIfNotNull (responseFile);
 			return cmd;
 		}

@@ -153,6 +153,26 @@ partial class MonoAndroidHelper
 		return Convert.ToString (obj, CultureInfo.InvariantCulture);
 	}
 
+	internal static string GetJavaOptions (string? javaOptions, string? jdkVersion)
+	{
+		string options = javaOptions ?? "";
+		if (!Version.TryParse (jdkVersion, out var version) || version.Major < 24) {
+			return options;
+		}
+
+		options = AppendJavaOption (options, "--enable-native-access=ALL-UNNAMED");
+		return AppendJavaOption (options, "--sun-misc-unsafe-memory-access=allow");
+	}
+
+	static string AppendJavaOption (string options, string option)
+	{
+		if (options.IndexOf (option, StringComparison.Ordinal) >= 0) {
+			return options;
+		}
+
+		return string.IsNullOrWhiteSpace (options) ? option : $"{options} {option}";
+	}
+
 	public static string MakeZipArchivePath (string part1, params string[]? pathParts)
 	{
 		return MakeZipArchivePath (part1, (ICollection<string>?)pathParts);

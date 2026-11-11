@@ -20,7 +20,7 @@ namespace Microsoft.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
-			var javaOptions = GetJavaOptions (JavaOptions, JdkVersion);
+			var javaOptions = MonoAndroidHelper.GetJavaOptions (JavaOptions, JdkVersion);
 			if (!javaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (javaOptions);
 			}
