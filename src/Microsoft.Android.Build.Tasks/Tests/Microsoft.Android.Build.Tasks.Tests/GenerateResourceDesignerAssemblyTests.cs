@@ -12,7 +12,6 @@ using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -492,7 +491,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		var minimumVersion = Version.Parse (File.ReadAllText (Path.Combine (sdkDirectory, "minimumMSBuildVersion")).Trim ());
 		var executable = "dotnet";
 		if (frameworkMSBuild) {
-			executable = MSBuildLocator.QueryLatest ().MSBuildPath;
+			executable = FindFrameworkMSBuild ();
 			var fileVersion = FileVersionInfo.GetVersionInfo (executable);
 			var version = new Version (fileVersion.FileMajorPart, fileVersion.FileMinorPart, fileVersion.FileBuildPart);
 			if (version.Major < 18 || version < minimumVersion)
@@ -511,6 +510,18 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 				reader.GetString (reader.GetPropertyDefinition (handle).Name) == Path.GetFileName (directory)));
 		}
 		Assert.IsFalse (File.Exists (OutputPath));
+	}
+
+	string FindFrameworkMSBuild ()
+	{
+		string vswhere = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86),
+			"Microsoft Visual Studio", "Installer", "vswhere.exe");
+		if (!File.Exists (vswhere))
+			throw new FileNotFoundException ("Cannot find vswhere.exe.", vswhere);
+		string output = RunMSBuild (vswhere, "-latest", "-prerelease", "-products", "*", "-requires", "Microsoft.Component.MSBuild",
+			"-find", @"MSBuild\**\Bin\MSBuild.exe");
+		return output.Split ('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			.FirstOrDefault (File.Exists) ?? throw new FileNotFoundException ($"vswhere.exe did not find MSBuild.exe: {output}");
 	}
 
 	string RunMSBuild (string executable, params string [] arguments)

@@ -32,7 +32,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
-    <ProjectReference Include="..\..\..\..\tools\vswhere\vswhere.csproj" />
   </ItemGroup>
 
 </Project>
