@@ -29,6 +29,15 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Installer.AndroidSDK\Xamarin.Installer.AndroidSDK.csproj" />
+    <!-- StreamingTests run the built tool out of process; it pins its own Microsoft.Testing.Platform version. -->
+    <ProjectReference Include="..\..\src\Microsoft.Android.Run\Microsoft.Android.Run.csproj" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>MicrosoftAndroidRunPath</_Parameter1>
+      <_Parameter2>$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.dll</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

@@ -1,19 +1,15 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
@@ -126,12 +122,14 @@ public class StreamingTests
 			INSTRUMENTATION_RESULT: resultsPath=/device/results.trx
 			INSTRUMENTATION_CODE: -1
 			""");
-		using var application = await CreateApplication (transcript, reportFailure);
+		if (reportFailure)
+			Directory.CreateDirectory (Path.Combine (directory, "results.trx"));
+		var (exitCode, output) = await RunAndroidTestsAsync (transcript);
 		if (reportFailure) {
-			await Assert.ThrowsExactlyAsync<UnauthorizedAccessException> (async () => { await application.RunAsync (); });
+			Assert.AreNotEqual (0, exitCode, output);
 			Assert.IsFalse (File.Exists (Path.Combine (directory, "results.trx")));
 		} else {
-			Assert.AreEqual (!crash, await application.RunAsync () == 0);
+			Assert.AreEqual (!crash, exitCode == 0, output);
 			var trx = XDocument.Load (Path.Combine (directory, "results.trx"));
 			XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 			var results = trx.Descendants (ns + "UnitTestResult").ToArray ();
@@ -146,10 +144,10 @@ public class StreamingTests
 			}
 		}
 		if (crash) {
-			Assert.Contains ("Incomplete test run", error.ToString ());
-			Assert.Contains ("[passed] Tests.One", error.ToString ());
+			Assert.Contains ("Incomplete test run", output);
+			Assert.Contains ("[passed] Tests.One", output);
 		} else {
-			Assert.DoesNotContain ("Incomplete test run", error.ToString ());
+			Assert.DoesNotContain ("Incomplete test run", output);
 		}
 	}
 
@@ -157,24 +155,24 @@ public class StreamingTests
 	[DataRow ("", 0)]
 	[DataRow ("error: device offline", 1)]
 	[DataRow (Progress, 0)]
-	public async Task MissingBundleOrTransportFailureIsNotLabeledACrash (string transcript, int exitCode)
+	public async Task MissingBundleOrTransportFailureIsNotLabeledACrash (string transcript, int adbExitCode)
 	{
-		using var application = await CreateApplication (transcript, exitCode: exitCode);
-		if (exitCode == 0 && transcript.Length == 0)
-			await Assert.ThrowsExactlyAsync<InvalidOperationException> (async () => { await application.RunAsync (); });
-		else
-			Assert.AreNotEqual (0, await application.RunAsync ());
-		Assert.Contains ("Incomplete test run", error.ToString ());
-		Assert.Contains (transcript == Progress ? "passed=1" : "passed=0", error.ToString ());
-		Assert.DoesNotContain ("process crashed", error.ToString ());
+		var (exitCode, output) = await RunAndroidTestsAsync (transcript, adbExitCode: adbExitCode);
+		Assert.AreNotEqual (0, exitCode, output);
+		if (adbExitCode == 0 && transcript.Length == 0)
+			Assert.Contains ("Instrumentation did not report a resultsPath in the bundle.", output);
+		Assert.Contains ("Incomplete test run", output);
+		Assert.Contains (transcript == Progress ? "passed=1" : "passed=0", output);
+		Assert.DoesNotContain ("process crashed", output);
 	}
 
 	[TestMethod]
 	public async Task ProcessStartupExceptionStillPrintsPartialSummary ()
 	{
-		using var application = await CreateApplication ("", missingAdb: true);
-		await Assert.ThrowsExactlyAsync<System.ComponentModel.Win32Exception> (async () => { await application.RunAsync (); });
-		Assert.Contains ("Incomplete test run", error.ToString ());
+		var (exitCode, output) = await RunAndroidTestsAsync ("", executableAdb: false);
+		Assert.AreNotEqual (0, exitCode, output);
+		Assert.Contains ("An error occurred trying to start process", output);
+		Assert.Contains ("Incomplete test run", output);
 	}
 
 	[TestMethod]
@@ -188,79 +186,68 @@ public class StreamingTests
 			INSTRUMENTATION_STATUS: class=Tests
 			INSTRUMENTATION_STATUS_CODE: 1
 			""" + (finalBundle ? "\nINSTRUMENTATION_RESULT: resultsPath=/device/results.trx\nINSTRUMENTATION_CODE: -1" : "");
-		using var application = await CreateApplication (transcript);
-		Assert.AreNotEqual (0, await application.RunAsync ());
+		var (exitCode, output) = await RunAndroidTestsAsync (transcript);
+		Assert.AreNotEqual (0, exitCode, output);
 		XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 		var result = XDocument.Load (Path.Combine (directory, "results.trx")).Descendants (ns + "UnitTestResult").Single ();
 		Assert.AreEqual ("Tests.One", result.Attribute ("testName")?.Value);
 		Assert.AreEqual ("Failed", result.Attribute ("outcome")?.Value);
 		Assert.AreEqual ("This was the last observed active test, not necessarily the cause of the incomplete run.\nThe test run ended before all tests completed.", result.Element (ns + "Output")?.Element (ns + "ErrorInfo")?.Element (ns + "Message")?.Value);
-		Assert.Contains ("passed=0", error.ToString ());
-		Assert.DoesNotContain ("process crashed", error.ToString ());
+		Assert.Contains ("passed=0", output);
+		Assert.DoesNotContain ("process crashed", output);
 	}
 
 	[TestMethod]
 	public async Task CancellationAfterProgressPreservesPartialResults ()
 	{
-		using var cancellation = new CancellationTokenSource (TimeSpan.FromSeconds (30));
-		var adapter = new CancellableAdapter (Path.Combine (directory, "fake-adb"), cancellation.Token);
-		using var application = await CreateApplication (Progress, cancellationAdapter: adapter);
-		var run = application.RunAsync ();
-		try {
-			await adapter.ProgressObserved.Task.WaitAsync (TimeSpan.FromSeconds (15));
-			Assert.IsFalse (run.IsCompleted, "Cancel only after progress from a still-running invocation.");
-		} finally {
-			cancellation.Cancel ();
-			await Assert.ThrowsAsync<OperationCanceledException> (async () => { await run.WaitAsync (TimeSpan.FromSeconds (15)); });
-		}
-		Assert.Contains ("Incomplete test run", error.ToString ());
-		Assert.Contains ("[passed] Tests.One", error.ToString ());
+		var stopwatch = Stopwatch.StartNew ();
+		var (exitCode, output) = await RunAndroidTestsAsync (Progress, interruptAfterTranscript: true);
+		Assert.AreEqual (130, exitCode, output);
+		Assert.IsLessThan (TimeSpan.FromSeconds (25), stopwatch.Elapsed, "Ctrl+C must stop the still-running adb invocation.");
+		Assert.Contains ("Incomplete test run", output);
+		Assert.Contains ("[passed] Tests.One", output);
 	}
 
-	async Task<ITestApplication> CreateApplication (string transcript, bool reportFailure = false, int exitCode = 0, bool missingAdb = false,
-		CancellableAdapter? cancellationAdapter = null)
+	static readonly string MicrosoftAndroidRunPath = typeof (StreamingTests).Assembly
+		.GetCustomAttributes<AssemblyMetadataAttribute> ()
+		.Single (a => a.Key == "MicrosoftAndroidRunPath").Value ?? throw new InvalidOperationException ("Missing MicrosoftAndroidRunPath metadata.");
+
+	// Runs the built Microsoft.Android.Run under 'dotnet test', the same way Android test projects run, with a fake adb
+	// that replays an 'am instrument -w -r' transcript.
+	async Task<(int ExitCode, string Output)> RunAndroidTestsAsync (string transcript, int adbExitCode = 0, bool executableAdb = true, bool interruptAfterTranscript = false)
 	{
-		if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
+		if (OperatingSystem.IsWindows ())
 			Assert.Inconclusive ("The fake adb is a Unix shell executable.");
 		string adb = Path.Combine (directory, "fake-adb");
-		var ending = cancellationAdapter == null ? $"exit {exitCode}" : "exec sleep 30";
-		File.WriteAllText (adb, $"#!/bin/sh\ncat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
-		if (!OperatingSystem.IsWindows ())
+		// After Ctrl+C, Microsoft.Android.Run runs other adb commands to stop the app; only 'am instrument' replays the transcript.
+		var ending = interruptAfterTranscript ? "kill -INT $PPID\nexec sleep 30" : $"exit {adbExitCode}";
+		File.WriteAllText (adb, $"#!/bin/sh\ncase \"$*\" in *instrument*) ;; *) exit 0 ;; esac\ncat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
+		if (executableAdb && !OperatingSystem.IsWindows ())
 			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-		if (reportFailure)
-			Directory.CreateDirectory (Path.Combine (directory, "results.trx"));
-		var builder = await TestApplication.CreateBuilderAsync ([
-			"--report-trx", "--report-trx-filename", "results.trx", "--results-directory", directory,
-		]);
-		AndroidTestAdapter adapter = cancellationAdapter ?? new AndroidTestAdapter (missingAdb ? Path.Combine (directory, "missing-adb") : adb, null, "tests", "runner", false);
-		builder.RegisterTestFramework (_ => new AndroidTestCapabilities (), (_, _) => adapter);
-		builder.AddTrxReportProvider ();
-		return await builder.BuildAsync ();
-	}
+		File.WriteAllText (Path.Combine (directory, "global.json"), """{ "test": { "runner": "Microsoft.Testing.Platform" } }""");
 
-#pragma warning disable TPEXP // The pinned MTP marks request construction as experimental; inject cancellation only in tests.
-	sealed class CancellableAdapter (string adb, CancellationToken cancellationToken) :
-		AndroidTestAdapter (adb, null, "tests", "runner", false), ITestFramework, IMessageBus, IExecuteRequestCompletionNotifier
-	{
-		ExecuteRequestContext? original;
-		public TaskCompletionSource ProgressObserved { get; } = new (TaskCreationOptions.RunContinuationsAsynchronously);
+		var psi = new ProcessStartInfo (Path.GetFullPath (Path.Combine (RuntimeEnvironment.GetRuntimeDirectory (), "..", "..", "..", "dotnet"))) {
+			WorkingDirectory = directory,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		foreach (var arg in new [] {
+				"test", "--no-ansi", "--no-progress", "--test-modules", MicrosoftAndroidRunPath, "--root-directory", "/", "--",
+				"--adb", adb, "--package", "tests", "--instrument", "runner",
+				"--report-trx", "--report-trx-filename", "results.trx", "--results-directory", directory,
+		})
+			psi.ArgumentList.Add (arg);
 
-		Task ITestFramework.ExecuteRequestAsync (ExecuteRequestContext context)
-		{
-			original = context;
-			return base.ExecuteRequestAsync (new ExecuteRequestContext (context.Request, this, this, cancellationToken));
+		using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{psi.FileName}'.");
+		var stdout = process.StandardOutput.ReadToEndAsync ();
+		var stderr = process.StandardError.ReadToEndAsync ();
+		using var timeout = new CancellationTokenSource (TimeSpan.FromMinutes (2));
+		try {
+			await process.WaitForExitAsync (timeout.Token);
+		} catch (OperationCanceledException) {
+			process.Kill (entireProcessTree: true);
+			throw;
 		}
-
-		void IExecuteRequestCompletionNotifier.Complete () =>
-			(original ?? throw new InvalidOperationException ("No active execution request.")).Complete ();
-
-		public async Task PublishAsync (IDataProducer dataProducer, IData data)
-		{
-			var context = original ?? throw new InvalidOperationException ("No active execution request.");
-			await context.MessageBus.PublishAsync (dataProducer, data);
-			if (data is TestNodeUpdateMessage update && update.TestNode.DisplayName == "Tests.Two")
-				ProgressObserved.TrySetResult ();
-		}
+		return (process.ExitCode, await stdout + await stderr);
 	}
-#pragma warning restore TPEXP
 }
