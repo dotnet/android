@@ -17,9 +17,6 @@ Errors reported by `zipalign` and other Android command line tooling are
 outside of .NET for Android's control, so a general error code of
 ANDZA0000 is used to report the exact message.
 
-When `zipalign` exits with a non-zero code, its captured output lines are
-reported as errors. If it produces no output, the error reports its exit code.
-
 ## Solution
 
 To learn more about `zipalign` and its usage, see the Android documentation
