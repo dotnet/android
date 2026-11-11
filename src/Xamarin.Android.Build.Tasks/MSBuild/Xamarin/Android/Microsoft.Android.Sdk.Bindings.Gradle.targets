@@ -106,7 +106,7 @@ This file contains MSBuild targets that support building and operating on Androi
     <!-- OutputPath has a trailing separator; the final dot prevents it from escaping the closing quote on Windows. -->
     <ItemGroup>
       <AndroidGradleProject>
-        <_AndroidGradleAssembleArguments Condition=" '%(OutputPath)' != '' and Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleAssembleArguments>
+        <_AndroidGradleAssembleArguments Condition=" Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleAssembleArguments>
         <_AndroidGradleAssembleCommand>%(_AndroidGradleWrapperCommand) &quot;%(_AndroidGradleModule)assemble%(Configuration)&quot; %(_AndroidGradleAssembleArguments) --no-daemon</_AndroidGradleAssembleCommand>
       </AndroidGradleProject>
     </ItemGroup>
@@ -152,7 +152,7 @@ This file contains MSBuild targets that support building and operating on Androi
     />
     <ItemGroup>
       <AndroidGradleProject>
-        <_AndroidGradleCleanArguments Condition=" '%(OutputPath)' != '' and Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleCleanArguments>
+        <_AndroidGradleCleanArguments Condition=" Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleCleanArguments>
         <_AndroidGradleCleanCommand>%(_AndroidGradleWrapperCommand) &quot;%(_AndroidGradleModule)clean&quot; %(_AndroidGradleCleanArguments) --no-daemon</_AndroidGradleCleanCommand>
       </AndroidGradleProject>
     </ItemGroup>
