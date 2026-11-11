@@ -1148,13 +1148,19 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Create a dummy manifest file for aapt to work with -->
   <PropertyGroup>
-    <__ResgenManifest><![CDATA[<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="$(_AndroidPackage)" />]]></__ResgenManifest>
+    <_AndroidResgenManifest><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="" />]]></_AndroidResgenManifest>
   </PropertyGroup>
   <WriteLinesToFile
       File="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
-      Lines="$(__ResgenManifest)"
+      Lines="$(_AndroidResgenManifest)"
       Overwrite="true"
+  />
+  <!-- Use XmlPoke so $(_AndroidPackage) is escaped as an attribute value -->
+  <XmlPoke
+      XmlInputPath="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
+      Query="/manifest/@package"
+      Value="$(_AndroidPackage)"
   />
 
   <GetExtraPackages
