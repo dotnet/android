@@ -699,6 +699,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The &lt;instrumentation&gt; element in &apos;{0}&apos; is missing the android:name attribute..
+        /// </summary>
+        public static string XA1042 {
+            get {
+                return ResourceManager.GetString("XA1042", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not determine what to launch: &apos;{0}&apos; does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element. Set the $(AndroidLaunchActivity) or $(AndroidInstrumentation) MSBuild property to specify one..
         /// </summary>
         public static string XA1043 {
