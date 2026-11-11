@@ -90,4 +90,13 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <!-- FastDeploy shares AndroidHelper and its localized XA#### messages with Xamarin.Android.Build.Debugging.Tasks. -->
+  <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Utilities\AndroidHelper.cs" Link="Utilities\AndroidHelper.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources.Designer.cs" Link="Properties\DebuggingResources.Designer.cs" />
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources*.resx" Link="Properties\Debugging%(Filename)%(Extension)">
+      <ManifestResourceName>Xamarin.Android.Build.Debugging.Tasks.Properties.%(Filename)</ManifestResourceName>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>
