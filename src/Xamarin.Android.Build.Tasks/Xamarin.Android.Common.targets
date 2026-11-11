@@ -2389,6 +2389,45 @@ because xbuild doesn't support framework reference assemblies.
   </PropertyGroup>
 </Target>
 
+<!-- CallTarget cannot see items populated inside _Sign, so discover its inputs here. -->
+<Target Name="_AndroidZipAlignInputs">
+	<ItemGroup>
+		<_AndroidZipAlignApk Include="$(ApkFileIntermediate)" Condition=" '$(AndroidUseApkSigner)' == 'true' And '$(AndroidPackageFormat)' != 'aab' " />
+		<_AndroidZipAlignApk Include="$(_AppBundleIntermediate)" Condition=" '$(AndroidUseApkSigner)' == 'true' And '$(AndroidPackageFormat)' == 'aab' " />
+		<_AndroidZipAlignApk Include="$(IntermediateOutputPath)android\bin\$(_AndroidPackage)*.apk" Condition=" '$(AndroidUseApkSigner)' == 'true' And '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' " />
+		<_AndroidZipAlignApk Include="$(OutDir)$(_AndroidPackage)-Signed-Unaligned.apk" Condition=" '$(AndroidUseApkSigner)' != 'true' " />
+		<_AndroidZipAlignApk Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" Condition=" '$(AndroidUseApkSigner)' != 'true' And '$(AndroidCreatePackagePerAbi)' == 'true' " />
+	</ItemGroup>
+</Target>
+
+<!-- Batch the whole target so each APK's output is checked against its own exit code. -->
+<Target Name="_AndroidZipAlign"
+	DependsOnTargets="_AndroidZipAlignInputs"
+	Inputs="%(_AndroidZipAlignApk.Identity)"
+	Outputs="@(_AndroidZipAlignApk->'$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')">
+	<Exec
+		Command="$(_AndroidZipAlignCommand) -p $(AndroidZipAlignment) &quot;%(_AndroidZipAlignApk.Identity)&quot; &quot;@(_AndroidZipAlignApk->'$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')&quot;"
+		ConsoleToMSBuild="true"
+		IgnoreExitCode="true"
+		IgnoreStandardErrorWarningFormat="true"
+		StandardOutputImportance="Low"
+		StandardErrorImportance="Low">
+		<Output TaskParameter="ConsoleOutput" ItemName="_AndroidZipAlignOutput" />
+		<Output TaskParameter="ExitCode" PropertyName="_AndroidZipAlignExitCode" />
+	</Exec>
+	<Error
+		Condition=" '$(_AndroidZipAlignExitCode)' != '0' And '@(_AndroidZipAlignOutput->Count())' != '0' "
+		Code="ANDZA0000"
+		Text="%(_AndroidZipAlignOutput.Identity)"
+		ContinueOnError="ErrorAndContinue"
+	/>
+	<Error
+		Condition=" '$(_AndroidZipAlignExitCode)' != '0' And '@(_AndroidZipAlignOutput->Count())' == '0' "
+		Code="ANDZA0000"
+		Text="$(_AndroidZipAlignCommand) exited with code $(_AndroidZipAlignExitCode)."
+	/>
+</Target>
+
 <Target Name="_Sign"
 	Inputs="$(_SignInputs)"
 	Outputs="$(_SignOutputs)"
@@ -2422,10 +2461,7 @@ because xbuild doesn't support framework reference assemblies.
 		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' == 'true' " Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
 	</ItemGroup>
 	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
-	<Exec Condition=" '$(AndroidUseApkSigner)' == 'true' "
-		Command="$(_AndroidZipAlignCommand) -p $(AndroidZipAlignment) &quot;%(ApkAbiFilesIntermediate.Identity)&quot; &quot;$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)@(ApkAbiFilesIntermediate->'$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')&quot;"
-		StandardOutputImportance="Low"
-	/>
+	<CallTarget Targets="_AndroidZipAlign" Condition=" '$(AndroidUseApkSigner)' == 'true' " />
 	<ItemGroup>
 		<ApkAbiFilesAligned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' == 'true'" />
 		<ApkAbiFilesAligned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' == 'true' " Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
@@ -2458,10 +2494,7 @@ because xbuild doesn't support framework reference assemblies.
 		<ApkAbiFilesUnaligned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" />
 	</ItemGroup>
 	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "/>
-	<Exec Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "
-		Command="$(_AndroidZipAlignCommand) -p $(AndroidZipAlignment) &quot;%(ApkAbiFilesUnaligned.Identity)&quot; &quot;$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)@(ApkAbiFilesUnaligned->'$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')&quot;"
-		StandardOutputImportance="Low"
-	/>
+	<CallTarget Targets="_AndroidZipAlign" Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' " />
 	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)" />
 </Target>
 
