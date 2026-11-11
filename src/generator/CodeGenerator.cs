@@ -267,7 +267,8 @@ namespace Xamarin.Android.Binder
 				return false;
 			if (!a.ImplementsInterface ("Android.Runtime.IJavaObject", cache) || !b.ImplementsInterface ("Android.Runtime.IJavaObject", cache))
 				return false;
-			return JavaNativeTypeManager.ToJniName (a, cache) == JavaNativeTypeManager.ToJniName (b, cache);
+			return JavaNativeTypeManager.ToJniName (a, cache, PackageNamingPolicy.LowercaseCrc64) ==
+				JavaNativeTypeManager.ToJniName (b, cache, PackageNamingPolicy.LowercaseCrc64);
 		}
 
 		static IEnumerable<GenBase> FlattenNestedTypes (IEnumerable<GenBase> gens)

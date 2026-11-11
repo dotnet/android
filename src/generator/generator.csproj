@@ -10,6 +10,7 @@
     <OutputType>Exe</OutputType>
     <UseAppHost>false</UseAppHost>
     <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <WarningsAsErrors>$(WarningsAsErrors);RS0030</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,6 +35,8 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" PrivateAssets="All" />
+    <AdditionalFiles Include="..\..\build-tools\banned-apis\BannedSymbols.JavaNaming.txt" />
   </ItemGroup>
 
   <ItemGroup>

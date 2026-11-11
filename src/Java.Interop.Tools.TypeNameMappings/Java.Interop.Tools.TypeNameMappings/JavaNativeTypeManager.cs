@@ -230,9 +230,12 @@ namespace Java.Interop.Tools.TypeNameMappings
 		/// <param name="ns">The namespace of the type.</param>
 		/// <param name="assemblyName">The assembly name.</param>
 		/// <returns>A package name based on the current <see cref="PackageNamingPolicy"/>.</returns>
-		public static string GetPackageName (string ns, string assemblyName)
+		public static string GetPackageName (string ns, string assemblyName) =>
+			GetPackageName (ns, assemblyName, PackageNamingPolicy);
+
+		public static string GetPackageName (string ns, string assemblyName, PackageNamingPolicy packageNamingPolicy)
 		{
-			switch (PackageNamingPolicy) {
+			switch (packageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
 				return ns.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
@@ -240,7 +243,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			case PackageNamingPolicy.LowercaseCrc64:
 				return CRC_PREFIX + ToCrc64 (ns + ":" + assemblyName);
 			default:
-					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
+					throw new NotSupportedException ($"PackageNamingPolicy.{packageNamingPolicy} is no longer supported.");
 			}
 		}
 
@@ -533,14 +536,20 @@ namespace Java.Interop.Tools.TypeNameMappings
 		public static string ToJniName (TypeDefinition type, TypeDefinitionCache cache) =>
 			ToJniName (type, (IMetadataResolver) cache);
 
-		public static string ToJniName (TypeDefinition type, IMetadataResolver resolver)
+		public static string ToJniName (TypeDefinition type, IMetadataResolver resolver) =>
+			ToJniName (type, resolver, PackageNamingPolicy);
+
+		public static string ToJniName (TypeDefinition type, IMetadataResolver resolver, PackageNamingPolicy packageNamingPolicy)
 		{
-			var x = ToJniName (type, ExportParameterKind.Unspecified, resolver) ??
+			var x = ToJniName (type, ExportParameterKind.Unspecified, resolver, packageNamingPolicy) ??
 				"java/lang/Object";
 			return x;
 		}
 
-		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, IMetadataResolver cache)
+		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, IMetadataResolver cache) =>
+			ToJniName (type, exportKind, cache, PackageNamingPolicy);
+
+		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, IMetadataResolver cache, PackageNamingPolicy packageNamingPolicy)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -560,7 +569,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 					type:               type,
 					decl:               t => t.DeclaringType,
 					name:               t => t.Name,
-					ns:                 t => GetPackageName (t, cache),
+					ns:                 t => GetPackageName (t, cache, packageNamingPolicy),
 					overrideName:       t => ToJniNameFromAttributes (t, cache),
 					shouldUpdateName:   t => IsNonStaticInnerClass (t as TypeDefinition, cache)
 			);
@@ -679,11 +688,14 @@ namespace Java.Interop.Tools.TypeNameMappings
 		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache cache) =>
 			GetPackageName (type, (IMetadataResolver) cache);
 
-		public static string GetPackageName (TypeDefinition type, IMetadataResolver resolver)
+		public static string GetPackageName (TypeDefinition type, IMetadataResolver resolver) =>
+			GetPackageName (type, resolver, PackageNamingPolicy);
+
+		public static string GetPackageName (TypeDefinition type, IMetadataResolver resolver, PackageNamingPolicy packageNamingPolicy)
 		{
 			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName (resolver)))
 				return type.Namespace.ToLowerInvariant ();
-			return GetPackageName (type.Namespace, type.GetPartialAssemblyName (resolver));
+			return GetPackageName (type.Namespace, type.GetPartialAssemblyName (resolver), packageNamingPolicy);
 		}
 #endif
 

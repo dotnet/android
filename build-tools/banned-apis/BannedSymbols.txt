@@ -1,4 +1,3 @@
 M:Mono.Cecil.FieldReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached
 M:Mono.Cecil.MethodReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached.
 M:Mono.Cecil.TypeReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached.
-P:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.PackageNamingPolicy;Do not access process-wide Java naming policy from MSBuild tasks. Pass naming policy per operation instead.
