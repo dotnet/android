@@ -416,13 +416,11 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		}
 	}
 
-	[TestCase ("Xamarin.Android.Common.targets", false, false)]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false, false)]
-	[TestCase ("Xamarin.Android.Common.targets", false, true)]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false, true)]
-	[TestCase ("Xamarin.Android.Common.targets", true, false)]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true, false)]
-	public void MetadataTaskRegistration (string relativePath, bool frameworkMSBuild, bool multithreaded)
+	[TestCase ("Xamarin.Android.Common.targets", false)]
+	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false)]
+	[TestCase ("Xamarin.Android.Common.targets", true)]
+	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true)]
+	public void MetadataTaskRegistration (string relativePath, bool multithreaded)
 	{
 		var repository = new DirectoryInfo (AppContext.BaseDirectory);
 		while (repository != null && !File.Exists (Path.Combine (repository.FullName, "Configuration.props")))
@@ -447,8 +445,6 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.IsNull (coreRegistration.Attribute ("TaskFactory"));
 		var invocation = source.Descendants ().Single (element => element.Name.LocalName == "GenerateResourceDesignerAssembly");
 		Assert.IsNull (invocation.Attribute ("MSBuildRuntime"));
-		if (frameworkMSBuild && !OperatingSystem.IsWindows ())
-			Assert.Ignore ("MSBuild.exe requires Windows.");
 
 		var designerProject = new XDocument (new XElement ("Project",
 			new XAttribute ("Sdk", "Microsoft.NET.Sdk"),
@@ -487,20 +483,10 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 					new XAttribute ("BuildInParallel", "true")))))
 			.Save (projectPath);
 
-		var sdkDirectory = RunMSBuild ("dotnet", "msbuild", projectPaths [0], "-nologo", "-getProperty:MSBuildBinPath").Trim ();
-		var minimumVersion = Version.Parse (File.ReadAllText (Path.Combine (sdkDirectory, "minimumMSBuildVersion")).Trim ());
-		var executable = "dotnet";
-		if (frameworkMSBuild) {
-			executable = FindFrameworkMSBuild ();
-			var fileVersion = FileVersionInfo.GetVersionInfo (executable);
-			var version = new Version (fileVersion.FileMajorPart, fileVersion.FileMinorPart, fileVersion.FileBuildPart);
-			if (version.Major < 18 || version < minimumVersion)
-				Assert.Ignore ($"'{executable}' is MSBuild {version}; Runtime=\"NET\" requires MSBuild 18.0 or newer, and SDK '{sdkDirectory}' requires {minimumVersion} or newer.");
-		}
-		var arguments = new [] { projectPath, "-t:GenerateDesigner", "-nologo", "-v:minimal", "-m", "-nr:false" };
+		var arguments = new [] { "msbuild", projectPath, "-t:GenerateDesigner", "-nologo", "-v:minimal", "-m", "-nr:false" };
 		if (multithreaded)
 			arguments = [.. arguments, "-mt", "-warnaserror:MSB4286,MSB4287,MSB4288"];
-		RunMSBuild (executable, frameworkMSBuild ? arguments : ["msbuild", .. arguments]);
+		RunMSBuild ("dotnet", arguments);
 		foreach (var childProjectPath in projectPaths) {
 			var directory = Path.GetDirectoryName (childProjectPath) ?? throw new InvalidOperationException ();
 			using var stream = File.OpenRead (Path.Combine (directory, Path.GetFileName (OutputPath)));
@@ -510,18 +496,6 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 				reader.GetString (reader.GetPropertyDefinition (handle).Name) == Path.GetFileName (directory)));
 		}
 		Assert.IsFalse (File.Exists (OutputPath));
-	}
-
-	string FindFrameworkMSBuild ()
-	{
-		string vswhere = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86),
-			"Microsoft Visual Studio", "Installer", "vswhere.exe");
-		if (!File.Exists (vswhere))
-			throw new FileNotFoundException ("Cannot find vswhere.exe.", vswhere);
-		string output = RunMSBuild (vswhere, "-latest", "-prerelease", "-products", "*", "-requires", "Microsoft.Component.MSBuild",
-			"-find", @"MSBuild\**\Bin\MSBuild.exe");
-		return output.Split ('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-			.FirstOrDefault (File.Exists) ?? throw new FileNotFoundException ($"vswhere.exe did not find MSBuild.exe: {output}");
 	}
 
 	string RunMSBuild (string executable, params string [] arguments)
