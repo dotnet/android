@@ -89,7 +89,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.WriteLockFile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareSatelliteAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <!--
 *******************************************
@@ -2507,15 +2506,18 @@ because xbuild doesn't support framework reference assemblies.
       ExtraArgs="$(AndroidBundleToolExtraArgs)"
       GenerateUniversalApkSet="True"
   />
-  <!-- Extract the univeral.apk from the $(_UniversalApkSetIntermediate) to the output directory -->
+  <!-- Extract universal.apk from $(_UniversalApkSetIntermediate) and copy it to the output directory -->
+  <PropertyGroup>
+    <_UniversalApkExtractDir>$(IntermediateOutputPath)android\bin\universal-apk\</_UniversalApkExtractDir>
+  </PropertyGroup>
   <ItemGroup>
-    <_FilestoExtract Include="universal.apk" >
-      <DestinationFileName>$(_AndroidPackage)-Signed.apk</DestinationFileName>
-    </_FilestoExtract>
     <FileWrites Include="$(_UniversalApkSetIntermediate)" />
+    <FileWrites Include="$(_UniversalApkExtractDir)universal.apk" />
     <FileWrites Include="$(OutDir)$(_AndroidPackage)-Signed.apk" />
   </ItemGroup>
-  <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
+  <!-- universal.apk has a fixed ZIP timestamp, so always overwrite instead of comparing size/timestamp. -->
+  <Unzip SourceFiles="$(_UniversalApkSetIntermediate)" DestinationFolder="$(_UniversalApkExtractDir)" Include="universal.apk" SkipUnchangedFiles="false" />
+  <Copy SourceFiles="$(_UniversalApkExtractDir)universal.apk" DestinationFiles="$(OutDir)$(_AndroidPackage)-Signed.apk" />
   <!-- bundletool's universal.apk has a fixed ZIP timestamp, which otherwise leaves this target
        perpetually out of date relative to the unchanged input AAB. -->
   <Touch Files="$(OutDir)$(_AndroidPackage)-Signed.apk" />
