@@ -68,6 +68,49 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void AarResourcesRemovedRegeneratesResources ()
+		{
+			bool includeResources = true;
+			var proj = new XamarinAndroidApplicationProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidAarLibrary ("resources.aar") {
+						BinaryContent = () => CreateAarWithResources (includeResources),
+					},
+				},
+			};
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+			var rTxt = builder.Output.GetIntermediaryPath ("R.txt");
+			StringAssertEx.ContainsText (File.ReadAllLines (rTxt), "aar_resource_string");
+
+			// Only the resources change; the jars, native libraries, and manifest of the .aar stay the same
+			includeResources = false;
+			proj.Touch ("resources.aar");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build after removing the resources should succeed.");
+			builder.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen");
+			StringAssertEx.DoesNotContain ("aar_resource_string", File.ReadAllLines (rTxt), $"`{rTxt}` should not contain resources from the .aar.");
+		}
+
+		static byte [] CreateAarWithResources (bool includeResources)
+		{
+			using var stream = new MemoryStream ();
+			using (var aar = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				void AddEntry (string name, string content)
+				{
+					using var writer = new StreamWriter (aar.CreateEntry (name).Open ());
+					writer.Write (content);
+				}
+				AddEntry ("AndroidManifest.xml", """<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.aarresources" />""");
+				if (includeResources) {
+					AddEntry ("res/values/strings.xml", """<resources><string name="aar_resource_string">Hello</string></resources>""");
+					AddEntry ("R.txt", "int string aar_resource_string 0x7f010001\n");
+				}
+			}
+			return stream.ToArray ();
+		}
+
+		[Test]
 		public void AarConsumerRulesRemainInR8ConfigurationAfterAppProjectTimestampChange ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
