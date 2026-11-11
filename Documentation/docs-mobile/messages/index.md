@@ -360,7 +360,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
-* `MDC` - `MDoc`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
 * `PWA` - `PrepareWearApplicationFiles`

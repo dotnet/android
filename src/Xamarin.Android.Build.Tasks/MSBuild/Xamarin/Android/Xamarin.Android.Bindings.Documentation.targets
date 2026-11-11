@@ -12,7 +12,6 @@ This file is only used by "legacy" Xamarin Android binding projects.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc"       AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.MDoc"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_ExtractJavaDocJars"
@@ -48,40 +47,6 @@ This file is only used by "legacy" Xamarin Android binding projects.
     <ItemGroup>
       <JavaDocIndex Include="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="BuildDocumentation"
-      Condition=" '@(JavaDocIndex->Count())' != '0' And '$(_UseLegacyJavadocImport)' == 'True' "
-      Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
-      Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')">
-    <MDoc
-        References="@(ReferencePath);@(ReferenceDependencyPaths)"
-        TargetAssembly="@(IntermediateAssembly)"
-        OutputDocDirectory="$(IntermediateOutputPath)docs"
-        ToolPath="$(MonoAndroidToolsDirectory)"
-        ToolExe="$(MDocToolExe)"
-    />
-    <!-- "extra" mdoc needed to "fix" formatting, reducing diff size due to XML formatting -->
-    <MDoc
-        References="@(ReferencePath);@(ReferenceDependencyPaths)"
-        TargetAssembly="@(IntermediateAssembly)"
-        OutputDocDirectory="$(IntermediateOutputPath)docs"
-        ToolPath="$(MonoAndroidToolsDirectory)"
-        ToolExe="$(MDocToolExe)"
-    />
-    <!-- Then export .NET doc xml -->
-    <MDoc
-        RunExport="true"
-        TargetAssembly="@(IntermediateAssembly)"
-        OutputDocDirectory="$(IntermediateOutputPath)docs"
-        ToolPath="$(MonoAndroidToolsDirectory)"
-        ToolExe="$(MDocToolExe)"
-    />
-    <Copy
-        SourceFiles="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
-        DestinationFiles="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
-        SkipUnchangedFiles="true"
-    />
   </Target>
 
 </Project>
