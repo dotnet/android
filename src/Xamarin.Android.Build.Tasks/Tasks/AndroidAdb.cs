@@ -17,8 +17,6 @@ namespace Xamarin.Android.Tasks {
 		public string? Command { get; set; }
 		public string? Arguments { get; set; }
 
-		public bool IgnoreErrors { get; set; } = false;
-
 		[Output]
 		public bool Result { get; set; } = true;
 

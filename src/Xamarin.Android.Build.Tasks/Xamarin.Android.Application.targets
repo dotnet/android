@@ -11,16 +11,12 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
 ***********************************************************************************************
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <Target Name="StartAndroidActivity" DependsOnTargets="Run" />
   <Target Name="StopAndroidPackage"
       DependsOnTargets="_ResolveMonoAndroidSdks;_GetAndroidPackageName">
-    <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="shell"
-      Arguments="am force-stop &quot;$(_AndroidPackage)&quot;"
+    <Exec
+      Command="&quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(AdbTarget) shell am force-stop &quot;$(_AndroidPackage)&quot;"
+      StandardOutputImportance="Low"
     />
   </Target>
 </Project>

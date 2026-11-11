@@ -177,7 +177,7 @@ This file contains targets specific for Android application projects.
   </Target>
 
   <Target Name="RunWithLogging"
-          DependsOnTargets="$(_RunWithLoggingDependsOn);_PrepareRunWithLogging">
+          DependsOnTargets="$(_RunWithLoggingDependsOn);_PrepareRunWithLogging;_AndroidAdbToolPath">
     <GetAndroidActivityName
         ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         Condition=" '$(AndroidLaunchActivity)' == '' "
@@ -187,39 +187,15 @@ This file contains targets specific for Android application projects.
 
     <Message Text="Preparing application to log more information" Importance="High" />
     <Message Text="Setting the $(_AndroidRuntimeLogProperty) property to: $(_AndroidRuntimeLog)" Importance="High" />
-    <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="shell"
-      Arguments="setprop $(_AndroidRuntimeLogProperty) $(_AndroidRuntimeLog)"
-    />
-    <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="logcat"
-      Arguments="-G 16M"
-    />
-    <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="logcat"
-      Arguments="-c"
-    />
+    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) shell setprop $(_AndroidRuntimeLogProperty) $(_AndroidRuntimeLog)" StandardOutputImportance="Low" />
+    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) logcat -G 16M" StandardOutputImportance="Low" />
+    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) logcat -c" StandardOutputImportance="Low" />
 
     <PropertyGroup>
       <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
     </PropertyGroup>
     <Message Text="Running the application and waiting for it to fully start" Importance="High" />
-    <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="shell"
-      Arguments="am start -S -W$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
-    />
+    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) shell am start -S -W$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" StandardOutputImportance="Low" />
 
     <Message Text="Sleeping for $(RunLogDelayInMS)ms to give logcat a chance to log all the messages" Importance="High" />
     <XASleepInternal Milliseconds="$(RunLogDelayInMS)" />
