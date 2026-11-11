@@ -14,9 +14,7 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
-    <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Utilities\TestNameUtilities.cs" Link="TestNameUtilities.cs" />
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" Link="EnvironmentHelper.cs" />
-    <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.NUnit.cs" Link="EnvironmentHelper.NUnit.cs" />
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
     <None Update="Resources\NativeAotBootstrap\**" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Expected\CheckPackageManagerAssemblyOrder.java" CopyToOutputDirectory="PreserveNewest" />

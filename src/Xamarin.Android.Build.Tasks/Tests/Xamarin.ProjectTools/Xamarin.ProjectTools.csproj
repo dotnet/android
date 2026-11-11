@@ -11,9 +11,7 @@
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <ItemGroup>
-    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
-  </ItemGroup>
+  <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
     <Compile Include="..\..\Utilities\MonoAndroidHelper.Basic.cs" />

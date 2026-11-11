@@ -6,28 +6,25 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using NUnit.Framework;
 
 namespace Xamarin.ProjectTools
 {
-	public partial class DownloadedCache
+	public class DownloadedCache
 	{
 		static readonly ConcurrentDictionary<string, object> locks = new ConcurrentDictionary<string, object> ();
 		static readonly HttpClient httpClient = new HttpClient ();
 
-		readonly Action<string> writeLine;
-		readonly Action<string> inconclusive;
+		public DownloadedCache ()
+			: this (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Xamarin.ProjectTools"))
+		{
+		}
 
-		/// <summary>
-		/// Routes diagnostics and transient failures through the calling test's framework.
-		/// The inconclusive callback must throw the framework's inconclusive exception.
-		/// </summary>
-		public DownloadedCache (string cacheDirectory, Action<string> writeLine, Action<string> inconclusive)
+		public DownloadedCache (string cacheDirectory)
 		{
 			if (cacheDirectory == null)
 				throw new ArgumentNullException ("cacheDirectory");
 			CacheDirectory = cacheDirectory;
-			this.writeLine = writeLine ?? throw new ArgumentNullException (nameof (writeLine));
-			this.inconclusive = inconclusive ?? throw new ArgumentNullException (nameof (inconclusive));
 		}
 
 		public string CacheDirectory { get; private set; }
@@ -50,20 +47,19 @@ namespace Xamarin.ProjectTools
 						}
 					}
 				} catch (HttpRequestException ex) when (IsTransientError (ex)) {
-					writeLine ($"Transient network error downloading '{url}':");
-					writeLine ($"  Message: {ex.Message}");
+					TestContext.WriteLine ($"Transient network error downloading '{url}':");
+					TestContext.WriteLine ($"  Message: {ex.Message}");
 					if (ex.StatusCode.HasValue) {
-						writeLine ($"  HTTP Status Code: {(int)ex.StatusCode.Value} ({ex.StatusCode.Value})");
+						TestContext.WriteLine ($"  HTTP Status Code: {(int)ex.StatusCode.Value} ({ex.StatusCode.Value})");
 					}
-					writeLine ($"  URL: {url}");
-					writeLine ($"  Stack Trace: {ex.StackTrace}");
-					inconclusive ($"Test skipped due to transient network error: {ex.Message}");
+					TestContext.WriteLine ($"  URL: {url}");
+					TestContext.WriteLine ($"  Stack Trace: {ex.StackTrace}");
+					Assert.Inconclusive ($"Test skipped due to transient network error: {ex.Message}");
 					try {
 						File.Delete (filename);
 					} catch {
 						// Ignore any errors cleaning up the partially written file.
 					}
-					throw new InvalidOperationException ("The inconclusive callback must throw to stop the test.");
 				}
 				return filename;
 			}
@@ -93,3 +89,4 @@ namespace Xamarin.ProjectTools
 		}
 	}
 }
+

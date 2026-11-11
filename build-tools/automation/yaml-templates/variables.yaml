@@ -15,8 +15,6 @@ variables:
   value: 0.0.17
 - name: TestSlicerToolVersion
   value: 0.1.0-alpha7
-- name: NativeMtpHostSdkVersion
-  value: 11.0.100-rc.3.26522.148
 - name: BootsToolVersion
   value: 1.1.0.36
 - name: NUnitConsoleVersion

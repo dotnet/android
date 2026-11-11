@@ -5,8 +5,7 @@ using System.IO;
 using System.Text;
 
 using ELFSharp.ELF;
-using System.Collections;
-using Assert = Xamarin.Android.Build.Tests.EnvironmentHelperAssertions;
+using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -149,15 +148,5 @@ namespace Xamarin.Android.Build.Tests
 			}
 			return ret;
 		}
-	}
-
-	static partial class EnvironmentHelperAssertions
-	{
-		internal static partial void AreEqual (object expected, object actual, string message = null);
-		internal static partial void Greater (IComparable actual, IComparable expected);
-		internal static partial void GreaterOrEqual (IComparable actual, IComparable expected);
-		internal static partial void Less (IComparable actual, IComparable expected);
-		internal static partial void IsNotEmpty (IEnumerable actual, string message);
-		internal static partial void IsNotEmpty (string actual, string message);
 	}
 }

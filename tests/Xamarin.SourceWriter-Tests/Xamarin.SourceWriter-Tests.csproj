@@ -16,16 +16,13 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <!-- Identify the native test application even before its first package restore. -->
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
-    <MSTestVersion>4.6.0-preview.26524.1</MSTestVersion>
-    <MicrosoftTestingPlatformVersion>2.6.0-preview.26524.1</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" PrivateAssets="all" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" PrivateAssets="all" />
-    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportPackageVersion)" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
