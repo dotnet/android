@@ -31,11 +31,11 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
       Condition=" '$(JavacTargetVersion)' == '' or '$(JavacSourceVersion)' == '' ">
     <PropertyGroup Condition=" $(_JdkVersion.StartsWith ('9', StringComparison.OrdinalIgnoreCase)) ">
       <JavacSourceVersion>$(_DefaultJdkVersion)</JavacSourceVersion>
-      <JavacTargetVersion>$(JavacSourceVersion)</JavacTargetVersion>
+      <JavacTargetVersion>$(_DefaultJdkVersion)</JavacTargetVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" ('$(AndroidSkipJavacVersionCheck)' == '' or !$(AndroidSkipJavacVersionCheck)) and '$(AndroidEnableMultiDex)' != '' and $(AndroidEnableMultiDex) and $(_JdkVersion.StartsWith ('1.8', StringComparison.OrdinalIgnoreCase)) ">
       <JavacSourceVersion>1.7</JavacSourceVersion>
-      <JavacTargetVersion>$(JavacSourceVersion)</JavacTargetVersion>
+      <JavacTargetVersion>1.7</JavacTargetVersion>
     </PropertyGroup>
   </Target>
 
