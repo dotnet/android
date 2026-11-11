@@ -74,8 +74,7 @@ This file contains MSBuild targets that support building and operating on Androi
       <_AndroidGradleEnvironment Include="ANDROID_HOME=$(AndroidSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(AndroidSdkDirectory)')) " />
       <_AndroidGradleEnvironment Include="JAVA_HOME=$(JavaSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(JavaSdkDirectory)')) " />
       <AndroidGradleProject>
-        <_AndroidGradleWrapper>%(RootDir)%(Directory)$(_AndroidGradleToolName)</_AndroidGradleWrapper>
-        <_AndroidGradleWrapperCommand>&quot;%(_AndroidGradleWrapper)&quot;</_AndroidGradleWrapperCommand>
+        <_AndroidGradleWrapperCommand>&quot;%(RootDir)%(Directory)$(_AndroidGradleToolName)&quot;</_AndroidGradleWrapperCommand>
         <_AndroidGradleModule Condition=" '%(ModuleName)' != '' ">%(ModuleName):</_AndroidGradleModule>
       </AndroidGradleProject>
     </ItemGroup>
@@ -99,7 +98,7 @@ This file contains MSBuild targets that support building and operating on Androi
 
     <!-- Run assemble task for project outputs, android app and library project outputs are currently supported -->
     <AndroidError
-        Condition=" !Exists('%(AndroidGradleProject._AndroidGradleWrapper)') "
+        Condition=" !Exists('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)$(_AndroidGradleToolName)') "
         Code="XAGRDL1000"
         ResourceName="XAGRDL1000"
         FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
@@ -146,7 +145,7 @@ This file contains MSBuild targets that support building and operating on Androi
       Condition=" '@(AndroidGradleProject->Count())' != '0' "
       DependsOnTargets="_CalculateAndroidGradleProjectOutputPath;_AndroidPrepareGradleProjects" >
     <AndroidError
-        Condition=" !Exists('%(AndroidGradleProject._AndroidGradleWrapper)') "
+        Condition=" !Exists('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)$(_AndroidGradleToolName)') "
         Code="XAGRDL1000"
         ResourceName="XAGRDL1000"
         FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
