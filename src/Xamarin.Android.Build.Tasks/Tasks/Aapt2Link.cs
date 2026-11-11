@@ -162,7 +162,7 @@ namespace Xamarin.Android.Tasks {
 			Directory.CreateDirectory (manifestDir);
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			string targetSdkVersion = AndroidApiLevel;
-			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version v)) {
+			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var v)) {
 				targetSdkVersion = v.Major.ToString (CultureInfo.InvariantCulture);
 			}
 			ManifestDocument manifest = new ManifestDocument (ManifestFile, versions);
@@ -341,7 +341,7 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 			// Use $(SupportedOSPlatformVersion) if minSdkVersion was not found in the manifest
-			if (minSdkVersion.IsNullOrEmpty () && MonoAndroidHelper.TryParseApiLevel (SupportedOSPlatformVersion, out Version version)) {
+			if (minSdkVersion.IsNullOrEmpty () && MonoAndroidHelper.TryParseApiLevel (SupportedOSPlatformVersion, out var version)) {
 				minSdkVersion = version.Major.ToString (CultureInfo.InvariantCulture);
 			}
 			if (!minSdkVersion.IsNullOrEmpty ()) {

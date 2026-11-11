@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 
@@ -221,5 +222,19 @@ partial class MonoAndroidHelper
 			return false;
 		}
 		return value1.Equals (value2, comparisonType);
+	}
+
+	public static bool TryParseApiLevel (string? apiLevel, [NotNullWhen (true)] out Version? version)
+	{
+		if (Version.TryParse (apiLevel, out var v)) {
+			version = v;
+			return true;
+		}
+		if (int.TryParse (apiLevel, out var major)) {
+			version = new Version (major, 0);
+			return true;
+		}
+		version = null;
+		return false;
 	}
 }

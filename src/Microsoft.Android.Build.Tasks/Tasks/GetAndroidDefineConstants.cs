@@ -7,11 +7,12 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	[MSBuildMultiThreadableTask]
-	public class GetAndroidDefineConstants : MultithreadedAndroidTask
+	public partial class GetAndroidDefineConstants : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "GAD";
 
@@ -23,12 +24,15 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public  ITaskItem[]?    AndroidDefineConstants      { get; set; }
 
+		[GeneratedRegex ("[^A-Za-z0-9]")]
+		private static partial Regex NonAlphanumericRegex { get; }
+
 		public override bool RunTask ()
 		{
 			var constants = new List<ITaskItem> ();
 
 			if (!ProductVersion.IsNullOrEmpty ()) {
-				var version = Regex.Replace (ProductVersion, "[^A-Za-z0-9]", "_");
+				var version = NonAlphanumericRegex.Replace (ProductVersion, "_");
 				constants.Add (new TaskItem ($"__XAMARIN_ANDROID_{version}__"));
 			}
 
