@@ -229,7 +229,8 @@ namespace Microsoft.Android.Tasks
 		{
 			Regex issueReplaceRegex = new Regex ($"\b{issueToRemove}\b(,)?");
 			if (!issues.IsNullOrEmpty () && issues.Contains (issueToRemove)) {
-				var match = issueReplaceRegex.Match (DisabledIssues ?? throw new ArgumentNullException (nameof (DisabledIssues)));
+				ArgumentNullException.ThrowIfNull (DisabledIssues);
+				var match = issueReplaceRegex.Match (DisabledIssues);
 				if (match.Success) {
 					issues = issues.Replace (match.Value, string.Empty);
 					Log.LogCodedWarning ("XA0123", issueToRemove, issuePropertyName, lintToolVersion);
