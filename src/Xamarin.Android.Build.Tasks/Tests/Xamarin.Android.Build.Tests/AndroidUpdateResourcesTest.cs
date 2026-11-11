@@ -529,10 +529,9 @@ namespace UnnamedProject
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
 				FileAssert.Exists (packaged_resources);
-				var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
-				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}.aar").ToString ();
+				var libraryImportId = Path.GetFileName (b.Output.GetAarImportDirectory ($"{lib.ProjectName}.aar"));
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
-					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "lp", libraryImportId, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
 				}
 
@@ -568,7 +567,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
-					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "lp", libraryImportId, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
 				}
 

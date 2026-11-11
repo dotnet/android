@@ -1177,6 +1177,7 @@ because xbuild doesn't support framework reference assemblies.
 		$(_AndroidBuildPropertiesCache);
 		$(ProjectAssetsFile);
 		$(_AndroidLibraryProjectImportsCache);
+		$(_AndroidAarLibraryMapFile);
 		$(_AndroidLibraryImportsCache);
 		@(_ModifiedResources);
 	</_UpdateAndroidResgenInputs>

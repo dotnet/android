@@ -96,16 +96,14 @@ namespace Xamarin.Android.Build.Tests
 			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
 
-			var cacheFile = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
 			var projectFile = Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath);
 			File.SetLastWriteTimeUtc (projectFile, DateTime.UtcNow.AddMinutes (2));
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false),
 				"Build after touching the project file should succeed.");
 			builder.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
-			var rules = ReadCache (cacheFile).ProguardConfigFiles ?? [];
-			Assert.AreEqual (1, rules.Length, "The AAR consumer rule should remain in the imports cache.");
-			var proguardFile = Path.GetFullPath (rules [0].ItemSpec);
+			builder.Output.AssertTargetIsSkipped ("_AndroidExtractAarLibraries");
+			var proguardFile = Path.Combine (builder.Output.GetAarImportDirectory ("consumer-rules.aar"), "jl", "proguard.txt");
 			FileAssert.Exists (proguardFile);
 
 			// Force a subsequent R8 invocation to verify the rule recovered from the cache is passed through.
@@ -1021,6 +1019,7 @@ namespace Lib2
 				("_GeneratePackageManagerJava", true),
 				("_AndroidGenerateCoreClrBootstrap", true),
 				("_ResolveLibraryProjectImports", false),
+				("_AndroidExtractAarLibraries", false),
 				("_CleanIntermediateIfNeeded", false),
 			};
 
@@ -1656,31 +1655,30 @@ namespace Lib2
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var cacheFile = Path.Combine (intermediate, "libraryprojectimports.cache");
+				var cacheFile = Path.Combine (intermediate, "libraryimports.cache");
 				FileAssert.Exists (cacheFile);
 				var expected = ReadCache (cacheFile);
-				Assert.AreNotEqual (0, expected.Jars.Length,
-					$"{nameof (expected.Jars)} should not be empty");
-				Assert.AreNotEqual (0, expected.ResolvedResourceDirectories.Length,
-					$"{nameof (expected.ResolvedResourceDirectories)} should not be empty");
-				Assert.AreNotEqual (0, expected.ResolvedResourceDirectoryStamps.Length,
-					$"{nameof (expected.ResolvedResourceDirectoryStamps)} should not be empty");
+				Assert.AreNotEqual (0, expected.Jars?.Length ?? 0, "Jars should not be empty");
+				var aarMap = Path.Combine (intermediate, "lp", "aar.map");
+				var expectedAars = File.ReadAllLines (aarMap);
+				Assert.AreNotEqual (0, expectedAars.Length, $"`{aarMap}` should not be empty");
 
-				// Delete the stamp file; this triggers <ResolveLibraryProjectImports/> to re-run.
-				// However, the task will skip everything, since the hashes of each assembly will be the same.
-				var stamp = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
-				FileAssert.Exists (stamp);
-				File.Delete (stamp);
+				// Delete the extracted.stamp of one .aar; this triggers _AndroidExtractAarLibraries to re-run for it.
+				// However, the .aar is not re-extracted, since its hash is the same.
+				var importDirectory = Path.Combine (intermediate, "lp", expectedAars [0].Substring (0, expectedAars [0].IndexOf ('=')));
+				var extractedStamp = Path.Combine (importDirectory, "extracted.stamp");
+				FileAssert.Exists (extractedStamp);
+				File.Delete (extractedStamp);
+				var contentStamp = importDirectory + ".stamp";
+				var contentStampTime = File.GetLastWriteTimeUtc (contentStamp);
 
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
-				FileAssert.Exists (cacheFile);
-				var actual = ReadCache (cacheFile);
-				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec).OrderBy (j => j),
-					expected.Jars.Select (j => j.ItemSpec).OrderBy (j => j));
-				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j),
-					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j));
+				b.Output.AssertTargetIsPartiallyBuilt ("_AndroidExtractAarLibraries");
+				b.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+				b.Output.AssertTargetIsSkipped ("_ConvertResourcesCases");
+				FileAssert.Exists (extractedStamp);
+				Assert.AreEqual (contentStampTime, File.GetLastWriteTimeUtc (contentStamp), $"`{contentStamp}` should not have been updated.");
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
@@ -1690,23 +1688,19 @@ namespace Lib2
 
 				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-				FileAssert.Exists (cacheFile);
-				actual = ReadCache (cacheFile);
-				Assert.AreEqual (expected.Jars.Length + 1, actual.Jars.Length,
-					$"{nameof (expected.Jars)} should have one more item");
-				Assert.AreEqual (expected.ResolvedResourceDirectories.Length + 1, actual.ResolvedResourceDirectories.Length,
-					$"{nameof (expected.ResolvedResourceDirectories)} should have one more item");
-				Assert.AreEqual (expected.ResolvedResourceDirectoryStamps.Length + 1, actual.ResolvedResourceDirectoryStamps.Length,
-					$"{nameof (expected.ResolvedResourceDirectoryStamps)} should have one more item");
-				foreach (var s in actual.ResolvedResourceDirectoryStamps) {
-					FileAssert.Exists (s.ItemSpec);
-				}
+				var actual = ReadCache (cacheFile);
+				Assert.AreEqual ((expected.Jars?.Length ?? 0) + 1, actual.Jars?.Length ?? 0, "Jars should have one more item");
+				Assert.AreEqual (expectedAars.Length + 1, File.ReadAllLines (aarMap).Length, $"`{aarMap}` should have one more line");
+				var cropDirectory = b.Output.GetAarImportDirectory ("android-crop-1.0.1.aar");
+				FileAssert.Exists (cropDirectory + ".stamp");
+				DirectoryAssert.Exists (Path.Combine (cropDirectory, "jl", "res"));
 
 				// Build with no changes, checking we are skipping targets appropriately
 				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj), "fourth build should have succeeded.");
-				FileAssert.Exists (cacheFile);
 				var targets = new List<string> {
+					"_AndroidExtractAarLibraries",
+					"_BuildLibraryImportsCache",
 					"_UpdateAndroidResgen",
 					"_CompileJava",
 					"_CreateBaseApk",
@@ -1729,18 +1723,20 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "fifth build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
 				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
+				b.Output.AssertTargetIsNotSkipped ("_AndroidExtractAarLibraries");
 				FileAssert.Exists (cacheFile);
-				FileAssert.Exists (stamp);
+				FileAssert.Exists (aarMap);
+				FileAssert.Exists (extractedStamp);
 			}
 		}
 
-		ReadLibraryProjectImportsCache ReadCache (string cacheFile)
+		ReadImportedLibrariesCache ReadCache (string cacheFile)
 		{
-			var task = new ReadLibraryProjectImportsCache {
+			var task = new ReadImportedLibrariesCache {
 				BuildEngine = new MockBuildEngine (new StringWriter ()),
 				CacheFile = cacheFile,
 			};
-			Assert.IsTrue (task.Execute (), $"{nameof (ReadLibraryProjectImportsCache)} should have succeeded.");
+			Assert.IsTrue (task.Execute (), $"{nameof (ReadImportedLibrariesCache)} should have succeeded.");
 			return task;
 		}
 

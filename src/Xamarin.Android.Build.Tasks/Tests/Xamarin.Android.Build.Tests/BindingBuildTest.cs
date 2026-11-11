@@ -498,17 +498,12 @@ namespace Xamarin.Android.Build.Tests
 </manifest>";
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-					var assemblyMap = b.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
-					FileAssert.Exists (assemblyMap);
-					var libraryProjects = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp");
-					var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
-					var assemblyIdentityName = "mylibrary.aar";
-					var assemblyIdentity = assemblyIdentityMap.IndexOf (assemblyIdentityName).ToString ();
-					var dsStorePath = Path.Combine (libraryProjects, assemblyIdentity, "jl");
+					var dsStorePath = Path.Combine (b.Output.GetAarImportDirectory ("mylibrary.aar"), "jl");
 					DirectoryAssert.Exists (dsStorePath);
 					FileAssert.DoesNotExist (Path.Combine (dsStorePath, ".DS_Store"));
 					DirectoryAssert.DoesNotExist (Path.Combine (dsStorePath, "_MACOSX"));
-					var svgJarDir = Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ($"{binding.ProjectName}.aar").ToString (), "jl", "libs");
+					DirectoryAssert.DoesNotExist (Path.Combine (dsStorePath, "__MACOSX"));
+					var svgJarDir = Path.Combine (b.Output.GetAarImportDirectory ($"{binding.ProjectName}.aar"), "jl", "libs");
 					DirectoryAssert.Exists (svgJarDir);
 					var jarFiles = Directory.GetFiles (svgJarDir, "*.jar");
 					Assert.AreEqual (1, jarFiles.Length, $"Expected 1 .jar file in {svgJarDir}");
@@ -1057,8 +1052,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				var hash = Files.HashString (Path.Combine (lib.IntermediateOutputPath,
 					"binding", "bin", $"{lib.ProjectName}.jar").Replace ("\\", "/"));
 				var intermediate = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath);
-				var lpPath = Path.Combine ("1", "jl", "libs", $"{hash}.jar");
-				var jar = Path.Combine (intermediate, "lp", lpPath);
+				var jar = Path.Combine (appBuilder.Output.GetAarImportDirectory ($"{lib.ProjectName}.aar"), "jl", "libs", $"{hash}.jar");
 				FileAssert.Exists (jar, $"'{jar}' should have been generated.");
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);

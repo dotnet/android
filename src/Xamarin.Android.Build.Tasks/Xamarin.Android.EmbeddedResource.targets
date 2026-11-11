@@ -2,14 +2,19 @@
 ***********************************************************************************************
 Xamarin.Android.EmbeddedResource.targets
 
-This file contains MSBuild targets related to the creation or
-extraction of `__AndroidLibraryProjects__.zip` or
-`__AndroidNativeLibraries__.zip`. These are packaged as
-`EmbeddedResource` files in Xamarin.Android assemblies.
+This file contains MSBuild targets related to the extraction of
+Android library content (resources, assets, jars, native libraries,
+etc.) from referenced libraries:
 
-The actual creation of these files is only created in "classic"
-Xamarin.Android projects. We support *consuming* them from .NET 6+ in
-a backwards compatible fashion.
+* `.aar` files in @(AndroidAarLibrary), extracted by the
+  `_AndroidExtractAarLibraries` target.
+
+* "Classic" Xamarin.Android assemblies, which embed
+  `__AndroidLibraryProjects__.zip`, `__AndroidNativeLibraries__.zip`
+  or `.jar` files as `EmbeddedResource`s. These are only created by
+  "classic" Xamarin.Android projects. We support *consuming* them in a
+  backwards compatible fashion via the <ResolveLibraryProjectImports/>
+  task, which warns (XA0150) that this support is deprecated.
 
 This file is used by all project types, including binding projects.
 
@@ -30,22 +35,20 @@ This file is used by all project types, including binding projects.
     <_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
     <_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
     <_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
+    <!-- Must stay next to map.cache, see AssemblyIdentityMap.AarLibraryMapFileName -->
+    <_AndroidAarLibraryMapFile>$(_AndroidLibrayProjectIntermediatePath)aar.map</_AndroidAarLibraryMapFile>
   </PropertyGroup>
 
   <Target Name="_ResolveLibraryProjectImports"
       DependsOnTargets="$(CoreResolveReferencesDependsOn)"
-      Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
+      Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
     <ResolveLibraryProjectImports
         ContinueOnError="$(DesignTimeBuild)"
-        AndroidApplication="$(AndroidApplication)"
         CacheFile="$(_AndroidLibraryProjectImportsCache)"
-        DesignTimeBuild="$(DesignTimeBuild)"
         Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)"
-        AarLibraries="@(AndroidAarLibrary)"
         ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
         NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
-        OutputDirectory="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
         OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
     />
@@ -56,20 +59,137 @@ This file is used by all project types, including binding projects.
     </ItemGroup>
   </Target>
 
-  <Target Name="_ExtractLibraryProjectImports" DependsOnTargets="_ResolveLibraryProjectImports">
+  <!--
+    Each .aar is extracted to $(_AndroidLibrayProjectIntermediatePath)[id]/$(_LibraryProjectImportsDirectoryName)/,
+    where [id] is a short hash of the .aar path. Files:
+      [id].stamp            SHA256 of the extracted .aar; only rewritten when the .aar content changes.
+                            <CollectNonEmptyDirectories/> uses it as the %(StampFile) of the res/ directory.
+      [id]/extracted.stamp  Target output; touched whenever the .aar was checked.
+      aar.map               [id]=[.aar path] lines, used to map lp/[id] paths in tool errors to the .aar.
+  -->
+  <Target Name="_AndroidExtractAarLibrariesInputs"
+      DependsOnTargets="$(CoreResolveReferencesDependsOn)">
+    <ItemGroup>
+      <_AndroidAarLibraryImport Include="@(AndroidAarLibrary->'%(FullPath)'->Distinct())" />
+      <_AndroidAarLibraryImport Remove="@(_AndroidAarLibraryImport)" Condition=" !Exists('%(Identity)') " />
+      <_AndroidAarLibraryImport>
+        <OriginalFile>%(Identity)</OriginalFile>
+        <_AndroidImportId>$([MSBuild]::StableStringHash('%(Identity)').ToString('X8'))</_AndroidImportId>
+      </_AndroidAarLibraryImport>
+      <!-- .aar files may contain custom views, but resource processing is skipped by default -->
+      <_AndroidAarLibraryImport Condition=" '%(_AndroidAarLibraryImport.AndroidSkipResourceProcessing)' == '' ">
+        <AndroidSkipResourceProcessing>True</AndroidSkipResourceProcessing>
+      </_AndroidAarLibraryImport>
+      <_AndroidAarLibraryImport>
+        <_AndroidImportDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(_AndroidLibrayProjectIntermediatePath)', '%(_AndroidImportId)'))</_AndroidImportDirectory>
+        <_AndroidImportStamp>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_AndroidLibrayProjectIntermediatePath)', '%(_AndroidImportId).stamp'))</_AndroidImportStamp>
+      </_AndroidAarLibraryImport>
+      <_AndroidAarLibraryImport>
+        <_AndroidImportsDirectory>%(_AndroidImportDirectory)$(_LibraryProjectImportsDirectoryName)/</_AndroidImportsDirectory>
+        <_AndroidImportExtractedStamp>%(_AndroidImportDirectory)extracted.stamp</_AndroidImportExtractedStamp>
+      </_AndroidAarLibraryImport>
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_AndroidAarLibraryMapFile)"
+        Lines="@(_AndroidAarLibraryImport->'%(_AndroidImportId)=%(Identity)')"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidAarLibraryMapFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidExtractAarLibraries"
+      DependsOnTargets="_AndroidExtractAarLibrariesInputs"
+      Inputs="@(_AndroidAarLibraryImport)"
+      Outputs="@(_AndroidAarLibraryImport->'%(_AndroidImportExtractedStamp)')">
+    <!-- Only the .aar files that are newer than their extracted.stamp are processed here -->
+    <GetFileHash Files="@(_AndroidAarLibraryImport)">
+      <Output TaskParameter="Items" ItemName="_AndroidAarLibraryImportHash" />
+    </GetFileHash>
+    <ItemGroup>
+      <_AndroidAarLibraryImportChanged
+          Include="@(_AndroidAarLibraryImportHash)"
+          Condition=" !Exists('%(_AndroidImportStamp)') or '$([System.IO.File]::ReadAllText(%(_AndroidImportStamp)).Trim())' != '%(FileHash)' "
+      />
+    </ItemGroup>
+    <RemoveDir Directories="@(_AndroidAarLibraryImportChanged->'%(_AndroidImportsDirectory)')" ContinueOnError="$(DesignTimeBuild)" />
+    <!-- Extract everything except .jar files, then only classes.jar and libs/*.jar; other .jar files such as lint.jar are not needed -->
+    <Unzip
+        Condition=" '@(_AndroidAarLibraryImportChanged->Count())' != '0' "
+        ContinueOnError="$(DesignTimeBuild)"
+        SourceFiles="%(_AndroidAarLibraryImportChanged.Identity)"
+        DestinationFolder="%(_AndroidAarLibraryImportChanged._AndroidImportsDirectory)"
+        Exclude="*.jar;**/*.jar;__MACOSX;__MACOSX/**;**/__MACOSX;**/__MACOSX/**;.DS_Store;**/.DS_Store"
+    />
+    <Unzip
+        Condition=" '@(_AndroidAarLibraryImportChanged->Count())' != '0' "
+        ContinueOnError="$(DesignTimeBuild)"
+        SourceFiles="%(_AndroidAarLibraryImportChanged.Identity)"
+        DestinationFolder="%(_AndroidAarLibraryImportChanged._AndroidImportsDirectory)"
+        Include="classes.jar;libs/*.jar;libs/**/*.jar"
+    />
+    <ItemGroup Condition=" '@(_AndroidAarLibraryImportChanged->Count())' != '0' ">
+      <_AndroidAarLibraryExtractedFile Include="%(_AndroidAarLibraryImportChanged._AndroidImportsDirectory)**" />
+    </ItemGroup>
+    <!-- <Unzip/> preserves the (often fixed) timestamps of .aar entries; make updated files newer than their outputs -->
+    <Touch Files="@(_AndroidAarLibraryExtractedFile)" ContinueOnError="$(DesignTimeBuild)" />
+    <WriteLinesToFile
+        Condition=" '@(_AndroidAarLibraryImportChanged->Count())' != '0' "
+        File="%(_AndroidAarLibraryImportChanged._AndroidImportStamp)"
+        Lines="%(_AndroidAarLibraryImportChanged.FileHash)"
+        Overwrite="true"
+    />
+    <Touch Files="@(_AndroidAarLibraryImport->'%(_AndroidImportExtractedStamp)')" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="_ExtractLibraryProjectImports" DependsOnTargets="_ResolveLibraryProjectImports;_AndroidExtractAarLibraries">
     <ReadLibraryProjectImportsCache
         CacheFile="$(_AndroidLibraryProjectImportsCache)">
       <Output TaskParameter="ResolvedResourceDirectories" ItemName="LibraryResourceDirectories" />
       <Output TaskParameter="ResolvedAssetDirectories" ItemName="LibraryAssetDirectories" />
-      <Output TaskParameter="ResolvedEnvironmentFiles" ItemName="LibraryEnvironments" />
       <Output TaskParameter="ResolvedResourceDirectoryStamps" ItemName="_LibraryResourceDirectoryStamps" />
-      <Output TaskParameter="ProguardConfigFiles" ItemName="ProguardConfiguration" />
       <Output TaskParameter="ExtractedDirectories" ItemName="_ExtractedDirectories" />
     </ReadLibraryProjectImportsCache>
+    <ItemGroup>
+      <_ExtractedDirectories
+          Include="@(_AndroidAarLibraryImport->'%(_AndroidImportDirectory)')"
+          KeepMetadata="OriginalFile;NuGetPackageId;NuGetPackageVersion"
+      />
+      <LibraryResourceDirectories
+          Include="@(_AndroidAarLibraryImport->'%(_AndroidImportsDirectory)res')"
+          Condition=" Exists('%(_AndroidAarLibraryImport._AndroidImportsDirectory)res') or Exists('%(_AndroidAarLibraryImport._AndroidImportsDirectory)R.txt') "
+          KeepMetadata="OriginalFile;AndroidSkipResourceProcessing;NuGetPackageId;NuGetPackageVersion"
+      />
+      <_LibraryResourceDirectoryStamps
+          Include="@(_AndroidAarLibraryImport->'%(_AndroidImportStamp)')"
+          Condition=" Exists('%(_AndroidAarLibraryImport._AndroidImportsDirectory)res') or Exists('%(_AndroidAarLibraryImport._AndroidImportsDirectory)R.txt') "
+          KeepMetadata="OriginalFile"
+      />
+      <LibraryAssetDirectories
+          Include="@(_AndroidAarLibraryImport->'%(_AndroidImportsDirectory)assets')"
+          Condition=" Exists('%(_AndroidAarLibraryImport._AndroidImportsDirectory)assets') "
+          KeepMetadata="OriginalFile;NuGetPackageId;NuGetPackageVersion"
+      />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_AndroidAarLibraryImport->Count())' != '0' ">
+      <LibraryEnvironments
+          Include="%(_AndroidAarLibraryImport._AndroidImportsDirectory).net/env/**"
+          OriginalFile="%(_AndroidAarLibraryImport.OriginalFile)"
+          NuGetPackageId="%(_AndroidAarLibraryImport.NuGetPackageId)"
+          NuGetPackageVersion="%(_AndroidAarLibraryImport.NuGetPackageVersion)"
+      />
+      <ProguardConfiguration
+          Include="@(_AndroidAarLibraryImport->'%(_AndroidImportsDirectory)proguard.txt')"
+          Condition=" '$(AndroidApplication)' == 'true' and Exists('%(_AndroidAarLibraryImport._AndroidImportsDirectory)proguard.txt') "
+          KeepMetadata="OriginalFile;NuGetPackageId;NuGetPackageVersion"
+      />
+    </ItemGroup>
   </Target>
 
   <Target Name="_BuildLibraryImportsCache"
-      Inputs="$(_AndroidLibraryProjectImportsCache)"
+      Inputs="$(_AndroidLibraryProjectImportsCache);$(_AndroidAarLibraryMapFile);@(_AndroidAarLibraryImport->'%(_AndroidImportStamp)')"
       Outputs="$(_AndroidStampDirectory)_BuildLibraryImportsCache.stamp">
     <GetImportedLibraries
         ExtractedDirectories="@(_ExtractedDirectories)"

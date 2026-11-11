@@ -455,6 +455,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to NuGet package &apos;{0}&apos; version &apos;{1}&apos; contains assembly &apos;{2}&apos; with Android library content embedded in the legacy Xamarin.Android format. Support for this format is deprecated and will be removed in a future version of .NET for Android. Use a newer version of this NuGet package or notify the library author..
+        /// </summary>
+        public static string XA0150 {
+            get {
+                return ResourceManager.GetString("XA0150", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; contains Android library content embedded in the legacy Xamarin.Android format. Support for this format is deprecated and will be removed in a future version of .NET for Android. Use a newer version of this assembly or notify the library author..
+        /// </summary>
+        public static string XA0150_Assembly {
+            get {
+                return ResourceManager.GetString("XA0150_Assembly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {

@@ -109,6 +109,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0147](xa0147.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.
 + [XA0148](xa0148.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.
 + [XA0149](xa0149.md): Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android.
++ [XA0150](xa0150.md): NuGet package '{0}' version '{1}' contains assembly '{2}' with Android library content embedded in the legacy Xamarin.Android format. Support for this format is deprecated and will be removed in a future version of .NET for Android.
 
 ## XA1xxx: Project related
 

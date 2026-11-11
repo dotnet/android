@@ -69,7 +69,7 @@ namespace Xamarin.Android.Tasks
 			at com.android.dx.command.Main.main(Main.java:106)
 		*/
 		const string ExceptionRegExString = @"(?<exception>java.lang.+):(?<error>.+)";
-		const string LPDirectoryRegExString = @"(lp)([/\\]+)(?<identifier>[0-9]+)([/\\]+)";
+		const string LPDirectoryRegExString = @"(lp)([/\\]+)(?<identifier>[0-9A-Fa-f]+)([/\\]+)";
 		static readonly Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
 		static readonly Regex exceptionRegEx = new Regex (ExceptionRegExString, RegexOptions.Compiled);
 		static readonly Regex lpRegex = new Regex (LPDirectoryRegExString, RegexOptions.Compiled);

@@ -119,6 +119,20 @@ namespace Xamarin.ProjectTools
 			return File.ReadLines (path).ToList ();
 		}
 
+		/// <summary>
+		/// Returns the `lp/[id]` directory an .aar file was extracted to, using `lp/aar.map`.
+		/// </summary>
+		public string GetAarImportDirectory (string aarFileName)
+		{
+			var path = GetIntermediaryPath (Path.Combine ("lp", "aar.map"));
+			foreach (var line in File.ReadLines (path)) {
+				int separator = line.IndexOf ('=');
+				if (separator > 0 && string.Equals (Path.GetFileName (line.Substring (separator + 1)), aarFileName, StringComparison.OrdinalIgnoreCase))
+					return GetIntermediaryPath (Path.Combine ("lp", line.Substring (0, separator)));
+			}
+			throw new InvalidOperationException ($"'{aarFileName}' was not found in '{path}'.");
+		}
+
 		public bool IsTargetSkipped (string target, bool defaultIfNotUsed = false) => IsTargetSkipped (Builder.LastBuildOutput, target, defaultIfNotUsed);
 
 		public static bool IsTargetSkipped (IEnumerable<string> output, string target, bool defaultIfNotUsed = false)

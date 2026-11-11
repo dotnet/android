@@ -1137,6 +1137,18 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>
   </data>
+  <data name="XA0150" xml:space="preserve">
+    <value>NuGet package '{0}' version '{1}' contains assembly '{2}' with Android library content embedded in the legacy Xamarin.Android format. Support for this format is deprecated and will be removed in a future version of .NET for Android. Use a newer version of this NuGet package or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android, NuGet.
+{0} - The NuGet package id.
+{1} - The NuGet package version.
+{2} - The full path to the assembly that contains the embedded Android library content.</comment>
+  </data>
+  <data name="XA0150_Assembly" xml:space="preserve">
+    <value>Assembly '{0}' contains Android library content embedded in the legacy Xamarin.Android format. Support for this format is deprecated and will be removed in a future version of .NET for Android. Use a newer version of this assembly or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
+{0} - The full path to the assembly that contains the embedded Android library content.</comment>
+  </data>
   <data name="XAGCA7009_UnsupportedRuntime" xml:space="preserve">
     <value>GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.</value>
     <comment>The following are literal names and should not be translated: GenerateNativeApplicationConfigSources, CoreCLR, AndroidRuntime.

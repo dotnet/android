@@ -618,37 +618,22 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				var cache = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
-				Assert.IsTrue (File.Exists (cache), $"{cache} should exist.");
-				var assemblyIdentityMap = builder.Output.GetAssemblyMapCache ();
-				var libraryProjects = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp");
-				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1.aar").ToString (), "jl", "classes.jar"),
+				var cropDirectory = builder.Output.GetAarImportDirectory ("android-crop-1.0.1.aar");
+				FileAssert.Exists (Path.Combine (cropDirectory, "jl", "classes.jar"),
 					"classes.jar was not extracted from the aar.");
+				var libraryProjects = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
-					"_ResolveLibraryProjectImports should not have run.");
+				builder.Output.AssertTargetIsSkipped ("_AndroidExtractAarLibraries");
 
-				var doc = XDocument.Load (cache);
-				var expectedCount = doc.Elements ("Paths").Elements ("ResolvedResourceDirectories").Count ();
-
+				// Touching an .aar without changing its contents must not invalidate the extracted files
+				var cropStamp = cropDirectory + ".stamp";
+				var cropStampTime = File.GetLastWriteTimeUtc (cropStamp);
 				aar.Timestamp = DateTimeOffset.UtcNow.Add (TimeSpan.FromMinutes (2));
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
-					"_ResolveLibraryProjectImports should have run.");
+				builder.Output.AssertTargetIsNotSkipped ("_AndroidExtractAarLibraries");
+				Assert.AreEqual (cropStampTime, File.GetLastWriteTimeUtc (cropStamp), $"`{cropStamp}` should not have been updated.");
+				builder.Output.AssertTargetIsSkipped ("_CompileResources");
 
-				doc = XDocument.Load (cache);
-				var count = doc.Elements ("Paths").Elements ("ResolvedResourceDirectories").Count ();
-				Assert.AreEqual (expectedCount, count, "The same number of resource directories should have been resolved.");
-
-				//NOTE: the designer requires the paths to be full paths
-				foreach (var paths in doc.Elements ("Paths")) {
-					foreach (var element in paths.Elements ("Path")) {
-						var path = element.Value;
-						if (!string.IsNullOrEmpty (path)) {
-							Assert.IsTrue (path == Path.GetFullPath (path), $"`{path}` is not a full path!");
-						}
-					}
-				}
 				Assert.IsFalse (Directory.EnumerateFiles (libraryProjects, "lint.jar", SearchOption.AllDirectories).Any (),
 					"`lint.jar` should not be extracted!");
 			}
