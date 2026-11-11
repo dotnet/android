@@ -98,10 +98,10 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
     </ResolveAndroidTooling>
-    <Warning
+    <AndroidWarning
         Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidSupportedAbis)' != '' "
         Code="XA0036"
-        Text="The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead." />
+        ResourceName="XA0036" />
     <!-- Split() escapes each element, so glob characters in invalid RIDs are reported instead of matching files -->
     <ItemGroup Condition=" '$(AndroidApplication)' == 'true' ">
       <_AndroidRuntimeIdentifierAbi Include="$([MSBuild]::ValueOrDefault('$(RuntimeIdentifiers)', '$(RuntimeIdentifier)').Split(';'))" />
@@ -112,10 +112,11 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
         <Abi Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '(?i)^android.*-x64$'))">x86_64</Abi>
       </_AndroidRuntimeIdentifierAbi>
     </ItemGroup>
-    <Error
+    <AndroidError
         Condition=" '$(AndroidApplication)' == 'true' and '%(_AndroidRuntimeIdentifierAbi.Abi)' == '' "
         Code="XA0035"
-        Text="Unable to determine the Android ABI from the value '%(_AndroidRuntimeIdentifierAbi.Identity)'. Edit the project file in a text editor and set the 'RuntimeIdentifiers' MSBuild property to contain only valid identifiers for the Android platform." />
+        ResourceName="XA0035"
+        FormatArguments="%(_AndroidRuntimeIdentifierAbi.Identity)" />
     <PropertyGroup Condition=" '@(_AndroidRuntimeIdentifierAbi)' != '' ">
       <AndroidSupportedAbis>@(_AndroidRuntimeIdentifierAbi->'%(Abi)')</AndroidSupportedAbis>
     </PropertyGroup>
