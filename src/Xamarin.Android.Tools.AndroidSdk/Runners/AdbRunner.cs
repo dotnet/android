@@ -54,10 +54,16 @@ public class AdbRunner
 	/// <param name="adbPath">Executable path resolved by the caller.</param>
 	/// <param name="processStartInfo">Only the working directory and environment are copied.</param>
 	public static AdbRunner CreateWithProcessEnvironment (string adbPath, ProcessStartInfo processStartInfo) =>
-		new AdbRunner (adbPath, processStartInfo);
+		CreateWithProcessEnvironment (adbPath, processStartInfo, logger: null);
 
-	AdbRunner (string adbPath, ProcessStartInfo processStartInfo)
-		: this (adbPath)
+	/// <summary>
+	/// Creates a runner with a copy of the supplied working directory and environment, and a diagnostic logger.
+	/// </summary>
+	public static AdbRunner CreateWithProcessEnvironment (string adbPath, ProcessStartInfo processStartInfo, Action<TraceLevel, string>? logger) =>
+		new AdbRunner (adbPath, processStartInfo, logger);
+
+	AdbRunner (string adbPath, ProcessStartInfo processStartInfo, Action<TraceLevel, string>? logger)
+		: this (adbPath, logger: logger)
 	{
 		if (processStartInfo == null)
 			throw new ArgumentNullException (nameof (processStartInfo));

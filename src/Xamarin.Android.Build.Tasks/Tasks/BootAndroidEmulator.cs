@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -28,11 +29,17 @@ namespace Xamarin.Android.Tasks;
 /// Boot logic is delegated to <see cref="EmulatorRunner.BootEmulatorAsync"/> and
 /// <see cref="AdbRunner"/> in Xamarin.Android.Tools.AndroidSdk.
 /// </summary>
-public class BootAndroidEmulator : AsyncTask
+[MSBuildMultiThreadableTask]
+public class BootAndroidEmulator : MultithreadedAndroidTask, ICancelableTask
 {
 	const int DefaultBootTimeoutSeconds = 300;
+	readonly CancellationTokenSource cancellation = new CancellationTokenSource ();
 
 	public override string TaskPrefix => "BAE";
+
+	public CancellationToken CancellationToken => cancellation.Token;
+
+	public void Cancel () => cancellation.Cancel ();
 
 	/// <summary>
 	/// The device identifier from 'dotnet run' device selection. May be an ADB serial
@@ -94,11 +101,11 @@ public class BootAndroidEmulator : AsyncTask
 	[Output]
 	public string? AdbTarget { get; set; }
 
-	public override async Task RunTaskAsync ()
+	public override bool RunTask ()
 	{
 		if (BootTimeoutSeconds <= 0) {
-			LogCodedError ("XA0145", string.Format (Properties.Resources.XA0145, Device, BootTimeoutSeconds));
-			return;
+			Log.LogCodedError ("XA0145", string.Format (Properties.Resources.XA0145, Device, BootTimeoutSeconds));
+			return false;
 		}
 
 		var adbPath = ResolveAdbPath ();
@@ -110,33 +117,51 @@ public class BootAndroidEmulator : AsyncTask
 			AdditionalArgs = ParseExtraArguments (EmulatorExtraArguments),
 		};
 
-		var result = await ExecuteBootAsync (adbPath, emulatorPath, logger, Device, options, CancellationToken).ConfigureAwait (false);
+		var logLock = new object ();
+		bool logging = true;
+		EmulatorBootResult result;
+		try {
+			result = ExecuteBootAsync (adbPath, emulatorPath, (level, message) => {
+				lock (logLock) {
+					if (logging)
+						logger (level, message);
+				}
+			}, Device, options, CancellationToken).GetAwaiter ().GetResult ();
+		} catch (OperationCanceledException) when (CancellationToken.IsCancellationRequested) {
+			Log.LogMessage ($"Emulator boot for '{Device}' was cancelled.");
+			return !Log.HasLoggedErrors;
+		} finally {
+			// A successfully booted emulator can outlive this task.
+			lock (logLock)
+				logging = false;
+		}
 
 		if (result.Success) {
 			if (result.Serial.IsNullOrEmpty ()) {
-				LogCodedError ("XA0143", Properties.Resources.XA0143, Device, "Boot reported success but no device serial was returned.");
-				return;
+				Log.LogCodedError ("XA0143", Properties.Resources.XA0143, Device, "Boot reported success but no device serial was returned.");
+				return false;
 			}
 			ResolvedDevice = result.Serial;
 			AdbTarget = $"-s {result.Serial}";
-			LogMessage ($"Emulator '{Device}' ({result.Serial}) is fully booted and ready.");
-			return;
+			Log.LogMessage ($"Emulator '{Device}' ({result.Serial}) is fully booted and ready.");
+			return !Log.HasLoggedErrors;
 		}
 
 		switch (result.ErrorKind) {
 		case EmulatorBootErrorKind.LaunchFailed:
-			LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
+			Log.LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
 			break;
 		case EmulatorBootErrorKind.Cancelled:
-			LogMessage ($"Emulator boot for '{Device}' was cancelled.");
+			Log.LogMessage ($"Emulator boot for '{Device}' was cancelled.");
 			break;
 		case EmulatorBootErrorKind.Timeout:
-			LogCodedError ("XA0145", string.Format (Properties.Resources.XA0145, Device, BootTimeoutSeconds));
+			Log.LogCodedError ("XA0145", string.Format (Properties.Resources.XA0145, Device, BootTimeoutSeconds));
 			break;
 		default:
-			LogCodedError ("XA0144", Properties.Resources.XA0144, Device, result.ErrorKind, result.ErrorMessage ?? "Unknown error");
+			Log.LogCodedError ("XA0144", Properties.Resources.XA0144, Device, result.ErrorKind, result.ErrorMessage ?? "Unknown error");
 			break;
 		}
+		return !Log.HasLoggedErrors;
 	}
 
 	/// <summary>
@@ -151,8 +176,15 @@ public class BootAndroidEmulator : AsyncTask
 		EmulatorBootOptions options,
 		System.Threading.CancellationToken cancellationToken)
 	{
-		var adbRunner = new AdbRunner (adbPath, logger: logger);
-		var emulatorRunner = new EmulatorRunner (emulatorPath, logger: logger);
+		var startInfo = TaskEnvironment.GetProcessStartInfo ();
+		// Older MSBuild versions overlay the host environment instead of replacing it.
+		startInfo.EnvironmentVariables.Clear ();
+		foreach (var pair in TaskEnvironment.GetEnvironmentVariables ())
+			startInfo.EnvironmentVariables [pair.Key] = pair.Value;
+		var emulatorRunner = EmulatorRunner.CreateWithProcessEnvironment (emulatorPath, startInfo, logger);
+		// The adb server can outlive the build; do not let it retain the project directory.
+		startInfo.WorkingDirectory = TaskEnvironment.GetTempPath ();
+		var adbRunner = AdbRunner.CreateWithProcessEnvironment (adbPath, startInfo, logger);
 		return await emulatorRunner.BootEmulatorAsync (device, adbRunner, options, cancellationToken).ConfigureAwait (false);
 	}
 
@@ -207,7 +239,7 @@ public class BootAndroidEmulator : AsyncTask
 			dir = Path.Combine (AndroidSdkDirectory, "platform-tools");
 		}
 
-		return dir.IsNullOrEmpty () ? exe : Path.Combine (dir, exe);
+		return ResolveToolPath (dir.IsNullOrEmpty () ? exe : Path.Combine (dir, exe));
 	}
 
 	/// <summary>
@@ -223,6 +255,19 @@ public class BootAndroidEmulator : AsyncTask
 			dir = Path.Combine (AndroidSdkDirectory, "emulator");
 		}
 
-		return dir.IsNullOrEmpty () ? exe : Path.Combine (dir, exe);
+		return ResolveToolPath (dir.IsNullOrEmpty () ? exe : Path.Combine (dir, exe));
+	}
+
+	string ResolveToolPath (string path)
+	{
+		var projectPath = TaskEnvironment.GetAbsolutePath (path);
+		if (string.IsNullOrEmpty (Path.GetDirectoryName (path)) && !File.Exists (projectPath)) {
+			foreach (var directory in (TaskEnvironment.GetEnvironmentVariable ("PATH") ?? "").Split (Path.PathSeparator)) {
+				var candidate = TaskEnvironment.GetAbsolutePath (Path.Combine (directory.Trim ('"'), path));
+				if (File.Exists (candidate))
+					return candidate.GetCanonicalForm ().Value;
+			}
+		}
+		return projectPath.GetCanonicalForm ().Value;
 	}
 }
