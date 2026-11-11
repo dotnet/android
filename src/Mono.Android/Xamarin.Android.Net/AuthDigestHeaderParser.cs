@@ -114,7 +114,7 @@ namespace Xamarin.Android.Net
 				pos++;
 			}
 
-			return header.Substring (begin, pos - begin).Trim ().ToLowerInvariant ();
+			return header.Substring (begin, pos - begin).Trim ();
 		}
 
 		bool GetKeywordAndValue (out string key, out string? value)

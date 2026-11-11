@@ -374,13 +374,13 @@ namespace Xamarin.Installer.AndroidSDK
 			if (String.IsNullOrEmpty (osName))  // Some archives aren't OS-specific
 				return AndroidSDKPlatform.Any;
 
-			if (String.Compare (osName, "linux", StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals (osName, "linux", StringComparison.OrdinalIgnoreCase))
 				return AndroidSDKPlatform.Linux;
 
-			if (String.Compare (osName, "macosx", StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals (osName, "macosx", StringComparison.OrdinalIgnoreCase))
 				return AndroidSDKPlatform.Mac;
 
-			if (String.Compare (osName, "windows", StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals (osName, "windows", StringComparison.OrdinalIgnoreCase))
 				return AndroidSDKPlatform.Windows;
 
 			return AndroidSDKPlatform.Unknown;
@@ -418,19 +418,19 @@ namespace Xamarin.Installer.AndroidSDK
 			if (String.IsNullOrEmpty (abi))
 				return AndroidComponentInfoSystemImage.DefaultAbi;
 
-			if (String.Compare ("arm64-v8a", abi, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("arm64-v8a", abi, StringComparison.OrdinalIgnoreCase))
 				return AndroidSystemImageAbi.ARM64V8a;
 
-			if (String.Compare ("armeabi-v7a", abi, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("armeabi-v7a", abi, StringComparison.OrdinalIgnoreCase))
 				return AndroidSystemImageAbi.ARMV7a;
 
-			if (String.Compare ("mips", abi, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("mips", abi, StringComparison.OrdinalIgnoreCase))
 				return AndroidSystemImageAbi.Mips;
 
-			if (String.Compare ("x86", abi, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("x86", abi, StringComparison.OrdinalIgnoreCase))
 				return AndroidSystemImageAbi.X86;
 
-			if (String.Compare ("x86_64", abi, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("x86_64", abi, StringComparison.OrdinalIgnoreCase))
 				return AndroidSystemImageAbi.X86_64;
 
 			throw new ArgumentOutOfRangeException (String.Format ("Unknown ABI '{0}'", abi));

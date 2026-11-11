@@ -53,13 +53,13 @@ namespace generator.SourceWriters
 				IsShadow = true;
 
 			// Allow user to override our virtual/override logic
-			if (method.ManagedOverride?.ToLowerInvariant () == "virtual") {
+			if (string.Equals (method.ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = true;
 				IsOverride = false;
-			} else if (method.ManagedOverride?.ToLowerInvariant () == "override") {
+			} else if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = true;
-			} else if (method.ManagedOverride?.ToLowerInvariant () == "none") {
+			} else if (string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = false;
 			}

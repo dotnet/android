@@ -162,8 +162,8 @@ namespace Microsoft.Android.Tasks.JniRemapping
 						}
 					} else {
 						bool continuesPositionGroup =
-							String.Equals (pendingPositionRange, positionRange, StringComparison.Ordinal) &&
-							String.Equals (pendingObfuscatedName, obfuscatedName, StringComparison.Ordinal);
+							string.Equals (pendingPositionRange, positionRange, StringComparison.Ordinal) &&
+							string.Equals (pendingObfuscatedName, obfuscatedName, StringComparison.Ordinal);
 						if (!continuesPositionGroup) {
 							FlushPendingMethodMapping (mapping, currentOriginalClass, ref pendingPositionRange, ref pendingObfuscatedName, ref pendingMethodKey);
 							pendingPositionRange = positionRange;
@@ -242,7 +242,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 
 		static void AddUnambiguousReverseEntry (Dictionary<string, string> entries, string key, string value)
 		{
-			if (entries.TryGetValue (key, out string? existing) && !String.Equals (existing, value, StringComparison.Ordinal)) {
+			if (entries.TryGetValue (key, out string? existing) && !string.Equals (existing, value, StringComparison.Ordinal)) {
 				entries [key] = "";
 			} else if (existing == null) {
 				entries [key] = value;
@@ -410,7 +410,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 					if (classes.TryGetValue (parts [1], out string? seedClassName) &&
 							finalMapping.classes.TryGetValue (parts [1], out string? finalClassName) &&
 							!IsRemovedClassName (finalClassName) &&
-							!String.Equals (seedClassName, finalClassName, StringComparison.Ordinal)) {
+							!string.Equals (seedClassName, finalClassName, StringComparison.Ordinal)) {
 						yield return $"class '{parts [1]}': seed name '{seedClassName}', final name '{finalClassName}'";
 					}
 					break;
@@ -421,7 +421,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 						foreach (var field in seedFields) {
 							if (field.Key.Name == parts [2] && field.Value.Length != 0 &&
 									finalFields.TryGetValue (field.Key, out string? finalName) && finalName.Length != 0 &&
-									!String.Equals (field.Value, finalName, StringComparison.Ordinal)) {
+									!string.Equals (field.Value, finalName, StringComparison.Ordinal)) {
 								yield return $"field '{parts [1]}.{parts [2]}': seed name '{field.Value}', final name '{finalName}'";
 							}
 						}
@@ -435,7 +435,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 							finalMapping.methods.TryGetValue (parts [1], out var finalMethods) &&
 							finalMethods.TryGetValue (parts [2], out string? finalMethodName) &&
 							finalMethodName.Length != 0 &&
-							!String.Equals (seedMethodName, finalMethodName, StringComparison.Ordinal)) {
+							!string.Equals (seedMethodName, finalMethodName, StringComparison.Ordinal)) {
 						yield return $"method '{parts [1]}.{parts [2]}': seed name '{seedMethodName}', final name '{finalMethodName}'";
 					}
 					break;
@@ -725,7 +725,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 				string? firstOriginalName = null;
 				var allowedEntries = new List<string> ();
 				foreach (var entry in classMethods) {
-					if (!String.Equals (entry.Value, methodName, StringComparison.Ordinal)) {
+					if (!string.Equals (entry.Value, methodName, StringComparison.Ordinal)) {
 						continue;
 					}
 					string manifestEntry = BuildMethodEntry (originalClassName, entry.Key);
@@ -734,7 +734,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 					}
 					int parameterStart = entry.Key.IndexOf ('(');
 					string originalName = entry.Key.Substring (0, parameterStart);
-					if (firstOriginalName != null && !String.Equals (firstOriginalName, originalName, StringComparison.Ordinal)) {
+					if (firstOriginalName != null && !string.Equals (firstOriginalName, originalName, StringComparison.Ordinal)) {
 						return false;
 					}
 					firstOriginalName = originalName;
@@ -942,7 +942,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 		public IReadOnlyList<R8FieldMapping> Fields { get; }
 		public IReadOnlyList<R8MethodMapping> Methods { get; }
 
-		public bool IsRenamed => !String.Equals (OriginalJniName, ObfuscatedJniName, StringComparison.Ordinal);
+		public bool IsRenamed => !string.Equals (OriginalJniName, ObfuscatedJniName, StringComparison.Ordinal);
 
 		public R8ClassMapping (string originalJniName, string obfuscatedJniName, IReadOnlyList<R8FieldMapping> fields, IReadOnlyList<R8MethodMapping> methods)
 		{
@@ -959,7 +959,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 		public string ObfuscatedName { get; }
 		public string JavaFieldType { get; }
 
-		public bool IsRenamed => !String.Equals (OriginalName, ObfuscatedName, StringComparison.Ordinal);
+		public bool IsRenamed => !string.Equals (OriginalName, ObfuscatedName, StringComparison.Ordinal);
 
 		public R8FieldMapping (string originalName, string obfuscatedName, string javaFieldType)
 		{
@@ -976,7 +976,7 @@ namespace Microsoft.Android.Tasks.JniRemapping
 		public IReadOnlyList<string> JavaParameterTypes { get; }
 		public string JavaReturnType { get; }
 
-		public bool IsRenamed => !String.Equals (OriginalName, ObfuscatedName, StringComparison.Ordinal);
+		public bool IsRenamed => !string.Equals (OriginalName, ObfuscatedName, StringComparison.Ordinal);
 
 		public R8MethodMapping (string originalName, string obfuscatedName, IReadOnlyList<string> javaParameterTypes, string javaReturnType)
 		{

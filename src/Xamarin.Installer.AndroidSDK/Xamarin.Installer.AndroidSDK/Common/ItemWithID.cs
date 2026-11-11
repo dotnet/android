@@ -43,7 +43,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (ReferenceEquals (this, other))
 				return true;
 
-			if (String.Compare (ID, other.ID, StringComparison.Ordinal) != 0)
+			if (!string.Equals (ID, other.ID, StringComparison.Ordinal))
 				return false;
 
 			return true;

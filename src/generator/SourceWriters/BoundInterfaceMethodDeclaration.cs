@@ -26,7 +26,7 @@ namespace generator.SourceWriters
 			IsDeclaration = true;
 
 			// Allow user to force adding the 'abstract' keyword for "reabstraction"
-			if (method.ManagedOverride?.ToLowerInvariant () == "reabstract")
+			if (string.Equals (method.ManagedOverride, "reabstract", StringComparison.OrdinalIgnoreCase))
 				IsAbstract = true;
 
 			if (method.DeclaringType.IsGeneratable)

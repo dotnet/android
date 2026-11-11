@@ -177,7 +177,7 @@ namespace Xamarin.Android.Tasks {
 				}
 
 				bool manifestError = false;
-				if (AndroidManifestFile != null && string.Compare (Path.GetFileName (file), Path.GetFileName (AndroidManifestFile.ItemSpec), StringComparison.OrdinalIgnoreCase) == 0) {
+				if (AndroidManifestFile != null && string.Equals (Path.GetFileName (file), Path.GetFileName (AndroidManifestFile.ItemSpec), StringComparison.OrdinalIgnoreCase)) {
 					manifestError = true;
 				}
 

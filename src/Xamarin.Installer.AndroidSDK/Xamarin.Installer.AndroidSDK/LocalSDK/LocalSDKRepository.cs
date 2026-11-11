@@ -361,7 +361,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 				return false;
 			
 			string dir = Path.Combine (Path.GetDirectoryName (filePath), "..");
-			return String.Compare (parentDirName, Path.GetFileName (Path.GetFullPath (dir)), StringComparison.OrdinalIgnoreCase) == 0;
+			return string.Equals (parentDirName, Path.GetFileName (Path.GetFullPath (dir)), StringComparison.OrdinalIgnoreCase);
 		}
 
 		void AddLicense (License license)
