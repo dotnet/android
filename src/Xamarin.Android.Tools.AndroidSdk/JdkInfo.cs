@@ -50,14 +50,12 @@ namespace Xamarin.Android.Tools
 		{
 		}
 
-		// Retain the original CLR signature for compiled callers.
-		public JdkInfo (string homePath, string? locator, Action<TraceLevel, string>? logger)
+		public JdkInfo (string homePath, string? locator = null, Action<TraceLevel, string>? logger = null)
 			: this (homePath, locator, logger, null)
 		{
 		}
 
-		/// <summary>Uses a complete environment snapshot for executable lookup and Java probes.</summary>
-		public JdkInfo (string homePath, string? locator = null, Action<TraceLevel, string>? logger = null, IDictionary<string, string>? environmentVariables = null)
+		internal JdkInfo (string homePath, string? locator, Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
 		{
 			if (homePath == null)
 				throw new ArgumentNullException (nameof (homePath));
@@ -337,15 +335,22 @@ namespace Xamarin.Android.Tools
 		}
 
 		// Keep ordering in sync w/ GetSupportedJdkInfos
-		// Retain the original CLR signature for compiled callers.
-		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger)
+		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger = null)
 			=> GetKnownSystemJdkInfos (logger, null);
 
-		/// <summary>
-		/// Discovers JDKs in the usual order using a complete environment snapshot.
-		/// Missing variables do not fall back to the process environment; null preserves the original behavior.
-		/// </summary>
-		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger = null, IDictionary<string, string>? environmentVariables = null)
+		/// <summary>Uses the explicit JDK if valid, otherwise the first supported JDK from the supplied environment.</summary>
+		public static JdkInfo? FindJdk (Action<TraceLevel, string> logger, string? javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion,
+			IDictionary<string, string>? environmentVariables)
+		{
+			try {
+				return new JdkInfo (javaSdkPath ?? "", locator: null, logger, environmentVariables);
+			} catch {
+				return GetKnownSystemJdkInfos (logger, environmentVariables)
+					.FirstOrDefault (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion);
+			}
+		}
+
+		internal static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger, IDictionary<string, string>? environmentVariables)
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 			var locations = new JdkLocations (environmentVariables);

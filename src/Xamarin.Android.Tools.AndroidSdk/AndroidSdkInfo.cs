@@ -10,18 +10,18 @@ namespace Xamarin.Android.Tools
 	{
 		AndroidSdkBase sdk;
 
-		// Retain the original CLR signature for compiled callers.
-		public AndroidSdkInfo (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath, string? javaSdkPath)
+		public AndroidSdkInfo (Action<TraceLevel, string>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
 			: this (logger, androidSdkPath, androidNdkPath, javaSdkPath, null)
 		{
 		}
 
-		/// <summary>
-		/// Discovers tools using a complete environment snapshot. Missing variables do not fall back
-		/// to the process environment. A null snapshot preserves the original process-based behavior.
-		/// </summary>
-		public AndroidSdkInfo (Action<TraceLevel, string>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null,
-			IDictionary<string, string>? environmentVariables = null)
+		/// <summary>Uses a complete environment snapshot; null retains process-based discovery.</summary>
+		public static AndroidSdkInfo CreateWithEnvironment (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath,
+			string? javaSdkPath, IDictionary<string, string>? environmentVariables)
+			=> new AndroidSdkInfo (logger, androidSdkPath, androidNdkPath, javaSdkPath, environmentVariables);
+
+		internal AndroidSdkInfo (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath, string? javaSdkPath,
+			IDictionary<string, string>? environmentVariables)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 

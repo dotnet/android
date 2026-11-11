@@ -14,11 +14,11 @@ namespace Xamarin.Android.Tools.Tests
 		[TestCase ("JI_JAVA_HOME")]
 		[TestCase ("JAVA_HOME")]
 		[TestCase ("PATH")]
-		public void GetKnownSystemJdkInfos_UsesEnvironment (string variable)
+		public void FindJdk_UsesEnvironment (string variable)
 		{
 			var root = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
 			try {
-				CreateFauxJdk (root, "21.0.1", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
+				CreateFauxJdk (root, "999.123.456", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
 				var messages = new List<string> ();
 				var environment = new Dictionary<string, string> {
 					[variable] = variable == "PATH" ? Path.Combine (root, "bin") : root,
@@ -29,9 +29,11 @@ namespace Xamarin.Android.Tools.Tests
 					environment ["JI_JAVA_HOME"] = Path.Combine (root, "missing");
 				if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
 					environment ["SystemRoot"] = systemRoot;
-				var jdks = JdkInfo.GetKnownSystemJdkInfos ((_, message) => messages.Add (message), environment);
-				var jdk = variable == "JI_JAVA_HOME" ? jdks.First () : jdks.First (jdk => jdk.Locator == $"${variable}");
+				var versionRange = new Version (999, 123, 456);
+				var jdk = JdkInfo.FindJdk ((_, message) => messages.Add (message), null, versionRange, versionRange, environment);
+				Assert.IsNotNull (jdk);
 				Assert.AreEqual (root, jdk.HomePath);
+				Assert.AreEqual ($"${variable}", jdk.Locator);
 				Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.version", out var version));
 				Assert.AreEqual (variable, version);
 				if (variable != "JI_JAVA_HOME")

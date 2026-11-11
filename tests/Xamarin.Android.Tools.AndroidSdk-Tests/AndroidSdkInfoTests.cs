@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tools.Tests
 					File.Move (Path.Combine (sdk, "platform-tools", IsWindows ? "adb.exe" : "adb"), Path.Combine (sdk, "platform-tools", $"adb.{environmentExtension}"));
 					File.Move (Path.Combine (ndk, IsWindows ? "ndk-stack.cmd" : "ndk-stack"), Path.Combine (ndk, $"ndk-stack.{environmentExtension}"));
 				}
-				var info = environmentExtension != null ? new AndroidSdkInfo (logger, null, ndk, jdk, new Dictionary<string, string> {
+				var info = environmentExtension != null ? AndroidSdkInfo.CreateWithEnvironment (logger, null, ndk, jdk, new Dictionary<string, string> {
 					["ANDROID_HOME"] = Path.Combine (root, "missing"),
 					["ANDROID_SDK_ROOT"] = sdk,
 					["PATHEXT"] = $".{environmentExtension}",

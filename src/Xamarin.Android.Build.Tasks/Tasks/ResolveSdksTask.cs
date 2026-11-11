@@ -96,13 +96,13 @@ namespace Xamarin.Android.Tasks
 
 			var environmentVariables = TaskEnvironment.GetEnvironmentVariables ()
 				.ToDictionary (pair => pair.Key, pair => pair.Value, OS.IsWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-			JavaSdkPath         = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion, environmentVariables)?.HomePath;
+			JavaSdkPath         = JdkInfo.FindJdk (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion, environmentVariables)?.HomePath;
 
 			MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
 
 			AndroidSdkInfo androidSdk;
 			try {
-				androidSdk = new AndroidSdkInfo (LogSdkMessage, AndroidSdkPath, AndroidNdkPath, JavaSdkPath, environmentVariables);
+				androidSdk = AndroidSdkInfo.CreateWithEnvironment (LogSdkMessage, AndroidSdkPath, AndroidNdkPath, JavaSdkPath, environmentVariables);
 			} catch (InvalidOperationException e) {
 				if (e.Message.Contains (" Android ")) {
 					Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
