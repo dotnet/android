@@ -1975,6 +1975,117 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[NonParallelizable]
+		public void CheckLintErrorsAndWarnings ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			// Generated framework JCWs include a trust manager; this fixture intentionally has no app icon.
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel,AppLinkWarning,CustomX509TrustManager,MissingApplicationIcon";
+
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
+			proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
+			proj.SetProperty ("AndroidLintEnabledIssues", "");
+			proj.SetProperty ("AndroidLintCheckIssues", "");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", """
+
+		[IntentFilter (new[] { Android.Content.Intent.ActionView },
+			Categories = new [] { Android.Content.Intent.CategoryDefault, Android.Content.Intent.CategoryBrowsable },
+			DataHost = "mydomain.com",
+			DataScheme = "http"
+		)]
+		public class MainActivity : Activity
+
+""");
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+				TextContent = () => """
+<?xml version="1.0" encoding="utf-8"?>
+<ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<TextView android:id="@+id/foo"
+		android:layout_width="150dp"
+		android:layout_height="wrap_content"
+	/>
+</ConstraintLayout>
+"""
+			});
+			using (var b = CreateApkBuilder ()) {
+				var maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
+				b.LatestTargetFrameworkVersion (out string apiLevel);
+				if (AndroidSdkResolver.TryParseAndroidSdkVersion (apiLevel, out var v) && v < maxApiLevel) {
+					disabledIssues += ",OldTargetApi";
+				}
+				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
+				proj.SupportedOSPlatformVersion = "24";
+				proj.TargetSdkVersion = apiLevel;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (b.LastBuildOutput.Any (line => line.Contains (": warning :") && line.Contains ("Warning:")),
+					"Output should not contain lint warnings.");
+				Assert.IsFalse (b.LastBuildOutput.Any (line => line.Contains (": error :") && line.Contains ("Error:")),
+					"Output should not contain lint errors.");
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void CheckLintConfigMerging ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
+			proj.SetProperty ("AndroidLintCheckIssues", "MissingApplicationIcon");
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint1.xml") {
+				TextContent = () => """
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+	<issue id="NewApi" severity="warning" />
+</lint>
+"""
+			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint2.xml") {
+				TextContent = () => """
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+	<issue id="MissingApplicationIcon" severity="ignore" />
+</lint>
+"""
+			});
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var lintFile = Path.Combine (Root, "temp", TestName, proj.IntermediateOutputPath, "lint.xml");
+				Assert.IsTrue (File.Exists (lintFile), "{0} should have been created.", lintFile);
+				var doc = XDocument.Load (lintFile);
+				var root = doc.Element ("lint") ?? throw new InvalidOperationException ("The XML file should have a lint element.");
+				Assert.AreEqual (2, root.Elements ("issue").Count (), "Both configuration files should contribute an issue.");
+				Assert.IsTrue (root.Elements ("issue").Any (issue =>
+					(string) issue.Attribute ("id") == "MissingApplicationIcon" && (string) issue.Attribute ("severity") == "ignore"),
+					"The merged configuration should preserve the ignored issue.");
+				Assert.IsTrue (root.Elements ("issue").Any (issue =>
+					(string) issue.Attribute ("id") == "NewApi" && (string) issue.Attribute ("severity") == "warning"),
+					"The merged configuration should preserve the warning severity.");
+				Assert.IsFalse (b.LastBuildOutput.Any (line => line.Contains (": warning :") && line.Contains ("[MissingApplicationIcon]")),
+					"The merged configuration should suppress the missing-icon warning.");
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+				Assert.IsFalse (File.Exists (lintFile), "{0} should have been deleted on clean.", lintFile);
+			}
+		}
+
+		[Test]
 		public void BuildApplicationWithJavaSourceUsingAndroidX ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
@@ -2099,6 +2210,49 @@ public class ToolbarEx {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void CheckLintResourceFileReferencesArePreserved ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
+			proj.SetProperty ("AndroidLintCheckIssues", "HardcodedText");
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+				TextContent = () => """
+<?xml version="1.0" encoding="utf-8"?>
+<ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<TextView android:id="@+id/foo"
+		android:layout_width="150dp"
+		android:layout_height="wrap_content"
+	/>
+	<EditText
+		android:id="@+id/phone"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:hint="Hint me up."
+	/>
+</ConstraintLayout>
+"""
+			});
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Project should have built.");
+				Assert.IsTrue (b.LastBuildOutput.Any (line =>
+					line.Contains (": warning :") && line.Contains ("Warning:") && line.Contains ("[HardcodedText]") &&
+					line.Replace ('\\', '/').Contains ("res/layout/test.xml")),
+					"The lint warning should preserve the intermediate resource path and issue text.");
 			}
 		}
 
