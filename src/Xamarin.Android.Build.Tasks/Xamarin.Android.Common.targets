@@ -35,8 +35,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.BuildAppBundle" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.BuildAppBundle" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Microsoft.Android.Tasks.InstallApkSet" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
-<UsingTask TaskName="Microsoft.Android.Tasks.InstallApkSet" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2775,16 +2773,40 @@ because xbuild doesn't support framework reference assemblies.
       Command="shell cmd package uninstall"
       Arguments="$(_AndroidPackage)"
   />
-  <InstallApkSet
-      ToolPath="$(JavaToolPath)"
-      JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
-      JavaOptions="$(JavaOptions)"
-      JdkVersion="$(_JdkVersion)"
-      JarPath="$(AndroidBundleToolJarPath)"
-      AdbToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      ApkSet="$(_ApkSetIntermediate)"
-      Modules="@(AndroidInstallModules)"
+  <PropertyGroup>
+    <_InstallApkSetJava Condition=" $([MSBuild]::IsOSPlatform('windows')) ">java.exe</_InstallApkSetJava>
+    <_InstallApkSetJava Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">java</_InstallApkSetJava>
+    <_InstallApkSetJavaOptions>$(JavaOptions)</_InstallApkSetJavaOptions>
+    <_InstallApkSetJdk24 Condition=" '$(_JdkVersion)' != '' And $([MSBuild]::VersionGreaterThanOrEquals('$(_JdkVersion)', '24')) ">true</_InstallApkSetJdk24>
+    <_InstallApkSetJavaOptions Condition=" '$(_InstallApkSetJdk24)' == 'true' And !$(_InstallApkSetJavaOptions.Contains('--enable-native-access=ALL-UNNAMED')) ">$(_InstallApkSetJavaOptions) --enable-native-access=ALL-UNNAMED</_InstallApkSetJavaOptions>
+    <_InstallApkSetJavaOptions Condition=" '$(_InstallApkSetJdk24)' == 'true' And !$(_InstallApkSetJavaOptions.Contains('--sun-misc-unsafe-memory-access=allow')) ">$(_InstallApkSetJavaOptions) --sun-misc-unsafe-memory-access=allow</_InstallApkSetJavaOptions>
+    <_InstallApkSetHeap Condition=" '$(JavaMaximumHeapSize)' != '' ">-Xmx$(JavaMaximumHeapSize)</_InstallApkSetHeap>
+    <!-- `-s emulator-5554` becomes `emulator-5554`; a value without a space is passed through unchanged. -->
+    <_InstallApkSetDeviceId Condition=" '$(AdbTarget)' != '' ">--device-id $(AdbTarget.Substring($([MSBuild]::Add($(AdbTarget.IndexOf(' ')), 1))))</_InstallApkSetDeviceId>
+    <!-- `_ALL_` installs every module; on-demand modules are not supported. -->
+    <_InstallApkSetModules>_ALL_</_InstallApkSetModules>
+    <_InstallApkSetModules Condition=" '@(AndroidInstallModules)' != '' ">@(AndroidInstallModules->'&quot;%(Identity)&quot;', ',')</_InstallApkSetModules>
+  </PropertyGroup>
+  <Exec
+      Command="&quot;$([System.IO.Path]::Combine('$(JavaToolPath)', '$(_InstallApkSetJava)'))&quot; $(_InstallApkSetJavaOptions.Trim()) $(_InstallApkSetHeap) -jar &quot;$(AndroidBundleToolJarPath)&quot; install-apks --apks &quot;$(_ApkSetIntermediate)&quot; --adb &quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(_InstallApkSetDeviceId) --allow-downgrade --modules $(_InstallApkSetModules)"
+      ConsoleToMSBuild="True"
+      IgnoreExitCode="True">
+    <Output TaskParameter="ExitCode" PropertyName="_InstallApkSetExitCode" />
+    <Output TaskParameter="ConsoleOutput" ItemName="_InstallApkSetOutput" />
+  </Exec>
+  <ItemGroup>
+    <_InstallApkSetError Include="@(_InstallApkSetOutput)" Condition=" $([System.String]::new('%(Identity)').Contains('com.android.tools.build.bundletool.model.exceptions.CommandExecutionException:')) " />
+  </ItemGroup>
+  <Error
+      Condition=" '$(_InstallApkSetExitCode)' != '0' And '@(_InstallApkSetError)' != '' "
+      Code="BT0000"
+      File="$(_ApkSetIntermediate)"
+      Text="@(_InstallApkSetError, ' ')"
+  />
+  <Error
+      Condition=" '$(_InstallApkSetExitCode)' != '0' And '@(_InstallApkSetError)' == '' "
+      Code="BT0000"
+      Text="bundletool install-apks failed with exit code $(_InstallApkSetExitCode)."
   />
 </Target>
 
