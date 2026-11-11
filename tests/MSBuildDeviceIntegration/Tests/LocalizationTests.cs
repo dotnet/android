@@ -112,6 +112,21 @@ using System.Globalization;");
 			}
 		}
 
+		/// <summary>
+		/// CheckLocalizationIsCorrect changes the device-wide locale; restore the default so later suites on the same device are unaffected.
+		/// </summary>
+		[ClassCleanup (InheritanceBehavior.BeforeEachDerivedClass)]
+		public static void RestoreDeviceLocale ()
+		{
+			if (!IsDeviceAttached ())
+				return;
+			ClearAdbLogcat ();
+			RunAdbCommand ("shell \"su root setprop persist.sys.locale en-US;su root stop;sleep 5;su root start;\"");
+			var logcatFile = Path.Combine (XABuildPaths.TestOutputDirectory, "restore-locale-logcat.log");
+			if (!MonitorAdbLogcat (l => l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED"), logcatFile, timeout: 60))
+				Console.Out.WriteLine ($"{nameof (RestoreDeviceLocale)}: waiting for boot to complete failed or timed out.");
+		}
+
 
 
 		const int LOCALIZATION_NODE_COUNT = 15;
