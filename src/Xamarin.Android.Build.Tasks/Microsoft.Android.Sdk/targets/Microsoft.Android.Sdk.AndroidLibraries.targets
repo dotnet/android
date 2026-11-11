@@ -11,11 +11,11 @@ projects.
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateAar"          AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_AarCacheFile>$(IntermediateOutputPath)$(TargetName).aar.cache</_AarCacheFile>
     <_AarOutputPath>$(OutputPath)$(TargetName).aar</_AarOutputPath>
+    <_ExtractAarStagingDirectory>$(IntermediateOutputPath)extract_aar_staging\</_ExtractAarStagingDirectory>
   </PropertyGroup>
 
   <Target Name="_ResolveAars" AfterTargets="ResolveReferences">
@@ -113,14 +113,41 @@ projects.
       DependsOnTargets="_CategorizeAndroidLibraries"
       Inputs="@(LibraryProjectZip);@(_AndroidReferenceLibraryProjectZip);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_AndroidStampDirectory)_ExtractAar.stamp">
-    <ExtractJarsFromAar
-        OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
-        OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
-        Libraries="@(LibraryProjectZip)"
-        OutputReferenceJarsDirectory="$(IntermediateOutputPath)reference_library_project_jars"
-        OutputReferenceAnnotationsDirectory="$(IntermediateOutputPath)reference_library_project_annotations"
-        ReferenceLibraries="@(_AndroidReferenceLibraryProjectZip)"
+    <ItemGroup>
+      <_ExtractAarLibrary Include="@(LibraryProjectZip)" OutputPrefix="library_project" />
+      <_ExtractAarLibrary Include="@(_AndroidReferenceLibraryProjectZip)" OutputPrefix="reference_library_project" />
+    </ItemGroup>
+    <RemoveDirFixed Directories="$(_ExtractAarStagingDirectory)" />
+    <!-- .aar files only contribute classes.jar and libs/*.jar, see Files.ShouldSkipEntryInAar () -->
+    <Unzip
+        SourceFiles="@(_ExtractAarLibrary)"
+        DestinationFolder="$(_ExtractAarStagingDirectory)%(OutputPrefix)_jars\%(Filename)%(Extension)"
+        Include="*.jar"
+        Condition=" '%(Extension)' != '.aar' "
     />
+    <Unzip
+        SourceFiles="@(_ExtractAarLibrary)"
+        DestinationFolder="$(_ExtractAarStagingDirectory)%(OutputPrefix)_jars\%(Filename)%(Extension)"
+        Include="classes.jar;libs/*.jar"
+        Condition=" '%(Extension)' == '.aar' "
+    />
+    <Unzip
+        SourceFiles="@(_ExtractAarLibrary)"
+        DestinationFolder="$(_ExtractAarStagingDirectory)%(OutputPrefix)_annotations\%(Filename)%(Extension)"
+        Include="annotations.zip;*/annotations.zip"
+    />
+    <ItemGroup>
+      <_ExtractAarFile Include="$(_ExtractAarStagingDirectory)**" />
+      <_ExtractAarStaleFile
+          Include="$(IntermediateOutputPath)library_project_jars\**;$(IntermediateOutputPath)library_project_annotations\**;$(IntermediateOutputPath)reference_library_project_jars\**;$(IntermediateOutputPath)reference_library_project_annotations\**"
+          Exclude="@(_ExtractAarFile->'$(IntermediateOutputPath)%(RecursiveDir)%(Filename)%(Extension)')"
+      />
+    </ItemGroup>
+    <!-- Unzip keeps the zip entry timestamps; touch the staged files so CopyIfChanged compares content and only rewrites changed files -->
+    <Touch Files="@(_ExtractAarFile)" />
+    <CopyIfChanged SourceFiles="@(_ExtractAarFile)" DestinationFiles="@(_ExtractAarFile->'$(IntermediateOutputPath)%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Delete Files="@(_ExtractAarStaleFile)" />
+    <RemoveDirFixed Directories="$(_ExtractAarStagingDirectory)" />
     <Touch Files="$(_AndroidStampDirectory)_ExtractAar.stamp" AlwaysCreate="true" />
   </Target>
 
