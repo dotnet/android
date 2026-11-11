@@ -5,6 +5,5 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" PrivateAssets="All" />
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.JavaNaming.txt" />
   </ItemGroup>
 </Project>

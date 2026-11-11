@@ -339,7 +339,7 @@ namespace Xamarin.Android.Binder
 			if (td.Name.EndsWith ("Invoker", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 7);
-				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;
+				var types = td.DeclaringType != null ? td.DeclaringType.NestedTypes : td.Module.Types;
 				if (types.Any (t => t.FullName == n))
 					return;
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
@@ -347,7 +347,7 @@ namespace Xamarin.Android.Binder
 			if (td.Name.EndsWith ("Implementor", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 11);
-				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;
+				var types = td.DeclaringType != null ? td.DeclaringType.NestedTypes : td.Module.Types;
 				if (types.Any (t => t.FullName == n))
 					return;
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");

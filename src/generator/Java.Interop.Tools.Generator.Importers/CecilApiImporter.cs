@@ -23,7 +23,7 @@ namespace MonoDroid.Generation
 
 			foreach (var ifaceImpl in t.Interfaces) {
 				var iface = ifaceImpl.InterfaceType;
-				var def = ifaceImpl.InterfaceType.Resolve ();
+				var def = iface.Module.MetadataResolver.Resolve (iface);
 
 				if (def != null && def.IsNotPublic)
 					continue;
@@ -57,7 +57,7 @@ namespace MonoDroid.Generation
 
 			TypeReference nominal_base_type;
 
-			for (nominal_base_type = t.BaseType; nominal_base_type != null && (nominal_base_type.HasGenericParameters || nominal_base_type.IsGenericInstance); nominal_base_type = nominal_base_type.Resolve ().BaseType)
+			for (nominal_base_type = t.BaseType; nominal_base_type != null && (nominal_base_type.HasGenericParameters || nominal_base_type.IsGenericInstance); nominal_base_type = nominal_base_type.Module.MetadataResolver.Resolve (nominal_base_type).BaseType)
 				; // iterate up to non-generic type, at worst System.Object.
 
 			klass.BaseType = nominal_base_type?.FullNameCorrected ();
@@ -112,7 +112,7 @@ namespace MonoDroid.Generation
 				Visibility = f.IsPublic ? "public" : f.IsFamilyOrAssembly ? "protected internal" : f.IsFamily ? "protected" : f.IsAssembly ? "internal" : "private"
 			};
 
-			var field_parameter_type = f.FieldType.Resolve () ?? f.FieldType;
+			var field_parameter_type = f.FieldType.Module.MetadataResolver.Resolve (f.FieldType) ?? f.FieldType;
 			field.SetterParameter = CreateParameter (field_parameter_type.FullNameCorrected ().StripArity (), null);
 			field.SetterParameter.Name = "value";
 
