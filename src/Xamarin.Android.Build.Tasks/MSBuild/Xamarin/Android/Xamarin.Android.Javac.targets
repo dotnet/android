@@ -27,17 +27,23 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <_AndroidCompileBindingJavaFileList>$(IntermediateOutputPath)_CompileBindingJava.FileList.txt</_AndroidCompileBindingJavaFileList>
   </PropertyGroup>
 
-  <Target Name="_AdjustJavacVersionArguments">
-    <PropertyGroup Condition=" '$(JavacTargetVersion)' == '' or '$(JavacSourceVersion)' == '' ">
-      <_AndroidJavacSkipVersionCheck>false</_AndroidJavacSkipVersionCheck>
-      <_AndroidJavacSkipVersionCheck Condition=" '$(AndroidSkipJavacVersionCheck)' != '' and $(AndroidSkipJavacVersionCheck) ">true</_AndroidJavacSkipVersionCheck>
-      <_AndroidJavacEnableMultiDex>false</_AndroidJavacEnableMultiDex>
-      <_AndroidJavacEnableMultiDex Condition=" '$(AndroidEnableMultiDex)' != '' and $(AndroidEnableMultiDex) ">true</_AndroidJavacEnableMultiDex>
-      <_AndroidJavacVersion />
-      <_AndroidJavacVersion Condition=" $(_JdkVersion.StartsWith ('9', StringComparison.OrdinalIgnoreCase)) ">$(_DefaultJdkVersion)</_AndroidJavacVersion>
-      <_AndroidJavacVersion Condition=" '$(_AndroidJavacSkipVersionCheck)' != 'true' and '$(_AndroidJavacEnableMultiDex)' == 'true' and $(_JdkVersion.StartsWith ('1.8', StringComparison.OrdinalIgnoreCase)) ">1.7</_AndroidJavacVersion>
-      <JavacTargetVersion Condition=" '$(_AndroidJavacVersion)' != '' ">$(_AndroidJavacVersion)</JavacTargetVersion>
-      <JavacSourceVersion Condition=" '$(_AndroidJavacVersion)' != '' ">$(_AndroidJavacVersion)</JavacSourceVersion>
+  <Target Name="_AdjustJavacVersionArguments"
+      Condition=" '$(JavacTargetVersion)' == '' or '$(JavacSourceVersion)' == '' ">
+    <Error
+        Condition=" '$(_JdkVersion)' == '' "
+        Code="MSB4044"
+        Text="The &quot;AdjustJavacVersionArguments&quot; task was not given a value for the required parameter &quot;JdkVersion&quot;." />
+    <Error
+        Condition=" '$(_DefaultJdkVersion)' == '' "
+        Code="MSB4044"
+        Text="The &quot;AdjustJavacVersionArguments&quot; task was not given a value for the required parameter &quot;DefaultJdkVersion&quot;." />
+    <PropertyGroup Condition=" $(_JdkVersion.StartsWith ('9', StringComparison.OrdinalIgnoreCase)) ">
+      <JavacSourceVersion>$(_DefaultJdkVersion)</JavacSourceVersion>
+      <JavacTargetVersion>$(JavacSourceVersion)</JavacTargetVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition=" ('$(AndroidSkipJavacVersionCheck)' == '' or !$(AndroidSkipJavacVersionCheck)) and '$(AndroidEnableMultiDex)' != '' and $(AndroidEnableMultiDex) and $(_JdkVersion.StartsWith ('1.8', StringComparison.OrdinalIgnoreCase)) ">
+      <JavacSourceVersion>1.7</JavacSourceVersion>
+      <JavacTargetVersion>$(JavacSourceVersion)</JavacTargetVersion>
     </PropertyGroup>
   </Target>
 
