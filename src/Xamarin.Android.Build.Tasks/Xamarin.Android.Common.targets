@@ -78,8 +78,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Microsoft.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
-<UsingTask TaskName="Microsoft.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1990,13 +1988,12 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_CompressAssemblies"
     Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
-    <ProcessAssemblyCompressionFailures
-        FailedToCompressAssembliesOutput="@(_FailedToCompressAssemblies)"
-        ResolvedFrameworkAssemblies="@(_CompressedResolvedFrameworkAssemblies)"
-        ResolvedUserAssemblies="@(_CompressedBuildApkResolvedUserAssemblies)">
-      <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_BuildApkResolvedFrameworkAssemblies" />
-      <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_BuildApkResolvedUserAssemblies" />
-    </ProcessAssemblyCompressionFailures>
+    <ItemGroup>
+      <_BuildApkResolvedFrameworkAssemblies Include="@(_CompressedResolvedFrameworkAssemblies)" Exclude="@(_FailedToCompressAssemblies)" />
+      <_BuildApkResolvedFrameworkAssemblies Include="@(_CompressedResolvedFrameworkAssemblies)" Exclude="@(_BuildApkResolvedFrameworkAssemblies)" RemoveMetadata="CompressedAssembly" />
+      <_BuildApkResolvedUserAssemblies Include="@(_CompressedBuildApkResolvedUserAssemblies)" Exclude="@(_FailedToCompressAssemblies)" />
+      <_BuildApkResolvedUserAssemblies Include="@(_CompressedBuildApkResolvedUserAssemblies)" Exclude="@(_BuildApkResolvedUserAssemblies)" RemoveMetadata="CompressedAssembly" />
+    </ItemGroup>
 </Target>
 
 <Target Name="_BuildApkEmbed"
