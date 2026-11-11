@@ -2707,7 +2707,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_DeployApk"
     Condition=" '$(AndroidPackageFormat)' != 'aab' "
     DependsOnTargets="_AndroidAdbToolPath">
-  <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;" StandardOutputImportance="Low" />
+  <Exec Command="$(_AdbCommand) $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="_BuildApkSet"
@@ -2739,7 +2739,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_BuildApkSet;_AndroidAdbToolPath">
   <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
-      Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) shell pm list packages $(_AndroidPackage)"
+      Command="$(_AdbCommand) $(AdbTarget) shell pm list packages $(_AndroidPackage)"
       ConsoleToMSBuild="True"
       StandardOutputImportance="Low"
   >
@@ -2750,7 +2750,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
   <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '@(_AndroidInstalledPackage->Count())' != '0' "
-      Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) uninstall -k $(_AndroidPackage)"
+      Command="$(_AdbCommand) $(AdbTarget) uninstall -k $(_AndroidPackage)"
       ConsoleToMSBuild="True"
       IgnoreExitCode="True"
       StandardOutputImportance="Low"
@@ -2760,7 +2760,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Newer adb versions reject `uninstall -k` and suggest `adb shell cmd package uninstall` instead. -->
   <Exec
       Condition=" $(_UninstallOutput.Contains('adb shell cmd package uninstall')) "
-      Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) shell cmd package uninstall $(_AndroidPackage)"
+      Command="$(_AdbCommand) $(AdbTarget) shell cmd package uninstall $(_AndroidPackage)"
       IgnoreExitCode="True"
       StandardOutputImportance="Low"
   />
@@ -2784,7 +2784,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_Uninstall"
     DependsOnTargets="_AndroidAdbToolPath">
-  <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) uninstall $(_AndroidPackage)" StandardOutputImportance="Low" />
+  <Exec Command="$(_AdbCommand) $(AdbTarget) uninstall $(_AndroidPackage)" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="Uninstall"

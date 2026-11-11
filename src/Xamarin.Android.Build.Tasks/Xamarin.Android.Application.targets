@@ -14,6 +14,6 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
   <Target Name="StartAndroidActivity" DependsOnTargets="Run" />
   <Target Name="StopAndroidPackage"
       DependsOnTargets="_ResolveMonoAndroidSdks;_GetAndroidPackageName;_AndroidAdbToolPath">
-    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) shell am force-stop &quot;$(_AndroidPackage)&quot;" StandardOutputImportance="Low" />
+    <Exec Command="$(_AdbCommand) $(AdbTarget) shell am force-stop &quot;$(_AndroidPackage)&quot;" StandardOutputImportance="Low" />
   </Target>
 </Project>

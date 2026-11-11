@@ -93,6 +93,7 @@ This file contains targets specific for Android application projects.
       <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</_AdbToolPath>
       <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</_AdbToolPath>
       <_AdbToolPath>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(_AdbToolPath)'))</_AdbToolPath>
+      <_AdbCommand>&quot;$(_AdbToolPath)&quot;</_AdbCommand>
     </PropertyGroup>
   </Target>
 
@@ -186,20 +187,20 @@ This file contains targets specific for Android application projects.
 
     <Message Text="Preparing application to log more information" Importance="High" />
     <Message Text="Setting the $(_AndroidRuntimeLogProperty) property to: $(_AndroidRuntimeLog)" Importance="High" />
-    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) shell setprop $(_AndroidRuntimeLogProperty) $(_AndroidRuntimeLog)" StandardOutputImportance="Low" />
-    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) logcat -G 16M" StandardOutputImportance="Low" />
-    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) logcat -c" StandardOutputImportance="Low" />
+    <Exec Command="$(_AdbCommand) $(AdbTarget) shell setprop $(_AndroidRuntimeLogProperty) $(_AndroidRuntimeLog)" StandardOutputImportance="Low" />
+    <Exec Command="$(_AdbCommand) $(AdbTarget) logcat -G 16M" StandardOutputImportance="Low" />
+    <Exec Command="$(_AdbCommand) $(AdbTarget) logcat -c" StandardOutputImportance="Low" />
 
     <PropertyGroup>
       <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
     </PropertyGroup>
     <Message Text="Running the application and waiting for it to fully start" Importance="High" />
-    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) shell am start -S -W$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" StandardOutputImportance="Low" />
+    <Exec Command="$(_AdbCommand) $(AdbTarget) shell am start -S -W$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" StandardOutputImportance="Low" />
 
     <Message Text="Sleeping for $(RunLogDelayInMS)ms to give logcat a chance to log all the messages" Importance="High" />
     <XASleepInternal Milliseconds="$(RunLogDelayInMS)" />
 
-    <Exec Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) logcat -d &gt; &quot;$(_RunLogFilePath)&quot;" />
+    <Exec Command="$(_AdbCommand) $(AdbTarget) logcat -d &gt; &quot;$(_RunLogFilePath)&quot;" />
     <Message Text="Logcat output is available in $(_RunLogFilePath)" Importance="High" />
   </Target>
 </Project>
