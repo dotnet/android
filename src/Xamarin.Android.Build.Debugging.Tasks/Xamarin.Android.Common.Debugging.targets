@@ -18,7 +18,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Adb" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.DetectAndroidManifestDependencyChanges" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.DetectIfAppWasUninstalled" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetPrimaryCpuAbi" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MoveSubfolder" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
@@ -300,13 +299,10 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 -->
 
 <!-- I dare to not add 'Install' as a dependency target. It is sometimes unwanted. Run Install explicitly. -->
-<Target Name="RunTests" DependsOnTargets="AndroidPrepareForBuild" Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)">
-	<GetAndroidActivityName
-			ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
-			Condition=" '$(RunActivity)' == '' "
-			ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
-		<Output TaskParameter="ActivityName" PropertyName="TargetTestActivity" />
-	</GetAndroidActivityName>
+<Target Name="RunTests" DependsOnTargets="AndroidPrepareForBuild;_GetAndroidLaunchableActivity" Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)">
+	<PropertyGroup Condition=" '$(RunActivity)' == '' ">
+		<TargetTestActivity>$(_AndroidLaunchableActivity)</TargetTestActivity>
+	</PropertyGroup>
 	<RunTests
 		AdbTarget="$(AdbTarget)"
 		AdbOptions="$(AdbOptions)"
