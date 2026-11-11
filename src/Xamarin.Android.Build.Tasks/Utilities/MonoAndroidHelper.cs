@@ -585,23 +585,6 @@ namespace Xamarin.Android.Tasks
 			return string.Empty;
 		}
 
-		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-#if MSBUILD
-		/// <summary>
-		/// Returns the relative path that should be used for an @(AndroidAsset) item
-		/// </summary>
-		public static string GetRelativePathForAndroidAsset (string assetsDirectory, ITaskItem androidAsset)
-		{
-			var path = androidAsset.GetMetadata ("Link");
-			path = !string.IsNullOrWhiteSpace (path) ? path : androidAsset.ItemSpec;
-			var head = string.Join ("\\", path.Split (DirectorySeparators).TakeWhile (s => !s.Equals (assetsDirectory, StringComparison.OrdinalIgnoreCase)));
-			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
-			return path;
-		}
-#endif // MSBUILD
-
-
-
 		/// <summary>
 		/// Converts $(SupportedOSPlatformVersion) to an API level, as it can be a version (21.0), or an int (21).
 		/// </summary>

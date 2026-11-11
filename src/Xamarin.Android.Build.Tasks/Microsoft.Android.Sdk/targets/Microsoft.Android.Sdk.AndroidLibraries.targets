@@ -10,11 +10,12 @@ projects.
 -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.CreateAar"          AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar"   AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetNativeLibraryAbis" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_AarCacheFile>$(IntermediateOutputPath)$(TargetName).aar.cache</_AarCacheFile>
+    <_AarStagingDirectory>$(IntermediateOutputPath)aar\</_AarStagingDirectory>
     <_AarOutputPath>$(OutputPath)$(TargetName).aar</_AarOutputPath>
   </PropertyGroup>
 
@@ -75,17 +76,70 @@ projects.
       DependsOnTargets="_CategorizeAndroidLibraries;_CreateAarCache"
       Inputs="@(_CreateAarInputs)"
       Outputs="$(_AarOutputPath)">
-    <CreateAar
-        AssetDirectory="$(MonoAndroidAssetsPrefix)"
-        PrefixProperty="MonoAndroidAssetsPrefix"
-        AndroidAssets="@(AndroidAsset)"
-        AndroidResources="@(_AndroidResourceDest)"
-        AndroidEnvironment="@(AndroidEnvironment)"
-        AndroidManifest="$(AndroidManifest)"
-        JarFiles="@(AndroidJavaLibrary);@(EmbeddedJar)"
-        NativeLibraries="@(EmbeddedNativeLibrary)"
-        ProguardConfigurationFiles="@(ProguardConfiguration)"
-        OutputFile="$(_AarOutputPath)"
+    <AndroidError
+        Condition=" $([System.IO.Path]::IsPathRooted('$(MonoAndroidAssetsPrefix)')) "
+        Code="XA1041"
+        ResourceName="XA1041"
+        FormatArguments="MonoAndroidAssetsPrefix;$(MonoAndroidAssetsPrefix)"
+    />
+    <GetNativeLibraryAbis NativeLibraries="@(EmbeddedNativeLibrary)">
+      <Output TaskParameter="Output" ItemName="_AarNativeLibrary" />
+    </GetNativeLibraryAbis>
+    <AndroidError
+        Condition=" '%(_AarNativeLibrary.Abi)' == '' "
+        Code="XA4301"
+        ResourceName="XA4301_ABI"
+        FormatArguments="%(_AarNativeLibrary.Identity)"
+        File="%(_AarNativeLibrary.Identity)"
+    />
+    <!--
+      Stage the AAR layout; when two items map to the same %(ArchivePath), the last one wins.
+      Asset paths drop everything up to and including the first $(MonoAndroidAssetsPrefix) directory.
+    -->
+    <ItemGroup>
+      <_AarFile Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) "
+          ArchivePath="assets/$([System.Text.RegularExpressions.Regex]::Replace($([MSBuild]::ValueOrDefault('%(AndroidAsset.Link)', '%(AndroidAsset.Identity)')), '(?i)^(?:.*?[\\/])??$([System.Text.RegularExpressions.Regex]::Escape($(MonoAndroidAssetsPrefix)))(?:[\\/]+|$)', '').Replace('\', '/'))" />
+      <_AarResource Include="@(_AndroidResourceDest)" Condition=" !$([System.IO.Directory]::Exists('%(_AndroidResourceDest.FullPath)')) "
+          ResourcePath="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('%(_AndroidResourceDest.FullPath)'))))/%(_AndroidResourceDest.Filename)%(_AndroidResourceDest.Extension)"
+          LogicalName="$([System.String]::Copy('%(_AndroidResourceDest.LogicalName)').Replace('\', '/'))" />
+      <_AarFile Include="@(_AarResource)" ArchivePath="res/%(_AarResource.ResourcePath)" />
+      <_AarFile Include="@(AndroidEnvironment)" ArchivePath=".net/env/$([MSBuild]::StableStringHash($([System.String]::Copy('%(AndroidEnvironment.Identity)').Replace('\', '/')))).env" />
+      <_AarFile Include="@(AndroidJavaLibrary)" Condition=" '%(AndroidJavaLibrary.Pack)' != 'false' "
+          ArchivePath="libs/$([MSBuild]::StableStringHash($([System.String]::Copy('%(AndroidJavaLibrary.Identity)').Replace('\', '/')))).jar" />
+      <_AarFile Include="@(EmbeddedJar)" Condition=" '%(EmbeddedJar.Pack)' != 'false' "
+          ArchivePath="libs/$([MSBuild]::StableStringHash($([System.String]::Copy('%(EmbeddedJar.Identity)').Replace('\', '/')))).jar" />
+      <_AarFile Include="@(_AarNativeLibrary)" ArchivePath="jni/%(_AarNativeLibrary.Abi)/%(_AarNativeLibrary.Filename)%(_AarNativeLibrary.Extension)" />
+    </ItemGroup>
+    <XmlPeek
+        Condition=" Exists('$(AndroidManifest)') "
+        XmlInputPath="$(AndroidManifest)"
+        Query="/manifest/@package"
+        ProhibitDtd="true">
+      <Output TaskParameter="Result" PropertyName="_AarManifestPackage" />
+    </XmlPeek>
+    <ItemGroup Condition=" '$(_AarManifestPackage)' != '' ">
+      <_AarFile Include="$(AndroidManifest)" ArchivePath="AndroidManifest.xml" />
+    </ItemGroup>
+    <RemoveDirFixed Directories="$(_AarStagingDirectory)" />
+    <Copy SourceFiles="@(_AarFile)" DestinationFiles="@(_AarFile->'$(_AarStagingDirectory)%(ArchivePath)')" />
+    <WriteLinesToFile
+        Condition=" '@(_AarResource)' != '' "
+        File="$(_AarStagingDirectory).net/__res_name_case_map.txt"
+        Lines="@(_AarResource->'%(LogicalName)%3B%(ResourcePath)')"
+    />
+    <ReadLinesFromFile File="%(ProguardConfiguration.Identity)">
+      <Output TaskParameter="Lines" ItemName="_AarProguardLine" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile
+        Condition=" '@(ProguardConfiguration)' != '' "
+        File="$(_AarStagingDirectory)proguard.txt"
+        Lines="@(_AarProguardLine)"
+    />
+    <MakeDir Directories="$(_AarStagingDirectory);$(OutputPath)" />
+    <ZipDirectory
+        SourceDirectory="$(_AarStagingDirectory)"
+        DestinationFile="$(_AarOutputPath)"
+        Overwrite="true"
     />
     <ItemGroup>
       <FileWrites Include="$(_AarOutputPath)" />

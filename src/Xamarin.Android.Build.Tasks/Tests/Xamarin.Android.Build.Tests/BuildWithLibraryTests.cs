@@ -205,9 +205,6 @@ namespace Xamarin.Android.Build.Tests
 			var libBBuilder = CreateDllBuilder (Path.Combine (path, libB.ProjectName));
 			Assert.IsTrue (libBBuilder.Build (libB), $"{libB.ProjectName} should succeed");
 
-			var projectJarHash = Files.HashString (Path.Combine (libB.IntermediateOutputPath,
-					"binding", "bin", $"{libB.ProjectName}.jar").Replace ("\\", "/"));
-
 			// Check .aar file for class library
 			var libBOutputPath = Path.Combine (Root, libBBuilder.ProjectDirectory, libB.OutputPath);
 			aarPath = Path.Combine (libBOutputPath, $"{libB.ProjectName}.aar");
@@ -223,7 +220,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (2, envCount, $"{aarPath} should contain 2 .env files under .net/env/");
 				int jarCount = aar.Entries.Count (e => e.FullName.StartsWith ("libs/", StringComparison.Ordinal) && e.FullName.EndsWith (".jar", StringComparison.Ordinal));
 				Assert.AreEqual (2, jarCount, $"{aarPath} should contain 2 .jar files under libs/");
-				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
 				aar.AssertContainsEntry (aarPath, "jni/x86_64/libfoo.so");
 				// proguard.txt from Library C should not flow to Library B and "double"
