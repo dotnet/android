@@ -54,7 +54,7 @@ public class AndroidSdkVersionTests
 	}
 
 	[TestMethod]
-	public new void ToString ()
+	public void ToStringFormatsVersion ()
 	{
 		Assert.AreEqual ("0",       new AndroidSdkVersion (0).ToString ());
 		Assert.AreEqual ("36",      new AndroidSdkVersion (36).ToString ());

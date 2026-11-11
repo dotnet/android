@@ -33,7 +33,7 @@ namespace generatortests
 
 			generator.WriteEnumeration (new CodeGenerationOptions (), enu, null);
 
-			Assert.AreEqual (GetExpected (nameof (WriteBasicEnum)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetExpectedEnum (nameof (WriteBasicEnum)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[TestMethodAttribute]
@@ -45,7 +45,7 @@ namespace generatortests
 
 			generator.WriteEnumeration (new CodeGenerationOptions (), enu, null);
 
-			Assert.AreEqual (GetExpected (nameof (WriteFlagsEnum)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetExpectedEnum (nameof (WriteFlagsEnum)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[TestMethodAttribute]
@@ -56,7 +56,7 @@ namespace generatortests
 
 			generator.WriteEnumeration (new CodeGenerationOptions (), enu, gens);
 			
-			Assert.AreEqual (GetExpected (nameof (WriteEnumWithGens)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetExpectedEnum (nameof (WriteEnumWithGens)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[TestMethodAttribute]
@@ -184,7 +184,7 @@ namespace generatortests
 			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"Thisvaluewasincorrectlyaddedtotheenumerationandisnotavalidvalue\")]WithExcluded=1"), writer.ToString ());
 		}
 
-		protected new string GetExpected (string testName)
+		string GetExpectedEnum (string testName)
 		{
 			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
 

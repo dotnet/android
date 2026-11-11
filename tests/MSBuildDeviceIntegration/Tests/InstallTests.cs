@@ -189,10 +189,10 @@ namespace Xamarin.Android.Build.Tests
 					foreach (var abi in abis) {
 						string runtimeAbiName = AbiUtils.AbiToRuntimeIdentifier (abi);
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Runtime == "debug");
-						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
+						Assert.IsNotNull (runtime.Name, "Could not find the expected runtime.");
 						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
 						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Size == inApk.Length);
-						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
+						Assert.IsNotNull (inApkRuntime.Runtime, "Could not find the actual runtime used.");
 						Assert.AreEqual (runtime.Size, inApkRuntime.Size, string.Format ("expected {0} got {1}", "debug", inApkRuntime.Runtime));
 					}
 				}

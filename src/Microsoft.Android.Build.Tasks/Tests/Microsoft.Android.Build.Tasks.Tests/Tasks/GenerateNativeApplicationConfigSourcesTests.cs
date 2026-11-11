@@ -73,9 +73,11 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		Assert.HasCount (1, errors);
 		Assert.AreEqual ("XAGCA7009", errors [0].Code);
+		var message = errors [0].Message;
+		Assert.IsNotNull (message);
 		Assert.Contains (
 			$"GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{runtime}'.",
-			errors [0].Message);
+			message);
 		Assert.IsFalse (File.Exists (bootstrapPath));
 	}
 
@@ -110,7 +112,9 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 
 		Assert.IsFalse (task.Execute ());
 		Assert.HasCount (1, errors);
-		Assert.Contains ("CoreCLR bootstrap output path is required.", errors [0].Message);
+		var message = errors [0].Message;
+		Assert.IsNotNull (message);
+		Assert.Contains ("CoreCLR bootstrap output path is required.", message);
 		Assert.IsFalse (File.Exists (Path.Combine (outputRoot, "environment.arm64-v8a.ll")));
 	}
 

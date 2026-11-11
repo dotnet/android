@@ -109,7 +109,9 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		Assert.AreEqual (1, errors.Count);
 		Assert.AreEqual ("XA4234", errors [0].Code);
-		Assert.Contains (invalid.ItemSpec, errors [0].Message);
+		var message = errors [0].Message;
+		Assert.IsNotNull (message);
+		Assert.Contains (invalid.ItemSpec, message);
 		Assert.AreEqual (1, task.WrappedAssemblies.Length, "The wrapper written before the error must remain tracked.");
 		var library = task.WrappedAssemblies [0];
 		Assert.IsTrue (File.Exists (library.ItemSpec));

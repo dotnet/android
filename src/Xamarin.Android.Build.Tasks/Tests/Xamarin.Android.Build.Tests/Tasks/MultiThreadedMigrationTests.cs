@@ -114,7 +114,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNull (task.ProcessedSatelliteAssemblies);
 			Assert.AreEqual (1, errors.Count);
 			Assert.AreEqual ("XAPSA7009", errors [0].Code);
-			Assert.Contains ("missing the 'Culture' metadata", errors [0].Message);
+			var message = errors [0].Message;
+			Assert.IsNotNull (message);
+			Assert.Contains ("missing the 'Culture' metadata", message);
 		}
 
 		[TestMethod]

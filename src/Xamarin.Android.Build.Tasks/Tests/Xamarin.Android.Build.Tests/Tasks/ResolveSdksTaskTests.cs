@@ -135,34 +135,34 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
 			Assert.IsTrue (validateJavaVersion.Execute (), "ValidateJavaVersion should succeed!");
 			Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed!");
-			Assert.AreEqual (androidTooling.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
+			Assert.AreEqual ("26", androidTooling.AndroidApiLevel, "AndroidApiLevel should be 26");
 			Assert.AreEqual ("26.0", androidTooling.TargetPlatformVersion, "TargetPlatformVersion should be unchanged");
-			Assert.AreEqual (androidTooling.AndroidApiLevelName, "26", "AndroidApiLevelName should be 26");
+			Assert.AreEqual ("26", androidTooling.AndroidApiLevelName, "AndroidApiLevelName should be 26");
 			Assert.IsNotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
-			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths.Length, 1, "ReferenceAssemblyPaths should have 1 entry.");
-			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths[0], Path.Combine (referencePath, "MonoAndroid"), $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
+			Assert.AreEqual (1, resolveSdks.ReferenceAssemblyPaths.Length, "ReferenceAssemblyPaths should have 1 entry.");
+			Assert.AreEqual (Path.Combine (referencePath, "MonoAndroid"), resolveSdks.ReferenceAssemblyPaths[0], $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
 			var expected = Path.GetDirectoryName (GetType ().Assembly.Location);
-			Assert.AreEqual (resolveSdks.MonoAndroidToolsPath, expected, $"MonoAndroidToolsPath should be {expected}");
+			Assert.AreEqual (expected, resolveSdks.MonoAndroidToolsPath, $"MonoAndroidToolsPath should be {expected}");
 			expected += Path.DirectorySeparatorChar;
 			if (resolveSdks.MonoAndroidBinPath != expected) {
 				//For non-Windows platforms, remove a directory such as "Darwin", MonoAndroidBinPath also has a trailing /
 				var binPath = Path.GetDirectoryName (Path.GetDirectoryName (resolveSdks.MonoAndroidBinPath)) + Path.DirectorySeparatorChar;
-				Assert.AreEqual (binPath, expected, $"MonoAndroidBinPath should be {expected}");
+				Assert.AreEqual (expected, binPath, $"MonoAndroidBinPath should be {expected}");
 			}
-			Assert.AreEqual (resolveSdks.AndroidSdkPath, androidSdkPath, $"AndroidSdkPath should be {androidSdkPath}");
-			Assert.AreEqual (resolveSdks.AndroidNdkPath, androidNdkPath, $"AndroidNdkPath should be {androidNdkPath}");
-			Assert.AreEqual (resolveSdks.JavaSdkPath, javaPath, $"JavaSdkPath should be {javaPath}");
+			Assert.AreEqual (androidSdkPath, resolveSdks.AndroidSdkPath, $"AndroidSdkPath should be {androidSdkPath}");
+			Assert.AreEqual (androidNdkPath, resolveSdks.AndroidNdkPath, $"AndroidNdkPath should be {androidNdkPath}");
+			Assert.AreEqual (javaPath, resolveSdks.JavaSdkPath, $"JavaSdkPath should be {javaPath}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3");
-			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsPath, expected, $"AndroidSdkBuildToolsPath should be {expected}");
-			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsBinPath, expected, "AndroidSdkBuildToolsBinPath should be {expected}");
-			Assert.AreEqual (androidTooling.ZipAlignPath, expected, "ZipAlignPath should be {expected}");
+			Assert.AreEqual (expected, androidTooling.AndroidSdkBuildToolsPath, $"AndroidSdkBuildToolsPath should be {expected}");
+			Assert.AreEqual (expected, androidTooling.AndroidSdkBuildToolsBinPath, "AndroidSdkBuildToolsBinPath should be {expected}");
+			Assert.AreEqual (expected, androidTooling.ZipAlignPath, "ZipAlignPath should be {expected}");
 			expected = Path.Combine (androidSdkPath, "tools");
-			Assert.AreEqual (androidTooling.LintToolPath, expected, $"LintToolPath should be {expected}");
+			Assert.AreEqual (expected, androidTooling.LintToolPath, $"LintToolPath should be {expected}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
-			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
-			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
-			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
-			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8.0", "MinimumRequiredJdkVersion should be 1.8.0");
+			Assert.AreEqual (expected, androidTooling.ApkSignerJar, $"ApkSignerJar should be {expected}");
+			Assert.AreEqual (false, androidTooling.AndroidUseApkSigner, "AndroidUseApkSigner should be false");
+			Assert.AreEqual ("1.8.0", validateJavaVersion.JdkVersion, "JdkVersion should be 1.8.0");
+			Assert.AreEqual ("1.8.0", validateJavaVersion.MinimumRequiredJdkVersion, "MinimumRequiredJdkVersion should be 1.8.0");
 			Assert.IsFalse (messages.Any (m => m.Message == "ResolveSdks Outputs:" ||
 				m.Message == "ResolveAndroidTooling Outputs:" ||
 				m.Message == "ValidateJavaVersion Outputs:" ||
