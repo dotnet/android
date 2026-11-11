@@ -128,6 +128,7 @@ public class GoogleSdkRequirementsTests
 		root.AddProperty ("TargetPlatformVersion", "99");
 		root.AddProperty ("MSBuildWarningsAsErrors", warningsAsErrors ? "XA1006;XA1007" : "");
 		root.AddProperty ("_XamarinAndroidBuildTasksAssembly", typeof (ReadAndroidManifest).Assembly.Location);
+		root.AddProperty ("_MicrosoftAndroidBuildTasksAssembly", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "net", "Microsoft.Android.Build.Tasks.dll"));
 		foreach (string name in new [] { "ReadAndroidManifest", "AndroidWarning" }) {
 			root.AddUsingTask ("Xamarin.Android.Tasks." + name, typeof (ReadAndroidManifest).Assembly.Location, null);
 		}
