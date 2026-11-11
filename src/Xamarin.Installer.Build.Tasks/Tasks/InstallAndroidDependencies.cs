@@ -51,9 +51,9 @@ namespace Xamarin.Installer.Build.Tasks
 		List<string> temporaryFiles = new List<string> ();
 
 		/// <summary>
-		/// The pinned Android CLI version. Used to name the per-user cache directory.
+		/// The per-user cache directory for the pinned Android CLI version.
 		/// </summary>
-		public string AndroidCliVersion { get; set; } = "";
+		public string AndroidCliDirectory { get; set; } = "";
 
 		/// <summary>
 		/// One item per host platform, for example `windows_x86_64`, with `Url` and `Sha256` metadata.
@@ -478,12 +478,12 @@ namespace Xamarin.Installer.Build.Tasks
 			var package = platform == null ? null : AndroidCliPackages?.FirstOrDefault (p => p.ItemSpec == platform);
 			var url = package?.GetMetadata ("Url");
 			var expectedSha256 = package?.GetMetadata ("Sha256");
-			if (string.IsNullOrEmpty (url) || string.IsNullOrEmpty (expectedSha256) || string.IsNullOrEmpty (AndroidCliVersion)) {
+			if (string.IsNullOrEmpty (url) || string.IsNullOrEmpty (expectedSha256) || string.IsNullOrEmpty (AndroidCliDirectory)) {
 				Error (Resources.Unsupported_Platform, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture);
 				return null;
 			}
 
-			var directory = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Android", "android-cli", AndroidCliVersion);
+			var directory = AndroidCliDirectory;
 			var path = Path.Combine (directory, RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "android-cli.exe" : "android-cli");
 			if (File.Exists (path)) {
 				if (HashMatches (path, expectedSha256))

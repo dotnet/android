@@ -20,6 +20,10 @@
 		<PropertyGroup>
 			<_AndroidCliVersion>1.1.16717390</_AndroidCliVersion>
 			<_AndroidCliBaseUrl>https://dl.google.com/android/cli/$(_AndroidCliVersion)</_AndroidCliBaseUrl>
+			<!-- Same per-user cache locations as $(MavenCacheDirectory) -->
+			<_AndroidCliDirectory Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(LocalAppData)\dotnet-android\AndroidCli\$(_AndroidCliVersion)\</_AndroidCliDirectory>
+			<_AndroidCliDirectory Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Caches/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
+			<_AndroidCliDirectory Condition="'$(_AndroidCliDirectory)'==''">$(HOME)/.cache/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
 		</PropertyGroup>
 		<ItemGroup>
 			<_AndroidCliPackage Include="windows_x86_64" Url="$(_AndroidCliBaseUrl)/windows_x86_64/android-cli.exe" Sha256="E461A361540882A759031DD94AD4814B0BA109183CDFDF18013B639539A9AF7B" />
@@ -39,7 +43,7 @@
 				SkipSignCheck="$(_SkipSignCheck)"
 				OpenJdkPublicKeyUrl="$(_AndroidOpenJdkPublicKeyUrl)"
 				OpenJdkPublicKeySha256="$(_AndroidOpenJdkPublicKeySha256)"
-				AndroidCliVersion="$(_AndroidCliVersion)"
+				AndroidCliDirectory="$(_AndroidCliDirectory)"
 				AndroidCliPackages="@(_AndroidCliPackage)"
 				AndroidCliPath="$(_AndroidCliPath)"
 			>
