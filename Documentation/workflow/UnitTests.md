@@ -392,11 +392,8 @@ public void MyAppShouldRunAndRespondToClick ()
 ## On-Device Unit Tests
 
 There are a category of tests which run on the device itself, these test the
-runtime behaviour. `Mono.Android.NET-Tests`, its referenced `Java.Interop-Tests`
-fixtures, and `Xamarin.Android.JcwGen-Tests` use native MSTest with
-`MSTest.SourceGeneration` through Microsoft Testing Platform (MTP).
-Other NUnit consumers retain their existing runner.
-We build and install them within the repo, then run
+runtime behaviour. The main runtime tests use MSTest through Microsoft Testing
+Platform (MTP). We build and install them within the repo, then run
 `dotnet test` from the test project directory.
 
 These tests are generally found in:
@@ -420,137 +417,18 @@ For example:
 
 Pass the same `-c` and `-p:` properties to both commands. After running the
 tests, `.trx` result files will be created under `bin/TestDebug/TestResults`.
-Run from the project directory: its `global.json` selects MTP; running the same
-command from the repository root selects a different test command-line parser.
+Run from the project directory: its `global.json` selects MTP.
 
-Use `-p:IncludeCategories=Intune` (or another `TestCategory`) on **both** the
-install and test commands for pipeline category selection. The property is
-compiled into the app's runtime configuration, not forwarded as a host filter.
-The host Android adapter does not support arbitrary `--filter` expressions;
-the current project-mode CLI rejects that option. Direct instrumentation
-supports `-e include Category`, `-e exclude Category`, and
-`-e noexclusions true`. Includes are ORed, exclusions are ANDed, and the same
-effective includes govern the dedicated `JniReferenceLeak` opt-in.
-Standalone `-e list` is explicitly unsupported; do not treat it as successful
-NativeAOT discovery.
+To run a subset, pass `-p:IncludeCategories=<Category>` to **both** the install
+and test commands; the value is compiled into the app's runtime configuration.
+`--filter` is not supported. When invoking the instrumentation directly,
+`-e include <Category>`, `-e exclude <Category>` and `-e noexclusions true` are
+also accepted.
 
-The shared runner in `tests/TestRunner.MSTest.Android` registers all intended
-fixture assemblies together using `AddMSTest`. The main app registers itself
-and `Java.Interop-Tests`; `Mono.Android-Test.Library.NET` contains no fixtures.
-Packages are scoped to these projects: MSTest/SourceGeneration
-`4.6.0-preview.26524.1` and MTP `2.6.0-preview.26524.1`.
-Inherited lifecycle and `TestContext` are handled by native MSTest, and test
-execution remains nonparallel. General NUnit synchronization-context
-equivalence is not assumed; the actual Android synchronization-context,
-async, lifecycle, and JNI regressions must continue to pass.
-
-### Native metadata and trimming
-
-The runner writes `NativeTestNodes.xml` beside the native TRX under the app's
-external files `TestResults` directory. It records actual registered assembly
-names, native UIDs, method/type metadata, categories, and outcomes. Compare
-canonical discovery identities and multiplicities explicitly, including
-inherited/generic aliases and duplicate data rows; matching totals alone is
-not sufficient. Native source-generated descriptors still report incomplete
-metadata and retain a bounded reflection fallback: this is not a claim that
-all reflection has been eliminated.
-
-Normal builds keep migration diagnostics visible; they are not strict
-warning-clean acceptance. Package-generated metadata reports generic-helper
-fallback diagnostics and direct calls to existing trim-unsafe test methods.
-Converter lookup retains its explicit converter roots; JSON tests use the
-built-in `Int32` converter; XML and stack-trace regression tests keep their
-original metadata-sensitive operations and annotations. Generated object-row
-calls also lose static annotation flow: the JavaConvert rows pass interface
-types (which have no constructors), while AppContext's two reflected types
-have explicit `DynamicDependency` and descriptor roots. These contracts still
-require actual trimmed-runtime comparison, not a blanket warning suppression.
-
-Some original test diagnostics deliberately remain for behavioral and identity
-parity: `JniTypeManagerTests.GetType` keeps its canonical method name despite
-MSTEST0036, three boxed `JniObjectReference` `AreNotSame` checks retain their
-value-type warning, and three TimeZone non-null assertions on non-nullable
-values remain vacuous inside the unchanged `DoesNotThrow` checks. None is
-silently strengthened, removed, renamed, or suppressed by this migration.
-
-The migration baseline at `ba0edabb01dc1e8f0176a96981f4b44773ad1e2c` contains
-1,052 Mono rows: 1,043 selected by default and nine category-excluded rows.
-The default CoreCLR full-trim result is 1,035 passed and eight skipped;
-actual NativeAOT selects 980 rows, with 972 passed and eight skipped.
-The original discovery/streaming identities, all nine exclusions, and the
-32 inherited/generic TRX alias groups must remain accounted for.
-Runtime-dependent skip/pass outcomes are compared to an actual original
-NativeAOT run, not inferred from the CoreCLR results.
-One validation run observed missing `GlobalToWeak` events in
-`ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease`; the unchanged
-APK subsequently passed raw and project-mode execution, followed by three
-strict full-suite repetitions. The failed run is retained, no assertion is
-weakened, and its intermittent cause is not established.
-An independent CoreCLR run also reached the proxy-cancellation test's
-existing timing-inconclusive branch (1,034 passed/nine skipped). It was
-rejected by exact baseline verification, not normalized into the accepted
-1,035/eight result; the unchanged APK's later raw and project-mode runs
-matched the baseline.
-
-After reconciliation with main `598780a62f` and SDK
-`12.0.100-alpha.1.26551.101`, fresh original NUnit discovery measures 1,055 Mono
-rows, including three added upstream cases. Original CoreCLR selects 1,046
-(1,038 passed/eight skipped); original NativeAOT selects 983 (975 passed/eight
-skipped). Keep the historical manifests unchanged and compare migrated output
-to this freshly executed runtime authority, including changed category
-intersections and exact identities/multiplicities, not a source-derived count.
-
-The Mono app and Java.Interop fixture-assembly discovery roots, NUnit
-`NativeAOT.rd.xml`, and NUnit-specific complete type metadata are removed.
-Independent library, StartupHook, converter/reflection, and JNI roots remain.
-In particular, `RegisterMeOnNewNativeThreadOne` is loaded only by its Java
-name from native code and needs its narrow `TrimmerRoots.xml` entry.
-Without that entry, rootless CoreCLR trimming removes the Java class and
-`RegisterTypeOnNewNativeThread` returns `-104`.
-The three `ExportField` initializers on `ExportStaticField` and
-`ExportInstanceField` also have method-only roots: Java field initialization
-calls them without a managed caller. These preserve JNI behavior, not test
-discovery. Without the primitive static initializer, trimming removes
-`GetAnswer` and the generated Java `ANSWER` field. Check linked IL and Java
-output as well as fresh installed APKs; the Android project test path can
-perform linking, packaging and installation even with `dotnet test --no-build`.
-
-JCW has 47 baseline rows (46 passed, one explicit JNI test skipped by
-default). Its whole-app root is intentionally retained. Both original NUnit
-and migrated MSTest NativeAOT apps abort in `JavaAbstractMethodTest` at
-`ic.NewMethod()` (`RhFailFast`), before its catch or `GetMethodBody()` check.
-That pre-existing JNI/runtime blocker is not fixed or hidden by a new
-exclusion; a completed JCW NativeAOT comparison and root removal are not
-claimed. Device evidence currently covers API 35 arm64/CoreCLR and NativeAOT,
-not other ABIs; the selected SDK's missing
-`Microsoft.Android.Sdk.Mono.targets` also prevents a Mono-runtime claim.
-
-Failures retain native messages/stacks, TRX output, test attachments, and
-native exit status (`2` for test failures). Infrastructure failures cancel
-instrumentation instead of returning a successful empty run. Project-mode
-streams results through the existing Android protocol; arbitrary attachment
-files remain in the app's external `TestResults` directory and can be pulled
-with `adb` in addition to the host TRX.
-
-### Android CI entry point
-
-The existing `apk-instrumentation.yaml` template runs `dotnet test` from the
-app's directory, selects its local MTP configuration, and passes
-`--report-trx-filename` plus the lane's build properties. The dedicated Mono
-and JCW JNI lanes already pass `IncludeCategories=JniReferenceLeak`; keep
-that build/runtime-configuration path rather than introducing NUnit filters,
-worker arguments, or host UID slicing for Android.
-
-The separate opt-in [host pilot](../../tests/Xamarin.SourceWriter-Tests/README.md)
-runs SourceWriter directly through MTP and publishes its TRX. It does not
-validate Android installation, instrumentation, JNI, trimming, or NativeAOT.
-Conversely, device runs do not establish remote Azure publication or
-cross-platform host contracts. Keep those acceptance gates independent.
-
-When inspecting compiler-generated metadata, use
-`-p:EmitCompilerGeneratedFiles=true -p:CompilerGeneratedFilesOutputPath=obj/metadata-inspection`.
-Do not emit into Android's `generated` binding directory: its default source
-glob would compile those files again on the next build.
+The instrumentation runner lives in `tests/TestRunner.MSTest.Android`.
+`MSTest.SourceGeneration` registers the tests at build time, so test assemblies
+don't need to be rooted for test discovery. Use `TrimmerRoots.xml` only for code
+the tests reach via reflection, Java, or native code.
 
 The following is an example unit test.
 
