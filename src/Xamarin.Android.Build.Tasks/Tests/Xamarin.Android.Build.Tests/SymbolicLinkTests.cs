@@ -73,8 +73,9 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (SymbolicLink.Create (source, target));
 			Assert.AreEqual (target, new DirectoryInfo (source).LinkTarget);
-			Assert.IsFalse (Directory.Exists (source));
-			Assert.IsFalse (SymbolicLink.Create (source, target));
+			bool danglingLinkExists = OperatingSystem.IsWindows ();
+			Assert.AreEqual (danglingLinkExists, Directory.Exists (source));
+			Assert.AreEqual (danglingLinkExists, SymbolicLink.Create (source, target));
 		}
 
 		[Test]
