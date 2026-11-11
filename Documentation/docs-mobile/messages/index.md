@@ -354,7 +354,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GRD` - `GenerateResourceDesigner`
 * `IAS` - `InstallApkSet`
 * `JDC` - `JavaDoc`
-* `JVC` - `Javac`
 * `JTX` - `JarToXml`
 * `KEY` - `KeyTool`
 * `LNK` - `LinkAssemblies`

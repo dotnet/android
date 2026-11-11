@@ -2156,14 +2156,14 @@ public class ToolbarEx {
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				var ext = b.IsUnix ? "" : ".exe";
-				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, or enum expected";
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java(1,8) expected");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "error JAVAC0000:"), "Java compiler error expected");
+				var text = "TestMe.java:1: error: class, interface, or enum expected";
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java:1 expected");
 				var expectedErrors = new [] {
-					$"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected",
-					$"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: '{{' or ';' expected",
+					"TestMe2.java:1: error: ';' expected",
+					"TestMe2.java:1: error: '{' or ';' expected",
 				};
-				Assert.IsTrue (expectedErrors.Any (error => StringAssertEx.ContainsText (b.LastBuildOutput, error)), "TestMe2.java(1,41) expected");
+				Assert.IsTrue (expectedErrors.Any (error => StringAssertEx.ContainsText (b.LastBuildOutput, error)), "TestMe2.java:1 expected");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}

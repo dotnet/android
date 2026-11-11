@@ -80,7 +80,7 @@
        instead of copying every .java into android/src (which was hundreds of per-file copies).
        This is a static ItemGroup so the directory is registered even on incremental builds where
        _GenerateJavaStubs is skipped; _CompileJava globs it via _FindJavaStubFiles for
-       incrementality and compiles it via the Javac AdditionalStubSourceDirectories parameter. -->
+       incrementality and includes its sources in the javac response file. -->
   <ItemGroup>
     <_AdditionalJavaStubDirectory Include="$([MSBuild]::EnsureTrailingSlash('$(_TypeMapJavaStubsSourceDirectory)'))" />
   </ItemGroup>

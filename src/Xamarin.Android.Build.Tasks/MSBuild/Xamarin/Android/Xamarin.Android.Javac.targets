@@ -13,7 +13,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.AdjustJavacVersionArguments" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Microsoft.Android.Tasks.CreateJavaArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.CreateJavaArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
@@ -38,6 +37,20 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
       <Output TaskParameter="TargetVersion" PropertyName="JavacTargetVersion" />
       <Output TaskParameter="SourceVersion" PropertyName="JavacSourceVersion" />
     </AdjustJavacVersionArguments>
+  </Target>
+
+  <Target Name="_AndroidJavacCommand">
+    <PropertyGroup>
+      <_AndroidJavacToolExe>$(JavacToolExe)</_AndroidJavacToolExe>
+      <_AndroidJavacToolExe Condition=" '$(_AndroidJavacToolExe)' == '' ">javac</_AndroidJavacToolExe>
+      <_AndroidJavacToolExe Condition=" '$(JavacToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">javac.exe</_AndroidJavacToolExe>
+      <_AndroidJavacVersionArguments>-target $(JavacTargetVersion) -source $(JavacSourceVersion) -Xlint:-options</_AndroidJavacVersionArguments>
+      <_AndroidJavacVersionArguments
+          Condition=" '$(_JdkVersion)' != '' and $([System.Version]::Parse('$(_JdkVersion)').Major) &gt;= 17 and
+                      $([System.Text.RegularExpressions.Regex]::IsMatch('$(JavacSourceVersion)', '^\s*[+-]?[0-9]+\s*$')) and
+                      $([System.Text.RegularExpressions.Regex]::IsMatch('$(JavacTargetVersion)', '^\s*[+-]?[0-9]+\s*$')) ">--release $([System.Math]::Max($([System.Convert]::ToInt32('$(JavacSourceVersion)')), $([System.Convert]::ToInt32('$(JavacTargetVersion)'))))</_AndroidJavacVersionArguments>
+      <_AndroidJavacCommand>&quot;$([System.IO.Path]::Combine('$(JavacToolPath)', '$(_AndroidJavacToolExe)'))&quot; -J-Dfile.encoding=UTF8 $(_AndroidJavacVersionArguments)</_AndroidJavacCommand>
+    </PropertyGroup>
   </Target>
 
   <Target Name="_DetermineBindingJavaLibrariesToCompile"
@@ -106,29 +119,53 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
 
   <Target Name="_CompileBindingJava"
       Condition=" '@(_JavaBindingSource->Count())' != '0' "
-      DependsOnTargets="_CollectRuntimeJarFilenames;$(_CompileBindingJavaDependsOnTargets)"
+      DependsOnTargets="_CollectRuntimeJarFilenames;$(_CompileBindingJavaDependsOnTargets);_AndroidJavacCommand"
       Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileBindingJavaFileList);$(_RuntimeJar);@(_JavaBindingSource)"
       Outputs="$(_AndroidCompileBindingJavaStampFile)">
 
-    <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
+    <!-- Remove existing compiler outputs, since *.class files and classes.zip could contain old files. -->
     <RemoveDirFixed Directories="$(_AndroidIntermediateBindingJavaClassDirectory)" Condition="Exists('$(_AndroidIntermediateBindingJavaClassDirectory)')" />
     <Delete Files="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
-    <!-- Compile java code -->
-    <Javac
-        Condition=" '@(_JavaBindingSource->Count())' != '0' "
-        JavaPlatformJarPath="$(JavaPlatformJarPath)"
-        ClassesOutputDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
-        StubSourceDirectory="$(_AndroidIntermediateBindingJavaSourceDirectory)"
-        JavaSourceFiles="@(_JavaBindingSource)"
-        ToolPath="$(JavacToolPath)"
-        ToolExe="$(JavacToolExe)"
-        Jars="@(_BindingJavaLibrariesToCompile);@(_ReferenceJavaLibs)"
-        JavacTargetVersion="$(JavacTargetVersion)"
-        JavacSourceVersion="$(JavacSourceVersion)"
-        JdkVersion="$(_JdkVersion)"
-        IntermediateOutputPath="$(IntermediateOutputPath)"
-        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-    />
+    <MakeDir Directories="$(_AndroidIntermediateBindingJavaClassDirectory)" />
+    <PropertyGroup>
+      <_AndroidBindingJavacResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', '_CompileBindingJava.rsp'))</_AndroidBindingJavacResponseFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidBindingJavacClasspath Include="@(_BindingJavaLibrariesToCompile);@(_ReferenceJavaLibs);$(JavaPlatformJarPath)" />
+      <_AndroidBindingJavacSource Include="@(_JavaBindingSource)" Condition=" '%(_JavaBindingSource.Extension)' == '.java' " />
+      <_AndroidBindingJavacStub Include="$(_AndroidIntermediateBindingJavaSourceDirectory)\**\*.java" />
+    </ItemGroup>
+    <!-- javac response files interpret backslashes as escape characters. -->
+    <WriteLinesToFile
+        File="$(_AndroidBindingJavacResponseFile)"
+        Lines="-d &quot;$([MSBuild]::NormalizeDirectory('$(_AndroidIntermediateBindingJavaClassDirectory)').Replace('\', '\\'))&quot;;
+               -classpath &quot;@(_AndroidBindingJavacClasspath->Replace('\', '\\'), '$([MSBuild]::Escape($([System.IO.Path]::PathSeparator)))')&quot;;
+               -encoding UTF8;
+               @(_AndroidBindingJavacSource->'&quot;%(Identity)&quot;'->Replace('\', '\\'));
+               @(_AndroidBindingJavacStub->'&quot;%(Identity)&quot;'->Replace('\', '\\')->Normalize())"
+        Overwrite="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidBindingJavacResponseFile)" />
+    </ItemGroup>
+    <Exec Command="$(_AndroidJavacCommand) &quot;@$(_AndroidBindingJavacResponseFile)&quot;"
+        IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" ItemName="_AndroidBindingJavacOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_AndroidBindingJavacExitCode" />
+    </Exec>
+    <AndroidError Code="XA5213" ResourceName="XA5213"
+        FormatArguments="$(_AndroidJavacToolExe);$(_AndroidJavacCommand) &quot;@$(_AndroidBindingJavacResponseFile)&quot;"
+        Condition=" '$(_AndroidBindingJavacExitCode)' != '0' and $([System.String]::Copy('@(_AndroidBindingJavacOutput)').Contains('java.lang.OutOfMemoryError:')) " />
+    <ItemGroup Condition=" '$(_AndroidBindingJavacExitCode)' != '0' ">
+      <_AndroidBindingJavacError Include="@(_AndroidBindingJavacOutput)"
+          Condition=" $([System.Text.RegularExpressions.Regex]::IsMatch('%(_AndroidBindingJavacOutput.Identity)', '^.+\.java:\d+:')) " />
+    </ItemGroup>
+    <Error Code="JAVAC0000"
+        File="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidBindingJavacError.Identity)', '^(.+\.java):(\d+):(.+)$', '$1'))"
+        HelpKeyword="JAVAC0000"
+        Text="%(_AndroidBindingJavacError.Identity)"
+        Condition=" '@(_AndroidBindingJavacError->Count())' != '0' " />
+    <Error Code="JAVAC0000" Text="javac exited with code $(_AndroidBindingJavacExitCode).%0A@(_AndroidBindingJavacOutput, '%0A')"
+        Condition=" '$(_AndroidBindingJavacExitCode)' != '0' " />
     <CreateJavaArchive
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
         SourceDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
@@ -158,29 +195,56 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
   </Target>
 
   <Target Name="_CompileJava"
-    DependsOnTargets="_CollectRuntimeJarFilenames;$(_CompileJavaDependsOnTargets);_CollectJavaSource"
+    DependsOnTargets="_CollectRuntimeJarFilenames;$(_CompileJavaDependsOnTargets);_CollectJavaSource;_AndroidJavacCommand"
     Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileJavaFileList);$(_RuntimeJar);@(_JavaStubFiles);@(_JavaSource)"
     Outputs="$(_AndroidCompileJavaStampFile)">
 
-    <!-- remove existing <Javac /> outputs, since *.class files could contain old files -->
+    <!-- Remove existing compiler outputs, since *.class files could contain old files. -->
     <RemoveDirFixed Directories="$(_AndroidIntermediateJavaClassDirectory)" />
 
-    <!-- Compile java code -->
-    <Javac
-        JavaPlatformJarPath="$(JavaPlatformJarPath)"
-        ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
-        StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
-        AdditionalStubSourceDirectories="@(_AdditionalJavaStubDirectory)"
-        JavaSourceFiles="@(_JavaSource)"
-        ToolPath="$(JavacToolPath)"
-        ToolExe="$(JavacToolExe)"
-        Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
-        JavacTargetVersion="$(JavacTargetVersion)"
-        JavacSourceVersion="$(JavacSourceVersion)"
-        JdkVersion="$(_JdkVersion)"
-        IntermediateOutputPath="$(IntermediateOutputPath)"
-        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-    />
+    <MakeDir Directories="$(_AndroidIntermediateJavaClassDirectory)" />
+    <PropertyGroup>
+      <_AndroidJavacResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', '_CompileJava.rsp'))</_AndroidJavacResponseFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidJavacClasspath Include="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs);$(JavaPlatformJarPath)" />
+      <_AndroidJavacSource Include="@(_JavaSource)" Condition=" '%(_JavaSource.Extension)' == '.java' " />
+      <_AndroidJavacStub Include="$(_AndroidIntermediateJavaSourceDirectory)\**\*.java" />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_AdditionalJavaStubDirectory->Count())' != '0' ">
+      <_AndroidJavacStub Include="%(_AdditionalJavaStubDirectory.Identity)\**\*.java" />
+    </ItemGroup>
+    <!-- javac response files interpret backslashes as escape characters. -->
+    <WriteLinesToFile
+        File="$(_AndroidJavacResponseFile)"
+        Lines="-d &quot;$([MSBuild]::NormalizeDirectory('$(_AndroidIntermediateJavaClassDirectory)').Replace('\', '\\'))&quot;;
+               -classpath &quot;@(_AndroidJavacClasspath->Replace('\', '\\'), '$([MSBuild]::Escape($([System.IO.Path]::PathSeparator)))')&quot;;
+               -encoding UTF8;
+               @(_AndroidJavacSource->'&quot;%(Identity)&quot;'->Replace('\', '\\'));
+               @(_AndroidJavacStub->'&quot;%(Identity)&quot;'->Replace('\', '\\')->Normalize())"
+        Overwrite="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidJavacResponseFile)" />
+    </ItemGroup>
+    <Exec Command="$(_AndroidJavacCommand) &quot;@$(_AndroidJavacResponseFile)&quot;"
+        IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" ItemName="_AndroidJavacOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_AndroidJavacExitCode" />
+    </Exec>
+    <AndroidError Code="XA5213" ResourceName="XA5213"
+        FormatArguments="$(_AndroidJavacToolExe);$(_AndroidJavacCommand) &quot;@$(_AndroidJavacResponseFile)&quot;"
+        Condition=" '$(_AndroidJavacExitCode)' != '0' and $([System.String]::Copy('@(_AndroidJavacOutput)').Contains('java.lang.OutOfMemoryError:')) " />
+    <ItemGroup Condition=" '$(_AndroidJavacExitCode)' != '0' ">
+      <_AndroidJavacError Include="@(_AndroidJavacOutput)"
+          Condition=" $([System.Text.RegularExpressions.Regex]::IsMatch('%(_AndroidJavacOutput.Identity)', '^.+\.java:\d+:')) " />
+    </ItemGroup>
+    <Error Code="JAVAC0000"
+        File="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidJavacError.Identity)', '^(.+\.java):(\d+):(.+)$', '$1'))"
+        HelpKeyword="JAVAC0000"
+        Text="%(_AndroidJavacError.Identity)"
+        Condition=" '@(_AndroidJavacError->Count())' != '0' " />
+    <Error Code="JAVAC0000" Text="javac exited with code $(_AndroidJavacExitCode).%0A@(_AndroidJavacOutput, '%0A')"
+        Condition=" '$(_AndroidJavacExitCode)' != '0' " />
 
     <Touch Files="$(_AndroidCompileJavaStampFile)" AlwaysCreate="true" />
   </Target>

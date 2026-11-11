@@ -842,7 +842,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void JavacTaskDoesNotRunOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void JavaCompilationDoesNotRunOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

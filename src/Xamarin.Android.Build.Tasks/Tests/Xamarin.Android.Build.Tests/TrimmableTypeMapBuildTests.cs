@@ -2682,7 +2682,7 @@ namespace Xamarin.Android.Build.Tests {
 		// in place from their output directory (no longer copied into $(IntermediateOutputPath)android/src).
 		// For CoreCLR + PublishTrimmed those come from the post-trim `typemap/linked-java` directory,
 		// which `_GeneratePostTrimTrimmableTypeMapJavaSources` (re)generates from the linked assemblies
-		// and `_CompileJava` compiles via the Javac AdditionalStubSourceDirectories parameter.
+		// and `_CompileJava` includes in the javac response file.
 		static void AssertLinkedJavaCompiledInPlace (ProjectBuilder builder, string message)
 		{
 			var linkedJavaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java"));

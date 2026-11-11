@@ -250,8 +250,9 @@ In other words, what is currently happening *before* we introduce D8/R8 support?
 
 .NET for Android now has two new MSBuild tasks: `<R8/>` and `<D8/>`.
 
-1. The [Javac](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
-   MSBuild task will remain unchanged.
+1. Java compilation still precedes dexing. The `_CompileJava` and
+   `_CompileBindingJava` targets in `Xamarin.Android.Javac.targets` now run
+   `javac` through `Exec` with a response file instead of a custom MSBuild task.
 2. `D8` will run if `$(AndroidEnableMultiDex)` is `False`,
    `$(AndroidLinkTool)` is not `r8`, and "desugar" by default.
 3. Otherwise, `R8` will run if `$(AndroidEnableMultiDex)` is `True` or
