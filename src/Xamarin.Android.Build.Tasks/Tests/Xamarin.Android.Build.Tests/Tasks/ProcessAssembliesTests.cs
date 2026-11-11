@@ -6,32 +6,34 @@ using System.Security;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class ProcessAssembliesTests
 	{
 		string directory = "";
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
-			directory = Path.Combine (TestContext.CurrentContext.WorkDirectory, "ProcessAssemblies-" + Guid.NewGuid ());
+			directory = Path.Combine (AppContext.BaseDirectory, "ProcessAssemblies-" + Guid.NewGuid ());
 			Directory.CreateDirectory (directory);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (directory, recursive: true);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RelativeReadsPreserveItems (bool multithreaded)
 		{
 			string taskAssembly = SecurityElement.Escape (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"));
@@ -108,14 +110,14 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DesignTimeSkipsMissingAssembly ()
 		{
 			File.WriteAllText (Path.Combine (directory, "library.dll"), "not an assembly");
 			var present = new TaskItem ("library.dll");
 			present.SetMetadata ("RuntimeIdentifier", "android-arm64");
 			var task = new ProcessAssemblies {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
 				DesignTimeBuild = true,
 				InputAssemblies = [new TaskItem ("missing.dll"), present],
@@ -125,7 +127,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("", present.GetMetadata ("HasMonoAndroidReference"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReferenceMetadataDoesNotRequireFile ()
 		{
 			var item = new TaskItem ("missing.dll");

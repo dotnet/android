@@ -8,43 +8,45 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class GoogleSdkRequirementsTests
 {
 	string directory = "";
 
-	[SetUp]
+	[TestInitialize]
 	public void Setup ()
 	{
 		directory = Path.Combine (Path.GetTempPath (), "GoogleSdkRequirements-" + Guid.NewGuid ());
 		Directory.CreateDirectory (Path.Combine (directory, "android"));
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void TearDown ()
 	{
 		Directory.Delete (directory, recursive: true);
 	}
 
-	[TestCase ("28", "10", "28", "")]
-	[TestCase ("28", "29", "27", "XA1006;XA1007")]
-	[TestCase ("27", "29", "28", "XA1008;XA1007")]
-	[TestCase ("36.1", "24", "36", "")]
-	[TestCase ("28", "invalid", "invalid", "")]
-	[TestCase ("Preview", "invalid", "23", "")]
-	[TestCase ("Preview", null, null, "XA1007")]
+	[TestMethod]
+	[DataRow ("28", "10", "28", "")]
+	[DataRow ("28", "29", "27", "XA1006;XA1007")]
+	[DataRow ("27", "29", "28", "XA1008;XA1007")]
+	[DataRow ("36.1", "24", "36", "")]
+	[DataRow ("28", "invalid", "invalid", "")]
+	[DataRow ("Preview", "invalid", "23", "")]
+	[DataRow ("Preview", null, null, "XA1007")]
 	public void CheckMergedManifest (string compile, string minimum, string target, string expectedCodes)
 	{
 		WriteManifest (minimum, target);
 		var (logger, instance) = Build (compile);
-		CollectionAssert.AreEqual (expectedCodes.Split (';', StringSplitOptions.RemoveEmptyEntries), logger.Warnings.Select (warning => warning.Code),
+		CollectionAssert.AreEqual (expectedCodes.Split (';', StringSplitOptions.RemoveEmptyEntries), logger.Warnings.Select (warning => warning.Code).ToArray (),
 			string.Join (Environment.NewLine, logger.Warnings.Select (warning => warning.Message)));
 		Assert.AreEqual (1, logger.Tasks.Count (task => task == "ReadAndroidManifest"));
 		foreach (var warning in logger.Warnings) {
@@ -54,8 +56,9 @@ public class GoogleSdkRequirementsTests
 		}
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void SkippedChecksDoNotReadManifest (bool missingManifest)
 	{
 		if (!missingManifest)
@@ -65,22 +68,22 @@ public class GoogleSdkRequirementsTests
 		Assert.IsEmpty (logger.Tasks);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ReusesExistingManifestRead ()
 	{
 		WriteManifest ("29", "27");
 		var (logger, _) = Build ("28", reuseRead: true);
-		CollectionAssert.AreEqual (new [] { "XA1006", "XA1007" }, logger.Warnings.Select (warning => warning.Code),
+		CollectionAssert.AreEqual (new [] { "XA1006", "XA1007" }, logger.Warnings.Select (warning => warning.Code).ToArray (),
 			string.Join (Environment.NewLine, logger.Warnings.Select (warning => warning.Message)));
 		Assert.AreEqual (1, logger.Tasks.Count (task => task == "ReadAndroidManifest"), "The check must not parse the manifest again.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void WarningsAsErrorsStillLogsBothWarningsAndContinues ()
 	{
 		WriteManifest ("29", "27");
 		var (logger, instance) = Build ("28", warningsAsErrors: true);
-		CollectionAssert.AreEqual (new [] { "XA1006", "XA1007" }, logger.Errors.Select (error => error.Code));
+		CollectionAssert.AreEqual (new [] { "XA1006", "XA1007" }, logger.Errors.Select (error => error.Code).ToArray ());
 		Assert.AreEqual ("true", instance.GetPropertyValue ("CheckCompleted"));
 	}
 

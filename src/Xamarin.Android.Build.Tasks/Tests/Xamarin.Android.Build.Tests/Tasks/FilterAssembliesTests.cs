@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,21 +13,22 @@ using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class FilterAssembliesTests : BaseTest
 	{
 		const string DotNetPublicPackageBaseAddress = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2";
 
 		string tempDirectory;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			tempDirectory = Path.Combine (Root, "temp", TestName, "nuget");
 			Directory.CreateDirectory (tempDirectory);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (tempDirectory, recursive: true);
@@ -43,7 +44,7 @@ namespace Xamarin.Android.Build.Tests
 			return $"{DotNetPublicPackageBaseAddress}/{lowercaseId}/{lowercaseVersion}/{lowercaseId}.{lowercaseVersion}.nupkg";
 		}
 
-		[Test]
+		[TestMethod]
 		public void PackageUrlIsLowercase ()
 		{
 			var actual = GetPackageUrl ("Package.ID", "1.0.0-RC1");
@@ -70,14 +71,14 @@ namespace Xamarin.Android.Build.Tests
 		string [] Run (params string [] assemblies)
 		{
 			var task = new FilterAssemblies {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				InputAssemblies = assemblies.Select (a => new TaskItem (a)).ToArray (),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			return task.OutputAssemblies.Select (a => Path.GetFileName (a.ItemSpec)).ToArray ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task CircleImageView ()
 		{
 			var assemblies = await GetAssembliesFromNuGet (
@@ -89,7 +90,7 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (expected, actual);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task XamarinForms ()
 		{
 			var assemblies = await GetAssembliesFromNuGet (
@@ -105,7 +106,7 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (expected, actual);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task GuavaListenableFuture ()
 		{
 			var assemblies = await GetAssembliesFromNuGet (
@@ -117,14 +118,14 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (expected, actual);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NativeDll_Skipped ()
 		{
 			// Create a minimal valid PE file without CLI metadata (a native DLL)
 			var nativeDll = Path.Combine (tempDirectory, "native.dll");
 			CreateNativePE (nativeDll);
 			var actual = Run (nativeDll);
-			CollectionAssert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
+			Assert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
 		}
 
 		static void CreateAssembly (string path, bool android)
@@ -138,8 +139,9 @@ namespace Xamarin.Android.Build.Tests
 			assembly.Write (path);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ConcurrentProjectsPreserveRelativeItems (bool multithreaded)
 		{
 			string assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll");
@@ -183,7 +185,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (string name in new [] { "first", "second" }) {
 				string file = name == "first" ? "library.dll" : "other.dll";
 				string line = $"{file}|{Path.Combine (tempDirectory, name, file)}|{name}";
-				CollectionAssert.AreEqual (Enumerable.Repeat (line, name == "first" ? 4 : 2),
+				CollectionAssert.AreEqual (Enumerable.Repeat (line, name == "first" ? 4 : 2).ToArray (),
 					File.ReadAllLines (Path.Combine (tempDirectory, name, "output.txt")));
 			}
 		}

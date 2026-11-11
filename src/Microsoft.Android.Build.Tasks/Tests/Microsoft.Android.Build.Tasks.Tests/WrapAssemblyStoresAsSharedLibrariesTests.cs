@@ -7,24 +7,26 @@ using System.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 {
-	[TestCase ("armeabi-v7a", "android-arm")]
-	[TestCase ("arm64-v8a", "android-arm64")]
-	[TestCase ("x86", "android-x86")]
-	[TestCase ("x86_64", "android-x64")]
-	[Category ("RequiresAndroidNdk")]
+	[TestMethod]
+	[DataRow ("armeabi-v7a", "android-arm")]
+	[DataRow ("arm64-v8a", "android-arm64")]
+	[DataRow ("x86", "android-x86")]
+	[DataRow ("x86_64", "android-x64")]
+	[TestCategory ("RequiresAndroidNdk")]
 	public void WrapsStoreWithArchivePathAndCleanupDirectory (string abi, string rid)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
 		var store = CreateStore (directory, abi);
 		var task = new WrapAssemblyStoresAsSharedLibraries {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			IntermediateOutputPath = directory,
 			ResolvedAssemblies = [store],
 		};
@@ -35,7 +37,7 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		string outputDirectory = Path.Combine (directory, rid, "wrapped-assembly-store");
 		Assert.AreEqual (Path.Combine (outputDirectory, "libassembly-store.so"), library.ItemSpec);
 		Assert.AreEqual ($"lib/{abi}/libassembly-store.so", library.GetMetadata ("ArchivePath"));
-		FileAssert.Exists (library.ItemSpec);
+		Assert.IsTrue (File.Exists (library.ItemSpec));
 		Assert.AreEqual (1, task.DirectoriesToDelete.Length);
 		Assert.AreEqual (outputDirectory, task.DirectoriesToDelete [0].ItemSpec);
 
@@ -44,23 +46,23 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		Assert.IsEmpty (Directory.GetFiles (directory, "*.o", SearchOption.AllDirectories));
 	}
 
-	[Test]
-	[Category ("RequiresAndroidNdk")]
+	[TestMethod]
+	[TestCategory ("RequiresAndroidNdk")]
 	public void PerAbiStoresRemainSeparateForAppBundleSplitting ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
 		string [] abis = ["armeabi-v7a", "arm64-v8a", "x86_64"];
 		ITaskItem [] stores = abis.Select (abi => CreateStore (directory, abi)).ToArray ();
 		var task = new WrapAssemblyStoresAsSharedLibraries {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			IntermediateOutputPath = directory,
 			ResolvedAssemblies = stores,
 		};
 
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual (abis.Length, task.WrappedAssemblies.Select (item => item.ItemSpec).Distinct ().Count ());
-		CollectionAssert.AreEquivalent (abis.Select (abi => $"lib/{abi}/libassembly-store.so"),
-			task.WrappedAssemblies.Select (item => item.GetMetadata ("ArchivePath")));
+		CollectionAssert.AreEquivalent (abis.Select (abi => $"lib/{abi}/libassembly-store.so").ToArray (),
+			task.WrappedAssemblies.Select (item => item.GetMetadata ("ArchivePath")).ToArray ());
 		Assert.AreEqual (abis.Length, task.DirectoriesToDelete.Length);
 		foreach (var library in task.WrappedAssemblies) {
 			string abi = library.GetMetadata ("ArchivePath").Split ('/') [1];
@@ -69,7 +71,7 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingAbiLogsCodedError ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -77,7 +79,7 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		store.RemoveMetadata ("Abi");
 		var errors = new List<BuildErrorEventArgs> ();
 		var task = new WrapAssemblyStoresAsSharedLibraries {
-			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			BuildEngine = new MockBuildEngine (Console.Out, errors),
 			IntermediateOutputPath = directory,
 			ResolvedAssemblies = [store],
 		};
@@ -89,7 +91,7 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		Assert.IsEmpty (Directory.GetFiles (directory, "libassembly-store.so", SearchOption.AllDirectories));
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingAbiPreservesEarlierWrapperAndCleanupOutputs ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -99,7 +101,7 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		var last = CreateStore (directory, "x86_64");
 		var errors = new List<BuildErrorEventArgs> ();
 		var task = new WrapAssemblyStoresAsSharedLibraries {
-			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			BuildEngine = new MockBuildEngine (Console.Out, errors),
 			IntermediateOutputPath = directory,
 			ResolvedAssemblies = [first, invalid, last],
 		};
@@ -107,10 +109,10 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		Assert.AreEqual (1, errors.Count);
 		Assert.AreEqual ("XA4234", errors [0].Code);
-		StringAssert.Contains (invalid.ItemSpec, errors [0].Message);
+		Assert.Contains (invalid.ItemSpec, errors [0].Message);
 		Assert.AreEqual (1, task.WrappedAssemblies.Length, "The wrapper written before the error must remain tracked.");
 		var library = task.WrappedAssemblies [0];
-		FileAssert.Exists (library.ItemSpec);
+		Assert.IsTrue (File.Exists (library.ItemSpec));
 		Assert.AreEqual ("lib/arm64-v8a/libassembly-store.so", library.GetMetadata ("ArchivePath"));
 		Assert.AreEqual (1, task.DirectoriesToDelete.Length, "The partial wrapper directory must remain available for cleanup.");
 		Assert.AreEqual (Path.GetDirectoryName (library.ItemSpec), task.DirectoriesToDelete [0].ItemSpec);

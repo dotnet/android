@@ -1,4 +1,5 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -7,10 +8,13 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class InvalidConfigTests : BaseTest
 	{
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void EmbeddedLibraries (int count)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -47,8 +51,9 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ($" {count} Error(s)", builder.LastBuildOutput);
 		}
 
-		[Test]
-		public void EolFrameworks ([Values ("net6.0-android", "net7.0-android", "net8.0-android", "net9.0-android", "net10.0-android")] string targetFramework)
+		[TestMethod]
+		[CombinatorialData]
+		public void EolFrameworks ([CombinatorialValues ("net6.0-android", "net7.0-android", "net8.0-android", "net9.0-android", "net10.0-android")] string targetFramework)
 		{
 			var library = new XamarinAndroidLibraryProject () {
 				TargetFramework = targetFramework,
@@ -60,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"NETSDK1202: The workload '{targetFramework}' is out of support"), $"{builder.BuildLogFile} should have NETSDK1202.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void XA0119 ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -73,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void XA0119AAB ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -85,10 +90,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		public void UnsupportedCodegenTargetIsRejected (
-			[Values ("XamarinAndroid", "JavaInterop1", "javainterop1")] string codegenTarget,
-			[Values (true, false)] bool isApplication)
+			[CombinatorialValues ("XamarinAndroid", "JavaInterop1", "javainterop1")] string codegenTarget,
+			[CombinatorialValues (true, false)] bool isApplication)
 		{
 			XamarinProject project = isApplication
 				? new XamarinAndroidApplicationProject ()
@@ -102,10 +108,11 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains (codegenTarget, builder.LastBuildOutput, "Error should identify the unsupported code generation target.");
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		public void UnsupportedJcwCodegenTargetIsRejected (
-			[Values ("XamarinAndroid", "JavaInterop1")] string codegenTarget,
-			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+			[CombinatorialValues ("XamarinAndroid", "JavaInterop1")] string codegenTarget,
+			[CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var project = new XamarinAndroidApplicationProject {
 				IsRelease = runtime == AndroidRuntime.NativeAOT,
@@ -121,10 +128,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (null, "private-members", "false", "")]
-		[TestCase ("private-members", "private-members", "false", "")]
-		[TestCase ("disabled", "disabled", "false", "")]
-		[TestCase ("runtime-remapping", "runtime-remapping", "true", "false")]
+		[TestMethod]
+		[DataRow (null, "private-members", "false", "")]
+		[DataRow ("private-members", "private-members", "false", "")]
+		[DataRow ("disabled", "disabled", "false", "")]
+		[DataRow ("runtime-remapping", "runtime-remapping", "true", "false")]
 		public void R8ObfuscationDefaults (string? mode, string expectedMode, string expectedRemapping, string expectedTypeMapR8Trimming)
 		{
 			var project = new XamarinAndroidApplicationProject { IsRelease = true };
@@ -147,10 +155,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (project));
 			StringAssertEx.Contains ($"R8_OPTIONS={expectedMode}|{expectedRemapping}|{expectedTypeMapR8Trimming}", builder.LastBuildOutput);
 		}
-		[TestCase ("AndroidLinkTool", "d8", "AndroidLinkTool")]
-		[TestCase ("AndroidLinkTool", "", "AndroidLinkTool")]
-		[TestCase ("PublishTrimmed", "false", "PublishTrimmed")]
-		[TestCase ("_AndroidRuntime", "MonoVM", "Supported runtimes are CoreCLR and NativeAOT")]
+		[TestMethod]
+		[DataRow ("AndroidLinkTool", "d8", "AndroidLinkTool")]
+		[DataRow ("AndroidLinkTool", "", "AndroidLinkTool")]
+		[DataRow ("PublishTrimmed", "false", "PublishTrimmed")]
+		[DataRow ("_AndroidRuntime", "MonoVM", "Supported runtimes are CoreCLR and NativeAOT")]
 		public void R8ObfuscationInvalidConfiguration (string property, string value, string expectedMessage)
 		{
 			var project = new XamarinAndroidApplicationProject { IsRelease = true };
@@ -181,7 +190,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains (expectedMessage, builder.LastBuildOutput);
 		}
 
-		[Test]
+		[TestMethod]
 		public void R8ObfuscationDoesNotEnableLibraries ()
 		{
 			var project = new XamarinAndroidLibraryProject ();
@@ -190,22 +199,22 @@ namespace Xamarin.Android.Build.Tests
 			builder.Target = "_ValidateAndroidR8ObfuscationMode";
 			Assert.IsTrue (builder.Build (project), "Application obfuscation settings must not affect referenced libraries.");
 		}
-		[Test]
+		[TestMethod]
 		public void LibraryBuildDoesNotGenerateTypeMap ()
 		{
 			var project = new XamarinAndroidLibraryProject ();
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (project), "A library should build without generating a type map.");
-			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "typemap-assemblies.txt")));
+			Assert.IsFalse (File.Exists (builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "typemap-assemblies.txt"))));
 		}
 
-		[Test]
-		[TestCase ("RunAOTCompilation", "true", false)]
-		[TestCase ("RunAOTCompilation", "true", true)]
-		[TestCase ("RunAOTCompilation", "false", false)]
-		[TestCase ("RunAOTCompilation", "false", true)]
-		[TestCase ("EnableLLVM", "true", false)]
-		[TestCase ("EnableLLVM", "true", true)]
+		[TestMethod]
+		[DataRow ("RunAOTCompilation", "true", false)]
+		[DataRow ("RunAOTCompilation", "true", true)]
+		[DataRow ("RunAOTCompilation", "false", false)]
+		[DataRow ("RunAOTCompilation", "false", true)]
+		[DataRow ("EnableLLVM", "true", false)]
+		[DataRow ("EnableLLVM", "true", true)]
 		public void UnsupportedMonoAotPropertyFailsBuild (string property, string value, bool isRelease)
 		{
 			var project = new XamarinAndroidApplicationProject {
@@ -231,10 +240,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		public void ReadyToRunWithoutMonoAotProperty (
-			[Values ("", "true", "false")] string publishReadyToRun,
-			[Values] bool isRelease)
+			[CombinatorialValues ("", "true", "false")] string publishReadyToRun,
+			bool isRelease)
 		{
 			var project = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -247,7 +257,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (project), "Configuration should be valid without RunAOTCompilation.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void RunAotCompilationFalseAllowedForNativeAot ()
 		{
 			var project = new XamarinAndroidApplicationProject {

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,12 +11,13 @@ using ELFSharp.ELF.Sections;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
 	static void WriteTestJniLibrary (string path, string libraryName, AndroidTargetArch arch = AndroidTargetArch.Arm64)
@@ -45,32 +47,43 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		File.WriteAllBytes (path, image);
 	}
 
-	[TestCase ("NativeAOT")]
-	[TestCase ("nativeaot")]
-	[SetUICulture ("en-US")]
+	[TestMethod]
+	[DataRow ("NativeAOT")]
+	[DataRow ("nativeaot")]
 	public void RejectsUnsupportedRuntimesWithoutWritingBootstrap (string runtime)
+	{
+		var uiCulture = CultureInfo.CurrentUICulture;
+		CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo ("en-US");
+		try {
+			RejectsUnsupportedRuntime (runtime);
+		} finally {
+			CultureInfo.CurrentUICulture = uiCulture;
+		}
+	}
+
+	void RejectsUnsupportedRuntime (string runtime)
 	{
 		string bootstrapPath = Path.Combine (Root, "temp", TestName, "coreclr-bootstrap.bin");
 		var errors = new List<BuildErrorEventArgs> ();
 		var task = new GenerateNativeApplicationConfigSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			BuildEngine = new MockBuildEngine (Console.Out, errors),
 			AndroidRuntime = runtime,
 			CoreClrBootstrapOutputFile = bootstrapPath,
 		};
 		Assert.IsFalse (task.Execute ());
-		Assert.That (errors, Has.Count.EqualTo (1));
+		Assert.HasCount (1, errors);
 		Assert.AreEqual ("XAGCA7009", errors [0].Code);
-		StringAssert.Contains (
+		Assert.Contains (
 			$"GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{runtime}'.",
 			errors [0].Message);
-		FileAssert.DoesNotExist (bootstrapPath);
+		Assert.IsFalse (File.Exists (bootstrapPath));
 	}
 
-	[Test]
+	[TestMethod]
 	public void InvalidBundleConfigUsesCodedWarning ()
 	{
 		var warnings = new List<BuildWarningEventArgs> ();
-		var engine = new MockBuildEngine (TestContext.Out, warnings: warnings);
+		var engine = new MockBuildEngine (Console.Out, warnings: warnings);
 		var log = new TaskLoggingHelper (engine, nameof (BundleConfigSplitConfigsChecker));
 		string configFile = Path.Combine (Root, "missing-bundle-config.json");
 
@@ -79,14 +92,15 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		Assert.AreEqual ($"Failed to process bundle config file '{configFile}', split config files will be ignored at run time.", warning.Message);
 	}
 
-	[TestCase (null)]
-	[TestCase (" ")]
+	[TestMethod]
+	[DataRow (null)]
+	[DataRow (" ")]
 	public void CoreClrRequiresBootstrapOutputFile (string? bootstrapPath)
 	{
 		string outputRoot = Path.Combine (Root, "temp", TestName);
 		var errors = new List<BuildErrorEventArgs> ();
 		var task = new GenerateNativeApplicationConfigSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			BuildEngine = new MockBuildEngine (Console.Out, errors),
 			ResolvedAssemblies = [],
 			CoreClrBootstrapOutputFile = bootstrapPath,
 			SupportedAbis = ["arm64-v8a"],
@@ -95,15 +109,16 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		};
 
 		Assert.IsFalse (task.Execute ());
-		Assert.That (errors, Has.Count.EqualTo (1));
-		StringAssert.Contains ("CoreCLR bootstrap output path is required.", errors [0].Message);
-		FileAssert.DoesNotExist (Path.Combine (outputRoot, "environment.arm64-v8a.ll"));
+		Assert.HasCount (1, errors);
+		Assert.Contains ("CoreCLR bootstrap output path is required.", errors [0].Message);
+		Assert.IsFalse (File.Exists (Path.Combine (outputRoot, "environment.arm64-v8a.ll")));
 	}
 
-	[TestCase (false, false)]
-	[TestCase (false, true)]
-	[TestCase (true, false)]
-	[TestCase (true, true)]
+	[TestMethod]
+	[DataRow (false, false)]
+	[DataRow (false, true)]
+	[DataRow (true, false)]
+	[DataRow (true, true)]
 	public void CoreClrConfigurationUsesBinaryBootstrapInsteadOfApplicationGlobals (bool haveAssemblyStore, bool ignoreSplitConfigs)
 	{
 		string outputRoot = Path.Combine (Root, "temp", TestName);
@@ -149,7 +164,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			libraries.Add (new TaskItem (libraryPath));
 		}
 		var task = new GenerateNativeApplicationConfigSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			ResolvedAssemblies = [new TaskItem (Path.Combine (outputRoot, "Example.dll"))],
 			CoreClrBootstrapOutputFile = rawPath,
 			SupportedAbis = ["arm64-v8a", "x86"],
@@ -169,40 +184,39 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		var config = bootstrap.Config;
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 		Assert.AreEqual (ignoreSplitConfigs, config.ignore_split_configs);
-		Assert.AreEqual (12, config.number_of_dso_cache_entries, "The 2/4/6-alias libraries must retain all cache entries.");
-		Assert.AreEqual (ignoreSplitConfigs ? 4 : 6, bootstrap.Preloads.IndexStride);
+		Assert.AreEqual (12U, config.number_of_dso_cache_entries, "The 2/4/6-alias libraries must retain all cache entries.");
+		Assert.AreEqual (ignoreSplitConfigs ? 4U : 6U, bootstrap.Preloads.IndexStride);
 		Assert.AreEqual (ignoreSplitConfigs ? 8 : 18, bootstrap.Preloads.Entries.Count);
-		Assert.Multiple (() => {
-			Assert.AreEqual ("\u00e9\u65e5", bootstrap.EnvironmentVariables ["BOOTSTRAP_VALUE"]);
-			Assert.AreEqual ("", bootstrap.EnvironmentVariables ["BOOTSTRAP_EMPTY"]);
-			Assert.AreEqual (pathValue, bootstrap.EnvironmentVariables ["BOOTSTRAP_PATH"]);
-			Assert.AreEqual (quotedValue, bootstrap.EnvironmentVariables ["BOOTSTRAP_QUOTES"]);
-			Assert.AreEqual (bootstrap.EnvironmentVariables.Count, config.environment_variable_count);
-			Assert.AreEqual (pathValue, bootstrap.SystemProperties ["debug.bootstrap.path"]);
-			Assert.AreEqual (quotedValue, bootstrap.SystemProperties ["debug.bootstrap.quotes"]);
-			Assert.AreEqual ("\u00e9\u65e5", bootstrap.SystemProperties ["debug.bootstrap.unicode"]);
-			Assert.AreEqual ("", bootstrap.SystemProperties ["debug.bootstrap.empty"]);
-			Assert.AreEqual (bootstrap.SystemProperties.Count, config.system_property_count);
-		});
+		Assert.AreEqual ("\u00e9\u65e5", bootstrap.EnvironmentVariables ["BOOTSTRAP_VALUE"]);
+		Assert.AreEqual ("", bootstrap.EnvironmentVariables ["BOOTSTRAP_EMPTY"]);
+		Assert.AreEqual (pathValue, bootstrap.EnvironmentVariables ["BOOTSTRAP_PATH"]);
+		Assert.AreEqual (quotedValue, bootstrap.EnvironmentVariables ["BOOTSTRAP_QUOTES"]);
+		Assert.AreEqual ((uint) bootstrap.EnvironmentVariables.Count, config.environment_variable_count);
+		Assert.AreEqual (pathValue, bootstrap.SystemProperties ["debug.bootstrap.path"]);
+		Assert.AreEqual (quotedValue, bootstrap.SystemProperties ["debug.bootstrap.quotes"]);
+		Assert.AreEqual ("\u00e9\u65e5", bootstrap.SystemProperties ["debug.bootstrap.unicode"]);
+		Assert.AreEqual ("", bootstrap.SystemProperties ["debug.bootstrap.empty"]);
+		Assert.AreEqual ((uint) bootstrap.SystemProperties.Count, config.system_property_count);
 		byte [] raw = File.ReadAllBytes (rawPath);
-		StringAssert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
-		StringAssert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));
-		StringAssert.Contains ("dev-override", Encoding.UTF8.GetString (raw));
-		StringAssert.DoesNotContain ("enabled", Encoding.UTF8.GetString (raw));
+		Assert.Contains ("com.example.bootstrap", Encoding.UTF8.GetString (raw));
+		Assert.Contains ("Test.Feature", Encoding.UTF8.GetString (raw));
+		Assert.Contains ("dev-override", Encoding.UTF8.GetString (raw));
+		Assert.DoesNotContain ("enabled", Encoding.UTF8.GetString (raw));
 		Assert.IsEmpty (Directory.GetFiles (Path.Combine (outputRoot, "android"), "*.ll"),
 			"Application configuration should not generate LLVM sources for any ABI.");
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void ApplicationConfigDoesNotReadAssemblyMetadata (bool haveAssemblyStore)
 	{
 		string outputRoot = Path.Combine (Root, "temp", $"{nameof (ApplicationConfigDoesNotReadAssemblyMetadata)}-{haveAssemblyStore}");
 		string monoAndroidPath = Path.Combine (outputRoot, "missing", "Mono.Android.dll");
-		FileAssert.DoesNotExist (monoAndroidPath);
+		Assert.IsFalse (File.Exists (monoAndroidPath));
 
 		var task = new GenerateNativeApplicationConfigSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			ResolvedAssemblies = [new TaskItem (monoAndroidPath)],
 			CoreClrBootstrapOutputFile = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin"),
 			SupportedAbis = ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"],
@@ -222,7 +236,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void TypeMapAssemblyIsCountedOnceAcrossResolvedAssemblyLists ()
 	{
 		string outputRoot = Path.Combine (Root, "temp", TestName);
@@ -234,7 +248,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		typeMap.SetMetadata ("RelativePath", "_Test.TypeMap.dll");
 
 		var task = new GenerateNativeApplicationConfigSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			ResolvedAssemblies = [new TaskItem (monoAndroidPath), typeMap],
 			AdditionalResolvedAssemblies = [new TaskItem (typeMapPath)],
 			CoreClrBootstrapOutputFile = Path.Combine (outputRoot, "android", "coreclr-bootstrap.bin"),
@@ -249,7 +263,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		Assert.AreEqual (2u, config.number_of_assemblies_in_apk, "The type map must not be counted again as a satellite assembly.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void GenerateNativeApplicationConfigUpdatesEnvironmentAndSkipsExcludedAssemblies ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -267,7 +281,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		string bootstrapPath = Path.Combine (path, "env", "coreclr-bootstrap.bin");
 
 		var configTask = new GenerateNativeApplicationConfigSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			ResolvedAssemblies = [
 				new TaskItem ("linked/HelloAndroid.dll", metadata),
 				new TaskItem ("linked/Excluded.dll", skipped),
@@ -281,12 +295,12 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 
 		Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 		string bootstrap = Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath));
-		StringAssert.Contains ("YYYY", bootstrap, "CoreCLR bootstrap should contain the initial custom environment value.");
-		StringAssert.DoesNotContain ("Excluded.dll", bootstrap, "CoreCLR bootstrap should not list assemblies excluded from packaging.");
+		Assert.Contains ("YYYY", bootstrap, "CoreCLR bootstrap should contain the initial custom environment value.");
+		Assert.DoesNotContain ("Excluded.dll", bootstrap, "CoreCLR bootstrap should not list assemblies excluded from packaging.");
 		Assert.AreEqual (1u, EnvironmentHelper.ReadCoreClrBootstrap (path).Config.number_of_assemblies_in_apk);
 
 		File.WriteAllText (envFile, "MYENV=XXXX");
 		Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed. (run 2)");
-		StringAssert.Contains ("XXXX", Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath)));
+		Assert.Contains ("XXXX", Encoding.UTF8.GetString (File.ReadAllBytes (bootstrapPath)));
 	}
 }

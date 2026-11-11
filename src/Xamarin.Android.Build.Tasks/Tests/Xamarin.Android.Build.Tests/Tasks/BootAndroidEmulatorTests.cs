@@ -8,13 +8,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class BootAndroidEmulatorTests : BaseTest
 {
 	List<BuildErrorEventArgs> errors = [];
@@ -22,10 +23,10 @@ public class BootAndroidEmulatorTests : BaseTest
 	List<BuildMessageEventArgs> messages = [];
 	MockBuildEngine? engine;
 
-	[SetUp]
+	[TestInitialize]
 	public void Setup ()
 	{
-		engine = new MockBuildEngine (TestContext.Out, errors = [], warnings = [], messages = []);
+		engine = new MockBuildEngine (Console.Out, errors = [], warnings = [], messages = []);
 	}
 
 	/// <summary>
@@ -69,7 +70,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		};
 	}
 
-	[Test]
+	[TestMethod]
 	public void AlreadyOnlineDevice_PassesThrough ()
 	{
 		var task = CreateTask ("emulator-5554");
@@ -84,7 +85,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual (0, errors.Count, "Should have no errors");
 	}
 
-	[Test]
+	[TestMethod]
 	public void AlreadyOnlinePhysicalDevice_PassesThrough ()
 	{
 		var task = CreateTask ("0A041FDD400327");
@@ -98,7 +99,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual ("-s 0A041FDD400327", task.AdbTarget);
 	}
 
-	[Test]
+	[TestMethod]
 	public void AvdAlreadyRunning_WaitsForFullBoot ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -113,7 +114,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual ("Pixel_6_API_33", task.LastBootedDevice);
 	}
 
-	[Test]
+	[TestMethod]
 	public void BootEmulator_AppearsAfterPolling ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -128,7 +129,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual ("Pixel_6_API_33", task.LastBootedDevice);
 	}
 
-	[Test]
+	[TestMethod]
 	public void LaunchFailure_ReturnsError ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -143,7 +144,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null");
 	}
 
-	[Test]
+	[TestMethod]
 	public void BootTimeout_ReturnsError ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -157,11 +158,11 @@ public class BootAndroidEmulatorTests : BaseTest
 		var error = errors.FirstOrDefault (e => e.Code == "XA0145");
 		Assert.IsNotNull (error, "Should have XA0145 timeout error");
 		var message = error?.Message ?? "";
-		StringAssert.Contains ("Pixel_6_API_33", message, "AVD name should be substituted into the message");
+		Assert.Contains ("Pixel_6_API_33", message, "AVD name should be substituted into the message");
 		Assert.IsFalse (message.Contains ("{0}") || message.Contains ("{1}"), "Message placeholders should be substituted");
 	}
 
-	[Test]
+	[TestMethod]
 	public void MultipleEmulators_FindsCorrectAvd ()
 	{
 		var task = CreateTask ("Pixel_9_Pro_XL");
@@ -175,7 +176,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual ("-s emulator-5556", task.AdbTarget);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ToolPaths_ResolvedFromAndroidSdkDirectory ()
 	{
 		var task = new MockBootAndroidEmulator {
@@ -199,7 +200,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			$"emulator path should be resolved from AndroidSdkDirectory, got: {emulatorPath}");
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExtraArguments_PassedToOptions ()
 	{
 		var task = new MockBootAndroidEmulator {
@@ -228,7 +229,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			"Extra arguments should be parsed and passed to options");
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExtraArguments_QuotedValuesPreserved ()
 	{
 		var task = new MockBootAndroidEmulator {
@@ -255,7 +256,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			"Quoted arguments with spaces should be preserved as a single token");
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExtraArguments_EscapedQuotesPreserved ()
 	{
 		var task = new MockBootAndroidEmulator {
@@ -282,7 +283,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			"Escaped quotes inside quoted values should be preserved as literal quotes");
 	}
 
-	[Test]
+	[TestMethod]
 	public void UnknownError_MapsToXA0144 ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -295,11 +296,11 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.IsFalse (task.Execute (), "Task should fail");
 		var error = errors.FirstOrDefault (e => e.Code == "XA0144");
 		Assert.IsNotNull (error, "Unknown errors should map to XA0144");
-		StringAssert.Contains ("Unknown", error?.Message, "Error kind should be included in the message");
-		StringAssert.Contains ("Some unexpected error occurred", error?.Message, "Error message should be included");
+		Assert.Contains ("Unknown", error?.Message, "Error kind should be included in the message");
+		Assert.Contains ("Some unexpected error occurred", error?.Message, "Error message should be included");
 	}
 
-	[Test]
+	[TestMethod]
 	public void Cancelled_DoesNotFail ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -313,7 +314,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.IsEmpty (errors, "No errors should be logged for cancellation");
 	}
 
-	[Test]
+	[TestMethod]
 	public void Success_NullSerial_ReturnsError ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -327,7 +328,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null");
 	}
 
-	[Test]
+	[TestMethod]
 	public void InvalidTimeout_ReturnsError ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
@@ -337,7 +338,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		var error = errors.FirstOrDefault (e => e.Code == "XA0145");
 		Assert.IsNotNull (error, "Invalid timeout should produce XA0145 error");
 		var message = error?.Message ?? "";
-		StringAssert.Contains ("Pixel_6_API_33", message, "AVD name should be substituted into the message");
+		Assert.Contains ("Pixel_6_API_33", message, "AVD name should be substituted into the message");
 		Assert.IsFalse (message.Contains ("{0}") || message.Contains ("{1}"), "Message placeholders should be substituted");
 	}
 }

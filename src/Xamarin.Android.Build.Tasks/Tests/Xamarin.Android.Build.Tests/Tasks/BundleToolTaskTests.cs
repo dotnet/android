@@ -1,13 +1,14 @@
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class BundleToolTaskTests
 	{
-		[Test]
+		[TestMethod]
 		public void BuildApkSetCommand ()
 		{
 			var task = new BuildApkSet {
@@ -30,7 +31,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ($"-jar bundletool.jar build-apks --connected-device --mode default --adb \"{adb}\" --device-id emulator-5554 --bundle foo.aab --output foo.apks --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
 		}
 
-		[Test]
+		[TestMethod]
 		public void InstallApkSetCommand ()
 		{
 			var task = new InstallApkSet {

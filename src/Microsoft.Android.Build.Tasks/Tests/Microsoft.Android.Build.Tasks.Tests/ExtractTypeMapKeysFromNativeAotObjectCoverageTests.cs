@@ -8,13 +8,13 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.Android.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable]
+[TestClass]
+[DoNotParallelize]
 public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 {
 	const int SectionOffset = 128;
@@ -22,7 +22,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 	readonly string directory = Path.Combine (AppContext.BaseDirectory, nameof (ExtractTypeMapKeysFromNativeAotObjectCoverageTests), Guid.NewGuid ().ToString ("N"));
 	readonly Dictionary<string, JsonArray> metadata = new (StringComparer.Ordinal);
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp ()
 	{
 		metadata.Clear ();
@@ -30,7 +30,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		File.WriteAllBytes (Path.Combine (directory, "llvm-readobj-placeholder"), []);
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void Dispose ()
 	{
 		if (Directory.Exists (directory)) {
@@ -38,14 +38,14 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void TaskLivesInModernBuildTasksAssembly ()
 	{
 		Assert.AreEqual ("Microsoft.Android.Tasks.ExtractTypeMapKeysFromNativeAotObject", typeof (ExtractTypeMapKeysFromNativeAotObject).FullName);
 		Assert.AreEqual ("Microsoft.Android.Build.Tasks", typeof (ExtractTypeMapKeysFromNativeAotObject).Assembly.GetName ().Name);
 	}
 
-	[Test]
+	[TestMethod]
 	public void CapturedIlcArm64BlobContainsOnlyRetainedCanonicalKeys ()
 	{
 		// Microsoft.DotNet.ILCompiler 11.0.0-rc.2.26461.115, Android ARM64, optimized with --scanreflection.
@@ -55,10 +55,10 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.IsTrue (task.Execute ());
 		Assert.IsEmpty (engine.Errors);
 		byte [] expected = new UTF8Encoding (false).GetBytes ("com/\u00e9xample/Peer\u0394$Nested\nsample/Always\nsample/Live\n");
-		Assert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
+		CollectionAssert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExtractsOnlySymbolPayloadAndUnionsEveryJavaGroupAndObject ()
 	{
 		string arm64 = WriteObject ("arm64", NativeAotObjectTestFixture.CreateGroups (
@@ -78,20 +78,21 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.IsEmpty (engine.Errors);
 		byte [] expected = new UTF8Encoding (false).GetBytes (
 			"test/Alias\ntest/Alpha\ntest/A\u0301\ntest/FromOtherGroup\ntest/Outer$Inner\ntest/Zebra\ntest/a\ntest/\u00e9clair\ntest/\u2160Peer\ntest/\U00010400Peer\n");
-		Assert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
+		CollectionAssert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
 
 		File.SetLastWriteTimeUtc (task.OutputFile, new DateTime (2000, 1, 1));
 		var (reordered, reorderedEngine) = CreateTask (x64, arm64);
 		Assert.IsTrue (reordered.Execute ());
 		Assert.IsEmpty (reorderedEngine.Errors);
-		Assert.AreEqual (expected, File.ReadAllBytes (reordered.OutputFile));
+		CollectionAssert.AreEqual (expected, File.ReadAllBytes (reordered.OutputFile));
 		Assert.IsTrue (File.GetLastWriteTimeUtc (reordered.OutputFile).Year > 2000);
 	}
 
-	[TestCase ("elf32-littlearm", "arm", "32bit")]
-	[TestCase ("elf64-littleaarch64", "aarch64", "64bit")]
-	[TestCase ("elf64-x86-64", "x86_64", "64bit")]
-	[TestCase ("elf32-i386", "i386", "32bit")]
+	[TestMethod]
+	[DataRow ("elf32-littlearm", "arm", "32bit")]
+	[DataRow ("elf64-littleaarch64", "aarch64", "64bit")]
+	[DataRow ("elf64-x86-64", "x86_64", "64bit")]
+	[DataRow ("elf32-i386", "i386", "32bit")]
 	public void AcceptsSupportedRelocatableElfArchitectures (string format, string arch, string addressSize)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -105,21 +106,22 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[TestCase ("test/A[123]", "test/A")]
-	[TestCase ("test/A[000]", "test/A")]
-	[TestCase ("test/A[9999999999999999999999999999999]", "test/A")]
-	[TestCase ("test/Outer$Inner[2]", "test/Outer$Inner")]
-	[TestCase ("test/\u2160[1]", "test/\u2160")]
+	[TestMethod]
+	[DataRow ("test/A[123]", "test/A")]
+	[DataRow ("test/A[000]", "test/A")]
+	[DataRow ("test/A[9999999999999999999999999999999]", "test/A")]
+	[DataRow ("test/Outer$Inner[2]", "test/Outer$Inner")]
+	[DataRow ("test/\u2160[1]", "test/\u2160")]
 	public void RemovesOneTerminalNonemptyAsciiDecimalAlias (string key, string expected)
 	{
 		var (task, engine) = CreateTask (WriteObject ("map", NativeAotObjectTestFixture.CreateBlob (key)));
 
 		Assert.IsTrue (task.Execute ());
 		Assert.IsEmpty (engine.Errors);
-		Assert.AreEqual (new UTF8Encoding (false).GetBytes (expected + "\n"), File.ReadAllBytes (task.OutputFile));
+		CollectionAssert.AreEqual (new UTF8Encoding (false).GetBytes (expected + "\n"), File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ObjectArraysContributeOnlyCanonicalElementClasses ()
 	{
 		byte [] blob = NativeAotObjectTestFixture.CreateBlob (
@@ -132,7 +134,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual ("java/lang/Object\ntest/Outer$Inner\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void PrimitiveArraysContributeNoClasses ()
 	{
 		byte [] blob = NativeAotObjectTestFixture.CreateBlob ("[Z", "[B", "[C", "[S", "[I", "[J", "[F", "[D", "[[I", "[[[D");
@@ -144,7 +146,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.IsEmpty (File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void SelectsJavaGroupsByFixupsRatherThanKeyAppearance ()
 	{
 		string path = WriteObject ("mixed-universes", NativeAotObjectTestFixture.CreateGroups (
@@ -165,10 +167,11 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual (12, task.RelocationEnd - task.RelocationStart);
 	}
 
-	[TestCase ("_ZTV31Mono_Android_0_Java_Lang_Object")]
-	[TestCase ("_ZTV32Mono_Android_10_Java_Lang_Object")]
-	[TestCase ("_ZTV33Mono_Android_0_Java_Lang_Object_1")]
-	[TestCase ("_ZTV39_Mono_Android_TypeMap_0___TypeMapAnchor")]
+	[TestMethod]
+	[DataRow ("_ZTV31Mono_Android_0_Java_Lang_Object")]
+	[DataRow ("_ZTV32Mono_Android_10_Java_Lang_Object")]
+	[DataRow ("_ZTV33Mono_Android_0_Java_Lang_Object_1")]
+	[DataRow ("_ZTV39_Mono_Android_TypeMap_0___TypeMapAnchor")]
 	public void RecognizesDisambiguatedJavaGroups (string groupSymbol)
 	{
 		string path = WriteObject ("colliding-assemblies", NativeAotObjectTestFixture.CreateGroups (
@@ -184,10 +187,11 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual ("test/Retained\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[TestCase ("aarch64", "R_AARCH64_PREL32", "SHT_RELA", ".rela.rodata")]
-	[TestCase ("arm", "R_ARM_REL32", "SHT_REL", ".rel.rodata")]
-	[TestCase ("x86_64", "R_X86_64_PC32", "SHT_RELA", ".rela.rodata")]
-	[TestCase ("i386", "R_386_PC32", "SHT_REL", ".rel.rodata")]
+	[TestMethod]
+	[DataRow ("aarch64", "R_AARCH64_PREL32", "SHT_RELA", ".rela.rodata")]
+	[DataRow ("arm", "R_ARM_REL32", "SHT_REL", ".rel.rodata")]
+	[DataRow ("x86_64", "R_X86_64_PC32", "SHT_RELA", ".rela.rodata")]
+	[DataRow ("i386", "R_386_PC32", "SHT_REL", ".rel.rodata")]
 	public void ResolvesGroupSlotsUsingTargetRelocationKind (string arch, string kind, string sectionType, string sectionName)
 	{
 		string path = WriteObject ("abi-group", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -206,7 +210,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual (sectionName, task.RelocationSection);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ResolvesCompilationPrefixedMapAndFixupSymbols ()
 	{
 		string path = WriteObject ("prefixed", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -220,7 +224,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void MalformedSelectedJavaKeyStillFails ()
 	{
 		string path = WriteObject ("invalid-java-group", NativeAotObjectTestFixture.CreateGroups (
@@ -234,14 +238,15 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[TestCase ("_ZTV43Mono_Android_Android_Runtime_JavaDictionary")]
-	[TestCase ("_ZTV29Mono_Android_Java_Lang_ObjectExtra")]
-	[TestCase ("_ZTV30ThirdParty_TypeMap___TypeMapAnchor")]
-	[TestCase ("_ZTV30_Other_TypeMap___TypeMapAnchorExtra")]
-	[TestCase ("_ZTV31Mono_Android_x_Java_Lang_Object")]
-	[TestCase ("_ZTV32Mono_Android_00_Java_Lang_Object")]
-	[TestCase ("_ZTV45Mono_Android_0_Android_Runtime_JavaDictionary")]
-	[TestCase ("_ZTV39_Mono_Android_TypeMap_x___TypeMapAnchor")]
+	[TestMethod]
+	[DataRow ("_ZTV43Mono_Android_Android_Runtime_JavaDictionary")]
+	[DataRow ("_ZTV29Mono_Android_Java_Lang_ObjectExtra")]
+	[DataRow ("_ZTV30ThirdParty_TypeMap___TypeMapAnchor")]
+	[DataRow ("_ZTV30_Other_TypeMap___TypeMapAnchorExtra")]
+	[DataRow ("_ZTV31Mono_Android_x_Java_Lang_Object")]
+	[DataRow ("_ZTV32Mono_Android_00_Java_Lang_Object")]
+	[DataRow ("_ZTV45Mono_Android_0_Android_Runtime_JavaDictionary")]
+	[DataRow ("_ZTV39_Mono_Android_TypeMap_x___TypeMapAnchor")]
 	public void MissingRecognizedJavaGroupIsNotAnEmptySuccess (string groupSymbol)
 	{
 		string path = WriteObject ("foreign-only", NativeAotObjectTestFixture.CreateBlob ("test/LooksLikeJava"));
@@ -252,16 +257,17 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[TestCase ("missing-fixups")]
-	[TestCase ("duplicate-fixups")]
-	[TestCase ("bad-fixup-size")]
-	[TestCase ("missing-relocation-section")]
-	[TestCase ("ambiguous-relocation-section")]
-	[TestCase ("wrong-target-section")]
-	[TestCase ("missing-relocation")]
-	[TestCase ("duplicate-relocation")]
-	[TestCase ("wrong-relocation-kind")]
-	[TestCase ("nonzero-addend")]
+	[TestMethod]
+	[DataRow ("missing-fixups")]
+	[DataRow ("duplicate-fixups")]
+	[DataRow ("bad-fixup-size")]
+	[DataRow ("missing-relocation-section")]
+	[DataRow ("ambiguous-relocation-section")]
+	[DataRow ("wrong-target-section")]
+	[DataRow ("missing-relocation")]
+	[DataRow ("duplicate-relocation")]
+	[DataRow ("wrong-relocation-kind")]
+	[DataRow ("nonzero-addend")]
 	public void InvalidGroupMetadataFails (string defect)
 	{
 		string path = WriteObject ("invalid-group-metadata", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -307,7 +313,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[Test]
+	[TestMethod]
 	public void OutOfRangeGroupFixupFails ()
 	{
 		byte [] group = NativeAotObjectTestFixture.CreateGroup (
@@ -321,7 +327,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.IsNull (task.RelocationSection);
 	}
 
-	[Test]
+	[TestMethod]
 	public void EmptyOuterTableDoesNotRequireGroupRelocations ()
 	{
 		var (task, engine) = CreateTask (WriteObject ("empty-groups", NativeAotObjectTestFixture.CreateGroups ()));
@@ -333,8 +339,9 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.IsNull (task.RelocationSection);
 	}
 
-	[TestCase (true)]
-	[TestCase (false)]
+	[TestMethod]
+	[DataRow (true)]
+	[DataRow (false)]
 	public void EmptyOuterOrInnerTableOverwritesWithZeroByteFile (bool emptyOuter)
 	{
 		byte [] blob = emptyOuter ? NativeAotObjectTestFixture.CreateGroups () : NativeAotObjectTestFixture.CreateBlob ();
@@ -357,10 +364,11 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		}
 	}
 
-	[TestCase (1, 0)]
-	[TestCase (1, 2)]
-	[TestCase (2, 1)]
-	[TestCase (4, 3)]
+	[TestMethod]
+	[DataRow (1, 0)]
+	[DataRow (1, 2)]
+	[DataRow (2, 1)]
+	[DataRow (4, 3)]
 	public void ReadsBucketIndexWidthsAndMultipleBuckets (int indexWidth, int bucketShift)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable (
@@ -375,16 +383,17 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual ("test/A\ntest/M\ntest/Z\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[TestCase (1, false)]
-	[TestCase (2, false)]
-	[TestCase (3, false)]
-	[TestCase (4, false)]
-	[TestCase (5, false)]
-	[TestCase (1, true)]
-	[TestCase (2, true)]
-	[TestCase (3, true)]
-	[TestCase (4, true)]
-	[TestCase (5, true)]
+	[TestMethod]
+	[DataRow (1, false)]
+	[DataRow (2, false)]
+	[DataRow (3, false)]
+	[DataRow (4, false)]
+	[DataRow (5, false)]
+	[DataRow (1, true)]
+	[DataRow (2, true)]
+	[DataRow (3, true)]
+	[DataRow (4, true)]
+	[DataRow (5, true)]
 	public void RelativeOffsetsUseTheIntegerAddressAndCanPointBackwards (int relativeWidth, bool backwards)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable (
@@ -398,12 +407,13 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[TestCase (0u)]
-	[TestCase (128u)]
-	[TestCase (16384u)]
-	[TestCase (2097152u)]
-	[TestCase (268435456u)]
-	[TestCase (uint.MaxValue)]
+	[TestMethod]
+	[DataRow (0u)]
+	[DataRow (128u)]
+	[DataRow (16384u)]
+	[DataRow (2097152u)]
+	[DataRow (268435456u)]
+	[DataRow (uint.MaxValue)]
 	public void ReadsAllUnsignedCompactIntegerWidths (uint typeIndex)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable ([NativeAotObjectTestFixture.CreateKey ("test/Live", typeIndex)]);
@@ -415,10 +425,11 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[TestCase (127)]
-	[TestCase (128)]
-	[TestCase (16384)]
-	[TestCase (2097152)]
+	[TestMethod]
+	[DataRow (127)]
+	[DataRow (128)]
+	[DataRow (16384)]
+	[DataRow (2097152)]
 	public void ReadsMultibyteStringLengthsWithoutTruncatingKeys (int byteLength)
 	{
 		string key = "test/" + new string ('A', byteLength - 5);
@@ -426,18 +437,19 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 
 		Assert.IsTrue (task.Execute ());
 		Assert.IsEmpty (engine.Errors);
-		Assert.AreEqual (new UTF8Encoding (false).GetBytes (key + "\n"), File.ReadAllBytes (task.OutputFile));
+		CollectionAssert.AreEqual (new UTF8Encoding (false).GetBytes (key + "\n"), File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingObjectInputsFail ()
 	{
 		var (task, engine) = CreateTask ();
 		AssertFailure (task, engine);
 	}
 
-	[TestCase ("missing")]
-	[TestCase ("directory")]
+	[TestMethod]
+	[DataRow ("missing")]
+	[DataRow ("directory")]
 	public void MissingOrUnreadableObjectFailsWithFileContext (string kind)
 	{
 		string path = Path.Combine (directory, "invalid.o");
@@ -448,8 +460,9 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[TestCase (0)]
-	[TestCase (128)]
+	[TestMethod]
+	[DataRow (0)]
+	[DataRow (128)]
 	public void TruncatedObjectFailsAgainstActualFileBounds (int length)
 	{
 		string path = WriteObject ("truncated", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -460,8 +473,9 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[TestCase ("")]
-	[TestCase ("missing-llvm-readobj")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("missing-llvm-readobj")]
 	public void MissingToolFailsWithCodedError (string tool)
 	{
 		var engine = new TypeMapTaskBuildEngine ();
@@ -474,13 +488,14 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, task.LlvmReadObjPath);
 	}
 
-	[TestCase ("")]
-	[TestCase ("not JSON")]
-	[TestCase ("{}")]
-	[TestCase ("[]")]
-	[TestCase ("[{},{}]")]
-	[TestCase ("[null]")]
-	[TestCase ("[{}]")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("not JSON")]
+	[DataRow ("{}")]
+	[DataRow ("[]")]
+	[DataRow ("[{},{}]")]
+	[DataRow ("[null]")]
+	[DataRow ("[{}]")]
 	public void MalformedToolJsonFailsWithFileContext (string json)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -489,10 +504,11 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[TestCase ("FileSummary")]
-	[TestCase ("ElfHeader")]
-	[TestCase ("Sections")]
-	[TestCase ("Symbols")]
+	[TestMethod]
+	[DataRow ("FileSummary")]
+	[DataRow ("ElfHeader")]
+	[DataRow ("Sections")]
+	[DataRow ("Symbols")]
 	public void MissingRequiredMetadataFails (string property)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -501,26 +517,27 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[TestCase ("format")]
-	[TestCase ("architecture")]
-	[TestCase ("dynamic")]
-	[TestCase ("executable")]
-	[TestCase ("big-endian")]
-	[TestCase ("missing-encoding")]
-	[TestCase ("no-symbol")]
-	[TestCase ("suffix-not-terminal")]
-	[TestCase ("undefined-symbol")]
-	[TestCase ("no-sections")]
-	[TestCase ("nobits-section")]
-	[TestCase ("duplicate-section")]
-	[TestCase ("negative-offset")]
-	[TestCase ("section-past-file")]
-	[TestCase ("section-overruns-file")]
-	[TestCase ("symbol-past-section")]
-	[TestCase ("symbol-overruns-section")]
-	[TestCase ("empty-symbol")]
-	[TestCase ("huge-symbol")]
-	[TestCase ("wrong-number-type")]
+	[TestMethod]
+	[DataRow ("format")]
+	[DataRow ("architecture")]
+	[DataRow ("dynamic")]
+	[DataRow ("executable")]
+	[DataRow ("big-endian")]
+	[DataRow ("missing-encoding")]
+	[DataRow ("no-symbol")]
+	[DataRow ("suffix-not-terminal")]
+	[DataRow ("undefined-symbol")]
+	[DataRow ("no-sections")]
+	[DataRow ("nobits-section")]
+	[DataRow ("duplicate-section")]
+	[DataRow ("negative-offset")]
+	[DataRow ("section-past-file")]
+	[DataRow ("section-overruns-file")]
+	[DataRow ("symbol-past-section")]
+	[DataRow ("symbol-overruns-section")]
+	[DataRow ("empty-symbol")]
+	[DataRow ("huge-symbol")]
+	[DataRow ("wrong-number-type")]
 	public void InvalidObjectMetadataFails (string defect)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -555,7 +572,8 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[TestCaseSource (nameof (MalformedTables))]
+	[TestMethod]
+	[DynamicData (nameof (MalformedTables))]
 	public void MalformedOuterOrInnerTableFails (string defect, byte [] table)
 	{
 		foreach (bool inner in new [] { false, true }) {
@@ -583,9 +601,10 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		yield return ["invalid-integer-tag", new byte [] { 0, 2, 4, 42, 31 }];
 	}
 
-	[TestCase (0u)]
-	[TestCase (2u)]
-	[TestCase (uint.MaxValue)]
+	[TestMethod]
+	[DataRow (0u)]
+	[DataRow (2u)]
+	[DataRow (uint.MaxValue)]
 	public void InvalidGroupStateIsNotAnEmptyMap (uint state)
 	{
 		byte [] group = NativeAotObjectTestFixture.CreateGroup (NativeAotObjectTestFixture.CreateTable ([]), state);
@@ -593,18 +612,20 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[TestCase (new byte [] { })]
-	[TestCase (new byte [] { 0 })]
-	[TestCase (new byte [] { 0, 2 })]
-	[TestCase (new byte [] { 31 })]
-	[TestCase (new byte [] { 0, 31 })]
+	[TestMethod]
+	[DataRow (new byte [] { })]
+	[DataRow (new byte [] { 0 })]
+	[DataRow (new byte [] { 0, 2 })]
+	[DataRow (new byte [] { 31 })]
+	[DataRow (new byte [] { 0, 31 })]
 	public void TruncatedOrMalformedGroupTupleFails (byte [] group)
 	{
 		var (task, engine) = CreateTask (WriteObject ("invalid-group", NativeAotObjectTestFixture.CreateTable ([group])));
 		AssertFailure (task, engine);
 	}
 
-	[TestCaseSource (nameof (MalformedKeyTuples))]
+	[TestMethod]
+	[DynamicData (nameof (MalformedKeyTuples))]
 	public void MalformedKeyTupleFails (string defect, byte [] tuple)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable ([tuple]);
@@ -630,41 +651,42 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		yield return ["invalid-utf8-continuation", new byte [] { 2, 128, 0 }];
 	}
 
-	[TestCase ("")]
-	[TestCase ("test/Invalid\nName")]
-	[TestCase ("test/Invalid\rName")]
-	[TestCase ("test/Invalid\0Name")]
-	[TestCase ("test/A[]")]
-	[TestCase ("test/A[-1]")]
-	[TestCase ("test/A[1x]")]
-	[TestCase ("test/A[1]Extra")]
-	[TestCase ("test/A[1")]
-	[TestCase ("test/A[")]
-	[TestCase ("[0]")]
-	[TestCase ("test/A[\u0661]")]
-	[TestCase ("test/A[1][2]")]
-	[TestCase ("test.Invalid")]
-	[TestCase ("test/*")]
-	[TestCase ("test/")]
-	[TestCase ("/test")]
-	[TestCase ("test//Invalid")]
-	[TestCase ("test/Invalid\u200bName")]
-	[TestCase ("[L;")]
-	[TestCase ("[V")]
-	[TestCase ("[Q")]
-	[TestCase ("[Iextra")]
-	[TestCase ("[Ljava.lang.Object;")]
-	[TestCase ("[Ljava/lang/Object")]
-	[TestCase ("[Ljava/lang/Object;;")]
-	[TestCase ("[Ltest/A[0];")]
-	[TestCase ("[[")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("test/Invalid\nName")]
+	[DataRow ("test/Invalid\rName")]
+	[DataRow ("test/Invalid\0Name")]
+	[DataRow ("test/A[]")]
+	[DataRow ("test/A[-1]")]
+	[DataRow ("test/A[1x]")]
+	[DataRow ("test/A[1]Extra")]
+	[DataRow ("test/A[1")]
+	[DataRow ("test/A[")]
+	[DataRow ("[0]")]
+	[DataRow ("test/A[\u0661]")]
+	[DataRow ("test/A[1][2]")]
+	[DataRow ("test.Invalid")]
+	[DataRow ("test/*")]
+	[DataRow ("test/")]
+	[DataRow ("/test")]
+	[DataRow ("test//Invalid")]
+	[DataRow ("test/Invalid\u200bName")]
+	[DataRow ("[L;")]
+	[DataRow ("[V")]
+	[DataRow ("[Q")]
+	[DataRow ("[Iextra")]
+	[DataRow ("[Ljava.lang.Object;")]
+	[DataRow ("[Ljava/lang/Object")]
+	[DataRow ("[Ljava/lang/Object;;")]
+	[DataRow ("[Ltest/A[0];")]
+	[DataRow ("[[")]
 	public void InvalidCanonicalKeysOrAliasesFail (string key)
 	{
 		var (task, engine) = CreateTask (WriteObject ("invalid-key", NativeAotObjectTestFixture.CreateBlob (key)));
 		AssertFailure (task, engine);
 	}
 
-	[Test]
+	[TestMethod]
 	public void InvalidSecondObjectDoesNotWritePartialOutput ()
 	{
 		string valid = WriteObject ("valid", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -673,7 +695,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, invalid);
 	}
 
-	[Test]
+	[TestMethod]
 	public void InvalidLaterGroupDoesNotWritePartialOutput ()
 	{
 		byte [] valid = NativeAotObjectTestFixture.CreateGroup (
@@ -683,7 +705,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MetadataReadFailureIsReportedWithoutPartialOutput ()
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -692,7 +714,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[Test]
+	[TestMethod]
 	public void OutputWriteFailureIsReported ()
 	{
 		var (task, engine) = CreateTask (WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live")));

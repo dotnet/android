@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -26,6 +26,13 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
+		public TestContext TestContext { get; set; }
+
+		/// <summary>
+		/// Identifies the current test, including its data row.
+		/// </summary>
+		protected string TestId => $"{TestContext.FullyQualifiedTestClassName}.{TestContext.TestDisplayName}";
+
 		public static IEnumerable<(bool isRelease, AndroidRuntime runtime)> ValidRuntimeConfigurations => [
 			(false, AndroidRuntime.CoreCLR),
 			(true, AndroidRuntime.CoreCLR),
@@ -38,7 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			var variableName = $"JAVA_HOME_21_{architecture}";
 			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
 			if (string.IsNullOrEmpty (javaSdkPath)) {
-				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
+				Assert.Inconclusive ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
 			}
 			return javaSdkPath;
 		}
@@ -66,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public string TestName {
 			get {
-				var result = TestContext.CurrentContext.Test.Name;
+				var result = TestContext.TestDisplayName.Replace (" (", "(");
 				foreach (var c in invalidChars.Concat (Path.GetInvalidPathChars ().Concat (Path.GetInvalidFileNameChars ()))) {
 					result = result.Replace (c, '_');
 				}
@@ -133,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 			return RunAdbCommandWithExitCode (arguments.ToString (), timeout);
 		}
 
-		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
+		protected (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
 			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
 			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
@@ -164,7 +171,7 @@ namespace Xamarin.Android.Build.Tests
 				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
 			File.WriteAllText (logFilePath, logContent);
-			TestContext.AddTestAttachment (logFilePath, Path.GetFileName (logFilePath));
+			TestContext.AddResultFile (logFilePath);
 			return result;
 		}
 
@@ -177,7 +184,7 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30)
 		{
-			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
+			Console.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
@@ -210,7 +217,7 @@ namespace Xamarin.Android.Build.Tests
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
 					if (!proc.HasExited)
 						proc.Kill (entireProcessTree: true);
-					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
+					Console.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
 					return (-1, null, null); //Don't try to read stdout/stderr
 				}
 
@@ -218,7 +225,7 @@ namespace Xamarin.Android.Build.Tests
 				bool outputDrained = outputDone.Task.Wait (TimeSpan.FromSeconds (2));
 				bool errorDrained = errorDone.Task.Wait (TimeSpan.FromSeconds (2));
 				if (!outputDrained || !errorDrained)
-					TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
+					Console.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
 
 				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 			}
@@ -429,7 +436,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (string.IsNullOrEmpty (directory))
 				directory = Path.Combine ("temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
+			TestOutputDirectories [TestId] = Path.Combine (Root, directory);
 			TestPackageNames [packageName] = $"com.xamarin.{packageName}";
 			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
@@ -438,23 +445,23 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (string.IsNullOrEmpty (directory))
 				directory = Path.Combine ("temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
+			TestOutputDirectories [TestId] = Path.Combine (Root, directory);
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
 		protected void AssertFileContentsMatch (string file1, string file2)
 		{
 			if (!FileCompare (file1, file2)) {
-				TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
-				TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
+				TestContext.AddResultFile (file1);
+				TestContext.AddResultFile (file2);
 				Assert.Fail ($"{file1} and {file2} do not match.");
 			}
 		}
 
 		protected bool FileCompare (string file1, string file2)
 		{
-			FileAssert.Exists (file1);
-			FileAssert.Exists (file2);
+			Assert.IsTrue (File.Exists (file1));
+			Assert.IsTrue (File.Exists (file2));
 			using (var stream1 = File.OpenRead (file1))
 			using (var stream2 = File.OpenRead (file2)) {
 				return StreamCompare (stream1, stream2);
@@ -488,7 +495,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var path = Path.Combine (AndroidSdkPath, "build-tools");
 			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => Path.GetFileName (x))) {
-				TestContext.Out.WriteLine ($"Found build tools version: {dir}.");
+				Console.Out.WriteLine ($"Found build tools version: {dir}.");
 				var aapt2 = Path.Combine (dir, exe);
 				if (File.Exists (aapt2))
 					return dir;
@@ -581,7 +588,7 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		protected void AssertExtractNativeLibs (string manifest, bool extractNativeLibs)
 		{
-			FileAssert.Exists (manifest);
+			Assert.IsTrue (File.Exists (manifest));
 			using (var stream = File.OpenRead (manifest)) {
 				var doc = XDocument.Load (stream);
 				var element = doc.Root.Element ("application");
@@ -660,7 +667,7 @@ namespace Xamarin.Android.Build.Tests
 					return false;
 				}
 
-				Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
+				Assert.Inconclusive ($"NativeAOT: unsupported configuration (release == {release})");
 				return true;
 			}
 
@@ -674,22 +681,22 @@ namespace Xamarin.Android.Build.Tests
 		protected bool IgnoreOnNativeAot (AndroidRuntime runtime, string reason)
 		{
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ($"NativeAOT: {reason}");
+				Assert.Inconclusive ($"NativeAOT: {reason}");
 				return true;
 			}
 
 			return false;
 		}
 
-		[SetUp]
+		[TestInitialize]
 		public void TestSetup ()
 		{
-			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
-			TestContext.Out.Flush ();
+			Console.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
+			Console.Out.Flush ();
 		}
 
-		[OneTimeTearDown]
-		protected virtual void AfterAllTests ()
+		[ClassCleanup (InheritanceBehavior.BeforeEachDerivedClass)]
+		public static void AfterAllTests ()
 		{
 			if (System.Diagnostics.Debugger.IsAttached)
 				return;
@@ -697,7 +704,7 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: adb.exe can cause a couple issues on Windows
 			//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
 			//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
-			if (IsWindows) {
+			if (TestEnvironment.IsWindows) {
 				try {
 					RunAdbCommand ("kill-server", true);
 				} catch (Exception ex) {
@@ -710,14 +717,14 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TearDown]
-		protected virtual void CleanupTest ()
+		[TestCleanup]
+		public virtual void CleanupTest ()
 		{
-			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
-			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
-			TestContext.Out.Flush ();
+			Console.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
+			Console.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentTestOutcome}");
+			Console.Out.Flush ();
 			string outputDir = null;
-			if (!TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out outputDir))
+			if (!TestOutputDirectories.TryGetValue (TestId, out outputDir))
 				return;
 			if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
 					return;
@@ -729,21 +736,20 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (!Directory.Exists (output))
 				return;
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
-			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
+			if (TestContext.CurrentTestOutcome is UnitTestOutcome.Passed or UnitTestOutcome.Inconclusive) {
 				FileSystemUtils.SetDirectoryWriteable (output);
 				try {
 					Directory.Delete (output, recursive: true);
 				} catch (Exception ex) {
 					// This happens on CI occasionally, let's not fail the test
-					TestContext.Out.WriteLine ($"Failed to delete '{output}': {ex}");
+					Console.Out.WriteLine ($"Failed to delete '{output}': {ex}");
 				}
 			} else {
 				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (file, Path.GetFileName (output));
+					TestContext.AddResultFile (file);
 				}
 				foreach (var bl in Directory.GetFiles (Path.Combine (output), "*.binlog", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (bl, Path.GetFileName (output));
+					TestContext.AddResultFile (bl);
 				}
 			}
 		}

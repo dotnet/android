@@ -9,11 +9,14 @@
     <DebugType>portable</DebugType>
     <NoWarn>$(NoWarn);CA1305</NoWarn>
     <Nullable>annotations</Nullable>
+    <!-- Xamarin.Android.Build.Tasks exposes its internal DynamicallyAccessedMemberTypes polyfill to these tests,
+         which conflicts with the MSTest.SourceGeneration output; use reflection-based discovery instead. -->
+    <UseMSTestSourceGeneration>false</UseMSTestSourceGeneration>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
+  <Import Project="..\..\..\..\build-tools\scripts\MSTestReferences.projitems" />
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />

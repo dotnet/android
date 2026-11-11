@@ -11,23 +11,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.Build.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class OpenJdkSignatureTests
 	{
 		static readonly byte [] archiveBytes = Encoding.UTF8.GetBytes ("OpenJDK archive test contents");
-		RSA signingKey;
-		byte [] publicKey;
-		string publicKeyHash;
+		static RSA signingKey;
+		static byte [] publicKey;
+		static string publicKeyHash;
 
-		[OneTimeSetUp]
-		public void CreateSigningKey ()
+		[ClassInitialize]
+		public static void CreateSigningKey (TestContext context)
 		{
 			signingKey = RSA.Create ();
 			signingKey.KeySize = 2048;
@@ -37,8 +38,8 @@ namespace Xamarin.Android.Build.Tests
 				publicKeyHash = Convert.ToHexString (hash.ComputeHash (publicKey));
 		}
 
-		[OneTimeTearDown]
-		public void DisposeSigningKey () => signingKey.Dispose ();
+		[ClassCleanup]
+		public static void DisposeSigningKey () => signingKey.Dispose ();
 
 		byte [] Sign (int algorithm = 8, bool oldFormat = false, byte [] hashedSubpackets = null)
 		{
@@ -61,52 +62,53 @@ namespace Xamarin.Android.Build.Tests
 				OpenJdkSignatureVerifier.Verify (archive, signature, key ?? publicKey, trustedHash ?? publicKeyHash, cancellationToken);
 		}
 
-		[TestCase (8, false)]
-		[TestCase (9, false)]
-		[TestCase (10, false)]
-		[TestCase (8, true)]
+		[TestMethod]
+		[DataRow (8, false)]
+		[DataRow (9, false)]
+		[DataRow (10, false)]
+		[DataRow (8, true)]
 		public void ValidSignature (int algorithm, bool oldFormat)
 		{
-			Assert.DoesNotThrow (() => Verify (archiveBytes, Sign (algorithm, oldFormat)));
+			Verify (archiveBytes, Sign (algorithm, oldFormat));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ArmoredSignatureAndKey ()
 		{
-			Assert.DoesNotThrow (() => Verify (archiveBytes, Armor (Sign (), "SIGNATURE"), Armor (publicKey, "PUBLIC KEY BLOCK")));
+			Verify (archiveBytes, Armor (Sign (), "SIGNATURE"), Armor (publicKey, "PUBLIC KEY BLOCK"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ChangedArchive ()
 		{
 			var changed = (byte []) archiveBytes.Clone ();
 			changed [0] ^= 1;
-			Assert.Throws<InvalidDataException> (() => Verify (changed, Sign ()));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (changed, Sign ()));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ChangedSignature ()
 		{
 			var changed = Sign ();
 			changed [changed.Length - 1] ^= 1;
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, changed));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, changed));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ChangedSignedMetadata ()
 		{
 			var changed = Sign ();
 			changed [14] ^= 1;
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, changed));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, changed));
 		}
 
-		[Test]
+		[TestMethod]
 		public void UntrustedKey ()
 		{
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, Sign (), trustedHash: OpenJdkSignatureVerifier.PublicKeySha256));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, Sign (), trustedHash: OpenJdkSignatureVerifier.PublicKeySha256));
 		}
 
-		[Test]
+		[TestMethod]
 		public void WrongRsaKey ()
 		{
 			using (var other = RSA.Create ()) {
@@ -114,47 +116,47 @@ namespace Xamarin.Android.Build.Tests
 				var parameters = other.ExportParameters (false);
 				var key = Packet (6, Join ([4, 0, 0, 0, 0, 1], Integer (parameters.Modulus), Integer (parameters.Exponent)));
 				using (var hash = SHA256.Create ())
-					Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, Sign (), key, Convert.ToHexString (hash.ComputeHash (key))));
+					Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, Sign (), key, Convert.ToHexString (hash.ComputeHash (key))));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingSignature ()
 		{
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, []));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, []));
 		}
 
-		[Test]
+		[TestMethod]
 		public void WeakHash ()
 		{
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, Sign (algorithm: 2)));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, Sign (algorithm: 2)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CriticalSubpacket ()
 		{
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, Sign (hashedSubpackets: [1, 255])));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, Sign (hashedSubpackets: [1, 255])));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MultipleSignatures ()
 		{
 			var signature = Sign ();
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, Join (signature, signature)));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, Join (signature, signature)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void RejectTruncatedSignatures ()
 		{
 			var signature = Sign ();
 			for (int length = 0; length < signature.Length; length++) {
 				var truncated = new byte [length];
 				Buffer.BlockCopy (signature, 0, truncated, 0, length);
-				Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, truncated), $"Length: {length}");
+				Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, truncated), $"Length: {length}");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InvalidPacketLengthsAndTypes ()
 		{
 			byte [] [] malformed = [
@@ -166,10 +168,10 @@ namespace Xamarin.Android.Build.Tests
 				[194, 1, 5],
 			];
 			foreach (var signature in malformed)
-				Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, signature));
+				Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, signature));
 		}
 
-		[Test]
+		[TestMethod]
 		public void InvalidArmoredSignatures ()
 		{
 			string [] malformed = [
@@ -180,31 +182,33 @@ namespace Xamarin.Android.Build.Tests
 				Encoding.ASCII.GetString (Armor (Sign (), "SIGNATURE")) + "extra",
 			];
 			foreach (var signature in malformed)
-				Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, Encoding.ASCII.GetBytes (signature)));
+				Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, Encoding.ASCII.GetBytes (signature)));
 		}
 
-		[TestCase (0, 5)]
-		[TestCase (1, 1)]
-		[TestCase (2, 17)]
+		[TestMethod]
+		[DataRow (0, 5)]
+		[DataRow (1, 1)]
+		[DataRow (2, 17)]
 		public void UnsupportedSignatureFields (int offset, int value)
 		{
 			var signature = Sign ();
 			signature [6 + offset] = (byte) value;
-			Assert.Throws<InvalidDataException> (() => Verify (archiveBytes, signature));
+			Assert.ThrowsExactly<InvalidDataException> (() => Verify (archiveBytes, signature));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void CancelledVerification (bool skip)
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		public async Task CancelledVerification (bool skip)
 		{
-			Assert.Throws<OperationCanceledException> (() => Verify (archiveBytes, Sign (), cancellationToken: new CancellationToken (true)));
+			Assert.ThrowsExactly<OperationCanceledException> (() => Verify (archiveBytes, Sign (), cancellationToken: new CancellationToken (true)));
 			using (var client = new HttpClient (new SignatureHandler ([], []))) {
 				var task = new InstallAndroidDependencies { SkipSignCheck = skip };
-				Assert.ThrowsAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, new Archive ("windows"), new CancellationToken (true)));
+				await Assert.ThrowsExactlyAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, new Archive ("windows"), new CancellationToken (true)));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void OversizedRentedArchiveBufferUsesFullCapacity ()
 		{
 			var pool = new TrackingBufferPool ();
@@ -213,8 +217,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (pool.Returned);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void HttpTimeoutReportsVerificationError (bool keyRequest)
 		{
 			var handler = new BlockingVerificationHandler (keyRequest);
@@ -234,9 +239,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void CallerCancellationDuringVerificationPropagates (bool keyRequest)
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		public async Task CallerCancellationDuringVerificationPropagates (bool keyRequest)
 		{
 			using (var source = new CancellationTokenSource ()) {
 				var handler = new BlockingVerificationHandler (keyRequest, source.Cancel);
@@ -244,7 +250,7 @@ namespace Xamarin.Android.Build.Tests
 					var engine = CreateBuildEngine ();
 					var task = new InstallAndroidDependencies { BuildEngine = engine };
 					var archive = new Archive ("windows") { Url = new Uri ("https://example.test/jdk.zip") };
-					Assert.CatchAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, archive, source.Token));
+					await Assert.ThrowsAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, archive, source.Token));
 					Assert.IsTrue (handler.Blocked);
 					Assert.IsTrue (source.IsCancellationRequested);
 					Assert.IsEmpty (engine.Errors);
@@ -252,8 +258,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RentedArchiveBufferIsReturnedOnFailureOrCancellation (bool cancel)
 		{
 			var contents = (byte []) archiveBytes.Clone ();
@@ -262,16 +269,17 @@ namespace Xamarin.Android.Build.Tests
 			using (var source = new CancellationTokenSource ())
 			using (var archive = new FullBufferReadCheckingStream (contents, cancel ? source.Cancel : null)) {
 				if (cancel)
-					Assert.Throws<OperationCanceledException> (() => OpenJdkSignatureVerifier.Verify (archive, Sign (), publicKey, publicKeyHash, source.Token, pool));
+					Assert.ThrowsExactly<OperationCanceledException> (() => OpenJdkSignatureVerifier.Verify (archive, Sign (), publicKey, publicKeyHash, source.Token, pool));
 				else
-					Assert.Throws<InvalidDataException> (() => OpenJdkSignatureVerifier.Verify (archive, Sign (), publicKey, publicKeyHash, source.Token, pool));
+					Assert.ThrowsExactly<InvalidDataException> (() => OpenJdkSignatureVerifier.Verify (archive, Sign (), publicKey, publicKeyHash, source.Token, pool));
 			}
 			Assert.IsTrue (pool.Returned);
 		}
 
-		[TestCase (0)]
-		[TestCase (4096 + 19)]
-		[TestCase (64 * 1024)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (4096 + 19)]
+		[DataRow (64 * 1024)]
 		public async Task OversizedRentedDownloadBufferReturnsOnlyContentBytes (int length)
 		{
 			var contents = new byte [length];
@@ -283,14 +291,15 @@ namespace Xamarin.Android.Build.Tests
 			};
 			using (var client = new HttpClient (handler)) {
 				var result = await InstallAndroidDependencies.DownloadVerificationFileAsync (client, new Uri ("https://example.test/jdk.zip.sig"), CancellationToken.None, pool);
-				Assert.AreEqual (contents, result);
+				CollectionAssert.AreEqual (contents, result);
 			}
 			Assert.IsTrue (pool.Returned);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void RentedDownloadBufferIsReturnedOnFailureOrCancellation (bool cancel)
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		public async Task RentedDownloadBufferIsReturnedOnFailureOrCancellation (bool cancel)
 		{
 			var pool = new TrackingBufferPool ();
 			using (var source = new CancellationTokenSource ()) {
@@ -299,17 +308,18 @@ namespace Xamarin.Android.Build.Tests
 				};
 				using (var client = new HttpClient (handler)) {
 					if (cancel)
-						Assert.ThrowsAsync<OperationCanceledException> (async () => await InstallAndroidDependencies.DownloadVerificationFileAsync (client, new Uri ("https://example.test/jdk.zip.sig"), source.Token, pool));
+						await Assert.ThrowsExactlyAsync<OperationCanceledException> (async () => await InstallAndroidDependencies.DownloadVerificationFileAsync (client, new Uri ("https://example.test/jdk.zip.sig"), source.Token, pool));
 					else
-						Assert.ThrowsAsync<InvalidDataException> (async () => await InstallAndroidDependencies.DownloadVerificationFileAsync (client, new Uri ("https://example.test/jdk.zip.sig"), source.Token, pool));
+						await Assert.ThrowsExactlyAsync<InvalidDataException> (async () => await InstallAndroidDependencies.DownloadVerificationFileAsync (client, new Uri ("https://example.test/jdk.zip.sig"), source.Token, pool));
 				}
 			}
 			Assert.IsTrue (pool.Returned);
 		}
 
-		[TestCase (HttpStatusCode.NotFound, false)]
-		[TestCase (HttpStatusCode.OK, false)]
-		[TestCase (HttpStatusCode.NotFound, true)]
+		[TestMethod]
+		[DataRow (HttpStatusCode.NotFound, false)]
+		[DataRow (HttpStatusCode.OK, false)]
+		[DataRow (HttpStatusCode.NotFound, true)]
 		public void VerificationRequiredUnlessExplicitlySkipped (HttpStatusCode status, bool skip)
 		{
 			var handler = new SignatureHandler ([], publicKey) { SignatureStatus = status };
@@ -321,7 +331,7 @@ namespace Xamarin.Android.Build.Tests
 			if (skip) {
 				var message = engine.Messages.Single (entry => entry.Message.Contains ("_SkipSignCheck=true"));
 				Assert.AreEqual (MessageImportance.High, message.Importance);
-				StringAssert.Contains ("signature verification was skipped", message.Message);
+				Assert.Contains ("signature verification was skipped", message.Message);
 				Assert.IsEmpty (handler.Requests, "The bypass must not request a signature or key.");
 			} else {
 				Assert.AreEqual ("XA5305", engine.Errors [0].Code);
@@ -329,8 +339,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void KeyUnavailableOrUntrusted (bool missing)
 		{
 			var handler = new SignatureHandler (Sign (), publicKey) {
@@ -344,9 +355,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (engine.Warnings);
 		}
 
-		[TestCase (null)]
-		[TestCase ("")]
-		[TestCase ("https://example.test/openjdk.asc")]
+		[TestMethod]
+		[DataRow (null)]
+		[DataRow ("")]
+		[DataRow ("https://example.test/openjdk.asc")]
 		public void PublicKeyUrlUsesDefaultOrOverrideWithoutChangingTrust (string publicKeyUrl)
 		{
 			var expectedUrl = string.IsNullOrEmpty (publicKeyUrl) ? OpenJdkSignatureVerifier.PublicKeyUrl : publicKeyUrl;
@@ -356,12 +368,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (2, handler.Requests.Count);
 			Assert.AreEqual (expectedUrl, handler.Requests [1].AbsoluteUri);
 			Assert.AreEqual ("XA5305", engine.Errors [0].Code);
-			StringAssert.Contains ("does not match the trusted SHA-256 hash", engine.Errors [0].Message);
+			Assert.Contains ("does not match the trusted SHA-256 hash", engine.Errors [0].Message);
 			Assert.IsEmpty (engine.Warnings);
 		}
 
-		[TestCase ("relative/key.asc")]
-		[TestCase ("file:///tmp/key.asc")]
+		[TestMethod]
+		[DataRow ("relative/key.asc")]
+		[DataRow ("file:///tmp/key.asc")]
 		public void InvalidPublicKeyUrlFailsWithoutFallback (string publicKeyUrl)
 		{
 			var handler = new SignatureHandler (Sign (), publicKey);
@@ -371,19 +384,21 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (handler.Requests);
 		}
 
-		[TestCase (null)]
-		[TestCase ("")]
+		[TestMethod]
+		[DataRow (null)]
+		[DataRow ("")]
 		public void BlankSigningKeyHashUsesBuiltInDefault (string hash)
 		{
 			var handler = new SignatureHandler (Sign (), publicKey);
 			var engine = CreateBuildEngine ();
 			Assert.IsFalse (RunVerificationTask (handler, engine, publicKeySha256: hash));
 			Assert.AreEqual ("XA5305", engine.Errors [0].Code);
-			StringAssert.Contains ("does not match the trusted SHA-256 hash", engine.Errors [0].Message);
+			Assert.Contains ("does not match the trusted SHA-256 hash", engine.Errors [0].Message);
 		}
 
-		[TestCase (null, false)]
-		[TestCase ("https://example.test/openjdk.asc", true)]
+		[TestMethod]
+		[DataRow (null, false)]
+		[DataRow ("https://example.test/openjdk.asc", true)]
 		public void SigningKeyHashOverrideAuthenticatesConfiguredKey (string publicKeyUrl, bool lowercaseHash)
 		{
 			var expectedUrl = publicKeyUrl ?? OpenJdkSignatureVerifier.PublicKeyUrl;
@@ -397,18 +412,19 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (engine.Warnings);
 		}
 
-		[Test]
+		[TestMethod]
 		public void WrongSigningKeyHashOverrideFailsWithoutFallback ()
 		{
 			var handler = new SignatureHandler (Sign (), publicKey);
 			var engine = CreateBuildEngine ();
 			Assert.IsFalse (RunVerificationTask (handler, engine, publicKeySha256: new string ('0', 64)));
 			Assert.AreEqual ("XA5305", engine.Errors [0].Code);
-			StringAssert.Contains ("does not match the trusted SHA-256 hash", engine.Errors [0].Message);
+			Assert.Contains ("does not match the trusted SHA-256 hash", engine.Errors [0].Message);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void MalformedSigningKeyHashOverrideFailsBeforeDownload (bool validLength)
 		{
 			var handler = new SignatureHandler (Sign (), publicKey);
@@ -416,11 +432,11 @@ namespace Xamarin.Android.Build.Tests
 			var hash = validLength ? new string ('g', 64) : "ABC";
 			Assert.IsFalse (RunVerificationTask (handler, engine, publicKeySha256: hash));
 			Assert.AreEqual ("XA5305", engine.Errors [0].Code);
-			StringAssert.Contains ("exactly 64 hexadecimal characters", engine.Errors [0].Message);
+			Assert.Contains ("exactly 64 hexadecimal characters", engine.Errors [0].Message);
 			Assert.IsEmpty (handler.Requests);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SigningKeyHashOverrideStillRequiresValidArchiveSignature ()
 		{
 			var signature = Sign ();
@@ -429,11 +445,12 @@ namespace Xamarin.Android.Build.Tests
 			var engine = CreateBuildEngine ();
 			Assert.IsFalse (RunVerificationTask (handler, engine, publicKeySha256: publicKeyHash));
 			Assert.AreEqual ("XA5305", engine.Errors [0].Code);
-			StringAssert.Contains ("archive signature is invalid", engine.Errors [0].Message);
+			Assert.Contains ("archive signature is invalid", engine.Errors [0].Message);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void VerificationDownloadSizeLimit (bool oversizedKey)
 		{
 			var oversized = new byte [64 * 1024 + 1];
@@ -441,10 +458,10 @@ namespace Xamarin.Android.Build.Tests
 			var engine = CreateBuildEngine ();
 			Assert.IsFalse (RunVerificationTask (handler, engine));
 			Assert.AreEqual ("XA5305", engine.Errors [0].Code);
-			StringAssert.Contains ("64 KiB", engine.Errors [0].Message);
+			Assert.Contains ("64 KiB", engine.Errors [0].Message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void BypassDefaultsToFalseAndTargetForwardsPrivateProperty ()
 		{
 			Assert.IsFalse (new InstallAndroidDependencies ().SkipSignCheck);
@@ -460,8 +477,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (targets.Descendants (ns + "_AndroidOpenJdkPublicKeySha256").Any (), "The private hash property must remain blank by default.");
 		}
 
-		[Test]
-		[Explicit ("Downloads a Microsoft OpenJDK archive to verify the production key hash and format reader.")]
+		[TestMethod]
+		[Ignore ("Downloads a Microsoft OpenJDK archive to verify the production key hash and format reader.")]
 		public async Task PublishedMicrosoftArchive ()
 		{
 			using (var client = new HttpClient { Timeout = TimeSpan.FromMinutes (10) }) {
@@ -506,9 +523,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[NonParallelizable]
-		[Explicit ("Downloads and installs Microsoft OpenJDK through the production dependency task.")]
+		[TestMethod]
+		[DoNotParallelize]
+		[Ignore ("Downloads and installs Microsoft OpenJDK through the production dependency task.")]
 		public void InstallMicrosoftJdk ()
 		{
 			var root = Path.Combine (Path.GetTempPath (), "android-jdk-signature-test-" + Guid.NewGuid ().ToString ("N"));
@@ -529,14 +546,14 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsEmpty (engine.Errors);
 				Assert.IsEmpty (engine.Warnings);
 				Assert.IsTrue (File.Exists (Path.Combine (jdkPath, "release")));
-				StringAssert.Contains ("JAVA_VERSION=\"21.0.8\"", File.ReadAllText (Path.Combine (jdkPath, "release")));
+				Assert.Contains ("JAVA_VERSION=\"21.0.8\"", File.ReadAllText (Path.Combine (jdkPath, "release")));
 			} finally {
 				if (Directory.Exists (root))
 					Directory.Delete (root, recursive: true);
 			}
 		}
 
-		static MockBuildEngine CreateBuildEngine () => new MockBuildEngine (TestContext.Out, [], [], []);
+		static MockBuildEngine CreateBuildEngine () => new MockBuildEngine (Console.Out, [], [], []);
 
 		static bool RunVerificationTask (SignatureHandler handler, MockBuildEngine engine, bool skip = false, string publicKeyUrl = null, string publicKeySha256 = null)
 		{

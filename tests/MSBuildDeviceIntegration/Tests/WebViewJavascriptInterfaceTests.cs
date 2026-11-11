@@ -1,22 +1,23 @@
 using System;
 using System.IO;
 using System.Text;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class WebViewJavascriptInterfaceTests : DeviceTest
 	{
 		const string SuccessResult = "bridge-12542:payload-12542:1";
 		const string SuccessMarker = "# JAVASCRIPT_INTERFACE_RESULT ";
 		const string FailureMarker = "# JAVASCRIPT_INTERFACE_FAILURE ";
 
-		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.NativeAOT)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR)]
+		[DataRow (AndroidRuntime.NativeAOT)]
 		public void LocalJavascriptInvokesManagedBridge (AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -182,17 +183,17 @@ managedBridge.completeTestForIssue12542();
 					resultLog,
 					timeout: 30), "WebView did not report a JavaScript interface result.");
 				var logcat = File.ReadAllText (resultLog);
-				StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
-				StringAssert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
+				Assert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
+				Assert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
 			} finally {
 				if (installed) {
 					try {
 						builder.ThrowOnBuildFailure = false;
 						if (!builder.Uninstall (proj)) {
-							TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
+							Console.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
 						}
 					} catch (Exception ex) {
-						TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
+						Console.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
 					}
 				}
 			}

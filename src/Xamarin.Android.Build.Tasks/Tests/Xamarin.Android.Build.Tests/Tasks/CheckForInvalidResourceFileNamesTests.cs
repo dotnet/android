@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
@@ -10,11 +10,12 @@ using TaskItem = Microsoft.Build.Utilities.TaskItem;
 namespace Xamarin.Android.Build.Tests
 {
 
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class CheckForInvalidResourceFileNamesTests : BaseTest {
 
 #pragma warning disable 414
-		static object [] InvalidResourceFileNamesChecks () => new object [] {
+		static object [] [] InvalidResourceFileNamesChecks () => new object [] [] {
 			new object[] {
 				"myresource.xml",
 				true,
@@ -67,13 +68,13 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 #pragma warning restore 414
-		[Test]
-		[TestCaseSource(nameof(InvalidResourceFileNamesChecks))]
+		[TestMethod]
+		[DynamicData (nameof(InvalidResourceFileNamesChecks))]
 		public void InvalidResourceFileNames (string file, bool shouldPass, int expectedErrorCount)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new CheckForInvalidResourceFileNames {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors),
 				Resources = new TaskItem [] {
 					new TaskItem (file),
 				},

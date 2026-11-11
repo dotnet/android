@@ -8,22 +8,23 @@ using System.Text;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class BuildArchiveTests : BaseTest
 {
 	string TempDirectory => Path.Combine (Root, "temp", TestName);
 
-	[SetUp]
+	[TestInitialize]
 	public void Setup ()
 	{
 		Directory.CreateDirectory (TempDirectory);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ConsecutiveUnchangedBuildsKeepJavaArchiveEntries ()
 	{
 		var apk = Path.Combine (TempDirectory, "app.apk");
@@ -37,7 +38,7 @@ public class BuildArchiveTests : BaseTest
 
 		for (var build = 1; build <= 3; build++) {
 			var task = new BuildArchive {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				ApkOutputPath = apk,
 				FilesToAddToArchive = [item],
 			};
@@ -56,7 +57,7 @@ public class BuildArchiveTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExistingJavaArchiveEntriesAreSkippedWhenUpToDate ()
 	{
 		var apk = Path.Combine (TempDirectory, "app.apk");
@@ -69,21 +70,21 @@ public class BuildArchiveTests : BaseTest
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
-			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 			ApkOutputPath = apk,
 			FilesToAddToArchive = [item],
 		};
 
 		Assert.IsTrue (task.RunTask (), "task should have succeeded");
 
-		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Skipping commonMain/default/manifest from {jar} as it is up to date."));
+		Assert.IsTrue (messages.Any (m => m.Message == $"Skipping commonMain/default/manifest from {jar} as it is up to date."), string.Join ("\n", messages.Select (m => m.Message)));
 
 		using (var archive = ZipFile.OpenRead (apk)) {
 			AssertEntryContents (archive, "commonMain/default/manifest", "current");
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void DuplicateJavaArchiveEntriesKeepFirstCurrentBuildItem ()
 	{
 		var apk = Path.Combine (TempDirectory, "app.apk");
@@ -99,14 +100,14 @@ public class BuildArchiveTests : BaseTest
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
-			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 			ApkOutputPath = apk,
 			FilesToAddToArchive = [firstItem, secondItem],
 		};
 
 		Assert.IsTrue (task.RunTask (), "task should have succeeded");
 
-		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ("Failed to add jar entry commonMain/default/manifest from second.jar: the same file already exists in the apk"));
+		Assert.IsTrue (messages.Any (m => m.Message == "Failed to add jar entry commonMain/default/manifest from second.jar: the same file already exists in the apk"), string.Join ("\n", messages.Select (m => m.Message)));
 
 		using (var archive = ZipFile.OpenRead (apk)) {
 			AssertEntryContents (archive, "commonMain/default/manifest", "first");
@@ -114,7 +115,7 @@ public class BuildArchiveTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingJarEntryIsSkippedAndExistingOutputEntryIsRemoved ()
 	{
 		var apk = Path.Combine (TempDirectory, "app.apk");
@@ -127,14 +128,14 @@ public class BuildArchiveTests : BaseTest
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
-			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 			ApkOutputPath = apk,
 			FilesToAddToArchive = [item],
 		};
 
 		Assert.IsTrue (task.RunTask (), "task should have succeeded");
 
-		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Failed to add jar entry commonMain/default/manifest from {jar}: entry not found in jar."));
+		Assert.IsTrue (messages.Any (m => m.Message == $"Failed to add jar entry commonMain/default/manifest from {jar}: entry not found in jar."), string.Join ("\n", messages.Select (m => m.Message)));
 
 		// The entry should be removed. If the APK itself no longer exists, all entries were cleared (also satisfies the assertion).
 		if (File.Exists (apk)) {

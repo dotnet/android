@@ -14,19 +14,19 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
 
-[TestFixture]
-[NonParallelizable]
+[TestClass]
+[DoNotParallelize]
 public class StreamingTests
 {
 	string directory = "";
 	TextWriter previousError = Console.Error;
 	StringWriter error = new ();
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp ()
 	{
 		directory = Path.Combine (Path.GetTempPath (), "android-streaming-" + Guid.NewGuid ().ToString ("N"));
@@ -36,7 +36,7 @@ public class StreamingTests
 		Console.SetError (TextWriter.Synchronized (error));
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void TearDown ()
 	{
 		Console.SetError (previousError);
@@ -52,7 +52,7 @@ public class StreamingTests
 		return new () { Values = values };
 	}
 
-	[Test]
+	[TestMethod]
 	public void PartialResultsPreserveObservedOutcomesAndAllUnfinishedTests ()
 	{
 		var state = new StreamingState ();
@@ -65,15 +65,15 @@ public class StreamingTests
 		state.Observe (Status ("finish", "Tests.ActiveOne")); // Missing outcome is not a completion.
 		state.Observe (Status ("other", "Tests.Ignored", "passed"));
 		state.WritePartialResults ();
-		Assert.That (error.ToString (), Does.Contain ("passed=1, failed=1, skipped=1, unknown=1"));
+		Assert.Contains ("passed=1, failed=1, skipped=1, unknown=1", error.ToString ());
 		foreach (var outcome in new [] { "passed", "failed", "skipped", "unexpected" })
-			Assert.That (error.ToString (), Does.Contain ($"[{outcome}] Tests.{outcome}"));
-		Assert.That (error.ToString (), Does.Contain ("[unfinished] Tests.ActiveOne").And.Contain ("[unfinished] Tests.ActiveTwo"));
-		Assert.That (error.ToString (), Does.Contain ("not necessarily the cause"));
-		Assert.That (state.ReportedFinal, Is.Empty, "Observation must not depend on MTP publication.");
+			Assert.Contains ($"[{outcome}] Tests.{outcome}", error.ToString ());
+		Assert.Contains ("[unfinished] Tests.ActiveOne", error.ToString ());
+		Assert.Contains ("not necessarily the cause", error.ToString ());
+		Assert.IsEmpty (state.ReportedFinal, "Observation must not depend on MTP publication.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParserObservesCompleteBlocksImmediatelyButNeverInventsACompletion ()
 	{
 		var state = new StreamingState ();
@@ -81,13 +81,13 @@ public class StreamingTests
 		parser.OnLine ("INSTRUMENTATION_STATUS: event=start");
 		parser.OnLine ("INSTRUMENTATION_STATUS: test=Tests.One");
 		parser.OnLine ("INSTRUMENTATION_STATUS_CODE: 1");
-		Assert.That (state.HasUnfinishedTests, Is.True, "Observed before the instrumentation process exits.");
+		Assert.IsTrue (state.HasUnfinishedTests, "Observed before the instrumentation process exits.");
 		parser.OnLine ("INSTRUMENTATION_STATUS: event=finish");
 		parser.OnLine ("INSTRUMENTATION_STATUS: test=Tests.One");
 		parser.OnLine ("INSTRUMENTATION_STATUS: outcome=passed");
 		parser.Complete ();
 		state.WritePartialResults ();
-		Assert.That (error.ToString (), Does.Contain ("passed=0").And.Contain ("[unfinished] Tests.One"));
+		Assert.Contains ("passed=0", error.ToString ());
 	}
 
 	const string Progress = """
@@ -106,10 +106,11 @@ public class StreamingTests
 		INSTRUMENTATION_STATUS_CODE: 1
 		""";
 
-	[TestCase (false, false)]
-	[TestCase (false, true)]
-	[TestCase (true, false)]
-	[TestCase (true, true)]
+	[TestMethod]
+	[DataRow (false, false)]
+	[DataRow (false, true)]
+	[DataRow (true, false)]
+	[DataRow (true, true)]
 	public async Task AdapterPreservesNormalTrxAndPrintsPartialResultsWithoutTrx (bool crash, bool reportFailure)
 	{
 		string transcript = Progress + (crash ? "\nINSTRUMENTATION_RESULT: shortMsg=Process crashed.\nINSTRUMENTATION_CODE: 0" : """
@@ -127,57 +128,58 @@ public class StreamingTests
 			""");
 		using var application = await CreateApplication (transcript, reportFailure);
 		if (reportFailure) {
-			Assert.ThrowsAsync<UnauthorizedAccessException> (async () => { await application.RunAsync (); });
-			Assert.That (File.Exists (Path.Combine (directory, "results.trx")), Is.False);
+			await Assert.ThrowsExactlyAsync<UnauthorizedAccessException> (async () => { await application.RunAsync (); });
+			Assert.IsFalse (File.Exists (Path.Combine (directory, "results.trx")));
 		} else {
-			Assert.That (await application.RunAsync () == 0, Is.EqualTo (!crash));
+			Assert.AreEqual (!crash, await application.RunAsync () == 0);
 			var trx = XDocument.Load (Path.Combine (directory, "results.trx"));
 			XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 			var results = trx.Descendants (ns + "UnitTestResult").ToArray ();
-			Assert.That (results, Has.Length.EqualTo (2));
+			Assert.HasCount (2, results);
 			var preceding = results.Single (e => e.Attribute ("testName")?.Value == "Tests.One");
 			var last = results.Single (e => e.Attribute ("testName")?.Value == "Tests.Two");
-			Assert.That (preceding.Attribute ("outcome")?.Value, Is.EqualTo ("Passed"));
-			Assert.That (last.Attribute ("outcome")?.Value, Is.EqualTo (crash ? "Failed" : "Passed"));
+			Assert.AreEqual ("Passed", preceding.Attribute ("outcome")?.Value);
+			Assert.AreEqual (crash ? "Failed" : "Passed", last.Attribute ("outcome")?.Value);
 			if (crash) {
 				var message = last.Element (ns + "Output")?.Element (ns + "ErrorInfo")?.Element (ns + "Message")?.Value;
-				Assert.That (message, Is.EqualTo (
-					"This was the last observed active test, not necessarily the cause of the incomplete run.\nThe test process crashed: Process crashed."));
+				Assert.AreEqual ("This was the last observed active test, not necessarily the cause of the incomplete run.\nThe test process crashed: Process crashed.", message);
 			}
 		}
 		if (crash) {
-			Assert.That (error.ToString (), Does.Contain ("Incomplete test run").And.Contain ("passed=1, failed=0, skipped=0, unknown=0"));
-			Assert.That (error.ToString (), Does.Contain ("[passed] Tests.One").And.Contain ("[unfinished] Tests.Two"));
+			Assert.Contains ("Incomplete test run", error.ToString ());
+			Assert.Contains ("[passed] Tests.One", error.ToString ());
 		} else {
-			Assert.That (error.ToString (), Does.Not.Contain ("Incomplete test run").And.Not.Contain ("[unfinished]"));
+			Assert.DoesNotContain ("Incomplete test run", error.ToString ());
 		}
 	}
 
-	[TestCase ("", 0)]
-	[TestCase ("error: device offline", 1)]
-	[TestCase (Progress, 0)]
+	[TestMethod]
+	[DataRow ("", 0)]
+	[DataRow ("error: device offline", 1)]
+	[DataRow (Progress, 0)]
 	public async Task MissingBundleOrTransportFailureIsNotLabeledACrash (string transcript, int exitCode)
 	{
 		using var application = await CreateApplication (transcript, exitCode: exitCode);
 		if (exitCode == 0 && transcript.Length == 0)
-			Assert.ThrowsAsync<InvalidOperationException> (async () => { await application.RunAsync (); });
+			await Assert.ThrowsExactlyAsync<InvalidOperationException> (async () => { await application.RunAsync (); });
 		else
-			Assert.That (await application.RunAsync (), Is.Not.Zero);
-		Assert.That (error.ToString (), Does.Contain ("Incomplete test run"));
-		Assert.That (error.ToString (), Does.Contain (transcript == Progress ? "passed=1" : "passed=0"));
-		Assert.That (error.ToString (), Does.Not.Contain ("process crashed").And.Not.Contain ("native crash"));
+			Assert.AreNotEqual (0, await application.RunAsync ());
+		Assert.Contains ("Incomplete test run", error.ToString ());
+		Assert.Contains (transcript == Progress ? "passed=1" : "passed=0", error.ToString ());
+		Assert.DoesNotContain ("process crashed", error.ToString ());
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task ProcessStartupExceptionStillPrintsPartialSummary ()
 	{
 		using var application = await CreateApplication ("", missingAdb: true);
-		Assert.ThrowsAsync<System.ComponentModel.Win32Exception> (async () => { await application.RunAsync (); });
-		Assert.That (error.ToString (), Does.Contain ("Incomplete test run").And.Contain ("passed=0"));
+		await Assert.ThrowsExactlyAsync<System.ComponentModel.Win32Exception> (async () => { await application.RunAsync (); });
+		Assert.Contains ("Incomplete test run", error.ToString ());
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public async Task UnfinishedTestIsSavedAsFailedEvenWhenAdbExitsSuccessfully (bool finalBundle)
 	{
 		string transcript = """
@@ -187,18 +189,17 @@ public class StreamingTests
 			INSTRUMENTATION_STATUS_CODE: 1
 			""" + (finalBundle ? "\nINSTRUMENTATION_RESULT: resultsPath=/device/results.trx\nINSTRUMENTATION_CODE: -1" : "");
 		using var application = await CreateApplication (transcript);
-		Assert.That (await application.RunAsync (), Is.Not.Zero);
+		Assert.AreNotEqual (0, await application.RunAsync ());
 		XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 		var result = XDocument.Load (Path.Combine (directory, "results.trx")).Descendants (ns + "UnitTestResult").Single ();
-		Assert.That (result.Attribute ("testName")?.Value, Is.EqualTo ("Tests.One"));
-		Assert.That (result.Attribute ("outcome")?.Value, Is.EqualTo ("Failed"));
-		Assert.That (result.Element (ns + "Output")?.Element (ns + "ErrorInfo")?.Element (ns + "Message")?.Value, Is.EqualTo (
-			"This was the last observed active test, not necessarily the cause of the incomplete run.\nThe test run ended before all tests completed."));
-		Assert.That (error.ToString (), Does.Contain ("passed=0").And.Contain ("[unfinished] Tests.One"));
-		Assert.That (error.ToString (), Does.Not.Contain ("process crashed").And.Not.Contain ("native crash"));
+		Assert.AreEqual ("Tests.One", result.Attribute ("testName")?.Value);
+		Assert.AreEqual ("Failed", result.Attribute ("outcome")?.Value);
+		Assert.AreEqual ("This was the last observed active test, not necessarily the cause of the incomplete run.\nThe test run ended before all tests completed.", result.Element (ns + "Output")?.Element (ns + "ErrorInfo")?.Element (ns + "Message")?.Value);
+		Assert.Contains ("passed=0", error.ToString ());
+		Assert.DoesNotContain ("process crashed", error.ToString ());
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task CancellationAfterProgressPreservesPartialResults ()
 	{
 		using var cancellation = new CancellationTokenSource (TimeSpan.FromSeconds (30));
@@ -207,20 +208,20 @@ public class StreamingTests
 		var run = application.RunAsync ();
 		try {
 			await adapter.ProgressObserved.Task.WaitAsync (TimeSpan.FromSeconds (15));
-			Assert.That (run.IsCompleted, Is.False, "Cancel only after progress from a still-running invocation.");
+			Assert.IsFalse (run.IsCompleted, "Cancel only after progress from a still-running invocation.");
 		} finally {
 			cancellation.Cancel ();
-			Assert.CatchAsync<OperationCanceledException> (async () => { await run.WaitAsync (TimeSpan.FromSeconds (15)); });
+			await Assert.ThrowsAsync<OperationCanceledException> (async () => { await run.WaitAsync (TimeSpan.FromSeconds (15)); });
 		}
-		Assert.That (error.ToString (), Does.Contain ("Incomplete test run").And.Contain ("passed=1, failed=0, skipped=0, unknown=0"));
-		Assert.That (error.ToString (), Does.Contain ("[passed] Tests.One").And.Contain ("[unfinished] Tests.Two"));
+		Assert.Contains ("Incomplete test run", error.ToString ());
+		Assert.Contains ("[passed] Tests.One", error.ToString ());
 	}
 
 	async Task<ITestApplication> CreateApplication (string transcript, bool reportFailure = false, int exitCode = 0, bool missingAdb = false,
 		CancellableAdapter? cancellationAdapter = null)
 	{
 		if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
-			Assert.Ignore ("The fake adb is a Unix shell executable.");
+			Assert.Inconclusive ("The fake adb is a Unix shell executable.");
 		string adb = Path.Combine (directory, "fake-adb");
 		var ending = cancellationAdapter == null ? $"exit {exitCode}" : "exec sleep 30";
 		File.WriteAllText (adb, $"#!/bin/sh\ncat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");

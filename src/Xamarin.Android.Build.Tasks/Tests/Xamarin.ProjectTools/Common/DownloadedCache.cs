@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Threading;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.ProjectTools
 {
@@ -48,13 +48,13 @@ namespace Xamarin.ProjectTools
 						}
 					}
 				} catch (HttpRequestException ex) when (IsTransientError (ex)) {
-					TestContext.WriteLine ($"Transient network error downloading '{url}':");
-					TestContext.WriteLine ($"  Message: {ex.Message}");
+					Console.WriteLine ($"Transient network error downloading '{url}':");
+					Console.WriteLine ($"  Message: {ex.Message}");
 					if (ex.StatusCode.HasValue) {
-						TestContext.WriteLine ($"  HTTP Status Code: {(int)ex.StatusCode.Value} ({ex.StatusCode.Value})");
+						Console.WriteLine ($"  HTTP Status Code: {(int)ex.StatusCode.Value} ({ex.StatusCode.Value})");
 					}
-					TestContext.WriteLine ($"  URL: {url}");
-					TestContext.WriteLine ($"  Stack Trace: {ex.StackTrace}");
+					Console.WriteLine ($"  URL: {url}");
+					Console.WriteLine ($"  Stack Trace: {ex.StackTrace}");
 					Assert.Inconclusive ($"Test skipped due to transient network error: {ex.Message}");
 					try {
 						File.Delete (filename);

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,18 +8,20 @@ using System.Xml.Linq;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class MergeRemapXmlTests : BaseTest
 	{
-		[TestCase ("mismatched-root")]
-		[TestCase ("unfinished-child")]
-		[TestCase ("trailing-root")]
+		[TestMethod]
+		[DataRow ("mismatched-root")]
+		[DataRow ("unfinished-child")]
+		[DataRow ("trailing-root")]
 		public void MalformedInputContributesNoLeadingNodes (string kind)
 		{
 			string prefix = """
@@ -28,7 +31,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				"mismatched-root" => prefix + "</broken>",
 				"unfinished-child" => prefix + "<replace-method",
 				"trailing-root" => prefix + "</replacements><extra />",
-				_ => throw new AssertionException ("Unknown fixture kind."),
+				_ => throw new AssertFailedException ("Unknown fixture kind."),
 			};
 			var warnings = new List<BuildWarningEventArgs> ();
 			XElement root = Merge (warnings,
@@ -45,7 +48,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("XA4318", warnings.Single ().Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ValidInputsPreserveNodeOrderAndAttributes ()
 		{
 			var warnings = new List<BuildWarningEventArgs> ();
@@ -69,7 +72,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsEmpty (warnings);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ValidInputPreservesInheritedNamespacesAndNestedContent ()
 		{
 			var warnings = new List<BuildWarningEventArgs> ();
@@ -99,12 +102,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			}
 			string output = Path.Combine (directory, "merged.xml");
 			var task = new MergeRemapXml {
-				BuildEngine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> (), warnings),
+				BuildEngine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> (), warnings),
 				InputRemapXmlFiles = items.ToArray (),
 				OutputFile = new TaskItem (output),
 			};
 			Assert.IsTrue (task.Execute ());
-			return XDocument.Load (output).Root ?? throw new AssertionException ("Merged XML has no root.");
+			return XDocument.Load (output).Root ?? throw new AssertFailedException ("Merged XML has no root.");
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
@@ -11,14 +12,15 @@ using System.Reflection.PortableExecutable;
 using Mono.Cecil;
 
 namespace Xamarin.Android.Build.Tests {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Self)]
+	[TestClass]
+	[DoNotParallelize]
 	public class AndroidResourceTests : BaseTest
 	{
-		[TestCase (true, true)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (false, false)]
+		[TestMethod]
+		[DataRow (true, true)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
+		[DataRow (false, false)]
 		public void ResourceDesignerAssemblyDeterministic (bool deterministic, bool isApplication)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -35,7 +37,7 @@ namespace Xamarin.Android.Build.Tests {
 			void Generate ()
 			{
 				var task = new GenerateResourceDesignerAssembly {
-					BuildEngine = new MockBuildEngine (TestContext.Out),
+					BuildEngine = new MockBuildEngine (Console.Out),
 					RTxtFile = new TaskItem (rtxt),
 					OutputFile = new TaskItem (output),
 					CaseMapFile = Path.Combine (path, "case_map.txt"),
@@ -53,7 +55,7 @@ namespace Xamarin.Android.Build.Tests {
 				if (deterministic)
 					Assert.AreEqual (0, timestamp, "Deterministic output must have a fixed PE timestamp.");
 				else
-					Assert.That ((long) timestamp, Is.InRange (start, DateTimeOffset.UtcNow.ToUnixTimeSeconds ()), "Non-deterministic output must retain the current PE timestamp.");
+					Assert.IsInRange (start, DateTimeOffset.UtcNow.ToUnixTimeSeconds (), (long) timestamp, "Non-deterministic output must retain the current PE timestamp.");
 			}
 
 			Generate ();
@@ -73,7 +75,7 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void RTxtParserTest ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -88,7 +90,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (lines.Count () - 1, resources.Count ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void HeaderLayout ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -115,11 +117,11 @@ namespace Xamarin.Android.Build.Tests {
 ");
 			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
 			var mainText = File.ReadAllText (main);
-			Assert.True (mainText.Contains ("@layout/headerlayout"), "'@layout/headerLayout' was not converted to '@layout/headerlayout'");
+			Assert.IsTrue (mainText.Contains ("@layout/headerlayout"), "'@layout/headerLayout' was not converted to '@layout/headerlayout'");
 			Directory.Delete (path, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MenuActionLayout ()
 		{
 			var path = Path.Combine (Root, "temp", "MenuActionLayout");
@@ -174,11 +176,11 @@ namespace Xamarin.Android.Build.Tests {
 </menu>");
 			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), actions, null);
 			var actionsText = File.ReadAllText (actions);
-			Assert.True (actionsText.Contains ("@layout/servinglayout"), "'@layout/ServingLayout' was not converted to '@layout/servinglayout'");
+			Assert.IsTrue (actionsText.Contains ("@layout/servinglayout"), "'@layout/ServingLayout' was not converted to '@layout/servinglayout'");
 			Directory.Delete (path, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UserLayout ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -211,12 +213,13 @@ namespace Xamarin.Android.Build.Tests {
 			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), attrs, null);
 			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
 			var mainText = File.ReadAllText (main);
-			Assert.True (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
+			Assert.IsTrue (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
 			Directory.Delete (path, recursive: true);
 		}
 
-		[Test]
-		public void AdaptiveIcon ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AdaptiveIcon ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

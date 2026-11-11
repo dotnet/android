@@ -1,13 +1,16 @@
 #nullable enable
 using System;
+using System.Linq;
 using System.IO;
 using System.Text.Json.Nodes;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
+[TestClass]
+[DoNotParallelize]
 public class NuGetPackageVersionFinderTests : BaseTest
 {
 	const string PackageName = "Xamarin.Google.Material.Core";
@@ -17,13 +20,13 @@ public class NuGetPackageVersionFinderTests : BaseTest
 
 	string TestDirectory => Path.Combine (Root, "temp", TestName);
 
-	[Test]
+	[TestMethod]
 	public void PackageVersionsUseNuGetSemantics ()
 	{
 		var cache = Path.Combine (TestDirectory, "packages");
 		CreateNuspec (cache);
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
 		var assets = CreateAssets ("1.0.0", [cache]);
 		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
@@ -36,7 +39,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DependencyFulfilledByPackageNuspec ()
 	{
 		var missingCache = Path.Combine (TestDirectory, "missing-packages");
@@ -51,7 +54,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		var package = new TaskItem (PackageName);
 		package.SetMetadata ("Version", "1.0");
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [library],
@@ -63,14 +66,14 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MalformedAssetsAreLogged ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, [], [], []);
+		var engine = new MockBuildEngine (Console.Out, [], [], []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
 
 		Assert.IsNull (NuGetPackageVersionFinder.Create (WriteAssets ("not JSON"), task.Log));
-		Assert.That (engine.Messages, Has.Exactly (1).Matches<Microsoft.Build.Framework.BuildMessageEventArgs> (message =>
+		Assert.AreEqual (1, engine.Messages.Count (message =>
 			message.Message?.StartsWith ("Could not parse NuGet lock file.", StringComparison.Ordinal) == true));
 		Assert.IsEmpty (engine.Errors);
 	}

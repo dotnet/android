@@ -8,16 +8,17 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class CompressionMetadataTests : BaseTest
 {
 	string TestDirectory => Path.Combine (Root, "temp", TestName);
 
-	[Test]
+	[TestMethod]
 	public void TrimmingRetainsSparseIndicesAndCompressedFiles ()
 	{
 		const string abi = "arm64-v8a";
@@ -26,7 +27,7 @@ public class CompressionMetadataTests : BaseTest
 			.ToArray ();
 		string project = Path.Combine (TestDirectory, "Sample.csproj");
 
-		var engine = new MockBuildEngine (TestContext.Out);
+		var engine = new MockBuildEngine (Console.Out);
 		Assert.IsTrue (Register (engine, project, assemblies, [abi]));
 		var collect = Collect (engine, project, [assemblies [0], assemblies [17]], [abi]);
 
@@ -45,7 +46,7 @@ public class CompressionMetadataTests : BaseTest
 
 		// A later build retains the same pre-trimming list, but a different subset survives.
 		// Assembly17.dll must keep index 17 rather than being renumbered in the two-entry store.
-		engine = new MockBuildEngine (TestContext.Out);
+		engine = new MockBuildEngine (Console.Out);
 		Assert.IsTrue (Register (engine, project, assemblies, [abi]));
 		collect = Collect (engine, project, [assemblies [1], assemblies [17]], [abi]);
 		Assert.AreEqual (lastOutput, collect.AssembliesToCompressOutput [1].GetMetadata ("DestinationPath"));
@@ -62,7 +63,7 @@ public class CompressionMetadataTests : BaseTest
 
 		// A composite ReadyToRun image is generated after trimming, not in the input closure.
 		var composite = CreateAssembly ("Sample.r2r.dll", abi);
-		engine = new MockBuildEngine (TestContext.Out);
+		engine = new MockBuildEngine (Console.Out);
 		Assert.IsTrue (Register (engine, project, assemblies, [abi], [assemblies [1], assemblies [17], composite]));
 		collect = Collect (engine, project, [assemblies [1], assemblies [17], composite], [abi]);
 		compress.BuildEngine = engine;
@@ -74,14 +75,14 @@ public class CompressionMetadataTests : BaseTest
 		Assert.AreEqual (previousTimestamp, File.GetLastWriteTimeUtc (lastOutput));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ChangedTrimmedAssemblyUsesItsOriginalIndexAndActualLength ()
 	{
 		const string abi = "arm64-v8a";
 		var removed = CreateAssembly ("Removed.dll", abi);
 		var original = CreateAssembly ("Kept.dll", abi);
 		string project = Path.Combine (TestDirectory, "Sample.csproj");
-		var engine = new MockBuildEngine (TestContext.Out);
+		var engine = new MockBuildEngine (Console.Out);
 		Assert.IsTrue (Register (engine, project, [removed, original], [abi]));
 
 		var trimmed = new TaskItem (original) {

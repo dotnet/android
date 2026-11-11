@@ -4,14 +4,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class UncaughtExceptionTests : DeviceTest
 	{
 		class LogcatLine
@@ -22,8 +23,9 @@ namespace Xamarin.Android.Build.Tests
 			public int Count = 0;
 		};
 
-		[Test]
-		public void FatalManagedExceptionTerminatesProcess ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FatalManagedExceptionTerminatesProcess ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			string packageName = PackageUtils.MakePackageName (runtime).ToLowerInvariant ();
 			var app = new XamarinAndroidApplicationProject (packageName: packageName) {
@@ -67,7 +69,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 				Thread.Sleep ((int) Math.Min (1000, Math.Max (0, (timeout - stopwatch.Elapsed).TotalMilliseconds)));
 			}
-			TestContext.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
+			Console.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
 
 			Assert.IsTrue (processExited,
 				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
@@ -78,8 +80,9 @@ namespace Xamarin.Android.Build.Tests
 				"The uncaught exception handler should not call a missing native method.");
 		}
 
-		[Test]
-		public void EnsureUncaughtExceptionWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void EnsureUncaughtExceptionWorks ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -226,7 +229,7 @@ namespace Scratch.JMJMException
 			string path = Path.Combine ("temp", TestName);
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.True (libBuilder.Build (lib), "Library should have built.");
+				Assert.IsTrue (libBuilder.Build (lib), "Library should have built.");
 				Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
 				ClearAdbLogcat ();
 

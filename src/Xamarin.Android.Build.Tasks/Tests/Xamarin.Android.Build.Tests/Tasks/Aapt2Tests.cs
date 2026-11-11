@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -12,6 +13,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class Aapt2Tests : BaseTest
 	{
 		void CallAapt2Compile (IBuildEngine engine, string dir, string outputPath, string flatFilePath, List<ITaskItem> output = null, int maxInstances = 0, bool keepInDomain = false)
@@ -43,7 +46,7 @@ namespace Xamarin.Android.Build.Tests
 				DaemonKeepInDomain = keepInDomain,
 			};
 			MockBuildEngine mockEngine = (MockBuildEngine)engine;
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (" ", mockEngine.Errors.Select (x => x.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (" ", mockEngine.Errors.Select (x => x.Message))}");
 			output?.AddRange (task.CompiledResourceFlatArchives);
 		}
 
@@ -64,11 +67,11 @@ namespace Xamarin.Android.Build.Tests
 			return new TaskItem (file, new Dictionary<string, string> { { "_FlatFile", $"{dir}_{Path.GetFileNameWithoutExtension (file)}{ext}.flat" } } );
 		}
 
-		[Test]
-		[TestCase (6, 6, 3, 2)]
-		[TestCase (6, 6, 2, 1)]
-		[TestCase (6, 6, 6, 50)]
-		[TestCase (1, 1, 1, 10)]
+		[TestMethod]
+		[DataRow (6, 6, 3, 2)]
+		[DataRow (6, 6, 2, 1)]
+		[DataRow (6, 6, 6, 50)]
+		[DataRow (1, 1, 1, 10)]
 		public void Aapt2DaemonInstances (int maxInstances, int expectedMax, int expectedInstances, int numLayouts)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -103,7 +106,7 @@ namespace Xamarin.Android.Build.Tests
 				DaemonMaxInstanceCount = maxInstances,
 				DaemonKeepInDomain = false,
 			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (Aapt2Daemon.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			Assert.IsNotNull (daemon, "Should have got a Daemon");
 			Assert.AreEqual (expectedMax, daemon.MaxInstances, $"Expected {expectedMax} but was {daemon.MaxInstances}");
@@ -131,7 +134,7 @@ namespace Xamarin.Android.Build.Tests
 			public AndroidVersions Versions { get; private set; }
 
 			public ApiMetadataBuildEngine (IList<BuildErrorEventArgs> errors, IList<BuildWarningEventArgs> warnings)
-				: base (TestContext.Out, errors, warnings)
+				: base (Console.Out, errors, warnings)
 			{
 			}
 
@@ -174,8 +177,9 @@ namespace Xamarin.Android.Build.Tests
 			void IBuildEngine3.Reacquire () { }
 		}
 
-		[Test]
-		public void Aapt2Link ([Values (true, false)] bool compilePerFile)
+		[TestMethod]
+		[CombinatorialData]
+		public void Aapt2Link ([CombinatorialValues (true, false)] bool compilePerFile)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
@@ -240,25 +244,26 @@ namespace Xamarin.Android.Build.Tests
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
 				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
 			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			Assert.AreEqual (1, engine.MetadataLookups, "All ABI links must share one API metadata lookup.");
 			Assert.IsTrue (engine.MetadataAccessBeforeYield, "Resolve API metadata on the calling thread before yielding.");
 			Assert.IsTrue (engine.Yielded);
 			Assert.IsNotNull (engine.Versions);
-			CollectionAssert.Contains (engine.Versions.FrameworkDirectories, Path.Combine (referencePath, "MonoAndroid"));
-			FileAssert.Exists (outputFile + "-arm64-v8a");
-			FileAssert.Exists (outputFile + "-x86_64");
+			CollectionAssert.Contains (engine.Versions.FrameworkDirectories.ToArray (), Path.Combine (referencePath, "MonoAndroid"));
+			Assert.IsTrue (File.Exists (outputFile + "-arm64-v8a"));
+			Assert.IsTrue (File.Exists (outputFile + "-x86_64"));
 			Assert.AreEqual (0, errors.Count, "There should be no errors.");
-			Assert.LessOrEqual (0, warnings.Count, "There should be 0 warnings.");
-			Assert.True (File.Exists (outputFile), $"{outputFile} should have been created.");
+			Assert.IsLessThanOrEqualTo (warnings.Count, 0, "There should be 0 warnings.");
+			Assert.IsTrue (File.Exists (outputFile), $"{outputFile} should have been created.");
 			using (var apk = ZipHelper.OpenZip (outputFile)) {
 				Assert.AreEqual (3, apk.Entries.Count, $"{outputFile} should have 3 entries.");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[TestCase ("Aapt2Compile")]
-		[TestCase ("Aapt2CompileÜmläüt")]
+		[TestMethod]
+		[DataRow ("Aapt2Compile")]
+		[DataRow ("Aapt2CompileÜmläüt")]
 		public void Aapt2Compile (string directoryName)
 		{
 			var path = Path.Combine (Root, "temp", directoryName);
@@ -273,7 +278,7 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
 			File.WriteAllText (Path.Combine (resPath, "layout", "main.xml"), @"<?xml version='1.0' ?><LinearLayout xmlns:android='http://schemas.android.com/apk/res/android' />");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -287,9 +292,9 @@ namespace Xamarin.Android.Build.Tests
 				FlatArchivesDirectory = archivePath,
 				FlatFilesDirectory = flatFilePath,
 			};
-			Assert.True (task.Execute (), "task should have succeeded.");
+			Assert.IsTrue (task.Execute (), "task should have succeeded.");
 			var flatArchive = Path.Combine (archivePath, "compiled.flata");
-			Assert.True (File.Exists (flatArchive), $"{flatArchive} should have been created.");
+			Assert.IsTrue (File.Exists (flatArchive), $"{flatArchive} should have been created.");
 			using (var apk = ZipHelper.OpenZip (flatArchive)) {
 				Assert.AreEqual (2, apk.Entries.Count, $"{flatArchive} should have 2 entries.");
 			}
@@ -297,7 +302,7 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Aapt2CompileUmlautsAndSpaces ()
 		{
 			var path = Path.Combine (Root, "temp", "Aapt2CompileÜmläüt Files");
@@ -316,7 +321,7 @@ namespace Xamarin.Android.Build.Tests
 			files.Add (CreateTaskItemForResourceFile (resPath, "values", "strings.xml"));
 			files.Add (CreateTaskItemForResourceFile (resPath, "layout", "main.xml"));
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -325,17 +330,17 @@ namespace Xamarin.Android.Build.Tests
 				FlatArchivesDirectory = archivePath,
 				FlatFilesDirectory = flatFilePath,
 			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			var flatArchive = Path.Combine (archivePath, "compiled.flata");
-			Assert.False (File.Exists (flatArchive), $"{flatArchive} should not have been created.");
+			Assert.IsFalse (File.Exists (flatArchive), $"{flatArchive} should not have been created.");
 			foreach (var file in files) {
 				string f = Path.Combine (flatFilePath, file.GetMetadata ("_FlatFile"));
-				Assert.True (File.Exists (f), $"{f} should have been created.");
+				Assert.IsTrue (File.Exists (f), $"{f} should have been created.");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CollectNonEmptyDirectoriesTest ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -380,7 +385,7 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), @"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo' />");
 			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new CollectNonEmptyDirectories {
 				BuildEngine = engine,
 				Directories = new ITaskItem[] {
@@ -397,7 +402,7 @@ namespace Xamarin.Android.Build.Tests
 				LibraryProjectIntermediatePath = libPath,
 				StampDirectory = Path.Combine(path, "stamps"),
 			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			Assert.AreEqual (4, task.Output.Length, "Output should have 4 items in it.");
 			Assert.AreEqual (5, task.LibraryResourceFiles.Length, "Output should have 5 items in it.");
 			Assert.AreEqual ("layout_main.xml.flat", task.LibraryResourceFiles[0].GetMetadata ("_FlatFile"));
@@ -407,11 +412,11 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var item in task.Output) {
 				Assert.IsNotNull (item.GetMetadata ("FilesCache"), "FilesCache should have been set");
 				var cacheFile = item.GetMetadata ("FilesCache");
-				FileAssert.Exists (cacheFile, $"{cacheFile} should have been created.");
+				Assert.IsTrue (File.Exists (cacheFile), $"{cacheFile} should have been created.");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Aapt2CompileFiles ()
 		{
 			var path = Path.Combine (Root, "temp", "Aapt2CompileFiles");
@@ -430,7 +435,7 @@ namespace Xamarin.Android.Build.Tests
 			files.Add (CreateTaskItemForResourceFile (resPath, "values", "strings.xml"));
 			files.Add (CreateTaskItemForResourceFile (resPath, "layout", "main.xml"));
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -439,17 +444,17 @@ namespace Xamarin.Android.Build.Tests
 				FlatArchivesDirectory = archivePath,
 				FlatFilesDirectory = flatFilePath,
 			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			var flatArchive = Path.Combine (archivePath, "compiled.flata");
-			Assert.False (File.Exists (flatArchive), $"{flatArchive} should not have been created.");
+			Assert.IsFalse (File.Exists (flatArchive), $"{flatArchive} should not have been created.");
 			foreach (var file in files) {
 				string f = Path.Combine (flatFilePath, file.GetMetadata ("_FlatFile"));
-				Assert.True (File.Exists (f), $"{f} should have been created.");
+				Assert.IsTrue (File.Exists (f), $"{f} should have been created.");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Aapt2CompileFixesUpErrors ()
 		{
 			var path = Path.Combine (Root, "temp", "Aapt2CompileFixesUpErrors");
@@ -477,7 +482,7 @@ namespace Xamarin.Android.Build.Tests
 </LinearLayout>
 ");
 			var errors = new List<BuildErrorEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, errors);
+			var engine = new MockBuildEngine (Console.Out, errors);
 			var directorySeperator = Path.DirectorySeparatorChar;
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
@@ -496,7 +501,7 @@ namespace Xamarin.Android.Build.Tests
 				FlatArchivesDirectory = archivePath,
 				FlatFilesDirectory = flatFilePath,
 			};
-			Assert.False (task.Execute (), "task should not have succeeded.");
+			Assert.IsFalse (task.Execute (), "task should not have succeeded.");
 			Assert.AreEqual (2, errors.Count, $"Two Error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors[0].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
 			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors [1].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
@@ -505,7 +510,7 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Aapt2AndroidResgenExtraArgsAreInvalid ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -524,7 +529,7 @@ namespace Xamarin.Android.Build.Tests
 			var errors = new List<BuildErrorEventArgs> ();
 			var warnings = new List<BuildWarningEventArgs> ();
 			var messages = new List<BuildMessageEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors, warnings, messages);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors, warnings, messages);
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
@@ -540,12 +545,12 @@ namespace Xamarin.Android.Build.Tests
 				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
 				ExtraArgs = "--no-crunch "
 			};
-			Assert.False (task.Execute (), "task should have failed.");
+			Assert.IsFalse (task.Execute (), "task should have failed.");
 			Assert.AreEqual (1, errors.Count, $"One error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Aapt2AndroidResgenExtraArgsAreSplit ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -564,7 +569,7 @@ namespace Xamarin.Android.Build.Tests
 			var errors = new List<BuildErrorEventArgs> ();
 			var warnings = new List<BuildWarningEventArgs> ();
 			var messages = new List<BuildMessageEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors, warnings, messages);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors, warnings, messages);
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
@@ -582,20 +587,20 @@ namespace Xamarin.Android.Build.Tests
 				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
 				ExtraArgs = $@"--no-version-vectors -v --emit-ids ""{emitids}"" --output-text-symbols '{Rtxt}'"
 			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (" ", errors.Select (e => e.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (" ", errors.Select (e => e.Message))}");
 			Assert.AreEqual (0, errors.Count, $"No errors should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
-			Assert.True (File.Exists (emitids), $"{emitids} should have been created.");
-			Assert.True (File.Exists (Rtxt), $"{Rtxt} should have been created.");
+			Assert.IsTrue (File.Exists (emitids), $"{emitids} should have been created.");
+			Assert.IsTrue (File.Exists (Rtxt), $"{Rtxt} should have been created.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		[TestCase ("1.0", "", "XA0003")]
-		[TestCase ("-1", "", "XA0004")]
-		[TestCase ("2100000001", "", "XA0004")]
-		[TestCase ("1.0", "{abi}{versionCode:D5}", "XA0003")]
-		[TestCase ("-1", "{abi}{versionCode:D5}", "XA0004")]
-		[TestCase ("2100000001", "{abi}{versionCode:D5}", "XA0004")]
+		[TestMethod]
+		[DataRow ("1.0", "", "XA0003")]
+		[DataRow ("-1", "", "XA0004")]
+		[DataRow ("2100000001", "", "XA0004")]
+		[DataRow ("1.0", "{abi}{versionCode:D5}", "XA0003")]
+		[DataRow ("-1", "{abi}{versionCode:D5}", "XA0004")]
+		[DataRow ("2100000001", "{abi}{versionCode:D5}", "XA0004")]
 		public void CheckForInvalidVersionCode (string versionCode, string versionCodePattern, string errorCode)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -612,7 +617,7 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo' android:versionCode='{versionCode}' />");
 			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var archives = new List<ITaskItem> ();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
@@ -627,7 +632,7 @@ namespace Xamarin.Android.Build.Tests
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
 				VersionCodePattern = versionCodePattern,
 			};
-			Assert.False (task.Execute (), "task should have failed.");
+			Assert.IsFalse (task.Execute (), "task should have failed.");
 			Assert.AreEqual (1, errors.Count, $"One error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			Assert.AreEqual (errorCode, errors [0].Code, $"Error Code should have been {errorCode}");
 			Assert.AreEqual (manifestFile, errors [0].File, $"Error File should have been {manifestFile}");

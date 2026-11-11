@@ -3,15 +3,17 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class JavaRuntimeTargetsTests : BaseTest
 {
-	[TestCase ("Build")]
-	[TestCase ("Clean")]
+	[TestMethod]
+	[DataRow ("Build")]
+	[DataRow ("Clean")]
 	public void RetiredArtifactsAreRemovedWithoutRegeneratingRetainedOutputs (string target)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -53,21 +55,21 @@ public class JavaRuntimeTargetsTests : BaseTest
 			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", project, "-t:" + target, "-v:normal", "-nr:false");
 			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 			foreach (string name in retired) {
-				FileAssert.DoesNotExist (Path.Combine (output, name), $"{target} must remove retired artifact {name} on every run.");
+				Assert.IsFalse (File.Exists (Path.Combine (output, name)), $"{target} must remove retired artifact {name} on every run.");
 			}
 			foreach (string name in retained) {
 				string file = Path.Combine (output, name);
 				if (target == "Clean" && name == "java_runtime_trimmable.jar") {
-					FileAssert.DoesNotExist (file, "Clean still removes the retained JAR through its existing cleanup target.");
+					Assert.IsFalse (File.Exists (file), "Clean still removes the retained JAR through its existing cleanup target.");
 					continue;
 				}
-				FileAssert.Exists (file, $"{target} must not remove {name} as a retired artifact.");
+				Assert.IsTrue (File.Exists (file), $"{target} must not remove {name} as a retired artifact.");
 				Assert.AreEqual (name, File.ReadAllText (file));
 				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (file), "Cleanup must not rewrite retained or unrelated outputs.");
 			}
 			if (target == "Build") {
-				StringAssert.Contains ("Skipping target \"_BuildJavaRuntimeJar\"", result.Output);
-				StringAssert.Contains ("Skipping target \"_GenerateRuntimeDex16\"", result.Output);
+				Assert.Contains ("Skipping target \"_BuildJavaRuntimeJar\"", result.Output);
+				Assert.Contains ("Skipping target \"_GenerateRuntimeDex16\"", result.Output);
 			}
 		}
 

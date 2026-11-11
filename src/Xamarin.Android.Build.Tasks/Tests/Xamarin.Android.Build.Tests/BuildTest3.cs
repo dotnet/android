@@ -2,21 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;
 
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public partial class BuildTest3 : BaseTest
 {
 	const int ExpectedJniPreloadIndexStride = 4;
 	const string JniPreloadSourceLibraryName = "libtest-jni-library.so";
 
-	[Test]
-	public void NativeLibraryJniPreload_NoDuplicates ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void NativeLibraryJniPreload_NoDuplicates ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLibKeep1 = "libMyStuffKeep.so";
 		const string MyLibKeep2 = "libMyStuffKeep.so";
@@ -30,8 +32,9 @@ public partial class BuildTest3 : BaseTest
 		NativeLibraryJniPreload_VerifyLibs (preloads, new List<string> { MyLibKeep1 });
 	}
 
-	[Test]
-	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void NativeLibraryJniPreload_IncludeCustomLibraries ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		string [] libraries = ["MyStuffPlain.so", "libMyStuff.so", "libMyStuffManaged.dll.so"];
 
@@ -48,8 +51,9 @@ public partial class BuildTest3 : BaseTest
 		}
 	}
 
-	[Test]
-	public void NativeLibraryJniPreload_ExcludeSomeCustomLibraries ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void NativeLibraryJniPreload_ExcludeSomeCustomLibraries ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLibKeep = "libMyStuffKeep.so";
 		const string MyLibExempt = "libMyStuffExempt.so";
@@ -66,8 +70,9 @@ public partial class BuildTest3 : BaseTest
 		NativeLibraryJniPreload_VerifyLibs (preloads, new List<string> { MyLibKeep });
 	}
 
-	[Test]
-	public void NativeLibraryJniPreload_ExcludeAllCustomLibraries ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void NativeLibraryJniPreload_ExcludeAllCustomLibraries ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLibExempt1 = "libMyStuffExempt1.so";
 		const string MyLibExempt2 = "libMyStuffExempt2.so";
@@ -87,8 +92,9 @@ public partial class BuildTest3 : BaseTest
 		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
-	[Test]
-	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAll ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAll ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
@@ -126,8 +132,9 @@ public partial class BuildTest3 : BaseTest
 		}
 	}
 
-	[Test]
-	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
@@ -140,8 +147,9 @@ public partial class BuildTest3 : BaseTest
 		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
-	[Test]
-	public void NativeLibraryJniPreload_DefaultsWork ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void NativeLibraryJniPreload_DefaultsWork ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
 		NativeLibraryJniPreload_VerifyDefaults (preloads);

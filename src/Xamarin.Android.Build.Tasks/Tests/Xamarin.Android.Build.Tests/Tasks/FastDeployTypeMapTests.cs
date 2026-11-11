@@ -3,18 +3,21 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class FastDeployTypeMapTests : BaseTest
 	{
-		[TestCase (true, true, true, true, 2)]
-		[TestCase (true, true, true, false, 3)]
-		[TestCase (true, true, false, true, 3)]
-		[TestCase (true, false, true, true, 3)]
-		[TestCase (false, true, true, true, 1)]
+		[TestMethod]
+		[DataRow (true, true, true, true, 2)]
+		[DataRow (true, true, true, false, 3)]
+		[DataRow (true, true, false, true, 3)]
+		[DataRow (true, false, true, true, 3)]
+		[DataRow (false, true, true, true, 1)]
 		public void PreTrimTypeMapYieldsOnlyToMatchingFinalCopy (
 			bool includeFinal, bool finalExists, bool trimmed, bool sameAbi, int expectedCount)
 		{

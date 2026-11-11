@@ -5,11 +5,13 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <!-- Identify the native test application even before its first package restore. -->
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <!-- Test apps share output directories; an apphost named after the assembly would collide with per-suite work directories. -->
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
-    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestPackageVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestPackageVersion)" PrivateAssets="all" Condition=" '$(UseMSTestSourceGeneration)' != 'false' " />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportPackageVersion)" PrivateAssets="all" />
   </ItemGroup>
 </Project>

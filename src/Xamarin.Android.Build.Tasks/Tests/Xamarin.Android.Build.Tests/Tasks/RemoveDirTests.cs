@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -12,13 +13,14 @@ using System.Threading;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class RemoveDirTests : BaseTest
 	{
 		List<BuildMessageEventArgs> messages;
 		string tempDirectory;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			messages = new List<BuildMessageEventArgs> ();
@@ -41,18 +43,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		RemoveDirFixed CreateTask () => new RemoveDirFixed {
-			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 			Directories = new [] { new TaskItem (tempDirectory) },
 		};
 
 		RemoveDirFixed CreateTaskWithRetry (int retryAttempts, int retryDelayMs) => new RemoveDirFixed {
-			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 			Directories = new [] { new TaskItem (tempDirectory) },
 			RetryAttempts = retryAttempts,
 			RetryDelayMs = retryDelayMs,
 		};
 
-		[Test]
+		[TestMethod]
 		public void NormalDelete ()
 		{
 			NewFile ();
@@ -61,20 +63,20 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
 			Assert.AreEqual (tempDirectory, task.RemovedDirectories [0].ItemSpec);
 			Assert.IsEmpty (messages, "RemovedDirectories should not be dumped to the log.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NoExist ()
 		{
 			Directory.Delete (tempDirectory);
 			var task = CreateTask ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (0, task.RemovedDirectories.Length, "No changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReadonlyFile ()
 		{
 			var file = NewFile ();
@@ -82,24 +84,24 @@ namespace Xamarin.Android.Build.Tests
 			var task = CreateTask ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 		}
 
-		[Test]
+		[TestMethod]
 		public void LongPath ()
 		{
 			var file = NewFile (fileName: "foo".PadRight (MaxFileName, 'N'));
 			var task = CreateTask ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 		}
 
-		[Test]
+		[TestMethod]
 		public void LongPathWithTrailingDirectorySeparator ()
 		{
 			if (!IsWindows) {
-				Assert.Ignore ("MAX_PATH only applies on Windows.");
+				Assert.Inconclusive ("MAX_PATH only applies on Windows.");
 				return;
 			}
 
@@ -121,14 +123,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (3, deletedPaths.Count, "Delete should have been attempted three times.");
 			Assert.AreEqual (Files.ToLongPath (tempDirectory), deletedPaths [1], "Long path should not have a trailing directory separator.");
 			Assert.AreEqual (deletedPaths [1], deletedPaths [2], "Long path should not be prefixed more than once.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 		}
 
-		[Test, Category ("SmokeTests")]
+		[TestMethod]
+		[TestCategory ("SmokeTests")]
 		public void DirectoryInUse ()
 		{
 			if (OS.IsMac) {
-				Assert.Ignore ("This is not an issue on macos.");
+				Assert.Inconclusive ("This is not an issue on macos.");
 				return;
 			}
 			var file = NewFile ();
@@ -136,15 +139,16 @@ namespace Xamarin.Android.Build.Tests
 			using (var f = File.OpenWrite (file)) {
 				Assert.IsFalse (task.Execute (), "task.Execute() should have failed.");
 				Assert.AreEqual (0, task.RemovedDirectories.Length, "Changes should not have been made.");
-				DirectoryAssert.Exists (tempDirectory);
+				Assert.IsTrue (Directory.Exists (tempDirectory));
 			}
 		}
 
-		[Test, Category ("SmokeTests")]
+		[TestMethod]
+		[TestCategory ("SmokeTests")]
 		public async TPL.Task DirectoryInUseWithRetry ()
 		{
 			if (OS.IsMac) {
-				Assert.Ignore ("This is not an issue on macos.");
+				Assert.Inconclusive ("This is not an issue on macos.");
 				return;
 			}
 			var file = NewFile ();
@@ -159,21 +163,21 @@ namespace Xamarin.Android.Build.Tests
 			ev.WaitOne ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 			await t;
 		}
 
-		[Test]
+		[TestMethod]
 		public void CustomRetryAttempts ()
 		{
 			NewFile ();
 			var task = CreateTaskWithRetry (retryAttempts: 3, retryDelayMs: 100);
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 		}
 
-		[Test]
+		[TestMethod]
 		public void DefaultRetryBehavior ()
 		{
 			NewFile ();
@@ -181,14 +185,14 @@ namespace Xamarin.Android.Build.Tests
 			// Verify default behavior still works
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 		}
 
-		[Test]
+		[TestMethod]
 		public async TPL.Task DirectoryInUseWithCustomRetry ()
 		{
 			if (!OS.IsWindows) {
-				Assert.Ignore ("This is not an issue on non-Windows platforms.");
+				Assert.Inconclusive ("This is not an issue on non-Windows platforms.");
 				return;
 			}
 			var file = NewFile ();
@@ -204,7 +208,7 @@ namespace Xamarin.Android.Build.Tests
 			ev.WaitOne ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsFalse (Directory.Exists (tempDirectory));
 			await t;
 		}
 	}

@@ -4,14 +4,15 @@ using System.Linq;
 
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class TrimmableTypeMapIncrementalTests
 {
-	[Test]
+	[TestMethod]
 	public void ChangedCrossAssemblyAliasRegeneratesOwner ()
 	{
 		var owner = CreatePeer ("Owner", "Owner.JavaObject", "java/lang/Object");
@@ -34,7 +35,7 @@ public class TrimmableTypeMapIncrementalTests
 			GetChangedAssemblyNames (initialPeers, changedPeers));
 	}
 
-	[Test]
+	[TestMethod]
 	public void AddingAssemblyRegeneratesItsTypeMapAndRoot ()
 	{
 		var initialPeers = new List<JavaPeerInfo> {

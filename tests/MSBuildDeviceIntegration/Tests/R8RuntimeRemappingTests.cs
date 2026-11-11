@@ -5,17 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class R8RuntimeRemappingTests : DeviceTest
 	{
-		[Test]
+		[TestMethod]
 		public void CoreClrLargeBootstrapStartsInDebug ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
@@ -50,8 +50,8 @@ namespace Xamarin.Android.Build.Tests
 			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			byte [] bootstrap = File.ReadAllBytes (Directory.GetFiles (intermediate, "coreclr-bootstrap.bin",
 				SearchOption.AllDirectories).Single ());
-			Assert.Greater (bootstrap.Length, 64 * 1024);
-			Assert.GreaterOrEqual (BitConverter.ToUInt32 (bootstrap, 20), 5003u,
+			Assert.IsGreaterThan (64 * 1024, bootstrap.Length);
+			Assert.IsGreaterThanOrEqualTo (5003u, BitConverter.ToUInt32 (bootstrap, 20),
 				"The application should retain all 5000 custom properties and three runtime-owned properties.");
 			ClearAdbLogcat ();
 			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
@@ -74,7 +74,7 @@ namespace Xamarin.Android.Build.Tests
 			var trimmingTargets = build.FindChildrenRecursive<Target> (t => t.Name == trimTargetName).ToList ();
 			Assert.IsNotEmpty (trimmingTargets, $"Expected the {trimTargetName} target before R8.");
 			foreach (var trimming in trimmingTargets) {
-				Assert.LessOrEqual (trimming.EndTime, r8 [0].StartTime, "R8 must run after managed trimming/ILC.");
+				Assert.IsLessThanOrEqualTo (r8 [0].StartTime, trimming.EndTime, "R8 must run after managed trimming/ILC.");
 			}
 			var blobTasks = runtime == AndroidRuntime.NativeAOT
 				? build.FindChildrenRecursive<Target> (t => t.Name == "_AndroidGenerateNativeAotR8BinaryBlobs")
@@ -83,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 				: tasks.Where (t => t.Name == "GenerateJniRemappingBinaryBlobs").ToList ();
 			Assert.IsNotEmpty (blobTasks, "Expected binary-blob generation after R8.");
 			foreach (var blob in blobTasks) {
-				Assert.GreaterOrEqual (blob.StartTime, r8 [0].EndTime, "Binary blobs must consume the final R8 mapping.");
+				Assert.IsGreaterThanOrEqualTo (r8 [0].EndTime, blob.StartTime, "Binary blobs must consume the final R8 mapping.");
 			}
 		}
 
@@ -99,7 +99,7 @@ namespace Xamarin.Android.Build.Tests
 				"Updating static data must not recompile managed ILC output.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void NativeAotEmptyExplicitRemappingRuns ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.NativeAOT;
@@ -122,7 +122,7 @@ namespace Xamarin.Android.Build.Tests
 			string sourceManifest = Path.Combine (Root, builder.ProjectDirectory, "Properties", "AndroidManifest.xml");
 			string? package = (string?)XDocument.Load (sourceManifest).Root?.Attribute ("package");
 			Assert.AreEqual (proj.PackageName, package);
-			TestContext.Out.WriteLine ($"Installing fixture package '{package}' from '{sourceManifest}' to '{Environment.GetEnvironmentVariable ("ADB_TARGET")}'.");
+			Console.Out.WriteLine ($"Installing fixture package '{package}' from '{sourceManifest}' to '{Environment.GetEnvironmentVariable ("ADB_TARGET")}'.");
 			Assert.IsTrue (builder.Install (proj));
 			try {
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
@@ -138,10 +138,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true)]
-		[TestCase (AndroidRuntime.NativeAOT, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true)]
+		[DataRow (AndroidRuntime.NativeAOT, false)]
+		[DataRow (AndroidRuntime.NativeAOT, true)]
 		public void ObfuscatedMembersRun (AndroidRuntime runtime, bool compress)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
@@ -278,7 +279,7 @@ namespace Xamarin.Android.Build.Tests
 			string sourceManifest = Path.Combine (Root, builder.ProjectDirectory, "Properties", "AndroidManifest.xml");
 			string? package = (string?)XDocument.Load (sourceManifest).Root?.Attribute ("package");
 			Assert.AreEqual (proj.PackageName, package);
-			TestContext.Out.WriteLine ($"Installing fixture package '{package}' from '{sourceManifest}' to '{Environment.GetEnvironmentVariable ("ADB_TARGET")}'.");
+			Console.Out.WriteLine ($"Installing fixture package '{package}' from '{sourceManifest}' to '{Environment.GetEnvironmentVariable ("ADB_TARGET")}'.");
 			void AssertAppRuns (string logFile)
 			{
 				ClearAdbLogcat ();
@@ -308,7 +309,7 @@ namespace Xamarin.Android.Build.Tests
 						(string) e.Attribute ("target-field-name") != name),
 						$"{runtime} must preserve the exercised field '{name}' to avoid inherited lookup collisions.");
 				}
-				StringAssert.Contains ("-keepclassmembernames class * { <fields>; }",
+				Assert.Contains ("-keepclassmembernames class * { <fields>; }",
 					File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")),
 					$"{runtime} runtime-remapping must preserve field names to avoid inherited lookup collisions.");
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
@@ -326,13 +327,13 @@ namespace Xamarin.Android.Build.Tests
 					runtime == AndroidRuntime.CoreCLR ? "libbinary_blobs.so" : "remapping-data.o", SearchOption.AllDirectories).Single ();
 				byte [] data = File.ReadAllBytes (binaryBlob);
 				int envelope = data.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
-				Assert.GreaterOrEqual (envelope, 0, "The ELF must contain the remapping payload.");
+				Assert.IsGreaterThanOrEqualTo (0, envelope, "The ELF must contain the remapping payload.");
 				Assert.AreEqual (runtime == AndroidRuntime.CoreCLR && compress ? 1 : 0, BitConverter.ToUInt16 (data, envelope + 6),
 					"NativeAOT must ignore the private compression opt-in and read its linked data directly.");
 				if (runtime == AndroidRuntime.NativeAOT) {
 					byte [] bootstrap = File.ReadAllBytes (Directory.GetFiles (intermediate, "nativeaot-bootstrap.o", SearchOption.AllDirectories).Single ());
 					int bootstrapEnvelope = bootstrap.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
-					Assert.GreaterOrEqual (bootstrapEnvelope, 0);
+					Assert.IsGreaterThanOrEqualTo (0, bootstrapEnvelope);
 					Assert.AreEqual (0, BitConverter.ToUInt16 (bootstrap, bootstrapEnvelope + 6),
 						"NativeAOT bootstrap configuration must remain raw even when the CoreCLR compression opt-in is set.");
 				}
@@ -342,7 +343,7 @@ namespace Xamarin.Android.Build.Tests
 				var aaptRules = Path.Combine (intermediate, "aapt_rules.txt");
 				string? originalAaptRules = null;
 				if (runtime == AndroidRuntime.NativeAOT) {
-					FileAssert.Exists (aaptRules);
+					Assert.IsTrue (File.Exists (aaptRules));
 					originalAaptRules = File.ReadAllText (aaptRules);
 				}
 				var blobTimestamp = File.GetLastWriteTimeUtc (binaryBlob);
@@ -356,13 +357,13 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8Remapping"));
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidGenerateNativeAotR8BinaryBlobs"));
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_AndroidLinkNativeAotSharedLibrary"));
-					FileAssert.Exists (aaptRules, "IncrementalClean must retain AAPT keep rules.");
+					Assert.IsTrue (File.Exists (aaptRules), "IncrementalClean must retain AAPT keep rules.");
 					Assert.AreEqual (originalAaptRules, File.ReadAllText (aaptRules));
 
 					File.Delete (aaptRules);
 					Assert.IsTrue (builder.Build (proj), "Missing resource keep rules should be regenerated.");
 					AssertR8Invocations (builder, 1, runtime);
-					FileAssert.Exists (aaptRules);
+					Assert.IsTrue (File.Exists (aaptRules));
 					Assert.AreEqual (originalAaptRules, File.ReadAllText (aaptRules));
 					Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreateBaseApk"));
 				}
@@ -373,7 +374,7 @@ namespace Xamarin.Android.Build.Tests
 				File.Delete (binaryBlob);
 				Assert.IsTrue (builder.Build (proj), "A missing binary-blob library should be regenerated.");
 				AssertR8Invocations (builder, 0, runtime);
-				FileAssert.Exists (binaryBlob);
+				Assert.IsTrue (File.Exists (binaryBlob));
 				CollectionAssert.AreEqual (data, File.ReadAllBytes (binaryBlob), "Recovery must reproduce the same remapping payload.");
 				Assert.IsFalse (builder.Output.IsTargetSkipped (blobTarget));
 				AssertDataOnlyNativeWork (builder, runtime);
@@ -381,12 +382,12 @@ namespace Xamarin.Android.Build.Tests
 					Assert.AreEqual (ilcTimestamp, File.GetLastWriteTimeUtc (ilcObject), "Recovering the data library must not recompile IL.");
 
 				var finalMapping = Path.Combine (intermediate, "r8-jni-final-mapping.txt");
-				FileAssert.Exists (finalMapping);
+				Assert.IsTrue (File.Exists (finalMapping));
 				File.Delete (finalMapping);
 				Assert.IsTrue (builder.Build (proj), "A missing final mapping must rerun R8, not reuse stale tables.");
 				AssertR8Invocations (builder, 1, runtime);
-				FileAssert.Exists (finalMapping);
-				FileAssert.Exists (binaryBlob);
+				Assert.IsTrue (File.Exists (finalMapping));
+				Assert.IsTrue (File.Exists (binaryBlob));
 				Assert.IsFalse (builder.Output.IsTargetSkipped (blobTarget));
 				AssertDataOnlyNativeWork (builder, runtime);
 				CollectionAssert.AreEqual (data, File.ReadAllBytes (binaryBlob));
@@ -412,7 +413,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidR8ObfuscationMode", "disabled");
 				Assert.IsTrue (builder.Install (proj), "Disabling obfuscation should rebuild and install the baseline.");
 				AssertR8Invocations (builder, 1, runtime, obfuscationEnabled: false);
-				StringAssert.Contains ("-dontobfuscate", File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
+				Assert.Contains ("-dontobfuscate", File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));
 				using (var apk = ZipFile.OpenRead (Path.Combine (Root, builder.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
 					Assert.AreEqual (runtime == AndroidRuntime.CoreCLR,

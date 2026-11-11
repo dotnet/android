@@ -1,14 +1,15 @@
 #nullable enable
 
 using Microsoft.Android.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class BuildAppBundleTests
 	{
-		[Test]
+		[TestMethod]
 		public void BuildAppBundleCommand ()
 		{
 			var task = new BuildAppBundle {

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests;
@@ -26,7 +26,7 @@ static class TypeMapProguardNativeObject
 	{
 		string clang = ToolPath ("clang");
 		if (!File.Exists (LlvmReadObjPath) || !File.Exists (LlvmObjDumpPath) || !File.Exists (clang)) {
-			Assert.Ignore ("Set _NativeAotLlvmReadObjPath to the NDK llvm-readobj executable with adjacent llvm-objdump and clang to run native-object integration tests.");
+			Assert.Inconclusive ("Set _NativeAotLlvmReadObjPath to the NDK llvm-readobj executable with adjacent llvm-objdump and clang to run native-object integration tests.");
 		}
 
 		string objectPath = Path.ChangeExtension (Path.Combine (directory, name), ".o");

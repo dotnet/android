@@ -10,38 +10,39 @@ using System.Xml.Linq;
 using ELFSharp.ELF;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class NativeAotBootstrapTargetsTests : BaseTest
 {
 	static string TargetsPath => Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
 		"src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.NativeAOT.targets");
 
-	[Test]
+	[TestMethod]
 	public void CoreClrBootstrapGenerationIsIndependentOfPackageManagerJava ()
 	{
 		string root = NativeAotBootstrapTestTools.FindRepositoryRoot ();
 		var common = XDocument.Load (Path.Combine (root, "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
 		var bootstrap = common.Descendants ().Single (element =>
 			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_AndroidGenerateCoreClrBootstrap");
-		StringAssert.Contains ("'$(_AndroidRuntime)' == 'CoreCLR'", (string?)bootstrap.Attribute ("Condition"));
+		Assert.Contains ("'$(_AndroidRuntime)' == 'CoreCLR'", (string?)bootstrap.Attribute ("Condition"));
 		var bootstrapTask = bootstrap.Elements ().Single (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources");
 		Assert.IsNull (bootstrapTask.Attribute ("MSBuildRuntime"));
 		var usingTasks = common.Descendants ().Where (element =>
 			element.Name.LocalName == "UsingTask" &&
 			(string?)element.Attribute ("TaskName") == "Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources").ToArray ();
 		Assert.AreEqual (2, usingTasks.Length);
-		Assert.That (usingTasks.Select (u => (string?)u.Attribute ("AssemblyFile")), Is.All.EqualTo ("$(_MicrosoftAndroidBuildTasksAssembly)"));
-		Assert.That (usingTasks.Select (u => (string?)u.Attribute ("Runtime")), Is.All.EqualTo ("NET"));
+		Assert.IsTrue (usingTasks.Select (u => (string?)u.Attribute ("AssemblyFile")).All (v => v == "$(_MicrosoftAndroidBuildTasksAssembly)"));
+		Assert.IsTrue (usingTasks.Select (u => (string?)u.Attribute ("Runtime")).All (v => v == "NET"));
 		var fullUsingTask = usingTasks.Single (u => (string?)u.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Full' ");
 		Assert.AreEqual ("TaskHostFactory", (string?)fullUsingTask.Attribute ("TaskFactory"));
 		var coreUsingTask = usingTasks.Single (u => (string?)u.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Core' ");
 		Assert.IsNull (coreUsingTask.Attribute ("TaskFactory"));
 		var taskAssembly = common.Descendants ().Single (element => element.Name.LocalName == "_AndroidCoreClrBootstrapTaskAssembly");
-		StringAssert.Contains ("$(_MicrosoftAndroidBuildTasksAssembly)", taskAssembly.Value);
+		Assert.Contains ("$(_MicrosoftAndroidBuildTasksAssembly)", taskAssembly.Value);
 		var java = common.Descendants ().Single (element =>
 			element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == "_GeneratePackageManagerJava");
 		Assert.IsFalse (java.Elements ().Any (element => element.Name.LocalName == "GenerateNativeApplicationConfigSources"));
@@ -49,13 +50,14 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		foreach (string target in new [] { "_AndroidGenerateBinaryBlobsInputs", "_AndroidGenerateR8BinaryBlobsInputs" }) {
 			string dependencies = (string?)remapping.Descendants ().Single (element =>
 				element.Name.LocalName == "Target" && (string?)element.Attribute ("Name") == target).Attribute ("DependsOnTargets") ?? "";
-			StringAssert.Contains ("_AndroidGenerateCoreClrBootstrap", dependencies);
-			StringAssert.DoesNotContain ("_GeneratePackageManagerJava", dependencies);
+			Assert.Contains ("_AndroidGenerateCoreClrBootstrap", dependencies);
+			Assert.DoesNotContain ("_GeneratePackageManagerJava", dependencies);
 		}
 	}
 
-	[TestCase ("NativeAOT", 0)]
-	[TestCase ("CoreCLR", 1)]
+	[TestMethod]
+	[DataRow ("NativeAOT", 0)]
+	[DataRow ("CoreCLR", 1)]
 	public void OnlyCoreClrConfigurationTracksEnvironmentInLegacyJavaTarget (string runtime, int expectedCount)
 	{
 		string path = Path.Combine (Root, "temp", TestName);
@@ -86,7 +88,7 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			"NativeAOT must still receive the environment input for its binary data-object generator.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void OptionalDataObjectsInvalidateFailedWritesAndOmitEmptyMappings ()
 	{
 		string path = Path.Combine (Root, "temp", TestName);
@@ -96,7 +98,7 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		string stamp = Path.Combine (path, "remap.stamp");
 		File.WriteAllText (xml, """<replacements><replace-type from="example/Original" to="example/Replacement" /></replacements>""");
 		var task = new GenerateNativeAotDataObject {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			Abi = "arm64-v8a",
 			OutputFile = output,
 			CompletionStamp = stamp,
@@ -105,10 +107,10 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		};
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("true", File.ReadAllText (stamp));
-		FileAssert.Exists (output);
+		Assert.IsTrue (File.Exists (output));
 		ReadOnlySpan<byte> symbols = File.ReadAllBytes (output);
-		Assert.GreaterOrEqual (symbols.IndexOf (Encoding.ASCII.GetBytes ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "\0")), 0);
-		Assert.GreaterOrEqual (symbols.IndexOf (Encoding.ASCII.GetBytes ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "_size\0")), 0);
+		Assert.IsGreaterThanOrEqualTo (0, symbols.IndexOf (Encoding.ASCII.GetBytes ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "\0")));
+		Assert.IsGreaterThanOrEqualTo (0, symbols.IndexOf (Encoding.ASCII.GetBytes ("\0" + GenerateNativeAotDataObject.RemappingSymbol + "_size\0")));
 		Assert.AreEqual (-1, symbols.IndexOf (Encoding.ASCII.GetBytes ("\0remapping_data\0")),
 			"The static NativeAOT object must not use CoreCLR's dynamic lookup symbol.");
 		using (IELF elf = ELFReader.Load (output)) {
@@ -118,20 +120,20 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		File.WriteAllText (xml, "<replacements />");
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual ("false", File.ReadAllText (stamp));
-		FileAssert.DoesNotExist (output, "Semantic empty data must not define optional symbols.");
+		Assert.IsFalse (File.Exists (output), "Semantic empty data must not define optional symbols.");
 		File.WriteAllText (output, "stale object");
 		File.WriteAllText (xml, "<broken>");
 		Assert.IsFalse (task.Execute ());
-		FileAssert.DoesNotExist (stamp, "Malformed data cannot leave an up-to-date absence stamp.");
-		FileAssert.DoesNotExist (output);
+		Assert.IsFalse (File.Exists (stamp), "Malformed data cannot leave an up-to-date absence stamp.");
+		Assert.IsFalse (File.Exists (output));
 	}
 
-	[Test]
-	[Platform ("MacOsX,Linux")]
+	[TestMethod]
+	[OSCondition (OperatingSystems.OSX | OperatingSystems.Linux)]
 	public void FailedDataObjectCleanupUsesCodedErrors ()
 	{
 		if (OperatingSystem.IsWindows ()) {
-			Assert.Ignore ("This regression requires Unix file permissions.");
+			Assert.Inconclusive ("This regression requires Unix file permissions.");
 			return;
 		}
 		string path = Path.Combine (Root, "temp", TestName);
@@ -143,7 +145,7 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		File.WriteAllText (stamp, "true");
 		var errors = new List<BuildErrorEventArgs> ();
 		GenerateNativeAotDataObject CreateTask () => new () {
-			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			BuildEngine = new MockBuildEngine (Console.Out, errors),
 			Abi = "arm64-v8a",
 			OutputFile = output,
 			CompletionStamp = stamp,
@@ -156,9 +158,9 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			File.SetUnixFileMode (outputDirectory, directoryPermissions & ~WritePermissions);
 			Assert.IsFalse (CreateTask ().Execute ());
 			Assert.AreEqual (2, errors.Count, "Both the write failure and cleanup failure must be reported.");
-			Assert.That (errors.Select (error => error.Code), Is.All.EqualTo ("XA4325"),
+			Assert.IsTrue (errors.All (error => error.Code == "XA4325"),
 				"Cleanup must not escape as a generic task exception.");
-			FileAssert.DoesNotExist (stamp, "A failed write must invalidate the completion stamp even when output cleanup fails.");
+			Assert.IsFalse (File.Exists (stamp), "A failed write must invalidate the completion stamp even when output cleanup fails.");
 			Assert.AreEqual ("stale object", File.ReadAllText (output));
 		} finally {
 			File.SetUnixFileMode (outputDirectory, directoryPermissions);
@@ -172,7 +174,7 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.AreEqual (FileType.Relocatable, elf.Type);
 	}
 
-	[Test]
+	[TestMethod]
 	public void GeneratedProvidersStayContainedAndIncremental ()
 	{
 		string path = Path.Combine (Root, "temp", TestName);
@@ -228,10 +230,10 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
 		var first = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles;_AndroidGenerateNativeAotBootstrapObject", "-getItem:FileWrites", "-v:quiet", "-nr:false");
 		Assert.AreEqual (0, first.ExitCode, first.Output + first.Error);
-		FileAssert.DoesNotExist (legacySource, "An upgraded intermediate directory must not retain Java configuration for obsolete environment values.");
+		Assert.IsFalse (File.Exists (legacySource), "An upgraded intermediate directory must not retain Java configuration for obsolete environment values.");
 		string sourceFile = Path.Combine (sourceDirectory, "JavaInteropRuntime.java");
 		string objectFile = Path.Combine (path, "native", "data", "nativeaot-bootstrap.o");
-		FileAssert.Exists (objectFile);
+		Assert.IsTrue (File.Exists (objectFile));
 		DateTime objectTimestamp = File.GetLastWriteTimeUtc (objectFile);
 		DateTime timestamp = File.GetLastWriteTimeUtc (sourceFile);
 		using (var result = JsonDocument.Parse (first.Output)) {
@@ -250,14 +252,14 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		}
 		CollectionAssert.AreEquivalent (
 			new [] { "JavaInteropRuntime.java", "NativeAotRuntimeProvider_1.java", "NativeAotRuntimeProvider_12.java" },
-			Directory.GetFiles (path, "*.java", SearchOption.AllDirectories).Select (Path.GetFileName));
-		StringAssert.Contains ("class NativeAotRuntimeProvider_12", File.ReadAllText (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_12.java")));
+			Directory.GetFiles (path, "*.java", SearchOption.AllDirectories).Select (Path.GetFileName).ToArray ());
+		Assert.Contains ("class NativeAotRuntimeProvider_12", File.ReadAllText (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_12.java")));
 
 		var second = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles;_AndroidGenerateNativeAotBootstrapObject", "-v:quiet", "-nr:false");
 		Assert.AreEqual (0, second.ExitCode, second.Output + second.Error);
 		Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (sourceFile), "A no-op build must skip the source generator.");
 		Assert.AreEqual (objectTimestamp, File.GetLastWriteTimeUtc (objectFile), "A no-op build must skip the data-object generator.");
-		FileAssert.DoesNotExist (legacySource);
+		Assert.IsFalse (File.Exists (legacySource));
 
 		var compressionOptIn = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile,
 			"-t:_FindJavaStubFiles;_AndroidGenerateNativeAotBootstrapObject", "-p:_AndroidR8CompressBinaryBlobs=true", "-v:quiet", "-nr:false");
@@ -278,13 +280,13 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		File.Delete (objectFile);
 		var missingObject = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_AndroidGenerateNativeAotBootstrapObject", "-v:quiet", "-nr:false");
 		Assert.AreEqual (0, missingObject.ExitCode, missingObject.Output + missingObject.Error);
-		FileAssert.Exists (objectFile);
+		Assert.IsTrue (File.Exists (objectFile));
 
 		string providerFile = Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_1.java");
 		File.Delete (providerFile);
 		var missingProvider = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
 		Assert.AreEqual (0, missingProvider.ExitCode, missingProvider.Output + missingProvider.Error);
-		FileAssert.Exists (providerFile, "Provider names must be recovered even when the typemap generator is skipped.");
+		Assert.IsTrue (File.Exists (providerFile), "Provider names must be recovered even when the typemap generator is skipped.");
 
 	}
 }

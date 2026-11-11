@@ -7,14 +7,13 @@ using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class GenerateTrimmableTypeMapTests : BaseTest {
 
-		[Test]
+		[TestMethod]
 		public void AssemblyQualifiedApplicationTypeReferencesSelectCorrectPeer ()
 		{
 			var wrongPeer = new JavaPeerInfo {
@@ -50,9 +49,10 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("expected.Agent", (string?)application.Attribute (android + "backupAgent"));
 		}
 
-		[TestCase ("GetZzaHandler")]
-		[TestCase ("")]
-		[TestCase (null)]
+		[TestMethod]
+		[DataRow ("GetZzaHandler")]
+		[DataRow ("")]
+		[DataRow (null)]
 		public void RegisteredMethodsDoNotRequireJavaOverrides (string? connector)
 		{
 			var peer = new JavaPeerInfo {
@@ -78,24 +78,25 @@ namespace Xamarin.Android.Build.Tests {
 			new JcwJavaSourceGenerator ().Generate (peer, writer);
 			var java = writer.ToString ();
 
-			StringAssert.Contains ("example.ListenerInterface", java);
-			StringAssert.Contains ("public void zza (java.lang.String p0)", java);
-			StringAssert.Contains ("n_zza (p0);", java);
-			StringAssert.Contains ("public native void n_zza (java.lang.String p0);", java);
-			StringAssert.DoesNotContain ("@Override", java,
+			Assert.Contains ("example.ListenerInterface", java);
+			Assert.Contains ("public void zza (java.lang.String p0)", java);
+			Assert.Contains ("n_zza (p0);", java);
+			Assert.Contains ("public native void n_zza (java.lang.String p0);", java);
+			Assert.DoesNotContain ("@Override", java,
 				"A registered compatibility method can exist only in the managed interface, not its Java counterpart.");
 		}
 
-		[TestCase ("method", true, false)]
-		[TestCase ("method", true, true)]
-		[TestCase ("constructor", true, false)]
-		[TestCase ("constructor", true, true)]
-		[TestCase ("register", false, false)]
-		[TestCase ("register", false, true)]
-		[TestCase ("binding", false, false)]
-		[TestCase ("binding", false, true)]
-		[TestCase ("interface", false, false)]
-		[TestCase ("interface", false, true)]
+		[TestMethod]
+		[DataRow ("method", true, false)]
+		[DataRow ("method", true, true)]
+		[DataRow ("constructor", true, false)]
+		[DataRow ("constructor", true, true)]
+		[DataRow ("register", false, false)]
+		[DataRow ("register", false, true)]
+		[DataRow ("binding", false, false)]
+		[DataRow ("binding", false, true)]
+		[DataRow ("interface", false, false)]
+		[DataRow ("interface", false, true)]
 		public void ExplicitExportsAreUnconditionalEntries (string shape, bool unconditional, bool alias)
 		{
 			var peer = new JavaPeerInfo {
@@ -155,14 +156,15 @@ namespace Xamarin.Android.Build.Tests {
 				"Only unconditional entries should use the rooting two-argument TypeMap attribute.");
 		}
 
-		[TestCase (false, false, false)]
-		[TestCase (false, false, true)]
-		[TestCase (false, true, false)]
-		[TestCase (false, true, true)]
-		[TestCase (true, false, false)]
-		[TestCase (true, false, true)]
-		[TestCase (true, true, false)]
-		[TestCase (true, true, true)]
+		[TestMethod]
+		[DataRow (false, false, false)]
+		[DataRow (false, false, true)]
+		[DataRow (false, true, false)]
+		[DataRow (false, true, true)]
+		[DataRow (true, false, false)]
+		[DataRow (true, false, true)]
+		[DataRow (true, true, false)]
+		[DataRow (true, true, true)]
 		public void ConstructorCallbacksMatchJavaCallSites (bool isAbstract, bool deferred, bool hasCallback)
 		{
 			var constructor = new MarshalMethodInfo {
@@ -201,11 +203,11 @@ namespace Xamarin.Android.Build.Tests {
 			using var writer = new StringWriter ();
 			new JcwJavaSourceGenerator ().Generate (peer, writer);
 			var java = writer.ToString ();
-			StringAssert.Contains ("public Peer ()", java);
-			StringAssert.Contains ("super ();", java);
-			StringAssert.Contains ("mono.android.IGCUserPeer", java);
-			StringAssert.Contains ("private java.util.ArrayList refList;", java);
-			StringAssert.DoesNotContain ("__md_methods", java);
+			Assert.Contains ("public Peer ()", java);
+			Assert.Contains ("super ();", java);
+			Assert.Contains ("mono.android.IGCUserPeer", java);
+			Assert.Contains ("private java.util.ArrayList refList;", java);
+			Assert.DoesNotContain ("__md_methods", java);
 
 			bool hasNativeConstructor = !isAbstract && !deferred;
 			Assert.AreEqual (hasNativeConstructor, java.Contains ("if (getClass () == Peer.class) nctor_0 ();", StringComparison.Ordinal));
@@ -223,7 +225,7 @@ namespace Xamarin.Android.Build.Tests {
 				? (hasCallback ? ["nctor_0", "n_onCallback"] : ["nctor_0"])
 				: (hasCallback ? ["n_onCallback"] : []);
 			CollectionAssert.AreEquivalent (expectedRegistrations,
-				proxy.NativeRegistrations.Select (registration => registration.JniMethodName));
+				proxy.NativeRegistrations.Select (registration => registration.JniMethodName).ToArray ());
 			Assert.IsNotNull (proxy.ActivationCtor, "Managed peer creation must retain its activation constructor.");
 
 			using var stream = new MemoryStream ();
@@ -242,10 +244,10 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.AreEqual ("Android.Runtime.AndroidEnvironment", unhandledException.DeclaringType.FullName);
 				Assert.AreEqual ("Mono.Android", unhandledException.DeclaringType.Scope.Name);
 			}
-			TestContext.Out.WriteLine ($"abstract={isAbstract}, deferred={deferred}, callback={hasCallback}: Java nctor={hasNativeConstructor}, native registrations=[{string.Join (", ", proxy.NativeRegistrations.Select (registration => registration.JniMethodName))}]");
+			Console.Out.WriteLine ($"abstract={isAbstract}, deferred={deferred}, callback={hasCallback}: Java nctor={hasNativeConstructor}, native registrations=[{string.Join (", ", proxy.NativeRegistrations.Select (registration => registration.JniMethodName))}]");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_EmptyAssemblyList_Succeeds ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -259,12 +261,12 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsEmpty (task.GeneratedJavaFiles);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_RelativePathsUseTaskDirectory ()
 		{
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -295,12 +297,12 @@ namespace Xamarin.Android.Build.Tests {
 				first.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
 
 				Assert.IsTrue (first.Execute ());
-				CollectionAssert.AreEqual (first.GeneratedAssemblies.Select (item => item.ItemSpec),
+				CollectionAssert.AreEqual (first.GeneratedAssemblies.Select (item => item.ItemSpec).ToArray (),
 					File.ReadAllLines (Path.Combine (directory, first.GeneratedAssembliesListFile)));
 				Assert.IsTrue (first.GeneratedAssemblies.All (item => !Path.IsPathRooted (item.ItemSpec)));
-				FileAssert.Exists (Path.Combine (directory, first.AcwMapOutputFile));
-				FileAssert.Exists (Path.Combine (directory, first.ApplicationRegistrationOutputFile));
-				StringAssert.Contains ($"Project{i}", File.ReadAllText (Path.Combine (directory, first.MergedAndroidManifestOutput)));
+				Assert.IsTrue (File.Exists (Path.Combine (directory, first.AcwMapOutputFile)));
+				Assert.IsTrue (File.Exists (Path.Combine (directory, first.ApplicationRegistrationOutputFile)));
+				Assert.Contains ($"Project{i}", File.ReadAllText (Path.Combine (directory, first.MergedAndroidManifestOutput)));
 				using (var typeMap = Mono.Cecil.AssemblyDefinition.ReadAssembly (Path.Combine (directory, output, "_Mono.Android.TypeMap.dll"))) {
 					var view = typeMap.CustomAttributes.Single (attribute =>
 						attribute.AttributeType.Name == "TypeMapAttribute`1" &&
@@ -326,15 +328,15 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.IsTrue (second.Execute ());
 				Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: unchanged, skipping emission", StringComparison.Ordinal) == true));
 				var copiedPath = Path.Combine (directory, linkedJava, Path.GetRelativePath (java, javaItem.ItemSpec));
-				StringAssert.Contains ("// copied input", File.ReadAllText (copiedPath));
-				FileAssert.DoesNotExist (stalePath);
+				Assert.Contains ("// copied input", File.ReadAllText (copiedPath));
+				Assert.IsFalse (File.Exists (stalePath));
 				var deleted = second.DeletedJavaFiles.Single ();
 				Assert.AreEqual (stalePath, deleted.ItemSpec);
 				Assert.AreEqual (staleRelativePath, deleted.GetMetadata ("RelativePath"));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_InvalidTargetFrameworkVersion_Fails ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -343,7 +345,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new GenerateTrimmableTypeMap {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors),
 				ResolvedAssemblies = [],
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
@@ -354,7 +356,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotEmpty (errors, "Should have logged an error.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void LoadCustomViewTypeNames_ParsesKeysAndIgnoresBlankLines ()
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
@@ -364,10 +366,10 @@ namespace Xamarin.Android.Build.Tests {
 
 			var typeNames = GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile);
 
-			CollectionAssert.AreEquivalent (new [] { "Example.View", "Other.View" }, typeNames);
+			CollectionAssert.AreEquivalent (new [] { "Example.View", "Other.View" }, typeNames.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void LoadCustomViewTypeNames_InvalidEntryThrows ()
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
@@ -375,12 +377,12 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.CreateDirectory (directory);
 			File.WriteAllText (mapFile, "invalid");
 
-			var exception = Assert.Throws<InvalidDataException> (() => GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile));
+			var exception = Assert.ThrowsExactly<InvalidDataException> (() => GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile));
 
-			StringAssert.Contains ("Invalid custom view map entry 'invalid'", exception?.Message);
+			Assert.Contains ("Invalid custom view map entry 'invalid'", exception?.Message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_WithMonoAndroid_ProducesOutputs ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -389,7 +391,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -406,11 +408,11 @@ namespace Xamarin.Android.Build.Tests {
 				"Should produce _Mono.Android.TypeMap.dll");
 
 			foreach (var assembly in task.GeneratedAssemblies) {
-				FileAssert.Exists (assembly.ItemSpec);
+				Assert.IsTrue (File.Exists (assembly.ItemSpec));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_SecondRun_OutputsAreUpToDate ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -419,7 +421,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -446,7 +448,7 @@ namespace Xamarin.Android.Build.Tests {
 				"Second run should skip typemap PE emission based on the persisted model fingerprint.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_MissingTypeMapAssembly_RegeneratesWithMatchingFingerprint ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -455,7 +457,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -472,12 +474,12 @@ namespace Xamarin.Android.Build.Tests {
 			var task2 = CreateTask (assemblies, outputDir, javaDir, messages: messages);
 			Assert.IsTrue (task2.Execute (), "Second run should recover the missing typemap assembly.");
 
-			FileAssert.Exists (typeMapPath, "A missing typemap assembly should be regenerated even when its persisted fingerprint matches.");
+			Assert.IsTrue (File.Exists (typeMapPath), "A missing typemap assembly should be regenerated even when its persisted fingerprint matches.");
 			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: changed, generating", StringComparison.Ordinal) == true),
 				"A missing typemap assembly should be reported as changed rather than unchanged.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReadTypeMapFingerprints_UnreadableCache_Regenerates ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -493,7 +495,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An unreadable incremental cache should regenerate every typemap assembly.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReadTypeMapFingerprints_InvalidCache_Regenerates ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -506,7 +508,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An invalid incremental cache should regenerate every typemap assembly.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_MissingJavaSource_DoesNotPruneExistingOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -516,7 +518,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -542,10 +544,10 @@ namespace Xamarin.Android.Build.Tests {
 
 			Assert.IsFalse (secondTask.Execute (), "The missing pre-trim Java source should fail with XA4255.");
 			Assert.IsTrue (errors.Any (e => e.Code == "XA4255"), "The task should report the missing Java source.");
-			FileAssert.Exists (existingOutput, "A failing in-place update should preserve the last known-good linked Java source.");
+			Assert.IsTrue (File.Exists (existingOutput), "A failing in-place update should preserve the last known-good linked Java source.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_WritesGeneratedAssembliesListFile ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -556,7 +558,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -574,7 +576,7 @@ namespace Xamarin.Android.Build.Tests {
 			CollectionAssert.DoesNotContain (listedAssemblies, staleAssembly);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_GeneratesFrameworkJcws ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -583,7 +585,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -610,9 +612,10 @@ namespace Xamarin.Android.Build.Tests {
 				Path.Combine (javaDir, "android/app/Activity.java"));
 		}
 
-		[TestCase ("v11.0")]
-		[TestCase ("v10.0")]
-		[TestCase ("11.0")]
+		[TestMethod]
+		[DataRow ("v11.0")]
+		[DataRow ("v10.0")]
+		[DataRow ("11.0")]
 		public void Execute_ParsesTargetFrameworkVersion (string tfv)
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -623,7 +626,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (task.Execute (), $"Task should succeed with TargetFrameworkVersion='{tfv}'.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_ManifestPlaceholdersAreResolvedForRooting ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -636,7 +639,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var monoAndroidItem = FindMonoAndroidDll ();
 			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				Assert.Inconclusive ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
@@ -664,13 +667,13 @@ namespace Xamarin.Android.Build.Tests {
 			task.ManifestPlaceholders = "applicationId=android.app";
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
-			FileAssert.Exists (applicationRegistration);
+			Assert.IsTrue (File.Exists (applicationRegistration));
 
 			var registrationText = File.ReadAllText (applicationRegistration);
-			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Application.class);", registrationText);
-			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Instrumentation.class);", registrationText);
-			StringAssert.DoesNotContain ("android.test.InstrumentationTestRunner.class", registrationText);
-			StringAssert.DoesNotContain ("android.test.mock.MockApplication.class", registrationText);
+			Assert.Contains ("mono.android.Runtime.registerNatives (android.app.Application.class);", registrationText);
+			Assert.Contains ("mono.android.Runtime.registerNatives (android.app.Instrumentation.class);", registrationText);
+			Assert.DoesNotContain ("android.test.InstrumentationTestRunner.class", registrationText);
+			Assert.DoesNotContain ("android.test.mock.MockApplication.class", registrationText);
 			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
 		}
 
@@ -679,7 +682,7 @@ namespace Xamarin.Android.Build.Tests {
 			IList<BuildErrorEventArgs>? errors = null, string tfv = "v11.0")
 		{
 			return new GenerateTrimmableTypeMap {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors, warnings: warnings, messages: messages),
+				BuildEngine = new MockBuildEngine (Console.Out, errors: errors, warnings: warnings, messages: messages),
 				ResolvedAssemblies = assemblies,
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,

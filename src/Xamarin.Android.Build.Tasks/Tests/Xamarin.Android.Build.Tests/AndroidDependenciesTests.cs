@@ -6,7 +6,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -20,13 +21,13 @@ using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class AndroidDependenciesTests : BaseTest
 	{
-		[Test]
-		[NonParallelizable] // Do not run environment modifying tests in parallel.
-		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize] // Do not run environment modifying tests in parallel.
+		public void InstallAndroidDependenciesTest ([CombinatorialValues ("GoogleV2", "Xamarin")] string manifestType, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -36,7 +37,7 @@ namespace Xamarin.Android.Build.Tests
 			// The GoogleV2 manifest from Google doesn't have an ndk-bundle component,
 			// so the NDK dependency can't be resolved for runtimes that require it.
 			if (manifestType == "GoogleV2" && runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("GoogleV2 manifest does not have an ndk-bundle component for NativeAOT");
+				Assert.Inconclusive ("GoogleV2 manifest does not have an ndk-bundle component for NativeAOT");
 			}
 			if (manifestType == "GoogleV2") {
 				InstallGoogleV2Dependencies ();
@@ -112,7 +113,7 @@ namespace Xamarin.Android.Build.Tests
 							break;
 						}
 
-						TestContext.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in 'install-deps.log'.");
+						Console.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in 'install-deps.log'.");
 						if (attempt < maxInstallAttempts)
 							Thread.Sleep (TimeSpan.FromSeconds (10));
 					}
@@ -122,9 +123,9 @@ namespace Xamarin.Android.Build.Tests
 					var revisionProperty = File.ReadLines (sourceProperties)
 						.First (line => line.StartsWith ("Pkg.Revision", StringComparison.Ordinal));
 					int separator = revisionProperty.IndexOf ('=');
-					Assert.GreaterOrEqual (separator, 0, "The command-line tools revision property should contain a value.");
+					Assert.IsGreaterThanOrEqualTo (0, separator, "The command-line tools revision property should contain a value.");
 					var installedRevision = Version.Parse (revisionProperty.Substring (separator + 1).Trim ());
-					Assert.Greater (installedRevision.CompareTo (outdatedCommandLineToolsRevision), 0, "The outdated command-line tools installation should have been updated.");
+					Assert.IsGreaterThan (0, installedRevision.CompareTo (outdatedCommandLineToolsRevision), "The outdated command-line tools installation should have been updated.");
 
 					// When dependencies can not be resolved/installed a warning will be present in build output:
 					//    Dependency `platform-tools` should have been installed but could not be resolved.
@@ -203,8 +204,8 @@ namespace Xamarin.Android.Build.Tests
 
 			var installationSet = installer.GetInstallationSet (sdk, components);
 			CollectionAssert.AreEquivalent (
-				requested.Select (dependency => dependency.path).Append (GoogleV2Fixture.FixtureDependencyPath),
-				installationSet.Select (component => component.Path),
+				requested.Select (dependency => dependency.path).Append (GoogleV2Fixture.FixtureDependencyPath).ToArray (),
+				installationSet.Select (component => component.Path).ToArray (),
 				"The installation set should contain direct and transitive GoogleV2 dependencies.");
 
 			var downloads = installer.GetDownloadItems (installationSet);
@@ -482,11 +483,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, false, true, true)]
-		[TestCase (AndroidRuntime.NativeAOT, true, false, true)]
-		[TestCase (AndroidRuntime.NativeAOT, false, false, false)]
-		[TestCase (AndroidRuntime.NativeAOT, false, true, true)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR, false, false, false)]
+		[DataRow (AndroidRuntime.CoreCLR, false, true, true)]
+		[DataRow (AndroidRuntime.NativeAOT, true, false, true)]
+		[DataRow (AndroidRuntime.NativeAOT, false, false, false)]
+		[DataRow (AndroidRuntime.NativeAOT, false, true, true)]
 		public void NdkDependencyUsesEffectiveRuntime (AndroidRuntime runtime, bool isRelease, bool stripNativeLibraries, bool ndkRequired)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -514,8 +516,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void GetDependencyWhenBuildToolsAreMissingTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void GetDependencyWhenBuildToolsAreMissingTest ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -542,7 +545,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
-				Assert.True (builder.Build (proj, parameters: parameters),
+				Assert.IsTrue (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains (
@@ -554,8 +557,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void GetDependencyWhenSDKIsMissingTest ([Values] bool createSdkDirectory, [Values] bool installJavaDeps, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void GetDependencyWhenSDKIsMissingTest (bool createSdkDirectory, bool installJavaDeps, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -588,7 +592,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
-				Assert.True (builder.Build (proj, parameters: parameters),
+				Assert.IsTrue (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains (

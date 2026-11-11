@@ -7,17 +7,18 @@ using System.Reflection.PortableExecutable;
 
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class TrimmableTypeMapRidCallbackTests
 {
 	const string Arm64Path = "/packages/runtimes/android-arm64/lib/net11.0-android/RidSpecificCallbacks.dll";
 	const string X64Path = "/packages/runtimes/android-x64/lib/net11.0-android/RidSpecificCallbacks.dll";
 
-	[Test]
+	[TestMethod]
 	public void EquivalentRidSpecificUcoCallbacksAreAccepted ()
 	{
 		using var arm64Assembly = CreateCallbackAssembly (includeCallback: true);
@@ -32,7 +33,7 @@ public class TrimmableTypeMapRidCallbackTests
 		]));
 	}
 
-	[Test]
+	[TestMethod]
 	public void DifferentRidSpecificUcoCallbacksAreRejected ()
 	{
 		using var arm64Assembly = CreateCallbackAssembly (includeCallback: true);
@@ -41,13 +42,13 @@ public class TrimmableTypeMapRidCallbackTests
 		using var x64 = new PEReader (x64Assembly);
 		using var scanner = new JavaPeerScanner ();
 
-		var error = Assert.Throws<InvalidOperationException> (() => scanner.Scan ([
+		var error = Assert.ThrowsExactly<InvalidOperationException> (() => scanner.Scan ([
 			new AssemblyInput ("RidSpecificCallbacks", Arm64Path, arm64),
 			new AssemblyInput ("RidSpecificCallbacks", X64Path, x64),
 		]));
-		StringAssert.Contains ("different Java peer callback metadata", error.Message);
-		StringAssert.Contains (Arm64Path, error.Message);
-		StringAssert.Contains (X64Path, error.Message);
+		Assert.Contains ("different Java peer callback metadata", error.Message);
+		Assert.Contains (Arm64Path, error.Message);
+		Assert.Contains (X64Path, error.Message);
 	}
 
 	static MemoryStream CreateCallbackAssembly (bool includeCallback)
