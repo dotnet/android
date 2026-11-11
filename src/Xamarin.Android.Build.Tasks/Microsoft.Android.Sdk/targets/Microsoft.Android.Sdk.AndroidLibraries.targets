@@ -81,43 +81,44 @@ projects.
         ResourceName="XA1041"
         FormatArguments="MonoAndroidAssetsPrefix;$(MonoAndroidAssetsPrefix)"
     />
-    <!-- Mirrors AndroidRidAbiHelper.GetNativeLibraryAbi. -->
-    <PropertyGroup>
-      <_AarArchFromRidPattern>(?i)^android.*-(arm64|arm|x86|x64)$|.*</_AarArchFromRidPattern>
-      <!-- Replacing with "$1$2$3" yields the first match, or an empty string. -->
-      <_AarArchFromPathPattern>(?ix)
-        ^.*[\\/] (?:
-            (?:interpreter-)? (arm64-v8a|armeabi-v7a|x86_64|x86)  [\\/][^\\/]*               # ABI-named parent directory
-          | (?:interpreter-)? android[^\\/]*-(arm64|arm|x86|x64)  [\\/][^\\/]*               # RID-named parent directory
-          |                   android[^\\/]*-(arm64|arm|x86|x64)  [\\/][^\\/]* [\\/][^\\/]*  # RID-named grandparent directory
-        )$
-        | .*
-      </_AarArchFromPathPattern>
-    </PropertyGroup>
+    <!--
+      Mirrors AndroidRidAbiHelper.GetNativeLibraryAbi: unless %(Abi) is set, try these names in order:
+      %(RuntimeIdentifier), else the parent and grandparent directories of %(Link); then those of the library itself.
+    -->
     <ItemGroup>
-      <_AarNativeLibrary Include="@(EmbeddedNativeLibrary)" />
-      <!-- Without %(Abi): use %(RuntimeIdentifier), else %(Link)... -->
-      <_AarNativeLibrary>
-        <_AarArch Condition=" '%(Abi)' == '' and '%(RuntimeIdentifier)' != '' ">$([System.Text.RegularExpressions.Regex]::Replace('%(RuntimeIdentifier)', '$(_AarArchFromRidPattern)', '$1'))</_AarArch>
-        <_AarArch Condition=" '%(Abi)' == '' and '%(RuntimeIdentifier)' == '' and '%(Link)' != '' ">$([System.Text.RegularExpressions.Regex]::Replace($([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(Link)')), '$(_AarArchFromPathPattern)', '$1$2$3'))</_AarArch>
-      </_AarNativeLibrary>
-      <!-- ...and if neither gives an answer, the library's own path. -->
-      <_AarNativeLibrary>
-        <_AarArch Condition=" '%(Abi)' == '' and '%(_AarArch)' == '' ">$([System.Text.RegularExpressions.Regex]::Replace('%(FullPath)', '$(_AarArchFromPathPattern)', '$1$2$3'))</_AarArch>
-      </_AarNativeLibrary>
-      <_AarNativeLibrary>
-        <Abi Condition=" '%(_AarArch)' != '' ">$([System.String]::Copy('%(_AarArch)').ToLowerInvariant())</Abi>
-        <Abi Condition=" '%(_AarArch)' == 'arm64' ">arm64-v8a</Abi>
-        <Abi Condition=" '%(_AarArch)' == 'arm' ">armeabi-v7a</Abi>
-        <Abi Condition=" '%(_AarArch)' == 'x64' ">x86_64</Abi>
-      </_AarNativeLibrary>
+      <_AarAbiCandidate Include="@(EmbeddedNativeLibrary)" Condition=" '%(EmbeddedNativeLibrary.RuntimeIdentifier)' != '' "
+          Name="%(EmbeddedNativeLibrary.RuntimeIdentifier)" />
+      <_AarAbiCandidate Include="@(EmbeddedNativeLibrary)" Condition=" '%(EmbeddedNativeLibrary.RuntimeIdentifier)' == '' and '%(EmbeddedNativeLibrary.Link)' != '' "
+          Name="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName($([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(EmbeddedNativeLibrary.Link)'))))))" />
+      <_AarAbiCandidate Include="@(EmbeddedNativeLibrary)" Condition=" '%(EmbeddedNativeLibrary.RuntimeIdentifier)' == '' and '%(EmbeddedNativeLibrary.Link)' != '' "
+          Name="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName($([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(EmbeddedNativeLibrary.Link)'))))))))" />
+      <_AarAbiCandidate Include="@(EmbeddedNativeLibrary)"
+          Name="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('%(EmbeddedNativeLibrary.FullPath)'))))" />
+      <_AarAbiCandidate Include="@(EmbeddedNativeLibrary)"
+          Name="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName('%(EmbeddedNativeLibrary.FullPath)'))))))" />
+      <_AarAbiCandidate>
+        <Name>$([System.String]::Copy('%(Name)').ToLowerInvariant().Replace('interpreter-', ''))</Name>
+      </_AarAbiCandidate>
+      <_AarAbiCandidate>
+        <Rid Condition=" $([System.String]::Copy('%(Name)').StartsWith('android')) ">%(Name)</Rid>
+      </_AarAbiCandidate>
+      <_AarAbiCandidate>
+        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'arm64-v8a'   or $([System.String]::Copy('%(Rid)').EndsWith('-arm64'))) ">arm64-v8a</Abi>
+        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'armeabi-v7a' or $([System.String]::Copy('%(Rid)').EndsWith('-arm')))   ">armeabi-v7a</Abi>
+        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'x86'         or $([System.String]::Copy('%(Rid)').EndsWith('-x86')))   ">x86</Abi>
+        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'x86_64'      or $([System.String]::Copy('%(Rid)').EndsWith('-x64')))   ">x86_64</Abi>
+      </_AarAbiCandidate>
+      <!-- The first candidate with an ABI wins. -->
+      <_AarAbiResolved Include="@(_AarAbiCandidate)" Condition=" '%(_AarAbiCandidate.Abi)' != '' " />
+      <_AarNativeLibrary Include="@(_AarAbiResolved->Distinct())" RemoveMetadata="Name;Rid" />
+      <_AarAbiUnresolved Include="@(EmbeddedNativeLibrary)" Exclude="@(_AarNativeLibrary)" />
     </ItemGroup>
     <AndroidError
-        Condition=" '%(_AarNativeLibrary.Abi)' == '' "
+        Condition=" '@(_AarAbiUnresolved)' != '' "
         Code="XA4301"
         ResourceName="XA4301_ABI"
-        FormatArguments="%(_AarNativeLibrary.Identity)"
-        File="%(_AarNativeLibrary.Identity)"
+        FormatArguments="%(_AarAbiUnresolved.Identity)"
+        File="%(_AarAbiUnresolved.Identity)"
     />
     <!--
       Stage the AAR layout; when two items map to the same %(ArchivePath), the last one wins.
