@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -68,6 +69,47 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsFalse (task.Execute (), "Task should fail.");
 			Assert.AreEqual ("XA0140", errors.Single ().Code);
 			Assert.AreEqual (0, task.AssetPacks?.Length);
+		}
+
+		[TestCase ("en-US", "i", true)]
+		[TestCase ("en-US", "\u0130", true)]
+		[TestCase ("en-US", "\u0131", false)]
+		[TestCase ("tr-TR", "i", false)]
+		[TestCase ("tr-TR", "\u0130", false)]
+		[TestCase ("tr-TR", "\u0131", true)]
+		[TestCase ("az", "i", false)]
+		[TestCase ("az", "\u0130", false)]
+		[TestCase ("az", "\u0131", true)]
+		[TestCase ("", "i", true)]
+		[TestCase ("", "\u0130", false)]
+		[TestCase ("", "\u0131", false)]
+		public void AssetPackNameValidationUsesCurrentCulture (string cultureName, string assetPack, bool valid)
+		{
+			var originalCulture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo (cultureName);
+				var dir = Path.Combine (Root, "temp", TestName);
+				Directory.CreateDirectory (dir);
+				var asset = Path.Combine (dir, "a.txt");
+				File.WriteAllText (asset, "a");
+				var errors = new List<BuildErrorEventArgs> ();
+				var task = new GetAssetPacks {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+					IntermediateDir = new TaskItem (Path.Combine (dir, "assetpacks")),
+					Assets = [Asset (asset, assetPack, "")],
+				};
+
+				Assert.AreEqual (valid, task.Execute (), "Task result");
+				if (valid) {
+					Assert.AreEqual (0, errors.Count);
+					CollectionAssert.AreEqual (new [] { assetPack }, task.AssetPacks?.Select (p => p.ItemSpec));
+				} else {
+					Assert.AreEqual ("XA0140", errors.Single ().Code);
+					Assert.AreEqual (0, task.AssetPacks?.Length);
+				}
+			} finally {
+				CultureInfo.CurrentCulture = originalCulture;
+			}
 		}
 
 		[TestCase ("Microsoft.Android.Tasks.GetAssetPacks")]
