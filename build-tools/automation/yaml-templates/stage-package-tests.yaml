@@ -4,6 +4,10 @@ parameters:
   macTestAgentsUseCleanImages: 
   usePublicSetupTemplate: false
   use1ESTemplate: true
+  macPool:
+    name: Azure Pipelines
+    vmImage: $(HostedMacImageWithEmulator)
+    os: macOS
 
 stages:
 - stage: smoke_tests
@@ -11,13 +15,9 @@ stages:
   dependsOn: mac_build
   jobs:
 # Check - "Xamarin.Android (Package Tests macOS > Tests > APKs .NET)"
-  # NOTE: AcesShared pool cannot boot Android emulators, so APK test jobs must use hosted images
   - job: mac_apk_tests_net_1
     displayName: macOS > Tests > APKs 1
-    pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImageWithEmulator)
-      os: macOS
+    pool: ${{ parameters.macPool }}
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -105,13 +105,9 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
-  # NOTE: AcesShared pool cannot boot Android emulators, so APK test jobs must use hosted images
   - job: mac_apk_tests_net_2
     displayName: macOS > Tests > APKs 2
-    pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImageWithEmulator)
-      os: macOS
+    pool: ${{ parameters.macPool }}
     timeoutInMinutes: 180
     workspace:
       clean: all

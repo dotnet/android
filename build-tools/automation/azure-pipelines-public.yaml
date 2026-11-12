@@ -169,6 +169,10 @@ stages:
     parameters:
       macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
       use1ESTemplate: false
+      macPool:
+        name: AcesShared
+        os: macOS
+        demands: ImageOverride -equals ACES_VM_SharedPool_GoldenGate
 
 # Linux Tests Stage
 - stage: linux_tests
@@ -382,11 +386,10 @@ stages:
     strategy:
       parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
     displayName: "macOS > Tests > MSBuild+Emulator"
-    # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
     pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImageWithEmulator)
+      name: AcesShared
       os: macOS
+      demands: ImageOverride -equals ACES_VM_SharedPool_GoldenGate
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
