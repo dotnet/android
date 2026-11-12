@@ -46,6 +46,7 @@ namespace Xamarin.Android.Build.Tests
 				JarPath = Path.Combine (tempDir, "bundletool.jar"),
 				BaseZip = Path.Combine (tempDir, "base.zip"),
 				Output = output,
+				IntermediateOutputPath = tempDir,
 				MetaDataFiles = new ITaskItem [] {
 					new TaskItem ($"{archivePath}:{sourcePath}"),
 				},
@@ -60,7 +61,10 @@ namespace Xamarin.Android.Build.Tests
 			var separator = metadata.IndexOf (':');
 			Assert.Greater (separator, 0, $"Expected staged metadata argument in: {metadata}");
 			var temporaryArchivePath = "BUNDLE-METADATA/" + metadata.Substring (0, separator);
-			var temporarySourcePath = metadata.Substring (separator + 1);
+			var stagingDirectory = task.MetaDataStagingDirectory;
+			Assert.IsNotNull (stagingDirectory, "Metadata should be staged in a private directory.");
+			var temporarySourcePath = Path.Combine (stagingDirectory, metadata.Substring (separator + 1));
+			FileAssert.Exists (temporarySourcePath);
 
 			try {
 				using (var outputBundle = ZipFile.Open (output, ZipArchiveMode.Create)) {
@@ -80,6 +84,141 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				File.Delete (temporarySourcePath);
 			}
+		}
+
+		[Test]
+		public void StagesMetadataWithAsciiArgumentsUnderNonAsciiDirectory ()
+		{
+			var intermediateDir = Path.Combine (tempDir, "テスト\u2002obj");
+			Directory.CreateDirectory (intermediateDir);
+			var sourcePath = Path.Combine (intermediateDir, "libテスト.dbg.so");
+			File.WriteAllText (sourcePath, "symbols");
+
+			var task = new BuildAppBundle {
+				BuildEngine = engine,
+				JarPath = Path.Combine (tempDir, "bundletool.jar"),
+				BaseZip = Path.Combine (intermediateDir, "base.zip"),
+				Output = Path.Combine (intermediateDir, "output.aab"),
+				IntermediateOutputPath = intermediateDir,
+				MetaDataFiles = new ITaskItem [] {
+					new TaskItem ($"com.android.tools.build.debugsymbols/arm64-v8a/libテスト.so.dbg:{sourcePath}"),
+				},
+			};
+
+			task.PrepareMetaDataFiles ();
+			var stagingDirectory = task.MetaDataStagingDirectory;
+			Assert.IsNotNull (stagingDirectory, "Metadata should be staged in a private directory.");
+			StringAssert.Contains ("テスト", stagingDirectory, "Test requires a non-ASCII staging directory path.");
+
+			var metadata = task.BundleToolMetaDataFiles.Single ();
+			Assert.IsTrue (metadata.All (c => c <= 0x7f), $"Metadata argument should be ASCII: {metadata}");
+			var stagedPath = metadata.Substring (metadata.IndexOf (':') + 1);
+			Assert.IsFalse (Path.IsPathRooted (stagedPath), $"Staged metadata path should be relative to the tool working directory: {stagedPath}");
+			FileAssert.Exists (Path.Combine (stagingDirectory, stagedPath));
+
+			var commandLine = task.GetCommandLineBuilder ().ToString ();
+			var metadataSwitch = $"--metadata-file={metadata}";
+			StringAssert.Contains (metadataSwitch, commandLine);
+			StringAssert.Contains (Path.Combine (intermediateDir, "base.zip"), commandLine, "Other tool paths should remain absolute.");
+		}
+
+		[Test]
+		public void RebasesRelativeMetadataPathsOntoStagingDirectory ()
+		{
+			var workingDirectory = Directory.GetCurrentDirectory ();
+			var projectDir = Path.Combine (workingDirectory, "BuildAppBundleTests_" + Guid.NewGuid ().ToString ("N"));
+			try {
+				var mappingPath = Path.Combine (projectDir, "bin", "mapping.txt");
+				Directory.CreateDirectory (Path.GetDirectoryName (mappingPath) ?? throw new InvalidOperationException ());
+				File.WriteAllText (mappingPath, "mapping");
+				var unicodeSourcePath = Path.Combine (projectDir, "libテスト.dbg.so");
+				File.WriteAllText (unicodeSourcePath, "symbols");
+				var relativeProjectDir = Path.GetRelativePath (workingDirectory, projectDir);
+
+				var task = new BuildAppBundle {
+					BuildEngine = engine,
+					JarPath = Path.Combine (tempDir, "bundletool.jar"),
+					BaseZip = Path.Combine (relativeProjectDir, "base.zip"),
+					Output = Path.Combine (relativeProjectDir, "bin", "output.aab"),
+					IntermediateOutputPath = Path.Combine (relativeProjectDir, "obj"),
+					MetaDataFiles = new ITaskItem [] {
+						new TaskItem ($"com.android.tools.build.obfuscation/proguard.map:{Path.Combine (relativeProjectDir, "bin", "mapping.txt")}"),
+						new TaskItem ($"com.android.tools.build.debugsymbols/arm64-v8a/libテスト.so.dbg:{unicodeSourcePath}"),
+					},
+				};
+
+				task.PrepareMetaDataFiles ();
+				var stagingDirectory = task.MetaDataStagingDirectory;
+				Assert.IsNotNull (stagingDirectory, "Unicode metadata should be staged.");
+
+				foreach (var metadata in task.BundleToolMetaDataFiles) {
+					Assert.IsTrue (metadata.All (c => c <= 0x7f), $"Metadata argument should be ASCII: {metadata}");
+					var source = metadata.Substring (metadata.IndexOf (':') + 1);
+					FileAssert.Exists (Path.Combine (stagingDirectory, source), $"Metadata source should resolve from the BundleTool working directory: {metadata}");
+				}
+
+				var commandLine = task.GetCommandLineBuilder ().ToString ();
+				Assert.IsTrue (commandLine.All (c => c <= 0x7f), $"Command line should be ASCII: {commandLine}");
+				var expectedOutput = Path.Combine ("..", "..", "..", relativeProjectDir, "bin", "output.aab");
+				StringAssert.Contains (expectedOutput, commandLine, "Relative output path should be rebased onto the staging directory.");
+				Assert.AreEqual (Path.GetFullPath (Path.Combine (projectDir, "bin", "output.aab")), Path.GetFullPath (Path.Combine (stagingDirectory, expectedOutput)));
+			} finally {
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, recursive: true);
+			}
+		}
+
+		[Test]
+		public void RestoresMetadataEntriesInBatches ()
+		{
+			const int count = 5;
+			var output = Path.Combine (tempDir, "output.aab");
+			var items = new List<ITaskItem> ();
+			for (int i = 0; i < count; i++) {
+				var sourcePath = Path.Combine (tempDir, $"libテスト{i}.dbg.so");
+				File.WriteAllText (sourcePath, $"symbols{i}");
+				items.Add (new TaskItem ($"com.android.tools.build.debugsymbols/arm64-v8a/libテスト{i}.so.dbg:{sourcePath}"));
+			}
+
+			var task = new BuildAppBundle {
+				BuildEngine = engine,
+				JarPath = Path.Combine (tempDir, "bundletool.jar"),
+				BaseZip = Path.Combine (tempDir, "base.zip"),
+				Output = output,
+				IntermediateOutputPath = tempDir,
+				MetaDataFiles = items.ToArray (),
+				MetaDataRestoreBatchFilesLimit = 2,
+			};
+
+			task.PrepareMetaDataFiles ();
+			Assert.AreEqual (count, task.BundleToolMetaDataFiles.Count);
+			using (var bundle = ZipFile.Open (output, ZipArchiveMode.Create)) {
+				var other = bundle.CreateEntry ("base/manifest/AndroidManifest.xml");
+				using (var writer = new StreamWriter (other.Open ()))
+					writer.Write ("manifest");
+				for (int i = 0; i < count; i++) {
+					var metadata = task.BundleToolMetaDataFiles [i];
+					var entry = bundle.CreateEntry ("BUNDLE-METADATA/" + metadata.Substring (0, metadata.IndexOf (':')));
+					using var writer = new StreamWriter (entry.Open ());
+					writer.Write ($"symbols{i}");
+				}
+			}
+
+			task.RestoreMetaDataFileNames ();
+
+			using var restoredBundle = ZipFile.OpenRead (output);
+			Assert.AreEqual (count + 1, restoredBundle.Entries.Count, "Temporary metadata entries should be replaced.");
+			Assert.IsFalse (restoredBundle.Entries.Any (e => e.FullName.Contains ("xamarin-android-")), "Temporary metadata entries should be removed.");
+			for (int i = 0; i < count; i++) {
+				var restored = restoredBundle.GetEntry ($"BUNDLE-METADATA/com.android.tools.build.debugsymbols/arm64-v8a/libテスト{i}.so.dbg");
+				Assert.IsNotNull (restored, $"Metadata entry {i} should use its original Unicode path.");
+				using var reader = new StreamReader (restored.Open ());
+				Assert.AreEqual ($"symbols{i}", reader.ReadToEnd ());
+			}
+			var manifest = restoredBundle.GetEntry ("base/manifest/AndroidManifest.xml");
+			Assert.IsNotNull (manifest);
+			using (var reader = new StreamReader (manifest.Open ()))
+				Assert.AreEqual ("manifest", reader.ReadToEnd ());
 		}
 	}
 

@@ -167,6 +167,34 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void NativeAotAppBundleOmitsStaleDebugSymbolsWhenIncludingDebugSymbols ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			const string abi = "arm64-v8a";
+			proj.SetRuntimeIdentifiers ([abi]);
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			proj.SetProperty ("DebugSymbols", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First NativeAOT AAB build should succeed.");
+			string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+			string symbolsEntryName = $"BUNDLE-METADATA/com.android.tools.build.debugsymbols/{abi}/lib{proj.ProjectName}.so.dbg";
+			FileAssert.Exists (bundle);
+			using (var archive = ZipHelper.OpenZip (bundle))
+				Assert.IsNotNull (archive.GetEntry (symbolsEntryName), "The stripped build must include separate debug symbols.");
+
+			// $(AndroidIncludeDebugSymbols) is computed; this keeps Optimize=true so NativeAOT stays selected.
+			proj.SetProperty ("DebugSymbols", "true");
+			proj.SetProperty ("DebugType", "");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second NativeAOT AAB build should succeed.");
+			using (var archive = ZipHelper.OpenZip (bundle))
+				Assert.IsNull (archive.GetEntry (symbolsEntryName), "Stale separate debug symbols must not be packaged once the library is unstripped.");
+		}
+
+		[Test]
 		public void BootstrapUpdatesForCommandLineFlavorChanges ()
 		{
 			var proj = new XamarinAndroidApplicationProject {

@@ -1872,7 +1872,7 @@ because xbuild doesn't support framework reference assemblies.
         Include="com.android.tools/r8.json:$(_AndroidR8BuildMetadataFile)"
     />
     <AndroidAppBundleMetaDataFile
-        Condition=" '$(Configuration)' == 'Release' And '$(AndroidPackageFormat)' == 'aab' And '$(_AndroidRuntime)' == 'NativeAOT' And Exists('%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)') "
+        Condition=" '$(Configuration)' == 'Release' And '$(AndroidPackageFormat)' == 'aab' And '$(_AndroidRuntime)' == 'NativeAOT' And '%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)' != '' And Exists('%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)') "
         Include="com.android.tools.build.debugsymbols/%(ResolvedFileToPublish._AndroidNativeAotAbi)/lib$(TargetName).so.dbg:%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)"
     />
   </ItemGroup>
