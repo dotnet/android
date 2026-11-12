@@ -17,7 +17,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="_WriteLockFile">
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveUnknownFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidComputeResPaths" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidSignPackage" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidCreateDebugKey" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -39,7 +38,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CollectAssemblyFilesToCompress" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CollectAssemblyFilesToCompress" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CollectCompressedAssemblyInfo" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
@@ -59,7 +59,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -68,7 +67,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -78,13 +78,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Microsoft.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
-<UsingTask TaskName="Microsoft.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
@@ -1146,6 +1143,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
   <_PrepareUpdateAndroidResgenDependsOnTargets>
+    _GenerateResourceDesignerAssemblyInputs;
     _IncludeModifiedFilesInUpdateAndroidResgenInputs;
   </_PrepareUpdateAndroidResgenDependsOnTargets>
 </PropertyGroup>
@@ -1156,9 +1154,9 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(_AndroidResgenFlagFile)">
 
   <!-- Create a temporary directory to work in -->
-  <CreateTemporaryDirectory>
-    <Output TaskParameter="TemporaryDirectory" PropertyName="ResgenTemporaryDirectory" />
-  </CreateTemporaryDirectory>
+  <MakeDir Directories="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
+    <Output TaskParameter="DirectoriesCreated" PropertyName="ResgenTemporaryDirectory" />
+  </MakeDir>
 
   <!-- Create a dummy manifest file for aapt to work with -->
   <CreateResgenManifest
@@ -1663,9 +1661,9 @@ because xbuild doesn't support framework reference assemblies.
   -->
 
   <!-- Create a temporary directory to work in, or else R.java will always get updated -->
-  <CreateTemporaryDirectory>
-    <Output TaskParameter="TemporaryDirectory" PropertyName="AaptTemporaryDirectory" />
-  </CreateTemporaryDirectory>
+  <MakeDir Directories="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
+    <Output TaskParameter="DirectoriesCreated" PropertyName="AaptTemporaryDirectory" />
+  </MakeDir>
 
   <GetExtraPackages
       IntermediateOutputPath="$(IntermediateOutputPath)"
@@ -2003,13 +2001,12 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_CompressAssemblies"
     Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
-    <ProcessAssemblyCompressionFailures
-        FailedToCompressAssembliesOutput="@(_FailedToCompressAssemblies)"
-        ResolvedFrameworkAssemblies="@(_CompressedResolvedFrameworkAssemblies)"
-        ResolvedUserAssemblies="@(_CompressedBuildApkResolvedUserAssemblies)">
-      <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_BuildApkResolvedFrameworkAssemblies" />
-      <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_BuildApkResolvedUserAssemblies" />
-    </ProcessAssemblyCompressionFailures>
+    <ItemGroup>
+      <_BuildApkResolvedFrameworkAssemblies Include="@(_CompressedResolvedFrameworkAssemblies)" Exclude="@(_FailedToCompressAssemblies)" />
+      <_BuildApkResolvedFrameworkAssemblies Include="@(_CompressedResolvedFrameworkAssemblies)" Exclude="@(_BuildApkResolvedFrameworkAssemblies)" RemoveMetadata="CompressedAssembly" />
+      <_BuildApkResolvedUserAssemblies Include="@(_CompressedBuildApkResolvedUserAssemblies)" Exclude="@(_FailedToCompressAssemblies)" />
+      <_BuildApkResolvedUserAssemblies Include="@(_CompressedBuildApkResolvedUserAssemblies)" Exclude="@(_BuildApkResolvedUserAssemblies)" RemoveMetadata="CompressedAssembly" />
+    </ItemGroup>
 </Target>
 
 <Target Name="_BuildApkEmbed"
@@ -2293,9 +2290,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_DefineBuildTargetAbis" DependsOnTargets="$(_BeforeDefineBuildTargetAbis)">
-  <SplitProperty Value="$(AndroidSupportedAbis)" Condition="'@(_BuildTargetAbis)' == ''">
-    <Output TaskParameter="Output" ItemName="_BuildTargetAbis" />
-  </SplitProperty>
+  <ItemGroup Condition="'@(_BuildTargetAbis)' == ''">
+    <_BuildTargetAbis Include="$(AndroidSupportedAbis.Split(',;', StringSplitOptions.RemoveEmptyEntries))" />
+  </ItemGroup>
   <Error Code="XA0115"
       Condition=" '%(_BuildTargetAbis.Identity)' == 'armeabi' "
       Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
@@ -2719,14 +2716,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_DeployApk"
-    Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-  <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="install"
-      Arguments="-r &quot;$(ApkFileSigned)&quot;"
-  />
+    Condition=" '$(AndroidPackageFormat)' != 'aab' "
+    DependsOnTargets="_AndroidAdbToolPath">
+  <Exec Command="$(_AdbCommand) $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="_BuildApkSet"
@@ -2755,10 +2747,10 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_DeployAppBundle"
     Condition=" '$(AndroidPackageFormat)' == 'aab' "
-    DependsOnTargets="_BuildApkSet">
+    DependsOnTargets="_BuildApkSet;_AndroidAdbToolPath">
   <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
-      Command="&quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(AdbTarget) shell pm list packages $(_AndroidPackage)"
+      Command="$(_AdbCommand) $(AdbTarget) shell pm list packages $(_AndroidPackage)"
       ConsoleToMSBuild="True"
       StandardOutputImportance="Low"
   >
@@ -2767,25 +2759,21 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_AndroidInstalledPackage Include="@(_AndroidInstalledPackages->WithMetadataValue('Identity', 'package:$(_AndroidPackage)'))" />
   </ItemGroup>
-  <AndroidAdb
+  <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '@(_AndroidInstalledPackage->Count())' != '0' "
-      ContinueOnError="True"
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="uninstall"
-      Arguments="-k $(_AndroidPackage)"
+      Command="$(_AdbCommand) $(AdbTarget) uninstall -k $(_AndroidPackage)"
+      ConsoleToMSBuild="True"
+      IgnoreExitCode="True"
+      StandardOutputImportance="Low"
   >
-    <Output TaskParameter="Result" PropertyName="_UninstallResult" />
-  </AndroidAdb>
-   <AndroidAdb
-      Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '@(_AndroidInstalledPackage->Count())' != '0' And '$(_UninstallResult)' == 'false' "
-      ContinueOnError="True"
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="shell cmd package uninstall"
-      Arguments="$(_AndroidPackage)"
+    <Output TaskParameter="ConsoleOutput" PropertyName="_UninstallOutput" />
+  </Exec>
+  <!-- Newer adb versions reject `uninstall -k` and suggest `adb shell cmd package uninstall` instead. -->
+  <Exec
+      Condition=" $(_UninstallOutput.Contains('adb shell cmd package uninstall')) "
+      Command="$(_AdbCommand) $(AdbTarget) shell cmd package uninstall $(_AndroidPackage)"
+      IgnoreExitCode="True"
+      StandardOutputImportance="Low"
   />
   <InstallApkSet
       ToolPath="$(JavaToolPath)"
@@ -2805,14 +2793,9 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="$(InstallDependsOnTargets)">
 </Target>
 
-<Target Name="_Uninstall">
-  <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="uninstall"
-      Arguments="$(_AndroidPackage)"
-  />
+<Target Name="_Uninstall"
+    DependsOnTargets="_AndroidAdbToolPath">
+  <Exec Command="$(_AdbCommand) $(AdbTarget) uninstall $(_AndroidPackage)" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="Uninstall"

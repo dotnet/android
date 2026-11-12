@@ -57,6 +57,7 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("AndroidLaunchActivity", "MainActivity"),
 					new XElement ("_AndroidComputeRunArgumentsDependsOn", "_AndroidAdbToolPath"),
 					new XElement ("_XamarinAndroidBuildTasksAssembly", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll")),
+					new XElement ("_MicrosoftAndroidBuildTasksAssembly", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "net", "Microsoft.Android.Build.Tasks.dll")),
 					new XElement ("AdbToolPath", Path.Combine (detection.Directory, "tools")),
 					new XElement ("AdbToolExe", detection.Executable)),
 				new XElement ("Import", new XAttribute ("Project",
