@@ -4,7 +4,7 @@
 <Project>
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
   <PropertyGroup>
-    <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">18.9.6</MSBuildPackageReferenceVersion>
+    <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">18.12.3-1.26559.117</MSBuildPackageReferenceVersion>
     <SystemReflectionMetadataPackageVersion Condition=" '$(SystemReflectionMetadataPackageVersion)' == '' ">10.0.4</SystemReflectionMetadataPackageVersion>
     <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
   </PropertyGroup>

@@ -1710,6 +1710,14 @@ namespace UnnamedProject
 					values.Add ("DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend");
 				if (enableCrashReport)
 					values.Add ("DOTNET_EnableCrashReport=1");
+				// Newer .NET SDKs also pin a build-owned Hot Reload public key.
+				var publicKeyFile = b.Output.GetIntermediaryPath ("HotReload/websocket-key.public.json");
+				if (File.Exists (publicKeyFile)) {
+					using var document = JsonDocument.Parse (File.ReadAllText (publicKeyFile));
+					var publicKey = document.RootElement.GetProperty ("publicKey").GetString ();
+					Assert.IsNotEmpty (publicKey, "The generated Hot Reload public key should not be empty.");
+					values.Add ($"DOTNET_WATCH_HOTRELOAD_WEBSOCKET_KEY={publicKey}");
+				}
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}

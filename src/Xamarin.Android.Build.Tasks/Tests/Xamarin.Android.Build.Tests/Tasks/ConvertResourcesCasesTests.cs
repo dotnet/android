@@ -131,6 +131,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 			var custom = new ConvertCustomView () {
 				BuildEngine = engine,
+				ResourceCaseMap = new ITaskItem [] {
+					new TaskItem (Path.Combine ("layout", "main.xml"), new Dictionary<string, string> {
+						{ "OriginalName", Path.Combine ("Layout", "Main.axml") },
+					}),
+				},
 				CustomViewMapFile = task.CustomViewMapFile,
 				AcwMapFile = Path.Combine (path, "acwmap.txt"),
 				ResourceDirectories = new ITaskItem [] {
@@ -148,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("classLibrary1.CustomView", output, "classLibrary1.CustomView should have been replaced.");
 			Assert.AreEqual (1, errors.Count, "One Error should have been raised.");
 			Assert.AreEqual ("XA1002", errors [0].Code, "XA1002 should have been raised.");
-			var expected = Path.Combine ("Resources", "layout", "main.xml");
+			var expected = Path.Combine ("Resources", "Layout", "Main.axml");
 			Assert.AreEqual (expected, errors [0].File, $"Error should have the \"{expected}\" path. But contained \"{errors [0].File}\"");
 			Assert.IsFalse (custom.Execute (), "Task should have executed successfully");
 			var secondOutput = File.ReadAllText (Path.Combine (resPath, "layout", "main.xml"));

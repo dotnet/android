@@ -19,8 +19,7 @@ static class SafeArrayFactory
 	{
 		ValidateRank (rank);
 
-		if (elementType == null)
-			throw new ArgumentNullException (nameof (elementType));
+		ArgumentNullException.ThrowIfNull (elementType);
 
 		if (!TryGetVectorType (elementType, out arrayType)) {
 			arrayType = null;
@@ -51,8 +50,7 @@ static class SafeArrayFactory
 		ValidateRank (rank);
 		ArgumentOutOfRangeException.ThrowIfNegative (length);
 
-		if (elementType == null)
-			throw new ArgumentNullException (nameof (elementType));
+		ArgumentNullException.ThrowIfNull (elementType);
 
 		if (rank == 1 && ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
 			array = factory.CreateArray (length);

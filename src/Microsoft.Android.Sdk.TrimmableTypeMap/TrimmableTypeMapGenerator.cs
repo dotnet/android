@@ -68,10 +68,17 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
+		ManifestGenerator.ValidateApplicationDeclarations (allPeers, assemblyManifestInfo);
 		bool validConstructors = ValidateConstructors (allPeers);
 
 		RootCustomViewTypes (allPeers, customViewTypeNames);
-		RootManifestReferencedTypes (allPeers, manifestForRooting, manifestConfig?.ApplicationJavaClass);
+		var assemblyManifestComponentNames = GetAssemblyManifestComponentNames (assemblyManifestInfo, manifestConfig);
+		RootManifestReferencedTypes (
+			allPeers,
+			manifestForRooting,
+			manifestConfig?.ApplicationJavaClass,
+			assemblyManifestComponentNames);
+		RootAssemblyApplicationTypeReferences (allPeers, assemblyManifestInfo.ApplicationProperties);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting);
@@ -103,6 +110,32 @@ public class TrimmableTypeMapGenerator
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
 	}
 
+	static List<string> GetAssemblyManifestComponentNames (AssemblyManifestInfo assemblyManifestInfo, ManifestConfig? manifestConfig)
+	{
+		var names = new List<string> ();
+		if (assemblyManifestInfo.ApplicationProperties?.TryGetValue ("Name", out var applicationName) == true &&
+		    applicationName is string applicationNameString) {
+			names.Add (applicationNameString);
+		}
+		names.AddRange (assemblyManifestInfo.Instrumentations.Select (instrumentation => instrumentation.Name));
+
+		if (names.Count == 0 || manifestConfig is null) {
+			return names;
+		}
+
+		var doc = new XDocument (new XElement ("manifest",
+			names.Select (name => new XElement ("instrumentation", new XAttribute (ManifestConstants.AttName, name)))));
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders, manifestConfig.PackageName);
+
+		var resolvedNames = new List<string> (names.Count);
+		foreach (var element in doc.Descendants ("instrumentation")) {
+			if (element.Attribute (ManifestConstants.AttName) is { } nameAttribute) {
+				resolvedNames.Add (nameAttribute.Value.Replace ("@PACKAGE_NAME@", manifestConfig.PackageName, StringComparison.Ordinal));
+			}
+		}
+		return resolvedNames;
+	}
+
 	internal static void RootCustomViewTypes (List<JavaPeerInfo> allPeers, IReadOnlyCollection<string>? customViewTypeNames)
 	{
 		if (customViewTypeNames is null || customViewTypeNames.Count == 0) {
@@ -114,6 +147,23 @@ public class TrimmableTypeMapGenerator
 			if (names.Contains (peer.ManagedTypeName) ||
 					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
 					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
+				peer.IsUnconditional = true;
+			}
+		}
+	}
+
+	internal static void RootAssemblyApplicationTypeReferences (
+		List<JavaPeerInfo> allPeers,
+		IReadOnlyDictionary<string, object?>? applicationProperties)
+	{
+		if (applicationProperties is null) {
+			return;
+		}
+
+		foreach (var propertyName in new [] { "BackupAgent", "ManageSpaceActivity" }) {
+			if (applicationProperties.TryGetValue (propertyName, out var value) &&
+			    value is string managedName &&
+			    AssemblyLevelElementBuilder.FindPeerByAssemblyQualifiedName (allPeers, managedName) is JavaPeerInfo peer) {
 				peer.IsUnconditional = true;
 			}
 		}
@@ -369,8 +419,6 @@ public class TrimmableTypeMapGenerator
 			targetSdk = apiVersion.Major.ToString (System.Globalization.CultureInfo.InvariantCulture);
 		}
 
-		bool forceDebuggable = !config.CheckedBuild.IsNullOrEmpty ();
-
 		var generator = new ManifestGenerator {
 			PackageName = config.PackageName,
 			ApplicationLabel = config.ApplicationLabel ?? config.PackageName,
@@ -382,8 +430,6 @@ public class TrimmableTypeMapGenerator
 			Debug = config.Debug,
 			NeedsInternet = config.NeedsInternet,
 			EmbedAssemblies = config.EmbedAssemblies,
-			ForceDebuggable = forceDebuggable,
-			ForceExtractNativeLibs = forceDebuggable,
 			ManifestPlaceholders = config.ManifestPlaceholders,
 			ApplicationJavaClass = config.ApplicationJavaClass,
 			WarnInvalidPlaceholder = placeholders => logger.LogInvalidManifestPlaceholderWarning (placeholders),
@@ -568,7 +614,11 @@ public class TrimmableTypeMapGenerator
 		return sources.ToList ();
 	}
 
-	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc, string? applicationJavaClass = null)
+	internal void RootManifestReferencedTypes (
+		List<JavaPeerInfo> allPeers,
+		XDocument? doc,
+		string? applicationJavaClass = null,
+		IReadOnlyCollection<string>? generatedComponentNames = null)
 	{
 		if (doc?.Root is not { } root) {
 			return;
@@ -580,6 +630,7 @@ public class TrimmableTypeMapGenerator
 
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
+		var generatedNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
 			switch (element.Name.LocalName) {
 			case "application":
@@ -604,6 +655,18 @@ public class TrimmableTypeMapGenerator
 					componentNames.Add (ManifestNameResolver.Resolve (targetActivity, packageName));
 				}
 				break;
+			}
+		}
+
+		if (generatedComponentNames is not null) {
+			foreach (var name in generatedComponentNames) {
+				if (name.IsNullOrEmpty ()) {
+					continue;
+				}
+				var resolvedName = ManifestNameResolver.Resolve (name, packageName);
+				componentNames.Add (resolvedName);
+				deferredRegistrationNames.Add (resolvedName);
+				generatedNames.Add (resolvedName);
 			}
 		}
 
@@ -634,6 +697,9 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 			} else {
+				if (generatedNames.Contains (name)) {
+					continue;
+				}
 				// $(AndroidApplicationJavaClass) (e.g. android.support.multidex.MultiDexApplication
 				// when $(AndroidEnableMultiDex) is true) is a Java framework type with no managed
 				// peer, so it is expected to be absent from the scanned assemblies — don't warn.

@@ -3,7 +3,7 @@
   "name": "Android-Testprojekt",
   "description": "Ein Projekt zum Erstellen eines .NET für Android-Testprojekts mit MSTest",
   "symbols/Framework/description": "Das Zielframework für das Projekt.",
-  "symbols/Framework/choices/net12.0-android/description": "Target net12.0-android",
+  "symbols/Framework/choices/net12.0-android/description": "Ziel: net12.0-android",
   "symbols/Framework/choices/net11.0-android/description": "Ziel: net11.0-android",
   "symbols/packageName/description": "Überschreibt den Paketnamen in der Datei „AndroidManifest.xml“.",
   "symbols/supportedOSVersion/description": "Überschreibt $(SupportedOSPlatformVersion) im Projekt",

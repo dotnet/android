@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.Tests;
@@ -12,6 +13,116 @@ namespace Xamarin.Android.Tools.Tests;
 [TestFixture]
 public class AvdManagerRunnerTests
 {
+	[TestCase ("hw.gpu.enabled=no\nhw.gpu.mode=auto\n")]
+	[TestCase (" hw.gpu.enabled = no \nhw.gpu.mode = off\n")]
+	[TestCase ("hw.gpu.enabled=no\nhw.gpu.enabled=yes\nhw.gpu.mode=host\n")]
+	[TestCase ("hw.gpu.enabled=yes\nhw.gpu.mode=auto\n")]
+	[TestCase ("")]
+	public async Task GetOrCreateAvdAsync_NewAvd_EnablesGpu (string gpuConfig)
+	{
+		using var avd = new FakeAvdManager ("# Keep this comment\nhw.ramSize=2048\nhw.gpu.enabled.extra=no\n" + gpuConfig);
+		var created = await avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image");
+
+		Assert.AreEqual (avd.AvdPath, created.Path);
+		CollectionAssert.AreEqual (new [] {
+			"# Keep this comment",
+			"hw.ramSize=2048",
+			"hw.gpu.enabled.extra=no",
+			"hw.gpu.enabled=yes",
+			"hw.gpu.mode=auto",
+		}, File.ReadAllLines (avd.ConfigPath));
+		Assert.That (avd.CreationCommand, Is.EqualTo ("create avd -n test-avd -k system-image"));
+	}
+
+	[Test]
+	public async Task GetOrCreateAvdAsync_ExistingAvd_PreservesConfiguration ()
+	{
+		const string config = "hw.gpu.enabled=no\r\nhw.gpu.mode=host\r\nhw.ramSize=4096\r\n";
+		using var avd = new FakeAvdManager (config, existing: true);
+		var existing = await avd.Runner.GetOrCreateAvdAsync ("TEST-AVD", "system-image");
+
+		Assert.AreEqual (avd.AvdPath, existing.Path);
+		Assert.AreEqual (config, File.ReadAllText (avd.ConfigPath));
+		Assert.IsEmpty (avd.CreationCommand);
+	}
+
+	[Test]
+	public async Task GetOrCreateAvdAsync_Force_EnablesGpu ()
+	{
+		using var avd = new FakeAvdManager ("hw.gpu.enabled=no\nhw.gpu.mode=off\n", existing: true);
+		await avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image", force: true);
+
+		CollectionAssert.AreEqual (new [] { "hw.gpu.enabled=yes", "hw.gpu.mode=auto" }, File.ReadAllLines (avd.ConfigPath));
+		Assert.That (avd.CreationCommand, Does.Contain ("--force"));
+	}
+
+	[Test]
+	public void GetOrCreateAvdAsync_MissingConfig_Throws ()
+	{
+		using var avd = new FakeAvdManager ("");
+		File.Delete (avd.ConfigPath);
+
+		Assert.ThrowsAsync<FileNotFoundException> (() => avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image"));
+		Assert.IsFalse (File.Exists (avd.ConfigPath));
+	}
+
+	[Test]
+	public void GetOrCreateAvdAsync_MissingPath_Throws ()
+	{
+		using var avd = new FakeAvdManager ("", reportPath: false);
+
+		var exception = Assert.ThrowsAsync<InvalidOperationException> (() => avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image"));
+		Assert.That (exception.Message, Does.Contain ("did not report a path"));
+	}
+
+	sealed class FakeAvdManager : IDisposable
+	{
+		readonly string directory = Path.Combine (Path.GetTempPath (), $"avd-test-{Path.GetRandomFileName ()}");
+
+		public string AvdPath { get; }
+		public string ConfigPath => Path.Combine (AvdPath, "config.ini");
+		string MarkerPath => Path.Combine (directory, "created");
+		public string CreationCommand => File.ReadAllText (MarkerPath).Trim ();
+		public AvdManagerRunner Runner { get; }
+
+		public FakeAvdManager (string config, bool existing = false, bool reportPath = true)
+		{
+			if (OS.IsWindows)
+				Assert.Ignore ("Fake avdmanager tests use shell scripts and are not supported on Windows.");
+
+			AvdPath = Path.Combine (directory, "custom location", "actual.avd");
+			Directory.CreateDirectory (AvdPath);
+			File.WriteAllText (ConfigPath, config);
+			if (existing)
+				File.WriteAllText (MarkerPath, "");
+
+			var scriptPath = Path.Combine (directory, "avdmanager");
+			File.WriteAllText (scriptPath, """
+				#!/bin/sh
+				if [ "$1" = create ]; then
+				  read answer
+				  echo "$*" > "$FAKE_MARKER"
+				  exit 0
+				fi
+				if [ -f "$FAKE_MARKER" ]; then
+				  echo '    Name: test-avd'
+				  if [ -n "$FAKE_AVD_PATH" ]; then
+				    echo "  Path: $FAKE_AVD_PATH"
+				  fi
+				fi
+				""");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (scriptPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+			Runner = new AvdManagerRunner (scriptPath, new Dictionary<string, string> {
+				["FAKE_MARKER"] = MarkerPath,
+				["FAKE_AVD_PATH"] = reportPath ? AvdPath : "",
+			});
+		}
+
+		public void Dispose () => Directory.Delete (directory, true);
+	}
+
 	[Test]
 	public void ParseAvdListOutput_MultipleAvds ()
 	{

@@ -52,7 +52,7 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 		internal void SetProperty (string key, string value)
 		{
 			if (properties.ContainsKey (key)) {
-				if (String.Compare (properties [key], value, StringComparison.Ordinal) == 0)
+				if (string.Equals (properties [key], value, StringComparison.Ordinal))
 					return;
 				properties.Remove (key);
 			}

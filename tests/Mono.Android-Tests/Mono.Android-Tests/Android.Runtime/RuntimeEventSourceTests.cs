@@ -374,6 +374,7 @@ namespace Android.RuntimeTests
 
 		sealed class CapturingEventListener : EventListener
 		{
+			readonly Lock eventsLock = new ();
 			readonly List<CapturedEvent> events = new ();
 
 			public bool ProviderCreated { get; private set; }
@@ -381,7 +382,7 @@ namespace Android.RuntimeTests
 			public IReadOnlyList<CapturedEvent> GetEvents (params int [] eventIds)
 			{
 				int managedThreadId = Environment.CurrentManagedThreadId;
-				lock (events) {
+				lock (eventsLock) {
 					if (eventIds.Length == 0) {
 						return events.FindAll (captured => captured.ManagedThreadId == managedThreadId);
 					}
@@ -402,7 +403,7 @@ namespace Android.RuntimeTests
 				out CapturedEvent startEvent,
 				out CapturedEvent stopEvent)
 			{
-				lock (events) {
+				lock (eventsLock) {
 					for (int i = 0; i + 1 < events.Count; i++) {
 						if (events [i].Id == startEventId && events [i + 1].Id == stopEventId) {
 							startEvent = events [i];
@@ -428,7 +429,7 @@ namespace Android.RuntimeTests
 			protected override void OnEventWritten (EventWrittenEventArgs eventData)
 			{
 				if (eventData.EventName is not null) {
-					lock (events) {
+					lock (eventsLock) {
 						events.Add (new CapturedEvent (eventData));
 					}
 				}

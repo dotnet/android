@@ -3,7 +3,7 @@
   "name": "Android Wear Application",
   "description": "A project for creating a Wear OS app using .NET for Android",
   "symbols/Framework/description": "Infrastructure cible du projet.",
-  "symbols/Framework/choices/net12.0-android/description": "Target net12.0-android",
+  "symbols/Framework/choices/net12.0-android/description": "Cible net12.0-android",
   "symbols/Framework/choices/net11.0-android/description": "Cible net11.0-android",
   "symbols/packageName/description": "Remplace le nom du package dans le AndroidManifest.xml",
   "symbols/supportedOSVersion/description": "Remplace $(SupportedOSPlatformVersion) dans le projet",

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
@@ -704,17 +703,6 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			if (!preview) {
 				builder.AssertHasNoWarnings ();
 			}
-		}
-
-		static string GetPreviousWorkloadJavaSdkPath ()
-		{
-			var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
-			var variableName = $"JAVA_HOME_21_{architecture}";
-			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
-			if (string.IsNullOrEmpty (javaSdkPath)) {
-				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
-			}
-			return javaSdkPath;
 		}
 	}
 }

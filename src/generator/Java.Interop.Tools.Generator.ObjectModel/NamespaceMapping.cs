@@ -10,8 +10,7 @@ namespace MonoDroid.Generation
 		public NamespaceMapping (IEnumerable<GenBase> gens)
 		{
 			foreach (GenBase gen in gens)
-				if (!mappings.ContainsKey (gen.PackageName))
-					mappings [gen.PackageName] = gen.Namespace;
+				mappings.TryAdd (gen.PackageName, gen.Namespace);
 		}
 
 		bool IsGeneratable { get { return true; } }

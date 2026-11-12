@@ -34,6 +34,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator** | `tests/generator-Tests/` | `dotnet test tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
+| **Android test adapter streaming/TRX** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0 --filter "FullyQualifiedName~StreamingTests"` |
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 | **MTP host runner and discovery** | `tests/Microsoft.Android.Run-Tests/` | `dotnet test tests/Microsoft.Android.Run-Tests/Microsoft.Android.Run-Tests.csproj -v minimal` |
 
@@ -96,7 +97,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
 | **bundletool commands** | `--filter "FullyQualifiedName~BundleToolTaskTests"` | Command-line generation only; no project builds or device |
-| **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools, Clang runtime discovery, and checked-build wrapper diagnostics |
+| **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools and Clang runtime discovery |
 
 ---
 
@@ -121,6 +122,10 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Java exception handling and fatal managed main-thread process termination on CoreCLR and NativeAOT |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
 | **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
+
+`DotNetInstallAndRunPreviousSdk` covers CoreCLR Debug/Release and NativeAOT Release.
+Set `JAVA_HOME_21_ARM64` or `JAVA_HOME_21_X64` to JDK 21, matching the test host's
+architecture. Local workload setup installs the previous Android SDK.
 
 ---
 
@@ -216,7 +221,7 @@ Run these tests with `dotnet test` from each test project directory listed above
 
 The trimmable typemap is exercised by the on-device runtime tests above,
 `TrimmableTypeMapBuildTests` (host-side build integration), and
-`GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`,
+`GenerateTrimmableTypeMapTests`, `GeneratedJniDebuggerBoundaryTests`, `TrimmableTypeMapIncrementalTests`,
 `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, and
 `ExtractTypeMapKeysFromNativeAotObjectTests` (standalone build-task tests).
 The host tests cover incremental typemap invalidation, activity-alias rewriting,
@@ -226,6 +231,23 @@ The object-extraction tests use synthetic metadata, so they need no NDK tools.
 The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
 because the UCO format marker is assembly-wide. The manifest-only Activity
 lives in the library assembly, which is not rooted wholesale by the test app.
+
+`GeneratedJniDebuggerBoundaryTests` checks the emitted debugger attribute and
+inline exception regions for constructor and export/direct-dispatch UCOs.
+On device, `-p:IncludeCategories=GeneratedJniDebuggerBoundary` selects constructor
+activation and export coverage, including throwing calls, subsequent successful
+calls, and handled-exception ABI defaults with exactly-once application-event
+delivery on both CoreCLR and NativeAOT.
+Ordinary device runs are no-debugger transport tests, not proof of an attached
+debugger's user-unhandled stop, Continue, or Java evaluation behavior.
+For attached CoreCLR acceptance, build with `Optimize=false` and use
+`JavaSideThrowingConstructorPropagatesException` and
+`Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException`: their catches
+remain in user code so JNI's managed rethrow does not add another user-unhandled
+stop inside NUnit's external `Assert.Catch`. Each should stop once at the original
+throw, then pass after Continue. The handled-policy tests above should not stop.
+Java evaluation while stopped must be checked separately.
+
 To run the on-device typemap tests:
 
 ```bash

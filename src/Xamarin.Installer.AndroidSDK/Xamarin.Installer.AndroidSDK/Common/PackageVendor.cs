@@ -34,10 +34,10 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (!ReferenceEquals (this, other))
 				return false;
 
-			if (String.Compare (ID, other.ID, StringComparison.Ordinal) != 0)
+			if (!string.Equals (ID, other.ID, StringComparison.Ordinal))
 				return false;
 
-			return String.Compare (Display, other.Display, StringComparison.Ordinal) == 0;
+			return string.Equals (Display, other.Display, StringComparison.Ordinal);
 		}
 
 		/// <summary>

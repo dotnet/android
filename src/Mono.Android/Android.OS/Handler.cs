@@ -95,8 +95,7 @@ namespace Android.OS {
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 
-			if (handler == null)
-				throw new ArgumentNullException ("handler");
+			ArgumentNullException.ThrowIfNull (handler);
 			this.handler = handler;
 		}
 

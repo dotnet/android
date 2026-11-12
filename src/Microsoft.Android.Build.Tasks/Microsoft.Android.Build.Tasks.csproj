@@ -14,7 +14,9 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
-    <Features>$(Features);updated-memory-safety-rules</Features>
+    <!-- Use the property instead of the feature flag: satellite compilation forwards Features but not LangVersion.
+         https://github.com/dotnet/sdk/issues/56839 -->
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
@@ -58,6 +60,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\Resource.Designer.snk" LogicalName="Resource.Designer.snk" />
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java;..\Xamarin.Android.Build.Tasks\Resources\MonoRuntimeProvider.Bundled.java">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
@@ -68,7 +71,15 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceParser.cs" Link="Utilities\ResourceParser.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceIdentifier.cs" Link="Utilities\ResourceIdentifier.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\RtxtParser.cs" Link="Utilities\RtxtParser.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\PackageFileListBuilder.cs" Link="Utilities\PackageFileListBuilder.cs" />
+    <!-- BuildAppBundle: the legacy BundleToolAdbTask tasks still derive from these, so they remain shared sources. -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
   </ItemGroup>
 
   <!--
@@ -80,6 +91,15 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources*.resx" Link="Properties\%(Filename)%(Extension)">
       <ManifestResourceName>Xamarin.Android.Tasks.Properties.%(Filename)</ManifestResourceName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- FastDeploy shares AndroidHelper and its localized XA#### messages with Xamarin.Android.Build.Debugging.Tasks. -->
+  <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Utilities\AndroidHelper.cs" Link="Utilities\AndroidHelper.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources.Designer.cs" Link="Properties\DebuggingResources.Designer.cs" />
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources*.resx" Link="Properties\Debugging%(Filename)%(Extension)">
+      <ManifestResourceName>Xamarin.Android.Build.Debugging.Tasks.Properties.%(Filename)</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
 

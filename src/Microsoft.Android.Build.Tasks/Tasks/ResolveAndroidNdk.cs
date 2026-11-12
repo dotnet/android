@@ -13,7 +13,6 @@ public class ResolveAndroidNdk : AndroidTask
 	public string? AndroidNdkDirectory { get; set; }
 	public string? AndroidRuntime { get; set; }
 	public bool StripNativeLibraries { get; set; }
-	public string? CheckedBuild { get; set; }
 
 	[Output]
 	public string? ToolchainDirectory { get; set; }
@@ -34,7 +33,7 @@ public class ResolveAndroidNdk : AndroidTask
 	{
 		ToolchainDirectory = LinkerToolPath = ObjcopyToolPath = StripToolPath = ClangRuntimeDirectory = null;
 		bool nativeAot = string.Equals (AndroidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase);
-		if (!nativeAot && !StripNativeLibraries && string.IsNullOrEmpty (CheckedBuild)) {
+		if (!nativeAot && !StripNativeLibraries) {
 			return true;
 		}
 
@@ -54,7 +53,7 @@ public class ResolveAndroidNdk : AndroidTask
 		if (StripNativeLibraries) {
 			StripToolPath = ndk.GetToolPath ("llvm-strip");
 		}
-		if (nativeAot || !string.IsNullOrEmpty (CheckedBuild)) {
+		if (nativeAot) {
 			ClangRuntimeDirectory = ndk.GetClangDeviceLibraryPath ();
 		}
 		return !Log.HasLoggedErrors;

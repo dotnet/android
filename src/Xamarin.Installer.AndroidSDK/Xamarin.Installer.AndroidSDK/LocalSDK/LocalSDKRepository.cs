@@ -12,8 +12,6 @@ using System.IO;
 using System.Xml.Linq;
 using System.Linq;
 
-using IniParser;
-using IniParser.Model;
 using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.AndroidSDK.GoogleV2;
 using Xamarin.Installer.AndroidSDK.GoogleV2.Parsing;
@@ -237,9 +235,13 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 			if (!File.Exists (manifestIni))
 				return null;
 
-			var parser = new FileIniDataParser ();
-			IniData data = parser.ReadFile (manifestIni);
-			string libs = data.GetKey ("libraries")?.Trim ();
+			// Android SDK tools read add-on manifest.ini with java.util.Properties.load().
+			// This intentionally decodes escapes/continuations and skips #/! comments, unlike INI.
+			// Semicolons remain value delimiters, not inline comments; standalone ; lines are unused keys.
+			// Keep the old INI reader's encoding detection without changing other properties consumers.
+			var data = AndroidUtilities.ReadAndroidProperties (manifestIni, detectEncodingFromByteOrderMarks: true);
+			data.TryGetValue ("libraries", out string libs);
+			libs = libs?.Trim ();
 			if (String.IsNullOrEmpty (libs))
 				return null;
 
@@ -249,7 +251,8 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 				string id = lid.Trim ();
 				if (String.IsNullOrEmpty (lid))
 					continue;
-				AddPackageLibrary (id, data.GetKey (id), ref libraries);
+				data.TryGetValue (id, out string details);
+				AddPackageLibrary (id, details, ref libraries);
 			}
 
 			return libraries;
@@ -361,7 +364,7 @@ namespace Xamarin.Installer.AndroidSDK.LocalSDK
 				return false;
 			
 			string dir = Path.Combine (Path.GetDirectoryName (filePath), "..");
-			return String.Compare (parentDirName, Path.GetFileName (Path.GetFullPath (dir)), StringComparison.OrdinalIgnoreCase) == 0;
+			return string.Equals (parentDirName, Path.GetFileName (Path.GetFullPath (dir)), StringComparison.OrdinalIgnoreCase);
 		}
 
 		void AddLicense (License license)

@@ -17,7 +17,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="_WriteLockFile">
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveUnknownFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidComputeResPaths" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidSignPackage" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidCreateDebugKey" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -32,7 +31,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.GetAndroidPackageName" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.BuildArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.BuildArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.BuildAppBundle" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.BuildAppBundle" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.InstallApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -67,7 +67,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -83,7 +84,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
@@ -162,7 +162,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' And '$(Optimize)' == 'True' ">22</_AndroidAssemblyStoreCompressionLevel>
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' ">3</_AndroidAssemblyStoreCompressionLevel>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
-	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
 	<!-- Currently only C# is supported -->
 	<AndroidGenerateLayoutBindings Condition=" '$(Language)' != 'C#' ">False</AndroidGenerateLayoutBindings>
@@ -865,6 +864,7 @@ because xbuild doesn't support framework reference assemblies.
 		CheckIssues="$(AndroidLintCheckIssues)"
 		ConfigFiles="@(AndroidLintConfig)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)"
+		ResourceCaseMap="@(_AndroidResourceCaseMap)"
 		SourceDirectories="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)"
 		IntermediateOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(LintToolPath)"
@@ -946,7 +946,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
 		<_PropertyCacheItems Include="AndroidStripNativeLibraries=$(_AndroidStripNativeLibraries)" />
 		<_PropertyCacheItems Include="_AndroidRuntime=$(_AndroidRuntime)" />
-		<_PropertyCacheItems Include="_AndroidCheckedBuild=$(_AndroidCheckedBuild)" />
 		<_PropertyCacheItems Include="_AndroidNativeAotExtraLinkerArgs=$(_AndroidNativeAotExtraLinkerArgs)" />
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
 		<_PropertyCacheItems Include="_NuGetAssetsFileHash=%(_NuGetAssetsFileHash.FileHash)" />
@@ -1000,6 +999,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_ComputeAndroidResourcePaths">
+	<ItemGroup>
+		<_AndroidResourceCaseMap Remove="@(_AndroidResourceCaseMap)" />
+	</ItemGroup>
 	<AndroidComputeResPaths ResourceFiles="@(AndroidResource);@(AndroidBoundLayout)"
 			IntermediateDir="$(MonoAndroidResDirIntermediate)"
 			Prefixes="$(MonoAndroidResourcePrefix)"
@@ -1010,6 +1012,7 @@ because xbuild doesn't support framework reference assemblies.
 	>
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
 		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
+		<Output ItemName="_AndroidResourceCaseMap" TaskParameter="ResourceCaseMap" />
 		<Output PropertyName="_AndroidResolvedResourcesFilesHash" TaskParameter="FilesHash" />
 	</AndroidComputeResPaths>
 
@@ -1129,6 +1132,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
   <_PrepareUpdateAndroidResgenDependsOnTargets>
+    _GenerateResourceDesignerAssemblyInputs;
     _IncludeModifiedFilesInUpdateAndroidResgenInputs;
   </_PrepareUpdateAndroidResgenDependsOnTargets>
 </PropertyGroup>
@@ -1429,6 +1433,7 @@ because xbuild doesn't support framework reference assemblies.
   <ConvertCustomView
       CustomViewMapFile="$(_CustomViewMapFile)"
       AcwMapFile="$(_AcwMapFile)"
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)">
     <Output TaskParameter="Processed" ItemName="_ProcessedCustomViews" />
   </ConvertCustomView>
@@ -1898,12 +1903,11 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_AndroidResolveNdk"
     DependsOnTargets="_ResolveSdks"
-    Condition=" '$(DesignTimeBuild)' != 'true' and ('$(_AndroidRuntime)' == 'NativeAOT' or '$(_AndroidStripNativeLibraries)' == 'true' or '$(_AndroidCheckedBuild)' != '') ">
+    Condition=" '$(DesignTimeBuild)' != 'true' and ('$(_AndroidRuntime)' == 'NativeAOT' or '$(_AndroidStripNativeLibraries)' == 'true') ">
   <ResolveAndroidNdk
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       AndroidRuntime="$(_AndroidRuntime)"
-      StripNativeLibraries="$(_AndroidStripNativeLibraries)"
-      CheckedBuild="$(_AndroidCheckedBuild)">
+      StripNativeLibraries="$(_AndroidStripNativeLibraries)">
     <Output TaskParameter="ToolchainDirectory" PropertyName="_AndroidNdkToolchainDirectory" />
     <Output TaskParameter="LinkerToolPath" PropertyName="_AndroidNdkLinkerToolPath" />
     <Output TaskParameter="ObjcopyToolPath" PropertyName="_AndroidNdkObjcopyToolPath" />
@@ -2066,7 +2070,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <CollectNativeFilesForArchive
       AndroidRuntime="$(_AndroidRuntime)"
-      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"
       StripToolPath="$(_AndroidNdkStripToolPath)"
@@ -2076,7 +2079,6 @@ because xbuild doesn't support framework reference assemblies.
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
       SupportedAbis="@(_BuildTargetAbis)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
-      CheckedBuild="$(_AndroidCheckedBuild)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
@@ -2194,7 +2196,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <CollectNativeFilesForArchive
       AndroidRuntime="$(_AndroidRuntime)"
-      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"
       StripToolPath="$(_AndroidNdkStripToolPath)"
@@ -2204,7 +2205,6 @@ because xbuild doesn't support framework reference assemblies.
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
       SupportedAbis="@(_BuildTargetAbis)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
-      CheckedBuild="$(_AndroidCheckedBuild)"
       IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="_AndroidNativeFilesToAddToArchive" />
@@ -2280,9 +2280,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_DefineBuildTargetAbis" DependsOnTargets="$(_BeforeDefineBuildTargetAbis)">
-  <SplitProperty Value="$(AndroidSupportedAbis)" Condition="'@(_BuildTargetAbis)' == ''">
-    <Output TaskParameter="Output" ItemName="_BuildTargetAbis" />
-  </SplitProperty>
+  <ItemGroup Condition="'@(_BuildTargetAbis)' == ''">
+    <_BuildTargetAbis Include="$(AndroidSupportedAbis.Split(',;', StringSplitOptions.RemoveEmptyEntries))" />
+  </ItemGroup>
   <Error Code="XA0115"
       Condition=" '%(_BuildTargetAbis.Identity)' == 'armeabi' "
       Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
@@ -2706,14 +2706,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_DeployApk"
-    Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-  <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="install"
-      Arguments="-r &quot;$(ApkFileSigned)&quot;"
-  />
+    Condition=" '$(AndroidPackageFormat)' != 'aab' "
+    DependsOnTargets="_AndroidAdbToolPath">
+  <Exec Command="$(_AdbCommand) $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="_BuildApkSet"
@@ -2742,10 +2737,10 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_DeployAppBundle"
     Condition=" '$(AndroidPackageFormat)' == 'aab' "
-    DependsOnTargets="_BuildApkSet">
+    DependsOnTargets="_BuildApkSet;_AndroidAdbToolPath">
   <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
-      Command="&quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(AdbTarget) shell pm list packages $(_AndroidPackage)"
+      Command="$(_AdbCommand) $(AdbTarget) shell pm list packages $(_AndroidPackage)"
       ConsoleToMSBuild="True"
       StandardOutputImportance="Low"
   >
@@ -2754,25 +2749,21 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_AndroidInstalledPackage Include="@(_AndroidInstalledPackages->WithMetadataValue('Identity', 'package:$(_AndroidPackage)'))" />
   </ItemGroup>
-  <AndroidAdb
+  <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '@(_AndroidInstalledPackage->Count())' != '0' "
-      ContinueOnError="True"
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="uninstall"
-      Arguments="-k $(_AndroidPackage)"
+      Command="$(_AdbCommand) $(AdbTarget) uninstall -k $(_AndroidPackage)"
+      ConsoleToMSBuild="True"
+      IgnoreExitCode="True"
+      StandardOutputImportance="Low"
   >
-    <Output TaskParameter="Result" PropertyName="_UninstallResult" />
-  </AndroidAdb>
-   <AndroidAdb
-      Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '@(_AndroidInstalledPackage->Count())' != '0' And '$(_UninstallResult)' == 'false' "
-      ContinueOnError="True"
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="shell cmd package uninstall"
-      Arguments="$(_AndroidPackage)"
+    <Output TaskParameter="ConsoleOutput" PropertyName="_UninstallOutput" />
+  </Exec>
+  <!-- Newer adb versions reject `uninstall -k` and suggest `adb shell cmd package uninstall` instead. -->
+  <Exec
+      Condition=" $(_UninstallOutput.Contains('adb shell cmd package uninstall')) "
+      Command="$(_AdbCommand) $(AdbTarget) shell cmd package uninstall $(_AndroidPackage)"
+      IgnoreExitCode="True"
+      StandardOutputImportance="Low"
   />
   <InstallApkSet
       ToolPath="$(JavaToolPath)"
@@ -2792,14 +2783,9 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="$(InstallDependsOnTargets)">
 </Target>
 
-<Target Name="_Uninstall">
-  <AndroidAdb
-      ToolExe="$(AdbToolExe)"
-      ToolPath="$(AdbToolPath)"
-      AdbTarget="$(AdbTarget)"
-      Command="uninstall"
-      Arguments="$(_AndroidPackage)"
-  />
+<Target Name="_Uninstall"
+    DependsOnTargets="_AndroidAdbToolPath">
+  <Exec Command="$(_AdbCommand) $(AdbTarget) uninstall $(_AndroidPackage)" StandardOutputImportance="Low" />
 </Target>
 
 <Target Name="Uninstall"
@@ -2819,7 +2805,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency);@(JavaDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
-    <_NdkRequired Condition="'$(_AndroidRuntime)' == 'NativeAOT' or '$(_AndroidStripNativeLibraries)' == 'true' or '$(_AndroidCheckedBuild)' != ''">true</_NdkRequired>
+    <_NdkRequired Condition="'$(_AndroidRuntime)' == 'NativeAOT' or '$(_AndroidStripNativeLibraries)' == 'true'">true</_NdkRequired>
     <_NdkRequired Condition="'$(_NdkRequired)' == ''">false</_NdkRequired>
   </PropertyGroup>
   <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>

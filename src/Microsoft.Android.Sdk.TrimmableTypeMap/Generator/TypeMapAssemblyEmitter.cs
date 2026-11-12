@@ -180,12 +180,8 @@ sealed class TypeMapAssemblyEmitter
 	/// </param>
 	internal void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
-		if (stream is null) {
-			throw new ArgumentNullException (nameof (stream));
-		}
+		ArgumentNullException.ThrowIfNull (model);
+		ArgumentNullException.ThrowIfNull (stream);
 
 		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		_pe.WritePE (stream);
@@ -198,9 +194,7 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	internal Stream EmitToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
+		ArgumentNullException.ThrowIfNull (model);
 
 		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		return _pe.CreatePEStream ();
@@ -1325,11 +1319,13 @@ sealed class TypeMapAssemblyEmitter
 		Action<TrackedInstructionEncoder> emitActivation,
 		Action<BlobBuilder> encodeLocals)
 	{
-		return _pe.EmitBody (wrapperName,
+		var handle = _pe.EmitBody (wrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, emitActivation),
 			encodeLocals);
+		_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
+		return handle;
 	}
 
 	void EmitManagedConstructorActivation (

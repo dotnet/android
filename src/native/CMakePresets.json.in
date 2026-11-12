@@ -22,7 +22,6 @@
                 "ANDROID_USE_LEGACY_TOOLCHAIN_FILE": "OFF",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_MAKE_PROGRAM": "@NinjaPath@",
-                "XA_LIB_TOP_DIR": "@MicrosoftAndroidSdkOutDir@",
                 "XA_BUILD_CONFIGURATION": "@XA_BUILD_CONFIGURATION@",
                 "XA_TEST_OUTPUT_DIR": "@XA_TEST_OUTPUT_DIR@"
             }
@@ -61,28 +60,6 @@
             "cacheVariables": {
                 "ANDROID_STL": "c++_static"
             }
-        },
-
-        {
-            "name": "analyzers-common",
-            "hidden": true,
-            "inherits": "common",
-            "cacheVariables": {
-                "ANDROID_STL": "c++_static",
-                "ANDROID_CPP_FEATURES": "rtti exceptions"
-            }
-        },
-
-        {
-            "name": "analyzers-debug",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-debug"]
-        },
-
-        {
-            "name": "analyzers-release",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-release"]
         },
 
         {
@@ -130,22 +107,6 @@
         },
 
         {
-            "name": "asan-common",
-            "hidden": true,
-            "cacheVariables": {
-                "ENABLE_CLANG_ASAN": "ON"
-            }
-        },
-
-        {
-            "name": "ubsan-common",
-            "hidden": true,
-            "cacheVariables": {
-                "ENABLE_CLANG_UBSAN": "ON"
-            }
-        },
-
-        {
             "name": "default-debug-armeabi-v7a",
             "inherits": ["mono-default-common", "common-debug", "common-armeabi-v7a"]
         },
@@ -174,40 +135,6 @@
             "name": "coreclr-default-release-armeabi-v7a",
             "inherits": ["default-common", "common-release", "common-armeabi-v7a"]
         },
-
-        {
-            "name": "analyzers-debug-armeabi-v7a",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-debug", "common-armeabi-v7a"]
-        },
-
-        {
-            "name": "analyzers-release-armeabi-v7a",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-release", "common-armeabi-v7a"]
-        },
-
-        {
-            "name": "asan-release-armeabi-v7a",
-            "inherits": ["analyzers-release-armeabi-v7a", "asan-common"]
-        },
-
-        {
-            "name": "asan-debug-armeabi-v7a",
-            "inherits": ["analyzers-debug-armeabi-v7a", "asan-common"]
-        },
-
-        {
-            "name": "ubsan-release-armeabi-v7a",
-            "inherits": ["analyzers-release-armeabi-v7a", "ubsan-common"]
-        },
-
-        {
-            "name": "ubsan-debug-armeabi-v7a",
-            "inherits": ["analyzers-debug-armeabi-v7a", "ubsan-common"]
-        },
-
-
 
         {
             "name": "default-debug-arm64-v8a",
@@ -240,40 +167,6 @@
         },
 
         {
-            "name": "analyzers-debug-arm64-v8a",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-debug", "common-arm64-v8a"]
-        },
-
-        {
-            "name": "analyzers-release-arm64-v8a",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-release", "common-arm64-v8a"]
-        },
-
-        {
-            "name": "asan-release-arm64-v8a",
-            "inherits": ["analyzers-release-arm64-v8a", "asan-common"]
-        },
-
-        {
-            "name": "asan-debug-arm64-v8a",
-            "inherits": ["analyzers-debug-arm64-v8a", "asan-common"]
-        },
-
-        {
-            "name": "ubsan-release-arm64-v8a",
-            "inherits": ["analyzers-release-arm64-v8a", "ubsan-common"]
-        },
-
-        {
-            "name": "ubsan-debug-arm64-v8a",
-            "inherits": ["analyzers-debug-arm64-v8a", "ubsan-common"]
-        },
-
-
-
-        {
             "name": "default-debug-x86",
             "inherits": ["mono-default-common", "common-debug", "common-x86"]
         },
@@ -282,40 +175,6 @@
             "name": "default-release-x86",
             "inherits": ["mono-default-common", "common-release", "common-x86"]
         },
-
-        {
-            "name": "analyzers-debug-x86",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-debug", "common-x86"]
-        },
-
-        {
-            "name": "analyzers-release-x86",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-release", "common-x86"]
-        },
-
-        {
-            "name": "asan-release-x86",
-            "inherits": ["analyzers-release-x86", "asan-common"]
-        },
-
-        {
-            "name": "asan-debug-x86",
-            "inherits": ["analyzers-debug-x86", "asan-common"]
-        },
-
-        {
-            "name": "ubsan-release-x86",
-            "inherits": ["analyzers-release-x86", "ubsan-common"]
-        },
-
-        {
-            "name": "ubsan-debug-x86",
-            "inherits": ["analyzers-debug-x86", "ubsan-common"]
-        },
-
-
 
         {
             "name": "default-debug-x86_64",
@@ -345,38 +204,6 @@
         {
             "name": "coreclr-default-release-x86_64",
             "inherits": ["default-common", "common-release", "common-x86_64"]
-        },
-
-        {
-            "name": "analyzers-debug-x86_64",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-debug", "common-x86_64"]
-        },
-
-        {
-            "name": "analyzers-release-x86_64",
-            "hidden": true,
-            "inherits": ["analyzers-common", "common-release", "common-x86_64"]
-        },
-
-        {
-            "name": "asan-release-x86_64",
-            "inherits": ["analyzers-release-x86_64", "asan-common"]
-        },
-
-        {
-            "name": "asan-debug-x86_64",
-            "inherits": ["analyzers-debug-x86_64", "asan-common"]
-        },
-
-        {
-            "name": "ubsan-release-x86_64",
-            "inherits": ["analyzers-release-x86_64", "ubsan-common"]
-        },
-
-        {
-            "name": "ubsan-debug-x86_64",
-            "inherits": ["analyzers-debug-x86_64", "ubsan-common"]
         }
     ]
 }

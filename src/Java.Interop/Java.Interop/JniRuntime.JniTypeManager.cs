@@ -313,8 +313,7 @@ namespace Java.Interop {
 			{
 				AssertValid ();
 
-				if (type == null)
- 					throw new ArgumentNullException (nameof (type));
+				ArgumentNullException.ThrowIfNull (type);
 
 				return GetTypeSignatureCore (type);
 			}

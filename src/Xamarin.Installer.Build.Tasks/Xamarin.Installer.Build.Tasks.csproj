@@ -31,7 +31,6 @@
   </ItemGroup>
   <Import Project="..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <ItemGroup>
-    <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" GeneratePathProperty="true" />
   </ItemGroup>
   <ItemGroup>

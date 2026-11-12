@@ -70,8 +70,7 @@ static class JavaMarshalRegisteredPeers
 		CollectPeers ();
 
 		var r = value.PeerReference;
-		if (!r.IsValid)
-			throw new ObjectDisposedException (value.GetType ().FullName);
+		ObjectDisposedException.ThrowIf (!r.IsValid, value);
 
 		if (r.Type != JniObjectReferenceType.Global) {
 			value.SetPeerReference (r.NewGlobalRef ());
@@ -191,8 +190,7 @@ static class JavaMarshalRegisteredPeers
 		// Remove any collected contexts before modifying RegisteredInstances
 		CollectPeers ();
 
-		if (value == null)
-			throw new ArgumentNullException (nameof (value));
+		ArgumentNullException.ThrowIfNull (value);
 
 		lock (s_instancesLock) {
 			int key = value.JniIdentityHashCode;
