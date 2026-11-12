@@ -226,12 +226,55 @@ namespace Xamarin.Android.Tools
 				? new [] { "/i", installerPath, "/quiet", "/norestart" }
 				: new [] { "-pkg", installerPath, "-target", "/" })
 				psi.ArgumentList.Add (argument);
-			var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+			await RunPlatformInstallerAsync (psi, cancellationToken).ConfigureAwait (false);
+		}
+
+		async Task RunPlatformInstallerAsync (ProcessStartInfo startInfo, CancellationToken cancellationToken)
+		{
 			cancellationToken.ThrowIfCancellationRequested ();
-			if (result.ExitStatus.ExitCode != 0) {
-				var errorOutput = result.StandardError;
-				logger (TraceLevel.Error, $"Installer failed (exit code {result.ExitStatus.ExitCode}): {errorOutput}");
-				throw new InvalidOperationException ($"Platform installer failed with exit code {result.ExitStatus.ExitCode}: {errorOutput}");
+			using var process = new Process { StartInfo = startInfo };
+			process.Start ();
+			using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+			using var reading = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+			var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+			var capture = process.ReadAllTextAsync (reading.Token);
+			using var stdout = process.StandardOutput;
+			using var stderr = process.StandardError;
+			var monitor = BoundInstallerDrainAsync ();
+			try {
+				if (await Task.WhenAny (exit, capture).ConfigureAwait (false) == capture)
+					await capture.ConfigureAwait (false);
+				var status = await exit.WaitAsync (cancellationToken).ConfigureAwait (false);
+				var result = await capture.ConfigureAwait (false);
+				cancellationToken.ThrowIfCancellationRequested ();
+				if (status.ExitCode != 0) {
+					logger (TraceLevel.Error, $"Installer failed (exit code {status.ExitCode}): {result.StandardError}");
+					throw new InvalidOperationException ($"Platform installer failed with exit code {status.ExitCode}: {result.StandardError}");
+				}
+			} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+				throw new TimeoutException ("The platform installer exited, but its redirected output did not close within 30 seconds.");
+			} catch (OperationCanceledException ex) {
+				throw new OperationCanceledException (ex.Message, ex, cancellationToken);
+			} finally {
+				reading.Cancel ();
+				execution.Cancel ();
+				try {
+					await capture.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (reading.IsCancellationRequested) {
+					// Installation services are not owned by this client and must remain running.
+				} finally {
+					try {
+						await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+					} finally {
+						await monitor.ConfigureAwait (false);
+					}
+				}
+			}
+
+			async Task BoundInstallerDrainAsync ()
+			{
+				await exit.ConfigureAwait (false);
+				reading.CancelAfter (TimeSpan.FromSeconds (30));
 			}
 		}
 

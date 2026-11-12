@@ -142,12 +142,16 @@ namespace Microsoft.Android.Tasks
 			}
 		}
 
-		public override bool Execute ()
+		public async override Task RunTaskAsync ()
 		{
-			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4, adbToolPath: AdbToolPath, adbToolExe: AdbToolExe);
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+				WorkingDirectory, new Dictionary<string, string> (TaskEnvironment.Fallback.GetEnvironmentVariables ()));
+			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true,
+				engine4: BuildEngine4, adbToolPath: AdbToolPath, adbToolExe: AdbToolExe,
+				taskEnvironment: environment, cancellationToken: CancellationToken);
 			if (device == null) {
 				PrintDiagnostics ();
-				return false;
+				return;
 			}
 			DeviceId = device.Serial;
 			LogMessage ($"Found device: {DeviceId}");
@@ -155,7 +159,7 @@ namespace Microsoft.Android.Tasks
 			if (string.IsNullOrEmpty (PrimaryCpuAbi) && !EmbedAssembliesIntoApk) {
 				PrintDiagnostics ();
 				LogCodedError ("XA0010", Resources.XA0010_NoAbi, DeviceId);
-				return false;
+				return;
 			}
 
 			var flagFilePath = GetFullPath (UploadFlagFile);
@@ -171,19 +175,12 @@ namespace Microsoft.Android.Tasks
 			}
 
 			try {
-				return base.Execute ();
-			} finally {
-				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, packageInfo, lifetime, allowEarlyCollection: false);
-			}
-		}
-
-		public async override Task RunTaskAsync ()
-		{
-			try {
 				await RunInstall ();
 			} catch {
 				PrintDiagnostics ();
 				throw;
+			} finally {
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, packageInfo, lifetime, allowEarlyCollection: false);
 			}
 		}
 
@@ -255,9 +252,8 @@ namespace Microsoft.Android.Tasks
 				return;
 			}
 
-			if (!warmProbeStoppedApp) {
-				await TerminateApp ();
-			}
+			if (!warmProbeStoppedApp && !await TerminateApp ())
+				return;
 			if (!await DeployFastDevFilesWithAdbPush (OverrideFullPath)) {
 				LogDiagnostic ("FastDeploy deployment did not complete successfully.");
 			}
@@ -369,7 +365,7 @@ namespace Microsoft.Android.Tasks
 			LogDebugMessage ($"Installed Package {PackageName}.");
 		}
 
-		async Task TerminateApp ()
+		async Task<bool> TerminateApp ()
 		{
 			var pid = packageInfo.ProcessId;
 			if (pid == 0 && packageInfo.IsSystemApplication) {
@@ -377,11 +373,13 @@ namespace Microsoft.Android.Tasks
 			}
 			if (pid == 0) {
 				LogDebugMessage ($"{PackageName} was not running, skipping kill");
-				return;
+				return true;
 			}
 			LogDebugMessage ($"Terminating {PackageName}...");
-			await RunLoggedDeviceOperation ($"ForceStop {PackageName}", () => ForceStopPackage (PackageName));
+			if (!await RunLoggedDeviceOperation ($"ForceStop {PackageName}", () => ForceStopPackage (PackageName)))
+				return false;
 			LogDebugMessage ($"{PackageName} Terminated.");
+			return true;
 		}
 
 		async Task<string> CreateRemoteStagingDirectories (string remoteStagingPath, HashSet<string> stagedFiles)
@@ -543,11 +541,9 @@ namespace Microsoft.Android.Tasks
 		async Task<Dictionary<string, RemoteFileInfo>> GetRemoteFileData (string rootPath, bool runAs)
 		{
 			// The stat format must be quoted so that the `|` separators survive to the device
-			// shell. `adb shell` re-parses its arguments, so passing the format as an argv element
-			// (e.g. via RunAdbShellCommand (params string [])) would let the device shell treat the
-			// `|` characters as pipes. Building a single, explicitly quoted command string avoids it.
+			// shell. This is an authored script, not an argv-style shell invocation.
 			string findCommand = $"find {QuoteShellArgument (rootPath)} -type f -exec stat -c '%n|%s|%Y' {{}} +";
-			var result = runAs ? await RunAsShell (findCommand) : await RunAdbShellCommand (findCommand);
+			var result = runAs ? await RunAsShell (findCommand) : await RunAdbShellScript (findCommand);
 			string output = result.Output;
 			if (runAs && RaiseRunAsError (output)) {
 				return null;
@@ -671,7 +667,7 @@ namespace Microsoft.Android.Tasks
 			var batch = new List<string> { command, option };
 			int length = command.Length + option.Length + 2;
 			foreach (var value in values) {
-				int itemLength = value.Length + 3;
+				int itemLength = EscapeShellArgument (value).Length + 1;
 				if (batch.Count > 2 && length + itemLength >= MaxShellCommandLength) {
 					yield return batch;
 					batch = new List<string> { command, option };
@@ -696,18 +692,18 @@ namespace Microsoft.Android.Tasks
 		/// </summary>
 		IEnumerable<List<string>> BatchShellArguments (IReadOnlyList<string> prefix, IEnumerable<string> values, int maxCount, string trailing = null)
 		{
-			int prefixLength = 0;
+			int prefixLength = BuildRunAsArgs ().Sum (arg => EscapeShellArgument (arg).Length + 1);
 			foreach (var arg in prefix) {
-				prefixLength += arg.Length + 3;
+				prefixLength += EscapeShellArgument (arg).Length + 1;
 			}
 			bool hasTrailing = !string.IsNullOrEmpty (trailing);
-			int trailingLength = hasTrailing ? trailing.Length + 3 : 0;
+			int trailingLength = hasTrailing ? EscapeShellArgument (trailing).Length + 1 : 0;
 
 			var batch = new List<string> (prefix);
 			int count = 0;
 			int length = prefixLength + trailingLength;
 			foreach (var value in values) {
-				int itemLength = value.Length + 3;
+				int itemLength = EscapeShellArgument (value).Length + 1;
 				if (count > 0 && (count >= maxCount || length + itemLength >= MaxShellCommandLength)) {
 					if (hasTrailing) {
 						batch.Add (trailing);
@@ -763,8 +759,14 @@ namespace Microsoft.Android.Tasks
 
 		async Task<AdbCommandResult> RunAdbShellCommand (params string [] arguments)
 		{
-			return await RunAdbCommand (new [] { "shell" }.Concat (arguments).ToArray ());
+			return await RunAdbShellScript (string.Join (" ", arguments.Select (EscapeShellArgument)));
 		}
+
+		Task<AdbCommandResult> RunAdbShellScript (string script) => RunAdbCommand ("shell", script);
+
+		static string EscapeShellArgument (string value) =>
+			value.Length > 0 && value.All (c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+				(c >= '0' && c <= '9') || "_./:=+-".Contains (c)) ? value : QuoteShellArgument (value);
 
 		async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
 		{
@@ -907,7 +909,7 @@ namespace Microsoft.Android.Tasks
 			args.Add ("-c");
 			args.Add (script);
 			string command = string.Join (" ", args.Select (QuoteShellArgument));
-			return RunAdbShellCommand (command);
+			return RunAdbShellScript (command);
 		}
 
 		static string QuoteShellArgument (string value)

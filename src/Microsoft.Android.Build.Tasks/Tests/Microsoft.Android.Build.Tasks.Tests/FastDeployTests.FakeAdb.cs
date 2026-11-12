@@ -1,10 +1,33 @@
 using System.Linq;
+using Microsoft.Android.Tasks;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
 	public partial class FastDeployTests
 	{
+		[TestCase (7, "Success", "Failed")]
+		[TestCase (0, "Success\nFailure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", "InsufficientSpace")]
+		[TestCase (0, "Success\nFailure", "Failed")]
+		public void FastDeployDoesNotAcceptSuccessBeforeFailure (int exitCode, string output, string expected)
+		{
+			Assert.AreEqual (expected, FastDeploy.ClassifyInstallResult (CreateAdbResult (exitCode, output)).ToString ());
+		}
+
+		[TestCase ("")]
+		[TestCase ("error: transport closed")]
+		public void FastDeployDoesNotDeployAfterFailedForceStop (string output)
+		{
+			using var device = new FakeAdbDevice ();
+			device.WriteResult ("package", 0, "/data/user/0/com.example.app\n123");
+			device.FailCommand ("am force-stop", output, exitCode: 7);
+			Assert.IsFalse (device.RunFastDeploy ());
+			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
+			Assert.IsFalse (device.HasManifest);
+			Assert.That (device.Commands.Last (), Does.Contain ("am force-stop"));
+			Assert.IsFalse (device.Commands.Any (command => command.Contains (" push ")));
+		}
+
 		[Test]
 		public void FastDeployRejectsFailedOverrideCommand (
 			[Values (

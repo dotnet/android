@@ -31,9 +31,9 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!string.IsNullOrWhiteSpace (Filter))
 				filter = new Regex (Filter);
-			base.Execute ();
+			bool success = base.RunTask ();
 			Output = sb.ToString().Trim ();
-			return !Log.HasLoggedErrors;
+			return success && !Log.HasLoggedErrors;
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)

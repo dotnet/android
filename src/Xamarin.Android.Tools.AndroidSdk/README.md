@@ -34,9 +34,15 @@ dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.A
 ## Process execution and hosting
 
 Process execution belongs to the tool that owns the command. Use .NET 11's
-`Process.Run[Async]` without capture, `Process.RunAndCaptureText[Async]` for complete
-text, and `Process.ReadAllLines[Async]` for streaming. This library provides no
+`Process.Run[Async]` without capture, instance `Process.ReadAllText[Async]` for
+complete text, and `Process.ReadAllLines[Async]` for streaming. This library provides no
 generic process facade or older-runtime implementation.
+
+Start native capture before accessing the redirected readers, then explicitly own
+and dispose both readers after capture has joined. The pinned runtime's static
+complete-capture helpers leave those readers to finalization: repeated successful
+captures otherwise retain two pipe descriptors per command until GC. Disposing
+the `Process` alone does not close readers in the native capture's synchronous mode.
 
 ADB keeps environment overrides, structured arguments, diagnostics, and its
 per-device protocols at `AdbRunner`. Root exit is distinct from output EOF:
@@ -62,8 +68,31 @@ License discovery parses completed output even when declining returns a nonzero
 exit code, but propagates startup, capture and drain-timeout failures instead of
 reporting an empty license list. Accepting specific license IDs propagates the
 same discovery failures.
+AVD list/delete/device-profile discovery and SDK-manager package queries have a
+30-second execution budget. AVD creation, SDK/JDK installation, license input and
+tar extraction retain caller-controlled active durations. Every such command
+separately bounds post-root output draining to 30 seconds; cancellation stops and
+joins the owned root and readers, not shared ADB servers or installer services.
+Unexpected input or capture failures cannot bypass the other owned task joins.
+These budgets govern owned processes and reads, not arbitrary caller-supplied
+logging callbacks; callbacks must return cooperatively.
 Native line enumeration serializes instrumentation parsing and LLVM symbol
 filtering without an event pump or text-writer adapter.
+
+Instrumentation publication failures stop the invocation and propagate rather
+than being treated as malformed status blocks. Owned client/reader cleanup runs
+before joining the publication consumer. MTP's `IMessageBus.PublishAsync` has no
+cancellation argument: an in-progress arbitrary sink must cooperate to finish;
+the five-second exit-cleanup budget is not a hard publication deadline. Already
+observed complete status blocks remain available for partial-run diagnostics.
+
+FastDeploy distinguishes authored remote shell scripts from remote argument
+lists, quoting dynamic operands before ADB's device-side re-parsing. It rejects
+failed force-stop and install results before claiming success. Its initial
+device query participates in task cancellation. Deferred app-detection queries
+have a 30-second execution budget and a disposable build owner; waiter/build-end
+cancellation stops and joins the original query and preserves the upload flag
+when discovery is incomplete.
 
 Native text capture preserves CR/LF and trailing text but decodes with the selected
 encoding, rather than guessing a different encoding from a BOM. Applications

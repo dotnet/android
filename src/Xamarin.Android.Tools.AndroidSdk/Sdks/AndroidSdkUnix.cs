@@ -283,12 +283,26 @@ namespace Xamarin.Android.Tools
 			foreach (var path in paths)
 				psi.ArgumentList.Add (path);
 			Logger (TraceLevel.Verbose, $"Changing filesystem object ownership: {psi.FileName}");
-			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
-
-			if (result.ExitStatus.ExitCode != 0 || result.ExitStatus.Canceled) {
-				Logger (TraceLevel.Warning, $"Failed to change ownership of filesystem object(s)");
-				Logger (TraceLevel.Verbose, $"standard output: {result.StandardOutput}");
-				Logger (TraceLevel.Verbose, $"standard error: {result.StandardError}");
+			using var process = new Process { StartInfo = psi };
+			process.Start ();
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+			var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (deadline.Token);
+			try {
+				var result = process.ReadAllText (TimeSpan.FromSeconds (30));
+				var status = exit.GetAwaiter ().GetResult ();
+				if (status.ExitCode != 0 || status.Canceled || deadline.IsCancellationRequested) {
+					Logger (TraceLevel.Warning, $"Failed to change ownership of filesystem object(s)");
+					Logger (TraceLevel.Verbose, $"standard output: {result.StandardOutput}");
+					Logger (TraceLevel.Verbose, $"standard error: {result.StandardError}");
+				}
+			} finally {
+				deadline.Cancel ();
+				try {
+					process.StandardOutput.Dispose ();
+					process.StandardError.Dispose ();
+				} finally {
+					exit.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+				}
 			}
 		}
 

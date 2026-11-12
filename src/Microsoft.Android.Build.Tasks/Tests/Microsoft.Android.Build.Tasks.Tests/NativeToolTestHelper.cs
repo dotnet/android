@@ -65,35 +65,39 @@ static class NativeToolTestHelper
 
 	internal static (int ExitCode, string StandardOutput, string StandardError) Capture (ProcessStartInfo startInfo, TimeSpan timeout)
 	{
-#if NET11_0_OR_GREATER
-		ProcessTextOutput result;
-		try {
-			result = Process.RunAndCaptureText (startInfo, timeout);
-		} catch (TimeoutException ex) {
-			throw new TimeoutException ($"Native tool timed out: {startInfo.FileName}", ex);
-		}
-		if (result.ExitStatus.Canceled) {
-			throw new TimeoutException ($"Native tool timed out: {startInfo.FileName}");
-		}
-		return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
-#else // !NET11_0_OR_GREATER
-		// This helper is also compiled into the net10.0 packaging tests.
 		using var cancellation = new CancellationTokenSource (timeout);
-		using var process = new Process { StartInfo = startInfo };
-		process.Start ();
-		var output = process.StandardOutput.ReadToEndAsync (cancellation.Token);
-		var error = process.StandardError.ReadToEndAsync (cancellation.Token);
+		using var process = Process.Start (startInfo) ?? throw new InvalidOperationException ($"Could not start {startInfo.FileName}.");
+		// Select native capture mode before borrowing readers for deterministic disposal.
+		var capture = process.ReadAllTextAsync (cancellation.Token);
+		using var stdout = process.StandardOutput;
+		using var stderr = process.StandardError;
+		var exited = process.WaitForExitAsync (cancellation.Token);
 		try {
-			Task.WhenAll (output, error, process.WaitForExitAsync (cancellation.Token))
-				.WaitAsync (cancellation.Token).GetAwaiter ().GetResult ();
-		} catch (OperationCanceledException ex) {
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-			}
+			Task.WhenAll (capture, exited).GetAwaiter ().GetResult ();
+			var result = capture.GetAwaiter ().GetResult ();
+			return (process.ExitCode, result.StandardOutput, result.StandardError);
+		} catch (OperationCanceledException ex) when (cancellation.IsCancellationRequested) {
 			throw new TimeoutException ($"Native tool timed out: {startInfo.FileName}", ex);
+		} finally {
+			try {
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The command exited before the kill request.
+					}
+					if (!process.WaitForExit (5000))
+						throw new TimeoutException ($"Native tool did not exit after termination: {startInfo.FileName}");
+				}
+			} finally {
+				cancellation.Cancel ();
+				try {
+					Task.WhenAll (capture, exited).GetAwaiter ().GetResult ();
+				} catch (OperationCanceledException) when (cancellation.IsCancellationRequested) {
+					TestContext.Progress.WriteLine ($"Stopped native-tool capture: {startInfo.FileName}");
+				}
+			}
 		}
-		return (process.ExitCode, output.GetAwaiter ().GetResult (), error.GetAwaiter ().GetResult ());
-#endif // NET11_0_OR_GREATER
 	}
 
 	public static JsonDocument ReadElf (string library) => JsonDocument.Parse (Run (

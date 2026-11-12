@@ -274,6 +274,86 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public async Task WaiterCancellationStopsAndJoinsTheOriginalQuery ()
+		{
+			using var detection = new Detection ("missing");
+			var engine = new MockBuildEngine (TestContext.Out);
+			var producer = detection.CreateProducer (engine);
+			Assert.IsTrue (producer.Execute ());
+			var query = GetQuery (engine, producer.TaskEnvironment);
+			var waiter = new WaitForAppDetection { BuildEngine = engine, TaskEnvironment = producer.TaskEnvironment };
+			var wait = Task.Run (() => waiter.Execute ());
+			try {
+				Assert.IsFalse (wait.Wait (100));
+				waiter.Cancel ();
+				Assert.IsTrue (await wait.WaitAsync (TimeSpan.FromSeconds (5)));
+				Assert.IsTrue (query.IsCanceled, "Cancelling only a continuation leaves the owned adb query running.");
+				Assert.IsTrue (File.Exists (detection.Flag));
+			} finally {
+				waiter.Cancel ();
+				producer.Cancel ();
+				await wait.WaitAsync (TimeSpan.FromSeconds (5));
+			}
+		}
+
+		[Test]
+		public void BuildOwnerCancellationJoinsTheOriginalQuery ()
+		{
+			using var detection = new Detection ("missing");
+			var engine = new MockBuildEngine (TestContext.Out);
+			var producer = detection.CreateProducer (engine);
+			Assert.IsTrue (producer.Execute ());
+			var query = GetQuery (engine, producer.TaskEnvironment);
+			var owner = engine.GetRegisteredTaskObjectAssemblyLocal<IDisposable> (
+				(DetectIfAppWasUninstalled.QueryOwnerKey, producer.TaskEnvironment.ProjectDirectory), RegisteredTaskObjectLifetime.Build) ??
+				throw new InvalidOperationException ("The producer must register a disposable build owner.");
+			owner.Dispose ();
+			Assert.IsTrue (query.IsCanceled);
+			Assert.IsTrue (File.Exists (detection.Flag));
+		}
+
+		[Test]
+		public void FiniteQueryDeadlinePreservesTheUploadFlag ()
+		{
+			using var detection = new Detection ("missing");
+			var engine = new MockBuildEngine (TestContext.Out);
+			var producer = detection.CreateProducer (engine);
+			Assert.IsTrue (producer.Execute ());
+			var query = GetQuery (engine, producer.TaskEnvironment);
+			var timer = Stopwatch.StartNew ();
+			Assert.CatchAsync<OperationCanceledException> (async () => await query.WaitAsync (TimeSpan.FromSeconds (40)));
+			Assert.GreaterOrEqual (timer.Elapsed, TimeSpan.FromSeconds (29));
+			Assert.IsTrue (File.Exists (detection.Flag));
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Platform ("Linux,MacOsX")]
+		public async Task MSBuildEndDisposesAnUnawaitedQuery (bool multithreaded)
+		{
+			using var detection = new Detection ("missing");
+			var assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Debugging.Tasks.dll");
+			var project = new XElement ("Project",
+				new XElement ("UsingTask", new XAttribute ("TaskName", "Xamarin.Android.Tasks.DetectIfAppWasUninstalled"),
+					new XAttribute ("AssemblyFile", assembly)),
+				new XElement ("Target", new XAttribute ("Name", "Probe"),
+					new XElement ("DetectIfAppWasUninstalled", new XAttribute ("AdbToolPath", "tools"),
+						new XAttribute ("AdbToolExe", detection.Executable), new XAttribute ("PackageName", "com.example.app"),
+						new XAttribute ("UploadFlagFile", "upload.flag"))));
+			await RunMSBuild (detection, project, multithreaded, waitForQuery: false, "-warnaserror:MSB4286,MSB4287,MSB4288");
+			Assert.IsTrue (File.Exists (detection.Flag), "An incomplete query must not invalidate deployment state.");
+			string pidFile = Path.Combine (detection.Directory, "query.pid");
+			if (File.Exists (pidFile)) {
+				try {
+					using var client = Process.GetProcessById (int.Parse (File.ReadAllText (pidFile)));
+					Assert.IsTrue (client.HasExited, "The original client must not outlive the completed build.");
+				} catch (ArgumentException) {
+					// The client has already been reaped.
+				}
+			}
+		}
+
+		[Test]
 		public void WaiterPreservesFaultAndCancellationBehavior ()
 		{
 			var errors = new List<BuildErrorEventArgs> ();
@@ -415,6 +495,7 @@ namespace Xamarin.Android.Build.Tests
 					fi
 					echo "$*" > "$WAIT_TEST_ROOT/query-arguments"
 					echo "$PWD" > "$WAIT_TEST_ROOT/query-directory"
+					echo $$ > "$WAIT_TEST_ROOT/query.pid"
 					echo started > "$WAIT_TEST_ROOT/query-started"
 					while [ ! -f "$WAIT_TEST_ROOT/release" ]; do sleep 0.05; done
 					if [ "$WAIT_TEST_RESULT" = fail ]; then
@@ -464,6 +545,21 @@ namespace Xamarin.Android.Build.Tests
 						} catch (OperationCanceledException) {
 							// Expected when cleaning up a failed test.
 						}
+					}
+					(engine.UnregisterTaskObjectAssemblyLocal (
+						(DetectIfAppWasUninstalled.QueryOwnerKey, producer.TaskEnvironment.ProjectDirectory),
+						RegisteredTaskObjectLifetime.Build) as IDisposable)?.Dispose ();
+				}
+				string pidFile = Path.Combine (Directory, "query.pid");
+				if (File.Exists (pidFile)) {
+					try {
+						using var client = Process.GetProcessById (int.Parse (File.ReadAllText (pidFile)));
+						if (!client.WaitForExit (5000)) {
+							client.Kill ();
+							Assert.IsTrue (client.WaitForExit (5000), "Stop the owned external-build fixture before deleting its files.");
+						}
+					} catch (ArgumentException) {
+						// The external-build client has already been reaped.
 					}
 				}
 				System.IO.Directory.Delete (Directory, recursive: true);

@@ -158,6 +158,10 @@ public class AdbRunner
 		// Try 2: Console command (fallback for older emulators where getprop may not be available)
 		try {
 			var result = await RunCommandAsync (["-s", serial, "emu", "avd", "name"], cancellationToken).ConfigureAwait (false);
+			if (result.ExitCode != 0) {
+				logger.Invoke (TraceLevel.Warning, $"GetEmulatorAvdNameAsync: emu avd name failed for {serial} (exit {result.ExitCode}): {result.StandardError} {result.StandardOutput}");
+				return null;
+			}
 			foreach (var line in result.StandardOutput.Split ('\n')) {
 				var trimmed = line.Trim ();
 				if (!string.IsNullOrEmpty (trimmed) &&
@@ -307,9 +311,9 @@ public class AdbRunner
 	/// Returns the full stdout output trimmed, or <c>null</c> on failure.
 	/// </summary>
 	/// <remarks>
-	/// When <c>adb shell</c> receives the command and arguments as separate tokens, it uses
-	/// <c>exec()</c> directly on the device — bypassing the device's shell interpreter.
-	/// This avoids shell expansion, pipes, and injection risks, making it safer for dynamic input.
+	/// Argument boundaries are preserved for the local adb client, not the remote shell:
+	/// adb joins and re-parses the command on the device. Callers must quote or validate
+	/// dynamic remote arguments; this overload does not prevent shell expansion or injection.
 	/// </remarks>
 	public virtual async Task<string?> RunShellCommandAsync (string serial, string command, string[] args, CancellationToken cancellationToken = default)
 	{

@@ -279,9 +279,24 @@ namespace Xamarin.Android.Tools
 			const string PropertySettings = "Property settings:";
 
 			try {
-				var result = Process.RunAndCaptureText (javaProps, TimeSpan.FromSeconds (30));
-				if (result.ExitStatus.Canceled)
-					throw new TimeoutException ($"Timed out retrieving Java properties from '{java}'.");
+				using var process = new Process { StartInfo = javaProps };
+				process.Start ();
+				using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+				var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (deadline.Token);
+				(string StandardOutput, string StandardError) result;
+				try {
+					result = process.ReadAllText (TimeSpan.FromSeconds (30));
+					if (exit.GetAwaiter ().GetResult ().Canceled || deadline.IsCancellationRequested)
+						throw new TimeoutException ($"Timed out retrieving Java properties from '{java}'.");
+				} finally {
+					deadline.Cancel ();
+					try {
+						process.StandardOutput.Dispose ();
+						process.StandardError.Dispose ();
+					} finally {
+						exit.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+					}
+				}
 				using var reader = new StringReader (result.StandardOutput + Environment.NewLine + result.StandardError);
 				string? line;
 				while ((line = reader.ReadLine ()) != null) {
@@ -416,9 +431,24 @@ namespace Xamarin.Android.Tools
 				RedirectStandardError = true,
 				CreateNoWindow = true,
 			};
-			var result = Process.RunAndCaptureText (jhp, TimeSpan.FromSeconds (30));
-			if (result.ExitStatus.Canceled)
-				throw new TimeoutException ("Timed out querying /usr/libexec/java_home.");
+			using var process = new Process { StartInfo = jhp };
+			process.Start ();
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+			var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (deadline.Token);
+			(string StandardOutput, string StandardError) result;
+			try {
+				result = process.ReadAllText (TimeSpan.FromSeconds (30));
+				if (exit.GetAwaiter ().GetResult ().Canceled || deadline.IsCancellationRequested)
+					throw new TimeoutException ("Timed out querying /usr/libexec/java_home.");
+			} finally {
+				deadline.Cancel ();
+				try {
+					process.StandardOutput.Dispose ();
+					process.StandardError.Dispose ();
+				} finally {
+					exit.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+				}
+			}
 
 			XElement plist;
 			try {
@@ -468,9 +498,24 @@ namespace Xamarin.Android.Tools
 				CreateNoWindow = true,
 			};
 			var paths   = new List<string> ();
-			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
-			if (result.ExitStatus.Canceled)
-				throw new TimeoutException ("Timed out querying update-java-alternatives.");
+			using var process = new Process { StartInfo = psi };
+			process.Start ();
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+			var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (deadline.Token);
+			(string StandardOutput, string StandardError) result;
+			try {
+				result = process.ReadAllText (TimeSpan.FromSeconds (30));
+				if (exit.GetAwaiter ().GetResult ().Canceled || deadline.IsCancellationRequested)
+					throw new TimeoutException ("Timed out querying update-java-alternatives.");
+			} finally {
+				deadline.Cancel ();
+				try {
+					process.StandardOutput.Dispose ();
+					process.StandardError.Dispose ();
+				} finally {
+					exit.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+				}
+			}
 			using var reader = new StringReader (result.StandardOutput);
 			string? line;
 			while ((line = reader.ReadLine ()) != null) {

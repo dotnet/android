@@ -22,10 +22,12 @@ namespace Xamarin.Android.Tasks {
 			Log.LogDebugMessage ("Waiting for DetectIfAppWasUninstalled...");
 			if (getPackagesAsync == null)
 				return !Log.HasLoggedErrors;
+			var owner = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<DetectIfAppWasUninstalled.PackageQuery> (
+				(DetectIfAppWasUninstalled.QueryOwnerKey, TaskEnvironment.ProjectDirectory), RegisteredTaskObjectLifetime.Build);
+			using var registration = cancellation.Token.Register (() => owner?.Cancel ());
 			try {
-				// Cancel only the wait, not the adb query.
-				var error = getPackagesAsync.ContinueWith (task => task.GetAwaiter ().GetResult (),
-					cancellation.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+				// Legacy registrations contain only a Task; owned queries must also finish cleanup.
+				var error = (owner == null ? getPackagesAsync.WaitAsync (cancellation.Token) : getPackagesAsync)
 					.GetAwaiter ().GetResult ();
 				if (error != null)
 					Log.LogDebugMessage ($"DetectIfAppWasUninstalled failed with {error}");

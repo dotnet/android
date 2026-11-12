@@ -34,44 +34,71 @@ public partial class SdkManager
 		int exitCode;
 		string stdoutStr, stderrStr;
 		try {
-			if (!interactive) {
-				var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
-				cancellationToken.ThrowIfCancellationRequested ();
-				exitCode = result.ExitStatus.ExitCode;
-				stdoutStr = result.StandardOutput;
-				stderrStr = result.StandardError;
-			} else {
+			{
 				using var process = new Process { StartInfo = psi };
 				process.Start ();
 				using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+				if (Array.IndexOf (arguments, "--list") >= 0)
+					execution.CancelAfter (TimeSpan.FromSeconds (30));
+				using var reading = CancellationTokenSource.CreateLinkedTokenSource (execution.Token);
+				using var answering = CancellationTokenSource.CreateLinkedTokenSource (execution.Token);
 				var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
-				var capture = process.ReadAllTextAsync (execution.Token);
+				var capture = CaptureAsync ();
 				using var stdout = process.StandardOutput;
 				using var stderr = process.StandardError;
-				var answers = AnswerLicensesAsync ();
+				var answers = interactive ? AnswerLicensesAsync () : Task.CompletedTask;
+				var monitor = BoundDrainAsync ();
 				try {
 					var status = await exit.WaitAsync (cancellationToken).ConfigureAwait (false);
-					execution.CancelAfter (TimeSpan.FromSeconds (30));
+					await Task.WhenAll (capture, answers).ConfigureAwait (false);
 					var result = await capture.ConfigureAwait (false);
 					cancellationToken.ThrowIfCancellationRequested ();
+					execution.Token.ThrowIfCancellationRequested ();
 					exitCode = status.ExitCode;
 					stdoutStr = result.StandardOutput;
 					stderrStr = result.StandardError;
 				} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
 					if (answers.IsFaulted)
 						await answers.ConfigureAwait (false);
+					if (execution.IsCancellationRequested)
+						throw new TimeoutException ("sdkmanager --list did not complete within 30 seconds.");
 					throw new TimeoutException ("sdkmanager exited, but its redirected output did not close within 30 seconds.");
 				} catch (OperationCanceledException ex) {
 					throw new OperationCanceledException (ex.Message, ex, cancellationToken);
 				} finally {
 					execution.Cancel ();
+					reading.Cancel ();
+					answering.Cancel ();
 					try {
-						await answers.ConfigureAwait (false);
-						await capture.ConfigureAwait (false);
+						await Task.WhenAll (capture, answers).ConfigureAwait (false);
 					} catch (OperationCanceledException) when (execution.IsCancellationRequested) {
 						// Stop the owned license-input loop and native readers when the command finishes.
+					} finally {
+						try {
+							await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+						} finally {
+							await monitor.ConfigureAwait (false);
+						}
 					}
-					await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+				}
+
+				async Task<(string StandardOutput, string StandardError)> CaptureAsync ()
+				{
+					try {
+						return await process.ReadAllTextAsync (reading.Token).ConfigureAwait (false);
+					} catch (OperationCanceledException) when (reading.IsCancellationRequested) {
+						throw;
+					} catch {
+						execution.Cancel ();
+						throw;
+					}
+				}
+
+				async Task BoundDrainAsync ()
+				{
+					await exit.ConfigureAwait (false);
+					answering.Cancel ();
+					reading.CancelAfter (TimeSpan.FromSeconds (30));
 				}
 
 				async Task AnswerLicensesAsync ()
@@ -80,13 +107,15 @@ public partial class SdkManager
 						try {
 							using var input = process.StandardInput;
 							while (!exit.IsCompleted) {
-								await input.WriteLineAsync ((acceptLicenses ? "y" : "n").AsMemory (), execution.Token).ConfigureAwait (false);
-								await Task.Delay (StdinPollDelayMs, execution.Token).ConfigureAwait (false);
+								await input.WriteLineAsync ((acceptLicenses ? "y" : "n").AsMemory (), answering.Token).ConfigureAwait (false);
+								await Task.Delay (StdinPollDelayMs, answering.Token).ConfigureAwait (false);
 							}
 						} catch (IOException ex) {
 							// Closing stdin can precede exit; keep observing the command and its output.
 							logger (TraceLevel.Verbose, $"sdkmanager standard input closed: {ex.Message}");
 						}
+					} catch (OperationCanceledException) when (answering.IsCancellationRequested) {
+						// Root completion stops feeding, not output capture.
 					} catch {
 						execution.Cancel ();
 						throw;

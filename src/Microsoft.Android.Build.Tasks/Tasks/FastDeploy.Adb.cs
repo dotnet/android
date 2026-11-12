@@ -44,9 +44,14 @@ namespace Microsoft.Android.Tasks
 		/// <summary>
 		/// Force-stops <paramref name="packageName"/> via <c>adb shell am force-stop</c>.
 		/// </summary>
-		async Task ForceStopPackage (string packageName)
+		async Task<bool> ForceStopPackage (string packageName)
 		{
-			await RunAdbShellCommand ("am", "force-stop", packageName);
+			var result = await RunAdbShellCommand ("am", "force-stop", packageName);
+			if (result.ExitCode != 0) {
+				LogFastDeployError ("XA0129", $"am force-stop exited with code {result.ExitCode}: {result.Output}", packageName);
+				return false;
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -176,11 +181,6 @@ namespace Microsoft.Android.Tasks
 		internal static InstallResultKind ClassifyInstallResult (AdbCommandResult result)
 		{
 			string output = result.Output ?? "";
-
-			// `adb install` prints "Success" on success; it can also be empty on success.
-			if (output.IndexOf ("Success", StringComparison.Ordinal) >= 0) {
-				return InstallResultKind.Success;
-			}
 
 			// NOTE: match without the trailing ']', since adb may print either
 			//       [INSTALL_FAILED_NO_MATCHING_ABIS] or [INSTALL_FAILED_NO_MATCHING_ABIS: ...].

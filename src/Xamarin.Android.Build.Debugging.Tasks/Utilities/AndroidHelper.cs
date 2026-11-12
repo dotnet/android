@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 		public static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null) =>
 			ParseTarget (target, logMessage, logError, logErrors, engine4, adbToolPath, adbToolExe, null, default);
 
-		static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken)
+		internal static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken)
 		{
 			string adbPath = taskEnvironment == null ? GetAdbPath (adbToolPath, adbToolExe) :
 				GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);

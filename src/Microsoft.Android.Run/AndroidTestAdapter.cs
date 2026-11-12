@@ -128,17 +128,8 @@ class AndroidTestAdapter(
 		using var stderr = new StringWriter ();
 
 		var consumer = Task.Run (async () => {
-			await foreach (var status in channel.Reader.ReadAllAsync ()) {
-				try {
-					await PublishStatusAsync (context, sessionUid, status, state);
-				} catch (OperationCanceledException) {
-					throw;
-				} catch (Exception ex) {
-					// One malformed/unreportable status block must not abort
-					// reporting for the rest of the run.
-					Console.Error.WriteLine ($"[AndroidTestAdapter] Failed to report a streamed test result: {ex}");
-				}
-			}
+			await foreach (var status in channel.Reader.ReadAllAsync (cancellationToken))
+				await PublishStatusAsync (context, sessionUid, status, state);
 		});
 
 		var parser = new StatusStreamParser (status => {
@@ -146,14 +137,12 @@ class AndroidTestAdapter(
 			state.Observe (status);
 			channel.Writer.TryWrite (status);
 		}, fullOutput, verbose);
+		var outputReading = ReadInstrumentationOutputAsync ();
 		int exitCode = 0;
 		try {
-			await foreach (var line in process.ReadAllLinesAsync (reading.Token)) {
-				if (line.StandardError)
-					stderr.WriteLine (line.Content);
-				else if (line.Content.Length > 0)
-					parser.OnLine (line.Content);
-			}
+			if (await Task.WhenAny (outputReading, consumer) == consumer)
+				await consumer;
+			await outputReading;
 			var status = await exit.WaitAsync (cancellationToken);
 			cancellationToken.ThrowIfCancellationRequested ();
 			exitCode = status.ExitCode;
@@ -164,15 +153,39 @@ class AndroidTestAdapter(
 		} finally {
 			reading.Cancel ();
 			execution.Cancel ();
-			process.StandardOutput.Dispose ();
-			process.StandardError.Dispose ();
-			parser.Complete ();
-			channel.Writer.Complete ();
 			try {
-				await consumer;
+				await outputReading;
+			} catch (OperationCanceledException) when (reading.IsCancellationRequested) {
+				// Stop pipe parsing independently of an in-progress MTP publication.
 			} finally {
-				await exit.WaitAsync (TimeSpan.FromSeconds (5));
-				await monitor;
+				process.StandardOutput.Dispose ();
+				process.StandardError.Dispose ();
+				try {
+					parser.Complete ();
+				} finally {
+					channel.Writer.TryComplete ();
+					try {
+						await exit.WaitAsync (TimeSpan.FromSeconds (5));
+					} finally {
+						try {
+							await monitor;
+						} finally {
+							// IMessageBus.PublishAsync has no cancellation argument. Join it,
+							// but never postpone owned-process cleanup behind a user sink.
+							await consumer;
+						}
+					}
+				}
+			}
+		}
+
+		async Task ReadInstrumentationOutputAsync ()
+		{
+			await foreach (var line in process.ReadAllLinesAsync (reading.Token)) {
+				if (line.StandardError)
+					stderr.WriteLine (line.Content);
+				else if (line.Content.Length > 0)
+					parser.OnLine (line.Content);
 			}
 		}
 

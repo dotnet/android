@@ -146,12 +146,56 @@ namespace Xamarin.Android.Tools
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 			};
-			var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+			await ExtractTarGzAsync (archivePath, psi, logger, cancellationToken).ConfigureAwait (false);
+		}
+
+		static async Task ExtractTarGzAsync (string archivePath, ProcessStartInfo startInfo,
+			Action<TraceLevel, string> logger, CancellationToken cancellationToken)
+		{
 			cancellationToken.ThrowIfCancellationRequested ();
-			if (result.ExitStatus.ExitCode != 0) {
-				var errorOutput = result.StandardError;
-				logger (TraceLevel.Error, $"tar extraction failed (exit code {result.ExitStatus.ExitCode}): {errorOutput}");
-				throw new IOException ($"Failed to extract archive '{archivePath}': {errorOutput}");
+			using var process = new Process { StartInfo = startInfo };
+			process.Start ();
+			using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+			using var reading = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+			var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+			var capture = process.ReadAllTextAsync (reading.Token);
+			using var stdout = process.StandardOutput;
+			using var stderr = process.StandardError;
+			var monitor = BoundExtractionDrainAsync ();
+			try {
+				if (await Task.WhenAny (exit, capture).ConfigureAwait (false) == capture)
+					await capture.ConfigureAwait (false);
+				var status = await exit.WaitAsync (cancellationToken).ConfigureAwait (false);
+				var result = await capture.ConfigureAwait (false);
+				cancellationToken.ThrowIfCancellationRequested ();
+				if (status.ExitCode != 0) {
+					logger (TraceLevel.Error, $"tar extraction failed (exit code {status.ExitCode}): {result.StandardError}");
+					throw new IOException ($"Failed to extract archive '{archivePath}': {result.StandardError}");
+				}
+			} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+				throw new TimeoutException ("tar exited, but its redirected output did not close within 30 seconds.");
+			} catch (OperationCanceledException ex) {
+				throw new OperationCanceledException (ex.Message, ex, cancellationToken);
+			} finally {
+				reading.Cancel ();
+				execution.Cancel ();
+				try {
+					await capture.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (reading.IsCancellationRequested) {
+					// Cancel owned reads independently of inherited output handles.
+				} finally {
+					try {
+						await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+					} finally {
+						await monitor.ConfigureAwait (false);
+					}
+				}
+			}
+
+			async Task BoundExtractionDrainAsync ()
+			{
+				await exit.ConfigureAwait (false);
+				reading.CancelAfter (TimeSpan.FromSeconds (30));
 			}
 		}
 

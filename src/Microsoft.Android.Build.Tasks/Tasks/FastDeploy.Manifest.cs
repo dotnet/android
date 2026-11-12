@@ -25,7 +25,7 @@ namespace Microsoft.Android.Tasks
 				LogDiagnostic ($"FastDeploy orphan staging cleanup command length {command.Length} exceeds the configured maximum of {MaxShellCommandLength}; cleanup will be skipped.");
 				return;
 			}
-			AdbCommandResult result = await RunAdbShellCommand (command);
+			AdbCommandResult result = await RunAdbShellScript (command);
 			if (result.ExitCode != 0) {
 				LogDiagnostic ($"FastDeploy orphan staging cleanup failed and will be skipped. Output: {result.Output}");
 			} else if (!string.IsNullOrEmpty (result.StandardOutput)) {
@@ -384,8 +384,7 @@ namespace Microsoft.Android.Tasks
 		async Task<bool> RemoveRemoteStaleFiles (string remoteStagingPath, List<string> removedFiles)
 		{
 			foreach (var batch in BatchArguments ("rm", "-f", removedFiles.Select (file => CombineRemotePath (remoteStagingPath, file)))) {
-				var args = new [] { "shell" }.Concat (batch).ToArray ();
-				var result = await RunAdbCommand (args);
+				var result = await RunAdbShellCommand (batch.ToArray ());
 				if (result.ExitCode != 0 || IsShellError (result.Output, "rm")) {
 					LogFastDeployError ("XA0129", result.Output, remoteStagingPath);
 					return false;
@@ -396,7 +395,7 @@ namespace Microsoft.Android.Tasks
 
 		async Task<bool> ResetRemoteStagingDirectory (string remoteStagingPath)
 		{
-			var result = await RunAdbCommand ("shell", "rm", "-rf", remoteStagingPath);
+			var result = await RunAdbShellCommand ("rm", "-rf", remoteStagingPath);
 			if (result.ExitCode != 0 || IsShellError (result.Output, "rm")) {
 				LogFastDeployError ("XA0129", result.Output, remoteStagingPath);
 				return false;
@@ -446,7 +445,7 @@ namespace Microsoft.Android.Tasks
 			// a single line so ParseDeviceManifestState can never read the override hash and the
 			// readiness check always fails (forcing a full redeploy on every incremental install).
 			string script = $"echo \"remote=$(cat {QuoteShellArgument (remoteMarkerPath)} 2>/dev/null)\"; echo \"override=$({runAsCommand} 2>/dev/null)\"";
-			var result = await RunAdbShellCommand (script);
+			var result = await RunAdbShellScript (script);
 			return ParseDeviceManifestState (result.Output);
 		}
 
@@ -472,7 +471,7 @@ namespace Microsoft.Android.Tasks
 				script += $" && {runAsCommand}";
 			}
 
-			AdbCommandResult result = await RunAdbShellCommand (script);
+			AdbCommandResult result = await RunAdbShellScript (script);
 			if ((UseShellSymlinkAppFileTransfer () && RaiseRunAsError (result.Output)) ||
 					result.ExitCode != 0 ||
 					IsShellError (result.Output, "mkdir") ||

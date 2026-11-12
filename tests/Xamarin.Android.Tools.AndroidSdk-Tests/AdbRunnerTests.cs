@@ -1541,6 +1541,27 @@ public class AdbRunnerTests
 	}
 
 	[Test]
+	public async Task GetEmulatorAvdNameAsync_RejectsFailedFallbackDiagnostics ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$3" == "shell" ]]; then
+			    exit 0
+			fi
+			echo "not an AVD name"
+			echo "transport failed" >&2
+			exit 7
+			""");
+		var diagnostics = new List<string> ();
+		try {
+			var runner = new AdbRunner (adbPath, logger: (_, message) => diagnostics.Add (message));
+			Assert.IsNull (await runner.GetEmulatorAvdNameAsync ("emulator-5554"));
+			Assert.That (string.Join ("\n", diagnostics), Does.Contain ("exit 7").And.Contain ("transport failed"));
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
 	public async Task GetEmulatorAvdNameAsync_BothFail_ReturnsNull ()
 	{
 		// Both getprop and emu avd name return empty

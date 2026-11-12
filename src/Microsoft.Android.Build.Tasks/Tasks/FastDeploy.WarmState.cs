@@ -57,7 +57,7 @@ namespace Microsoft.Android.Tasks
 				$"if [ \"$fd_run_as_status\" -eq 0 ] && [ -n \"$fd_pid\" ]; then am force-stop {packageName}; fd_force_stop_status=$?; fi; " +
 				$"echo {QuoteShellArgument (WarmForceStopStatusTag)}$fd_force_stop_status; fi";
 
-			AdbCommandResult result = await RunAdbShellCommand (script);
+			AdbCommandResult result = await RunAdbShellScript (script);
 			WarmStateProbeData data = ParseWarmStateProbeOutput (result.Output);
 
 			if (data.HasRedirectStdio && string.Equals ("true", data.RedirectStdio, StringComparison.OrdinalIgnoreCase)) {

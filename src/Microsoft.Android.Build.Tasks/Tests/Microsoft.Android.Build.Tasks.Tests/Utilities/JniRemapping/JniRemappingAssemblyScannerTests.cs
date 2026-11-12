@@ -199,10 +199,9 @@ namespace Xamarin.Android.Build.Tests
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
-			TestContext.Out.WriteLine ($"Process.RunAndCaptureText: {info.FileName} {info.Arguments}");
-			var result = Process.RunAndCaptureText (info, TimeSpan.FromSeconds (120));
-			Assert.IsFalse (result.ExitStatus.Canceled, $"Process timed out after 120 seconds.{Environment.NewLine}{result.StandardOutput}{result.StandardError}");
-			Assert.AreEqual (0, result.ExitStatus.ExitCode, result.StandardOutput.Trim () + result.StandardError.Trim ());
+			TestContext.Out.WriteLine ($"ILLink: {info.FileName} {info.Arguments}");
+			var result = NativeToolTestHelper.Capture (info, TimeSpan.FromSeconds (120));
+			Assert.AreEqual (0, result.ExitCode, result.StandardOutput.Trim () + result.StandardError.Trim ());
 			string linkedFile = Path.Combine (linkedDirectory, "_Fixture.TypeMap.dll");
 			using (var linked = Cecil.AssemblyDefinition.ReadAssembly (linkedFile)) {
 				var attribute = linked.CustomAttributes [0];

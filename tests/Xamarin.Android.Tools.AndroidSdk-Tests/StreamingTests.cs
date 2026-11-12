@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -199,6 +200,60 @@ public class StreamingTests
 	}
 
 	[Test]
+	public async Task PublicationFailureStopsTheLiveInvocation ()
+	{
+		using var cancellation = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+		var failure = new InvalidOperationException ("The publication sink failed.");
+		var adapter = new CancellableAdapter (Path.Combine (directory, "fake-adb"), cancellation.Token, publicationFailure: failure);
+		using var application = await CreateApplication (Progress, cancellationAdapter: adapter);
+		var run = application.RunAsync ();
+		try {
+			await adapter.ProgressObserved.Task.WaitAsync (TimeSpan.FromSeconds (5));
+			var propagated = Assert.ThrowsAsync<InvalidOperationException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (5)));
+			Assert.That (propagated, Is.SameAs (failure));
+			Assert.That (error.ToString (), Does.Contain ("Tests.Two").And.Contain ("Incomplete test run"));
+		} finally {
+			cancellation.Cancel ();
+			try {
+				await run.WaitAsync (TimeSpan.FromSeconds (5));
+			} catch (Exception ex) when (ex is OperationCanceledException || ReferenceEquals (ex, failure)) {
+				// Stop a still-running baseline invocation before disposing the application.
+			}
+		}
+	}
+
+	[Test]
+	public async Task CancellationCleansUpClientBeforeJoiningACooperativePublicationSink ()
+	{
+		using var cancellation = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+		var gate = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
+		var adapter = new CancellableAdapter (Path.Combine (directory, "fake-adb"), cancellation.Token, publicationGate: gate);
+		using var application = await CreateApplication (Progress, cancellationAdapter: adapter);
+		var run = application.RunAsync ();
+		try {
+			await adapter.ProgressObserved.Task.WaitAsync (TimeSpan.FromSeconds (5));
+			cancellation.Cancel ();
+			int pid = int.Parse (File.ReadAllText (Path.Combine (directory, "fake-adb.pid")));
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (5));
+			while (true) {
+				try {
+					using var process = Process.GetProcessById (pid);
+					if (process.HasExited)
+						break;
+				} catch (ArgumentException) {
+					break;
+				}
+				await Task.Delay (10, deadline.Token);
+			}
+			Assert.That (run.IsCompleted, Is.False, "PublishAsync has no cancellation token; do not abandon the outstanding publication.");
+		} finally {
+			cancellation.Cancel ();
+			gate.TrySetResult ();
+			Assert.CatchAsync<OperationCanceledException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (5)));
+		}
+	}
+
+	[Test]
 	public async Task CancellationAfterProgressPreservesPartialResults ()
 	{
 		using var cancellation = new CancellationTokenSource (TimeSpan.FromSeconds (30));
@@ -223,7 +278,7 @@ public class StreamingTests
 			Assert.Ignore ("The fake adb is a Unix shell executable.");
 		string adb = Path.Combine (directory, "fake-adb");
 		var ending = cancellationAdapter == null ? $"exit {exitCode}" : "exec sleep 30";
-		File.WriteAllText (adb, $"#!/bin/sh\ncat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
+		File.WriteAllText (adb, $"#!/bin/sh\necho $$ > \"$0.pid\"\ncat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
 		if (!OperatingSystem.IsWindows ())
 			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 		if (reportFailure)
@@ -238,7 +293,8 @@ public class StreamingTests
 	}
 
 #pragma warning disable TPEXP // The pinned MTP marks request construction as experimental; inject cancellation only in tests.
-	sealed class CancellableAdapter (string adb, CancellationToken cancellationToken) :
+	sealed class CancellableAdapter (string adb, CancellationToken cancellationToken,
+		TaskCompletionSource? publicationGate = null, Exception? publicationFailure = null) :
 		AndroidTestAdapter (adb, null, "tests", "runner", false), ITestFramework, IMessageBus, IExecuteRequestCompletionNotifier
 	{
 		ExecuteRequestContext? original;
@@ -256,6 +312,14 @@ public class StreamingTests
 		public async Task PublishAsync (IDataProducer dataProducer, IData data)
 		{
 			var context = original ?? throw new InvalidOperationException ("No active execution request.");
+			if (data is TestNodeUpdateMessage blocked && blocked.TestNode.DisplayName == "Tests.Two" &&
+				(publicationGate != null || publicationFailure != null)) {
+				ProgressObserved.TrySetResult ();
+				if (publicationFailure != null)
+					throw publicationFailure;
+				if (publicationGate != null)
+					await publicationGate.Task;
+			}
 			await context.MessageBus.PublishAsync (dataProducer, data);
 			if (data is TestNodeUpdateMessage update && update.TestNode.DisplayName == "Tests.Two")
 				ProgressObserved.TrySetResult ();
