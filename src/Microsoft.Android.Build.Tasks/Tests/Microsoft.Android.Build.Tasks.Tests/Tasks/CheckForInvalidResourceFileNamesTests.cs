@@ -21,58 +21,68 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				"myresource.xml",
 				true,
-				0,
+				new string [0],
 			},
 			new object[] {
 				"_myresource.xml",
 				true,
-				0,
+				new string [0],
 			},
 			new object[] {
 				"Myresource.xml",
 				true,
-				0,
+				new string [0],
 			},
 			new object[] {
 				"@myresource.xml",
 				false,
-				2,
+				new [] { "APT0004", "APT0003" },
 			},
 			new object[] {
 				"5myresource.xml",
 				false,
-				1,
+				new [] { "APT0004" },
 			},
 			new object[] {
 				".myresource.xml",
 				false,
-				1,
+				new [] { "APT0004" },
 			},
 			new object[] {
 				"-myresource.xml",
 				false,
-				2,
+				new [] { "APT0004", "APT0003" },
 			},
 			new object[] {
 				"import.xml",
 				false,
-				1,
+				new [] { "APT0005" },
 			},
 			new object[] {
 				"class.png",
 				false,
-				1,
+				new [] { "APT0005" },
 			},
 			new object[] {
 				"class1.png",
 				true,
-				0,
+				new string [0],
+			},
+			new object[] {
+				"Resources/values/strings@v2.xml",
+				false,
+				new [] { "APT0002" },
+			},
+			new object[] {
+				"Resources/drawable/icon-v2.png",
+				false,
+				new [] { "APT0003" },
 			},
 		};
 #pragma warning restore 414
 		[Test]
 		[TestCaseSource(nameof(InvalidResourceFileNamesChecks))]
-		public void InvalidResourceFileNames (string file, bool shouldPass, int expectedErrorCount)
+		public void InvalidResourceFileNames (string file, bool shouldPass, string [] expectedErrorCodes)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new CheckForInvalidResourceFileNames {
@@ -82,7 +92,7 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			Assert.AreEqual (shouldPass, task.Execute (), $"task.Execute() should have {(shouldPass ? "succeeded" : "failed")}.");
-			Assert.AreEqual (expectedErrorCount, errors.Count, "There should be one error.");
+			CollectionAssert.AreEqual (expectedErrorCodes, errors.Select (e => e.Code), "Unexpected error codes.");
 		}
 
 		[TestCase ("Microsoft.Android.Tasks.CheckForInvalidResourceFileNames")]
