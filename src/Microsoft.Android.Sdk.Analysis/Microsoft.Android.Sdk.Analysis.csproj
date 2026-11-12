@@ -7,6 +7,7 @@
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+		<LangVersion>preview</LangVersion>
 		<MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
 	</PropertyGroup>
 	<ItemGroup>

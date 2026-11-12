@@ -1,5 +1,4 @@
 <Project>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\build-tools\scripts\MemorySafetyRules.targets" />
   <!--
     This file exists so that we do NOT import top-level Configuration.props/etc.
 

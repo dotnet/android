@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <LangVersion>12</LangVersion>
+    <LangVersion>preview</LangVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <DefineConstants>$(DefineConstants);MSBUILD</DefineConstants>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>

@@ -735,8 +735,6 @@ namespace Xamarin.Android.Build.Tests
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "eng", "Versions.props"), Path.Combine (tempRoot, "eng", "Versions.props"));
-			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "build-tools", "scripts", "MemorySafetyRules.targets"), Path.Combine (tempRoot, "build-tools", "scripts", "MemorySafetyRules.targets"));
-			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "build-tools", "scripts", "updated-memory-safety-rules.rsp"), Path.Combine (tempRoot, "build-tools", "scripts", "updated-memory-safety-rules.rsp"));
 			var project = new XamarinAndroidApplicationProject ();
 			project.CopyNuGetConfig (tempRoot);
 

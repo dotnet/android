@@ -108,10 +108,8 @@ namespace Xamarin.Android.Tools
 		public static string GetLongPathName (string path)
 		{
 			StringBuilder sb = new StringBuilder (255);
-			unsafe {
-				// SAFETY: The native output limit equals the marshalled buffer capacity.
-				GetLongPathName (path, sb, sb.Capacity);
-			}
+			// SAFETY: The native output limit equals the marshalled buffer capacity.
+			_ = unsafe (GetLongPathName (path, sb, sb.Capacity));
 			return sb.ToString ();
 		}
 
@@ -128,10 +126,8 @@ namespace Xamarin.Android.Tools
 		public static string GetShortPathName (string path)
 		{
 			StringBuilder sb = new StringBuilder (255);
-			unsafe {
-				// SAFETY: The native output limit equals the marshalled buffer capacity.
-				GetShortPathName (path, sb, sb.Capacity);
-			}
+			// SAFETY: The native output limit equals the marshalled buffer capacity.
+			_ = unsafe (GetShortPathName (path, sb, sb.Capacity));
 			return sb.ToString ();
 		}
 	}

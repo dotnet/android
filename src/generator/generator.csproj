@@ -5,7 +5,7 @@
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Version>11.0.0</Version>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <UseAppHost>false</UseAppHost>

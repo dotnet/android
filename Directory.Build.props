@@ -1,7 +1,6 @@
 <Project>
 
   <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" />
-  <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\MemorySafetyRules.targets" />
 
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
