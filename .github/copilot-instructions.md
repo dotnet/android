@@ -53,6 +53,8 @@ These principles address the most common reasons sessions needed extra correctio
 
 **Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
 
+**Commit messages and PR descriptions:** PRs are squash-merged, so the PR title and description become the commit message. Use the `pull-request` skill (`[Component] Summary` titles, `Context:`/`Fixes:` lines, why before what, evidence, and validation results).
+
 Reference official Android documentation where helpful:
 * [Android Developer Guide](https://developer.android.com/develop)
 * [Android API Reference](https://developer.android.com/reference)
