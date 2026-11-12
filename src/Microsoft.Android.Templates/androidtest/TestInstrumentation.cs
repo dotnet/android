@@ -75,7 +75,7 @@ public class TestInstrumentation : Instrumentation
 
     void ReportStatus(MtpTestNodeUpdate node)
     {
-        if (node.NodeType != "action" || node.Uid is null)
+        if (node.NodeType != "action")
             return;
 
         (string? eventName, string? outcome) = node.ExecutionState switch
@@ -100,7 +100,7 @@ public class TestInstrumentation : Instrumentation
         var b = new Bundle();
         b.PutString("event", eventName);
         b.PutString("test", node.Uid);
-        b.PutString("name", node.DisplayName ?? node.Uid);
+        b.PutString("name", node.DisplayName);
         if (node.Node.GetValueOrDefault("location.type") is string className)
             b.PutString("class", className);
         if (outcome is not null)

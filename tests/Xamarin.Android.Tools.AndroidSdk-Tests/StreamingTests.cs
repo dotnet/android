@@ -232,7 +232,7 @@ public class StreamingTests
 	[Test]
 	public async Task InstrumentationWithoutStreamingReportsResultsFromTrx ()
 	{
-		// The androidtest template from .NET 11 does not stream results, so the host pulls its TRX file.
+		// The previous androidtest template does not stream results, so the host pulls its TRX file.
 		using var application = await CreateApplication ("""
 			INSTRUMENTATION_RESULT: passed=1
 			INSTRUMENTATION_RESULT: failed=1
@@ -246,7 +246,7 @@ public class StreamingTests
 			  </TestDefinitions>
 			  <Results>
 			    <UnitTestResult testId="1" testName="One" outcome="Passed" />
-			    <UnitTestResult testId="2" testName="Two" outcome="Failed"><Output><ErrorInfo><Message>boom</Message></ErrorInfo></Output></UnitTestResult>
+			    <UnitTestResult testId="2" testName="Two" outcome="Failed" />
 			  </Results>
 			</TestRun>
 			""");
