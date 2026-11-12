@@ -724,9 +724,12 @@ namespace Android.Runtime {
 				Java.Lang.Object? item = null;
 				bool disposeItem = false;
 				try {
-					disposeItem = Java.Lang.Object.PeekObject (reference.Handle, typeof (Java.Lang.Object)) == null;
-					// SAFETY: List.get returned this owned local, retained through the virtual calls below.
-					item = unsafe(Java.Lang.Object.GetObject<Java.Lang.Object> (reference.Handle, JniHandleOwnership.DoNotTransfer));
+					item = Java.Lang.Object.PeekObject<Java.Lang.Object> (reference.Handle);
+					if (item == null && reference.IsValid) {
+						// SAFETY: List.get returned this owned local, retained through the virtual calls below.
+						item = unsafe(new Java.Lang.Object (reference.Handle, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister));
+						disposeItem = true;
+					}
 					if (collection.Contains (item) && Remove (item))
 						ret = true;
 					else

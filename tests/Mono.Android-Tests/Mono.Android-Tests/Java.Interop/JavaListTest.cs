@@ -202,6 +202,43 @@ namespace Java.InteropTests
 			Assert.AreEqual ("foo", item.ToString ());
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		[NonParallelizable]
+		public void RemoveAllDoesNotDisposePeerFromReentrantLookup (bool reentrantActivation)
+		{
+			var handle = JNIEnv.CreateInstance (ReentrantLookupPeer.JniName, "()V");
+			ReentrantLookupPeer registered = null;
+			try {
+				using (var item = new Java.Lang.Object (handle, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister))
+					list.Add ((object) item);
+				if (reentrantActivation) {
+					ReentrantLookupPeer.BeforeRegistration = value => {
+						registered = Java.Lang.Object.GetObject<ReentrantLookupPeer> (value, JniHandleOwnership.DoNotTransfer);
+					};
+				}
+				using var collection = new BulkRemovalJavaList {
+					BeforeContains = item => {
+						registered = Java.Lang.Object.GetObject<ReentrantLookupPeer> (handle, JniHandleOwnership.DoNotTransfer);
+					},
+				};
+
+				Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekPeer (new JniObjectReference (handle)));
+				Assert.IsFalse (list.RemoveAll (collection));
+				Assert.AreEqual (1, collection.ContainsCalls);
+				Assert.IsNotNull (registered);
+				if (registered == null)
+					throw new InvalidOperationException ("The Contains callback did not acquire a peer.");
+				Assert.IsTrue (registered.PeerReference.IsValid, "RemoveAll must not dispose a peer acquired by another lookup.");
+				Assert.AreSame (registered, JniRuntime.CurrentRuntime.ValueManager.PeekPeer (new JniObjectReference (handle)));
+				Assert.IsTrue (JniEnvironment.Types.IsSameObject (new JniObjectReference (handle), registered.PeerReference));
+			} finally {
+				ReentrantLookupPeer.BeforeRegistration = null;
+				registered?.Dispose ();
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
 		[Test]
 		public void RemoveAllWithEmptyCollectionsReturnsFalse ()
 		{
@@ -298,10 +335,12 @@ namespace Java.InteropTests
 		public bool AllowRemoval { get; set; } = true;
 		public int ContainsCalls { get; private set; }
 		public int RemoveCalls { get; private set; }
+		public Action<Java.Lang.Object> BeforeContains { get; set; }
 
 		public override bool Contains (Java.Lang.Object item)
 		{
 			ContainsCalls++;
+			BeforeContains?.Invoke (item);
 			return base.Contains (item);
 		}
 
