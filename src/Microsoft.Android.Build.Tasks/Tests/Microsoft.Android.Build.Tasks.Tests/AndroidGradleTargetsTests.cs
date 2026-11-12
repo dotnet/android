@@ -33,7 +33,9 @@ public class AndroidGradleTargetsTests : BaseTest
 		string buildGradle = Path.Combine (gradleProject, "build.gradle.kts");
 		File.WriteAllText (buildGradle, "");
 		string initScript = Path.Combine (directory, "init.gradle.kts");
-		File.WriteAllText (initScript, "");
+		if (File.Exists (initScript)) {
+			File.Delete (initScript);
+		}
 		string wrapper = Path.Combine (gradleProject, "gradlew");
 		File.WriteAllText (wrapper, """
 			#!/bin/sh
@@ -69,6 +71,9 @@ public class AndroidGradleTargetsTests : BaseTest
 					new XElement ("PropertyGroup",
 						new XElement ("AndroidSdkDirectory", "$(MSBuildProjectDirectory)/sdk"),
 						new XElement ("JavaSdkDirectory", "$(MSBuildProjectDirectory)/jdk"))),
+				// Mirrors CopyResource, which creates the init script inside _BuildAndroidGradleProjects after its dependencies ran.
+				new XElement ("Target", new XAttribute ("Name", "_CreateInitScript"), new XAttribute ("BeforeTargets", "_BuildAndroidGradleProjects"),
+					new XElement ("WriteLinesToFile", new XAttribute ("File", "$(_AGPInitScriptPath)"), new XAttribute ("Lines", ""), new XAttribute ("Overwrite", "true"))),
 				new XElement ("Target", new XAttribute ("Name", "Clean"), new XAttribute ("DependsOnTargets", "_CleanAndroidGradleProjects")),
 				new XElement ("Target", new XAttribute ("Name", "Build"), new XAttribute ("DependsOnTargets", "_BuildAndroidGradleProjects"))))
 			.Save (project);
@@ -83,16 +88,20 @@ public class AndroidGradleTargetsTests : BaseTest
 			.ToArray ();
 		Assert.AreEqual (2, invocations.Length, File.ReadAllText (log));
 
-		AssertInvocation (invocations [0], "clean");
-		AssertInvocation (invocations [1], "assembleRelease");
+		AssertInvocation (invocations [0], "clean", hasInitScript: false);
+		AssertInvocation (invocations [1], "assembleRelease", hasInitScript: true);
 		CollectionAssert.Contains (invocations [1], $"ANDROID_HOME={sdk}", "assemble must see the SDK resolved after Clean ran.");
 		CollectionAssert.Contains (invocations [1], $"JAVA_HOME={jdk}", "assemble must see the JDK resolved after Clean ran.");
 
-		void AssertInvocation (string [] lines, string task)
+		void AssertInvocation (string [] lines, string task, bool hasInitScript)
 		{
 			var args = lines.Where (l => l.StartsWith ("ARG=", StringComparison.Ordinal)).Select (l => l.Substring (4)).ToArray ();
+			Assert.AreEqual (task, args [0], string.Join ("\n", lines));
+			if (!hasInitScript) {
+				CollectionAssert.AreEqual (new [] { task, "--no-daemon" }, args);
+				return;
+			}
 			Assert.AreEqual (5, args.Length, string.Join ("\n", lines));
-			Assert.AreEqual (task, args [0]);
 			StringAssert.StartsWith ($"-PnetAndroidBuildDirOverride={intermediate}gradle/Release-", args [1]);
 			StringAssert.EndsWith ("/.", args [1]);
 			Assert.AreEqual ("--init-script", args [2]);
