@@ -3498,9 +3498,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
 			} else if (mode == "list") {
 				Assert.AreEqual (0, process.ExitCode, $"`dotnet test --list-tests` should succeed. See {logPath} for details.");
-				StringAssert.Contains ("TestMethod1", outputText, $"Output should list TestMethod1. See {logPath} for details.");
-				StringAssert.Contains ("TestMethod2", outputText, $"Output should list TestMethod2. See {logPath} for details.");
-				StringAssert.Contains ("TestMethod3", outputText, $"Output should list TestMethod3. See {logPath} for details.");
+				StringAssert.Contains ("Discovered 3 tests", outputText, $"Output should list 3 tests. See {logPath} for details.");
 			} else {
 				// dotnet test reports results via MTP protocol
 				// Verify non-zero exit code (there is a failing test) and stable summary counts

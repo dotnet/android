@@ -96,53 +96,35 @@ class AndroidTestAdapter(
 	}
 
 	/// <summary>
-	/// Runs the instrumentation with 'list-tests' so the device only discovers
-	/// tests, then publishes each discovered test to MTP (e.g. 'dotnet test --list-tests').
+	/// Runs the instrumentation with 'list-tests' and publishes the tests it discovers.
 	/// </summary>
 	async Task DiscoverAndReportAsync (ExecuteRequestContext context, SessionUid sessionUid)
 	{
-		var cmdArgs = $"shell am instrument -w -r -e {InstrumentationProtocol.ArgListTests} true {package}/{instrumentation}";
-		var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
-
+		var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, $"shell am instrument -w -r -e {InstrumentationProtocol.ArgListTests} true {package}/{instrumentation}");
 		if (verbose)
 			Console.WriteLine ($"Running: adb {psi.Arguments}");
 
 		var discovered = new List<InstrumentationStatus> ();
 		var fullOutput = new StringBuilder ();
-		var parser = new StatusStreamParser (status => {
-			if (status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind) && eventKind == InstrumentationProtocol.EventDiscovered)
-				discovered.Add (status);
-		}, fullOutput, verbose);
+		var parser = new StatusStreamParser (discovered.Add, fullOutput, verbose);
 		using var stdout = new LineWriter (parser.OnLine);
 		using var stderr = new StringWriter ();
-
-		int exitCode;
-		try {
-			exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, context.CancellationToken);
-		} finally {
-			stdout.Flush ();
-			parser.Complete ();
-		}
+		int exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, context.CancellationToken);
+		stdout.Flush ();
 
 		var output = fullOutput.ToString ();
-		var result = ParseInstrumentationBundle (output, stderr.ToString ());
-		if (exitCode != 0 || result.Error != null || output.Contains ("INSTRUMENTATION_FAILED", StringComparison.Ordinal)) {
-			var message = result.Error ?? ExtractCrashMessage (output) ?? $"Instrumentation exited with code {exitCode}.";
-			throw new InvalidOperationException ($"Test discovery failed: {message}");
-		}
-
-		// Instrumentation that does not support discovery ignores the 'list-tests' argument and runs the tests.
-		if (result.Discovered == null)
-			throw new InvalidOperationException ($"The instrumentation '{instrumentation}' does not support test discovery. It must handle the '{InstrumentationProtocol.ArgListTests}' argument and report a '{InstrumentationProtocol.KeyDiscoveredCount}' result.");
+		var error = ParseInstrumentationBundle (output, stderr.ToString ()).Error ?? ExtractCrashMessage (output);
+		if (exitCode != 0 || error != null)
+			throw new InvalidOperationException ($"Test discovery failed: {error ?? $"adb exited with code {exitCode}."}");
 
 		foreach (var status in discovered) {
-			if (!status.Values.TryGetValue (InstrumentationProtocol.KeyTest, out var fullyQualifiedName) || string.IsNullOrEmpty (fullyQualifiedName))
+			if (!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind) || eventKind != InstrumentationProtocol.EventDiscovered ||
+				!status.Values.TryGetValue (InstrumentationProtocol.KeyTest, out var uid) || string.IsNullOrEmpty (uid))
 				continue;
 			status.Values.TryGetValue (InstrumentationProtocol.KeyName, out var displayName);
-
 			var testNode = new TestNode {
-				Uid = new TestNodeUid (fullyQualifiedName),
-				DisplayName = displayName ?? fullyQualifiedName,
+				Uid = new TestNodeUid (uid),
+				DisplayName = displayName ?? uid,
 				Properties = new PropertyBag (DiscoveredTestNodeStateProperty.CachedInstance),
 			};
 			await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, testNode));
@@ -504,8 +486,6 @@ class AndroidTestAdapter(
 			result.Failed = failed;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeySkippedCount, out var skippedStr) && int.TryParse (skippedStr, out int skipped))
 			result.Skipped = skipped;
-		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyDiscoveredCount, out var discoveredStr) && int.TryParse (discoveredStr, out int discovered))
-			result.Discovered = discovered;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyResultsPath, out var resultsPath))
 			result.ResultsPath = resultsPath;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyError, out var bundleError))
@@ -588,7 +568,6 @@ class InstrumentationBundleResult
 	public int Passed { get; set; }
 	public int Failed { get; set; }
 	public int Skipped { get; set; }
-	public int? Discovered { get; set; }
 	public string? ResultsPath { get; set; }
 	public string? Error { get; set; }
 	public int? InstrumentationCode { get; set; }

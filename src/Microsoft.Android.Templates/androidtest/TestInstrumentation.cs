@@ -11,7 +11,7 @@ namespace AndroidTest1;
 public class TestInstrumentation : Instrumentation
 {
     bool _listTests;
-    int _passed, _failed, _skipped, _discovered;
+    int _passed, _failed, _skipped;
 
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
         : base(handle, ownership) { }
@@ -19,7 +19,7 @@ public class TestInstrumentation : Instrumentation
     public override void OnCreate(Bundle? arguments)
     {
         base.OnCreate(arguments);
-        // 'dotnet test --list-tests' passes '-e list-tests true' to only discover tests.
+        // Set by 'dotnet test --list-tests'
         _listTests = arguments?.GetString("list-tests") == "true";
         Start();
     }
@@ -33,15 +33,11 @@ public class TestInstrumentation : Instrumentation
         {
             var writeablePath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? Path.GetTempPath();
             var resultsPath = Path.Combine(writeablePath, "TestResults");
-
-            // Host MSTest in-process in server mode, and drive it with the server-mode client.
-            // This reports discovered tests (for 'dotnet test --list-tests') as well as test results.
             using var client = await MtpServerClient.LaunchInProcessAsync(async (serverArgs, cancellationToken) =>
             {
-                string[] args = _listTests
+                var builder = await TestApplication.CreateBuilderAsync(_listTests
                     ? [.. serverArgs, "--results-directory", resultsPath]
-                    : [.. serverArgs, "--results-directory", resultsPath, "--report-trx"];
-                var builder = await TestApplication.CreateBuilderAsync(args);
+                    : [.. serverArgs, "--results-directory", resultsPath, "--report-trx"]);
                 builder.AddMSTest(() => [GetType().Assembly]);
                 builder.AddTrxReportProvider();
                 using ITestApplication app = await builder.BuildAsync();
@@ -49,15 +45,14 @@ public class TestInstrumentation : Instrumentation
             });
             client.TestNodesUpdated += (_, e) =>
             {
-                foreach (var change in e.Changes)
-                    ReportStatus(change);
+                foreach (var node in e.Changes)
+                    ReportStatus(node);
             };
 
             await client.InitializeAsync();
             if (_listTests)
             {
                 await client.DiscoverTestsAsync();
-                bundle.PutInt("discovered", _discovered);
             }
             else
             {
@@ -65,7 +60,7 @@ public class TestInstrumentation : Instrumentation
                 bundle.PutInt("passed", _passed);
                 bundle.PutInt("failed", _failed);
                 bundle.PutInt("skipped", _skipped);
-                bundle.PutString("resultsPath", GetTrxPath(result));
+                bundle.PutString("resultsPath", result.Artifacts.FirstOrDefault(a => a.Uri?.EndsWith(".trx") == true)?.Uri);
             }
             await client.ExitAsync();
             await client.ShutdownAsync();
@@ -78,30 +73,24 @@ public class TestInstrumentation : Instrumentation
         }
     }
 
-    void ReportStatus(MtpTestNodeUpdate change)
+    void ReportStatus(MtpTestNodeUpdate node)
     {
-        if (change.NodeType != "action" || change.Uid is null)
+        if (node.NodeType != "action" || node.Uid is null)
             return;
 
-        string eventName = change.ExecutionState switch
+        (string? eventName, string? outcome) = node.ExecutionState switch
         {
-            "discovered" => "discovered",
-            "in-progress" => "start",
-            _ => "finish",
+            "discovered" => ("discovered", null),
+            "in-progress" => ("start", null),
+            "passed" => ("finish", "passed"),
+            "skipped" => ("finish", "skipped"),
+            "failed" or "error" or "timed-out" or "canceled" => ("finish", "failed"),
+            _ => (null, null),
         };
-        string? outcome = change.ExecutionState switch
-        {
-            "passed" => "passed",
-            "skipped" => "skipped",
-            "failed" or "error" or "timed-out" or "canceled" => "failed",
-            _ => null,
-        };
-        if (eventName == "finish" && outcome is null)
+        if (eventName is null)
             return;
 
-        if (eventName == "discovered")
-            Interlocked.Increment(ref _discovered);
-        else if (outcome == "passed")
+        if (outcome == "passed")
             Interlocked.Increment(ref _passed);
         else if (outcome == "failed")
             Interlocked.Increment(ref _failed);
@@ -110,27 +99,16 @@ public class TestInstrumentation : Instrumentation
 
         var b = new Bundle();
         b.PutString("event", eventName);
-        b.PutString("test", change.Uid);
-        b.PutString("name", change.DisplayName ?? change.Uid);
-        if (change.Node.TryGetValue("location.type", out var type) && type is string className)
+        b.PutString("test", node.Uid);
+        b.PutString("name", node.DisplayName ?? node.Uid);
+        if (node.Node.GetValueOrDefault("location.type") is string className)
             b.PutString("class", className);
         if (outcome is not null)
             b.PutString("outcome", outcome);
-        if (change.ErrorMessage is { } message)
+        if (node.ErrorMessage is { } message)
             b.PutString("message-b64", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(message)));
-        if (change.ErrorStackTrace is { } stack)
+        if (node.ErrorStackTrace is { } stack)
             b.PutString("stack-b64", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(stack)));
         SendStatus(0, b);
-    }
-
-    static string? GetTrxPath(MtpRunResult result)
-    {
-        foreach (var artifact in result.Artifacts)
-        {
-            if (artifact.Uri is not { } uri || !uri.EndsWith(".trx", StringComparison.OrdinalIgnoreCase))
-                continue;
-            return Uri.TryCreate(uri, UriKind.Absolute, out var parsed) && parsed.IsFile ? parsed.LocalPath : uri;
-        }
-        return null;
     }
 }

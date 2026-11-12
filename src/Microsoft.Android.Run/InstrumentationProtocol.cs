@@ -24,9 +24,8 @@ static class InstrumentationProtocol
 	public const string KeySkippedCount = "skipped";
 	public const string KeyResultsPath = "resultsPath";
 	public const string KeyError = "error";
-	public const string KeyDiscoveredCount = "discovered";
 
-	// Instrumentation argument ('am instrument -e list-tests true') that requests test discovery only.
+	// 'am instrument -e list-tests true' requests test discovery only.
 	public const string ArgListTests = "list-tests";
 
 	// "event" values.
