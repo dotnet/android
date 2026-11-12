@@ -9,7 +9,7 @@ inner-loop change only re-transfers the files that actually changed.
 This document describes how the [`FastDeploy`][task] MSBuild task works: the
 stages it runs, the `adb` commands it issues, and the properties that control it.
 
-[task]: ../../src/Xamarin.Android.Build.Debugging.Tasks/Tasks/FastDeploy.cs
+[task]: ../../src/Microsoft.Android.Build.Tasks/Tasks/FastDeploy.cs
 
 ## MSBuild properties
 

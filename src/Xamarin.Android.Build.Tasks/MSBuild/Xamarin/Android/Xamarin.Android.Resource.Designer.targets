@@ -16,7 +16,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceCaseMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateRtxt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidDesignerConfig" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -41,7 +42,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <!-- If we have not already built an assembly in either location, prefer the
     `_OuterIntermediateOutputPath` if possible over the `IntermediateOutputPath`.
     This will mean only one copy of the assembly will be created. Rather than one
-    per TargetFramework.
+    per runtime identifier.
     -->
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' And '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'true' ">$(_OuterIntermediateOutputPath)designtime\</_DesignerIntermediateOutputPath>
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_DesignerIntermediateOutputPath>
@@ -196,10 +197,29 @@ namespace $(AndroidResgenNamespace) {
   </ItemGroup>
 </Target>
 
+<Target Name="_GenerateResourceDesignerAssemblyInputs"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
+    DependsOnTargets="_SetupDesignerProperties">
+  <PropertyGroup>
+    <_AndroidResourceDesignerFrameworkFile>$(_DesignerIntermediateOutputPath)resource.designer.framework</_AndroidResourceDesignerFrameworkFile>
+    <!-- Normal builds emit the designer from _UpdateAndroidResgen, which may reuse a design-time retargeted output. -->
+    <_UpdateAndroidResgenInputs>$(_UpdateAndroidResgenInputs);$(_AndroidResourceDesignerFrameworkFile)</_UpdateAndroidResgenInputs>
+  </PropertyGroup>
+  <WriteLinesToFile
+      File="$(_AndroidResourceDesignerFrameworkFile)"
+      Lines="$(TargetFrameworkIdentifier);$(TargetFrameworkVersion)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
+  />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidResourceDesignerFrameworkFile)" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GenerateResourceDesignerAssembly"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
-    DependsOnTargets="_GenerateResourceCaseMap"
-    Inputs="$(_DesignerIntermediateOutputPath)R.txt"
+    DependsOnTargets="_GenerateResourceCaseMap;_GenerateResourceDesignerAssemblyInputs"
+    Inputs="$(_DesignerIntermediateOutputPath)R.txt;$(_AndroidResourceDesignerFrameworkFile)"
     Outputs="$(_GenerateResourceDesignerAssemblyOutput)">
   <GenerateResourceDesignerAssembly
       ContinueOnError="$(DesignTimeBuild)"
@@ -265,8 +285,8 @@ namespace $(AndroidResgenNamespace) {
     order for it to be included in the final application package.
 
     In additon we MUST set the `PostprocessAssembly` metadata to `true` so that the file
-    is processed by the ILLink step. If we do not do this then the reference to
-    `netstandard.dll` is not replaced with `System.Private.CoreLib` and the app crashes.
+    is processed by the ILLink step, which rewrites framework type references
+    from `System.Runtime` to their runtime implementations.
 
     The trimmable typemap targets root the designer assembly when trimming is enabled:
     resource IDs may be resolved through reflection at runtime.
