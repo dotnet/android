@@ -90,7 +90,7 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 # With more than one device attached:
-ADB_TARGET='-s emulator-5570' ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
 ### On-device runtime tests (stock NUnit/MTP, full-build + device)

@@ -5,43 +5,63 @@ description: >-
   dotnet/android device tests and runtime experiments. Use before running
   MSBuildDeviceIntegration or Mono.Android.NET-Tests on a device, when starting
   or stopping an emulator, when several sessions need devices on one host, or
-  when an on-device run crashes or goes silent. Prefer this over hand-rolled
-  avdmanager/emulator/adb scripts.
+  when an on-device run crashes or goes silent. Prefers the `android` CLI shipped
+  in the pinned cmdline-tools over hand-rolled emulator/adb scripts.
 ---
 
 # Android devices
 
 Device tests need a complete local SDK first (see the `local-build` skill) and the commands in the `tests` skill.
 
-## 1. Reuse before creating
+## 1. Use the `android` CLI
+
+The Android command-line tools pinned by this repo (`$(CommandLineToolsFolder)` = `23.0` in `Configuration.props`) include Google's `android` CLI, so it is available after `make prepare` at `~/android-toolchain/sdk/cmdline-tools/23.0/bin/android` (or under `$(AndroidSdkDirectory)` if overridden). Call that path directly: other `android` binaries on `PATH` (for example, Homebrew's) may be a different version.
 
 ```bash
-adb devices -l
+ANDROID_CLI=~/android-toolchain/sdk/cmdline-tools/23.0/bin/android
+
+$ANDROID_CLI info                              # SDK path and connected devices
+$ANDROID_CLI emulator list --long              # AVDs with API level, status, and serial
+$ANDROID_CLI emulator start --headless <avd>   # blocks until fully booted; prints "started as 'emulator-NNNN'"
+$ANDROID_CLI emulator stop emulator-NNNN       # stops only this emulator; the adb server keeps running
 ```
 
-If a suitable emulator or device is already online and no other session is using it, target it (section 3) instead of creating another one. In the GitHub Copilot app, the Mobile Device canvas/tools can also list, create, and boot emulators.
+**Reuse before creating.** Run `emulator list --long` (and `adb devices -l` for physical devices). If a suitable device is already online and no other session is using it, target it (section 3). If a suitable AVD is offline, start it.
 
-## 2. Start an emulator the same way CI does
+**Creating AVDs.**
 
-CI uses `Emulator.csproj` (`build-tools/automation/yaml-templates/start-stop-emulator.yaml`), which imports `build-tools/scripts/TestApks.targets`:
+  * `android emulator create <profile>` (see `create --list-profiles`, for example `medium_phone`) creates an AVD named after the profile with the CLI's default system image. It cannot choose the API level, ABI, or AVD name.
+  * When you need a specific API level or ABI, or a second concurrent AVD, create it with `avdmanager`, then start it with the CLI:
+
+    ```bash
+    sdk=~/android-toolchain/sdk
+    $ANDROID_CLI sdk install "system-images;android-35;google_apis;arm64-v8a"
+    $sdk/cmdline-tools/23.0/bin/avdmanager create avd -n <unique-name> \
+        -k "system-images;android-35;google_apis;arm64-v8a" -d pixel_9_pro
+    $ANDROID_CLI emulator start --headless <unique-name>
+    ```
+
+  * Use x86_64 images instead of arm64-v8a on Intel hosts.
+  * One AVD can only run once at a time. Concurrent sessions need distinct AVDs; the emulator picks the next free port (`emulator-5554`, `emulator-5556`, …).
+  * Delete AVDs you created when you are done (`$ANDROID_CLI emulator remove <name>`); `~/.android/avd` is shared by every session on the host.
+
+In the GitHub Copilot app, the Mobile Device canvas/tools wrap the same operations.
+
+## 2. CI's MSBuild targets (only to match CI exactly)
+
+CI starts emulators with `Emulator.csproj` (`build-tools/automation/yaml-templates/start-stop-emulator.yaml`), which imports `build-tools/scripts/TestApks.targets`. Use it only when reproducing a CI lane's exact emulator configuration:
 
 ```bash
-# Optional: download a specific system image first
 ./dotnet-local.sh build src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj \
-    -t:"InstallAvdImage;AcquireAndroidTarget" -p:TestAvdApiLevel=35 -p:TestAvdType=google_apis
-
-# Default image
-./dotnet-local.sh build src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj \
-    -t:AcquireAndroidTarget
+    -t:"InstallAvdImage;AcquireAndroidTarget" -p:TestAvdApiLevel=29 -p:TestAvdType=default
 ```
 
-Behavior to know (`TestApks.targets`):
+Its hazards on a shared host:
 
-- `AcquireAndroidTarget` first checks `$(AdbTarget)` (or the single attached device) and **reuses it if it is valid**. Pass `-p:RequireNewEmulator=True` to always start a new one.
-- The defaults are API 29, the `default` image type, arm64-v8a on Apple Silicon (otherwise x86_64), the `pixel_4` profile, and the AVD name `XamarinAndroidTestRunner<api>-<abi>`.
-- `TestAvdForceCreation` defaults to `true`, so the AVD is recreated on each acquire. Pass `-p:TestAvdForceCreation=false` to keep an existing AVD.
-- The emulator always listens on **port 5570 (`emulator-5570`)**, so these targets run only one emulator per host. For a second concurrent emulator, boot another AVD on a different even port (`$ANDROID_HOME/emulator/emulator -avd <name> -port 5580 -no-window -no-boot-anim`) or use the Mobile Device tools.
-- **`ReleaseAndroidTarget` also runs `adb kill-server`**, which disconnects every other session on the host. When other sessions may be using devices, stop only your own emulator: `adb -s emulator-5570 emu kill`.
+  * `AcquireAndroidTarget` reuses any valid attached device, unless you pass `-p:RequireNewEmulator=True`.
+  * It recreates the `XamarinAndroidTestRunner<api>-<abi>` AVD on every acquire (`TestAvdForceCreation=true`).
+  * It always uses port 5570, so only one such emulator can run per host.
+  * **`ReleaseAndroidTarget` runs `adb kill-server`**, which disconnects every other session. Stop your emulator with `android emulator stop emulator-5570` instead.
 
 ## 3. Target a specific device
 
@@ -58,7 +78,7 @@ Whenever more than one device may be attached, always target one explicitly:
 - Installing the same test APK (for example `Mono.Android.NET-Tests`) from two sessions onto one device overwrites the other run. Run one instrumentation per device at a time, or give each session its own emulator.
 - Keep to the default ADB server. Private ADB servers or ports are rarely needed; prefer distinct emulators and explicit serials.
 - Never stop emulators or `adb` processes that you did not start. On Windows, `BaseTest.AfterAllTests` kills every `adb.exe` after `adb kill-server` (`BaseTest.cs`, `AfterAllTests`), so host-side test runs there disrupt all device users.
-- When done, stop only your own emulator and report its serial in the handoff.
+- When done, stop only your own emulator (`android emulator stop <serial>`), remove AVDs you created, and report the serial in the handoff.
 
 ## 5. Narrowing and diagnosing on-device runs
 
