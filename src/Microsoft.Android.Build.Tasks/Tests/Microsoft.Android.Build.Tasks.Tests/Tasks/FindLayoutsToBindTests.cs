@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -70,8 +71,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("Foo.Bar", task.LayoutsToBind? [3].GetMetadata ("ClassName"));
 		}
 
-		[Test]
-		public void ShortTaskNameResolves ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ShortTaskNameResolves (bool projectRelativePaths)
 		{
 			string repo = NativeAotBootstrapTestTools.FindRepositoryRoot ();
 			var common = XDocument.Load (Path.Combine (repo, "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
@@ -84,28 +86,47 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsNull (usingTasks.Single (u => ((string?) u.Attribute ("Condition"))?.Contains ("'Core'") == true).Attribute ("TaskFactory"));
 
 			string layout = CreateFile ("Resources", "layout", "main.xml");
+			string cached = CreateFile ("Cached", "layout", "cached.xml");
+			string cacheFile = CreateFile ("obj", "deps.cache");
+			string InputPath (string path) => projectRelativePaths ? Path.GetRelativePath (root, path) : path;
+			File.WriteAllLines (cacheFile, [InputPath (cached)]);
 			XElement Invoke (string taskName, string itemName) =>
 				new XElement (taskName,
 					new XAttribute ("GenerateLayoutBindings", "true"),
-					new XAttribute ("ResourceFiles", layout),
+					new XAttribute ("ResourceFiles", "@(AndroidResource)"),
+					new XAttribute ("BindingDependenciesCacheFile", "$(IntermediateOutputPath)deps.cache"),
 					new XElement ("Output", new XAttribute ("ItemName", itemName), new XAttribute ("TaskParameter", "LayoutsToBind")));
 			string projectFile = Path.Combine (root, "names.proj");
 			new XDocument (
 				new XElement ("Project",
 					new XElement ("PropertyGroup",
-						new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (FindLayoutsToBind).Assembly.Location)),
+						new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (FindLayoutsToBind).Assembly.Location),
+						new XElement ("IntermediateOutputPath", InputPath (Path.GetDirectoryName (cacheFile) ?? root) + Path.DirectorySeparatorChar)),
+					new XElement ("ItemGroup",
+						new XElement ("AndroidResource", new XAttribute ("Include", InputPath (layout)))),
 					usingTasks,
 					new XElement ("Target", new XAttribute ("Name", "Bind"),
 						Invoke ("FindLayoutsToBind", "Short"))))
 				.Save (projectFile);
 
 			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
-			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:Bind", "-getItem:Short", "-v:quiet", "-nr:false");
-			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-			using var json = JsonDocument.Parse (result.Output);
+			string workingDirectory = Path.Combine (root, "invocation");
+			Directory.CreateDirectory (workingDirectory);
+			var startInfo = new ProcessStartInfo (dotnet) {
+				WorkingDirectory = workingDirectory,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			};
+			foreach (string argument in new [] { "msbuild", projectFile, "-t:Bind", "-getItem:Short", "-v:quiet", "-nr:false" }) {
+				startInfo.ArgumentList.Add (argument);
+			}
+			var result = NativeToolTestHelper.Capture (startInfo, TimeSpan.FromMinutes (2));
+			Assert.AreEqual (0, result.ExitCode, result.StandardOutput + result.StandardError);
+			using var json = JsonDocument.Parse (result.StandardOutput);
 			var identities = json.RootElement.GetProperty ("Items").GetProperty ("Short").EnumerateArray ()
 				.Select (i => i.GetProperty ("Identity").GetString ()).ToArray ();
-			CollectionAssert.AreEqual (new [] { layout }, identities);
+			CollectionAssert.AreEqual (new [] { InputPath (layout), InputPath (cached) }, identities);
 		}
 
 		[Test]
