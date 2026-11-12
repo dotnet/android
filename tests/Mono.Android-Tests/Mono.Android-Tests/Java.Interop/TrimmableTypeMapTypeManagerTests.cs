@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Android.Runtime;
+using Dalvik.SystemInterop;
 using Java.Interop;
 using Microsoft.Android.Runtime;
 using NUnit.Framework;
@@ -271,15 +272,25 @@ namespace Java.InteropTests
 		[Category ("NativeAOTTrimmable")]
 		public void GetProxyForJavaObject_SealedExternalTarget_UsesUnmarkedProxy ()
 		{
-			var handle = JNIEnv.CreateInstance ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer", "()V");
-			try {
-				var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (handle, typeof (TrimmableRuntimeJavaInteropPeer));
+			const string javaClassName = "net.dot.android.test.TrimmableRuntimeJavaInteropPeer";
+			var sourceDir = Android.App.Application.Context.ApplicationInfo?.SourceDir
+				?? throw new InvalidOperationException ("The application APK path is unavailable.");
+			using var loader = new PathClassLoader (sourceDir, null);
+			using var javaClass = loader.LoadClass (javaClassName)
+				?? throw new InvalidOperationException ($"Could not load {javaClassName} from a separate class loader.");
+			using var instance = javaClass.NewInstance ();
+			using var runtimeClass = Java.Lang.Class.ForName (
+				javaClassName,
+				initialize: false,
+				Android.App.Application.Context.ClassLoader);
 
-				Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), proxy?.TargetType);
-				Assert.IsNotInstanceOf<JavaPeerProxyForSealedFrameworkClass> (proxy);
-			} finally {
-				JNIEnv.DeleteLocalRef (handle);
-			}
+			Assert.IsFalse (runtimeClass.IsInstance (instance),
+				"The test instance must not belong to the runtime's application class loader.");
+
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (instance.Handle, typeof (TrimmableRuntimeJavaInteropPeer));
+
+			Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), proxy?.TargetType);
+			Assert.IsNotInstanceOf<JavaPeerProxyForSealedFrameworkClass> (proxy);
 		}
 
 		[Test]
