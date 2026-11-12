@@ -41,15 +41,26 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
 
   <Target Name="_AndroidJavacCommand">
     <PropertyGroup>
+      <_AndroidJavacShellQuote>'</_AndroidJavacShellQuote>
+      <_AndroidJavacShellEscapeFrom>'</_AndroidJavacShellEscapeFrom>
+      <_AndroidJavacShellEscapeTo>'\''</_AndroidJavacShellEscapeTo>
+      <_AndroidJavacPathSeparator>:</_AndroidJavacPathSeparator>
+      <_AndroidJavacShellQuote Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">&quot;</_AndroidJavacShellQuote>
+      <_AndroidJavacShellEscapeFrom Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25</_AndroidJavacShellEscapeFrom>
+      <_AndroidJavacShellEscapeTo Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25%25</_AndroidJavacShellEscapeTo>
+      <_AndroidJavacPathSeparator Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">;</_AndroidJavacPathSeparator>
+      <_AndroidJavacEscapedPathSeparator>$([MSBuild]::Escape('$(_AndroidJavacPathSeparator)'))</_AndroidJavacEscapedPathSeparator>
       <_AndroidJavacToolExe>$(JavacToolExe)</_AndroidJavacToolExe>
       <_AndroidJavacToolExe Condition=" '$(_AndroidJavacToolExe)' == '' ">javac</_AndroidJavacToolExe>
       <_AndroidJavacToolExe Condition=" '$(JavacToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">javac.exe</_AndroidJavacToolExe>
+      <_AndroidJavacToolPath>$([System.IO.Path]::Combine('$(JavacToolPath)', '$(_AndroidJavacToolExe)'))</_AndroidJavacToolPath>
+      <_AndroidJavacToolPath>$([System.String]::Copy('$(_AndroidJavacToolPath)').Replace('$(_AndroidJavacShellEscapeFrom)', '$(_AndroidJavacShellEscapeTo)').Insert(0, '$(_AndroidJavacShellQuote)'))$(_AndroidJavacShellQuote)</_AndroidJavacToolPath>
       <_AndroidJavacVersionArguments>-target $(JavacTargetVersion) -source $(JavacSourceVersion) -Xlint:-options</_AndroidJavacVersionArguments>
       <_AndroidJavacVersionArguments
           Condition=" '$(_JdkVersion)' != '' and $([System.Version]::Parse('$(_JdkVersion)').Major) &gt;= 17 and
                       $([System.Text.RegularExpressions.Regex]::IsMatch('$(JavacSourceVersion)', '^\s*[+-]?[0-9]+\s*$')) and
                       $([System.Text.RegularExpressions.Regex]::IsMatch('$(JavacTargetVersion)', '^\s*[+-]?[0-9]+\s*$')) ">--release $([System.Math]::Max($([System.Convert]::ToInt32('$(JavacSourceVersion)')), $([System.Convert]::ToInt32('$(JavacTargetVersion)'))))</_AndroidJavacVersionArguments>
-      <_AndroidJavacCommand>&quot;$([System.IO.Path]::Combine('$(JavacToolPath)', '$(_AndroidJavacToolExe)'))&quot; -J-Dfile.encoding=UTF8 $(_AndroidJavacVersionArguments)</_AndroidJavacCommand>
+      <_AndroidJavacCommand>$(_AndroidJavacToolPath) -J-Dfile.encoding=UTF8 $(_AndroidJavacVersionArguments)</_AndroidJavacCommand>
     </PropertyGroup>
   </Target>
 
@@ -129,17 +140,22 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <MakeDir Directories="$(_AndroidIntermediateBindingJavaClassDirectory)" />
     <PropertyGroup>
       <_AndroidBindingJavacResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', '_CompileBindingJava.rsp'))</_AndroidBindingJavacResponseFile>
+      <_AndroidBindingJavacResponseFileArgument>@$(_AndroidBindingJavacResponseFile)</_AndroidBindingJavacResponseFileArgument>
+      <_AndroidBindingJavacResponseFileArgument>$([System.String]::Copy('$(_AndroidBindingJavacResponseFileArgument)').Replace('$(_AndroidJavacShellEscapeFrom)', '$(_AndroidJavacShellEscapeTo)').Insert(0, '$(_AndroidJavacShellQuote)'))$(_AndroidJavacShellQuote)</_AndroidBindingJavacResponseFileArgument>
     </PropertyGroup>
     <ItemGroup>
       <_AndroidBindingJavacClasspath Include="@(_BindingJavaLibrariesToCompile);@(_ReferenceJavaLibs);$(JavaPlatformJarPath)" />
       <_AndroidBindingJavacSource Include="@(_JavaBindingSource)" Condition=" '%(_JavaBindingSource.Extension)' == '.java' " />
       <_AndroidBindingJavacStub Include="$(_AndroidIntermediateBindingJavaSourceDirectory)\**\*.java" />
     </ItemGroup>
+    <PropertyGroup>
+      <_AndroidBindingJavacClasspathArgument>@(_AndroidBindingJavacClasspath->Replace('\', '\\'), '$(_AndroidJavacEscapedPathSeparator)')</_AndroidBindingJavacClasspathArgument>
+    </PropertyGroup>
     <!-- javac response files interpret backslashes as escape characters. -->
     <WriteLinesToFile
         File="$(_AndroidBindingJavacResponseFile)"
         Lines="-d &quot;$([MSBuild]::NormalizeDirectory('$(_AndroidIntermediateBindingJavaClassDirectory)').Replace('\', '\\'))&quot;;
-               -classpath &quot;@(_AndroidBindingJavacClasspath->Replace('\', '\\'), '$([MSBuild]::Escape($([System.IO.Path]::PathSeparator)))')&quot;;
+               -classpath &quot;$(_AndroidBindingJavacClasspathArgument)&quot;;
                -encoding UTF8;
                @(_AndroidBindingJavacSource->'&quot;%(Identity)&quot;'->Replace('\', '\\'));
                @(_AndroidBindingJavacStub->'&quot;%(Identity)&quot;'->Replace('\', '\\')->Normalize())"
@@ -147,7 +163,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <ItemGroup>
       <FileWrites Include="$(_AndroidBindingJavacResponseFile)" />
     </ItemGroup>
-    <Exec Command="$(_AndroidJavacCommand) &quot;@$(_AndroidBindingJavacResponseFile)&quot;"
+    <Exec Command="$(_AndroidJavacCommand) $(_AndroidBindingJavacResponseFileArgument)"
         IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" ItemName="_AndroidBindingJavacOutput" />
       <Output TaskParameter="ExitCode" PropertyName="_AndroidBindingJavacExitCode" />
@@ -163,7 +179,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         File="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidBindingJavacError.Identity)', '^(.+\.java):(\d+):(.+)$', '$1'))"
         HelpKeyword="JAVAC0000"
         Text="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidBindingJavacError.Identity)', '^.+\.java:(\d+):\s*(?:error:\s*)?', 'line $1: '))"
-        Condition=" '@(_AndroidBindingJavacError->Count())' != '0' " />
+        Condition=" '@(_AndroidBindingJavacError->Count())' != '0' "
+        ContinueOnError="ErrorAndContinue" />
     <Error Code="JAVAC0000" Text="javac exited with code $(_AndroidBindingJavacExitCode).%0A@(_AndroidBindingJavacOutput, '%0A')"
         Condition=" '$(_AndroidBindingJavacExitCode)' != '0' " />
     <CreateJavaArchive
@@ -205,6 +222,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <MakeDir Directories="$(_AndroidIntermediateJavaClassDirectory)" />
     <PropertyGroup>
       <_AndroidJavacResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', '_CompileJava.rsp'))</_AndroidJavacResponseFile>
+      <_AndroidJavacResponseFileArgument>@$(_AndroidJavacResponseFile)</_AndroidJavacResponseFileArgument>
+      <_AndroidJavacResponseFileArgument>$([System.String]::Copy('$(_AndroidJavacResponseFileArgument)').Replace('$(_AndroidJavacShellEscapeFrom)', '$(_AndroidJavacShellEscapeTo)').Insert(0, '$(_AndroidJavacShellQuote)'))$(_AndroidJavacShellQuote)</_AndroidJavacResponseFileArgument>
     </PropertyGroup>
     <ItemGroup>
       <_AndroidJavacClasspath Include="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs);$(JavaPlatformJarPath)" />
@@ -214,11 +233,14 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <ItemGroup Condition=" '@(_AdditionalJavaStubDirectory->Count())' != '0' ">
       <_AndroidJavacStub Include="%(_AdditionalJavaStubDirectory.Identity)\**\*.java" />
     </ItemGroup>
+    <PropertyGroup>
+      <_AndroidJavacClasspathArgument>@(_AndroidJavacClasspath->Replace('\', '\\'), '$(_AndroidJavacEscapedPathSeparator)')</_AndroidJavacClasspathArgument>
+    </PropertyGroup>
     <!-- javac response files interpret backslashes as escape characters. -->
     <WriteLinesToFile
         File="$(_AndroidJavacResponseFile)"
         Lines="-d &quot;$([MSBuild]::NormalizeDirectory('$(_AndroidIntermediateJavaClassDirectory)').Replace('\', '\\'))&quot;;
-               -classpath &quot;@(_AndroidJavacClasspath->Replace('\', '\\'), '$([MSBuild]::Escape($([System.IO.Path]::PathSeparator)))')&quot;;
+               -classpath &quot;$(_AndroidJavacClasspathArgument)&quot;;
                -encoding UTF8;
                @(_AndroidJavacSource->'&quot;%(Identity)&quot;'->Replace('\', '\\'));
                @(_AndroidJavacStub->'&quot;%(Identity)&quot;'->Replace('\', '\\')->Normalize())"
@@ -226,7 +248,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <ItemGroup>
       <FileWrites Include="$(_AndroidJavacResponseFile)" />
     </ItemGroup>
-    <Exec Command="$(_AndroidJavacCommand) &quot;@$(_AndroidJavacResponseFile)&quot;"
+    <Exec Command="$(_AndroidJavacCommand) $(_AndroidJavacResponseFileArgument)"
         IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" ItemName="_AndroidJavacOutput" />
       <Output TaskParameter="ExitCode" PropertyName="_AndroidJavacExitCode" />
@@ -242,7 +264,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         File="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidJavacError.Identity)', '^(.+\.java):(\d+):(.+)$', '$1'))"
         HelpKeyword="JAVAC0000"
         Text="$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidJavacError.Identity)', '^.+\.java:(\d+):\s*(?:error:\s*)?', 'line $1: '))"
-        Condition=" '@(_AndroidJavacError->Count())' != '0' " />
+        Condition=" '@(_AndroidJavacError->Count())' != '0' "
+        ContinueOnError="ErrorAndContinue" />
     <Error Code="JAVAC0000" Text="javac exited with code $(_AndroidJavacExitCode).%0A@(_AndroidJavacOutput, '%0A')"
         Condition=" '$(_AndroidJavacExitCode)' != '0' " />
 

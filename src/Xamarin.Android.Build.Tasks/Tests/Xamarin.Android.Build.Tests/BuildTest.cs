@@ -2156,14 +2156,33 @@ public class ToolbarEx {
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "error JAVAC0000:"), "Java compiler error expected");
-				var text = "TestMe.java:1: error: class, interface, or enum expected";
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java:1 expected");
 				var expectedErrors = new [] {
-					"TestMe2.java:1: error: ';' expected",
-					"TestMe2.java:1: error: '{' or ';' expected",
+					@"TestMe\.java\s*: error JAVAC0000: line 1: class, interface, or enum expected",
+					@"TestMe2\.java\s*: error JAVAC0000: line 1: ';' expected",
 				};
-				Assert.IsTrue (expectedErrors.Any (error => StringAssertEx.ContainsText (b.LastBuildOutput, error)), "TestMe2.java:1 expected");
+				foreach (var error in expectedErrors) {
+					StringAssertEx.ContainsRegex (error, b.LastBuildOutput, $"Formatted Java compiler error should match `{error}`.");
+				}
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void BuildApplicationWithJavaSourceInShellSensitiveDirectory ()
+		{
+			var path = Path.Combine ("temp", TestName, "app$HOME%PATH%'q");
+			var proj = new XamarinAndroidApplicationProject () {
+				AndroidJavaSources = {
+					new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestJava.java") {
+						TextContent = () => "public class TestJava { }",
+						Encoding = Encoding.ASCII,
+					},
+				},
+			};
+			using (var b = CreateApkBuilder (path)) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var quotedPathSegment = IsWindows ? "app$HOME%%PATH%%'q" : "app$HOME%PATH%'\\''q";
+				Assert.IsTrue (b.LastBuildOutput.ContainsText (quotedPathSegment), $"Javac command should contain `{quotedPathSegment}`.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
