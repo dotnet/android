@@ -172,15 +172,27 @@ namespace $(AndroidResgenNamespace) {
 	#pragma warning restore IDE0002
 }]]></_ResourceDesignerIntermediateClass>
   </PropertyGroup>
+  <!-- Stage the content, then copy it only when it changed. `Copy` can replace a read-only destination,
+       which `WriteLinesToFile` cannot. -->
   <WriteLinesToFile
-      File="$(_GenerateResourceDesignerClassFile)"
+      File="$(_GenerateResourceDesignerClassFile).tmp"
       Lines="$(_ResourceDesignerIntermediateClass)"
       Overwrite="true"
       WriteOnlyWhenDifferent="true"
   />
+  <PropertyGroup>
+    <_ResourceDesignerIntermediateClassChanged>true</_ResourceDesignerIntermediateClassChanged>
+    <_ResourceDesignerIntermediateClassChanged Condition=" Exists('$(_GenerateResourceDesignerClassFile)') And '$([System.IO.File]::ReadAllText(`$(_GenerateResourceDesignerClassFile).tmp`))' == '$([System.IO.File]::ReadAllText(`$(_GenerateResourceDesignerClassFile)`))' ">false</_ResourceDesignerIntermediateClassChanged>
+  </PropertyGroup>
+  <Copy
+      SourceFiles="$(_GenerateResourceDesignerClassFile).tmp"
+      DestinationFiles="$(_GenerateResourceDesignerClassFile)"
+      OverwriteReadOnlyFiles="true"
+      Condition=" '$(_ResourceDesignerIntermediateClassChanged)' == 'true' "
+  />
   <Touch Files="$(_GenerateResourceDesignerClassFile)" />
   <ItemGroup>
-    <FileWrites Include="$(_GenerateResourceDesignerClassFile)" />
+    <FileWrites Include="$(_GenerateResourceDesignerClassFile);$(_GenerateResourceDesignerClassFile).tmp" />
   </ItemGroup>
 </Target>
 

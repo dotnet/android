@@ -700,6 +700,26 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void ResourceDesignerIntermediateClassIsRegeneratedWhenReadOnly ()
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
+
+			var classFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "__Microsoft.Android.Resource.Designer.cs");
+			StringAssert.Contains ("public partial class Resource", File.ReadAllText (classFile));
+			File.SetAttributes (classFile, FileAttributes.ReadOnly);
+			Assert.IsTrue ((File.GetAttributes (classFile) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
+				"{0} should be read only", classFile);
+
+			proj.SetProperty ("AndroidResourceDesignerClassModifier", "internal");
+			Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
+			StringAssert.Contains ("internal partial class Resource", File.ReadAllText (classFile));
+			Assert.IsTrue ((File.GetAttributes (classFile) & FileAttributes.ReadOnly) != FileAttributes.ReadOnly,
+				"{0} should be writable", classFile);
+		}
+
+		[Test]
 		public void CheckOldResourceDesignerIsNotUsed ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
