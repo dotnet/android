@@ -2365,7 +2365,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_AndroidZipAlignToolExe Condition=" '$(OS)' == 'Windows_NT' ">zipalign.exe</_AndroidZipAlignToolExe>
     <_AndroidZipAlignToolExe Condition=" '$(OS)' != 'Windows_NT' ">zipalign</_AndroidZipAlignToolExe>
-    <_AndroidZipAlignCommand>&quot;$([System.IO.Path]::Combine('$(ZipAlignToolPath)', $([MSBuild]::ValueOrDefault('$(ZipalignToolExe)', '$(_AndroidZipAlignToolExe)'))))&quot;</_AndroidZipAlignCommand>
+    <_AndroidZipAlignTool>$([System.IO.Path]::Combine(`$(ZipAlignToolPath)`, $([MSBuild]::ValueOrDefault(`$(ZipalignToolExe)`, `$(_AndroidZipAlignToolExe)`))))</_AndroidZipAlignTool>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_SignInputs>
@@ -2398,15 +2398,50 @@ because xbuild doesn't support framework reference assemblies.
 		<_AndroidZipAlignApk Include="$(OutDir)$(_AndroidPackage)-Signed-Unaligned.apk" Condition=" '$(AndroidUseApkSigner)' != 'true' " />
 		<_AndroidZipAlignApk Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" Condition=" '$(AndroidUseApkSigner)' != 'true' And '$(AndroidCreatePackagePerAbi)' == 'true' " />
 	</ItemGroup>
+	<RemoveDuplicates Inputs="@(_AndroidZipAlignApk)">
+		<Output TaskParameter="Filtered" ItemName="_AndroidZipAlignDistinctApk" />
+	</RemoveDuplicates>
+	<ItemGroup>
+		<_AndroidZipAlignApk Remove="@(_AndroidZipAlignApk)" />
+		<_AndroidZipAlignApk Include="@(_AndroidZipAlignDistinctApk)">
+			<Destination>$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk</Destination>
+		</_AndroidZipAlignApk>
+	</ItemGroup>
 </Target>
 
 <!-- Batch the whole target so each APK's output is checked against its own exit code. -->
 <Target Name="_AndroidZipAlign"
 	DependsOnTargets="_AndroidZipAlignInputs"
 	Inputs="%(_AndroidZipAlignApk.Identity)"
-	Outputs="@(_AndroidZipAlignApk->'$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')">
+	Outputs="%(_AndroidZipAlignApk.Destination)">
+	<ItemGroup>
+		<_AndroidZipAlignOutput Remove="@(_AndroidZipAlignOutput)" />
+		<_AndroidZipAlignArgument Remove="@(_AndroidZipAlignArgument)" />
+		<_AndroidZipAlignArgument Include="Tool">
+			<Value>$(_AndroidZipAlignTool)</Value>
+		</_AndroidZipAlignArgument>
+		<_AndroidZipAlignArgument Include="Alignment">
+			<Switch>-p</Switch>
+			<Value>$(AndroidZipAlignment)</Value>
+		</_AndroidZipAlignArgument>
+		<_AndroidZipAlignArgument Include="Source">
+			<Value>%(_AndroidZipAlignApk.Identity)</Value>
+		</_AndroidZipAlignArgument>
+		<_AndroidZipAlignArgument Include="Destination">
+			<Value>%(_AndroidZipAlignApk.Destination)</Value>
+		</_AndroidZipAlignArgument>
+		<_AndroidZipAlignArgument>
+			<!-- Protect percent sequences through argument unescaping and the final Unescape.
+			     Delay shell backslashes until Exec to avoid Unix path normalization. -->
+			<QuotedValue Condition=" '$(OS)' == 'Windows_NT' ">&quot;$([System.String]::Copy(`%(_AndroidZipAlignArgument.Value)`).Replace(`%`, `%252525%252525`))&quot;</QuotedValue>
+			<QuotedValue Condition=" '$(OS)' != 'Windows_NT' ">'$([System.String]::Copy(`%(_AndroidZipAlignArgument.Value)`).Replace(`%`, `%252525`).Replace(`'`, `'%255c''`))'</QuotedValue>
+		</_AndroidZipAlignArgument>
+	</ItemGroup>
+	<PropertyGroup>
+		<_AndroidZipAlignCommand>@(_AndroidZipAlignArgument->'%(Switch) %(QuotedValue)', ' ')</_AndroidZipAlignCommand>
+	</PropertyGroup>
 	<Exec
-		Command="$(_AndroidZipAlignCommand) -p $(AndroidZipAlignment) &quot;%(_AndroidZipAlignApk.Identity)&quot; &quot;@(_AndroidZipAlignApk->'$(OutDir)$([System.IO.Path]::DirectorySeparatorChar)$([System.Text.RegularExpressions.Regex]::Replace(`%(Filename)`, `(?i)-Signed-Unaligned$`, ``))-Signed.apk')&quot;"
+		Command="$([MSBuild]::Unescape(`$(_AndroidZipAlignCommand)`))"
 		ConsoleToMSBuild="true"
 		IgnoreExitCode="true"
 		IgnoreStandardErrorWarningFormat="true"
@@ -2424,7 +2459,8 @@ because xbuild doesn't support framework reference assemblies.
 	<Error
 		Condition=" '$(_AndroidZipAlignExitCode)' != '0' And '@(_AndroidZipAlignOutput->Count())' == '0' "
 		Code="ANDZA0000"
-		Text="$(_AndroidZipAlignCommand) exited with code $(_AndroidZipAlignExitCode)."
+		Text="zipalign exited with code $(_AndroidZipAlignExitCode) for %(_AndroidZipAlignApk.Identity)."
+		ContinueOnError="ErrorAndContinue"
 	/>
 </Target>
 
