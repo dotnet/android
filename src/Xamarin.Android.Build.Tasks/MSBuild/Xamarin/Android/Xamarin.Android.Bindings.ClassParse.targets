@@ -35,11 +35,32 @@ This file is only used by binding projects.
     <PropertyGroup>
       <!-- Allow $(_BindingsToolsLocation) to override where to find class-parse/generator -->
       <_BindingsToolsLocation Condition=" '$(_BindingsToolsLocation)' == '' ">$(MonoAndroidToolsDirectory)</_BindingsToolsLocation>
-      <_AndroidClassParseDotnet Condition=" '$(NetCoreRoot)' != '' and $([MSBuild]::IsOSPlatform('Windows')) ">$([System.IO.Path]::Combine('$(NetCoreRoot)', 'dotnet.exe'))</_AndroidClassParseDotnet>
-      <_AndroidClassParseDotnet Condition=" '$(NetCoreRoot)' != '' and !$([MSBuild]::IsOSPlatform('Windows')) ">$([System.IO.Path]::Combine('$(NetCoreRoot)', 'dotnet'))</_AndroidClassParseDotnet>
+      <_AndroidClassParseDotnet Condition=" '$(NetCoreRoot)' != '' and $([MSBuild]::IsOSPlatform('Windows')) ">$([System.IO.Path]::Combine(`$(NetCoreRoot)`, 'dotnet.exe'))</_AndroidClassParseDotnet>
+      <_AndroidClassParseDotnet Condition=" '$(NetCoreRoot)' != '' and !$([MSBuild]::IsOSPlatform('Windows')) ">$([System.IO.Path]::Combine(`$(NetCoreRoot)`, 'dotnet'))</_AndroidClassParseDotnet>
       <_AndroidClassParseDotnet Condition=" !Exists('$(_AndroidClassParseDotnet)') and Exists('$(DOTNET_HOST_PATH)') ">$(DOTNET_HOST_PATH)</_AndroidClassParseDotnet>
       <_AndroidClassParseDotnet Condition=" !Exists('$(_AndroidClassParseDotnet)') ">dotnet</_AndroidClassParseDotnet>
-      <_AndroidClassParseResponseFile>$([System.IO.Path]::Combine($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetFullPath('$(ApiOutputFile)')))), 'class-parse.rsp'))</_AndroidClassParseResponseFile>
+      <_AndroidClassParseResponseFile>$([System.IO.Path]::Combine($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetFullPath(`$(ApiOutputFile)`)))), 'class-parse.rsp'))</_AndroidClassParseResponseFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_AndroidClassParseArgument Remove="@(_AndroidClassParseArgument)" />
+      <_AndroidClassParseArgument Include="Host">
+        <Value>$(_AndroidClassParseDotnet)</Value>
+      </_AndroidClassParseArgument>
+      <_AndroidClassParseArgument Include="Tool">
+        <Value>$([System.IO.Path]::Combine(`$(_BindingsToolsLocation)`, `$(ClassParseToolExe)`))</Value>
+      </_AndroidClassParseArgument>
+      <_AndroidClassParseArgument Include="ResponseFile">
+        <Value>@$(_AndroidClassParseResponseFile)</Value>
+      </_AndroidClassParseArgument>
+      <_AndroidClassParseArgument>
+        <!-- Protect percent sequences through MSBuild unescaping; delay shell backslashes until Exec. -->
+        <QuotedValue Condition="$([MSBuild]::IsOSPlatform('Windows'))">&quot;$([System.String]::Copy(`%(_AndroidClassParseArgument.Value)`).Replace(`%`, `%252525%252525`))&quot;</QuotedValue>
+        <QuotedValue Condition="!$([MSBuild]::IsOSPlatform('Windows'))">'$([System.String]::Copy(`%(_AndroidClassParseArgument.Value)`).Replace(`%`, `%252525`).Replace(`'`, `'%25255c''`))'</QuotedValue>
+      </_AndroidClassParseArgument>
+    </ItemGroup>
+    <PropertyGroup>
+      <_AndroidClassParseCommand>@(_AndroidClassParseArgument->'%(QuotedValue)', ' ')</_AndroidClassParseCommand>
     </PropertyGroup>
 
     <ItemGroup>
@@ -63,7 +84,7 @@ This file is only used by binding projects.
         Overwrite="true"
     />
     <Exec
-        Command="&quot;$(_AndroidClassParseDotnet)&quot; &quot;$([System.IO.Path]::Combine('$(_BindingsToolsLocation)', '$(ClassParseToolExe)'))&quot; &quot;@$(_AndroidClassParseResponseFile)&quot;"
+        Command="$([MSBuild]::Unescape(`$(_AndroidClassParseCommand)`))"
         StandardOutputImportance="Low"
     />
     <BindingsGenerator
