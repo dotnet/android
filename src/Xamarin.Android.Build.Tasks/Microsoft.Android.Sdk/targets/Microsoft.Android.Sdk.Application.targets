@@ -99,9 +99,17 @@ This file contains targets specific for Android application projects.
   <Target Name="_AndroidComputeRunArguments"
       BeforeTargets="ComputeRunArguments"
       DependsOnTargets="$(_AndroidComputeRunArgumentsDependsOn)">
+    <!-- $(AndroidUseInstrumentation), set by default by $(EnableMSTestRunner), takes precedence over a launchable activity. -->
+    <GetAndroidActivityName
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
+        Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(AndroidUseInstrumentation)' != 'true' "
+        ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
+      <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
+    </GetAndroidActivityName>
     <!--
-      Read the first <instrumentation>'s android:name. If there is none, read the element itself
-      so that a nameless element (XA1042) can be told apart from a missing one (XA1048/XA1043).
+      If an instrumentation is needed, read its first android:name. If there is none, read the
+      element itself so that a nameless element (XA1042) can be told apart from a missing one
+      (XA1048/XA1043).
     -->
     <XmlPeek
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' "
@@ -118,15 +126,11 @@ This file contains targets specific for Android application projects.
         ProhibitDtd="true">
       <Output TaskParameter="Result" PropertyName="_AndroidInstrumentationElement" />
     </XmlPeek>
-    <!--
-      $(AndroidUseInstrumentation) apps launch through their <instrumentation>, even if they
-      also declare a launchable <activity>. $(EnableMSTestRunner) sets this by default.
-    -->
-    <PropertyGroup Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(AndroidUseInstrumentation)' == 'true' ">
+    <PropertyGroup Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' ">
       <AndroidInstrumentation>$(_AndroidInstrumentationName)</AndroidInstrumentation>
     </PropertyGroup>
     <AndroidError
-        Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(AndroidUseInstrumentation)' == 'true' and '$(_AndroidInstrumentationElement)' != '' "
+        Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(_AndroidInstrumentationElement)' != '' "
         Code="XA1042"
         ResourceName="XA1042"
         FormatArguments="$(IntermediateOutputPath)android\AndroidManifest.xml"
@@ -135,25 +139,6 @@ This file contains targets specific for Android application projects.
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(AndroidUseInstrumentation)' == 'true' "
         Code="XA1048"
         ResourceName="XA1048"
-        FormatArguments="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    />
-    <GetAndroidActivityName
-        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
-        Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' "
-        ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
-      <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
-    </GetAndroidActivityName>
-    <!--
-      Apps without a launchable <activity>, such as a BenchmarkDotNet host, launch through
-      their <instrumentation> instead. This errors if the app has neither.
-    -->
-    <PropertyGroup Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' ">
-      <AndroidInstrumentation>$(_AndroidInstrumentationName)</AndroidInstrumentation>
-    </PropertyGroup>
-    <AndroidError
-        Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(_AndroidInstrumentationElement)' != '' "
-        Code="XA1042"
-        ResourceName="XA1042"
         FormatArguments="$(IntermediateOutputPath)android\AndroidManifest.xml"
     />
     <AndroidError
