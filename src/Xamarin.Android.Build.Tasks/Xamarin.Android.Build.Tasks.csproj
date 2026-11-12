@@ -17,8 +17,7 @@
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;XABT_MANIFEST_EXTENSIONS</DefineConstants>
-    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\$(DotNetTargetFramework)\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
+    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD</DefineConstants>
     <NoWarn>8632</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -47,6 +46,8 @@
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
+    <Compile Remove="..\Xamarin.Android.NamingCustomAttributes\Android.App\*.cs" />
+    <Compile Remove="..\Xamarin.Android.NamingCustomAttributes\Android.Content\*.cs" />
 
     <!-- Include only the linker sources required for the build tasks (LinkAssembliesNoShrink and PostTrimmingPipeline) -->
     <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep, LinkDesignerBase -->
@@ -79,27 +80,6 @@
     <Compile Include="Linker\External\Mono.Tuner\CecilRocks.cs" />
     <Compile Include="Linker\External\Mono.Tuner\Extensions.cs" />
 
-    <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
-      <Link>Mono.Android\IntentFilterAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.Partial.cs">
-      <Link>Mono.Android\IntentFilterAttribute.Partial.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\MetaDataAttribute.cs">
-      <Link>Mono.Android\MetaDataAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\MetaDataAttribute.Partial.cs">
-      <Link>Mono.Android\MetaDataAttribute.Partial.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\PropertyAttribute.cs">
-      <Link>Mono.Android\PropertyAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\PropertyAttribute.Partial.cs">
-      <Link>Mono.Android\PropertyAttribute.Partial.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
-      <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
-    </Compile>
     <Compile Include="..\Mono.Android\Android.Runtime\BoundExceptionType.cs">
       <Link>Mono.Android\BoundExceptionType.cs</Link>
     </Compile>
@@ -111,39 +91,6 @@
     </Compile>
     <Compile Include="..\..\src\utils\NullableAttributes.cs">
       <Link>Utilities\NullableAttributes.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
-      <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.Partial.cs">
-      <Link>Mono.Android\UsesLibraryAttribute.Partial.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\UsesPermissionAttribute.cs">
-      <Link>Mono.Android\UsesPermissionAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\UsesPermissionAttribute.Partial.cs">
-      <Link>Mono.Android\UsesPermissionAttribute.Partial.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\PermissionAttribute.cs">
-      <Link>Mono.Android\PermissionAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\PermissionGroupAttribute.cs">
-      <Link>Mono.Android\PermissionGroupAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\PermissionTreeAttribute.cs">
-      <Link>Mono.Android\PermissionTreeAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\UsesConfigurationAttribute.cs">
-      <Link>Mono.Android\UsesConfigurationAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\UsesFeatureAttribute.cs">
-      <Link>Mono.Android\UsesFeatureAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\UsesFeatureAttribute.Partial.cs">
-      <Link>Mono.Android\UsesFeatureAttribute.Partial.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\\Android.App\SupportsGLTextureAttribute.cs">
-      <Link>Mono.Android\SupportsGLTextureAttribute.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Java.Interop\JavaLibraryReferenceAttribute.cs">
       <Link>Mono.Android\JavaLibraryReferenceAttribute.cs</Link>
@@ -159,23 +106,6 @@
     </Compile>
     <Compile Include="..\..\build-tools\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks\Sleep.cs">
       <Link>Xamarin.Android.BuildTools.PrepTasks\Sleep.cs</Link>
-    </Compile>
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ApplicationCategories.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.GwpAsan.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ForegroundService.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.UiOptions.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.SoftInput.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.Protection.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.LayoutDirection.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ActivityPersistableMode.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.DocumentLaunchMode.cs" />
-    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.WindowRotationAnimation.cs" />
-    <_MonoAndroidEnum Include="..\Mono.Android\Android.App\RequiredContentUriPermission.cs" />
-    <Compile Include="@(_MonoAndroidEnum)">
-      <Link>Mono.Android\%(Filename)%(Extension)</Link>
     </Compile>
   </ItemGroup>
 
@@ -230,11 +160,6 @@
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Maven\Java.Interop.Tools.Maven.csproj" />
-    <!--
-      Mono.Android.csproj needs to be built first because this project
-      references files *generated* and contained within the Mono.Android project.
-      -->
-    <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
     <!--
       Xamarin.Android.Tools.BootstrapTasks needs to be built first because
       Xamarin.Android.Build.Tasks.targets uses several tasks located in

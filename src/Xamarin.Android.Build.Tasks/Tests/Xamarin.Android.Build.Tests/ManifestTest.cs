@@ -5,16 +5,11 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Android.App;
-using Android.Content;
-using Java.Interop.Tools.Cecil;
-using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
-using PropertyAttribute = Android.App.PropertyAttribute;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -1469,149 +1464,6 @@ class TestActivity : Activity { }"
 			}
 		}
 
-		[IntentFilter (new [] { "singularAction" },
-		    DataPathSuffix = "singularSuffix",
-		    DataPathAdvancedPattern = "singularPattern")]
-		[IntentFilter (new [] { "pluralAction" },
-		    DataPathSuffixes = new [] { "pluralSuffix1", "pluralSuffix2" },
-		    DataPathAdvancedPatterns = new [] { "pluralPattern1", "pluralPattern2" })]
-
-		public class IntentFilterAttributeDataPathTestClass { }
-
-		[Test]
-		public void IntentFilterDataPathTest ()
-		{
-			var cache = new TypeDefinitionCache ();
-			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
-			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
-
-			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("singularAction"));
-			var xml = intent.ToElement ("dummy.packageid").ToString ();
-
-			var expected =
-@"<intent-filter>
-  <action p2:name=""singularAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathSuffix=""singularSuffix"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathAdvancedPattern=""singularPattern"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-</intent-filter>";
-
-			StringAssertEx.AreMultiLineEqual (expected, xml);
-		}
-
-		[Test]
-		public void IntentFilterDataPathsTest ()
-		{
-			var cache = new TypeDefinitionCache ();
-			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
-			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
-
-			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("pluralAction"));
-			var xml = intent.ToElement ("dummy.packageid").ToString ();
-
-			var expected =
-@"<intent-filter>
-  <action p2:name=""pluralAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathSuffix=""pluralSuffix1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathSuffix=""pluralSuffix2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathAdvancedPattern=""pluralPattern1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathAdvancedPattern=""pluralPattern2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-</intent-filter>";
-
-			StringAssertEx.AreMultiLineEqual (expected, xml);
-		}
-
-		static readonly string expected_activity = """
-			<activity android:name="TestActivity">
-				<property android:name="test-activity-property" android:value="test-activity-property-value" />
-			</activity>
-		""";
-
-		static readonly string expected_application = """
-			<application android:name="TestApplication" android:allowBackup="true" android:extractNativeLibs="true">
-				<property android:name="test-application-property" android:value="test-application-property-value" />
-				<provider android:name="mono.MonoRuntimeProvider" android:exported="false" android:initOrder="1999999999" android:authorities="dummy.packageid.mono.MonoRuntimeProvider.__mono_init__" />
-			</application>
-		""";
-
-		static readonly string expected_receiver = """
-			<receiver android:name="TestBroadcastReceiver">
-				<property android:name="test-broadcast-property" android:value="test-broadcast-property-value" />
-			</receiver>
-		""";
-
-		static readonly string expected_provider = """
-			<provider android:authorities="foo" android:name="TestContentProvider">
-				<property android:name="test-provider-property" android:value="test-provider-property-value" />
-			</provider>
-		""";
-
-		static readonly string expected_service = """
-			<service android:name="TestService">
-				<property android:name="test-service-property" android:value="test-service-property-value" />
-			</service>
-		""";
-
-		static readonly object [] PropertyElementTestSource = [
-			new object [] {typeof (TestActivity), expected_activity },
-			new object [] {typeof (TestApplication), expected_application },
-			new object [] {typeof (TestBroadcastReceiver), expected_receiver },
-			new object [] {typeof (TestContentProvider), expected_provider },
-			new object [] {typeof (TestService), expected_service },
-		];
-
-		[Test]
-		[TestCaseSource (nameof (PropertyElementTestSource))]
-		public void PropertyTest (Type type, string expected)
-		{
-			var cache = new TypeDefinitionCache ();
-			var asm = AssemblyDefinition.ReadAssembly (type.Assembly.Location);
-			var td = asm.MainModule.GetType ($"Xamarin.Android.Build.Tests.ManifestTest/{type.Name}");
-
-			var manifest = new ManifestDocument (null) {
-				PackageName = "dummy.packageid",
-				TargetSdkVersion = "21",
-				VersionResolver = new MockVersionResolver (),
-			};
-
-			manifest.Merge (null, cache, [td], null, false, null);
-
-			var sb = new StringWriter ();
-			manifest.Save (null, sb);
-
-			var xml = sb.ToString ();
-			StringAssertEx.AreMultiLineContains (expected, xml);
-		}
-
-		[Activity (Name = "TestActivity")]
-		[Property ("test-activity-property", Value = "test-activity-property-value")]
-		public class TestActivity : global::Android.App.Activity
-		{
-		}
-
-		[Application (Name = "TestApplication")]
-		[Property ("test-application-property", Value = "test-application-property-value")]
-		public class TestApplication : global::Android.App.Application
-		{
-		}
-
-		[BroadcastReceiver (Name = "TestBroadcastReceiver")]
-		[Property ("test-broadcast-property", Value = "test-broadcast-property-value")]
-		public class TestBroadcastReceiver : global::Android.Content.BroadcastReceiver
-		{
-		}
-
-		[ContentProvider (["foo"], Name = "TestContentProvider")]
-		[Property ("test-provider-property", Value = "test-provider-property-value")]
-		public class TestContentProvider : global::Android.Content.ContentProvider
-		{
-		}
-
-		[Service (Name = "TestService")]
-		[Property ("test-service-property", Value = "test-service-property-value")]
-		public class TestService : global::Android.App.Service
-		{
-		}
-
 		[Test]
 		public void UsesPermissionFlagsAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
@@ -1652,12 +1504,6 @@ class TestActivity : Activity { }"
 		[Test]
 		public void TargetSdkVersion_361In_36Out ()
 		{
-			// GetIdFromApiLevel("36") returns "36.1" — simulates the real bug
-			var resolver = new MockVersionResolver {
-				GetIdFromApiLevelFunc = apiLevel => apiLevel == "36" ? "36.1" : apiLevel,
-				GetApiLevelFromIdFunc = id => id == "36" || id == "36.1" ? 36 : 99,
-			};
-
 			// Manifest generation strips "36.1" to "36" before setting TargetSdkVersion.
 			string targetSdkVersion = "36.1";
 			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
@@ -1672,7 +1518,6 @@ class TestActivity : Activity { }"
 					PackageName = "com.test.targetsdkversion",
 					TargetSdkVersion = targetSdkVersion,
 					MinSdkVersion = "21",
-					VersionResolver = resolver,
 				};
 
 				var sb = new StringWriter ();
@@ -1691,23 +1536,4 @@ class TestActivity : Activity { }"
 			}
 		}
 	}
-}
-
-// Dummy types because we don't want to take a dependency on Mono.Android or Java.Interop
-namespace Android.App
-{
-	public class Activity : Java.Interop.IJavaPeerable { }
-	public class Application : Java.Interop.IJavaPeerable { }
-	public class Service : Java.Interop.IJavaPeerable { }
-}
-
-namespace Android.Content
-{
-	public class ContentProvider : Java.Interop.IJavaPeerable { }
-	public class BroadcastReceiver : Java.Interop.IJavaPeerable { }
-}
-
-namespace Java.Interop
-{
-	public interface IJavaPeerable { }
 }

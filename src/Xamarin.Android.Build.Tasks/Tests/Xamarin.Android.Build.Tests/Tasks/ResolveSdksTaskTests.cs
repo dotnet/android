@@ -331,11 +331,6 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.AreNotSame (first, MonoAndroidHelper.GetSupportedVersions (new MockBuildEngine (TextWriter.Null), referencePaths [0]));
 				Assert.AreEqual (127, first.GetApiLevelFromId ("Z"));
 				Assert.AreEqual (128, second.GetApiLevelFromId ("Z"));
-				var firstManifest = new ManifestDocument (null, first);
-				var secondManifest = new ManifestDocument (null, second);
-				Assert.AreEqual (127, firstManifest.VersionResolver.GetApiLevelFromId ("Z"));
-				Assert.AreEqual (128, secondManifest.VersionResolver.GetApiLevelFromId ("Z"));
-				Assert.IsNull (new ManifestDocument (null).VersionResolver.GetApiLevelFromId ("Z"));
 				var concurrentEngine = new MockBuildEngine (TextWriter.Synchronized (new StringWriter ()));
 				System.Threading.Tasks.Parallel.For (0, 64, i => {
 					var context = i % 2;
