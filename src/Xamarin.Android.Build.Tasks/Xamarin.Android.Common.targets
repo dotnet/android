@@ -55,7 +55,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CopyResource" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1317,23 +1316,24 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_AndroidRuntimeProviderSource>$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java</_AndroidRuntimeProviderSource>
     <_AndroidRuntimeProviderSource Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(_AndroidIntermediateJavaSourceDirectory)net\dot\jni\nativeaot\NativeAotRuntimeProvider.java</_AndroidRuntimeProviderSource>
-    <_AndroidRuntimeProviderTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_XamarinAndroidBuildTasksAssembly)'))</_AndroidRuntimeProviderTaskAssembly>
+    <_AndroidRuntimeProviderTemplate>$(MSBuildThisFileDirectory)MonoRuntimeProvider.Bundled.java</_AndroidRuntimeProviderTemplate>
+    <_AndroidRuntimeProviderTemplate Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(MSBuildThisFileDirectory)NativeAotRuntimeProvider.java</_AndroidRuntimeProviderTemplate>
   </PropertyGroup>
 </Target>
 
 <Target Name="_AddStaticResources"
-		Inputs="$(_RuntimeJar);$(_AndroidBuildPropertiesCache);$(_AndroidRuntimeProviderTaskAssembly);$(MSBuildThisFileFullPath)"
+		Inputs="$(_RuntimeJar);$(_AndroidBuildPropertiesCache);$(_AndroidRuntimeProviderTemplate);$(MSBuildThisFileFullPath)"
 		Outputs="$(_AndroidStaticResourcesFlag);$(_AndroidRuntimeProviderSource)"
 		DependsOnTargets="_AddStaticResourcesInputs">
-  <CopyResource
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
-      ResourceName="MonoRuntimeProvider.Bundled.java"
-      OutputPath="$(_AndroidRuntimeProviderSource)"
+  <AndroidError Code="XA0116"
+      ResourceName="XA0116"
+      FormatArguments="$(_AndroidRuntimeProviderTemplate)"
+      Condition=" !Exists('$(_AndroidRuntimeProviderTemplate)') "
   />
-  <CopyResource
-      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
-      ResourceName="NativeAotRuntimeProvider.java"
-      OutputPath="$(_AndroidRuntimeProviderSource)"
+  <CopyIfChanged
+      SourceFiles="$(_AndroidRuntimeProviderTemplate)"
+      DestinationFiles="$(_AndroidRuntimeProviderSource)"
+      VerifyContent="true"
   />
 
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />

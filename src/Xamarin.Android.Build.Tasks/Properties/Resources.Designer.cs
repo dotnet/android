@@ -302,7 +302,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
+        ///   Looks up a localized string similar to Unable to find required SDK file `{0}`..
         /// </summary>
         public static string XA0116 {
             get {
