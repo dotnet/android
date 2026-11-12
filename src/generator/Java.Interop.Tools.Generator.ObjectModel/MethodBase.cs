@@ -43,21 +43,17 @@ namespace MonoDroid.Generation
 			classes = classes.Concat (classes.SelectMany (x => x.GetAllImplementedInterfaces ()));
 
 			foreach (var t in classes) {
-				foreach (var candidate in t.GetAllMethods ().Where (m => m.Name == Name
+				candidates: foreach (var candidate in t.GetAllMethods ().Where (m => m.Name == Name
 					&& m.Parameters.Count == Parameters.Count
 					&& m.Parameters.Any (p => p.IsEnumified))) {
 					var ret = new string [Parameters.Count];
-					bool mismatch = false;
 					for (int i = 0; i < Parameters.Count; i++) {
 						if (Parameters [i].Type == "int" && candidate.Parameters [i].IsEnumified)
 							ret [i] = candidate.Parameters [i].Type;
 						else if (Parameters [i].Type != candidate.Parameters [i].Type) {
-							mismatch = true;
-							break;
+							continue candidates;
 						}
 					}
-					if (mismatch)
-						continue;
 					for (int i = 0; i < ret.Length; i++)
 						if (ret [i] != null)
 							Parameters [i].SetGeneratedEnumType (ret [i]);

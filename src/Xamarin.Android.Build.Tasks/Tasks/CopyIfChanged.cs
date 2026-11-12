@@ -29,6 +29,9 @@ namespace Xamarin.Android.Tasks
 
 		public bool CompareFileLengths { get; set; } = true;
 
+		// When true, always compare file contents instead of trusting timestamps and lengths.
+		public bool VerifyContent { get; set; }
+
 		[Output]
 		public ITaskItem[]? ModifiedFiles { get; set; }
 
@@ -50,7 +53,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				var dest = new FileInfo (DestinationFiles [i].ItemSpec);
-				if (dest.Exists && dest.LastWriteTimeUtc > src.LastWriteTimeUtc && (CompareFileLengths ? dest.Length == src.Length : true)) {
+				if (!VerifyContent && dest.Exists && dest.LastWriteTimeUtc > src.LastWriteTimeUtc && (CompareFileLengths ? dest.Length == src.Length : true)) {
 					Log.LogDebugMessage ($"  Skipping {src} it is up to date");
 					continue;
 				}
