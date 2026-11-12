@@ -47,12 +47,29 @@ namespace Xamarin.Android.Build.Tests
 			ClearAdbLogcat ();
 
 			string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "fatal-exception-logcat.log");
-			Assert.IsTrue (MonitorAdbLogcat (
-				line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
-				logcatPath,
-				timeout: ActivityStartTimeoutInSeconds,
-				onMonitoringStarted: () => StartActivityAndAssert (app)),
-				"The expected managed exception should have been logged.");
+			var deviceProperties = new Dictionary<string, string> ();
+			try {
+				foreach (string name in new [] { "debug.dotnet.log", "debug.dotnet.max_grefc" }) {
+					var (code, output, error) = RunAdbCommandWithExitCode ($"shell getprop {name}");
+					Assert.AreEqual (0, code, $"Could not read {name}: {error}");
+					deviceProperties.Add (name, output.TrimEnd ('\r', '\n'));
+					Assert.IsEmpty (ClearShellProp (name), $"Could not clear {name}.");
+				}
+				Assert.IsTrue (MonitorAdbLogcat (
+					line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
+					logcatPath,
+					timeout: ActivityStartTimeoutInSeconds,
+					onMonitoringStarted: () => StartActivityAndAssert (app)),
+					"The expected managed exception should have been logged.");
+			} finally {
+				Assert.Multiple (() => {
+					foreach (var property in deviceProperties) {
+						string value = property.Value.Replace ("'", "'\\''");
+						var (code, output, error) = RunAdbCommandWithExitCode ($"shell setprop {property.Key} '{value}'");
+						Assert.AreEqual (0, code, $"Could not restore {property.Key}: {output}{error}");
+					}
+				});
+			}
 			string remainingPids = "";
 			bool processExited = false;
 			var timeout = TimeSpan.FromSeconds (30);
