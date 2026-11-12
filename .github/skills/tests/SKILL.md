@@ -2,7 +2,7 @@
 name: tests
 description: >-
   Runs, discovers, or recommends dotnet/android tests. Handles standalone tests
-  (plain dotnet test), full-build tests (local SDK required), and on-device
+  (dotnetup dotnet test), full-build tests (local Android workload required), and on-device
   MTP/NUnit tests. Maps source files to relevant test suites. Trigger on test
   execution requests, questions about available tests, or "which tests should I
   run for this change?"
@@ -14,18 +14,20 @@ Consult `references/test-catalog.md` for the full mapping of test areas → asse
 
 ## Test categories
 
-- **Standalone** — `dotnet test <project>.csproj`. No local SDK needed.
-- **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows).
+- **Standalone** — `dotnetup dotnet test <project>.csproj`. Only the pinned shared SDK is needed, not a local Android build.
+- **Full-build** — requires worktree-local Android packs and manifests. Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows) with the shared SDK.
 
-Check for the local SDK in the configuration needed by the tests:
-```bash
-CONFIGURATION=Debug # Set to Release for Release tests.
-test -x "bin/${CONFIGURATION}/dotnet/dotnet"
-```
+Install the pinned SDK with `dotnetup sdk install` from the repository root.
+For full-build tests, build `Microsoft.Android.slnx` with `dotnetup dotnet build`
+first; rebuild after source changes. The wrappers report missing local workloads.
+They default to Debug; export `CONFIGURATION=Release` for Release workloads and
+also pass `-c Release` to build/test commands. Normal `global.json` lookup applies.
+Forward SDK help with `dotnetup dotnet -- test --help`.
 
-**If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make all`; on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make all CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK.
-
-**Validate code changes locally before pushing.** Full SDK builds and relevant host/device tests are expected development work. Do not label them prohibitively slow, ask whether to skip them solely because of presumed duration, or rely on CI as the first validation. Start with focused tests while iterating and expand coverage as needed for the affected components. Never silently skip tests: if the user explicitly limits validation or an actual environment constraint blocks it, report the exact command, failure or missing prerequisite, and remaining unvalidated coverage. Include commands and outcomes in the handoff.
+Validate locally before pushing: build missing prerequisites, run focused tests,
+then expand coverage as needed. Do not skip required builds/device tests because
+of presumed duration or use CI as a substitute. Report exact commands and outcomes,
+including concrete blockers and remaining unvalidated coverage.
 
 ## Workflow
 
@@ -60,8 +62,8 @@ The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.p
 
 ### Standalone
 ```bash
-dotnet test <project>.csproj -v minimal
-dotnet test <project>.csproj -v minimal --filter "Name~TestName"
+dotnetup dotnet test <project>.csproj -v minimal
+dotnetup dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ```
 
 ### Host-side MSBuild tests (full-build)
@@ -79,7 +81,7 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 
 ### On-device runtime tests (stock NUnit/MTP, full-build + device)
 
-Build and install the APK first, then run `dotnet test` from the test project directory so the project-local `global.json` enables Microsoft Testing Platform:
+Build and install the APK first, then run `dotnet-local test` from the test project directory so the project-local `global.json` enables Microsoft Testing Platform:
 ```bash
 ./dotnet-local.sh build -t:Install -c Debug tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 (
@@ -87,14 +89,14 @@ Build and install the APK first, then run `dotnet test` from the test project di
   ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
 )
 ```
-Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands.
+Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet-local test --no-build` commands.
 
 ### Java.Interop tests
-Tooling tests are standalone (`dotnet test` on `.csproj`). Core JNI interop tests
+Tooling tests are standalone (`dotnetup dotnet test` on `.csproj`). Core JNI interop tests
 live in `tests/Mono.Android-Tests/Java.Interop-Tests/` and run on Android as part
 of `Mono.Android.NET-Tests.csproj`, using the on-device commands above.
 
 To build the generator tooling and its tests using the main solution's filter:
 ```bash
-dotnet build src/generator/generator.slnf -c Debug
+dotnetup dotnet build src/generator/generator.slnf -c Debug
 ```

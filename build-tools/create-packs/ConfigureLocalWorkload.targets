@@ -72,28 +72,6 @@
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_PackProps, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
   </Target>
 
-  <UsingTask TaskName="GetAndroidWorkloadExtends" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <JsonFilePath ParameterType="System.String" Required="true" />
-      <ExtendsElement Output="true" ParameterType="System.String" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System" />
-      <Using Namespace="System.IO" />
-      <Using Namespace="System.Text.RegularExpressions" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-        var jsonContent = File.ReadAllText(JsonFilePath);
-        var match = Regex.Match(jsonContent, "\"extends\"\\s*:\\s*\\[(?<items>[^\\]]+)\\]");
-        if (match.Success)
-            ExtendsElement = match.Groups["items"].Value.Trim();
-        if (string.IsNullOrEmpty(ExtendsElement))
-            Log.LogError($"Failed to find extends element in workload json '{JsonFilePath}'");
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
   <Target Name="_DetermineLocalSdkFeatureBand">
     <PropertyGroup>
       <_LocalSdkFeatureBandPrefix>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `^\d+\.\d+\.\d`))</_LocalSdkFeatureBandPrefix>
@@ -112,7 +90,8 @@
       <!-- Use the installed SDK version because stabilized SDK builds can retain a prerelease package version. -->
       <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(_LocalSdkFeatureBand)\</_LocalSdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
-      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
+      <_WorkloadPackRoot>$(BuildOutputDirectory)lib</_WorkloadPackRoot>
+      <_WorkloadToInstall>dependencies</_WorkloadToInstall>
     </PropertyGroup>
 
     <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
@@ -122,37 +101,58 @@
         Targets="_GenerateXAWorkloadContent"
     />
 
-    <GetAndroidWorkloadExtends JsonFilePath="$(_LocalAndroidManifestFolder)WorkloadManifest.json">
-      <Output TaskParameter="ExtendsElement" PropertyName="AndroidWorkloadExtendsElement" />
-    </GetAndroidWorkloadExtends>
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="InstallWorkloadPacks"
+        Properties="_WorkloadPackRoot=$(_WorkloadPackRoot);_WorkloadToInstall=$(_WorkloadToInstall);_LocalAndroidManifestFolder=$(_LocalAndroidManifestFolder)" />
+  </Target>
 
+  <Target Name="_ResolveWorkloadPacksInputs">
     <PropertyGroup>
-      <_EmptyWorkloadJsonContent>
-<![CDATA[
-{"version": "0.0.1", "workloads": { "android-deps": { "packs": [ "Microsoft.Android.Sdk.net11" ], "extends" : [ $(AndroidWorkloadExtendsElement) ] } } }
-]]>
-      </_EmptyWorkloadJsonContent>
+      <_WorkloadPackagesProject>$(BootstrapOutputDirectory)workload-dependencies\$(_WorkloadToInstall).proj</_WorkloadPackagesProject>
+      <_WorkloadToolAssembly>$([MSBuild]::NormalizePath('$(BootstrapOutputDirectory)', '$(DotNetTargetFramework)', 'workload-tools.dll'))</_WorkloadToolAssembly>
+      <_WorkloadManifestDirectory>$([MSBuild]::NormalizeDirectory('$(_LocalAndroidManifestFolder)'))</_WorkloadManifestDirectory>
+      <_WorkloadDestination>$([MSBuild]::NormalizeDirectory('$(_WorkloadPackRoot)'))</_WorkloadDestination>
+      <_WorkloadPackageDirectory>$([MSBuild]::NormalizeDirectory('$(XamarinAndroidSourcePath)', 'bin', 'Build$(Configuration)', 'nuget-unsigned'))</_WorkloadPackageDirectory>
+      <_WorkloadPackageDirectory Condition=" '$(MauiUseLocalPacks)' == 'true' ">$(_WorkloadPackageDirectory)$([System.IO.Path]::PathSeparator)$([MSBuild]::NormalizeDirectory('$(MauiPackagePath)'))</_WorkloadPackageDirectory>
+      <_WorkloadPackagesProject>$([MSBuild]::NormalizePath('$(_WorkloadPackagesProject)'))</_WorkloadPackagesProject>
     </PropertyGroup>
+    <XmlPeek Condition=" '$(MauiUseLocalPacks)' == 'true' "
+        XmlInputPath="$(MauiSourcePath)/NuGet.config" Query="/configuration/packageSources/add/@value">
+      <Output TaskParameter="Result" ItemName="_WorkloadSources" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config" Query="/configuration/packageSources/add/@value">
+      <Output TaskParameter="Result" ItemName="_WorkloadSources" />
+    </XmlPeek>
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(XamarinAndroidSourcePath)build-tools/workload-tools/workload-tools.csproj&quot; -p:Configuration=$(Configuration)" />
+    <ItemGroup>
+      <_WorkloadPlanInput Include="$(XamarinAndroidSourcePath)global.json;$(XamarinAndroidSourcePath)NuGet.config;$(_WorkloadToolAssembly)" />
+      <_WorkloadPlanInput Include="$(DotNetPreviewPath)sdk-manifests/$(DotNetSdkManifestsFolder)/**/WorkloadManifest.json" />
+      <_WorkloadPlanInput Include="$(_WorkloadDestination)sdk-manifests/$(DotNetSdkManifestsFolder)/**/WorkloadManifest.json" />
+      <_WorkloadPlanInput Include="$(_WorkloadManifestDirectory)WorkloadManifest.json" />
+      <_WorkloadPlanInput Include="$(XamarinAndroidSourcePath)bin/Build$(Configuration)/nuget-unsigned/*.nupkg" />
+      <_WorkloadPlanInput Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(MauiPackagePath)/*.nupkg;$(MauiSourcePath)/NuGet.config" />
+    </ItemGroup>
+  </Target>
 
-    <!-- Install the previous Android SDK and runtime tooling. -->
-    <Error Condition=" '$(AndroidWorkloadExtendsElement)' == '' " Text="Failed to find extends element in workload json" />
-    <MakeDir Directories="$(_EmptyWorkloadDir)" />
-    <WriteLinesToFile
-        File="$(_EmptyWorkloadDir)WorkloadManifest.json"
-        Lines="$(_EmptyWorkloadJsonContent)"
-        Overwrite="true"
-    />
+  <Target Name="_ResolveWorkloadPacks"
+      DependsOnTargets="_ResolveWorkloadPacksInputs"
+      Inputs="$(MSBuildThisFileFullPath);@(_WorkloadPlanInput)"
+      Outputs="$(_WorkloadPackagesProject)">
+    <!-- A directory's trailing backslash must not escape the closing quote on Windows. -->
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install android-deps --configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot; --skip-manifest-update --skip-sign-check --verbosity diag"
-        EnvironmentVariables="DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=$(BuildOutputDirectory)lib\sdk-manifests"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_WorkloadToolAssembly)&quot; &quot;$(DotNetPreviewPath).&quot; &quot;$(NETCoreSdkVersion)&quot; &quot;$(_WorkloadManifestDirectory).&quot; &quot;$(_WorkloadDestination).&quot; &quot;$(_WorkloadPackageDirectory).&quot; &quot;$(_WorkloadPackagesProject)&quot; $(_WorkloadToInstall) &quot;@(_WorkloadSources, ';')&quot;"
+        EnvironmentVariables="DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=;DOTNETSDK_WORKLOAD_PACK_ROOTS="
     />
-    <RemoveDir Directories="$(_EmptyWorkloadDir)" />
+  </Target>
+
+  <!-- Restore immutable dependencies through NuGet, then extract only into this worktree. -->
+  <Target Name="InstallWorkloadPacks" DependsOnTargets="_ResolveWorkloadPacks">
+    <!-- Use a fresh evaluation after restore so NuGetPackageRoot is available. -->
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; restore &quot;$(_WorkloadPackagesProject)&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; msbuild &quot;$(_WorkloadPackagesProject)&quot; -t:Install -p:Configuration=$(Configuration)" />
   </Target>
 
   <PropertyGroup>
-    <!-- Clean before installing the previous Android SDK. -->
-    <ConfigureLocalWorkloadDependsOn Condition="'$(RunningOnCI)' != 'true'">CreateLocalFrameworkLists;CreateLocalRuntimeLists;DeleteExtractedWorkloadPacks;InstallManifestAndDependencies;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
+    <ConfigureLocalWorkloadDependsOn>DeleteExtractedWorkloadPacks;CreateLocalFrameworkLists;CreateLocalRuntimeLists;InstallManifestAndDependencies;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
   </PropertyGroup>
   <Target Name="ConfigureLocalWorkload" DependsOnTargets="$(ConfigureLocalWorkloadDependsOn)" />
 

@@ -45,95 +45,38 @@ There are five types of unit tests within this repo:
 
 Running tests in an IDE is not currently supported.
 
-After [building the repo](../building), the
-[MSBuild Integration Tests](#msbuild-integration-tests),
-[MSBuild Task Unit Tests](#msbuild-task-tests), and
-[Device Integration Tests](#devive-integration-tests) tests can be run
-by using the [`dotnet-local.sh`](../../dotnet-local.sh) and
-[`dotnet-local.cmd`](../../dotnet-local.cmd) scripts in the top directory of
-the checkout.  The `dotnet-local*` scripts are wrappers around a custom
-`dotnet` installation which the build downloads and installs into
-`bin/Debug/dotnet` or `bin/Release/dotnet` (depending on your configuration).
+After [building the repo](../building), use
+[`dotnet-local.sh`](../../dotnet-local.sh) or
+[`dotnet-local.cmd`](../../dotnet-local.cmd) to run tests against the local
+Android workload. Standalone test projects use `dotnetup dotnet test <project>.csproj`.
+
+The wrappers default to Debug workload paths. For Release, set
+`CONFIGURATION=Release` in the environment and use `bin/TestRelease` below.
+The wrapper does not interpret `-c`; that option only configures the forwarded command.
+The test assembly framework is `DotNetStableTargetFramework` in `Directory.Build.props`
+(currently `net11.0`).
 
 ## Running on macOS & Linux
 
-On macOS and Windows we can use the `dotnet-local.sh` script to run the tests.
-
-To run ALL the [MSBuild Integration Tests](#msbuild-integration-tests) *and*
-all the [MSBuild Task Unit Tests](#msbuild-task-tests), run:
-
 ```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll
-```
-
-To run ALL the supported [Device Integration Tests](#devive-integration-tests), run:
-
-```sh
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net7.0/MSBuildDeviceIntegration.dll
-```
-
-If no Android device is attached, then the emulator will be created.
-The `ADB_TARGET` environment variable can be used to explicitly specify which
-Android device should be used when running Device Integration Tests.
-
-To run a specific test you can use the `Name=Value` argument for `--filter`,
-
-```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
-```
-
-If the test has arguments then the `=` will not match the name. Instead use the `~`,
-this does a "Contains" check for the Name.
-
-```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
-```
-
-To list all the available tests use the `-lt` argument
-
-```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll -lt
+./dotnet-local.sh test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll
+./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll
 ```
 
 ## Running on Windows
 
-On Windows we can use the `dotnet-local.cmd` script to run the tests.
-
-To run ALL the [MSBuild Integration Tests](#msbuild-integration-tests) *and*
-all the [MSBuild Task Unit Tests](#msbuild-task-tests), run:
-
 ```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll
+dotnet-local.cmd test bin\TestDebug\net11.0\Xamarin.Android.Build.Tests.dll
+dotnet-local.cmd test bin\TestDebug\MSBuildDeviceIntegration\net11.0\MSBuildDeviceIntegration.dll
 ```
 
-To run ALL the supported [Device Integration Tests](#devive-integration-tests), runs:
+The first command runs host-side build and task tests; the second runs device
+integration tests. Use `ADB_TARGET` to select a device; otherwise the test
+infrastructure can provision an emulator.
 
-```cmd
-dotnet-local.cmd test bin\TestDebug\MSBuildDeviceIntegration\net7.0\MSBuildDeviceIntegration.dll
-```
-
-If no Android device is attached, then the emulator will be created.
-The `ADB_TARGET` environment variable can be used to explicitly specify which
-Android device should be used when running Device Integration Tests.
-
-To run a specific test you can use the `Name=Value` argument for the `--filter`,
-
-```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
-```
-
-If the test has arguments then the `=` will not match the name. Instead use the `~`,
-this does a "Contains" check for the Name.
-
-```sh
-./dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
-```
-
-To list all the available tests use the `-lt` argument
-
-```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll -lt
-```
+Append `--list-tests` to list tests or `--filter "Name~BuildBasicApplication"`
+to select a subset. `~` matches names containing the value, including
+parameterized cases; `=` requires an exact match.
 
 # Writing Tests
 
@@ -393,7 +336,7 @@ public void MyAppShouldRunAndRespondToClick ()
 There are a category of tests which run on the device itself, these test the
 runtime behaviour. The main runtime tests use stock `NUnit` through Microsoft
 Testing Platform (MTP). We build and install them within the repo, then run
-`dotnet test` from the test project directory.
+`dotnetup dotnet test` from the test project directory.
 
 These tests are generally found in:
 

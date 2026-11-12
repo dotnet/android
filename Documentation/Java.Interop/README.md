@@ -37,7 +37,8 @@ or Java.Interop preparation step. Java.Interop projects are included in
 use the solution filter from the repository root:
 
 ```
-dotnet build src/generator/generator.slnf
+dotnetup sdk install
+dotnetup dotnet build src/generator/generator.slnf
 ```
 
 JNI unions and native structs use [`ExtendedLayout`][extended-layout] with

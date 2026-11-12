@@ -180,11 +180,11 @@ extends:
             -androidVersion $(ANDROID_PACK_VERSION)
           displayName: Update MAUI's Android dependency
 
-        - task: DotNetCoreCLI@2
+        - pwsh: >-
+            dotnetup dotnet build Microsoft.Android.slnx
+            -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
           displayName: Update Android SDK band in Workloads.csproj
-          inputs:
-            projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
-            arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
+          workingDirectory: $(Build.SourcesDirectory)/android
 
         - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
           displayName: Install .NET
@@ -200,12 +200,12 @@ extends:
             _SkipUpdateBuildNumber: 'true'
             NoWarn: CS0618
 
-        - task: DotNetCoreCLI@2
+        - pwsh: >-
+            dotnetup dotnet build Microsoft.Android.slnx
+            -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
           displayName: Install MAUI workload packs
           retryCountOnTaskFailure: 3
-          inputs:
-            projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
-            arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
+          workingDirectory: $(Build.SourcesDirectory)/android
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
@@ -213,6 +213,7 @@ extends:
             arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Create MAUI template
+            useLocalWorkload: true
             continueOnError: false
 
         - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml@self
@@ -229,6 +230,7 @@ extends:
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Debug
+            useLocalWorkload: true
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
@@ -240,6 +242,7 @@ extends:
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Release
+            useLocalWorkload: true
 
         - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml@self
           parameters:
@@ -377,9 +380,7 @@ extends:
           clean: true
           submodules: recursive
 
-        - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
-          parameters:
-            version: $(DotNetSdkVersion)
+        - template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml@self
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
@@ -412,11 +413,11 @@ extends:
             buildNumber: $(ReleaseDropPrefix)/nugets
             destinationPath: $(Build.StagingDirectory)\nuget-signed
 
-        - task: DotNetCoreCLI@2
+        - pwsh: >-
+            dotnetup dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+            -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/bootstrap.binlog
           displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-          inputs:
-            projects: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
-            arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
+          workingDirectory: $(System.DefaultWorkingDirectory)
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android') }}:
@@ -427,7 +428,7 @@ extends:
               scriptType: ps
               scriptLocation: inlineScript
               inlineScript: >-
-                dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+                dotnetup dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
                 -t:PushManifestToBuildAssetRegistry
                 -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
                 -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
@@ -442,8 +443,7 @@ extends:
                 $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
                 $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
                 $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-                & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-                & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
+                & dotnetup dotnet -- tool exec microsoft.dotnet.darc --version "$darcVersion" --source "$arcadeServicesSource" -- add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
             displayName: add build to default darc channel
             condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 

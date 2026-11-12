@@ -1,0 +1,24 @@
+<Project>
+  <Target Name="_AndroidBuildForPack"
+      Condition=" '$(NoBuild)' != 'true' "
+      DependsOnTargets="Build" />
+
+  <Target Name="Pack" DependsOnTargets="_AndroidBuildForPack">
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)build-tools\create-packs\Microsoft.Android.Sdk.proj"
+        Targets="CreateAllPacks"
+        Properties="Configuration=$(Configuration)"
+    />
+  </Target>
+
+  <Target Name="_AndroidConfigureLocalWorkload"
+      AfterTargets="Build;Rebuild"
+      Condition=" @(ProjectReference->AnyHaveMetadataValue('Filename', 'Mono.Android')) or @(ProjectReference->AnyHaveMetadataValue('Filename', 'Mono.Android.csproj')) "
+      DependsOnTargets="BuildExtraApiLevels">
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)build-tools\create-packs\Microsoft.Android.Sdk.proj"
+        Targets="Restore;ConfigureLocalWorkload"
+        Properties="Configuration=$(Configuration)"
+    />
+  </Target>
+</Project>

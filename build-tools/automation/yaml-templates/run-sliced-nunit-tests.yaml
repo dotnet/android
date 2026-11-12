@@ -7,10 +7,10 @@ parameters:
   condition: succeeded()  # Condition to run tests
 
 steps:
-# The tool apphost does not locate its runtime from PATH, so use the SDK installed during test setup.
+# Forward external CLI tools too, so their apphosts inherit the managed DOTNET_ROOT.
 - ${{if parameters.testFilter}}:
   - pwsh: >-
-      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
+      dotnetup dotnet test-slicer slice
       --test-assembly="${{ parameters.testAssembly }}"
       --test-filter="${{ parameters.testFilter }}"
       --slice-number=$(System.JobPositionInPhase)
@@ -19,11 +19,10 @@ steps:
     displayName: Slice unit tests with filter
     failOnStderr: true
     condition: ${{ parameters.condition }}
-    env:
-      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
+    workingDirectory: ${{ parameters.xaSourcePath }}
 - ${{ else }}:
   - pwsh: >-
-      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
+      dotnetup dotnet test-slicer slice
       --test-assembly="${{ parameters.testAssembly }}"
       --slice-number=$(System.JobPositionInPhase)
       --total-slices=$(System.TotalJobsInPhase)
@@ -31,8 +30,7 @@ steps:
     displayName: Slice unit tests
     failOnStderr: true
     condition: ${{ parameters.condition }}
-    env:
-      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
+    workingDirectory: ${{ parameters.xaSourcePath }}
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
@@ -47,7 +45,7 @@ steps:
 - ${{ if eq(parameters.retryFailedTests, 'true') }}:
   # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
   - pwsh: |
-      dotnet `
+      dotnetup dotnet -- `
         test `
         ${{ parameters.testAssembly }} `
         --settings "${{ parameters.testAssembly }}.runsettings" `
@@ -61,15 +59,13 @@ steps:
   - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 
   - pwsh: |
-      $(Agent.ToolsDirectory)/dotnet-test-slicer `
+      dotnetup dotnet test-slicer `
         retry `
         --trx="$(Agent.TempDirectory)" `
         --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Look for failed tests
     workingDirectory: ${{ parameters.xaSourcePath }}
     condition: ${{ parameters.condition }}
-    env:
-      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
 
     # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
   - task: PublishTestResults@2
@@ -79,12 +75,9 @@ steps:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
     condition: ${{ parameters.condition }}
 
-  - task: DotNetCoreCLI@2
+  - pwsh: dotnetup dotnet build-server shutdown
     displayName: Shut down existing dotnet daemons
-    inputs:
-      command: custom
-      custom: build-server
-      arguments: shutdown
+    workingDirectory: ${{ parameters.xaSourcePath }}
     condition: ${{ parameters.condition }}
 
   - pwsh: |

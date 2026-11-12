@@ -2,8 +2,8 @@
 
 There are two project configurations, `Debug` and `Release`. The project
 configuration is controlled by the `$(Configuration)` MSBuild property.
-By default this is `Debug`. [`make jenkins`](../building/unix/instructions.md)
-will build both `Debug` and `Release` configurations. The configuration name
+By default this is `Debug`. [`dotnetup dotnet build Microsoft.Android.slnx`](../building/unix/instructions.md)
+builds the selected configuration; pass `-c Release` for Release. The configuration name
 is used within many of the output directories which are created.
 
 
@@ -36,7 +36,8 @@ is used within many of the output directories which are created.
   * `external`: git submodules
       * `Java.Interop`: Core JNI interaction support
       * `mono`: Used to execute IL on Android
-  * `packages`: NuGet packages; created by [`make prepare`](../building/unix/instructions.md).
+  * NuGet dependencies use the shared global package cache. Build-tool restore
+    happens automatically during the [solution build](../building/unix/instructions.md).
   * `samples`: Sample applications.
   * `src`: Projects which are redistributable, the outputs of which will be in
     `bin/$(Configuration)`.

@@ -176,12 +176,14 @@ steps:
       # their own bootstrap step, rather than special-casing it in the prompt.
       if [ "$SKILL_NAME" = "update-androidsdk-packages" ]; then
         # Use the repository-pinned SDK, not the runner's preinstalled SDKs.
-        CONFIGURATION=Debug bash eng/install-dotnet.sh
-        export DOTNET_ROOT="$GITHUB_WORKSPACE/bin/Debug/dotnet"
-        export PATH="$DOTNET_ROOT:$PATH"
-        echo "$DOTNET_ROOT" >> "$GITHUB_PATH"
-        echo "DOTNET_ROOT=$DOTNET_ROOT" >> "$GITHUB_ENV"
-        dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
+        export PATH="$HOME/.dotnetup:$PATH"
+        if ! command -v dotnetup >/dev/null 2>&1; then
+          curl -fsSL https://aka.ms/dotnetup/get-dotnetup.sh -o "$RUNNER_TEMP/get-dotnetup.sh"
+          bash "$RUNNER_TEMP/get-dotnetup.sh"
+        fi
+        echo "$HOME/.dotnetup" >> "$GITHUB_PATH"
+        dotnetup sdk install --no-progress
+        dotnetup dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
       fi
 description: Weekly (or on-demand) runner that executes a selectable repository Copilot skill end to end, opens a PR for validated changes, and always reports outcome/errors on a tracking issue
 model: gpt-6.1-sol

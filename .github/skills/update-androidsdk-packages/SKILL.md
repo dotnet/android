@@ -95,12 +95,12 @@ It does not list every package in the catalog. Query Android Support Repository 
 Use the bundled helper with the correct manifest for each family:
 
 ```bash
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path build-tools
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "platforms;android-37" --archives
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path emulator --archives
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
-dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path build-tools
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "platforms;android-37" --archives
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path emulator --archives
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
 ```
 
 (These are C# file-based apps, matching the `ci_failures.cs` convention used by the `ci-status` skill — first run restores/builds, so allow a few extra seconds.)
@@ -137,7 +137,7 @@ guess a SHA-256** — either:
 - Compute it yourself by downloading the exact archive URL and hashing it:
 
 ```bash
-dotnet run .github/skills/update-androidsdk-packages/scripts/sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip --sha1 <manifest-sha1> --size <manifest-size>
+dotnetup dotnet -- run .github/skills/update-androidsdk-packages/scripts/sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip --sha1 <manifest-sha1> --size <manifest-size>
 ```
 
 This script downloads into a scratch temp file (not `$(AndroidToolchainCacheDirectory)`,
@@ -184,9 +184,9 @@ Run these in order — do not skip the BootstrapTasks build; `androidsdk.csproj`
 `UnzipDirectoryChildren`, a task defined in that assembly, and fails at evaluation time without it:
 
 ```bash
-dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
-dotnet restore src/androidsdk/androidsdk.csproj
-dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal
+dotnetup dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
+dotnetup dotnet restore src/androidsdk/androidsdk.csproj
+dotnetup dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal
 ```
 
 The second build downloads and extracts the whole SDK for the current host — expect it to take a
@@ -194,11 +194,11 @@ few minutes and use real disk space/network. If that's not acceptable in your en
 least confirm MSBuild evaluation succeeds without downloading anything:
 
 ```bash
-dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPlatformPackagesToInstall
+dotnetup dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPlatformPackagesToInstall
 ```
 
 Also check:
-- **XML validity** — both edited files still parse (`dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
+- **XML validity** — both edited files still parse (`dotnetup dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
 - **Diff cleanliness** — no unrelated files or stray temp downloads. Routine families remain scoped to `Configuration.props` and `src/androidsdk/androidsdk.targets`; command-line-tools updates additionally require the two shipped-product files in hard rule 5. Never edit `package.xml.in` during a routine refresh.
 - **The seven hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set, verify every `IsLatestStable` platform has its own sources package, verify selected releases are stable, and verify extraction outputs remain archive/hash-specific.
 - **Command-line tools compatibility** — test with `licenses/android-sdk-license` and `.licenses-accepted` absent, with a pre-existing unrelated valid fingerprint, and with malformed content. Confirm the expected pinned fingerprint is created, the unrelated fingerprint is preserved, malformed content fails, writes are atomic/locked, and Gradle recognizes the Build Tools and platform licenses. No license-acceptance path may execute a network-capable Android CLI.

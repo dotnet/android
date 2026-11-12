@@ -6,7 +6,6 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   jdkMajorVersion: $(LatestJavaSdkMajorVersion)
   useAgentJdkPath: false
-  remove_dotnet: false
   dotnetVersion: $(DotNetSdkVersion)
   installTestSlicer: false
   installApkDiff: true
@@ -28,7 +27,6 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
     jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
     useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
-    remove_dotnet: ${{ parameters.remove_dotnet }}
     dotnetVersion: ${{ parameters.dotnetVersion }}
     installTestSlicer: ${{ parameters.installTestSlicer }}
     installApkDiff: ${{ parameters.installApkDiff }}

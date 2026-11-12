@@ -3,4 +3,6 @@
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Prepare.proj" />
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\ImportExportDocs.targets" />
   <Import Project="$(MSBuildThisFileDirectory)tests\api-compatibility\api-compatibility.targets" />
+  <Target Name="_PrepareAndroidSolution" BeforeTargets="Build;Rebuild" DependsOnTargets="Prepare"
+      Condition=" @(ProjectReference->AnyHaveMetadataValue('Filename', 'Mono.Android')) or @(ProjectReference->AnyHaveMetadataValue('Filename', 'Mono.Android.csproj')) " />
 </Project>

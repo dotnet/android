@@ -3,39 +3,39 @@
 Mapping of test area keywords to assemblies, filters, and build prerequisites.
 
 **Legend:**
-- **Assembly**: The test DLL to pass to `dotnet test` (relative to repo root). `${TFM}` = current `DotNetStableTargetFramework` from `Directory.Build.props`.
-- **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
+- **Assembly**: The test DLL to pass to `dotnet-local test` for full-build tests (relative to repo root). `${TFM}` = current `DotNetStableTargetFramework` from `Directory.Build.props`.
+- **Filter**: The `--filter` argument for host-side `dotnetup dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
-  - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
+  - **Standalone** — Can run with plain `dotnetup dotnet test <project>.csproj`. No local SDK needed.
+  - **Full-build** — Requires local Android packs (`dotnet-local.sh`). Run `dotnetup sdk install`, then `dotnetup dotnet build Microsoft.Android.slnx -c Debug`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
 
 ## Standalone Tests — No Local SDK Required
 
-These tests can be run immediately with `dotnet test` on the `.csproj`, even if the repo has not been fully built.
+These tests can be run immediately with `dotnetup dotnet test` on the `.csproj`, even if the repo has not been fully built.
 
 **Note:** Git submodules must be initialized. Run `git submodule update --init --recursive` if needed.
 
 | Test Area | Project | Command |
 |-----------|---------|---------|
-| **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
-| **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
-| **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
-| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
-| **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
-| **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
-| **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
-| **Java peer naming** | `tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
-| **java type system** | `tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
-| **expressions** | `tests/Java.Interop.Tools.Expressions-Tests/` | `dotnet test tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
-| **generator tools** | `tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
-| **generator** | `tests/generator-Tests/` | `dotnet test tests/generator-Tests/generator-Tests.csproj -v minimal` |
-| **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
-| **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **Android test adapter streaming/TRX** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0 --filter "FullyQualifiedName~StreamingTests"` |
-| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
+| **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnetup dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
+| **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnetup dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
+| **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnetup dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
+| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnetup dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
+| **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnetup dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
+| **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | `dotnetup dotnet test tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
+| **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnetup dotnet test tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
+| **Java peer naming** | `tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnetup dotnet test tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
+| **java type system** | `tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnetup dotnet test tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
+| **expressions** | `tests/Java.Interop.Tools.Expressions-Tests/` | `dotnetup dotnet test tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
+| **generator tools** | `tests/Java.Interop.Tools.Generator-Tests/` | `dotnetup dotnet test tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
+| **generator** | `tests/generator-Tests/` | `dotnetup dotnet test tests/generator-Tests/generator-Tests.csproj -v minimal` |
+| **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnetup dotnet test tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
+| **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnetup dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
+| **Android test adapter streaming/TRX** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnetup dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0 --filter "FullyQualifiedName~StreamingTests"` |
+| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnetup dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 
 The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
 NativeAOT offset-based property reader. Its native probe memory-maps the generated
@@ -56,7 +56,7 @@ skipped. Other target regression cases do not require native tools.
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`
+Build: Full-build — `dotnetup sdk install`, then `dotnetup dotnet build Microsoft.Android.slnx -c Debug`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |
@@ -132,7 +132,7 @@ architecture. Local workload setup installs the previous Android SDK.
 
 Mono.Android device tests use stock NUnit through Microsoft Testing Platform (MTP), not NUnitLite. This changed in dotnet/android#11224.
 
-Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
+Build/install with `-t:Install`, then run `dotnetup dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
 Build: Full-build + the test project itself
 Device: **Yes**
@@ -169,7 +169,7 @@ Command:
 )
 ```
 
-Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
+Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet-local test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
 
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash
@@ -212,7 +212,7 @@ cause, or stack-trace extraction fails, while borrowed references remain valid.
 | **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | API XML adjustment |
 | **source writer** | `tests/Xamarin.SourceWriter-Tests/` | Source code generation |
 
-Run these tests with `dotnet test` from each test project directory listed above.
+Run these tests with `dotnetup dotnet test` from each test project directory listed above.
 
 ---
 
@@ -250,6 +250,7 @@ Java evaluation while stopped must be checked separately.
 To run the on-device typemap tests:
 
 ```bash
+export CONFIGURATION=Release
 ./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 (
   cd tests/Mono.Android-Tests/Mono.Android-Tests
@@ -263,6 +264,6 @@ To run the on-device typemap tests:
 
 | Test Area | Tier | Assembly / Project | Notes |
 |-----------|------|--------------------|-------|
-| **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
+| **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnetup dotnet test` on `.csproj` |
 | **api compatibility** | N/A | `tests/api-compatibility/` | Not a test runner — reference data for API surface checks |
-| **android sdk tools** | **Standalone** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |
+| **android sdk tools** | **Standalone** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | Android SDK helper tooling tests — `dotnetup dotnet test` on `.csproj` |
