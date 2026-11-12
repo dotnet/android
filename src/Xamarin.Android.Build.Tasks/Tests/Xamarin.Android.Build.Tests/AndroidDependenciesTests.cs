@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
@@ -286,6 +288,24 @@ namespace Xamarin.Android.Build.Tests
 			var args = File.ReadAllText (Path.Combine (root, "args.txt")).Trim ();
 			StringAssert.Contains ($"--no-metrics --sdk={Path.Combine (root, "sdk")} sdk install", args);
 			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.1 ndk/27.2.12479018 platforms/android-37.0", args);
+		}
+
+		[Test]
+		public async System.Threading.Tasks.Task UnknownJdkVersionIsNotValid ()
+		{
+			// aka.ms sends an unknown link to an HTML page on bing.com with status 200.
+			using (var client = new HttpClient (new HtmlHandler ())) {
+				var archive = await new JavaDependencyInstaller ().GetFirstValidJdkArchiveWithVersion (client, "21.0.99", CancellationToken.None);
+				Assert.IsNull (archive);
+			}
+		}
+
+		sealed class HtmlHandler : HttpMessageHandler
+		{
+			protected override System.Threading.Tasks.Task<HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken) =>
+				System.Threading.Tasks.Task.FromResult (new HttpResponseMessage (HttpStatusCode.OK) {
+					Content = new StringContent ("<html></html>", Encoding.UTF8, "text/html"),
+				});
 		}
 
 		static readonly XNamespace MSBuildXmlns = "http://schemas.microsoft.com/developer/msbuild/2003";

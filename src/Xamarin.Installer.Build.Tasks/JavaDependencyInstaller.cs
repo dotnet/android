@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace Xamarin.Installer.Build.Tasks
 	{
 		public string JdkPath { get; set; }
 
-		public Archive GetFirstValidJdkArchiveWithVersion (string version)
+		public async Task<Archive> GetFirstValidJdkArchiveWithVersion (HttpClient httpClient, string version, CancellationToken cancellationToken)
 		{
 			string os = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "windows" : RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "macOS" : RuntimeInformation.IsOSPlatform (OSPlatform.Linux) ? "linux" : null;
 			string arch = RuntimeInformation.OSArchitecture switch {
@@ -29,7 +30,14 @@ namespace Xamarin.Installer.Build.Tasks
 			if (os == null || arch == null)
 				return null;
 			string extension = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "zip" : "tar.gz";
-			return new Archive { Url = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{version}-{os}-{arch}.{extension}") };
+			var url = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{version}-{os}-{arch}.{extension}");
+
+			// aka.ms sends an unknown link to an HTML page on bing.com with status 200, so an HTML response means that this JDK version does not exist.
+			using (var response = await httpClient.GetAsync (url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)) {
+				if (!response.IsSuccessStatusCode || response.Content.Headers.ContentType?.MediaType == "text/html")
+					return null;
+			}
+			return new Archive { Url = url };
 		}
 
 		public bool GetJdkRevision (out Version version)
@@ -72,7 +80,8 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public async Task InstallJdk (Archive archive, CancellationToken cancellationToken)
 		{
-			// Extract next to JdkPath, so that Directory.Move does not move across volumes.
+			// The original code extracted into %TEMP%. Extract next to JdkPath instead, because Directory.Move
+			// fails when %TEMP% and JdkPath are on different volumes.
 			var unzipDestination = Path.GetFullPath (JdkPath).TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + "." + Path.GetRandomFileName ();
 			Directory.CreateDirectory (unzipDestination);
 
@@ -92,6 +101,8 @@ namespace Xamarin.Installer.Build.Tasks
 				if (RuntimeInformation.IsOSPlatform (OSPlatform.OSX)) {
 					jdkSubDir = Path.Combine (jdkSubDir, "Contents", "Home");
 				}
+				// Keep the existing JDK if the build was canceled during extraction.
+				cancellationToken.ThrowIfCancellationRequested ();
 				RemoveJdk ();
 				Directory.Move (jdkSubDir, JdkPath);
 			} finally {

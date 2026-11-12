@@ -273,10 +273,10 @@ namespace Xamarin.Installer.Build.Tasks
 				return false;
 			}
 
-			var jdkToInstall = javaInstaller.GetFirstValidJdkArchiveWithVersion(requestedJdkVersionText);
+			var jdkToInstall = await javaInstaller.GetFirstValidJdkArchiveWithVersion(installationContext.HttpClient, requestedJdkVersionText, cancellationToken);
 			if (jdkToInstall == null)
 			{
-				Error(Resources.Unsupported_Platform, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture);
+				Error(Resources.Invalid_JavaSdkVersion, requestedJdkVersionText);
 				return false;
 			}
 
