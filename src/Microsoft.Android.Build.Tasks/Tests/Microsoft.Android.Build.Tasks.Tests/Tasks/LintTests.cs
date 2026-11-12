@@ -83,7 +83,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
 			string toolPath = Path.Combine (directory, "tools");
-			string targetDirectory = Path.Combine (directory, "android");
+			string targetDirectory = Path.Combine (directory, "android project");
 			Directory.CreateDirectory (toolPath);
 			Directory.CreateDirectory (targetDirectory);
 			CreateFakeLint (toolPath);
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			string output = result.Output + result.Error;
 			Assert.AreEqual (0, result.ExitCode, output);
 			// `lint --version` reported 26.0.2, so the issues introduced up to 26.0.2 are disabled.
-			StringAssert.Contains ("warning XA0102: args=--quiet --disable Instantiatable,StaticFieldLeak,UnusedResources,HardcodedDebugMode", output);
+			StringAssert.Contains ($"warning XA0102: args=--quiet --disable Instantiatable,StaticFieldLeak,UnusedResources,HardcodedDebugMode {targetDirectory}", output);
 			StringAssert.IsMatch (@"strings\.xml\(3,\d+\): warning XA0102:  Unused resource \[UnusedResources\]", output);
 		}
 
@@ -119,7 +119,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 						echo lint: version 26.0.2
 						exit /b 0
 					)
-					echo Warning: args=%*
+					rem Match the shell fixture's $* expansion by removing argument quoting.
+					echo Warning: args=%~1 %~2 %~3 %~4
 					echo ^^
 					echo res\values\strings.xml:3: Warning: Unused resource [UnusedResources]
 					echo     ~~~~
