@@ -7,6 +7,11 @@
         <parameter name="startValue"  type="T" />
         <parameter name="endValue"    type="T" />
       </method>
+      <method name="evaluate">
+        <parameter name="amount" type="float" />
+        <parameter name="start"  type="int" />
+        <parameter name="end"    type="int" />
+      </method>
     </class>
   </package>
 </api>
