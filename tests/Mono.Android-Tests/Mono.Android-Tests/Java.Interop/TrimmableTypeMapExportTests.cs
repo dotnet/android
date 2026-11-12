@@ -189,6 +189,39 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("ColorExport")]
+		public void JaggedColorArrayExport_CopiesBackRowReplacements ()
+		{
+			const int first = unchecked ((int) 0xff80a1c2);
+			const int replacement = unchecked ((int) 0xff102030);
+			using var peer = new TrimmableExportColorPeer ();
+			var values = new int [][] {
+				null,
+				null,
+				[0x12345678],
+				[first, 0x0abcdef0],
+			};
+			IntPtr input = JNIEnv.NewArray (values);
+			try {
+				var method = GetRequiredMethodID (peer.Class.Handle, "replaceColorRows", "([[I)V");
+				JNIEnv.CallVoidMethod (peer.Handle, method, new JValue (input));
+
+				var copiedBack = JNIEnv.GetArray<int []> (input);
+				Assert.IsNotNull (copiedBack);
+				if (copiedBack == null)
+					return;
+				Assert.AreEqual (4, copiedBack.Length);
+				Assert.IsNotNull (copiedBack [0], "null Java row replaced by a managed row must be installed");
+				CollectionAssert.AreEqual (new [] { replacement, first }, copiedBack [0]);
+				Assert.IsNull (copiedBack [1]);
+				Assert.IsNull (copiedBack [2]);
+				CollectionAssert.AreEqual (new [] { first ^ 0x005500aa, 0x0abcdef0 }, copiedBack [3]);
+			} finally {
+				JNIEnv.DeleteLocalRef (input);
+			}
+		}
+
+		[Test]
 		public void CharSequenceAndCollectionExports_MarshalReferenceTypes ()
 		{
 			using var peer = new TrimmableExportReferencePeer ();
@@ -389,6 +422,14 @@ namespace Java.InteropTests
 		{
 			colors [0] [1] [0] = new Color (colors [0] [1] [0].ToArgb () ^ 0x005500aa);
 			return colors;
+		}
+
+		[Export ("replaceColorRows")]
+		public void ReplaceColorRows (Color [][] colors)
+		{
+			colors [0] = [new Color (unchecked ((int) 0xff102030)), colors [3] [0]];
+			colors [2] = null;
+			colors [3] [0] = new Color (colors [3] [0].ToArgb () ^ 0x005500aa);
 		}
 
 		[Export ("echoStaticColor")]

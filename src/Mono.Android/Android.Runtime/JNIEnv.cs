@@ -1487,10 +1487,19 @@ namespace Android.Runtime {
 							IntPtr _dest = GetObjectArrayElement (dest, i);
 							try {
 								var _source = (Array?) source.GetValue (i);
-								if (_source == null)
+								if (_source == null) {
 									SetObjectArrayElement (dest, i, IntPtr.Zero);
-								else
+								} else if (_dest == IntPtr.Zero) {
+									// The Java row was null but managed code supplied one; install a new JNI subarray.
+									IntPtr subarray = NewArray (_source);
+									try {
+										SetObjectArrayElement (dest, i, subarray);
+									} finally {
+										DeleteLocalRef (subarray);
+									}
+								} else {
 									CopyArray (_source, _source.GetType ().GetElementType ()!, _dest);
+								}
 							} finally {
 								JNIEnv.DeleteLocalRef (_dest);
 							}
