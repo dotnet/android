@@ -17,11 +17,19 @@ namespace Xamarin.Android.Tasks
 		const string DefaultErrorCode = "XA0010";
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.Build;
 
-		static object GetKey (string target, string adbPath, TaskEnvironment taskEnvironment)
+		/// <summary>
+		/// Builds the device cache key for every ParseTarget call. GetPrimaryCpuAbi, DetectIfAppWasUninstalled
+		/// and FastDeploy share the cached device only when they use this method with the same TaskEnvironment.
+		/// </summary>
+		internal static object GetDeviceCacheKey (string target, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
 		{
-			var key = Tuple.Create ($"{nameof (AndroidHelper)}_AndroidDevice", target ?? "", adbPath);
-			return taskEnvironment == null ? key : (key, taskEnvironment.ProjectDirectory);
+			if (taskEnvironment == null)
+				throw new ArgumentNullException (nameof (taskEnvironment));
+			return GetDeviceCacheKey (target, GetAdbPath (adbToolPath, adbToolExe, taskEnvironment), taskEnvironment);
 		}
+
+		static object GetDeviceCacheKey (string target, string adbPath, TaskEnvironment taskEnvironment) =>
+			(Tuple.Create ($"{nameof (AndroidHelper)}_AndroidDevice", target ?? "", adbPath), taskEnvironment.ProjectDirectory);
 
 		// This file is compiled into both Xamarin.Android.Build.Debugging.Tasks.dll and
 		// Microsoft.Android.Build.Tasks.dll (FastDeploy). Cache devices as framework types so both
@@ -99,14 +107,16 @@ namespace Xamarin.Android.Tasks
 		internal static AdbDeviceInfo ParseTarget (string target, TaskLoggingHelper log, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken) =>
 			ParseTarget (target, m => log.LogDebugMessage (m), (c, m) => log.LogCodedError (c, m), logErrors, engine4, adbToolPath, adbToolExe, taskEnvironment, cancellationToken);
 
+		// MSBuild gives TaskEnvironment.Fallback to multithreadable tasks in multi-process builds.
 		public static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null) =>
-			ParseTarget (target, logMessage, logError, logErrors, engine4, adbToolPath, adbToolExe, null, default);
+			ParseTarget (target, logMessage, logError, logErrors, engine4, adbToolPath, adbToolExe, TaskEnvironment.Fallback, default);
 
-		static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken)
+		internal static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken)
 		{
-			string adbPath = taskEnvironment == null ? GetAdbPath (adbToolPath, adbToolExe) :
-				GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
-			var key = GetKey (target, adbPath, taskEnvironment);
+			if (taskEnvironment == null)
+				throw new ArgumentNullException (nameof (taskEnvironment));
+			string adbPath = GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
+			var key = GetDeviceCacheKey (target, adbPath, taskEnvironment);
 			try {
 				if (engine4?.GetRegisteredTaskObject (key, Lifetime) is object [] cached) {
 					logMessage ("Using cached value from RegisterTaskObject");
@@ -116,14 +126,13 @@ namespace Xamarin.Android.Tasks
 					}
 					return ToDevice (cached);
 				}
-				var runner = taskEnvironment == null ? CreateAdbRunner (adbToolPath, adbToolExe) :
-					CreateAdbRunner (adbToolPath, adbToolExe, taskEnvironment);
+				var runner = CreateAdbRunner (adbToolPath, adbToolExe, taskEnvironment);
 				var devices = runner.ListDevicesWithoutAvdNamesAsync (cancellationToken).GetAwaiter ().GetResult ();
 				var selected = SelectDevice (devices, target);
 				if (selected != null) {
 					RegisterDevice (engine4, key, selected);
 					if (string.IsNullOrEmpty (target))
-						RegisterDevice (engine4, GetKey ($"-s {selected.Serial}", adbPath, taskEnvironment), selected);
+						RegisterDevice (engine4, GetDeviceCacheKey ($"-s {selected.Serial}", adbPath, taskEnvironment), selected);
 					return selected;
 				}
 				if (target != null && target.Length > 0 && !target.StartsWith ("-e", StringComparison.Ordinal) &&
