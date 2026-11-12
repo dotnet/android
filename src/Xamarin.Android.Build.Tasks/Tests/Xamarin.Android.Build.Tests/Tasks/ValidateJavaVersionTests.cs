@@ -200,5 +200,28 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
 			Assert.IsTrue (messages.Any (m => m.Message.Contains ("did not contain a valid JAVA_VERSION")), "valid JAVA_VERSION should *not* be found");
 		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void FivePartVersion (bool useJavaExeVersion)
+		{
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.13.0.2", out string javaExe, out string javacExe);
+			if (useJavaExeVersion)
+				File.WriteAllText (Path.Combine (javaPath, "release"), "JAVA_VERSION=\"99.0.0\"");
+			var validateJavaVersion = new Android.Tasks.ValidateJavaVersion {
+				BuildEngine = engine,
+				JavaSdkPath = javaPath,
+				JavaToolExe = javaExe,
+				JavacToolExe = javacExe,
+				LatestSupportedJavaVersion = "25.0.99",
+				MinimumSupportedJavaVersion = "21.0",
+				UseJavaExeVersion = useJavaExeVersion,
+			};
+			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
+			Assert.AreEqual ("21.0.13.0", validateJavaVersion.JdkVersion);
+			Assert.AreEqual (!useJavaExeVersion, messages.Any (m => m.Message.Contains ("contains JAVA_VERSION")));
+			Assert.IsEmpty (warnings);
+			Assert.IsEmpty (errors);
+		}
 	}
 }
