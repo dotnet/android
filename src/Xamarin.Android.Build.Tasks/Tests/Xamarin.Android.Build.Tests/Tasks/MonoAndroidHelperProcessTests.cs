@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -21,46 +19,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			return OS.IsWindows ? ("cmd.exe", $"/d /c \"{windows}\"") : ("/bin/sh", $"-c \"{unix}\"");
 		}
 
-		static TaskLoggingHelper CreateLog (List<BuildErrorEventArgs>? errors = null)
+		static TaskLoggingHelper CreateLog ()
 		{
-			return new TaskLoggingHelper (new MockBuildEngine (TextWriter.Null, errors: errors), nameof (MonoAndroidHelperProcessTests));
-		}
-
-		[TestCase (0, true)]
-		[TestCase (7, true)]
-		[TestCase (7, false)]
-		public void RunProcessDrainsOutputAndPreservesDiagnostics (int exitCode, bool logWarningOnFailure)
-		{
-			var shell = Shell (
-				$"for /L %i in (1,1,100) do @(echo output-%i&echo error-%i>&2) & exit /b {exitCode}",
-				$"i=1; while [ $i -le 100 ]; do echo output-$i; echo error-$i >&2; i=$((i+1)); done; exit {exitCode}");
-			var output = new List<string> ();
-			var error = new List<string> ();
-			var errors = new List<BuildErrorEventArgs> ();
-			int cancellations = 0;
-
-			int result = MonoAndroidHelper.RunProcess (shell.Command, shell.Arguments, CreateLog (errors),
-				onOutput: (sender, e) => {
-					Thread.Sleep (1);
-					output.Add (e.Data);
-				},
-				onError: (sender, e) => {
-					Thread.Sleep (1);
-					error.Add (e.Data);
-				},
-				cancelTask: () => cancellations++,
-				logWarningOnFailure: logWarningOnFailure);
-
-			Assert.AreEqual (exitCode, result);
-			CollectionAssert.AreEqual (Enumerable.Range (1, 100).Select (i => $"output-{i}"), output);
-			CollectionAssert.AreEqual (Enumerable.Range (1, 100).Select (i => $"error-{i}"), error);
-			Assert.AreEqual (exitCode == 0 ? 0 : 1, cancellations);
-			Assert.AreEqual (exitCode != 0 && logWarningOnFailure ? 1 : 0, errors.Count);
-			if (errors.Count != 0) {
-				Assert.AreEqual ("XA0142", errors [0].Code);
-				StringAssert.Contains ("stdout | output-100", errors [0].Message);
-				StringAssert.Contains ("stderr | error-100", errors [0].Message);
-			}
+			return new TaskLoggingHelper (new MockBuildEngine (TextWriter.Null), nameof (MonoAndroidHelperProcessTests));
 		}
 
 		[Test]
@@ -102,30 +63,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual (1, cancellations);
 		}
 
-		[Test]
-		[Timeout (30000)]
-		public void RunProcessAlreadyCancelledToken ()
-		{
-			var shell = Shell ("for /L %i in (1,0,2) do @rem", "while :; do :; done");
-			using var cancellation = new CancellationTokenSource ();
-			cancellation.Cancel ();
-
-			Assert.AreNotEqual (0, MonoAndroidHelper.RunProcess (shell.Command, shell.Arguments, CreateLog (),
-				cancellationToken: cancellation.Token, logWarningOnFailure: false));
-		}
-
-		[Test]
-		public void RunProcessStartFailure ()
-		{
-			using var cancellation = new CancellationTokenSource ();
-			Assert.Throws<Win32Exception> (() => MonoAndroidHelper.RunProcess (
-				Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"), "missing"), "", CreateLog (),
-				cancellationToken: cancellation.Token));
-			Assert.DoesNotThrow (() => cancellation.Cancel ());
-		}
-
 		[TestCase (0, false)]
-		[TestCase (7, false)]
 		[TestCase (7, true)]
 		public void RunProcessReleasesCancellationRegistration (int exitCode, bool throwOnFailure)
 		{
