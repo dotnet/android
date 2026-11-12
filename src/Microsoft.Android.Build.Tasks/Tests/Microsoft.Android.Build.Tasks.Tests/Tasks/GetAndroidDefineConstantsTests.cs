@@ -51,6 +51,30 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("Microsoft.Android.Tasks.GetAndroidDefineConstants")]
 		public void RegisteredTaskNamesExecute (string taskName)
 		{
+			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
+			RegisteredTaskNamesExecute (taskName, "Core", dotnet, "msbuild");
+		}
+
+		[Platform ("Win")]
+		[TestCase ("GetAndroidDefineConstants")]
+		[TestCase ("Microsoft.Android.Tasks.GetAndroidDefineConstants")]
+		public void RegisteredTaskNamesExecuteWithFullMSBuild (string taskName)
+		{
+			string vswhere = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86),
+				"Microsoft Visual Studio", "Installer", "vswhere.exe");
+			Assert.IsTrue (File.Exists (vswhere), $"Visual Studio discovery tool not found: {vswhere}");
+			var discovery = NativeAotBootstrapTestTools.Run (vswhere,
+				"-latest", "-prerelease", "-property", "installationPath", "-requires", "Microsoft.Component.MSBuild");
+			Assert.AreEqual (0, discovery.ExitCode, discovery.Output + discovery.Error);
+			string installationPath = discovery.Output.Trim ();
+			Assert.IsNotEmpty (installationPath, "No Visual Studio installation with MSBuild was found.");
+			string msbuild = Path.Combine (installationPath, "MSBuild", "Current", "Bin", "MSBuild.exe");
+			Assert.IsTrue (File.Exists (msbuild), $"Full-framework MSBuild not found: {msbuild}");
+			RegisteredTaskNamesExecute (taskName, "Full", msbuild);
+		}
+
+		void RegisteredTaskNamesExecute (string taskName, string runtimeType, string executable, params string [] arguments)
+		{
 			string directory = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (directory);
 			string commonTargets = Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
@@ -68,6 +92,9 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GetAndroidDefineConstants).Assembly.Location)),
 				registrations,
 				new XElement ("Target", new XAttribute ("Name", "Build"),
+					new XElement ("Error",
+						new XAttribute ("Condition", $"'$(MSBuildRuntimeType)' != '{runtimeType}'"),
+						new XAttribute ("Text", $"Expected {runtimeType} MSBuild, got $(MSBuildRuntimeType).")),
 					new XElement (taskName,
 						new XAttribute ("AndroidApiLevel", "36.1"),
 						new XAttribute ("ProductVersion", "11.0-rc+test"),
@@ -78,8 +105,8 @@ namespace Xamarin.Android.Build.Tests
 						new XAttribute ("Overwrite", "true")))))
 				.Save (project);
 
-			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
-			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", project, "-t:Build", "-v:minimal", "-nr:false");
+			var result = NativeAotBootstrapTestTools.Run (executable,
+				arguments.Concat ([project, "-t:Build", "-v:minimal", "-nr:false"]).ToArray ());
 			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 			var lines = File.ReadAllLines (output);
 			Assert.AreEqual ("__XAMARIN_ANDROID_11_0_rc_test__", lines [0]);
