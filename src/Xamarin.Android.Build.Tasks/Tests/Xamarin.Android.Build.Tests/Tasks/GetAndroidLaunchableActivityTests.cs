@@ -225,7 +225,8 @@ public class GetAndroidLaunchableActivityTests
 		var propertyGroup = new XElement (MSBuildNamespace + "PropertyGroup",
 			new XElement (MSBuildNamespace + "IntermediateOutputPath", directory + Path.DirectorySeparatorChar),
 			new XElement (MSBuildNamespace + "_AndroidComputeRunArgumentsDependsOn", "NoOp"),
-			new XElement (MSBuildNamespace + "_XamarinAndroidBuildTasksAssembly", typeof (AndroidError).Assembly.Location));
+			new XElement (MSBuildNamespace + "_XamarinAndroidBuildTasksAssembly", typeof (AndroidError).Assembly.Location),
+			new XElement (MSBuildNamespace + "_MicrosoftAndroidBuildTasksAssembly", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "net", "Microsoft.Android.Build.Tasks.dll")));
 		foreach (var property in properties ?? [])
 			propertyGroup.Add (new XElement (MSBuildNamespace + property.Key, property.Value));
 		var project = new XElement (MSBuildNamespace + "Project",
