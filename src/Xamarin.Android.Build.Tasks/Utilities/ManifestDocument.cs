@@ -248,10 +248,4 @@ namespace Xamarin.Android.Tasks {
 			VersionCode = versionCode.ToString ().TrimStart ('0');
 		}
 	}
-
-	public interface IVersionResolver
-	{
-		string? GetIdFromApiLevel (string apiLevel);
-		int? GetApiLevelFromId (string id);
-	}
 }
