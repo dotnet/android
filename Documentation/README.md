@@ -25,6 +25,7 @@
   * [MSBuild Best Practices](guides/MSBuildBestPractices.md)
   * [D8 and R8 Integration](guides/D8andR8.md)
   * [Java and managed interoperability](guides/internals/JavaJNI_Interop.md)
+  * [Access Java file stream channels](guides/JavaFileStreamChannels.md)
   * [Profiling Startup](guides/profiling.md)
 
 
