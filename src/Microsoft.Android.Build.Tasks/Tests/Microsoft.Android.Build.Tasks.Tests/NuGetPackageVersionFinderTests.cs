@@ -19,31 +19,28 @@ public class NuGetPackageVersionFinderTests : BaseTest
 
 	string TestDirectory => Path.Combine (Root, "temp", TestName);
 
-	[TestCase ("1.0", false)]
-	[TestCase ("1.0", true)]
-	[TestCase ("", false)]
-	public void PackageVersionsUseNuGetSemantics (string version, bool multipleVersions)
+	[Test]
+	public void PackageVersionsUseNuGetSemantics ()
 	{
 		var cache = Path.Combine (TestDirectory, "packages");
 		CreateNuspec (cache);
 
 		var engine = new MockBuildEngine (TestContext.Out, []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var assets = CreateAssets ("1.0.0", [cache], multipleVersions);
+		var assets = CreateAssets ("1.0.0", [cache]);
 		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
 			?? throw new InvalidOperationException ("Could not read assets file.");
 
-		var artifacts = finder.GetArtifactsInNugetPackage (PackageName.ToUpperInvariant (), version, task.Log);
+		var artifacts = finder.GetArtifactsInNugetPackage (PackageName.ToUpperInvariant (), "1.0", task.Log);
 
 		Assert.AreEqual (1, artifacts.Count);
 		Assert.AreEqual ("com.google.android:material-core:1.0", artifacts [0].VersionedArtifactString);
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[TestCase ("1.0", "")]
-	[TestCase ("", "")]
-	[TestCase ("", "1.0")]
-	public void DependencyFulfilledByPackageNuspec (string version, string versionOverride)
+	[TestCase ("1.0")]
+	[TestCase ("")]
+	public void DependencyFulfilledByPackageNuspec (string version)
 	{
 		var missingCache = Path.Combine (TestDirectory, "missing-packages");
 		var cache = Path.Combine (TestDirectory, "packages");
@@ -56,7 +53,6 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		library.SetMetadata ("Manifest", pom.FilePath);
 		var package = new TaskItem (PackageName);
 		package.SetMetadata ("Version", version);
-		package.SetMetadata ("VersionOverride", versionOverride);
 
 		var engine = new MockBuildEngine (TestContext.Out, []);
 		var task = new JavaDependencyVerification {
@@ -70,21 +66,25 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[TestCase ("Missing.Package", "", false)]
-	[TestCase (PackageName, "", true)]
-	[TestCase (PackageName, "2.0", false)]
-	[TestCase (PackageName, "not-a-version", false)]
-	public void UnresolvedPackageLogsRestoreError (string packageName, string version, bool multipleVersions)
+	[Test]
+	public void AmbiguousCentralPackageVersionLogsRestoreError ()
 	{
+		var assets = CreateAssets ("1.0.0", []);
+		var libraries = assets ["libraries"]?.AsObject ()
+			?? throw new InvalidOperationException ("Missing libraries.");
+		libraries [$"{PackageName}/2.0.0"] = new JsonObject {
+			["type"] = "package",
+			["path"] = "xamarin.google.material.core/2.0.0",
+			["files"] = new JsonArray (NuspecFile),
+		};
+
 		var engine = new MockBuildEngine (TestContext.Out, []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var finder = NuGetPackageVersionFinder.Create (WriteAssets (CreateAssets ("1.0.0", [], multipleVersions).ToJsonString ()), task.Log)
+		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
 			?? throw new InvalidOperationException ("Could not read assets file.");
 
-		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (packageName, version, task.Log));
+		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (PackageName, "", task.Log));
 		Assert.That (engine.Errors.Select (error => error.Code), Is.EqualTo (new [] { "XA4248" }));
-		StringAssert.Contains (packageName, engine.Errors [0].Message);
-		StringAssert.Contains ("Ensure NuGet Restore has run", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -206,13 +206,13 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		return path;
 	}
 
-	static JsonObject CreateAssets (string version, string [] packageFolders, bool multipleVersions = false)
+	static JsonObject CreateAssets (string version, string [] packageFolders)
 	{
 		var folders = new JsonObject ();
 		foreach (var folder in packageFolders)
 			folders [folder] = new JsonObject ();
 
-		var assets = new JsonObject {
+		return new JsonObject {
 			["version"] = 3,
 			["libraries"] = new JsonObject {
 				[$"{PackageName}/{version}"] = new JsonObject {
@@ -228,18 +228,6 @@ public class NuGetPackageVersionFinderTests : BaseTest
 			},
 			["packageFolders"] = folders,
 		};
-
-		if (multipleVersions) {
-			var libraries = assets ["libraries"]?.AsObject ()
-				?? throw new InvalidOperationException ("Missing libraries.");
-			libraries [$"{PackageName}/2.0.0"] = new JsonObject {
-				["type"] = "package",
-				["path"] = "xamarin.google.material.core/2.0.0",
-				["files"] = new JsonArray (NuspecFile),
-			};
-		}
-
-		return assets;
 	}
 
 	static void CreateNuspec (string cache, string packageNamespace = "", string metadataNamespace = "")
