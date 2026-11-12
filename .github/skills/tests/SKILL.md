@@ -23,7 +23,7 @@ CONFIGURATION=Debug # Set to Release for Release tests.
 test -x "bin/${CONFIGURATION}/dotnet/dotnet"
 ```
 
-**If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make leeroy` (not `make all`, which skips extra API levels and leaves the workload unconfigured); on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK. Use the `local-build` skill for fast per-project rebuilds, known build issues, and running several builds on one host. Use the `android-devices` skill to get and target an emulator.
+**If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make leeroy` (not `make all`); on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK. See `local-build` for per-project rebuilds and known issues, and `android-devices` for emulators.
 
 **Validate code changes locally before pushing.** Full SDK builds and relevant host/device tests are expected development work. Do not label them prohibitively slow, ask whether to skip them solely because of presumed duration, or rely on CI as the first validation. Start with focused tests while iterating and expand coverage as needed for the affected components. Never silently skip tests: if the user explicitly limits validation or an actual environment constraint blocks it, report the exact command, failure or missing prerequisite, and remaining unvalidated coverage. Include commands and outcomes in the handoff.
 
@@ -56,17 +56,15 @@ Present results as: **Must run** → **Should run** → **Consider running**, wi
 
 ### Smallest sufficient validation
 
-Choose the cheapest validation that exercises the change. Escalate only when the change crosses into a heavier row, or when focused results point there.
+Escalate only when the change or focused results require it.
 
-| Change touches | Minimum validation before handoff | Full local SDK? | Device? |
-|---|---|---|---|
-| Docs, `.github/` instructions/skills, comments only | None (run doc tests if they exist) | No | No |
-| Standalone libraries: `src/Microsoft.Android.Build.BaseTasks`, `src/Xamarin.Android.Tools.AndroidSdk`, `src/Microsoft.Android.Build.Tasks`, Java.Interop tooling, `src/generator`, `src/class-parse` | `dotnet build` the project + its standalone tests | No | No |
-| `src/Xamarin.Android.Build.Tasks` tasks/targets | Focused `Xamarin.Android.Build.Tests.dll` filters against the local SDK | Yes, once; then rebuild only that project (`local-build` skill) | Only when install/deploy/run behavior changes (`MSBuildDeviceIntegration.dll`) |
-| `src/Mono.Android`, core `src/Java.Interop`, `src/native`, typemaps, runtime hosting | Local SDK + `Mono.Android.NET-Tests` on device for each affected runtime (CoreCLR/MonoVM/NativeAOT) | Yes | Yes |
-| Build infrastructure (`Makefile`, `build-tools/`, `eng/`, CI YAML) | Run the affected entry point (e.g. `make prepare`, `make leeroy`) or the pipeline step's command locally | Depends | No |
-
-When several sessions share one host, follow the host-load rules in the `local-build` skill.
+| Change touches | Minimum validation |
+|---|---|
+| Docs, `.github/`, comments | None |
+| Standalone libraries (`Microsoft.Android.Build.BaseTasks`, `Xamarin.Android.Tools.AndroidSdk`, `Microsoft.Android.Build.Tasks`, Java.Interop tooling, `generator`, `class-parse`) | `dotnet build` + standalone tests |
+| `src/Xamarin.Android.Build.Tasks` | Focused `Xamarin.Android.Build.Tests.dll` filters on the local SDK; `MSBuildDeviceIntegration.dll` only if install/deploy/run changes |
+| `src/Mono.Android`, core `src/Java.Interop`, `src/native`, typemaps, hosting | `Mono.Android.NET-Tests` on device for each affected runtime |
+| `Makefile`, `build-tools/`, `eng/`, CI YAML | Run the affected entry point or pipeline command locally |
 
 ## Running tests
 
@@ -103,7 +101,7 @@ Build and install the APK first, then run `dotnet test` from the test project di
   ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
 )
 ```
-Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands. With more than one device attached, add `-p:Device=<serial>` to both. To narrow the run, use `-p:IncludeCategories=<Category>` (see the `android-devices` skill).
+Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands. With several devices attached, add `-p:Device=<serial>` to both.
 
 ### Java.Interop tests
 Tooling tests are standalone (`dotnet test` on `.csproj`). Core JNI interop tests

@@ -14,10 +14,10 @@
 **Build System:** MSBuild + .NET Arcade SDK + CMake (native)
 
 ## Essential Commands
-- **Build the local SDK:** `make prepare && make leeroy` (or `make jenkins`) on macOS/Linux; `build.cmd` on Windows. Do **not** use `make all`; it skips `BuildExtraApiLevels`, so the local workload setup fails. See the `local-build` skill for per-project rebuilds and known issues.
-- **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` (uses `bin/Release` whenever it exists, otherwise `bin/Debug`)
+- **Build the local SDK:** `make prepare && make leeroy` (not `make all`) or `build.cmd`; see the `local-build` skill
+- **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` (prefers `bin/Release` when present)
 - **Run tests:** `dotnet-local.cmd test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
-- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll` (see the `android-devices` skill for emulators and device targeting)
+- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll` (`android-devices` skill)
 
 The test assembly framework comes from `DotNetStableTargetFramework` in `Directory.Build.props`. On macOS/Linux, use `./dotnet-local.sh` instead of `dotnet-local.cmd`.
 
@@ -35,25 +35,18 @@ dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Buil
 
 ## Working Principles
 
-These principles address the most common reasons sessions needed extra correction rounds.
-
-**Check for existing work before starting.** Before non-trivial work, search for open or merged PRs and branches on the same topic (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --oneline --grep "<keywords>"`). If prior session history is available, check it too. Extend existing work instead of redoing it. When fanning out into several sessions, check that no earlier session or PR already covers each slice.
-
-**Reuse before inventing.** Before writing new infrastructure, look for an existing mechanism: an MSBuild property or target, an SDK, `global.json`, or Arcade feature, an in-repo task or helper, or a CI template (for example, `build-tools/scripts/TestApks.targets` for emulators). If something "must already exist", it usually does; find it first.
-
-**Keep changes simple.** Prefer the smallest change that solves the problem; prefer deleting unused code over adding layers. Simplification work must end with less code. Don't add fallbacks, options, or abstractions without a current caller.
-
-**Ask before adding new artifacts.** Ask the user before adding new GitHub workflows, scripts, `.editorconfig` or `Directory.*.props`/`.targets` files, tests for build scripts, or generated-at-build-time files where static files would do.
-
-**Measure performance claims.** For startup, allocation, or size changes, measure before and after with the same configuration. If there is no measurable improvement, stop and report it instead of keeping the change.
-
-**Escalate validation cost deliberately.** Use the smallest sufficient validation for the change (see the table in `.github/skills/tests/SKILL.md`), and escalate to a full SDK build or device run only when the change requires it.
+- **Check for existing work first:** search PRs and branches (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --grep "<keywords>"`) and prior sessions; extend rather than redo, including before fanning out.
+- **Reuse before inventing:** look for an existing MSBuild, SDK, `global.json`, or Arcade mechanism, in-repo helper, or CI template first.
+- **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller.
+- **Ask before adding** workflows, scripts, `.editorconfig`/`Directory.*` files, tests for build scripts, or build-time-generated files.
+- **Measure performance claims** before and after with the same configuration; drop changes without a measured win.
+- **Validate proportionally:** use the smallest sufficient validation (table in the `tests` skill).
 
 ## Critical Rules
 
 **Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
 
-**Commit messages and PR descriptions:** PRs are squash-merged, so the PR title and description become the commit message. Use the `pull-request` skill (`[Component] Summary` titles, `Context:`/`Fixes:` lines, why before what, evidence, and validation results).
+**PR descriptions and commit messages:** PRs are squash-merged; follow the `pull-request` skill.
 
 Reference official Android documentation where helpful:
 * [Android Developer Guide](https://developer.android.com/develop)
@@ -223,11 +216,11 @@ try {
 
 **Build and test code changes locally before pushing or opening a PR.** Building the full SDK is a normal part of development, not something to avoid because it is assumed to be slow. CI provides additional coverage; it is not a substitute for local validation or the first place to discover whether a change builds.
 
-- **Prepare and build the SDK when the change needs it.** On macOS/Linux, run `make prepare && make leeroy`; on Windows, run `build.cmd`. Use the configuration required by the affected tests (for example, `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`). A missing local SDK is a reason to prepare and build it, not to offer skipping full-build tests. Rebuild after source changes so tests exercise the updated SDK, not stale binaries. After one complete build, rebuild only the changed project when possible (see the `local-build` skill).
-- **Run the relevant tests against the locally built SDK.** Use `dotnet-local.sh`/`dotnet-local.cmd` for full-build tests; standalone tests can use plain `dotnet test`. Consult `.github/skills/tests/SKILL.md` and its test catalog for commands and coverage, and its "Smallest sufficient validation" table for what each kind of change requires. Start with focused tests while iterating, then expand coverage for cross-cutting changes. Runtime, JNI, and native changes need the relevant on-device tests, not just host-side unit tests; exercise the affected runtime, ABI, and build properties. Use the `android-devices` skill to get and target an emulator.
+- **Prepare and build the SDK when needed.** On macOS/Linux, run `make prepare && make leeroy`; on Windows, run `build.cmd`. Use the configuration required by the affected tests (for example, `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`). A missing local SDK is a reason to prepare and build it, not to offer skipping full-build tests. Rebuild after source changes so tests exercise the updated SDK, not stale binaries.
+- **Run the relevant tests against the locally built SDK.** Use `dotnet-local.sh`/`dotnet-local.cmd` for full-build tests; standalone tests can use plain `dotnet test`. Consult `.github/skills/tests/SKILL.md` and its test catalog for commands and coverage. Start with focused tests while iterating, then expand coverage for cross-cutting changes. Runtime, JNI, and native changes need the relevant on-device tests, not just host-side unit tests; exercise the affected runtime, ABI, and build properties.
 - **Do not ask whether to skip validation solely because of presumed build time.** Proceed with the required local build and tests unless the user explicitly limits validation or a concrete environment constraint prevents it. If blocked, report the exact command, failure or missing prerequisite, and what remains unvalidated. Do not push known regressions or use repeated CI runs to debug them.
 - **Record actual validation results.** Report the build/test commands and their outcomes when handing off code changes or preparing a PR. Documentation-only changes do not require SDK compilation or device tests.
-- **Share the host when running sessions in parallel.** Each worktree builds its own SDK, and a full build saturates a developer machine. Run at most one or two full SDK builds at a time, and give each device run its own emulator or an explicit serial. Never stop processes, emulators, or `adb` servers that you did not start. Don't build lease or admission protocols between sessions; queue heavy work one item after another. See the `local-build` and `android-devices` skills.
+- **Parallel sessions:** run at most one or two full SDK builds per host, give each device run its own emulator or serial, never stop processes or `adb` you didn't start, and queue heavy work instead of inventing lease protocols.
 
 **Modifying project files in tests:** Never use `File.WriteAllText()` directly to update project source files. Instead, use the `Xamarin.ProjectTools` infrastructure:
 
@@ -284,10 +277,10 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
 
 - **`am instrument` going silent means it crashed, not hung.** Check `adb logcat -d | grep -E 'FATAL|tombstone|signal'` for a native crash dump. Do not wait for a CI timeout to "confirm" a hang that was really an instant crash.
 
-- **Confirm which runtime actually ran.** `PublishAot=true` in Debug still uses CoreCLR unless `Optimize=true` or you are publishing. Check `_AndroidRuntime` in the binlog or the native libraries in the APK before claiming NativeAOT coverage.
+- **Confirm the runtime that ran.** `PublishAot=true` in Debug still uses CoreCLR unless `Optimize=true` or publishing; check `_AndroidRuntime` before claiming NativeAOT coverage.
 
 ## Troubleshooting
-- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean && make prepare && make leeroy`. For stalled builds, SourceLink "Repository has no commit" warnings, and disk space, see the `local-build` skill.
+- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean && make prepare && make leeroy`; see the `local-build` skill for stalls, SourceLink warnings, and disk space
 - **MSBuild:** Test in isolation, validate inputs
-- **Device:** Use update directories for rapid Debug iteration; see the `android-devices` skill for emulators, device targeting, and sharing devices.
+- **Device:** Use update directories for rapid Debug iteration; see the `android-devices` skill
 - **Performance:** See `../Documentation/guides/profiling.md` and `../Documentation/guides/tracing.md`

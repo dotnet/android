@@ -7,7 +7,7 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `make prepare && make leeroy` (see the `local-build` skill; `make all` leaves the workload unconfigured).
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `make prepare && make leeroy`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---

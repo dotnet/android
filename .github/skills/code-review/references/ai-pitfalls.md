@@ -11,8 +11,8 @@ reviews.
 |---------|------------------|
 | **Reinventing the wheel** | AI creates new infrastructure instead of using existing utilities. ALWAYS check if a similar utility exists before accepting new wrapper code. This is the most expensive AI pattern — hundreds of lines of plausible code that duplicates what's already there. |
 | **Over-engineering** | HttpClient injection "for testability", speculative helper classes, unused overloads. If no caller needs it today, remove it. |
-| **Unrequested artifacts** | New GitHub workflows, scripts, `.editorconfig`/`Directory.*.props` files, tests for build scripts, or files generated at build time where a static file would do. Flag them unless the PR description shows the user asked for them. "Simplification" PRs that add net code deserve extra scrutiny. |
-| **Unmeasured performance claims** | Startup, allocation, or size "improvements" without before/after numbers from the same configuration. Ask for the measurement; reject changes that add complexity without a measured win. |
+| **Unrequested artifacts** | Workflows, scripts, `.editorconfig`/`Directory.*` files, build-script tests, or build-time-generated files nobody asked for; "simplifications" that add net code. |
+| **Unmeasured performance claims** | Perf "improvements" without before/after numbers from the same configuration. |
 | **Swallowed errors** | AI catch blocks love to eat exceptions silently. Check EVERY catch block. Also check that exit codes are checked consistently. |
 | **Null-forgiving operator (`!`)** | AI sprinkles `!` everywhere to silence nullable warnings. This is banned — use null checks, `IsNullOrEmpty()`, or make types non-nullable. See `csharp-rules.md` for the full NRT rules. |
 | **Wrong formatting** | AI generates standard C# formatting (no space before parens). This repo requires Mono style: `Foo ()`, `array [0]`. |
