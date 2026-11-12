@@ -32,6 +32,16 @@ namespace Xamarin.Android.Build.Tests {
 				IsSealed = isSealed,
 				IsGenericDefinition = generic,
 				DoNotGenerateAcw = true,
+				ActivationCtor = new ActivationCtorInfo {
+					DeclaringTypeName = generic ? "Example.Peer`1" : "Example.Peer",
+					DeclaringAssemblyName = assemblyName,
+					DeclaringType = new TypeRefData {
+						ManagedTypeName = generic ? "Example.Peer`1" : "Example.Peer",
+						AssemblyName = assemblyName,
+					},
+					Style = ActivationCtorStyle.XamarinAndroid,
+				},
+				JavaConstructors = [new JavaConstructorInfo { JniSignature = "()V", ConstructorIndex = 0 }],
 			};
 			var peers = new List<JavaPeerInfo> { peer };
 			if (alias) {
@@ -40,6 +50,15 @@ namespace Xamarin.Android.Build.Tests {
 					ManagedTypeShortName = "OtherPeer",
 					IsSealed = false,
 					IsGenericDefinition = false,
+					ActivationCtor = new ActivationCtorInfo {
+						DeclaringTypeName = "Example.OtherPeer",
+						DeclaringAssemblyName = assemblyName,
+						DeclaringType = new TypeRefData {
+							ManagedTypeName = "Example.OtherPeer",
+							AssemblyName = assemblyName,
+						},
+						Style = ActivationCtorStyle.XamarinAndroid,
+					},
 				});
 			}
 
@@ -49,6 +68,7 @@ namespace Xamarin.Android.Build.Tests {
 			generator.Generate (model, stream, useSharedTypemapUniverse: true);
 			stream.Position = 0;
 			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
+			Assert.AreEqual (alias ? 2 : 1, model.ProxyTypes.Count, "Every peer must emit a proxy.");
 			foreach (var proxy in model.ProxyTypes) {
 				bool eligible = assemblyName == "Mono.Android" && isSealed && proxy.TargetType.ManagedTypeName == peer.ManagedTypeName;
 				string expectedBase = eligible ? "Java.Interop.JavaPeerProxyForSealedFrameworkClass" : "Java.Interop.JavaPeerProxy";
