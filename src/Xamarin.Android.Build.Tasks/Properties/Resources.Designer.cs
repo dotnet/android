@@ -167,6 +167,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Microsoft OpenJDK signature verification was skipped for &apos;{0}&apos; because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive..
+        /// </summary>
+        public static string InstallAndroidDependencies_SignatureCheckSkipped {
+            get {
+                return ResourceManager.GetString("InstallAndroidDependencies_SignatureCheckSkipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unhandled exception: {0}.
         /// </summary>
         public static string XA0000_Exception {
@@ -1751,6 +1760,51 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA5304 {
             get {
                 return ResourceManager.GetString("XA5304", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Android SDK license agreements were not accepted. Read the Android SDK License Agreement at https://developer.android.com/studio/terms, then set `$(AcceptAndroidSDKLicenses)` to `true` to accept it..
+        /// </summary>
+        public static string XA5306 {
+            get {
+                return ResourceManager.GetString("XA5306", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Android CLI did not install Android SDK package `{0}` into `{1}`. Make sure that the package name and version are correct..
+        /// </summary>
+        public static string XA5307 {
+            get {
+                return ResourceManager.GetString("XA5307", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to install the Java SDK into `{0}`. Please set `$(JavaSdkDirectory)` to a valid non-administrator path..
+        /// </summary>
+        public static string XA5308 {
+            get {
+                return ResourceManager.GetString("XA5308", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find a Java SDK with version `{0}`. Please set `$(JavaSdkVersion)` to a valid version..
+        /// </summary>
+        public static string XA5309 {
+            get {
+                return ResourceManager.GetString("XA5309", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing Android dependencies is not supported on this operating system and architecture: `{0}` `{1}`..
+        /// </summary>
+        public static string XA5310 {
+            get {
+                return ResourceManager.GetString("XA5310", resourceCulture);
             }
         }
         

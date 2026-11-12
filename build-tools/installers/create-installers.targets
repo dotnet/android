@@ -146,7 +146,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Build.Tasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.props" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.targets" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Properties\Resources.resx" />
   </ItemGroup>
   <!-- end monodroid -->
   <Target Name="ConstructInstallerItems"

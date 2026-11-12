@@ -162,10 +162,6 @@ Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a 
     <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
     <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
   </data>
-  <data name="Jdk_Signature_Skipped" xml:space="preserve">
-    <value>Microsoft OpenJDK signature verification was skipped for '{0}' because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive.</value>
-    <comment>{0} - Archive URL. _SkipSignCheck=true must not be translated.</comment>
-  </data>
   <data name="Unsupported_Platform" xml:space="preserve">
     <value>Installing Android dependencies is not supported on this operating system and architecture: `{0}` `{1}`.</value>
     <comment>{0} - The operating system description

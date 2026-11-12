@@ -282,6 +282,11 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
 + [XA5304](xa5304.md): Invalid AssemblyStore compression level '{level}'. The value must be between {min} and {max}.
 + [XA5305](xa5305.md): Could not verify the Microsoft OpenJDK archive signature.
++ [XA5306](xa5306.md): The Android SDK license agreements were not accepted.
++ [XA5307](xa5307.md): The Android CLI did not install an Android SDK package.
++ [XA5308](xa5308.md): Unable to install the Java SDK into the requested directory.
++ [XA5309](xa5309.md): Unable to find a Java SDK with the requested version.
++ [XA5310](xa5310.md): Installing Android dependencies is not supported on this platform.
 
 ## XA6xxx: Internal tools
 
