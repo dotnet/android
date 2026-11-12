@@ -14,10 +14,10 @@ Device tests need a local SDK (`local-build` skill) and the commands in the `tes
 
 ## Emulators
 
-Use the `android` CLI from the repo-pinned cmdline-tools. Other `android` binaries on `PATH` may be different versions.
+Use the `android` CLI from the repo-pinned cmdline-tools. Resolve its directory through MSBuild, which honors SDK overrides such as `ANDROID_SDK_ROOT` or `/mnt/android-toolchain`. Other `android` binaries on `PATH` may be different versions.
 
 ```bash
-B=~/android-toolchain/sdk/cmdline-tools/$(sed -n 's:.*<CommandLineToolsFolder[^>]*>\(.*\)</CommandLineToolsFolder>.*:\1:p' Configuration.props)/bin
+B=$(dotnet msbuild src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj -getProperty:CommandLineToolsBinPath)
 $B/android emulator list --long             # AVDs, API level, status, serial
 $B/android emulator start --headless <avd>  # waits for full boot, prints the serial
 $B/android emulator stop <serial>           # stops only this emulator
@@ -67,6 +67,6 @@ With more than one device attached, always target one:
 
 ## Diagnosing
 
-- `-p:IncludeCategories=A,B` limits `Mono.Android.NET-Tests` to those categories (the value goes into `runtimeconfig.json`). Pass it to both the install and test commands.
+- `-p:IncludeCategories=A%2CB` (escape the comma) limits `Mono.Android.NET-Tests` to those categories (the value goes into `runtimeconfig.json`). Pass it to both the install and test commands.
 - `PublishAot=true` in Debug still runs CoreCLR unless `Optimize=true` or publishing. Check `_AndroidRuntime` before claiming NativeAOT coverage.
 - A silent instrumentation run means the app crashed: run `adb -s <serial> logcat -d | grep -E 'FATAL|tombstone|signal'`.

@@ -27,7 +27,7 @@ On Windows, run `build.cmd`.
 
 | Change in | Command |
 |---|---|
-| `src/Xamarin.Android.Build.Tasks/` (tasks, `.targets`) | `./dotnet-local.sh build src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj` (it outputs into the local SDK) |
+| `src/Xamarin.Android.Build.Tasks/` (tasks, `.targets`) | `./dotnet-local.sh build src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj -c <cfg>`, where `<cfg>` matches the SDK and tests (it defaults to Debug and outputs into that configuration's local SDK) |
 | Standalone libraries (`Microsoft.Android.Build.BaseTasks`, `Xamarin.Android.Tools.AndroidSdk`, `Microsoft.Android.Build.Tasks`, Java.Interop tooling, `generator`) | `dotnet build` / `dotnet test` the project; no local SDK needed |
 | Bindings, native runtime, packaging, or unsure | `make leeroy` (incremental) |
 
