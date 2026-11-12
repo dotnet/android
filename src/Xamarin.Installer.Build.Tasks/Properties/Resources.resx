@@ -162,19 +162,20 @@ Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a 
     <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
     <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
   </data>
-  <data name="Unsupported_Platform" xml:space="preserve">
-    <value>Installing Android dependencies is not supported on this operating system and architecture: `{0}` `{1}`.</value>
-    <comment>{0} - The operating system description
+  <data name="XA5306" xml:space="preserve">
+    <value>The Android CLI is not available for this operating system and architecture: `{0}` `{1}`.</value>
+    <comment>The following are literal names and should not be translated: `Android CLI`
+{0} - The operating system description
 {1} - The processor architecture</comment>
   </data>
-  <data name="AndroidCli_Hash_Mismatch" xml:space="preserve">
+  <data name="XA5307" xml:space="preserve">
     <value>The Android CLI downloaded from `{0}` has SHA-256 `{2}`, but SHA-256 `{1}` was expected. The Android CLI will not be used.</value>
     <comment>The following are literal names and should not be translated: `Android CLI`, `SHA-256`
 {0} - The download URL
 {1} - The expected SHA-256 hash
 {2} - The SHA-256 hash of the downloaded file</comment>
   </data>
-  <data name="AndroidCli_Failed" xml:space="preserve">
+  <data name="XA5308" xml:space="preserve">
     <value>The Android CLI failed with exit code {0} while it installed Android SDK packages. Output:
 {1}</value>
     <comment>The following are literal names and should not be translated: `Android CLI`, `Android SDK`

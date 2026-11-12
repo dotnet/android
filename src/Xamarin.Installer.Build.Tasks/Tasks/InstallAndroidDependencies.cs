@@ -204,7 +204,7 @@ namespace Xamarin.Installer.Build.Tasks
 				int exitCode = await ProcessUtils.StartProcess (psi, output, output, cancellationToken);
 				if (exitCode != 0)
 				{
-					Error (Resources.AndroidCli_Failed, exitCode, output);
+					LogCodedError ("XA5308", Resources.XA5308, exitCode, output);
 					return false;
 				}
 			}
@@ -479,7 +479,7 @@ namespace Xamarin.Installer.Build.Tasks
 			var url = package?.GetMetadata ("Url");
 			var expectedSha256 = package?.GetMetadata ("Sha256");
 			if (string.IsNullOrEmpty (url) || string.IsNullOrEmpty (expectedSha256) || string.IsNullOrEmpty (AndroidCliDirectory)) {
-				Error (Resources.Unsupported_Platform, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture);
+				LogCodedError ("XA5306", Resources.XA5306, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture);
 				return null;
 			}
 
@@ -496,7 +496,7 @@ namespace Xamarin.Installer.Build.Tasks
 
 			var actualSha256 = ComputeSha256 (archive.DownloadedFilePath);
 			if (!string.Equals (actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase)) {
-				Error (Resources.AndroidCli_Hash_Mismatch, url, expectedSha256, actualSha256);
+				LogCodedError ("XA5307", Resources.XA5307, url, expectedSha256, actualSha256);
 				return null;
 			}
 

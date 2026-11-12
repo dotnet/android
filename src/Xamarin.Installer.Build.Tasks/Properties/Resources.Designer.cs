@@ -60,21 +60,21 @@ namespace Xamarin.Installer.Build.Tasks.Properties {
             }
         }
 
-        internal static string Unsupported_Platform {
+        internal static string XA5306 {
             get {
-                return ResourceManager.GetString("Unsupported_Platform", resourceCulture);
+                return ResourceManager.GetString("XA5306", resourceCulture);
             }
         }
 
-        internal static string AndroidCli_Hash_Mismatch {
+        internal static string XA5307 {
             get {
-                return ResourceManager.GetString("AndroidCli_Hash_Mismatch", resourceCulture);
+                return ResourceManager.GetString("XA5307", resourceCulture);
             }
         }
 
-        internal static string AndroidCli_Failed {
+        internal static string XA5308 {
             get {
-                return ResourceManager.GetString("AndroidCli_Failed", resourceCulture);
+                return ResourceManager.GetString("XA5308", resourceCulture);
             }
         }
 
