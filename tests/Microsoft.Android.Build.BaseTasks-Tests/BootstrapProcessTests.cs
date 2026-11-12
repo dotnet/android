@@ -29,9 +29,12 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		sealed class RecordingAdb : Adb
 		{
 			public string OutputFile { get; set; }
+			public string ErrorFile { get; set; }
+			public bool MergeOutput { get; set; } = true;
 			public bool ThrowOnOutput { get; set; }
 			public Action<ProcessStartInfo> ConfigureStartInfo { get; set; }
 			public List<string> Parsed { get; } = new List<string> ();
+			public List<string> ParsedErrors { get; } = new List<string> ();
 			public List<int> ParserThreads { get; } = new List<int> ();
 			public int OwnerThread { get; private set; }
 
@@ -47,6 +50,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			{
 				var commands = base.GenerateCommandArguments ();
 				commands [0].StdoutFilePath = OutputFile;
+				commands [0].StderrFilePath = ErrorFile;
+				commands [0].MergeStdoutAndStderr = MergeOutput;
 				return commands;
 			}
 
@@ -59,6 +64,12 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				Parsed.Add (line);
 				if (ThrowOnOutput)
 					throw new InvalidOperationException ("Output consumer failed.");
+			}
+
+			protected override void ProcessStderr (string line)
+			{
+				ParserThreads.Add (Environment.CurrentManagedThreadId);
+				ParsedErrors.Add (line);
 			}
 		}
 
@@ -126,26 +137,59 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (warnings.Any (e => e.Message.Contains ("failed to exit within")));
 		}
 
-		[TestCase (-1)]
-		[TestCase (0)]
-		[TestCase (200)]
-		public async Task AdbOutputDeadlineDoesNotKillInheritedServer (int timeout)
+		[TestCase (-1, false, 11, true)]
+		[TestCase (0, false, 11, true)]
+		[TestCase (1000, false, 11, true)]
+		[TestCase (1000, false, 11, false)]
+		[TestCase (1000, true, 11, true)]
+		[TestCase (1000, false, 4096, true)]
+		[TestCase (1000, true, 4096, true)]
+		public async Task AdbDeadlinesPreserveUnterminatedDiagnosticsWithoutKillingInheritedServer (int timeout, bool rootHangs, int tailLength, bool mergeOutput)
 		{
+			string stdoutTail = "stdout-tail" + (tailLength == 11 ? "" : new string ('x', tailLength - 13) + "\u00e9");
+			string stderrTail = "stderr-tail" + (tailLength == 11 ? "" : new string ('y', tailLength - 13) + "\u00e9");
+			File.WriteAllText (Path.Combine (directory, "stdout-tail"), stdoutTail);
+			File.WriteAllText (Path.Combine (directory, "stderr-tail"), stderrTail);
 			var script = CreateScript ("inherited-output", """
+				echo $$ > root.pid
 				sleep 60 &
 				echo $! > server.pid
 				printf 'before-eof\n'
-				exit 0
-				""");
+				printf 'stderr-line\n' >&2
+				sleep 0.1
+				cat stdout-tail
+				cat stderr-tail >&2
+				""" + (rootHangs ? "\nwait" : "\nexit 0"));
 			var task = CreateAdb (script);
 			task.Timeout = timeout;
+			task.MergeOutput = mergeOutput;
+			task.OutputFile = Path.Combine (directory, "timeout-output.txt");
+			task.ErrorFile = Path.Combine (directory, "timeout-error.txt");
 			var watch = Stopwatch.StartNew ();
 
 			Assert.IsFalse (await ExecuteAsync (task));
 			Assert.Less (watch.Elapsed, TimeSpan.FromSeconds (5));
 			Assert.GreaterOrEqual (watch.Elapsed, TimeSpan.FromMilliseconds (700));
-			CollectionAssert.Contains (task.Output, "before-eof");
+			Assert.Multiple (() => {
+				CollectionAssert.Contains (task.Output, "before-eof");
+				CollectionAssert.Contains (task.Output, "stderr-line");
+				CollectionAssert.Contains (task.Output, stdoutTail);
+				CollectionAssert.Contains (task.Output, stderrTail);
+				Assert.IsTrue (messages.Any (e => e.Message == stdoutTail));
+				Assert.IsTrue (messages.Any (e => e.Message == stderrTail));
+				StringAssert.Contains (stdoutTail, File.ReadAllText (task.OutputFile));
+				StringAssert.Contains (stderrTail, File.ReadAllText (mergeOutput ? task.OutputFile : task.ErrorFile));
+				CollectionAssert.AreEquivalent (mergeOutput ? new [] { "before-eof", "stderr-line" } : new [] { "before-eof" }, task.Parsed,
+					"Cancellation fragments are diagnostic text, not complete parser lines.");
+				CollectionAssert.AreEqual (mergeOutput ? [] : new [] { "stderr-line" }, task.ParsedErrors);
+			});
+			if (!mergeOutput) {
+				Assert.AreEqual ("before-eof" + Environment.NewLine + stdoutTail, File.ReadAllText (task.OutputFile));
+				Assert.AreEqual ("stderr-line" + Environment.NewLine + stderrTail, File.ReadAllText (task.ErrorFile));
+			}
 			Assert.IsTrue (warnings.Any (e => e.Message.Contains ("output did not close")));
+			Assert.AreEqual (rootHangs, warnings.Any (e => e.Message.Contains ("failed to exit within")));
+			Assert.IsFalse (IsRunning (ReadPid ("root.pid")));
 			Assert.IsTrue (IsRunning (ReadPid ("server.pid")), "The inherited pipe holder is not an owned ADB client.");
 		}
 
@@ -233,6 +277,34 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
+		public async Task AdbPreservesSplitByteOrderMarksAndLineTerminators ()
+		{
+			foreach (var encoding in new [] {
+				new UTF8Encoding (encoderShouldEmitUTF8Identifier: true),
+				Encoding.Unicode, Encoding.BigEndianUnicode, Encoding.UTF32,
+				new UTF32Encoding (bigEndian: true, byteOrderMark: true),
+			}) {
+				string payload = Path.Combine (directory, "encoded-output");
+				byte [] preamble = encoding.GetPreamble ();
+				File.WriteAllBytes (payload, preamble.Concat (encoding.GetBytes ("first\r\nsecond\rthird\nlast-\u00e9")).ToArray ());
+				int split = preamble.Length + encoding.GetByteCount ("first\r");
+				string script = CreateScript ("split-encoding", $"""
+					dd if="{payload}" bs=1 count=1 2>/dev/null
+					sleep 0.05
+					dd if="{payload}" bs=1 skip=1 count={split - 1} 2>/dev/null
+					sleep 0.05
+					dd if="{payload}" bs=1 skip={split} 2>/dev/null
+					""");
+				var task = CreateAdb (script);
+				task.ConfigureStartInfo = startInfo => startInfo.RedirectStandardError = false;
+
+				Assert.IsTrue (await ExecuteAsync (task), encoding.WebName);
+				CollectionAssert.AreEqual (new [] { "first", "second", "third", "last-\u00e9" }, task.Output, encoding.WebName);
+				CollectionAssert.AreEqual (task.Output, task.Parsed, encoding.WebName);
+			}
+		}
+
+		[Test]
 		public async Task CheckAdbTargetRejectsAnUnfinishedProbe ()
 		{
 			CreateScript ("adb", """
@@ -291,11 +363,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				WorkingDirectory = directory,
 				ToolPath = directory,
 				ToolExe = "adb",
-				Timeout = 1000,
+				Timeout = 5000,
 			};
 
 			Assert.IsFalse (await ExecuteAsync (task));
-			Assert.IsTrue (errors.Any (e => e.Message.Contains ("Package Manager did not become ready")));
+			Assert.IsTrue (errors.Any (e => e.Message.Contains ("Package Manager did not become ready")),
+				string.Join ("\n", errors.Select (e => e.Message).Concat (messages.Select (e => e.Message))) +
+				"\nOutput: " + string.Join ("|", task.Output));
 		}
 
 		[Test]
@@ -388,27 +462,53 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (1, buildEngine.ReacquireCount);
 		}
 
-		[Test]
-		public async Task ParallelOutputDeadlinePreservesPartialDiagnostics ()
+		[TestCase (false, 11)]
+		[TestCase (true, 11)]
+		[TestCase (true, 4096)]
+		public async Task ParallelOutputCancellationPreservesUnterminatedDiagnostics (bool cancelCommand, int tailLength)
 		{
+			string stdoutTail = "stdout-tail" + (tailLength == 11 ? "" : new string ('x', tailLength - 13) + "\u00e9");
+			string stderrTail = "stderr-tail" + (tailLength == 11 ? "" : new string ('y', tailLength - 13) + "\u00e9");
+			File.WriteAllText (Path.Combine (directory, "stdout-tail"), stdoutTail);
+			File.WriteAllText (Path.Combine (directory, "stderr-tail"), stderrTail);
 			string script = CreateScript ("parallel-inherited-output", """
+				echo $$ > root.pid
 				sleep 60 &
 				echo $! > inherited.pid
 				printf 'partial stdout\n'
 				printf 'partial stderr\n' >&2
-				exit 0
-				""");
+				sleep 0.1
+				cat stdout-tail
+				cat stderr-tail >&2
+				printf 'ready' > ready
+				""" + (cancelCommand ? "\nwait" : "\nexit 0"));
 			var task = new RunParallelCmds {
 				BuildEngine = engine,
 				Commands = [CreateCommand ("/bin/sh", $"\"{script}\"")],
 			};
 			var watch = Stopwatch.StartNew ();
+			var execution = ExecuteAsync (task, TimeSpan.FromSeconds (40));
+			if (cancelCommand) {
+				Assert.IsTrue (SpinWait.SpinUntil (() => File.Exists (Path.Combine (directory, "ready")), TimeSpan.FromSeconds (5)));
+				await Task.Delay (100);
+				task.Cancel ();
+			}
 
-			Assert.IsFalse (await ExecuteAsync (task, TimeSpan.FromSeconds (40)));
+			Assert.IsFalse (await execution);
 			Assert.Less (watch.Elapsed, TimeSpan.FromSeconds (35));
-			Assert.GreaterOrEqual (watch.Elapsed, TimeSpan.FromSeconds (25));
-			Assert.IsTrue (errors.Any (e => e.Message.Contains ("output did not close") && e.Message.Contains ("partial stderr")));
-			Assert.IsTrue (messages.Any (e => e.Message.Contains ("partial stdout")));
+			if (cancelCommand)
+				Assert.IsEmpty (errors);
+			else {
+				Assert.GreaterOrEqual (watch.Elapsed, TimeSpan.FromSeconds (25));
+				Assert.IsTrue (errors.Any (e => e.Message.Contains ("output did not close")));
+			}
+			Assert.Multiple (() => {
+				Assert.IsTrue (messages.Any (e => e.Message.Contains ("partial stdout")));
+				Assert.IsTrue (messages.Any (e => e.Message.Contains (stdoutTail)));
+				Assert.IsTrue (errors.Any (e => e.Message.Contains ("partial stderr") && e.Message.Contains (stderrTail)) ||
+					messages.Any (e => e.Message.Contains ("partial stderr") && e.Message.Contains (stderrTail)));
+			});
+			Assert.IsFalse (IsRunning (ReadPid ("root.pid")));
 		}
 
 		[Test]

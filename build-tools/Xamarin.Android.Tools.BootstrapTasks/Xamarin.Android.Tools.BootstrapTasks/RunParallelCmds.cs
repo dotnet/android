@@ -163,9 +163,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			using var outputCancellation = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
 			var exit = WaitForExitAsync ();
 			try {
-				await foreach (var line in process.ReadAllLinesAsync (outputCancellation.Token)) {
-					(line.StandardError ? result.StandardError : result.StandardOutput).AppendLine (line.Content);
-				}
+				await Tasks.Task.WhenAll (
+					ReadOutputAsync (process.StandardOutput, result.StandardOutput),
+					ReadOutputAsync (process.StandardError, result.StandardError)).ConfigureAwait (false);
 				result.ExitCode = (await exit.ConfigureAwait (false)).ExitCode;
 			} catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && !exitCancellation.IsCancellationRequested) {
 				if (exit.IsFaulted)
@@ -192,6 +192,19 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						using var stdout = process.StandardOutput;
 						using var stderr = process.StandardError;
 					}
+				}
+			}
+
+			async Tasks.Task ReadOutputAsync (StreamReader reader, StringBuilder text)
+			{
+				var output = new ProcessOutputReader (reader);
+				try {
+					int count;
+					while ((count = await output.ReadAsync (outputCancellation.Token).ConfigureAwait (false)) > 0)
+						text.Append (output.Buffer, 0, count);
+				} catch {
+					outputCancellation.Cancel ();
+					throw;
 				}
 			}
 

@@ -181,7 +181,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		protected virtual void ProcessStderr (string line)
 		{}
 
-		void OnOutput (string line, bool isStdout, CommandInfo info)
+		void OnOutput (string line, bool isStdout, CommandInfo info, bool completeLine = true)
 		{
 			lines.Add (line);
 
@@ -192,12 +192,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					Log.LogWarning (line);
 			}
 
-			if (isStdout || info.MergeStdoutAndStderr) {
-				info.StdoutWriter?.WriteLine (line);
-				ProcessStdout (line);
-			} else {
-				info.StderrWriter?.WriteLine (line);
-				ProcessStderr (line);
+			bool useStdout = isStdout || info.MergeStdoutAndStderr;
+			var writer = useStdout ? info.StdoutWriter : info.StderrWriter;
+			if (completeLine)
+				writer?.WriteLine (line);
+			else
+				writer?.Write (line);
+
+			if (completeLine) {
+				if (useStdout)
+					ProcessStdout (line);
+				else
+					ProcessStderr (line);
 			}
 		}
 
@@ -262,21 +268,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				exitCancellation.CancelAfter (Timeout);
 			var exit = WaitForExitAsync ();
 			try {
-				if (si.RedirectStandardOutput && si.RedirectStandardError) {
-					var output = p.ReadAllLinesAsync (outputCancellation.Token).GetAsyncEnumerator ();
-					try {
-						while (output.MoveNextAsync ().AsTask ().GetAwaiter ().GetResult ()) {
-							var line = output.Current;
-							OnOutput (line.Content, !line.StandardError, info);
-						}
-					} finally {
-						output.DisposeAsync ().AsTask ().GetAwaiter ().GetResult ();
-					}
-				} else if (si.RedirectStandardOutput || si.RedirectStandardError) {
-					var reader = si.RedirectStandardOutput ? p.StandardOutput : p.StandardError;
-					while (reader.ReadLineAsync (outputCancellation.Token).AsTask ().GetAwaiter ().GetResult () is string line)
-						OnOutput (line, si.RedirectStandardOutput, info);
-				}
+				ReadOutput ();
 
 				int exitCode = exit.GetAwaiter ().GetResult ();
 				if (exitCancellation.IsCancellationRequested)
@@ -312,6 +304,92 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					} finally {
 						using var stdout = si.RedirectStandardOutput ? p.StandardOutput : null;
 						using var stderr = si.RedirectStandardError ? p.StandardError : null;
+					}
+				}
+			}
+
+			void ReadOutput ()
+			{
+				var stdout = si.RedirectStandardOutput ? new ProcessOutputReader (p.StandardOutput) : null;
+				var stderr = si.RedirectStandardError ? new ProcessOutputReader (p.StandardError) : null;
+				var stdoutLine = new StringBuilder ();
+				var stderrLine = new StringBuilder ();
+				bool stdoutSkipLf = false;
+				bool stderrSkipLf = false;
+				Tasks.Task<int> stdoutRead = null;
+				Tasks.Task<int> stderrRead = null;
+				bool canceledOutput = false;
+				try {
+					stdoutRead = stdout?.ReadAsync (outputCancellation.Token);
+					stderrRead = stderr?.ReadAsync (outputCancellation.Token);
+
+					while (stdoutRead != null || stderrRead != null) {
+						var read = stdoutRead == null ? stderrRead : stderrRead == null ? stdoutRead :
+							Tasks.Task.WhenAny (stdoutRead, stderrRead).GetAwaiter ().GetResult ();
+						bool isStdout = read == stdoutRead;
+						int count = read.GetAwaiter ().GetResult ();
+						if (isStdout)
+							stdoutRead = null;
+						else
+							stderrRead = null;
+
+						if (count == 0) {
+							FlushLine (isStdout, completeLine: true);
+							continue;
+						}
+						ConsumeText ((isStdout ? stdout : stderr).Buffer.AsSpan (0, count), isStdout);
+						if (isStdout)
+							stdoutRead = stdout.ReadAsync (outputCancellation.Token);
+						else
+							stderrRead = stderr.ReadAsync (outputCancellation.Token);
+					}
+				} catch (OperationCanceledException) when (outputCancellation.IsCancellationRequested) {
+					canceledOutput = true;
+					throw;
+				} finally {
+					outputCancellation.Cancel ();
+					try {
+						Tasks.Task.WhenAll (stdoutRead ?? Tasks.Task.FromResult (0), stderrRead ?? Tasks.Task.FromResult (0))
+							.GetAwaiter ().GetResult ();
+					} catch (OperationCanceledException) when (outputCancellation.IsCancellationRequested) {
+					}
+					if (canceledOutput) {
+						if (stdoutRead?.IsCompletedSuccessfully == true)
+							ConsumeText (stdout.Buffer.AsSpan (0, stdoutRead.Result), isStdout: true);
+						if (stderrRead?.IsCompletedSuccessfully == true)
+							ConsumeText (stderr.Buffer.AsSpan (0, stderrRead.Result), isStdout: false);
+						// Cancellation is not EOF: retain fragments as diagnostics, not parser records.
+						FlushLine (isStdout: true, completeLine: false);
+						FlushLine (isStdout: false, completeLine: false);
+					}
+				}
+
+				void ConsumeText (ReadOnlySpan<char> text, bool isStdout)
+				{
+					var line = isStdout ? stdoutLine : stderrLine;
+					ref bool skipLf = ref (isStdout ? ref stdoutSkipLf : ref stderrSkipLf);
+					foreach (char value in text) {
+						if (skipLf) {
+							skipLf = false;
+							if (value == '\n')
+								continue;
+						}
+						if (value == '\r' || value == '\n') {
+							OnOutput (line.ToString (), isStdout, info);
+							line.Clear ();
+							skipLf = value == '\r';
+						} else {
+							line.Append (value);
+						}
+					}
+				}
+
+				void FlushLine (bool isStdout, bool completeLine)
+				{
+					var line = isStdout ? stdoutLine : stderrLine;
+					if (line.Length > 0) {
+						OnOutput (line.ToString (), isStdout, info, completeLine);
+						line.Clear ();
 					}
 				}
 			}
