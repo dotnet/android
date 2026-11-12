@@ -5,7 +5,73 @@ Xamarin.Installer.Build.Tasks contains the build tasks and targets that support 
 `InstallAndroidDependencies` target that ships with the .NET for Android SDK.
 
 
-### Testing
+### XML installer prototype
+
+On this branch, `InstallAndroidDependencies` installs both the JDK and Android SDK
+through MSBuild XML, without loading the installer task assembly. The C# sources
+and their tests remain as a baseline for comparison; they are not a fallback.
+Dependency discovery still uses the existing `GetAndroidDependencies` target.
+
+The XML uses standard MSBuild tasks for downloads, SHA-256 checks, and ZIP
+extraction. Unix hosts also require `tar`, `chmod`, and `mv`. JDK signature
+verification requires `gpg` on `PATH`, using an isolated keyring and the same
+decoded-public-key SHA-256 pin as the C# implementation. No user keyring is trusted.
+
+Run the standalone fixtures and build the installer from the repository root:
+
+```sh
+python3 tests/Xamarin.Installer.Build.Tasks-Tests/test_xml_installer.py -v
+dotnet build src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj -v:minimal -nr:false
+```
+
+The fixtures import the actual targets without any repository task assemblies.
+They serve mock downloads locally, generate signed JDK archives, and cover package
+mapping, installed revisions, repeat runs, license consent, CLI cache repair,
+hash/signature rejection, timeouts, and paths containing spaces.
+Signature fixtures require GnuPG; the fixture suite currently skips Windows.
+
+For a real-download smoke test independent of a full SDK build, save this as
+`installer-smoke.proj` in the repository root:
+
+```xml
+<Project>
+  <Import Project="$(InstallerTargets)" />
+  <Target Name="GetAndroidDependencies">
+    <ItemGroup>
+      <AndroidDependency Include="platform-tools" />
+      <JavaDependency Include="jdk" Version="21.0.8" />
+    </ItemGroup>
+  </Target>
+</Project>
+```
+
+Then run on macOS/Linux, accepting the Android SDK licenses only if appropriate:
+
+```sh
+dotnet msbuild installer-smoke.proj -t:InstallAndroidDependencies \
+  -p:InstallerTargets="$PWD/src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.targets" \
+  -p:AndroidSdkDirectory="$PWD/bin/installer-prototype/real-sdk" \
+  -p:JavaSdkDirectory="$PWD/bin/installer-prototype/real-jdk" \
+  -p:_AndroidCliDirectory="$PWD/bin/installer-prototype/real-cli" \
+  -p:AcceptAndroidSDKLicenses=true -v:normal -nr:false
+```
+
+Validated on macOS arm64: Microsoft JDK 21.0.8 downloaded, signature-verified,
+extracted, and executed; Google's pinned Android CLI downloaded and hash-checked;
+platform-tools 37.0.1 installed and `adb version` executed. A second identical
+invocation performed no downloads or installs. All 15 fixtures and the installer
+project build passed.
+
+This is not yet a production-equivalent replacement. GnuPG is an additional
+prerequisite, diagnostics read the copied English `Properties/Resources.resx`
+rather than satellite assemblies, and the timeout applies per external command,
+not across the whole operation or to `DownloadFile`. Windows/Linux execution,
+full workload packaging, and concurrent cache publishing are unvalidated. Windows
+Program Files protection and strict JDK-version parsing still need parity work.
+SDK/JDK repeat-run decisions inspect installed versions rather than timestamps;
+the CLI cache is hash-checked before incremental download decisions.
+
+### C# baseline tests
 
 `OpenJdkSignatureTests` in `Xamarin.Android.Build.Tests` covers signature
 verification and task diagnostics. Build the local SDK and test assembly first,
@@ -23,7 +89,10 @@ production dependency task:
 dotnet-local.cmd test bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~OpenJdkSignatureTests.PublishedMicrosoftArchive|FullyQualifiedName~OpenJdkSignatureTests.InstallMicrosoftJdk"
 ```
 
-### OpenJDK signing-key maintenance
+### C# baseline OpenJDK signing-key maintenance
+
+For this prototype, the URL and pin are also present in
+`Xamarin.Installer.Common.targets`; keep both implementations synchronized.
 
 Before a downloaded JDK archive is extracted, the task downloads its `.sig` file
 and the public key linked by [Microsoft's OpenJDK download documentation][1].

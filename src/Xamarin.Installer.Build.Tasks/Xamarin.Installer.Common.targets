@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-	<UsingTask AssemblyFile="Xamarin.Installer.Build.Tasks.dll" TaskName="Xamarin.Installer.Build.Tasks.InstallAndroidDependencies" />
 	<PropertyGroup>
 		<BuildDependsOn Condition="'$(AndroidRestoreOnBuild)' == 'True'">
 			InstallAndroidDependencies;
@@ -15,38 +14,248 @@
 		</PropertyGroup>
 	</Target>
 
-	<Target Name="InstallAndroidDependencies" DependsOnTargets="_SetAndroidInstallJavaDependencies;GetAndroidDependencies">
+	<Target Name="InstallAndroidDependencies"
+		DependsOnTargets="_SetAndroidInstallJavaDependencies;GetAndroidDependencies;_AndroidInstallerInputs;_AndroidJdkInputs;_AndroidInstallJdk;_AndroidCliInputs;_AndroidDownloadCli;_AndroidInstallSdk" />
+
+	<Target Name="_AndroidInstallerInputs">
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='License_Not_Accepted']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidLicenseNotAccepted" />
+		</XmlPeek>
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='Required_Not_Installed']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidPackageNotInstalled" />
+		</XmlPeek>
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='Invalid_JavaSdkDirectory']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidInvalidJdkDirectory" />
+		</XmlPeek>
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='Invalid_JavaSdkVersion']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidInvalidJdkVersion" />
+		</XmlPeek>
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='Unsupported_Platform']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidUnsupportedPlatform" />
+		</XmlPeek>
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='Task_Cancelled']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidInstallerCancelled" />
+		</XmlPeek>
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='XA5305']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidJdkSignatureFailed" />
+		</XmlPeek>
+		<XmlPeek XmlInputPath="$(MSBuildThisFileDirectory)Properties/Resources.resx" Query="/root/data[@name='Jdk_Signature_Skipped']/value/text()">
+			<Output TaskParameter="Result" PropertyName="_AndroidJdkSignatureSkipped" />
+		</XmlPeek>
+		<PropertyGroup>
+			<_AndroidInstallerTimeout>$([MSBuild]::Multiply($(AndroidDependencyInstallationTimeout), 60000))</_AndroidInstallerTimeout>
+			<_AndroidInstallerHome>$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))</_AndroidInstallerHome>
+			<_AndroidInstallerOS Condition="$([MSBuild]::IsOSPlatform('Windows'))">windows</_AndroidInstallerOS>
+			<_AndroidInstallerOS Condition="$([MSBuild]::IsOSPlatform('OSX'))">darwin</_AndroidInstallerOS>
+			<_AndroidInstallerOS Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux</_AndroidInstallerOS>
+			<_AndroidInstallerArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)</_AndroidInstallerArchitecture>
+			<_AndroidCliArchitecture Condition="'$(_AndroidInstallerArchitecture)' == 'X64'">x86_64</_AndroidCliArchitecture>
+			<_AndroidCliArchitecture Condition="'$(_AndroidInstallerArchitecture)' == 'Arm64'">arm64</_AndroidCliArchitecture>
+			<_AndroidInstallerSdk>$(AndroidSdkDirectory)</_AndroidInstallerSdk>
+			<_AndroidInstallerSdk Condition="'$(_AndroidInstallerSdk)' == ''">$(ANDROID_HOME)</_AndroidInstallerSdk>
+			<_AndroidInstallerSdk Condition="'$(_AndroidInstallerSdk)' == ''">$(ANDROID_SDK_ROOT)</_AndroidInstallerSdk>
+			<_AndroidInstallerSdk Condition="'$(_AndroidInstallerSdk)' == '' and '$(_AndroidInstallerOS)' == 'windows'">$(LocalAppData)/Android/Sdk</_AndroidInstallerSdk>
+			<_AndroidInstallerSdk Condition="'$(_AndroidInstallerSdk)' == '' and '$(_AndroidInstallerOS)' == 'darwin'">$(_AndroidInstallerHome)/Library/Android/sdk</_AndroidInstallerSdk>
+			<_AndroidInstallerSdk Condition="'$(_AndroidInstallerSdk)' == ''">$(_AndroidInstallerHome)/Android/Sdk</_AndroidInstallerSdk>
+			<_AndroidInstallerSdk>$([MSBuild]::NormalizePath('$(_AndroidInstallerSdk)'))</_AndroidInstallerSdk>
+		</PropertyGroup>
+		<Error Condition="'$(_AndroidInstallerTimeout)' &lt;= '0'" Text="$([System.String]::Format('$(_AndroidInstallerCancelled)', '$(AndroidDependencyInstallationTimeout)'))" />
+		<ItemGroup>
+			<_AndroidInstallerPackage Include="@(AndroidDependency)">
+				<PackageDirectory>$([System.String]::Copy('%(AndroidDependency.Identity)').Replace(';', '/'))</PackageDirectory>
+				<PackageDirectory Condition="'%(AndroidDependency.Identity)' == 'ndk-bundle' and '%(AndroidDependency.Version)' != ''">ndk/%(AndroidDependency.Version)</PackageDirectory>
+				<RequestedVersion>$([System.Text.RegularExpressions.Regex]::Match('%(AndroidDependency.Version)', '^\s*[0-9]+(?:\.[0-9]+){0,3}').Value.Trim())</RequestedVersion>
+			</_AndroidInstallerPackage>
+			<_AndroidInstallerPackage>
+				<LastSegment>$([System.IO.Path]::GetFileName('%(PackageDirectory)'))</LastSegment>
+				<PropertiesFile>$(_AndroidInstallerSdk)/%(PackageDirectory)/source.properties</PropertiesFile>
+			</_AndroidInstallerPackage>
+			<_AndroidInstallerPackage>
+				<Argument>%(PackageDirectory)</Argument>
+				<Argument Condition="'%(_AndroidInstallerPackage.Version)' != '' and '%(LastSegment)' != '%(_AndroidInstallerPackage.Version)'">%(PackageDirectory)@%(_AndroidInstallerPackage.Version)</Argument>
+				<InstalledVersion />
+				<InstalledVersion Condition="Exists('%(PropertiesFile)')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('%(PropertiesFile)')), '(?m)^\s*Pkg\.Revision\s*=\s*([0-9]+(?:\.[0-9]+){0,3})').Groups[1].Value)</InstalledVersion>
+			</_AndroidInstallerPackage>
+			<_AndroidInstallerPackage>
+				<Installed>false</Installed>
+				<Installed Condition="Exists('%(PropertiesFile)') and '%(RequestedVersion)' == ''">true</Installed>
+				<Installed Condition="'%(InstalledVersion)' != '' and '%(RequestedVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('%(InstalledVersion)', '%(RequestedVersion)'))">true</Installed>
+			</_AndroidInstallerPackage>
+			<_AndroidInstallerMissing Include="@(_AndroidInstallerPackage)" Condition="'%(Installed)' != 'true'" />
+			<_AndroidInstallerJdk Include="@(JavaDependency)" Condition="'%(Identity)' == 'jdk' and '$(AndroidInstallJavaDependencies)' == 'true'" />
+		</ItemGroup>
+	</Target>
+
+	<Target Name="_AndroidCliInputs" Condition="'@(_AndroidInstallerMissing->Count())' != '0'">
+		<Error Condition="'$(AcceptAndroidSDKLicenses)' != 'true'" Text="$(_AndroidLicenseNotAccepted)" />
 		<!-- Google's Android CLI, downloaded from Google and checked against these SHA-256 hashes. -->
 		<PropertyGroup>
 			<_AndroidCliVersion>1.1.16717390</_AndroidCliVersion>
 			<_AndroidCliBaseUrl>https://dl.google.com/android/cli/$(_AndroidCliVersion)</_AndroidCliBaseUrl>
 			<!-- Same per-user cache locations as $(MavenCacheDirectory) -->
-			<_AndroidCliDirectory Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(LocalAppData)\dotnet-android\AndroidCli\$(_AndroidCliVersion)\</_AndroidCliDirectory>
-			<_AndroidCliDirectory Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Caches/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
-			<_AndroidCliDirectory Condition="'$(_AndroidCliDirectory)'==''">$(HOME)/.cache/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
+			<_AndroidCliDirectory Condition="'$(_AndroidCliDirectory)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">$(LocalAppData)\dotnet-android\AndroidCli\$(_AndroidCliVersion)\</_AndroidCliDirectory>
+			<_AndroidCliDirectory Condition="'$(_AndroidCliDirectory)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">$(_AndroidInstallerHome)/Library/Caches/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
+			<_AndroidCliDirectory Condition="'$(_AndroidCliDirectory)'==''">$(_AndroidInstallerHome)/.cache/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
 		</PropertyGroup>
-		<ItemGroup>
+		<ItemGroup Condition="'@(_AndroidCliPackage->Count())' == '0'">
 			<_AndroidCliPackage Include="windows_x86_64" Url="$(_AndroidCliBaseUrl)/windows_x86_64/android-cli.exe" Sha256="E461A361540882A759031DD94AD4814B0BA109183CDFDF18013B639539A9AF7B" />
 			<_AndroidCliPackage Include="linux_x86_64" Url="$(_AndroidCliBaseUrl)/linux_x86_64/android-cli" Sha256="B34ED0BAEEFFA2AAEE2720D82491B975835696E2E56840449078BEC885436564" />
 			<_AndroidCliPackage Include="linux_arm64" Url="$(_AndroidCliBaseUrl)/linux_arm64/android-cli" Sha256="42F1FB9373A398CE72B65FA1D73DDCB6B7A419ABDF45CF0A293B51BEA1288EA5" />
 			<_AndroidCliPackage Include="darwin_x86_64" Url="$(_AndroidCliBaseUrl)/darwin_x86_64/android-cli" Sha256="4F102562A8D7ACA32FFE59FD9002D05EC0964675EDF17E7AC3E4C70546F30DD9" />
 			<_AndroidCliPackage Include="darwin_arm64" Url="$(_AndroidCliBaseUrl)/darwin_arm64/android-cli" Sha256="E9C6E19F5ED8142E2897E0B68B476E1768633E5740AA54BFC234767CC26401FE" />
 		</ItemGroup>
-		<InstallAndroidDependencies 
-				Dependencies="@(AndroidDependency)"
-				JavaDependencies="@(JavaDependency)"
-				AndroidSdkPath="$(AndroidSdkDirectory)"
-				JavaSdkPath="$(JavaSdkDirectory)"
-				AcceptAndroidSDKLicenses="$(AcceptAndroidSDKLicenses)"
-				TimeoutInMinutes="$(AndroidDependencyInstallationTimeout)"
-				InstallJavaDependencies="$(AndroidInstallJavaDependencies)"
-				SkipSignCheck="$(_SkipSignCheck)"
-				OpenJdkPublicKeyUrl="$(_AndroidOpenJdkPublicKeyUrl)"
-				OpenJdkPublicKeySha256="$(_AndroidOpenJdkPublicKeySha256)"
-				AndroidCliDirectory="$(_AndroidCliDirectory)"
-				AndroidCliPackages="@(_AndroidCliPackage)"
-				AndroidCliPath="$(_AndroidCliPath)"
-			>
-		</InstallAndroidDependencies>
+		<ItemGroup>
+			<_AndroidCliHostPackage Include="@(_AndroidCliPackage)" Condition="'%(Identity)' == '$(_AndroidInstallerOS)_$(_AndroidCliArchitecture)'" />
+		</ItemGroup>
+		<Error Condition="'$(_AndroidCliPath)' == '' and '@(_AndroidCliHostPackage->Count())' != '1'"
+			Text="$([System.String]::Format('$(_AndroidUnsupportedPlatform)', '$(_AndroidInstallerOS)', '$(_AndroidInstallerArchitecture)'))" />
+		<PropertyGroup>
+			<_AndroidCliExecutable>$(_AndroidCliPath)</_AndroidCliExecutable>
+			<_AndroidCliExecutable Condition="'$(_AndroidCliExecutable)' == ''">$([MSBuild]::NormalizePath('$(_AndroidCliDirectory)', 'android-cli'))</_AndroidCliExecutable>
+			<_AndroidCliExecutable Condition="'$(_AndroidCliPath)' == '' and '$(_AndroidInstallerOS)' == 'windows'">$(_AndroidCliExecutable).exe</_AndroidCliExecutable>
+		</PropertyGroup>
+		<GetFileHash Files="$(_AndroidCliExecutable)" Condition="'$(_AndroidCliPath)' == '' and Exists('$(_AndroidCliExecutable)')">
+			<Output TaskParameter="Hash" PropertyName="_AndroidCliCachedHash" />
+		</GetFileHash>
+		<PropertyGroup>
+			<_AndroidCliExpectedHash>@(_AndroidCliHostPackage->'%(Sha256)')</_AndroidCliExpectedHash>
+			<_AndroidCliDownloadRequired Condition="'$(_AndroidCliPath)' == '' and '$(_AndroidCliCachedHash)' != '$(_AndroidCliExpectedHash)'">true</_AndroidCliDownloadRequired>
+			<_AndroidCliDownloadDirectory>$([MSBuild]::NormalizeDirectory('$(_AndroidCliDirectory)', '$([System.Guid]::NewGuid().ToString("N"))'))</_AndroidCliDownloadDirectory>
+		</PropertyGroup>
+		<Delete Files="$(_AndroidCliExecutable)" Condition="'$(_AndroidCliDownloadRequired)' == 'true'" />
+	</Target>
+
+	<Target Name="_AndroidDownloadCli" DependsOnTargets="_AndroidCliInputs"
+		Condition="'$(_AndroidCliDownloadRequired)' == 'true'"
+		Inputs="$(MSBuildThisFileFullPath)" Outputs="$(_AndroidCliExecutable)">
+		<DownloadFile SourceUrl="@(_AndroidCliHostPackage->'%(Url)')" DestinationFolder="$(_AndroidCliDownloadDirectory)" DestinationFileName="android-cli" />
+		<VerifyFileHash File="$(_AndroidCliDownloadDirectory)android-cli" Hash="$(_AndroidCliExpectedHash)" />
+		<Exec Condition="'$(_AndroidInstallerOS)' != 'windows'" Command="chmod 755 &quot;$(_AndroidCliDownloadDirectory)android-cli&quot;" Timeout="$(_AndroidInstallerTimeout)" />
+		<Move SourceFiles="$(_AndroidCliDownloadDirectory)android-cli" DestinationFiles="$(_AndroidCliExecutable)" />
+		<RemoveDir Directories="$(_AndroidCliDownloadDirectory)" />
+		<OnError ExecuteTargets="_AndroidCleanupCli" />
+	</Target>
+
+	<Target Name="_AndroidCleanupCli">
+		<RemoveDir Directories="$(_AndroidCliDownloadDirectory)" />
+	</Target>
+
+	<Target Name="_AndroidInstallSdk" DependsOnTargets="_AndroidDownloadCli"
+		Condition="'@(_AndroidInstallerMissing->Count())' != '0'">
+		<!-- Installation is explicitly requested; inspect actual package revisions instead of using a stamp. -->
+		<MakeDir Directories="$(_AndroidInstallerSdk)" />
+		<Exec Command="&quot;$(_AndroidCliExecutable)&quot; --no-metrics &quot;--sdk=$(_AndroidInstallerSdk)&quot; sdk install @(_AndroidInstallerMissing->'&quot;%(Argument)&quot;', ' ')"
+			Timeout="$(_AndroidInstallerTimeout)" IgnoreStandardErrorWarningFormat="true" />
+		<ItemGroup>
+			<_AndroidInstallerMissing>
+				<InstalledVersion />
+				<InstalledVersion Condition="Exists('%(PropertiesFile)')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('%(PropertiesFile)')), '(?m)^\s*Pkg\.Revision\s*=\s*([0-9]+(?:\.[0-9]+){0,3})').Groups[1].Value)</InstalledVersion>
+			</_AndroidInstallerMissing>
+			<_AndroidInstallerMissing>
+				<Installed>false</Installed>
+				<Installed Condition="Exists('%(PropertiesFile)') and '%(RequestedVersion)' == ''">true</Installed>
+				<Installed Condition="'%(InstalledVersion)' != '' and '%(RequestedVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('%(InstalledVersion)', '%(RequestedVersion)'))">true</Installed>
+			</_AndroidInstallerMissing>
+		</ItemGroup>
+		<Warning Condition="'%(_AndroidInstallerMissing.Installed)' != 'true'"
+			Text="$([System.String]::Format('$(_AndroidPackageNotInstalled)', '%(_AndroidInstallerMissing.Argument)', '$(_AndroidInstallerSdk)'))" />
+	</Target>
+
+	<Target Name="_AndroidJdkInputs" Condition="'@(_AndroidInstallerJdk->Count())' != '0'">
+		<PropertyGroup>
+			<_AndroidJdkVersion>@(_AndroidInstallerJdk->'%(Version)')</_AndroidJdkVersion>
+			<_AndroidJdkMajor>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidJdkVersion)', '^\s*[0-9]+').Value.Trim())</_AndroidJdkMajor>
+		</PropertyGroup>
+		<Error Condition="'$(_AndroidJdkMajor)' == ''" Text="$([System.String]::Format('$(_AndroidInvalidJdkVersion)', '$(_AndroidJdkVersion)'))" />
+		<PropertyGroup>
+			<_AndroidInstallerJdkPath>$(JavaSdkDirectory)</_AndroidInstallerJdkPath>
+			<_AndroidInstallerJdkPath Condition="'$(_AndroidInstallerJdkPath)' == ''">$(JAVA_HOME)</_AndroidInstallerJdkPath>
+			<_AndroidInstallerJdkPath Condition="'$(_AndroidInstallerJdkPath)' == ''">$(JDK_HOME)</_AndroidInstallerJdkPath>
+			<_AndroidInstallerJdkPath Condition="'$(_AndroidInstallerJdkPath)' == '' and '$(_AndroidInstallerOS)' == 'windows'">$(LocalAppData)/Android/jdk-$(_AndroidJdkMajor)</_AndroidInstallerJdkPath>
+			<_AndroidInstallerJdkPath Condition="'$(_AndroidInstallerJdkPath)' == '' and '$(_AndroidInstallerOS)' == 'darwin'">$(_AndroidInstallerHome)/Library/Android/microsoft-$(_AndroidJdkMajor).jdk</_AndroidInstallerJdkPath>
+		</PropertyGroup>
+		<Error Condition="'$(_AndroidInstallerJdkPath)' == ''" Text="$([System.String]::Format('$(_AndroidInvalidJdkDirectory)', '$(_AndroidInstallerJdkPath)'))" />
+		<PropertyGroup>
+			<_AndroidInstallerJdkPath>$([MSBuild]::NormalizePath('$(_AndroidInstallerJdkPath)'))</_AndroidInstallerJdkPath>
+			<_AndroidJdkPathRoot>$([System.IO.Path]::GetPathRoot('$(_AndroidInstallerJdkPath)'))</_AndroidJdkPathRoot>
+			<_AndroidInstallerJdkPath Condition="'$(_AndroidInstallerJdkPath)' != '$(_AndroidJdkPathRoot)'">$([System.Text.RegularExpressions.Regex]::Replace('$(_AndroidInstallerJdkPath)', '[\\/]+$', ''))</_AndroidInstallerJdkPath>
+			<_AndroidJdkDirectoryFiles Condition="Exists('$(_AndroidInstallerJdkPath)')">$([System.IO.Directory]::GetFiles('$(_AndroidInstallerJdkPath)').Length)</_AndroidJdkDirectoryFiles>
+			<_AndroidJdkDirectoryChildren Condition="Exists('$(_AndroidInstallerJdkPath)')">$([System.IO.Directory]::GetDirectories('$(_AndroidInstallerJdkPath)').Length)</_AndroidJdkDirectoryChildren>
+			<_AndroidInstalledJdkMajor Condition="Exists('$(_AndroidInstallerJdkPath)/release')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(_AndroidInstallerJdkPath)/release')), '(?m)^JAVA_VERSION=["\x27]?([0-9]+)').Groups[1].Value)</_AndroidInstalledJdkMajor>
+			<_AndroidJdkInstallRequired Condition="'$(_AndroidInstalledJdkMajor)' == ''">true</_AndroidJdkInstallRequired>
+			<_AndroidJdkInstallRequired Condition="'$(_AndroidInstalledJdkMajor)' != '' and '$(_AndroidInstalledJdkMajor)' &lt; '$(_AndroidJdkMajor)'">true</_AndroidJdkInstallRequired>
+			<_AndroidJdkOS>$(_AndroidInstallerOS)</_AndroidJdkOS>
+			<_AndroidJdkOS Condition="'$(_AndroidInstallerOS)' == 'darwin'">macOS</_AndroidJdkOS>
+			<_AndroidJdkArchitecture Condition="'$(_AndroidInstallerArchitecture)' == 'X64'">x64</_AndroidJdkArchitecture>
+			<_AndroidJdkArchitecture Condition="'$(_AndroidInstallerArchitecture)' == 'Arm64'">aarch64</_AndroidJdkArchitecture>
+			<_AndroidJdkExtension>tar.gz</_AndroidJdkExtension>
+			<_AndroidJdkExtension Condition="'$(_AndroidInstallerOS)' == 'windows'">zip</_AndroidJdkExtension>
+			<_AndroidJdkUrl Condition="'$(_AndroidJdkUrl)' == ''">https://aka.ms/download-jdk/microsoft-jdk-$(_AndroidJdkVersion)-$(_AndroidJdkOS)-$(_AndroidJdkArchitecture).$(_AndroidJdkExtension)</_AndroidJdkUrl>
+			<_AndroidOpenJdkPublicKeyUrl Condition="'$(_AndroidOpenJdkPublicKeyUrl)' == ''">https://download.visualstudio.microsoft.com/download/pr/b90071e2-e0cf-4411-98be-dbeb09d67bf0/8622862bcd54206e158c5abca0582c9b/464279_464280_aoc_20210208.asc</_AndroidOpenJdkPublicKeyUrl>
+			<_AndroidOpenJdkPublicKeySha256 Condition="'$(_AndroidOpenJdkPublicKeySha256)' == ''">055050CF6D100B4BDD040F92F81A313C09D2D62EC172ADF889C21DABEE992889</_AndroidOpenJdkPublicKeySha256>
+			<_AndroidJdkStagingDirectory>$(_AndroidInstallerJdkPath).$([System.Guid]::NewGuid())</_AndroidJdkStagingDirectory>
+		</PropertyGroup>
+	</Target>
+
+	<Target Name="_AndroidInstallJdk" DependsOnTargets="_AndroidJdkInputs"
+		Condition="'$(_AndroidJdkInstallRequired)' == 'true'">
+		<Error Condition="'$(_AndroidJdkArchitecture)' == '' or '$(_AndroidJdkOS)' == ''"
+			Text="$([System.String]::Format('$(_AndroidUnsupportedPlatform)', '$(_AndroidInstallerOS)', '$(_AndroidInstallerArchitecture)'))" />
+		<!-- Refuse to recursively replace a non-JDK directory containing unrelated files. -->
+		<Error Condition="'$(_AndroidInstallerJdkPath)' == '$(_AndroidJdkPathRoot)' or '$(_AndroidInstallerJdkPath)' == '$(_AndroidInstallerHome)'"
+			Text="$([System.String]::Format('$(_AndroidInvalidJdkDirectory)', '$(_AndroidInstallerJdkPath)'))" />
+		<Error Condition="Exists('$(_AndroidInstallerJdkPath)') and !Exists('$(_AndroidInstallerJdkPath)/release') and ('$(_AndroidJdkDirectoryFiles)' != '0' or '$(_AndroidJdkDirectoryChildren)' != '0')"
+			Text="$([System.String]::Format('$(_AndroidInvalidJdkDirectory)', '$(_AndroidInstallerJdkPath)'))" />
+		<DownloadFile SourceUrl="$(_AndroidJdkUrl)" DestinationFolder="$(_AndroidJdkStagingDirectory)" DestinationFileName="jdk.$(_AndroidJdkExtension)" />
+		<Message Condition="'$(_SkipSignCheck)' == 'true'" Importance="High" Text="$([System.String]::Format('$(_AndroidJdkSignatureSkipped)', '$(_AndroidJdkUrl)'))" />
+		<CallTarget Targets="_AndroidVerifyJdk" />
+		<MakeDir Directories="$(_AndroidJdkStagingDirectory)/unpacked" />
+		<Unzip Condition="'$(_AndroidInstallerOS)' == 'windows'" SourceFiles="$(_AndroidJdkStagingDirectory)/jdk.zip" DestinationFolder="$(_AndroidJdkStagingDirectory)/unpacked" />
+		<Exec Condition="'$(_AndroidInstallerOS)' != 'windows'"
+			Command="tar -xzf &quot;$(_AndroidJdkStagingDirectory)/jdk.tar.gz&quot; -C &quot;$(_AndroidJdkStagingDirectory)/unpacked&quot;"
+			Timeout="$(_AndroidInstallerTimeout)" />
+		<ItemGroup>
+			<_AndroidExtractedJdk Include="$(_AndroidJdkStagingDirectory)/unpacked/*/release" Condition="'$(_AndroidInstallerOS)' != 'darwin'" />
+			<_AndroidExtractedJdk Include="$(_AndroidJdkStagingDirectory)/unpacked/*/Contents/Home/release" Condition="'$(_AndroidInstallerOS)' == 'darwin'" />
+		</ItemGroup>
+		<Error Condition="'@(_AndroidExtractedJdk->Count())' != '1'" Text="$([System.String]::Format('$(_AndroidInvalidJdkDirectory)', '$(_AndroidJdkStagingDirectory)/unpacked'))" />
+		<PropertyGroup>
+			<_AndroidExtractedJdkDirectory>@(_AndroidExtractedJdk->'%(RootDir)%(Directory)')</_AndroidExtractedJdkDirectory>
+			<_AndroidExtractedJdkDirectory>$([System.Text.RegularExpressions.Regex]::Replace('$(_AndroidExtractedJdkDirectory)', '[\\/]+$', ''))</_AndroidExtractedJdkDirectory>
+		</PropertyGroup>
+		<RemoveDir Directories="$(_AndroidInstallerJdkPath)" />
+		<!-- Move only supports files, so use the host's directory move command. -->
+		<Exec Condition="'$(_AndroidInstallerOS)' == 'windows'" Command="move &quot;$(_AndroidExtractedJdkDirectory)&quot; &quot;$(_AndroidInstallerJdkPath)&quot;" Timeout="$(_AndroidInstallerTimeout)" />
+		<Exec Condition="'$(_AndroidInstallerOS)' != 'windows'" Command="mv &quot;$(_AndroidExtractedJdkDirectory)&quot; &quot;$(_AndroidInstallerJdkPath)&quot;" Timeout="$(_AndroidInstallerTimeout)" />
+		<RemoveDir Directories="$(_AndroidJdkStagingDirectory)" />
+		<OnError ExecuteTargets="_AndroidCleanupJdk" />
+	</Target>
+
+	<Target Name="_AndroidVerifyJdk" Condition="'$(_SkipSignCheck)' != 'true'">
+		<DownloadFile SourceUrl="$(_AndroidJdkUrl).sig" DestinationFolder="$(_AndroidJdkStagingDirectory)" DestinationFileName="jdk.sig" />
+		<DownloadFile SourceUrl="$(_AndroidOpenJdkPublicKeyUrl)" DestinationFolder="$(_AndroidJdkStagingDirectory)" DestinationFileName="key.asc" />
+		<MakeDir Directories="$(_AndroidJdkStagingDirectory)/gnupg" />
+		<Exec Condition="'$(_AndroidInstallerOS)' != 'windows'" Command="chmod 700 &quot;$(_AndroidJdkStagingDirectory)/gnupg&quot;" />
+		<Exec Command="gpg --no-options --batch --homedir &quot;$(_AndroidJdkStagingDirectory)/gnupg&quot; --output &quot;$(_AndroidJdkStagingDirectory)/key.gpg&quot; --dearmor &quot;$(_AndroidJdkStagingDirectory)/key.asc&quot;"
+			Timeout="$(_AndroidInstallerTimeout)" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true">
+			<Output TaskParameter="ExitCode" PropertyName="_AndroidGpgExitCode" />
+		</Exec>
+		<Error Code="XA5305" Condition="'$(_AndroidGpgExitCode)' != '0'"
+			Text="$([System.String]::Format('$(_AndroidJdkSignatureFailed)', '$(_AndroidJdkUrl)', 'GnuPG dearmor exit code: $(_AndroidGpgExitCode)'))" />
+		<GetFileHash Files="$(_AndroidJdkStagingDirectory)/key.gpg">
+			<Output TaskParameter="Hash" PropertyName="_AndroidJdkActualKeyHash" />
+		</GetFileHash>
+		<Error Code="XA5305" Condition="'$(_AndroidJdkActualKeyHash)' != '$(_AndroidOpenJdkPublicKeySha256)'"
+			Text="$([System.String]::Format('$(_AndroidJdkSignatureFailed)', '$(_AndroidJdkUrl)', 'Public key SHA-256 mismatch.'))" />
+		<Exec Command="gpg --no-options --batch --homedir &quot;$(_AndroidJdkStagingDirectory)/gnupg&quot; --no-default-keyring --keyring &quot;$(_AndroidJdkStagingDirectory)/key.gpg&quot; --no-auto-key-retrieve --verify &quot;$(_AndroidJdkStagingDirectory)/jdk.sig&quot; &quot;$(_AndroidJdkStagingDirectory)/jdk.$(_AndroidJdkExtension)&quot;"
+			Timeout="$(_AndroidInstallerTimeout)" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true">
+			<Output TaskParameter="ExitCode" PropertyName="_AndroidGpgExitCode" />
+		</Exec>
+		<Error Code="XA5305" Condition="'$(_AndroidGpgExitCode)' != '0'"
+			Text="$([System.String]::Format('$(_AndroidJdkSignatureFailed)', '$(_AndroidJdkUrl)', 'GnuPG verify exit code: $(_AndroidGpgExitCode)'))" />
+	</Target>
+
+	<Target Name="_AndroidCleanupJdk">
+		<RemoveDir Directories="$(_AndroidJdkStagingDirectory)" />
 	</Target>
 </Project>
