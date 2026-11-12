@@ -1132,6 +1132,59 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void DotNetLibraryAarRejectsPathsOutsideArchive ()
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo.txt") {
+				TextContent = () => "foo",
+				MetadataValues = "Link=Assets/../../escape.txt",
+			});
+
+			using var builder = CreateDllBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("error XA4332", builder.LastBuildOutput, "XA4332 should have been raised");
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			FileAssert.DoesNotExist (Path.GetFullPath (Path.Combine (intermediate, "aar", "assets", "..", "..", "escape.txt")));
+			FileAssert.DoesNotExist (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar"));
+		}
+
+		[Test]
+		public void DotNetLibraryAarNativeLibraryCasingAndClean ()
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("x86_64\\libfoo.so") {
+				BinaryContent = () => new byte [] { 1 },
+			});
+
+			using var builder = CreateDllBuilder ();
+			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			Directory.CreateDirectory (projectDirectory);
+			bool caseSensitive = !Directory.Exists (projectDirectory.ToUpperInvariant ());
+			if (caseSensitive) {
+				proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("x86_64\\libFoo.so") {
+					BinaryContent = () => new byte [] { 2 },
+				});
+			}
+
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			var aarPath = Path.Combine (projectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+			using (var aar = ZipHelper.OpenZip (aarPath)) {
+				aar.AssertContainsEntry (aarPath, "jni/x86_64/libfoo.so");
+				if (caseSensitive) {
+					aar.AssertContainsEntry (aarPath, "jni/x86_64/libFoo.so");
+				}
+				aar.AssertDoesNotContainEntry (aarPath, "proguard.txt");
+			}
+
+			var stagedFile = Path.Combine (projectDirectory, proj.IntermediateOutputPath, "aar", "jni", "x86_64", "libfoo.so");
+			FileAssert.Exists (stagedFile);
+			Assert.IsTrue (builder.Clean (proj), "Clean should have succeeded.");
+			FileAssert.DoesNotExist (stagedFile);
+			FileAssert.DoesNotExist (aarPath);
+		}
+
 		/// <summary>
 		/// Regression test for https://github.com/dotnet/android/issues/10858
 		///

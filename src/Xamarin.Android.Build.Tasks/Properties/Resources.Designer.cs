@@ -1616,6 +1616,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The .aar archive path &apos;{0}&apos; for &apos;{1}&apos; resolves outside of the archive..
+        /// </summary>
+        public static string XA4332 {
+            get {
+                return ResourceManager.GetString("XA4332", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {

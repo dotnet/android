@@ -97,24 +97,26 @@ projects.
       <_AarAbiCandidate Include="@(EmbeddedNativeLibrary)"
           Name="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName('%(EmbeddedNativeLibrary.FullPath)'))))))" />
       <_AarAbiCandidate>
-        <Name>$([System.String]::Copy('%(Name)').ToLowerInvariant().Replace('interpreter-', ''))</Name>
+        <Name>$([System.String]::Copy('%(_AarAbiCandidate.Name)').ToLowerInvariant().Replace('interpreter-', ''))</Name>
       </_AarAbiCandidate>
       <_AarAbiCandidate>
-        <Rid Condition=" $([System.String]::Copy('%(Name)').StartsWith('android')) ">%(Name)</Rid>
+        <Rid Condition=" $([System.String]::Copy('%(_AarAbiCandidate.Name)').StartsWith('android')) ">%(_AarAbiCandidate.Name)</Rid>
       </_AarAbiCandidate>
       <_AarAbiCandidate>
-        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'arm64-v8a'   or $([System.String]::Copy('%(Rid)').EndsWith('-arm64'))) ">arm64-v8a</Abi>
-        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'armeabi-v7a' or $([System.String]::Copy('%(Rid)').EndsWith('-arm')))   ">armeabi-v7a</Abi>
-        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'x86'         or $([System.String]::Copy('%(Rid)').EndsWith('-x86')))   ">x86</Abi>
-        <Abi Condition=" '%(Abi)' == '' and ('%(Name)' == 'x86_64'      or $([System.String]::Copy('%(Rid)').EndsWith('-x64')))   ">x86_64</Abi>
+        <Abi Condition=" '%(_AarAbiCandidate.Abi)' == '' and ('%(_AarAbiCandidate.Name)' == 'arm64-v8a'   or $([System.String]::Copy('%(_AarAbiCandidate.Rid)').EndsWith('-arm64'))) ">arm64-v8a</Abi>
+        <Abi Condition=" '%(_AarAbiCandidate.Abi)' == '' and ('%(_AarAbiCandidate.Name)' == 'armeabi-v7a' or $([System.String]::Copy('%(_AarAbiCandidate.Rid)').EndsWith('-arm')))   ">armeabi-v7a</Abi>
+        <Abi Condition=" '%(_AarAbiCandidate.Abi)' == '' and ('%(_AarAbiCandidate.Name)' == 'x86'         or $([System.String]::Copy('%(_AarAbiCandidate.Rid)').EndsWith('-x86')))   ">x86</Abi>
+        <Abi Condition=" '%(_AarAbiCandidate.Abi)' == '' and ('%(_AarAbiCandidate.Name)' == 'x86_64'      or $([System.String]::Copy('%(_AarAbiCandidate.Rid)').EndsWith('-x64')))   ">x86_64</Abi>
       </_AarAbiCandidate>
       <!-- The first candidate with an ABI wins. -->
       <_AarAbiResolved Include="@(_AarAbiCandidate)" Condition=" '%(_AarAbiCandidate.Abi)' != '' " />
-      <_AarNativeLibrary Include="@(_AarAbiResolved->Distinct())" RemoveMetadata="Name;Rid" />
+      <_AarNativeLibrary Include="@(_AarAbiResolved->DistinctWithCase())" RemoveMetadata="Name;Rid" />
       <_AarAbiUnresolved Include="@(EmbeddedNativeLibrary)" Exclude="@(_AarNativeLibrary)" />
     </ItemGroup>
+    <!-- ErrorAndContinue reports every invalid item instead of stopping at the first batch. -->
     <AndroidError
         Condition=" '@(_AarAbiUnresolved)' != '' "
+        ContinueOnError="ErrorAndContinue"
         Code="XA4301"
         ResourceName="XA4301_ABI"
         FormatArguments="%(_AarAbiUnresolved.Identity)"
@@ -129,19 +131,30 @@ projects.
       <_AndroidAarAssetPrefix>$(_AndroidAarAssetDirectory)/</_AndroidAarAssetPrefix>
     </PropertyGroup>
     <ItemGroup>
-      <_AndroidAarAsset Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) ">
-        <_AndroidAssetPath>$([MSBuild]::ValueOrDefault('%(AndroidAsset.Link)', '%(AndroidAsset.Identity)').Replace('\', '/'))</_AndroidAssetPath>
-        <_AndroidAssetSearchPath>/%(_AndroidAssetPath)</_AndroidAssetSearchPath>
-        <_AndroidAssetPrefixIndex>$([System.String]::Copy('%(_AndroidAssetSearchPath)').IndexOf('$(_AndroidAarAssetPrefix)', System.StringComparison.OrdinalIgnoreCase))</_AndroidAssetPrefixIndex>
-        <_AndroidAssetRelativeStart>$([MSBuild]::Add(%(_AndroidAssetPrefixIndex), $(_AndroidAarAssetPrefix.Length)))</_AndroidAssetRelativeStart>
-        <_AndroidAssetRelativePath>%(_AndroidAssetPath)</_AndroidAssetRelativePath>
+      <_AndroidAarAsset Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) " />
+      <_AndroidAarAsset>
+        <_AndroidAssetPath>$([MSBuild]::ValueOrDefault('%(_AndroidAarAsset.Link)', '%(_AndroidAarAsset.Identity)').Replace('\', '/'))</_AndroidAssetPath>
+      </_AndroidAarAsset>
+      <_AndroidAarAsset>
+        <_AndroidAssetSearchPath>/%(_AndroidAarAsset._AndroidAssetPath)</_AndroidAssetSearchPath>
+      </_AndroidAarAsset>
+      <_AndroidAarAsset>
+        <_AndroidAssetPrefixIndex>$([System.String]::Copy('%(_AndroidAarAsset._AndroidAssetSearchPath)').IndexOf('$(_AndroidAarAssetPrefix)', System.StringComparison.OrdinalIgnoreCase))</_AndroidAssetPrefixIndex>
+      </_AndroidAarAsset>
+      <_AndroidAarAsset>
+        <_AndroidAssetRelativeStart>$([MSBuild]::Add(%(_AndroidAarAsset._AndroidAssetPrefixIndex), $(_AndroidAarAssetPrefix.Length)))</_AndroidAssetRelativeStart>
+      </_AndroidAarAsset>
+      <_AndroidAarAsset>
+        <_AndroidAssetRelativePath>%(_AndroidAarAsset._AndroidAssetPath)</_AndroidAssetRelativePath>
         <_AndroidAssetRelativePath
-            Condition=" '%(_AndroidAssetPrefixIndex)' &gt;= '0' "
-            >$([System.String]::Copy('%(_AndroidAssetSearchPath)').Substring(%(_AndroidAssetRelativeStart)).TrimStart('/'))</_AndroidAssetRelativePath>
+            Condition=" '%(_AndroidAarAsset._AndroidAssetPrefixIndex)' &gt;= '0' "
+            >$([System.String]::Copy('%(_AndroidAarAsset._AndroidAssetSearchPath)').Substring(%(_AndroidAarAsset._AndroidAssetRelativeStart)).TrimStart('/'))</_AndroidAssetRelativePath>
         <_AndroidAssetRelativePath
-            Condition=" '%(_AndroidAssetPrefixIndex)' == '-1' and $([System.String]::Copy('%(_AndroidAssetSearchPath)').EndsWith('$(_AndroidAarAssetDirectory)', System.StringComparison.OrdinalIgnoreCase)) "
+            Condition=" '%(_AndroidAarAsset._AndroidAssetPrefixIndex)' == '-1' and $([System.String]::Copy('%(_AndroidAarAsset._AndroidAssetSearchPath)').EndsWith('$(_AndroidAarAssetDirectory)', System.StringComparison.OrdinalIgnoreCase)) "
             ></_AndroidAssetRelativePath>
-        <ArchivePath>assets/%(_AndroidAssetRelativePath)</ArchivePath>
+      </_AndroidAarAsset>
+      <_AndroidAarAsset>
+        <ArchivePath>assets/%(_AndroidAarAsset._AndroidAssetRelativePath)</ArchivePath>
       </_AndroidAarAsset>
       <_AarFile Include="@(_AndroidAarAsset)" />
       <_AarResource Include="@(_AndroidResourceDest)" Condition=" !$([System.IO.Directory]::Exists('%(_AndroidResourceDest.FullPath)')) "
@@ -165,28 +178,52 @@ projects.
     <ItemGroup Condition=" '$(_AarManifestPackage)' != '' ">
       <_AarFile Include="$(AndroidManifest)" ArchivePath="AndroidManifest.xml" />
     </ItemGroup>
-    <RemoveDirFixed Directories="$(_AarStagingDirectory)" />
-    <Copy SourceFiles="@(_AarFile)" DestinationFiles="@(_AarFile->'$(_AarStagingDirectory)%(ArchivePath)')" />
+    <!-- Reject archive paths such as 'assets/../../file' or a custom %(Abi) of '..' that would escape the staging directory. -->
+    <PropertyGroup>
+      <_AarStagingFullPath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(_AarStagingDirectory)'))</_AarStagingFullPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AarFile StagedPath="$([MSBuild]::NormalizePath('$(_AarStagingFullPath)', '%(_AarFile.ArchivePath)'))" />
+      <_AarInvalidFile Include="@(_AarFile)" Condition=" !$([System.String]::Copy('%(_AarFile.StagedPath)').StartsWith('$(_AarStagingFullPath)', System.StringComparison.Ordinal)) " />
+      <_AarFile Remove="@(_AarInvalidFile)" MatchOnMetadata="StagedPath" />
+    </ItemGroup>
+    <AndroidError
+        Condition=" '@(_AarInvalidFile)' != '' "
+        ContinueOnError="ErrorAndContinue"
+        Code="XA4332"
+        ResourceName="XA4332"
+        FormatArguments="%(_AarInvalidFile.ArchivePath);%(_AarInvalidFile.Identity)"
+        File="%(_AarInvalidFile.Identity)"
+    />
+    <PropertyGroup>
+      <_AarHasErrors Condition=" '@(_AarAbiUnresolved)' != '' or '@(_AarInvalidFile)' != '' ">true</_AarHasErrors>
+    </PropertyGroup>
+    <RemoveDirFixed Condition=" '$(_AarHasErrors)' != 'true' " Directories="$(_AarStagingDirectory)" />
+    <Copy Condition=" '$(_AarHasErrors)' != 'true' " SourceFiles="@(_AarFile)" DestinationFiles="@(_AarFile->'%(StagedPath)')" />
     <WriteLinesToFile
-        Condition=" '@(_AarResource)' != '' "
+        Condition=" '$(_AarHasErrors)' != 'true' and '@(_AarResource)' != '' "
         File="$(_AarStagingDirectory).net/__res_name_case_map.txt"
         Lines="@(_AarResource->'%(LogicalName)%3B%(ResourcePath)')"
     />
-    <ReadLinesFromFile File="%(ProguardConfiguration.Identity)">
+    <ReadLinesFromFile Condition=" '$(_AarHasErrors)' != 'true' and '@(ProguardConfiguration)' != '' " File="%(ProguardConfiguration.Identity)">
       <Output TaskParameter="Lines" ItemName="_AarProguardLine" />
     </ReadLinesFromFile>
     <WriteLinesToFile
-        Condition=" '@(ProguardConfiguration)' != '' "
+        Condition=" '$(_AarHasErrors)' != 'true' and '@(ProguardConfiguration)' != '' "
         File="$(_AarStagingDirectory)proguard.txt"
         Lines="@(_AarProguardLine)"
     />
-    <MakeDir Directories="$(_AarStagingDirectory);$(OutputPath)" />
+    <MakeDir Condition=" '$(_AarHasErrors)' != 'true' " Directories="$(_AarStagingDirectory);$(OutputPath)" />
     <ZipDirectory
+        Condition=" '$(_AarHasErrors)' != 'true' "
         SourceDirectory="$(_AarStagingDirectory)"
         DestinationFile="$(_AarOutputPath)"
         Overwrite="true"
     />
-    <ItemGroup>
+    <ItemGroup Condition=" '$(_AarHasErrors)' != 'true' ">
+      <FileWrites Include="@(_AarFile->'%(StagedPath)')" />
+      <FileWrites Include="$(_AarStagingDirectory).net/__res_name_case_map.txt" Condition=" '@(_AarResource)' != '' " />
+      <FileWrites Include="$(_AarStagingDirectory)proguard.txt" Condition=" '@(ProguardConfiguration)' != '' " />
       <FileWrites Include="$(_AarOutputPath)" />
     </ItemGroup>
   </Target>
@@ -225,6 +262,9 @@ projects.
 
   <Target Name="_CleanAarCache">
     <Delete Files="$(_AarCacheFile)" />
+    <!-- _CreateAar runs after IncrementalClean, so its @(FileWrites) are not recorded; remove its outputs explicitly. -->
+    <RemoveDirFixed Directories="$(_AarStagingDirectory)" Condition=" Exists('$(_AarStagingDirectory)') " />
+    <Delete Files="$(_AarOutputPath)" />
   </Target>
 
 </Project>
