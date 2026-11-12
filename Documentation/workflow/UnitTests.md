@@ -9,6 +9,7 @@ Many of the BCL tests for Classic Xamarin.Android rely on an xUnit test runner.
 
  1. [NUnit](https://github.com/nunit/nunit)
  2. [xUnit](https://github.com/xunit/xunit)
+ 3. [MSTest](https://github.com/microsoft/testfx)
 
 # Project Test Types
 
@@ -26,7 +27,7 @@ There are five types of unit tests within this repo:
     MSBuild Integration Tests, these exercise an entire MSBuild "pipeline"
     *and also* install and run the resulting app on-device.
 
- 4. [On-Device Unit Tests](#device-unit-tests): A set of NUnit unit tests which
+ 4. [On-Device Unit Tests](#device-unit-tests): A set of runtime unit tests which
     run on-device.
 
  5. [Other Tests](#other-tests): Tests which don't easily fit into the previous
@@ -391,8 +392,8 @@ public void MyAppShouldRunAndRespondToClick ()
 ## On-Device Unit Tests
 
 There are a category of tests which run on the device itself, these test the
-runtime behaviour. The main runtime tests use stock `NUnit` through Microsoft
-Testing Platform (MTP). We build and install them within the repo, then run
+runtime behaviour. The main runtime tests use MSTest through Microsoft Testing
+Platform (MTP). We build and install them within the repo, then run
 `dotnet test` from the test project directory.
 
 These tests are generally found in:
@@ -416,11 +417,23 @@ For example:
 
 Pass the same `-c` and `-p:` properties to both commands. After running the
 tests, `.trx` result files will be created under `bin/TestDebug/TestResults`.
+Run from the project directory: its `global.json` selects MTP.
+
+To run a subset, pass `-p:IncludeCategories=<Category>` to **both** the install
+and test commands; the value is compiled into the app's runtime configuration.
+`--filter` is not supported. When invoking the instrumentation directly,
+`-e include <Category>`, `-e exclude <Category>` and `-e noexclusions true` are
+also accepted.
+
+The instrumentation runner lives in `tests/TestRunner.MSTest.Android`.
+`MSTest.SourceGeneration` registers the tests at build time, so test assemblies
+don't need to be rooted for test discovery. Use `TrimmerRoots.xml` only for code
+the tests reach via reflection, Java, or native code.
 
 The following is an example unit test.
 
 ```csharp
-[Test]
+[TestMethod]
 public void ApplicationContextIsApp ()
 {
     Assert.IsTrue (Application.Context is App);

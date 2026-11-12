@@ -5,15 +5,15 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("InvokerActivation")]
+	[TestClass]
+	[TestCategory ("InvokerActivation")]
 	public class InvokerActivationTests
 	{
-		[Test]
+		[TestMethod]
 		public void XamarinAndroidInterfaceInvoker_ActivatesOnceAndPreservesIdentity ()
 		{
 			IXamarinListInvoker.ConstructorInvocations = 0;
@@ -33,7 +33,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaInteropInterfaceInvoker_ActivatesOnceAndPreservesIdentity ()
 		{
 			JavaInteropCollectionInvoker.ConstructorInvocations = 0;
@@ -53,7 +53,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CompatibleInterfaceThenConcrete_PreservesIdentity ()
 		{
 			var handle = CreateArrayListHandle ();
@@ -70,7 +70,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InheritedJavaInteropInterface_UsesExplicitInvoker ()
 		{
 			InheritedJavaInteropListInvoker.ConstructorInvocations = 0;
@@ -80,7 +80,7 @@ namespace Java.InteropTests
 				var peer = GetValue<IInheritedJavaInteropList> (handle);
 
 				Assert.IsNotNull (peer);
-				Assert.IsInstanceOf<IJavaInteropCollection> (peer);
+				Assert.IsInstanceOfType<IJavaInteropCollection> (peer);
 				Assert.AreEqual (typeof (InheritedJavaInteropListInvoker), peer.GetType ());
 				Assert.AreEqual (1, InheritedJavaInteropListInvoker.ConstructorInvocations);
 				peer.Dispose ();
@@ -89,7 +89,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void AbstractJavaInteropType_UsesExplicitInvoker ()
 		{
 			JavaInteropAbstractListInvoker.ConstructorInvocations = 0;

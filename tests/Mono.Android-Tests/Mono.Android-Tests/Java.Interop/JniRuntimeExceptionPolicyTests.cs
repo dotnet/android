@@ -6,15 +6,16 @@ using System.Runtime.InteropServices;
 using Android.Runtime;
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests;
 
 // JNI transport coverage without an attached debugger, not debugger stop/Continue behavior.
-[TestFixture]
-[NonParallelizable]
-[Category ("JniRuntimeExceptionPolicy")]
+[TestClass]
+[DoNotParallelize]
+[TestCategory ("JniRuntimeExceptionPolicy")]
 public class JniRuntimeExceptionPolicyTests {
+	public TestContext? TestContext { get; set; }
 	static Exception? callbackException;
 	static int callbackInvocations;
 
@@ -31,23 +32,25 @@ public class JniRuntimeExceptionPolicyTests {
 		Callback (env, klass);
 	}
 
-	[SetUp]
+	[TestInitialize]
 	public void ResetCallbacks ()
 	{
 		callbackException = null;
 		callbackInvocations = 0;
-		TestContext.WriteLine ($"JNI runtime: {JniEnvironment.Runtime.GetType ().FullName}");
+		var context = TestContext ?? throw new InvalidOperationException ("The runner did not initialize TestContext.");
+		context.WriteLine ($"JNI runtime: {JniEnvironment.Runtime.GetType ().FullName}");
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void ClearCallbacks ()
 	{
 		JniEnvironment.Exceptions.ExceptionClear ();
 		callbackException = null;
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void FailedFunctionReturnsDefault (bool handled)
 	{
 		var expected = new InvalidOperationException ("JNI function exception");
@@ -72,10 +75,11 @@ public class JniRuntimeExceptionPolicyTests {
 		}
 	}
 
-	[TestCase (false, false)]
-	[TestCase (false, true)]
-	[TestCase (true, false)]
-	[TestCase (true, true)]
+	[TestMethod]
+	[DataRow (false, false)]
+	[DataRow (false, true)]
+	[DataRow (true, false)]
+	[DataRow (true, true)]
 	public void JavaCatchAndFinallyRespectPolicy (bool action, bool handled)
 	{
 		using var type = RegisterCallbacks ();
@@ -96,8 +100,9 @@ public class JniRuntimeExceptionPolicyTests {
 		}
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void JavaRethrowPreservesIdentityAndRunsFinally (bool action)
 	{
 		using var type = RegisterCallbacks ();
@@ -106,7 +111,7 @@ public class JniRuntimeExceptionPolicyTests {
 		var notification = new PolicyNotification (expected, handled: false);
 		AndroidEnvironment.UnhandledExceptionRaiser += notification.OnException;
 		try {
-			var actual = Assert.Throws<InvalidOperationException> (() => InvokeJava (type, action, swallow: false));
+			var actual = Assert.ThrowsExactly<InvalidOperationException> (() => InvokeJava (type, action, swallow: false));
 			Assert.AreSame (expected, actual);
 			Assert.AreEqual (1, GetCounter (type, "caught"));
 			Assert.AreEqual (1, GetCounter (type, "finished"));
@@ -118,8 +123,9 @@ public class JniRuntimeExceptionPolicyTests {
 		}
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void SuccessfulCallbacksPreserveReturnValue (bool action)
 	{
 		using var type = RegisterCallbacks ();
@@ -144,7 +150,7 @@ public class JniRuntimeExceptionPolicyTests {
 		Assert.AreEqual (1, notification.Count);
 		Assert.IsTrue (notification.SameException);
 		Assert.IsFalse (notification.PendingException);
-		Assert.Greater (notification.JavaTime, 0, "Java calls must remain usable during policy notification.");
+		Assert.IsGreaterThan (0, notification.JavaTime, "Java calls must remain usable during policy notification.");
 	}
 
 	sealed class PolicyNotification (Exception expected, bool handled) {

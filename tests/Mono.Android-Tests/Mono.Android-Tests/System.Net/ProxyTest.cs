@@ -2,17 +2,17 @@ using System;
 using System.IO;
 using System.Net;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.NetTests;
 
 namespace System.NetTests {
 
-	[TestFixture, Category ("InetAccess")]
+	[TestClass, TestCategory ("InetAccess")]
 	public class ProxyTest {
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=14968
-		[Test]
+		[TestMethod]
 		public void QuoteInvalidQuoteUrlsShouldWork ()
 		{
 			using var server = LocalHttpServer.Start ();

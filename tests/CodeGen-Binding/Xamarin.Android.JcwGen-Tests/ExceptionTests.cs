@@ -1,6 +1,6 @@
 using System;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.Graphics;
 using Android.Runtime;
@@ -9,10 +9,10 @@ using Com.Xamarin.Android;
 
 namespace Xamarin.Android.JcwGenTests {
 
-	[TestFixture]
+	[TestClass]
 	public class ExceptionTests {
 
-		[Test]
+		[TestMethod]
 		public void ManagedJavaManaged_FinallyExecuted ()
 		{
 			using (var t = new Bxc7634 ()) {
@@ -30,7 +30,7 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ManagedJavaManaged_JavaCatches ()
 		{
 			using (var t = new Bxc7634 ()) {

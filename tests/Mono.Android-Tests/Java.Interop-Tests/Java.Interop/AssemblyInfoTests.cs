@@ -2,14 +2,14 @@ using System;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class AssemblyInfoTests
 	{
-		[Test]
+		[TestMethod]
 		public void AssemblyVersion ()
 		{
 			var version = typeof (JniRuntime).Assembly.GetName ().Version;

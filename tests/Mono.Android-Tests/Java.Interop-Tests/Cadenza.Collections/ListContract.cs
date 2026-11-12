@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Cadenza.Collections;
 using Cadenza.Tests;
@@ -44,7 +44,7 @@ namespace Cadenza.Collections.Tests {
 			return (IList<T>) CreateCollection (values);
 		}
 
-		[Test]
+		[TestMethod]
 		public void IndexOf ()
 		{
 			var a = CreateValueA ();
@@ -82,7 +82,7 @@ namespace Cadenza.Collections.Tests {
 			Dispose (b);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Insert ()
 		{
 			var a = CreateValueA ();
@@ -122,7 +122,7 @@ namespace Cadenza.Collections.Tests {
 			Dispose (b);
 		}
 
-		[Test]
+		[TestMethod]
 		public void RemoveAt ()
 		{
 			var a = CreateValueA ();
@@ -166,7 +166,7 @@ namespace Cadenza.Collections.Tests {
 			Dispose (b);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Item ()
 		{
 			var a = CreateValueA ();
@@ -175,12 +175,12 @@ namespace Cadenza.Collections.Tests {
 			var list = CreateList (new []{a});
 
 			var e = list [0];
-			Assert.AreEqual (a, e);
-			Assert.Throws<ArgumentOutOfRangeException>(() => Ignore (list [-1]));
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (a, e));
+			Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => Ignore (list [-1]));
 
 			try {
-				Assert.Throws<ArgumentOutOfRangeException>(() => list [-1] = a);
-				Assert.Throws<ArgumentOutOfRangeException>(() => list [1] = a);
+				Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => list [-1] = a);
+				Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => list [1] = a);
 
 				list [0] = b;
 				Assert.AreEqual (-1,  list.IndexOf (a));

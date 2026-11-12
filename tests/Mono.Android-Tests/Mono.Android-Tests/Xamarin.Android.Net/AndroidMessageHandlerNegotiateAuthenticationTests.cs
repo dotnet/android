@@ -9,19 +9,19 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Android.Net;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.NetTests {
 	// Important: We expect the Negotiate authentication feature to be enabled in all of these tests because we set $(AndroidUseNegotiateAuthentication)=true
 	// in the Mono.Android.NET-Tests.csproj file.
-	[TestFixture]
-	[Category ("InetAccess"), Category ("NTLM")] // TODO: https://github.com/dotnet/android/issues/10069
+	[TestClass]
+	[TestCategory ("InetAccess"), TestCategory ("NTLM")] // TODO: https://github.com/dotnet/android/issues/10069
 	public sealed class AndroidMessageHandlerNegotiateAuthenticationTests
 	{
 		// Negotiate authentication is available for Android since .NET 7
 		public static bool ShouldBeAvailable => Environment.Version.Major >= 7;
 
-		[Test]
+		[TestMethod]
 		public void NegotiateAuthenticationIsEnabled ()
 		{
 			const string propertyName = "NegotiateAuthenticationIsEnabled";
@@ -36,11 +36,11 @@ namespace Xamarin.Android.NetTests {
 			Assert.IsTrue (property!.GetValue (null) as bool? ?? false, "Negotiate authentication is not enabled");
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task RequestWithoutCredentialsFails ()
 		{
 			if (!ShouldBeAvailable) {
-				Assert.Ignore ("Negotiate authentication is only available in .NET 7+");
+				Assert.Inconclusive ("Negotiate authentication is only available in .NET 7+");
 			}
 
 			using var server = new FakeNtlmServer (port: 47662);
@@ -53,11 +53,11 @@ namespace Xamarin.Android.NetTests {
 			Assert.AreEqual (HttpStatusCode.Unauthorized, response.StatusCode);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task RequestWithCredentialsSucceeds ()
 		{
 			if (!ShouldBeAvailable) {
-				Assert.Ignore ("Negotiate authentication is only available in .NET 7+");
+				Assert.Inconclusive ("Negotiate authentication is only available in .NET 7+");
 			}
 
 			using var server = new FakeNtlmServer (port: 47663);

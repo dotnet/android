@@ -1,24 +1,19 @@
 using System;
 using Android.Runtime;
 using Java.Interop;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[Category("JavaList")]
-	[TestFixture(typeof(JavaList))]
-	[TestFixture(typeof(JavaList<string>))]
-	public class JavaListTest<T> where T : JavaList, new()
+	[TestCategory("JavaList")]
+	public abstract class JavaListTest<T> where T : JavaList, new()
 	{
 		JavaList list;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			// Note: originally this was just `list = new T ();` but this doesn't work with NativeAOT due to how
-			// NUnit creates the `JavaListTest<T>` instance via reflection. The `new()` constraint cannot be respected
-			// under NativeAOT and so this would fail. Given we have just 2 cases, we can simply switch on them and
-			// call the ctors directly.
+			// Keep both Java peers' constructors statically reachable under NativeAOT.
 			list = typeof (T) switch
 			{
 				Type t when t == typeof (JavaList) => new JavaList (),
@@ -27,20 +22,20 @@ namespace Java.InteropTests
 			};
 		}
 
-		[Test]
+		[TestMethod]
 		public void Add ()
 		{
 			list.Add ("foo");
 			Assert.AreEqual (1, list.Count);
-			Assert.AreEqual ("foo", list [0]);
+			Assert.AreEqual ("foo", list [0]?.ToString ());
 
 			// Ensure duplicates are allowed.
 			list.Add ("foo");
 			Assert.AreEqual (2, list.Count);
-			Assert.AreEqual ("foo", list [1]);
+			Assert.AreEqual ("foo", list [1]?.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void AddWithIndex ()
 		{
 			list.Add ("Apple");
@@ -52,15 +47,15 @@ namespace Java.InteropTests
 			list.Add (2, "Blueberry");
 			list.Add (4, "Fig");
 
-			Assert.AreEqual ("Apple", list [0]);
-			Assert.AreEqual ("Banana", list [1]);
-			Assert.AreEqual ("Blueberry", list [2]);
-			Assert.AreEqual ("Cherry", list [3]);
-			Assert.AreEqual ("Fig", list [4]);
-			Assert.AreEqual ("Grape", list [5]);
+			Assert.AreEqual ("Apple", list [0]?.ToString ());
+			Assert.AreEqual ("Banana", list [1]?.ToString ());
+			Assert.AreEqual ("Blueberry", list [2]?.ToString ());
+			Assert.AreEqual ("Cherry", list [3]?.ToString ());
+			Assert.AreEqual ("Fig", list [4]?.ToString ());
+			Assert.AreEqual ("Grape", list [5]?.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void Indexer ()
 		{
 			list.Add ("foo");
@@ -68,16 +63,16 @@ namespace Java.InteropTests
 			Assert.AreEqual ("bar", list [0]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ForEach ()
 		{
 			list.Add ("foo");
 			foreach (var item in list) {
-				Assert.AreEqual ("foo", item);
+				Assert.AreEqual ("foo", item?.ToString ());
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Clear ()
 		{
 			list.Add ("foo");
@@ -85,7 +80,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (0, list.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Contains ()
 		{
 			list.Add ("foo");
@@ -93,7 +88,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (list.Contains ("bar"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyTo ()
 		{
 			var array = new object [1];
@@ -102,7 +97,7 @@ namespace Java.InteropTests
 			Assert.AreEqual ("foo", array [0]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void IndexOf ()
 		{
 			list.Add ("foo");
@@ -110,7 +105,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (-1, list.IndexOf ("bar"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void LastIndexOf ()
 		{
 			list.Add ("foo");
@@ -118,49 +113,59 @@ namespace Java.InteropTests
 			Assert.AreEqual (-1, list.LastIndexOf ("bar"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Insert ()
 		{
 			list.Add ("foo");
 			list.Insert (0, "bar");
-			Assert.AreEqual ("bar", list [0]);
-			Assert.AreEqual ("foo", list [1]);
+			Assert.AreEqual ("bar", list [0]?.ToString ());
+			Assert.AreEqual ("foo", list [1]?.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void RemoveAt ()
 		{
 			list.Add ("foo");
 			list.Add ("bar");
 			list.RemoveAt (0);
 			Assert.AreEqual (1, list.Count);
-			Assert.AreEqual ("bar", list [0]);
+			Assert.AreEqual ("bar", list [0]?.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void RemoveNonExistentItemDoesNotThrow ()
 		{
 			list.Add ("foo");
-			Assert.DoesNotThrow (() => list.Remove ("bar"));
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => list.Remove ("bar"));
 			Assert.AreEqual (1, list.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Set ()
 		{
 			list.Add ("foo");
 			list.Set (0, "bar");
-			Assert.AreEqual ("bar", list [0]);
+			Assert.AreEqual ("bar", list [0]?.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void SubList ()
 		{
 			list.Add ("foo");
 			list.Add ("bar");
 			var sub = list.SubList (0, 1);
 			Assert.AreEqual (1, sub.Count);
-			Assert.AreEqual ("foo", sub [0]);
+			Assert.AreEqual ("foo", sub [0]?.ToString ());
 		}
+	}
+
+	[TestClass]
+	public class JavaListNonGenericTest : JavaListTest<JavaList>
+	{
+	}
+
+	[TestClass]
+	public class JavaListStringTest : JavaListTest<JavaList<string>>
+	{
 	}
 }

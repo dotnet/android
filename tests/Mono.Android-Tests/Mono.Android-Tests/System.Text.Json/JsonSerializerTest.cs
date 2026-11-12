@@ -2,14 +2,14 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Text.JsonTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JsonSerializerTest {
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Serialize ()
 		{
@@ -20,7 +20,7 @@ namespace System.Text.JsonTests {
 			Assert.AreEqual("42", text);
 		}
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Deserialize ()
 		{

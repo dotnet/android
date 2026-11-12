@@ -1,17 +1,17 @@
 using System.Reflection;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.Runtime;
 using Android.Util;
 
 namespace Android.UtilTests {
 
-	[TestFixture]
-	[Category ("HandwrittenJniBindings")]
+	[TestClass]
+	[TestCategory ("HandwrittenJniBindings")]
 	public class SparseArrayTests {
 
-		[Test]
+		[TestMethod]
 		public void GenericSparseArrayUsesSparseArrayClass ()
 		{
 			using var values = new SparseArray<string> ();
@@ -21,7 +21,7 @@ namespace Android.UtilTests {
 			Assert.AreEqual ("one", values.Get (1));
 		}
 
-		[Test]
+		[TestMethod]
 		public void AppendResolvesAppendMethod ()
 		{
 			using var values = new SparseArray<string> ();

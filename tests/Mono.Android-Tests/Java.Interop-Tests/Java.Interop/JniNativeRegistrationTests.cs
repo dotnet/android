@@ -5,19 +5,19 @@ using System.Runtime.InteropServices;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
-	[NonParallelizable]
-	[Category ("JniRegistrationSafety")]
-	[Category ("NativeAOTIgnore")]
+	[TestClass]
+	[DoNotParallelize]
+	[TestCategory ("JniRegistrationSafety")]
+	[TestCategory ("NativeAOTIgnore")]
 	public class JniNativeRegistrationTests {
 
 		const string ClassName = "net/dot/jni/test/RegisterNativesTestType";
 
-		[Test]
+		[TestMethod]
 		public void RetainsTransferredArrayUntilUnregistration ()
 		{
 			using (var type = new JniType (ClassName)) {
@@ -44,7 +44,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void RuntimeRetainsOwnerAfterSuccessfulRegistration ()
 		{
 			var references = RegisterWithoutKeepingOwner ();
@@ -65,7 +65,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Delegate registration tests run only on runtimes supporting dynamic code.")]
 		public void RegistrationFailurePropagatesJavaException ()
 		{
@@ -76,7 +76,7 @@ namespace Java.InteropTests {
 					new JniNativeMethodRegistration ("__missing_native_method__", "(II)I", callback),
 				};
 				try {
-					var error = Assert.Throws<Java.Lang.NoSuchMethodError> (() => {
+					var error = Assert.ThrowsExactly<Java.Lang.NoSuchMethodError> (() => {
 						unsafe {
 							// SAFETY: Callback matches JNI; the caller keeps methods rooted through fixture cleanup.
 							type.RegisterNativeMethods (methods);
@@ -96,8 +96,9 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void PreparationFailureAllowsValidRetry (bool alreadyTracked)
 		{
 			using (var type = new JniType (ClassName)) {
@@ -116,7 +117,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void PreparationFailurePreservesPreviousRegistration ()
 		{
 			using (var type = new JniType (ClassName)) {
@@ -131,7 +132,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DisposingAfterPreparationFailurePreservesOtherOwner ()
 		{
 			using (var owner = new JniType (ClassName)) {
@@ -146,7 +147,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DisposeUnregistersMethodsAndReleasesOwner ()
 		{
 			var references = RegisterAndDispose ();
@@ -168,7 +169,7 @@ namespace Java.InteropTests {
 					Assert.IsFalse (owner.PeerReference.IsValid);
 					Assert.IsTrue (independent.PeerReference.IsValid);
 
-					var error = Assert.Throws<Java.Lang.UnsatisfiedLinkError> (() => InvokeAdd (independent));
+					var error = Assert.ThrowsExactly<Java.Lang.UnsatisfiedLinkError> (() => InvokeAdd (independent));
 					if (error == null)
 						throw new InvalidOperationException ("The disposed owner's native method is still registered.");
 					error.Dispose ();
@@ -212,7 +213,7 @@ namespace Java.InteropTests {
 				new JniNativeMethodRegistration ("add", "(II)I", callback),
 				default (JniNativeMethodRegistration),
 			};
-			var error = Assert.Throws<ArgumentException> (() => {
+			var error = Assert.ThrowsExactly<ArgumentException> (() => {
 				unsafe {
 					// SAFETY: The valid callback matches JNI; the null marshaler must be rejected before JNI.
 					type.RegisterNativeMethods (methods);

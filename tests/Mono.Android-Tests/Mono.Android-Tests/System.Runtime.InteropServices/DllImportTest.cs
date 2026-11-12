@@ -1,21 +1,21 @@
 using System;
 using System.Runtime.InteropServices;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class DllImportTest {
 
 		[DllImport ("libdl")]
 		static extern IntPtr dlopen (string libName, int flags);
 
-		[Test]
+		[TestMethod]
 		public void PInvokeDlopenSucceeds ()
 		{
 			const int RTLD_LAZY = 0x001;
-			Assert.DoesNotThrow (() => dlopen (null, RTLD_LAZY));
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => dlopen (null, RTLD_LAZY));
 		}
 	}
 }

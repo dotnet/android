@@ -5,7 +5,7 @@ using System.Linq;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
@@ -19,12 +19,12 @@ namespace Java.InteropTests
 			return new JavaObjectArray<T> (values);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new JavaObjectArray<T> ((IEnumerable<T>)null));
-			Assert.Throws<ArgumentNullException> (() => new JavaObjectArray<T> ((IList<T>)null));
-			Assert.Throws<ArgumentException> (() => new JavaObjectArray<T> (-1));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new JavaObjectArray<T> ((IEnumerable<T>)null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new JavaObjectArray<T> ((IList<T>)null));
+			Assert.ThrowsExactly<ArgumentException> (() => new JavaObjectArray<T> (-1));
 		}
 
 		protected override int IndexOf (T[] array, T value)
@@ -41,36 +41,37 @@ namespace Java.InteropTests
 		}
 
 		int beforeTestGrefCount;
+		public TestContext TestContext { get; set; }
 
-		[SetUp]
+		[TestInitialize]
 		public void LogBeginCurrentTestGrefCount ()
 		{
 			beforeTestGrefCount = JniEnvironment.Runtime.GlobalReferenceCount;
 			JniEnvironment.Runtime.ObjectReferenceManager.WriteGlobalReferenceLine(
 					"{0}",
-					$"Begin {TestContext.CurrentContext.Test.FullName}; " +
+					$"Begin {TestContext.FullyQualifiedTestClassName}.{TestContext.TestName}; " +
 					$"GREFs={beforeTestGrefCount}; "
 			);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void LogEndCurrentTestToGrefCount ()
 		{
 			int afterTestGrefCount  = JniEnvironment.Runtime.GlobalReferenceCount;
 			JniEnvironment.Runtime.ObjectReferenceManager.WriteGlobalReferenceLine(
 					"{0}",
-					$"End {TestContext.CurrentContext.Test.FullName}; " +
+					$"End {TestContext.FullyQualifiedTestClassName}.{TestContext.TestName}; " +
 					$"GREFs={afterTestGrefCount}; diff={afterTestGrefCount - beforeTestGrefCount}"
 			);
 		}
 	}
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectArrayContractTest : JavaObjectArrayContractTest<JavaObject> {
 		protected override JavaObject CreateValueA () {return new JavaObject ();}
 		protected override JavaObject CreateValueB () {return new JavaObject ();}
 
-		[Test]
+		[TestMethod]
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new JavaObject [0]);
@@ -79,12 +80,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectArray_Int32_ContractTest : JavaObjectArrayContractTest<int> {
 		protected override int  CreateValueA () {return 1;}
 		protected override int  CreateValueB () {return 2;}
 
-		[Test]
+		[TestMethod]
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new int[0]);
@@ -93,12 +94,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectArray_NullableByte_ContractTest : JavaObjectArrayContractTest<byte?> {
 		protected override byte? CreateValueA () {return 128;}
 		protected override byte? CreateValueB () {return 255;}
 
-		[Test]
+		[TestMethod]
 		public void NullableByteValues ()
 		{
 			var values = new byte? [] { 1, null, 127, 128, 200, 255 };
@@ -109,12 +110,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectArray_Int32Array_ContractTest : JavaObjectArrayContractTest<int[]> {
 		protected override int[]  CreateValueA () {return new[]{1};}
 		protected override int[]  CreateValueB () {return new[]{2};}
 
-		[Test]
+		[TestMethod]
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new int[0][]);
@@ -123,12 +124,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectArray_Int32ArrayArray_ContractTest : JavaObjectArrayContractTest<int[][]> {
 		protected override int[][]  CreateValueA () {return new[]{new[]{1}};}
 		protected override int[][]  CreateValueB () {return new[]{new[]{2}};}
 
-		[Test]
+		[TestMethod]
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new int[0][][]);
@@ -137,12 +138,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectArray_JavaInt32Array_ContractTest : JavaObjectArrayContractTest<JavaInt32Array> {
 		protected override JavaInt32Array CreateValueA () {return new JavaInt32Array (new[]{1});}
 		protected override JavaInt32Array CreateValueB () {return new JavaInt32Array (new[]{2});}
 
-		[Test]
+		[TestMethod]
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new JavaInt32Array [0]);
@@ -151,12 +152,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectArray_string_ContractTest : JavaObjectArrayContractTest<string> {
 		protected override string CreateValueA () {return "a";}
 		protected override string CreateValueB () {return "b";}
 
-		[Test]
+		[TestMethod]
 		public void ObjectArrayType ()
 		{
 			var c = CreateCollection (new string[0]);

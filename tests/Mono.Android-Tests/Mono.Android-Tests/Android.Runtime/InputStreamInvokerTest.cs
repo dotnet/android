@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.RuntimeTests
 {
-        [TestFixture]
+        [TestClass]
         public class InputStreamInvokerTest
         {
-		[Test]
+		[TestMethod]
 		public void Disposing_Shared_Data_Does_Not_Throw_IOE ()
 		{
 			var javaInputStream = new Java.IO.ByteArrayInputStream (new byte[]{0x1, 0x2, 0x3, 0x4});
@@ -21,7 +21,7 @@ namespace Android.RuntimeTests
 			invoker.Dispose ();
 		}
 
-                [Test]
+                [TestMethod]
                 public void InputStreamTest ()
                 {
                         string path = Path.GetTempFileName ();
@@ -36,19 +36,19 @@ namespace Android.RuntimeTests
                                 Assert.IsTrue (stream.CanSeek);
                                 Assert.IsFalse (stream.CanTimeout);
                                 Assert.IsFalse (stream.CanWrite);
-                                Assert.AreEqual (stream.Length, 24);
-                                Assert.AreEqual (stream.Seek (8, SeekOrigin.Begin), 8);
-                                Assert.AreEqual (stream.Position, 8);
-                                Assert.AreEqual (stream.Read (bytes, 0, 7), 7);
+                                Assert.AreEqual (24, stream.Length);
+                                Assert.AreEqual (8, stream.Seek (8, SeekOrigin.Begin));
+                                Assert.AreEqual (8, stream.Position);
+                                Assert.AreEqual (7, stream.Read (bytes, 0, 7));
                                 Assert.AreEqual ("so good", Encoding.ASCII.GetString (bytes, 0, 7));
-                                Assert.AreEqual (stream.Seek (1, SeekOrigin.Current), 16);
-                                Assert.AreEqual (stream.Read (bytes, 0, 7), 7);
+                                Assert.AreEqual (16, stream.Seek (1, SeekOrigin.Current));
+                                Assert.AreEqual (7, stream.Read (bytes, 0, 7));
                                 Assert.AreEqual ("looking", Encoding.ASCII.GetString (bytes, 0, 7));
-                                Assert.AreEqual (stream.Seek (-text.Length, SeekOrigin.End), 0);
-                                Assert.AreEqual (stream.Read (bytes, 0, 7), 7);
+                                Assert.AreEqual (0, stream.Seek (-text.Length, SeekOrigin.End));
+                                Assert.AreEqual (7, stream.Read (bytes, 0, 7));
                                 Assert.AreEqual ("Your're", Encoding.ASCII.GetString (bytes, 0, 7));
                                 stream.Position = text.Length - 1;
-                                Assert.AreEqual (stream.Read (bytes, 0, 1), 1);
+                                Assert.AreEqual (1, stream.Read (bytes, 0, 1));
                                 Assert.AreEqual ("!", Encoding.ASCII.GetString (bytes, 0, 1));
                         }
 
@@ -58,11 +58,11 @@ namespace Android.RuntimeTests
                                 Assert.IsFalse (stream.CanSeek);
                                 Assert.IsFalse (stream.CanTimeout);
                                 Assert.IsFalse (stream.CanWrite);
-                                Assert.Throws<NotSupportedException> (() => { var _ = stream.Length; });
-                                Assert.Throws<NotSupportedException> (() => { var _ = stream.Position; });
-                                Assert.Throws<NotSupportedException> (() => { stream.Position = 1; });
-                                Assert.Throws<NotSupportedException> (() => { stream.Seek (1, SeekOrigin.Begin); });
-                                Assert.AreEqual (stream.Read (bytes, 0, text.Length), text.Length);
+                                Assert.ThrowsExactly<NotSupportedException> (() => { var _ = stream.Length; });
+                                Assert.ThrowsExactly<NotSupportedException> (() => { var _ = stream.Position; });
+                                Assert.ThrowsExactly<NotSupportedException> (() => { stream.Position = 1; });
+                                Assert.ThrowsExactly<NotSupportedException> (() => { stream.Seek (1, SeekOrigin.Begin); });
+                                Assert.AreEqual (text.Length, stream.Read (bytes, 0, text.Length));
                                 Assert.AreEqual (text, Encoding.ASCII.GetString (bytes, 0, text.Length));
                         }
 

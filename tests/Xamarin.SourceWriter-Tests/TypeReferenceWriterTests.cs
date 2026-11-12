@@ -2,19 +2,19 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.SourceWriter.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class TypeReferenceWriterTests
 	{
-		[Test]
+		[TestMethod]
 		public void Constructor ()
 		{
 			var t = new TypeReferenceWriter ("String");
 
-			Assert.AreEqual (null, t.Namespace);
+			Assert.IsNull (t.Namespace);
 			Assert.AreEqual ("String", t.Name);
 
 			t = new TypeReferenceWriter ("System.String");
@@ -28,7 +28,7 @@ namespace Xamarin.SourceWriter.Tests
 			Assert.AreEqual ("String", t.Name);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NotNull ()
 		{
 			var t = new TypeReferenceWriter ("string");
@@ -41,7 +41,7 @@ namespace Xamarin.SourceWriter.Tests
 			Assert.AreEqual ("string ", sw.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void Nullable ()
 		{
 			var t = new TypeReferenceWriter ("string") { Nullable = true };
