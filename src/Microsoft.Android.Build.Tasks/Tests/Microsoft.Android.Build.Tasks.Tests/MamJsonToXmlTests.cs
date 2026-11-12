@@ -1,11 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
+
+using Task = System.Threading.Tasks.Task;
 
 namespace Xamarin.Android.Build.Tests.Tasks {
 
@@ -62,6 +67,68 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			var expected = File.ReadAllText (ResourcePath ("mam.xml")).ReplaceLineEndings ();
 			var xml = File.ReadAllText (output).ReplaceLineEndings ();
 			Assert.AreEqual (expected, xml);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void MissingOrEmptyOutputIsRejected (bool supplyEmptyItem)
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new MamJsonToXml {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			};
+			if (supplyEmptyItem) {
+				task.XmlMappingOutput = new TaskItem ("");
+			}
+
+			Assert.IsFalse (task.Execute ());
+			Assert.That (errors, Has.Exactly (1).Matches<BuildErrorEventArgs> (error =>
+				error.Message.Contains ("XmlMappingOutput is required.")));
+		}
+
+		[Test]
+		public void ConcurrentProjectDirectoriesAreIsolated ()
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			var projects = Enumerable.Range (0, 2).Select (i => {
+				var directory = Path.Combine (root, $"project{i}");
+				Directory.CreateDirectory (directory);
+				File.WriteAllText (Path.Combine (directory, "input.json"), $$"""
+					{
+					  "ClassRewrites": [
+					    { "Class": { "From": "project{{i}}.Original", "To": "project{{i}}.Replacement" } }
+					  ]
+					}
+					""");
+				var errors = new List<BuildErrorEventArgs> ();
+				var task = new MamJsonToXml {
+					BuildEngine = new MockBuildEngine (TextWriter.Null, errors),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
+					MappingFiles = [new TaskItem ("input.json")],
+					XmlMappingOutput = new TaskItem ("output.xml"),
+				};
+				return (directory, errors, task);
+			}).ToArray ();
+
+			using var barrier = new Barrier (projects.Length);
+			var executions = projects.Select (project => Task.Factory.StartNew (() => {
+				if (!barrier.SignalAndWait (TimeSpan.FromSeconds (30))) {
+					throw new TimeoutException ("Both MAM tasks must start concurrently.");
+				}
+				return project.task.Execute ();
+			}, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)).ToArray ();
+			Task.WaitAll (executions);
+
+			for (int i = 0; i < projects.Length; i++) {
+				Assert.IsTrue (executions [i].Result, string.Join (Environment.NewLine, projects [i].errors.Select (error => error.Message)));
+				Assert.IsEmpty (projects [i].errors);
+				var expected = new XElement ("replacements",
+					new XElement ("replace-type",
+						new XAttribute ("from", $"project{i}/Original"),
+						new XAttribute ("to", $"project{i}/Replacement")));
+				var actual = XElement.Load (Path.Combine (projects [i].directory, "output.xml"));
+				Assert.IsTrue (XNode.DeepEquals (expected, actual), $"Unexpected replacements for project {i}: {actual}");
+			}
 		}
 	}
 }

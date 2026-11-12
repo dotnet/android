@@ -2,6 +2,7 @@
 using System.IO;
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 
@@ -16,11 +17,11 @@ public class MamJsonToXml : MultithreadedAndroidTask
 	public  ITaskItem[] MappingFiles        { get; set; } = [];
 
 	[Required]
-	public  ITaskItem?  XmlMappingOutput    { get; set; }
+	public  ITaskItem   XmlMappingOutput    { get; set; } = new TaskItem ("");
 
 	public override bool RunTask ()
 	{
-		if (XmlMappingOutput == null) {
+		if (XmlMappingOutput == null || XmlMappingOutput.ItemSpec.IsNullOrEmpty ()) {
 			throw new System.InvalidOperationException ($"{nameof (XmlMappingOutput)} is required.");
 		}
 		var parser = new MamJsonParser (this.CreateTaskLogger ());
