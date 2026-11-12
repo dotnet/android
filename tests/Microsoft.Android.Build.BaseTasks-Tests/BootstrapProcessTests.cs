@@ -512,24 +512,25 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public async Task KillProcessWaitsForOnlyTheRecordedPidAndAllowsAnExitedPid ()
+		public void KillProcessWaitsForOnlyTheRecordedPidAndAllowsAnExitedPid ()
 		{
-			using var recorded = Process.Start (new ProcessStartInfo ("/bin/sleep", "60") { UseShellExecute = false });
-			using var other = Process.Start (new ProcessStartInfo ("/bin/sleep", "60") { UseShellExecute = false });
-			Assert.IsNotNull (recorded);
-			Assert.IsNotNull (other);
+			using var recorded = Process.Start (new ProcessStartInfo ("/bin/sleep", "60") { UseShellExecute = false })
+				?? throw new InvalidOperationException ("Could not start the recorded fixture process.");
 			try {
-				var task = new KillProcess { BuildEngine = engine, ProcessId = recorded.Id };
-				Assert.IsTrue (task.Execute ());
-				Assert.IsTrue (recorded.HasExited);
-				Assert.IsFalse (other.HasExited);
-				Assert.IsTrue (task.Execute ());
-				Assert.IsFalse (new KillProcess { BuildEngine = engine, ProcessId = 0 }.Execute ());
+				using var other = Process.Start (new ProcessStartInfo ("/bin/sleep", "60") { UseShellExecute = false })
+					?? throw new InvalidOperationException ("Could not start the unrelated fixture process.");
+				try {
+					var task = new KillProcess { BuildEngine = engine, ProcessId = recorded.Id };
+					Assert.IsTrue (task.Execute ());
+					Assert.IsTrue (recorded.HasExited);
+					Assert.IsFalse (other.HasExited);
+					Assert.IsTrue (task.Execute ());
+					Assert.IsFalse (new KillProcess { BuildEngine = engine, ProcessId = 0 }.Execute ());
+				} finally {
+					StopOwnedProcess (other);
+				}
 			} finally {
-				other.Kill ();
-				await other.WaitForExitAsync ();
-				if (!recorded.HasExited)
-					recorded.Kill ();
+				StopOwnedProcess (recorded);
 			}
 		}
 
@@ -568,9 +569,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 					: new [] { "kill-server" }, File.ReadAllLines (log));
 				Assert.AreEqual (ownedEmulator, emulator.HasExited);
 			} finally {
-				if (!emulator.HasExited)
-					emulator.Kill ();
-				Assert.IsTrue (emulator.WaitForExit (5000));
+				StopOwnedProcess (emulator);
 			}
 		}
 
@@ -635,6 +634,19 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
+		static void StopOwnedProcess (Process process)
+		{
+			try {
+				try {
+					if (!process.HasExited)
+						process.Kill (entireProcessTree: true);
+				} catch (InvalidOperationException) when (process.HasExited) {
+				}
+			} finally {
+				Assert.IsTrue (process.WaitForExit (5000), $"Fixture process {process.Id} did not exit.");
+			}
+		}
+
 		void StopOwnedProcesses ()
 		{
 			foreach (string path in Directory.GetFiles (directory, "*.pid")) {
@@ -642,12 +654,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 					continue;
 				try {
 					using var process = Process.GetProcessById (pid);
-					try {
-						if (!process.HasExited)
-							process.Kill (entireProcessTree: true);
-					} catch (InvalidOperationException) when (process.HasExited) {
-					}
-					Assert.IsTrue (process.WaitForExit (5000), $"Fixture process {pid} did not exit.");
+					StopOwnedProcess (process);
 				} catch (ArgumentException) {
 					// The recorded fixture process has already exited.
 				}
