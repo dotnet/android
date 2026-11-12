@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.Bytecode;
 
 namespace Xamarin.Android.Tools.BytecodeTests
@@ -10,10 +10,10 @@ namespace Xamarin.Android.Tools.BytecodeTests
 	// kotlin-gradle/ to confirm that the JVM-level mangling we expect (and that
 	// the generator's KotlinFixups must now de-collide) is actually what kotlinc
 	// emits for @JvmInline value-class parameters. See dotnet/java-interop#1431.
-	[TestFixture]
+	[TestClass]
 	public class KotlinInlineClassCollisionTests : ClassFileFixture
 	{
-		[Test]
+		[TestMethod]
 		public void Widgets_HasCollidingHashMangledSiblings ()
 		{
 			var klass = LoadClassFile ("Widgets.class");
@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"Expected one unique `tint-<hash>(F)V` (MyDp) that should survive deduplication.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Widgets_HasNonCollidingHashMangledOverloads ()
 		{
 			var klass = LoadClassFile ("Widgets.class");
@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"`pad` overloads have distinct JVM signatures and should both survive after rename.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void InlineClasses_AreEmittedAsValueClasses ()
 		{
 			// Sanity check that @JvmInline really produced a JvmInline annotation on
@@ -65,13 +65,13 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				.Select (a => a.Type)
 				.ToList ();
 
-			Assert.Contains ("Lkotlin/jvm/JvmInline;", annotations);
+			CollectionAssert.Contains (annotations, "Lkotlin/jvm/JvmInline;");
 		}
 
 		// dotnet/java-interop#1431 (Phase 2): KotlinFixups must surface the inline
 		// class's underlying primitive on each `@JvmInline value class` ClassFile so
 		// the generator can later emit a strongly-typed wrapper struct.
-		[Test]
+		[TestMethod]
 		public void Fixup_StampsKotlinInlineClassUnderlyingJniType ()
 		{
 			var classes = LoadInlineClassFixture ();
@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		// stamp the `KotlinInlineClassJniType` on that parameter so the generator
 		// can swap the parameter's symbol for a wrapper-struct projection while
 		// keeping JNI marshaling on the underlying primitive.
-		[Test]
+		[TestMethod]
 		public void Fixup_StampsParameterInlineClassJniType ()
 		{
 			var classes = LoadInlineClassFixture ();
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		// return type is a `@JvmInline value class`, KotlinFixups must stamp the
 		// method's `KotlinInlineClassReturnJniType` so the generator can project
 		// the return type to the wrapper struct.
-		[Test]
+		[TestMethod]
 		public void Fixup_StampsReturnInlineClassJniType ()
 		{
 			var classes = LoadInlineClassFixture ();
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		// dotnet/java-interop#1431 (Phase 2): KotlinFixups.FixupProperty must also
 		// stamp inline-class JNI types on property getter return values and setter
 		// parameters, not just on function parameters/returns.
-		[Test]
+		[TestMethod]
 		public void Fixup_StampsPropertyInlineClassJniType ()
 		{
 			var classes = LoadInlineClassFixture ();
@@ -176,7 +176,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		// dotnet/java-interop#1431 (Phase 2): the new fields must round-trip
 		// through XmlClassDeclarationBuilder onto the api.xml that the generator
 		// consumes.
-		[Test]
+		[TestMethod]
 		public void XmlOutput_ContainsKotlinInlineClassAttributes ()
 		{
 			var classes = LoadInlineClassFixture ();
@@ -190,11 +190,11 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			classPath.SaveXmlDescription (sw);
 			var xml = sw.ToString ();
 
-			StringAssert.Contains ("kotlin-inline-class=\"true\"", xml);
-			StringAssert.Contains ("kotlin-inline-class-underlying-jni-type=\"J\"", xml);
-			StringAssert.Contains ("kotlin-inline-class-underlying-jni-type=\"F\"", xml);
-			StringAssert.Contains ("kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"", xml);
-			StringAssert.Contains ("kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"", xml);
+			StringAssert.Contains (xml, "kotlin-inline-class=\"true\"");
+			StringAssert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"J\"");
+			StringAssert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"F\"");
+			StringAssert.Contains (xml, "kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"");
+			StringAssert.Contains (xml, "kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"");
 		}
 
 		static List<ClassFile> LoadInlineClassFixture () => new List<ClassFile> {

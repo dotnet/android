@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AndroidSdkWindowsTests
 	{
 	}

@@ -2,16 +2,16 @@ using System.Linq;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class KotlinInlineClassTests
 	{
 		CodeGenerationOptions opt = new CodeGenerationOptions ();
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateClass_ReadsKotlinInlineClassAttributes ()
 		{
 			var xml = XDocument.Parse (
@@ -25,7 +25,7 @@ namespace generatortests
 			Assert.AreEqual ("J", klass.KotlinInlineClassUnderlyingJniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateClass_DefaultsForNonInlineClass ()
 		{
 			var xml = XDocument.Parse (
@@ -38,7 +38,7 @@ namespace generatortests
 			Assert.IsFalse (klass.IsKotlinInlineClass);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateParameter_ReadsKotlinInlineClassJniType ()
 		{
 			var xml = XDocument.Parse (
@@ -49,7 +49,7 @@ namespace generatortests
 			Assert.AreEqual ("Lcom/example/MyColor;", p.KotlinInlineClassJniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_ReadsKotlinInlineClassReturnJniType ()
 		{
 			var xml = XDocument.Parse (
@@ -67,7 +67,7 @@ namespace generatortests
 			Assert.AreEqual ("Lcom/example/MyDp;", method.KotlinInlineClassReturnJniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Parameter_Clone_PreservesKotlinInlineClassJniType ()
 		{
 			var xml = XDocument.Parse (
@@ -79,7 +79,7 @@ namespace generatortests
 			Assert.AreEqual ("Lcom/example/MyColor;", clone.KotlinInlineClassJniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TypeNameUtilities_JniSignatureToJavaTypeName_HandlesReferenceTypes ()
 		{
 			Assert.AreEqual ("com.example.MyColor",
@@ -88,7 +88,7 @@ namespace generatortests
 				TypeNameUtilities.JniSignatureToJavaTypeName ("Ljava/lang/String;"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TypeNameUtilities_JniSignatureToJavaTypeName_RejectsPrimitivesAndArrays ()
 		{
 			Assert.IsNull (TypeNameUtilities.JniSignatureToJavaTypeName ("J"));

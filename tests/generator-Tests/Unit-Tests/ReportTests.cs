@@ -5,13 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
+	[TestClassAttribute]
 	public class ReportTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void FormatTests ()
 		{
 			var code = 0x37;

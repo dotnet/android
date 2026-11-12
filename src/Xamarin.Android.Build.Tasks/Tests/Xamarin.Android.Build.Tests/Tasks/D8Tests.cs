@@ -4,29 +4,30 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class D8Tests
 	{
 		MockBuildEngine engine;
 		List<BuildMessageEventArgs> messages;
 		string tempDir;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			engine = new MockBuildEngine (TestContext.Out,
+			engine = new MockBuildEngine (Console.Out,
 				messages: messages = new List<BuildMessageEventArgs> ());
 			tempDir = Path.Combine (Path.GetTempPath (), "D8Tests_" + Guid.NewGuid ().ToString ("N"));
 			Directory.CreateDirectory (tempDir);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			if (Directory.Exists (tempDir)) {
@@ -38,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 		/// Tests that the D8 task creates a response file with the expected content.
 		/// This test uses a test subclass to avoid actually running Java.
 		/// </summary>
-		[Test]
+		[TestMethod]
 		public void ResponseFileContainsLibAndInputJars ()
 		{
 			// Create mock jar files for testing
@@ -76,7 +77,7 @@ namespace Xamarin.Android.Build.Tests
 			try {
 				// Verify response file was created
 				Assert.IsNotNull (responseFilePath, "Response file path should not be null");
-				FileAssert.Exists (responseFilePath, "Response file should exist");
+				Assert.IsTrue (File.Exists (responseFilePath), "Response file should exist");
 
 				// Verify the response file is referenced in the command line
 				Assert.IsTrue (commandLine.Contains ($"\"@{responseFilePath}\""), "Command line should quote the response file");
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Build.Tests
 		/// Tests that paths with spaces are written correctly to the response file.
 		/// R8/D8 response files treat each line as a complete argument, so no quoting is needed.
 		/// </summary>
-		[Test]
+		[TestMethod]
 		public void ResponseFileHandlesPathsWithSpaces ()
 		{
 			var pathWithSpaces = Path.Combine (tempDir, "path with spaces");
@@ -134,7 +135,7 @@ namespace Xamarin.Android.Build.Tests
 
 			try {
 				Assert.IsNotNull (responseFilePath, "Response file path should not be null");
-				FileAssert.Exists (responseFilePath, "Response file should exist");
+				Assert.IsTrue (File.Exists (responseFilePath), "Response file should exist");
 				Assert.IsTrue (commandLine.Contains ($"\"@{responseFilePath}\""), "Command line should quote a response file path containing spaces");
 				string responseFileContent = File.ReadAllText (responseFilePath);
 

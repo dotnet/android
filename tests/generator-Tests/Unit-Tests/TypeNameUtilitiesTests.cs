@@ -1,14 +1,15 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class TypeNameUtilitiesTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void MangleName ()
 		{
 			Assert.AreEqual ("@abstract", TypeNameUtilities.MangleName ("abstract"));
@@ -21,16 +22,21 @@ namespace generatortests
 			Assert.AreEqual ("foo", TypeNameUtilities.MangleName ("foo"));
 		}
 
-		[Test, TestCaseSource (nameof (ReservedKeywords))]
-		[SetCulture ("cs-CZ")]
+		[TestMethodAttribute, DynamicData (nameof (ReservedKeywords))]
 		public void MangleNameCutlureInvariant (string keyword)
 		{
-			Assert.AreEqual ($"@{keyword}", TypeNameUtilities.MangleName (keyword));
+			var culture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("cs-CZ");
+				Assert.AreEqual ($"@{keyword}", TypeNameUtilities.MangleName (keyword));
+			} finally {
+				CultureInfo.CurrentCulture = culture;
+			}
 		}
 
-		private static IEnumerable<TestCaseData> ReservedKeywords
+		public static IEnumerable<object []> ReservedKeywords
 			=> TypeNameUtilities.reserved_keywords
 				.Where (keyword => keyword != "event") // "event" is a special case which is mapped to "e" instead of "@event"
-				.Select (keyword => new TestCaseData (keyword));
+				.Select (keyword => new object [] { keyword });
 	}
 }

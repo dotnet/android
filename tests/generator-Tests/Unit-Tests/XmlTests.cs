@@ -1,5 +1,5 @@
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,14 +7,14 @@ using System.Xml.Linq;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class XmlTests
 	{
 		XDocument xml;
 		XElement package;
 		CodeGenerationOptions options;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			using (var reader = new StringReader (@"<api>
@@ -60,7 +60,7 @@ namespace generatortests
 			package = (XElement)javaLang.NextNode;
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Class ()
 		{
 			var element = package.Element ("class");
@@ -77,7 +77,7 @@ namespace generatortests
 			Assert.IsNull (@class.DeprecatedComment);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method ()
 		{
 			var element = package.Element ("class");
@@ -97,7 +97,7 @@ namespace generatortests
 			Assert.IsNull (method.Deprecated);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_InvalidJniParameterOverride ()
 		{
 			var element = package.Element ("class");
@@ -108,7 +108,7 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_InvalidJniSignatureOverride ()
 		{
 			var element = package.Element ("class");
@@ -119,8 +119,9 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
-		[TestCase ("(L;)V")]
-		[TestCase ("(T;)V")]
+		[TestMethodAttribute]
+		[DataRow ("(L;)V")]
+		[DataRow ("(T;)V")]
 		public void Method_EmptyReferenceDescriptorIsInvalid (string signature)
 		{
 			var element = package.Element ("class");
@@ -131,7 +132,7 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_GenericJniSignatureOverrideIsInvalid ()
 		{
 			var element = package.Element ("class");
@@ -142,7 +143,7 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_GenericJniParameterOverrideIsInvalid ()
 		{
 			var element = package.Element ("class");
@@ -153,8 +154,9 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
-		[TestCase ("(Ljava.lang.String;)V")]
-		[TestCase ("([Ljava.lang.String;)V")]
+		[TestMethodAttribute]
+		[DataRow ("(Ljava.lang.String;)V")]
+		[DataRow ("([Ljava.lang.String;)V")]
 		public void Method_DottedJniSignatureOverrideIsInvalid (string signature)
 		{
 			var element = package.Element ("class");
@@ -165,7 +167,7 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_DottedJniParameterOverrideIsInvalid ()
 		{
 			var element = package.Element ("class");
@@ -176,7 +178,7 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_EmptyJniOverridesAreIgnored ()
 		{
 			var element = package.Element ("class");
@@ -189,7 +191,7 @@ namespace generatortests
 			Assert.AreEqual ("I", method.Parameters [0].JniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_Matches_True ()
 		{
 			var element = package.Element ("class");
@@ -200,7 +202,7 @@ namespace generatortests
 			Assert.IsTrue (methodA.Matches (methodB), "Methods should match!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_Matches_False ()
 		{
 			var element = package.Element ("class");
@@ -214,7 +216,7 @@ namespace generatortests
 			Assert.IsFalse (methodA.Matches (methodB), "Methods should not match!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void MethodWithParameters ()
 		{
 			var element = package.Element ("class");
@@ -244,7 +246,7 @@ namespace generatortests
 			Assert.AreEqual ("D", parameter.JniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Ctor ()
 		{
 			var element = package.Element ("class");
@@ -258,7 +260,7 @@ namespace generatortests
 			Assert.IsNull (ctor.Deprecated);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Field ()
 		{
 			var element = package.Element ("class");
@@ -274,7 +276,7 @@ namespace generatortests
 			Assert.IsTrue (field.IsConst);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Interface ()
 		{
 			var element = package.Element ("interface");

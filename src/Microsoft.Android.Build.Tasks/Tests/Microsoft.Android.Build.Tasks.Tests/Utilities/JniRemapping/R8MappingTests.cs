@@ -1,16 +1,16 @@
+using System.Linq;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class R8MappingTests : BaseTest
 	{
-		[Test]
+		[TestMethod]
 		public void ParsesSimpleClassAndFieldMapping ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -24,7 +24,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("x", renamedField);
 		}
 
-		[Test]
+		[TestMethod]
 		public void LooksUpOriginalClassAndMethodNames ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (mapping.TryGetOriginalClass ("a/b/Missing", out _));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParsesMethodMappingWithParameters ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -60,7 +60,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("b", renamed2);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParsesMethodMappingWithLeadingAndTrailingLineRanges ()
 		{
 			// "startLine:endLine:returnType name(params):origStartLine:origEndLine -> obfuscated"
@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParsesMethodMappingWithASingleTrailingLineNumber ()
 		{
 			// R8 sometimes collapses the trailing original range to a single line number when
@@ -86,7 +86,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParsesMethodMappingWithOnlyATrailingLineRange ()
 		{
 			// No leading "startLine:endLine:" prefix, only the trailing ":originalStart:originalEnd".
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParsesNoArgMethodMapping ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -109,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void KeepsDollarInNestedClassNames ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -119,7 +119,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a/b/C$D", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TranslatesConstructorNameForLookup ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("<init>", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NameOnlyLookupSucceedsWhenUnambiguous ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -143,7 +143,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NameOnlyLookupFailsWhenAmbiguous ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -154,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (mapping.TryGetRenamedMethodByNameOnly ("acme/orig/MyView", "onStart", out _));
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnknownClassOrMemberReturnsFalse ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader ("acme.orig.MyView -> a.b.C:\n"));
@@ -164,7 +164,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (mapping.TryGetRenamedMethod ("acme/orig/MyView", "missing", Array.Empty<string> (), "void", out _));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IgnoresCommentsAndBlankLines ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -178,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a/b/C", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void IgnoresIndentedMetadataComments ()
 		{
 			// R8 emits indented "# {...}" comments under member lines to carry extra metadata
@@ -196,7 +196,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("x", renamedField);
 		}
 
-		[Test]
+		[TestMethod]
 		public void IgnoresQualifiedInlineCallFrameMappings ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -213,7 +213,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (mapping.TryGetRenamedMethod ("androidx/collection/LongSparseArray", "androidx.collection.LongSparseArrayKt.commonGc", new [] { "androidx.collection.LongSparseArray" }, "void", out _));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IgnoresSameClassInlineCallFrameMappings ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -227,7 +227,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a", caller);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TreatsMethodInlinedIntoMultipleDestinationsAsAmbiguous ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -244,13 +244,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("getOrDefault", getOrDefault);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ThrowsOnMemberLineBeforeAnyClassLine ()
 		{
-			Assert.Throws<FormatException> (() => R8Mapping.Parse (new StringReader ("    int someField -> x\n")));
+			Assert.ThrowsExactly<FormatException> (() => R8Mapping.Parse (new StringReader ("    int someField -> x\n")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void LoadReportsSourcePathInFormatError ()
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
@@ -258,12 +258,12 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (directory);
 			File.WriteAllText (path, "not a mapping");
 
-			FormatException error = Assert.Throws<FormatException> (() => R8Mapping.Load (path));
+			FormatException error = Assert.ThrowsExactly<FormatException> (() => R8Mapping.Load (path));
 
-			Assert.That (error.Message, Does.StartWith ($"{path}:1:"));
+			Assert.StartsWith ($"{path}:1:", error.Message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReportsNamesThatDifferBetweenSeedAndFinalMappings ()
 		{
 			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
@@ -289,10 +289,10 @@ namespace Xamarin.Android.Build.Tests
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tcount",
 				"M\tacme/orig/MyView\tonClick(android.view.View):void",
-			}));
+			}).ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void IgnoresMappingsRemovedByFinalShrinking ()
 		{
 			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
@@ -313,7 +313,7 @@ namespace Xamarin.Android.Build.Tests
 
 				"""));
 
-			CollectionAssert.IsEmpty (seed.GetCompatibilityConflicts (final, new [] {
+			Assert.IsEmpty (seed.GetCompatibilityConflicts (final, new [] {
 				"C\tacme/orig/Removed",
 				"F\tacme/orig/Removed\tvalue",
 				"M\tacme/orig/Removed\tremoved():void",
@@ -321,7 +321,7 @@ namespace Xamarin.Android.Build.Tests
 			}));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TracksMappingsUsedByManagedRewriting ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -339,12 +339,13 @@ namespace Xamarin.Android.Build.Tests
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tcount",
 				"M\tacme/orig/MyView\tonClick(android.view.View):void",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 		}
 
-		[TestCase ("field", "F\tacme/orig/MyView\tcount")]
-		[TestCase ("method", "M\tacme/orig/MyView\tonClick(android.view.View):void")]
-		[TestCase ("name-only method", "M\tacme/orig/MyView\tonStart():void")]
+		[TestMethod]
+		[DataRow ("field", "F\tacme/orig/MyView\tcount")]
+		[DataRow ("method", "M\tacme/orig/MyView\tonClick(android.view.View):void")]
+		[DataRow ("name-only method", "M\tacme/orig/MyView\tonStart():void")]
 		public void MemberOnlyLookupTracksOwningClass (string lookupKind, string expectedMemberEntry)
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -366,10 +367,10 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (new [] {
 				"C\tacme/orig/MyView",
 				expectedMemberEntry,
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void AccessedEntriesIsAThreadSafeSnapshot ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -386,15 +387,15 @@ namespace Xamarin.Android.Build.Tests
 				mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, "void", out _);
 			});
 
-			CollectionAssert.IsEmpty (emptySnapshot);
+			Assert.IsEmpty (emptySnapshot);
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tcount",
 				"M\tacme/orig/MyView\tonClick(android.view.View):void",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReportsPostLinkEntriesRemovedByFinalR8 ()
 		{
 			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
@@ -428,11 +429,12 @@ namespace Xamarin.Android.Build.Tests
 				"F\tacme/orig/Members\tmissingField",
 				"M\tacme/orig/Members\tkept():void",
 				"M\tacme/orig/Members\tmissing():void",
-			}));
+			}).ToArray ());
 		}
 
-		[TestCase ("F\tacme/orig/MyView\tcount")]
-		[TestCase ("M\tacme/orig/MyView\tonClick():void")]
+		[TestMethod]
+		[DataRow ("F\tacme/orig/MyView\tcount")]
+		[DataRow ("M\tacme/orig/MyView\tonClick():void")]
 		public void MemberOnlyManifestReportsRemovedDeclaringClass (string requiredEntry)
 		{
 			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
@@ -443,10 +445,10 @@ namespace Xamarin.Android.Build.Tests
 				"""));
 			R8Mapping final = R8Mapping.Parse (new StringReader (""));
 
-			CollectionAssert.AreEqual (new [] { "class 'acme/orig/MyView'" }, seed.GetReachabilityConflicts (final, new [] { requiredEntry }));
+			CollectionAssert.AreEqual (new [] { "class 'acme/orig/MyView'" }, seed.GetReachabilityConflicts (final, new [] { requiredEntry }).ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReverseMappingRejectsAmbiguousMemberCandidates ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -461,10 +463,10 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsFalse (reverse.TryMapField ("a/b/C", "a", out _));
 			Assert.IsFalse (reverse.TryMapMethodByNameOnly ("a/b/C", "b", out _));
-			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			Assert.IsEmpty (mapping.AccessedEntries);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReverseMappingUsesSingleAllowedMemberCandidate ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -490,10 +492,10 @@ namespace Xamarin.Android.Build.Tests
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tsecond",
 				"M\tacme/orig/MyView\tinvoke(int):void",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReverseMappingRejectsAmbiguousMergedClassCandidates ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -508,10 +510,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (mapping.TryGetOriginalClass ("a/b/C", out _));
 			Assert.IsFalse (reverse.TryMapClass ("a/b/C", out _));
 			Assert.IsFalse (reverse.TryMapField ("a/b/C", "a", out _));
-			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			Assert.IsEmpty (mapping.AccessedEntries);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReverseMappingUsesSingleAllowedMergedClassCandidate ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -534,10 +536,10 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tacme/orig/Second",
 				"F\tacme/orig/Second\tsecond",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReverseMethodMappingPreservesPrimitiveTypesThatCollideWithClassNames ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -560,10 +562,10 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tacme/orig/MyView",
 				"M\tacme/orig/MyView\tconsume(int):void",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReverseMappingRejectsMergedClassWithNoAllowedCandidate ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -577,10 +579,10 @@ namespace Xamarin.Android.Build.Tests
 			IJniNameMapping reverse = mapping.CreateReverseMapping ();
 
 			Assert.IsFalse (reverse.TryMapClass ("a/b/C", out _));
-			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			Assert.IsEmpty (mapping.AccessedEntries);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreatesDeterministicManifestContent ()
 		{
 			Assert.AreEqual ("C\tacme/orig/A\nC\tacme/orig/B\n", R8Mapping.CreateManifestContent (new [] {
@@ -589,7 +591,7 @@ namespace Xamarin.Android.Build.Tests
 			}));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NestedClassTypeMatchesMappingKey ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -602,7 +604,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("a", renamed);
 		}
 
-		[Test]
+		[TestMethod]
 		public void DistinguishesMethodsByReturnType ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -618,7 +620,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("b", stringMethod);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnumeratesFieldTypesAndMembersDeterministically ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
@@ -638,10 +640,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("com/contoso/Zebra", classes [1].OriginalJniName);
 			Assert.AreEqual ("java.lang.String[]", classes [1].Fields [0].JavaFieldType);
 			Assert.AreEqual ("run", classes [1].Methods [0].OriginalName);
-			CollectionAssert.AreEqual (new [] { "int" }, classes [1].Methods [0].JavaParameterTypes);
+			CollectionAssert.AreEqual (new [] { "int" }, classes [1].Methods [0].JavaParameterTypes.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void PreservesSameNamedFieldsWithDistinctDescriptors ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader ("""
@@ -661,7 +663,7 @@ namespace Xamarin.Android.Build.Tests
 				"A name-only lookup must not choose an arbitrary descriptor's target.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FieldCompatibilityAndReachabilityUseDescriptorIdentity ()
 		{
 			var seed = R8Mapping.Parse (new StringReader ("""
@@ -678,10 +680,10 @@ namespace Xamarin.Android.Build.Tests
 			string [] required = ["F\tcom/contoso/Peer\tvalue"];
 			CollectionAssert.AreEqual (new [] {
 				"field 'com/contoso/Peer.value': seed name 'a', final name 'c'",
-			}, seed.GetCompatibilityConflicts (final, required));
+			}, seed.GetCompatibilityConflicts (final, required).ToArray ());
 			CollectionAssert.AreEqual (new [] {
 				"field 'com/contoso/Peer.value'",
-			}, seed.GetReachabilityConflicts (final, required));
+			}, seed.GetReachabilityConflicts (final, required).ToArray ());
 		}
 	}
 }

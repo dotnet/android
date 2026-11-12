@@ -1,6 +1,6 @@
 using System;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +9,8 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class ValidateJavaVersionTests : BaseTest
 	{
 		string path;
@@ -18,11 +19,11 @@ namespace Xamarin.Android.Build.Tests
 		List<BuildMessageEventArgs> messages;
 		MockBuildEngine engine;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			path = Path.Combine ("temp", TestName);
-			engine = new MockBuildEngine (TestContext.Out,
+			engine = new MockBuildEngine (Console.Out,
 				errors: errors = new List<BuildErrorEventArgs> (),
 				warnings: warnings = new List<BuildWarningEventArgs> (),
 				messages: messages = new List<BuildMessageEventArgs> ());
@@ -30,30 +31,31 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (Path.Combine (Root, path));
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[TestCase ("11.0.9", false, "XA0031", false)]
-		[TestCase ("11.0.9", false, "XA0031", true)]
-		[TestCase ("17.0.1", false, "XA0031", false)]
-		[TestCase ("17.0.1", false, "XA0031", true)]
-		[TestCase ("21.0", true, "", false)]
-		[TestCase ("21.0", true, "", true)]
-		[TestCase ("21.0.8", true, "", false)]
-		[TestCase ("21.0.8", true, "", true)]
-		[TestCase ("21.0.13.0.2", true, "", false, "21.0.13.0")]
-		[TestCase ("21.0.13.0.2", true, "", true, "21.0.13.0")]
-		[TestCase ("25.0.1", true, "", false)]
-		[TestCase ("25.0.1", true, "", true)]
-		[TestCase ("25.0.99", true, "", false)]
-		[TestCase ("25.0.99", true, "", true)]
-		[TestCase ("25.0.100", false, "XA0030", false)]
-		[TestCase ("25.0.100", false, "XA0030", true)]
-		[TestCase ("26.0.0", false, "XA0030", false)]
-		[TestCase ("26.0.0", false, "XA0030", true)]
+		[TestMethod]
+		[DataRow ("11.0.9", false, "XA0031", false)]
+		[DataRow ("11.0.9", false, "XA0031", true)]
+		[DataRow ("17.0.1", false, "XA0031", false)]
+		[DataRow ("17.0.1", false, "XA0031", true)]
+		[DataRow ("21.0", true, "", false)]
+		[DataRow ("21.0", true, "", true)]
+		[DataRow ("21.0.8", true, "", false)]
+		[DataRow ("21.0.8", true, "", true)]
+		[DataRow ("21.0.13.0.2", true, "", false, "21.0.13.0")]
+		[DataRow ("21.0.13.0.2", true, "", true, "21.0.13.0")]
+		[DataRow ("25.0.1", true, "", false)]
+		[DataRow ("25.0.1", true, "", true)]
+		[DataRow ("25.0.99", true, "", false)]
+		[DataRow ("25.0.99", true, "", true)]
+		[DataRow ("25.0.100", false, "XA0030", false)]
+		[DataRow ("25.0.100", false, "XA0030", true)]
+		[DataRow ("26.0.0", false, "XA0030", false)]
+		[DataRow ("26.0.0", false, "XA0030", true)]
 		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, bool useJavaExeVersion, string expectedVersion = null)
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), version, out string javaExe, out string javacExe);
@@ -78,8 +80,9 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (errorCode, errors [0].Code);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ToolingTargetRejectsOldJavaForModernAndroidApi (bool useJavaExeVersion)
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "17.0.1", out string javaExe, out string javacExe);
@@ -102,9 +105,10 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("Found Java SDK version 17.0.1.", builder.LastBuildOutput);
 		}
 
-		[TestCase ("11.0.9", "XA0031")]
-		[TestCase ("17.0.1", "XA0031")]
-		[TestCase ("26.0.0", "XA0030")]
+		[TestMethod]
+		[DataRow ("11.0.9", "XA0031")]
+		[DataRow ("17.0.1", "XA0031")]
+		[DataRow ("26.0.0", "XA0030")]
 		public void JavacMustMeetConfiguredJavaVersionRange (string version, string errorCode)
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out string javacExe);
@@ -126,7 +130,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (errorCode, errors [0].Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConfiguredMinimumJavaVersionIsRequired ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.7.0", out string javaExe, out string javacExe);
@@ -138,13 +142,13 @@ namespace Xamarin.Android.Build.Tests
 				LatestSupportedJavaVersion = "1.8.0",
 				MinimumSupportedJavaVersion = "1.8.0",
 			};
-			Assert.False (validateJavaVersion.Execute (), "Execute should *not* succeed!");
+			Assert.IsFalse (validateJavaVersion.Execute (), "Execute should *not* succeed!");
 			Assert.IsTrue (
 					errors.Any (e => e.Code == "XA0031"),
 					"Should report the configured minimum Java version.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtraJavacOutputIsIgnored ()
 		{
 			var extraPrefix = new[]{
@@ -166,8 +170,9 @@ namespace Xamarin.Android.Build.Tests
 					$"Want no XA0033 warnings! Got: ```{string.Join (Environment.NewLine, warnings.Select (m => $"warning {m.Code}: {m.Message}"))}```");
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RelativeJavaPathsUseProjectDirectory (bool useJavaExeVersion)
 		{
 			var projectDirectory = Path.Combine (Root, path, "project");
@@ -189,7 +194,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("21.0.8", task.JdkVersion);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaProcessUsesProjectEnvironment ()
 		{
 			var projectDirectory = Path.Combine (Root, path);
@@ -222,7 +227,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (processOptions, Environment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CacheWorks ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out string javaExe, out string javacExe);
@@ -252,7 +257,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (messages.Any (m => m.Message == $"Using cached value for `{javacFullPath} -version`: 1.8.0"), "`javac -version` should be cached!");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CacheInvalidates ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "1.8.0", out string javaExe, out string javacExe);
@@ -276,7 +281,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (messages.Any (m => m.Message.StartsWith ("Using cached value for", StringComparison.Ordinal)), "`java -version` should *not* be cached!");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReleaseFile_Valid ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out string javacExe);
@@ -311,7 +316,7 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.IsTrue (messages.Any (m => m.Message.Contains ("contains JAVA_VERSION")), "contains JAVA_VERSION should be found");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReleaseFile_Invalid ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out string javacExe);
@@ -333,7 +338,7 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.IsTrue (messages.Any (m => m.Message.Contains ("did not contain a valid JAVA_VERSION")), "valid JAVA_VERSION should *not* be found");
 		}
 
-		[Test]
+		[TestMethod]
 		public void NullJavaSdkPathDoesNotThrow ()
 		{
 			var validateJavaVersion = new Xamarin.Android.Tasks.ValidateJavaVersion {
@@ -351,7 +356,7 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.IsTrue (messages.Any (m => m.Message.Contains ("JavaSdkPath is not set")), "Should log debug message about missing JavaSdkPath.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void NullJavaSdkPathWithReleaseFileDoesNotThrow ()
 		{
 			var validateJavaVersion = new Xamarin.Android.Tasks.ValidateJavaVersion {

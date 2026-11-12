@@ -3,18 +3,18 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class AssemblyCompressionTargetsTests : BaseTest
 {
-	[TestCase ("none")]
-	[TestCase ("mixed")]
-	[TestCase ("all")]
-	[TestCase ("case-insensitive")]
+	[TestMethod]
+	[DataRow ("none")]
+	[DataRow ("mixed")]
+	[DataRow ("all")]
+	[DataRow ("case-insensitive")]
 	public void FailedAssembliesLoseOnlyCompressionMetadata (string failures)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);

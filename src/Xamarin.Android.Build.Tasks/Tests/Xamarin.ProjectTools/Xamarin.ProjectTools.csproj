@@ -11,7 +11,6 @@
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
     <Compile Include="..\..\Utilities\MonoAndroidHelper.Basic.cs" />
@@ -19,6 +18,9 @@
     <EmbeddedResource Include="..\..\..\Microsoft.Android.Templates\android\Resources\**\appicon.png">
       <LogicalName>%(RecursiveDir)appicon.png</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestPackageVersion)" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="FrameworkPath.targets">

@@ -6,14 +6,14 @@ using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.Generator.Transformation;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class KotlinFixupsTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_EnsureKotlinImplFix ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"add-impl\" final=\"false\" /></class></package>");
@@ -26,7 +26,7 @@ namespace generatortests
 			Assert.IsFalse (klass.Methods [0].IsVirtual);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_EnsureKotlinHashcodeFix ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"add-h-_1V8i\" final=\"false\" /></class></package>");
@@ -39,7 +39,7 @@ namespace generatortests
 			Assert.IsFalse (klass.Methods [0].IsVirtual);
 		}
 
-		[Test, NonParallelizable]
+		[TestMethodAttribute, DoNotParallelize]
 		public void CollidingHashSiblings_AreDeduplicated ()
 		{
 			// Two Kotlin hash-mangled siblings that erase to the same C# signature
@@ -66,7 +66,7 @@ namespace generatortests
 			Assert.IsTrue (warnings.Messages.Any (m => m.Contains ("BG8C02")), "Expected BG8C02 warning, got: " + string.Join (Environment.NewLine, warnings.Messages));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void NonCollidingHashSiblings_AreBothKept ()
 		{
 			// Two siblings with distinct parameter lists: both should rename to `Add`
@@ -89,7 +89,7 @@ namespace generatortests
 			Assert.IsTrue (klass.Methods.All (m => m.Name == "Add"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void MixedCollidingAndUniqueHashSiblings ()
 		{
 			// Three siblings of the same source-name: the long+long pair collide,
@@ -116,7 +116,7 @@ namespace generatortests
 			CollectionAssert.AreEquivalent (new [] { "long", "float" }, klass.Methods.Select (m => m.Parameters [0].RawNativeType).ToArray ());
 		}
 
-		[Test, NonParallelizable]
+		[TestMethodAttribute, DoNotParallelize]
 		public void MangledMethod_CollidesWithNonMangledOverload ()
 		{
 			// A pre-existing non-mangled overload `add(long)` plus a mangled
@@ -142,7 +142,7 @@ namespace generatortests
 			Assert.IsTrue (warnings.Messages.Any (m => m.Contains ("BG8C02")), "Expected BG8C02 warning.");
 		}
 
-		[Test, NonParallelizable]
+		[TestMethodAttribute, DoNotParallelize]
 		public void MangledMethod_CollidesWithNonMangledOverload_ReversedOrder ()
 		{
 			// Same as above but with the mangled method declared FIRST. The

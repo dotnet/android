@@ -62,16 +62,8 @@ distclean:
 	git clean -xdff
 	git submodule foreach git clean -xdff
 
-run-nunit-tests:
-ifeq ($(SKIP_NUNIT_TESTS),)
-	$(call MSBUILD_BINLOG,run-nunit-tests,,Test) $(TEST_TARGETS) /t:RunNUnitTests
-endif # $(SKIP_NUNIT_TESTS) == ''
-
 run-ji-tests:
 	$(call MSBUILD_BINLOG,run-ji-tests,,Test) $(TEST_TARGETS) /t:RunJavaInteropTests
-
-list-nunit-tests:
-	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:ListNUnitTests
 
 include build-tools/scripts/runtime-helpers.mk
 

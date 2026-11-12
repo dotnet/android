@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -7,14 +7,15 @@ using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class ZipArchiveExTests : BaseTest
 	{
 		string TestDirectory => Path.Combine (Root, "temp", TestName);
 		string TestPath => Path.Combine (TestDirectory, "source");
 		string Zip => Path.Combine (TestDirectory, "test.zip");
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			if (Directory.Exists (TestDirectory))
@@ -37,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void AssertZip (string expected)
 		{
-			FileAssert.Exists (Zip, "Zip file should exist!");
+			Assert.IsTrue (File.Exists (Zip), "Zip file should exist!");
 
 			var builder = new StringBuilder ();
 			using (var archive = ZipFile.OpenRead (Zip)) {
@@ -64,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void AddDirectory ()
 		{
 			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
@@ -80,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 				""");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AddDirectoryOddPaths ()
 		{
 			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
@@ -96,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 				""");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AddDirectoryCurrentDirectory ()
 		{
 			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
@@ -119,72 +120,78 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Repeat (100)]
+		[TestMethod]
 		public void SkipExistingFile_Exist ()
 		{
-			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
+			for (int i = 0; i < 100; i++) {
+				SetUp ();
+				CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
 
-			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath, folderInArchive: "", CompressionLevel.Optimal);
+				using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
+					archive.AddDirectory (TestPath, folderInArchive: "", CompressionLevel.Optimal);
+				}
+
+				AssertZip (
+					"""
+					A.txt
+					B/B.txt
+					""");
+				AssertSkipExisting (Path.Combine (TestPath, "A.txt"), "A.txt", expected: true);
+				AssertSkipExisting (Path.Combine (TestPath, "B", "B.txt"), "B/B.txt", expected: true);
+				AssertSkipExisting (Path.Combine (TestPath, "C.txt"), "C.txt", expected: false);
+				AssertSkipExisting (Path.Combine (TestPath, "C", "C.txt"), "C/C.txt", expected: false);
 			}
-
-			AssertZip (
-				"""
-				A.txt
-				B/B.txt
-				""");
-			AssertSkipExisting (Path.Combine (TestPath, "A.txt"), "A.txt", expected: true);
-			AssertSkipExisting (Path.Combine (TestPath, "B", "B.txt"), "B/B.txt", expected: true);
-			AssertSkipExisting (Path.Combine (TestPath, "C.txt"), "C.txt", expected: false);
-			AssertSkipExisting (Path.Combine (TestPath, "C", "C.txt"), "C/C.txt", expected: false);
 		}
 
-		[Test]
-		[Repeat (100)]
+		[TestMethod]
 		public void SkipExistingFile_TimeStamp ()
 		{
-			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
+			for (int i = 0; i < 100; i++) {
+				SetUp ();
+				CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
 
-			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath, folderInArchive: "", CompressionLevel.Optimal);
+				using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
+					archive.AddDirectory (TestPath, folderInArchive: "", CompressionLevel.Optimal);
+				}
+
+				AssertZip (
+					"""
+					A.txt
+					B/B.txt
+					""");
+				var file = Path.Combine (TestPath, "A.txt");
+				File.SetLastWriteTimeUtc (file, File.GetLastWriteTimeUtc (file).AddSeconds (2));
+				AssertSkipExisting (file, "A.txt", expected: false);
+				AssertSkipExisting (Path.Combine (TestPath, "B", "B.txt"), "B/B.txt", expected: true);
 			}
-
-			AssertZip (
-				"""
-				A.txt
-				B/B.txt
-				""");
-			var file = Path.Combine (TestPath, "A.txt");
-			File.SetLastWriteTimeUtc (file, File.GetLastWriteTimeUtc (file).AddSeconds (2));
-			AssertSkipExisting (file, "A.txt", expected: false);
-			AssertSkipExisting (Path.Combine (TestPath, "B", "B.txt"), "B/B.txt", expected: true);
 		}
 
-		[Test]
-		[Repeat (100)]
+		[TestMethod]
 		public void SkipExistingFile_Compression ()
 		{
-			var fileName = "A.txt";
-			var filePath = Path.Combine (TestPath, fileName);
-			CreateDirectories (fileName);
+			for (int i = 0; i < 100; i++) {
+				SetUp ();
+				var fileName = "A.txt";
+				var filePath = Path.Combine (TestPath, fileName);
+				CreateDirectories (fileName);
 
-			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath, folderInArchive: "", CompressionLevel.Optimal);
+				using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
+					archive.AddDirectory (TestPath, folderInArchive: "", CompressionLevel.Optimal);
+				}
+
+				AssertSkipExisting (filePath, fileName, expected: true, method: CompressionLevel.Optimal);
+				AssertSkipExisting (filePath, fileName, expected: true, method: CompressionLevel.Fastest);
+				AssertSkipExisting (filePath, fileName, expected: false, method: CompressionLevel.NoCompression);
+
+				File.Delete (Zip);
+				using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
+					archive.AddDirectory (TestPath, folderInArchive: "", method: CompressionLevel.NoCompression);
+				}
+
+				AssertSkipExisting (filePath, fileName, expected: true, method: CompressionLevel.NoCompression);
+				AssertSkipExisting (filePath, fileName, expected: false, method: CompressionLevel.Optimal);
+				AssertSkipExisting (filePath, fileName, expected: false, method: CompressionLevel.Fastest);
 			}
-
-			AssertSkipExisting (filePath, fileName, expected: true, method: CompressionLevel.Optimal);
-			AssertSkipExisting (filePath, fileName, expected: true, method: CompressionLevel.Fastest);
-			AssertSkipExisting (filePath, fileName, expected: false, method: CompressionLevel.NoCompression);
-
-			File.Delete (Zip);
-			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath, folderInArchive: "", method: CompressionLevel.NoCompression);
-			}
-
-			AssertSkipExisting (filePath, fileName, expected: true, method: CompressionLevel.NoCompression);
-			AssertSkipExisting (filePath, fileName, expected: false, method: CompressionLevel.Optimal);
-			AssertSkipExisting (filePath, fileName, expected: false, method: CompressionLevel.Fastest);
 		}
 	}
 }

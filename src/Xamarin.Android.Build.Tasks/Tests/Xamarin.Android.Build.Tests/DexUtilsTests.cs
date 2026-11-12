@@ -1,17 +1,19 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class DexUtilsTests
 {
-	[TestCase ("Class descriptor", "Lexample/Peer$-CC;", true)]
-	[TestCase ("Class descriptor", "Lexample/Peer$-CC", false)]
-	[TestCase ("Class descriptor", "Peer$-CC;", false)]
-	[TestCase ("Class descriptor", "Lexample/Peer$-CC$Nested;", false)]
-	[TestCase ("Other Class descriptor", "Lexample/Peer$-CC;", false)]
-	[TestCase ("Class descriptor extension", "Lexample/Peer$-CC;", false)]
+	[TestMethod]
+	[DataRow ("Class descriptor", "Lexample/Peer$-CC;", true)]
+	[DataRow ("Class descriptor", "Lexample/Peer$-CC", false)]
+	[DataRow ("Class descriptor", "Peer$-CC;", false)]
+	[DataRow ("Class descriptor", "Lexample/Peer$-CC$Nested;", false)]
+	[DataRow ("Other Class descriptor", "Lexample/Peer$-CC;", false)]
+	[DataRow ("Class descriptor extension", "Lexample/Peer$-CC;", false)]
 	public void ContainsClassMatchesExactFieldAndDescriptor (string field, string className, bool expected)
 	{
 		var dexDump = new [] {
@@ -21,7 +23,7 @@ public class DexUtilsTests
 		Assert.AreEqual (expected, DexUtils.ContainsClass (className, dexDump));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ContainsClassWithFieldMatchesDeclaringClassNameAndType ()
 	{
 		var dexDump = new [] {
@@ -39,7 +41,7 @@ public class DexUtilsTests
 		Assert.IsFalse (DexUtils.ContainsClassWithField ("Lexample/Other;", "ACTION_COLLAPSE", "Lexample/Peer;", dexDump));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ContainsClassWithMethodScopesSignatureToMethod ()
 	{
 		var dexDump = new [] {
@@ -54,7 +56,7 @@ public class DexUtilsTests
 		Assert.IsFalse (DexUtils.ContainsClassWithMethod ("Lexample/Peer;", "target", "()V", dexDump));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ContainsClassWithMethodMatchesExactNames ()
 	{
 		var dexDump = new [] {
@@ -66,8 +68,9 @@ public class DexUtilsTests
 		Assert.IsFalse (DexUtils.ContainsClassWithMethod ("Lexample/Peer;", "getValue", "()I", dexDump));
 	}
 
-	[TestCase ("()Ljava/lang/Object;")]
-	[TestCase ("()Ljava/lang/String;")]
+	[TestMethod]
+	[DataRow ("()Ljava/lang/Object;")]
+	[DataRow ("()Ljava/lang/String;")]
 	public void ContainsClassWithMethodMatchesOverloads (string signature)
 	{
 		var dexDump = new [] {
@@ -81,7 +84,7 @@ public class DexUtilsTests
 		Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/Derived;", "getValue", signature, dexDump));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ContainsClassWithMethodRejectsMissingSignature ()
 	{
 		var dexDump = new [] {
@@ -94,7 +97,7 @@ public class DexUtilsTests
 		Assert.IsFalse (DexUtils.ContainsClassWithMethod ("Lexample/Peer;", "$default$getValue", "()I", dexDump));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ContainsClassWithMethodHandlesWhitespaceAndCrLf ()
 	{
 		var dexDump = new [] {
@@ -110,7 +113,7 @@ public class DexUtilsTests
 			dexDump));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ContainsClassWithMethodResetsAtRepeatedClassDescriptor ()
 	{
 		var dexDump = new [] {

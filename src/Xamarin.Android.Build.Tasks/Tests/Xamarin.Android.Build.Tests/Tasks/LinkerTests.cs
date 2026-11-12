@@ -12,25 +12,29 @@ using Mono.Cecil.Cil;
 using Mono.Linker;
 using Mono.Tuner;
 using MonoDroid.Tuner;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using SR = System.Reflection;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class LinkerTests : BaseTest
 	{
 		void Logger (TraceLevel level, string message) =>
-			TestContext.WriteLine ($"{level}: {message}");
+			Console.WriteLine ($"{level}: {message}");
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled)
 		{
 			var task = new TestableLinkAssembliesNoShrink {
 				AddKeepAlives = true,
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				EnableLegacyCompatibilityAssemblyFixups = enabled,
 				UseDesignerAssembly = true,
 			};
@@ -57,7 +61,7 @@ namespace Xamarin.Android.Build.Tests
 				BuildPipeline (pipeline, context);
 		}
 
-		[Test]
+		[TestMethod]
 		public void LinkAssembliesNoShrinkCopiesJavaPeersWithoutLegacyImport ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -93,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 				var androidItem = new TaskItem (androidPath);
 				androidItem.SetMetadata ("Abi", "arm64-v8a");
 				var task = new LinkAssembliesNoShrink {
-					BuildEngine = new MockBuildEngine (TestContext.Out),
+					BuildEngine = new MockBuildEngine (Console.Out),
 					CodeGenerationTarget = "XAJavaInterop1",
 					DestinationFiles = [destination],
 					EnableLegacyCompatibilityAssemblyFixups = false,
@@ -112,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void PostTrimmingSkipsLegacyAbstractFixupsButWarnsAboutAppDomain ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -152,16 +156,17 @@ namespace Xamarin.Android.Build.Tests
 
 					Assert.IsFalse (context.IsAssemblyModified);
 					Assert.IsFalse (assembly.MainModule.GetType ("MyNamespace.MyClass").Methods.Any (m => m.Name == "MyAbstractMethod"));
-					Assert.That (warnings, Has.Count.EqualTo (1));
-					StringAssert.Contains ("AppDomain.CreateDomain()", warnings [0]);
+					Assert.HasCount (1, warnings);
+					Assert.Contains ("AppDomain.CreateDomain()", warnings [0]);
 				}
 			} finally {
 				Directory.Delete (path, true);
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RuntimeEventSourceFeatureSwitch (bool enabled)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -242,7 +247,7 @@ namespace Xamarin.Android.Build.Tests
 				"android-arm64",
 				"linked",
 				"Mono.Android.dll");
-			FileAssert.Exists (linkedRuntimeAssembly);
+			Assert.IsTrue (File.Exists (linkedRuntimeAssembly));
 
 			using var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly);
 			var eventSourceType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource");
@@ -298,7 +303,7 @@ namespace Xamarin.Android.Build.Tests
 					(methodName == null || reference.Name == methodName));
 		}
 
-		[Test]
+		[TestMethod]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -361,8 +366,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void PreTrimmingFixLegacyBindingsWritesOnlyModifiedCopies (bool writeSymbols)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -391,7 +397,7 @@ namespace Xamarin.Android.Build.Tests
 					TargetName = "MyAssembly",
 					OutputDirectory = outputDirectory,
 					Deterministic = true,
-					BuildEngine = new MockBuildEngine (TestContext.Out),
+					BuildEngine = new MockBuildEngine (Console.Out),
 				};
 				Assert.IsTrue (task.Execute ());
 				Assert.IsEmpty (task.ModifiedAssemblies, "the main assembly must not be repaired");
@@ -400,7 +406,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (task.Execute ());
 				var copy = Path.Combine (outputDirectory, "MyAssembly.dll");
 				var outputSymbols = Path.ChangeExtension (copy, ".pdb");
-				FileAssert.Exists (copy);
+				Assert.IsTrue (File.Exists (copy));
 				var outputItem = task.ModifiedAssemblies.Single ();
 				Assert.AreEqual (copy, outputItem.ItemSpec);
 				Assert.AreEqual ("MyAssembly.dll", outputItem.GetMetadata ("RelativePath"));
@@ -422,7 +428,7 @@ namespace Xamarin.Android.Build.Tests
 				File.SetLastWriteTimeUtc (copy, DateTime.UtcNow.AddMinutes (-2));
 				var writeTime = File.GetLastWriteTimeUtc (copy);
 				if (writeSymbols) {
-					FileAssert.Exists (outputSymbols);
+					Assert.IsTrue (File.Exists (outputSymbols));
 					File.SetLastWriteTimeUtc (outputSymbols, DateTime.UtcNow.AddMinutes (-2));
 					CollectionAssert.AreEqual (originalSymbols, File.ReadAllBytes (inputSymbols));
 					Assert.AreEqual (originalSymbolWriteTime, File.GetLastWriteTimeUtc (inputSymbols));
@@ -456,7 +462,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void PreTrimmingFixLegacyBindingsUsesSelectedBindingVersion ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -499,12 +505,12 @@ namespace Xamarin.Android.Build.Tests
 						new TaskItem (androidPath), new TaskItem (typeof (object).Assembly.Location)],
 					TargetName = "App",
 					OutputDirectory = Path.Combine (path, "prelink"),
-					BuildEngine = new MockBuildEngine (TestContext.Out),
+					BuildEngine = new MockBuildEngine (Console.Out),
 				};
 
 				Assert.IsTrue (task.Execute ());
 				var copy = Path.Combine (task.OutputDirectory, "LegacyLibrary.dll");
-				FileAssert.Exists (copy);
+				Assert.IsTrue (File.Exists (copy));
 				using var modified = AssemblyDefinition.ReadAssembly (copy);
 				Assert.IsTrue (modified.MainModule.GetType ("Legacy.Cursor").Methods.Any (member => member.Name == "NewMethod"),
 					"the selected binding interface, not the nearby older DLL, must determine missing methods");
@@ -531,7 +537,7 @@ namespace Xamarin.Android.Build.Tests
 			assembly.Write (path);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FixAbstractMethodsStep_Explicit ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -611,13 +617,14 @@ namespace Xamarin.Android.Build.Tests
 			return assm;
 		}
 
-		[Test]
-		public void WarnAboutAppDomains ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		public void WarnAboutAppDomains ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			if (isRelease) {
 				// NOTE: trimmer warnings are hidden by default in .NET 7 rc1
-				Assert.Ignore("https://github.com/dotnet/linker/issues/2982");
+				Assert.Inconclusive("https://github.com/dotnet/linker/issues/2982");
 			}
 
 			var path = Path.Combine (Root, "temp", TestName);
@@ -652,11 +659,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void RemoveDesigner ([CombinatorialValues (true, false)] bool useAssemblyStore, [CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("CoreCLR supports only assembly stores");
+				Assert.Inconclusive ("CoreCLR supports only assembly stores");
 				return;
 			}
 
@@ -672,7 +680,7 @@ namespace Xamarin.Android.Build.Tests
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			FileAssert.Exists (apk);
+			Assert.IsTrue (File.Exists (apk));
 			var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
 			foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 				Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
@@ -694,11 +702,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void LinkDescription ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void LinkDescription ([CombinatorialValues (true, false)] bool useAssemblyStore, [CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("CoreCLR doesn't support builds without assembly stores.");
+				Assert.Inconclusive ("CoreCLR doesn't support builds without assembly stores.");
 				return;
 			}
 
@@ -735,7 +744,7 @@ $@"<linker>
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				FileAssert.Exists (apk);
+				Assert.IsTrue (File.Exists (apk));
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
 				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assembly_name}.dll"), $"{assembly_name}.dll should exist in apk!");
@@ -751,8 +760,9 @@ $@"<linker>
 			}
 		}
 
-		[Test]
-		public void LinkWithNullAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void LinkWithNullAttribute ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -841,8 +851,8 @@ $@"			var myButton = new AttributedButtonStub (this);
 			}
 		}
 
-		[Test]
-		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
+		[TestMethod]
+		[DynamicData (nameof (Get_AndroidAddKeepAlivesData))]
 		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
 			bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups)
 		{
@@ -942,8 +952,9 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
-		public void StartupNoGCRegionFeatureSwitch ([Values (true, false, null)] bool? enabled)
+		[TestMethod]
+		[CombinatorialData]
+		public void StartupNoGCRegionFeatureSwitch ([CombinatorialValues (true, false, null)] bool? enabled)
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
@@ -971,8 +982,9 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
-		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AndroidUseNegotiateAuthentication ([CombinatorialValues (true, false, null)] bool? useNegotiateAuthentication, [CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
 			proj.SetRuntime (runtime);
@@ -1004,8 +1016,9 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
-		public void PreserveIX509TrustManagerSubclasses ([Values] bool hasServerCertificateCustomValidationCallback, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void PreserveIX509TrustManagerSubclasses (bool hasServerCertificateCustomValidationCallback, [CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
@@ -1040,8 +1053,9 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
-		public void PreserveServices ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void PreserveServices ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			var proj = new XamarinAndroidApplicationProject {
@@ -1067,7 +1081,7 @@ namespace UnnamedProject {
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 			var assemblyPath = BuildTest.GetLinkedPath (b, isRelease: true, "Plugin.Firebase.CloudMessaging.dll");
-			FileAssert.Exists (assemblyPath);
+			Assert.IsTrue (File.Exists (assemblyPath));
 			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
 			var types = new [] { "Plugin.Firebase.CloudMessaging.Platforms.Android.MyFirebaseMessagingService" };
 			foreach (var typeName in types) {
@@ -1076,9 +1090,10 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates (
-			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+			[CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
@@ -1130,9 +1145,9 @@ public abstract class MyRunner {
 				string libDir = Path.Combine (intermediate, rid, "linked");
 				var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (libDir, dll));
 				var type = assembly.MainModule.FindType ("Lib1.Library1");
-				Assert.NotNull (type, "Should find Lib1.Library1!");
+				Assert.IsNotNull (type, "Should find Lib1.Library1!");
 				var cctor = type.GetTypeConstructor ();
-				Assert.NotNull (type, "Should find Lib1.Library1.cctor!");
+				Assert.IsNotNull (type, "Should find Lib1.Library1.cctor!");
 				Assert.AreNotEqual (0, cctor.Body.Instructions.Count);
 
 				/*
@@ -1155,7 +1170,7 @@ public abstract class MyRunner {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void TrimUnusedJavaCallableMethods ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
@@ -1215,7 +1230,7 @@ public abstract class MyRunner {
 			Assert.IsTrue (b.Build (proj), "app build should have succeeded.");
 
 			var linked = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked", $"{lib.ProjectName}.dll");
-			FileAssert.Exists (linked);
+			Assert.IsTrue (File.Exists (linked));
 
 			using var assembly = AssemblyDefinition.ReadAssembly (linked);
 			var type = assembly.MainModule.FindType ("Lib1.Library1");
@@ -1231,8 +1246,9 @@ public abstract class MyRunner {
 				"Service1's default constructor must be preserved, because Android instantiates it from Java.");
 		}
 
-		[Test]
-		public void WarnWithReferenceToLegacyPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void WarnWithReferenceToLegacyPreserveAttribute ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			var path = Path.Combine (Root, "temp", TestName);

@@ -5,29 +5,29 @@ using System;
 using System.ComponentModel;
 using System.IO;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class SystemRenameTests
 	{
 		string tempDir = "";
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			tempDir = Path.Combine (Path.GetTempPath (), $"SystemRenameTests-{Guid.NewGuid ():N}");
 			Directory.CreateDirectory (tempDir);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (tempDir, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReplacesDestination ()
 		{
 			var source = Path.Combine (tempDir, "source");
@@ -41,17 +41,17 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsFalse (File.Exists (source));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingSourcePreservesDestination ()
 		{
 			if (OS.IsWindows)
-				Assert.Ignore ("Tests Unix rename errno reporting.");
+				Assert.Inconclusive ("Tests Unix rename errno reporting.");
 
 			var source = Path.Combine (tempDir, "missing-source");
 			var destination = Path.Combine (tempDir, "destination");
 			File.WriteAllText (destination, "old contents");
 
-			var error = Assert.Throws<IOException> (() => FileUtil.SystemRename (source, destination));
+			var error = Assert.ThrowsExactly<IOException> (() => FileUtil.SystemRename (source, destination));
 
 			Assert.AreEqual ("old contents", File.ReadAllText (destination));
 			if (error is null)
@@ -62,10 +62,10 @@ namespace Xamarin.Android.Tools.Tests
 				throw new InvalidOperationException ("Expected the captured native error.");
 
 			Assert.AreEqual (2, nativeError.NativeErrorCode); // ENOENT on Linux and macOS.
-			StringAssert.Contains ("rename", error.Message);
-			StringAssert.Contains (source, error.Message);
-			StringAssert.Contains (destination, error.Message);
-			StringAssert.Contains ("errno 2", error.Message);
+			StringAssert.Contains (error.Message, "rename");
+			StringAssert.Contains (error.Message, source);
+			StringAssert.Contains (error.Message, destination);
+			StringAssert.Contains (error.Message, "errno 2");
 		}
 	}
 }

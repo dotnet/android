@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
+  <Import Project="..\..\build-tools\scripts\MSTestReferences.projitems" />
 
   <PropertyGroup>
     <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>

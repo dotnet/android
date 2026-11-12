@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	public partial class BuildTest : BaseTest
 	{
-		static readonly object [] DotNetBuildSource = new object [] {
+		static readonly object [] [] DotNetBuildSource = new object [] [] {
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          true,

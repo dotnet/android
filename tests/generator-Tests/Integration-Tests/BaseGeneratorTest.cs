@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Java.Interop.Tools.JavaCallableWrappers;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Binder;
 
 namespace generatortests
@@ -13,7 +13,7 @@ namespace generatortests
 	{
 		StringWriter sw = null;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			Options = new CodeGeneratorOptions ();

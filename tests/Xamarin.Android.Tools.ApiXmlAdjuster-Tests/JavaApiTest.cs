@@ -1,22 +1,22 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Xml;
 using System.Linq;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaApiTest
 	{
-		JavaApi api;
+		static JavaApi api;
 		
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 		}
 		
-		[Test]
+		[TestMethod]
 		public void TestToString ()
 		{
 			var pkg = api.AllPackages.First (p => p.Name == "android.database");
@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.AreEqual ("[Class] android.database.ContentObservable", kls.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseName ()
 		{
 			var tn = JavaTypeName.Parse ("java.util.Function<java.util.Map.Entry<K, V>, ? extends U>");
@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.AreEqual ("U", ga2.GenericConstraints [0].FullNameNonGeneric, "genarg#1.1 constraint name mismatch");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseName2 ()
 		{
 			string name = "com.good.gd.ndkproxy.auth.GDFingerprintAuthenticationManager.a<com.good.gd.ndkproxy.auth.c.a>.b<com.good.gd.ndkproxy.auth.d.a>";

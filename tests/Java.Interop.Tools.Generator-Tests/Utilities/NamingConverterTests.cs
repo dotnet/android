@@ -1,19 +1,19 @@
 using System;
 using Java.Interop.Tools.Generator;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.Generator_Tests;
 
-[TestFixture]
+[TestClass]
 public class NamingConverterTests
 {
-	[Test]
+	[TestMethod]
 	public void ParseApiLevel_Exceptions ()
 	{
-		Assert.Throws<NotSupportedException> (() => NamingConverter.ParseApiLevel (@"..\..\bin\BuildDebug\api\api-CANARY.xml.in"));
+		Assert.ThrowsExactly<NotSupportedException> (() => NamingConverter.ParseApiLevel (@"..\..\bin\BuildDebug\api\api-CANARY.xml.in"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseApiLevel ()
 	{
 		AndroidSdkVersion v;

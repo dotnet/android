@@ -9,17 +9,26 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class AppDetectionTests
 	{
-		[TestCase (false)]
-		[TestCase (true)]
+		readonly TestContext testContext;
+
+		public AppDetectionTests (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public async Task WaitsForPendingQueryInMSBuild (bool multithreaded)
 		{
 			using var detection = new Detection ("missing");
@@ -38,13 +47,14 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("Error", new XAttribute ("Condition", "Exists('upload.flag')"),
 						new XAttribute ("Text", "The waiter returned before the package query deleted the flag."))));
 			var log = await RunMSBuild (detection, project, multithreaded, waitForQuery: true, "-warnaserror:MSB4286,MSB4287,MSB4288");
-			StringAssert.DoesNotContain ("TaskHostFactory", log);
-			StringAssert.Contains ("--user 10", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
+			Assert.DoesNotContain ("TaskHostFactory", log);
+			Assert.Contains ("--user 10", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public async Task DeviceSelectionSurvivesDeviceOrderChanges (bool multithreaded, bool embedAssemblies)
 		{
 			using var detection = new Detection ("switching");
@@ -78,11 +88,12 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("Error", new XAttribute ("Condition", "!$(RunArguments.Contains('-s emulator-5554'))"),
 						new XAttribute ("Text", "Run arguments lost the selected serial."))));
 			await RunMSBuild (detection, project, multithreaded, waitForQuery: true, "-p:AdbTarget=-e", "-warnaserror:MSB4286,MSB4287,MSB4288");
-			StringAssert.StartsWith ("-s emulator-5554 ", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
+			Assert.StartsWith ("-s emulator-5554 ", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public async Task CpuAbiCacheInMSBuild (bool multithreaded)
 		{
 			using var detection = new Detection ("missing");
@@ -105,19 +116,19 @@ namespace Xamarin.Android.Build.Tests
 						"'$(Abi)' != 'arm64-v8a' or '$(Rid)' != 'android-arm64' or '$(Sdk)' != '34' or '$(Serial)' != '-s missing'"),
 						new XAttribute ("Text", "CPU detection returned incorrect device properties."))));
 			var log = await RunMSBuild (detection, project, multithreaded, waitForQuery: false, "-warnaserror:MSB4286,MSB4287,MSB4288");
-			StringAssert.DoesNotContain ("TaskHostFactory", log);
-			StringAssert.Contains ($"Using cached properties: {cache}", log);
+			Assert.DoesNotContain ("TaskHostFactory", log);
+			Assert.Contains ($"Using cached properties: {cache}", log);
 			Assert.AreEqual (3, File.ReadAllLines (Path.Combine (detection.Directory, "property-arguments")).Length);
 			Assert.IsTrue (File.Exists (Path.Combine (detection.Directory, "obj", "devices.cache")));
 			Assert.IsFalse (File.Exists (Path.Combine (detection.Directory, "query-arguments")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CpuAbiUsesProjectCacheAndEnvironment ()
 		{
 			using var first = new Detection ("installed");
 			using var second = new Detection ("missing");
-			var engine = new MockBuildEngine (TestContext.Out);
+			var engine = new MockBuildEngine (Console.Out);
 			var firstTask = first.CreateCpuTask (engine);
 			var secondTask = second.CreateCpuTask (engine);
 			firstTask.AdbToolPath = null;
@@ -135,16 +146,16 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (cache), "A cache hit must not rewrite the file.");
 				Assert.AreEqual (3, File.ReadAllLines (Path.Combine (detection.Directory, "property-arguments")).Length,
 					"The second call must use the XML cache.");
-				StringAssert.Contains (Path.Combine (detection.Directory, "temp"),
+				Assert.Contains (Path.Combine (detection.Directory, "temp"),
 					File.ReadAllText (Path.Combine (detection.Directory, "property-directory")).Trim ());
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CpuAbiCancellationDoesNotWriteCache ()
 		{
 			using var detection = new Detection ("pending");
-			var engine = new MockBuildEngine (TestContext.Out);
+			var engine = new MockBuildEngine (Console.Out);
 			var task = detection.CreateCpuTask (engine);
 			var execution = Task.Run (() => task.Execute ());
 			try {
@@ -163,7 +174,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static async Task<string> RunMSBuild (Detection detection, XElement project, bool multithreaded, bool waitForQuery, params string [] arguments)
+		async Task<string> RunMSBuild (Detection detection, XElement project, bool multithreaded, bool waitForQuery, params string [] arguments)
 		{
 			project.Save (Path.Combine (detection.Directory, "detection.proj"));
 			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
@@ -175,8 +186,8 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var pair in detection.Environment)
 				startInfo.Environment [pair.Key] = pair.Value;
 			startInfo.Environment.Remove ("WAIT_TEST_ISOLATED");
-			string binlog = Path.Combine (TestContext.CurrentContext.WorkDirectory,
-				$"{TestContext.CurrentContext.Test.Name}.binlog");
+			string binlog = Path.Combine (AppContext.BaseDirectory,
+				$"{testContext.TestDisplayName}.binlog");
 			foreach (var argument in new [] { "msbuild", "detection.proj", "-t:Probe", "-m", "-nr:false", "-v:diag",
 				$"-bl:{binlog}" }.Concat (arguments))
 				startInfo.ArgumentList.Add (argument);
@@ -199,10 +210,10 @@ namespace Xamarin.Android.Build.Tests
 				}
 				Assert.IsTrue (process.WaitForExit (20000), "MSBuild did not finish.");
 				var log = await output + await error;
-				TestContext.Out.WriteLine ($"Binlog: {binlog}");
+				Console.Out.WriteLine ($"Binlog: {binlog}");
 				Assert.AreEqual (0, process.ExitCode, log);
 				if (waitForQuery) {
-					StringAssert.Contains ("DetectIfAppWasUninstalled Completed.", log);
+					Assert.Contains ("DetectIfAppWasUninstalled Completed.", log);
 					Assert.IsFalse (File.Exists (detection.Flag));
 				}
 				return log;
@@ -216,12 +227,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void QueryErrorPreservesFlag ()
 		{
 			using var detection = new Detection ("fail");
 			var messages = new List<BuildMessageEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, messages: messages);
+			var engine = new MockBuildEngine (Console.Out, messages: messages);
 			var producer = detection.CreateProducer (engine);
 			producer.AdbToolPath = null;
 			Assert.IsTrue (producer.Execute ());
@@ -230,17 +241,18 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (waiter.Execute ());
 			Assert.IsTrue (File.Exists (detection.Flag));
 			var failure = messages.Single (m => m.Message?.StartsWith ("DetectIfAppWasUninstalled failed with", StringComparison.Ordinal) == true);
-			StringAssert.Contains ("Package manager unavailable", failure.Message);
-			StringAssert.Contains (Path.Combine (detection.Directory, "temp"),
+			Assert.IsNotNull (failure.Message);
+			Assert.Contains ("Package manager unavailable", failure.Message);
+			Assert.Contains (Path.Combine (detection.Directory, "temp"),
 				File.ReadAllText (Path.Combine (detection.Directory, "query-directory")).Trim ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void QueryAndDeviceCacheAreProjectSpecific ()
 		{
 			using var first = new Detection ("installed");
 			using var second = new Detection ("missing");
-			var engine = new MockBuildEngine (TestContext.Out);
+			var engine = new MockBuildEngine (Console.Out);
 			var firstProducer = first.CreateProducer (engine);
 			var secondProducer = second.CreateProducer (engine);
 			secondProducer.AdbToolPath = Path.Combine (first.Directory, "tools");
@@ -253,18 +265,18 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (new WaitForAppDetection { BuildEngine = engine, TaskEnvironment = secondProducer.TaskEnvironment }.Execute ());
 			Assert.IsFalse (firstQuery.IsCompleted, "Waiting in one project must not wait for another project's query.");
 			Assert.IsFalse (File.Exists (second.Flag));
-			StringAssert.Contains ("-s missing", File.ReadAllText (Path.Combine (second.Directory, "query-arguments")));
+			Assert.Contains ("-s missing", File.ReadAllText (Path.Combine (second.Directory, "query-arguments")));
 			Assert.IsTrue (File.Exists (first.Flag));
 			first.Release ();
 			Assert.IsTrue (new WaitForAppDetection { BuildEngine = engine, TaskEnvironment = firstProducer.TaskEnvironment }.Execute ());
 			Assert.IsTrue (File.Exists (first.Flag));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CancellingProducerPreservesFlag ()
 		{
 			using var detection = new Detection ("missing");
-			var engine = new MockBuildEngine (TestContext.Out);
+			var engine = new MockBuildEngine (Console.Out);
 			var producer = detection.CreateProducer (engine);
 			Assert.IsTrue (producer.Execute ());
 			producer.Cancel ();
@@ -273,7 +285,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (File.Exists (detection.Flag));
 		}
 
-		[Test]
+		[TestMethod]
 		public void WaiterPreservesFaultAndCancellationBehavior ()
 		{
 			var errors = new List<BuildErrorEventArgs> ();

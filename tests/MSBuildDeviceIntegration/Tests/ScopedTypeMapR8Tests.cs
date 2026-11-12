@@ -2,17 +2,17 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Category ("UsesDevice")]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class ScopedTypeMapR8Tests : DeviceTest
 {
-	[Test]
+	[TestMethod]
 	public void PreservesJniMembersAndShrinksJavaOnlyDependencies ()
 	{
 		var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "scopedr8")) {
@@ -105,9 +105,9 @@ public class ScopedTypeMapR8Tests : DeviceTest
 				SearchOption.AllDirectories);
 			Assert.AreEqual (1, memberRuleFiles.Length, "CoreCLR should generate one scoped typemap member configuration.");
 			var memberRules = File.ReadAllText (memberRuleFiles [0]);
-			StringAssert.Contains ("-keepclassmembers class example.ScopedBase { *; }", memberRules);
-			StringAssert.Contains ("-keepclassmembers interface example.ScopedContract { *; }", memberRules);
-			StringAssert.Contains ("-keepclassmembers class example.ScopedPeer { *; }", memberRules);
+			Assert.Contains ("-keepclassmembers class example.ScopedBase { *; }", memberRules);
+			Assert.Contains ("-keepclassmembers interface example.ScopedContract { *; }", memberRules);
+			Assert.Contains ("-keepclassmembers class example.ScopedPeer { *; }", memberRules);
 			var dexFiles = Directory.GetFiles (Path.Combine (projectDirectory, proj.IntermediateOutputPath), "classes*.dex", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (dexFiles);
 			Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod ("Lexample/ScopedPeer;", "keptMethod", "()I", dex, AndroidSdkPath)),

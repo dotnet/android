@@ -5,7 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.Interop.Tools.JavaSource;
 
@@ -14,10 +14,10 @@ using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class SourceJavadocToXmldocGrammarHtmlBnfTermsTests : SourceJavadocToXmldocGrammarFixture {
 
-		[Test]
+		[TestMethod]
 		public void PBlockDeclaration ()
 		{
 			var p = CreateParser (g => g.HtmlTerms.PBlockDeclaration);
@@ -40,7 +40,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<para>For &lt;li&gt;A <i>Device Owner</i></para>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void PreBlockDeclaration ()
 		{
 			var p = CreateParser (g => g.HtmlTerms.PreBlockDeclaration);
@@ -56,7 +56,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 					r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void HyperLinkDeclaration ()
 		{
 			var p = CreateParser (g => g.HtmlTerms.InlineHyperLinkDeclaration);
@@ -97,7 +97,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 					r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void CodeElementDeclaration ()
 		{
 			var p = CreateParser (g => g.HtmlTerms.CodeElementDeclaration);

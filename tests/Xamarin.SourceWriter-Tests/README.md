@@ -8,11 +8,10 @@ of the product or device is required.
 
 ## Run from the repository root
 
-Use .NET SDK 11 Preview 6 or later. Select MTP for this invocation only; the
-repository's `global.json` and other (NUnit/VSTest) suites are unchanged:
+The repository `global.json` selects MTP for `dotnet test`:
 
 ```sh
-DOTNET_TEST_RUNNER=Microsoft.Testing.Platform dotnet test \
+dotnet test \
   --project tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj \
   -c Debug --report-trx \
   --results-directory bin/TestDebug/TestResults/SourceWriter
@@ -27,11 +26,6 @@ An already-built module can also be run directly:
 ```sh
 dotnet bin/TestDebug/net11.0/Xamarin.SourceWriter-Tests.dll --report-trx
 ```
-
-Caveats:
-
-* Plain VSTest-mode `dotnet test` is rejected by MTP for this project.
-* Don't pass a solution containing unconverted NUnit projects to the MTP runner.
 
 ## CI
 

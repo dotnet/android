@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class GenerateResourceCaseMapTests : BaseTest {
 
 		public void CreateResourceDirectory (string path)
@@ -20,13 +19,13 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllBytes (Path.Combine (Root, path, "res", "drawable", "IMALLCAPS.png"), icon_binary_mdpi);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CaseMapAllCapsWorks ()
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
 			var task = new GenerateResourceCaseMap () {
-				BuildEngine = new MockBuildEngine (TestContext.Out)
+				BuildEngine = new MockBuildEngine (Console.Out)
 			};
 			task.ProjectDir = Path.Combine (Root, path);
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
@@ -39,9 +38,9 @@ namespace Xamarin.Android.Build.Tests {
 			task.OutputFile = new TaskItem (Path.Combine (Root, path, "case_map.txt"));
 
 			Assert.IsTrue (task.Execute (), "Task should have run successfully.");
-			FileAssert.Exists (task.OutputFile.ItemSpec, $"'{task.OutputFile}' should have been created.");
+			Assert.IsTrue (File.Exists (task.OutputFile.ItemSpec), $"'{task.OutputFile}' should have been created.");
 			var content1 = File.ReadAllText (task.OutputFile.ItemSpec);
-			StringAssert.Contains ($"drawable{Path.DirectorySeparatorChar}IMALLCAPS;IMALLCAPS", content1, "File should contain 'IMALLCAPS'");
+			Assert.Contains ($"drawable{Path.DirectorySeparatorChar}IMALLCAPS;IMALLCAPS", content1, "File should contain 'IMALLCAPS'");
 		}
 	}
 }

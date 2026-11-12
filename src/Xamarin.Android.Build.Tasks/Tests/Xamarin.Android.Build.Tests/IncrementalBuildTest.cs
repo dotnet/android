@@ -1,6 +1,7 @@
 using Microsoft.Build.Framework;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -14,10 +15,10 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class IncrementalBuildTest : BaseTest
 	{
-		[Test]
+		[TestMethod]
 		public void AaptRulesRemainInR8ConfigurationAfterIncrementalBuild ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
@@ -44,7 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
 			var rulesFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "aapt_rules.txt");
-			FileAssert.Exists (rulesFile);
+			Assert.IsTrue (File.Exists (rulesFile));
 			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
 				"The initial R8 configuration should contain the merged AAPT2 rules.");
 
@@ -56,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
 			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
 				"The incremental R8 configuration should still contain the merged AAPT2 rules.");
-			FileAssert.Exists (rulesFile, "IncrementalClean should preserve the merged AAPT2 rules.");
+			Assert.IsTrue (File.Exists (rulesFile), "IncrementalClean should preserve the merged AAPT2 rules.");
 
 			javaSource = "public class Extra { public static final int Value = 2; }";
 			proj.Touch ("Extra.java");
@@ -67,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 				"Subsequent R8 builds should still receive the merged AAPT2 rules.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AarConsumerRulesRemainInR8ConfigurationAfterAppProjectTimestampChange ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Build.Tests
 			var rules = ReadCache (cacheFile).ProguardConfigFiles ?? [];
 			Assert.AreEqual (1, rules.Length, "The AAR consumer rule should remain in the imports cache.");
 			var proguardFile = Path.GetFullPath (rules [0].ItemSpec);
-			FileAssert.Exists (proguardFile);
+			Assert.IsTrue (File.Exists (proguardFile));
 
 			// Force a subsequent R8 invocation to verify the rule recovered from the cache is passed through.
 			proj.Touch ("Extra.java");
@@ -139,8 +140,9 @@ namespace Xamarin.Android.Build.Tests
 			return false;
 		}
 
-		[Test]
-		public void AaptRulesAreRegeneratedAfterDeletion ([Values] bool updateJavaSource)
+		[TestMethod]
+		[CombinatorialData]
+		public void AaptRulesAreRegeneratedAfterDeletion (bool updateJavaSource)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var library = new XamarinAndroidBindingProject {
@@ -173,7 +175,7 @@ namespace Xamarin.Android.Build.Tests
 			using var libraryBuilder = CreateDllBuilder (Path.Combine (path, library.ProjectName));
 			Assert.IsTrue (libraryBuilder.Build (library), "The Java library build should succeed.");
 			var libraryJar = libraryBuilder.Output.GetIntermediaryPath (Path.Combine ("binding", "bin", $"{library.ProjectName}.jar"));
-			FileAssert.Exists (libraryJar);
+			Assert.IsTrue (File.Exists (libraryJar));
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -223,7 +225,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			builder.BuildLogFile = "recovery-build.log";
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The damaged incremental build should succeed.");
-			FileAssert.Exists (rulesFile, "Missing AAPT2 rules should be regenerated even when resources have not changed.");
+			Assert.IsTrue (File.Exists (rulesFile), "Missing AAPT2 rules should be regenerated even when resources have not changed.");
 			builder.Output.AssertTargetIsNotSkipped ("_PrepareCreateBaseApk");
 			builder.Output.AssertTargetIsNotSkipped ("_CreateBaseApk");
 			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
@@ -245,18 +247,18 @@ namespace Xamarin.Android.Build.Tests
 				builder.BuildLogFile = $"excluded-{parameter.Split ('=') [0]}.log";
 				Assert.IsTrue (builder.RunTarget (proj, "_CreateBaseApkInputs", doNotCleanupOnUpdate: true, parameters: [parameter], saveProject: false),
 					$"Collecting inputs with {parameter} should succeed.");
-				FileAssert.Exists (packagedResources, $"{parameter} should not invalidate packaged resources.");
+				Assert.IsTrue (File.Exists (packagedResources), $"{parameter} should not invalidate packaged resources.");
 				Assert.AreEqual (repairedResourcesTimestamp, File.GetLastWriteTimeUtc (packagedResources),
 					$"{parameter} should not touch packaged resources.");
-				FileAssert.DoesNotExist (rulesFile, $"{parameter} should not regenerate keep rules.");
+				Assert.IsFalse (File.Exists (rulesFile), $"{parameter} should not regenerate keep rules.");
 			}
 
 			void AssertRulesAndJavaMembers ()
 			{
-				FileAssert.Exists (rulesFile);
+				Assert.IsTrue (File.Exists (rulesFile));
 				var rules = File.ReadAllText (rulesFile);
-				StringAssert.Contains ("example.KeptActivity", rules, "AAPT2 should keep the manifest-only activity.");
-				StringAssert.Contains ("example.KeptView", rules, "AAPT2 should keep the layout-only view.");
+				Assert.Contains ("example.KeptActivity", rules, "AAPT2 should keep the manifest-only activity.");
+				Assert.Contains ("example.KeptView", rules, "AAPT2 should keep the layout-only view.");
 				Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
 					"R8 should receive the merged AAPT2 rules.");
 				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
@@ -280,9 +282,10 @@ namespace Xamarin.Android.Build.Tests
 			};
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		[Ignore ("Flaky timing-based test. Disabled while investigating incremental build regressions. See: https://github.com/dotnet/android/issues/11792")]
-		public void BasicApplicationRepetitiveBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BasicApplicationRepetitiveBuild ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -300,9 +303,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				if (runtime != AndroidRuntime.NativeAOT) {
 					Assert.IsTrue (
-						firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-						b.LastBuildTime, firstBuildTime
-					);
+						firstBuildTime > b.LastBuildTime, string.Format ("Second build ({0}) should have been faster than the first ({1})", b.LastBuildTime, firstBuildTime));
 				}
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_Sign"),
@@ -320,8 +321,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void BasicApplicationRepetitiveReleaseBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BasicApplicationRepetitiveReleaseBuild ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -345,8 +347,8 @@ namespace Xamarin.Android.Build.Tests
 				b.Output.AssertTargetIsSkipped ("CoreCompile");
 				b.Output.AssertTargetIsSkipped ("_Sign");
 				b.Output.AssertTargetIsSkipped (compilationTarget);
-				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile), "An unchanged build should preserve package contents.");
-				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc), "An unchanged build should not rewrite packages.");
+				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile).ToArray (), "An unchanged build should preserve package contents.");
+				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc).ToArray (), "An unchanged build should not rewrite packages.");
 
 				// A timestamp-only touch can produce identical binaries and legitimately skip signing.
 				proj.MainActivity = proj.DefaultMainActivity.Replace ("count = 1;", "count = 2;");
@@ -368,12 +370,12 @@ namespace Xamarin.Android.Build.Tests
 				b.Output.AssertTargetIsSkipped ("CoreCompile");
 				b.Output.AssertTargetIsSkipped (compilationTarget);
 				b.Output.AssertTargetIsSkipped ("_Sign");
-				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile), "An unchanged build after a code change should preserve package contents.");
-				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc), "An unchanged build after a code change should not rewrite packages.");
+				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile).ToArray (), "An unchanged build after a code change should preserve package contents.");
+				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc).ToArray (), "An unchanged build after a code change should not rewrite packages.");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JniRemappingCountsSurviveIncrementalBuild ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
@@ -422,19 +424,19 @@ namespace Xamarin.Android.Build.Tests
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
 				string remapPath = Path.Combine (objDirPath, "binary-blobs", abi, "libbinary_blobs.so");
-				FileAssert.Exists (remapPath);
+				Assert.IsTrue (File.Exists (remapPath));
 				byte [] elf = File.ReadAllBytes (remapPath);
 				Assert.IsTrue (elf.AsSpan (0, 4).SequenceEqual (new byte [] { 0x7f, (byte)'E', (byte)'L', (byte)'F' }));
 				int envelope = elf.AsSpan ().IndexOf (new byte [] { 0x42, 0x4c, 0x42, 0x42 });
-				Assert.GreaterOrEqual (envelope, 0, $"Missing remapping payload for {abi}.");
-				Assert.GreaterOrEqual (elf.Length, envelope + 16 + 56);
+				Assert.IsGreaterThanOrEqualTo (0, envelope, $"Missing remapping payload for {abi}.");
+				Assert.IsGreaterThanOrEqualTo (envelope + 16 + 56, elf.Length);
 				Assert.AreEqual (0, BinaryPrimitives.ReadUInt16LittleEndian (elf.AsSpan (envelope + 6, 2)), "The default table should be uncompressed.");
 				Assert.AreEqual (expectedTypeCount, BinaryPrimitives.ReadUInt32LittleEndian (elf.AsSpan (envelope + 16, 4)));
 				Assert.AreEqual (expectedMethodCount, BinaryPrimitives.ReadUInt32LittleEndian (elf.AsSpan (envelope + 24, 4)));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnchangedCoreClrBootstrapDoesNotRegenerateOnNextBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -477,17 +479,17 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (bootstrap);
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), "A failed bootstrap write must fail the build.");
-			FileAssert.DoesNotExist (stamp, "Failure must invalidate the previous bootstrap stamp.");
+			Assert.IsFalse (File.Exists (stamp), "Failure must invalidate the previous bootstrap stamp.");
 			Directory.Delete (bootstrap);
 			builder.ThrowOnBuildFailure = true;
 			Assert.IsTrue (builder.Build (proj), "Generation must recover after a failed write.");
 			CollectionAssert.AreEqual (contents, File.ReadAllBytes (bootstrap));
 			Assert.IsTrue (builder.Clean (proj));
-			FileAssert.DoesNotExist (bootstrap);
-			FileAssert.DoesNotExist (stamp);
+			Assert.IsFalse (File.Exists (bootstrap));
+			Assert.IsFalse (File.Exists (stamp));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CoreClrBootstrapInputsAreIndependentOfJavaResources ()
 		{
 			string environment = "BOOTSTRAP_INPUT=first";
@@ -524,7 +526,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("second", EnvironmentHelper.ReadCoreClrBootstrap (intermediate).EnvironmentVariables ["BOOTSTRAP_INPUT"]);
 			runtimeOption.Metadata ["Value"] = "second-feature";
 			AssertBinaryChange ();
-			StringAssert.Contains ("second-feature", Encoding.UTF8.GetString (contents));
+			Assert.Contains ("second-feature", Encoding.UTF8.GetString (contents));
 			var library = new AndroidItem.AndroidNativeLibrary ("native/arm64-v8a/libbootstrap.so") {
 				BinaryContent = () => File.ReadAllBytes (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "android-arm64", "libtest-jni-library.so")),
 			};
@@ -542,11 +544,11 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AssemblyName", "RenamedBootstrapApp");
 			Assert.IsTrue (builder.Build (proj));
 			builder.Output.AssertTargetIsNotSkipped ("_GeneratePackageManagerJava");
-			StringAssert.Contains ("RenamedBootstrapApp.dll", File.ReadAllText (
+			Assert.Contains ("RenamedBootstrapApp.dll", File.ReadAllText (
 				Directory.GetFiles (intermediate, "MonoPackageManager_Resources.java", SearchOption.AllDirectories).Single ()));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NoChangeBuildKeepsDynamicJniRegistrationDisabled ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -590,7 +592,7 @@ namespace Xamarin.Android.Build.Tests
 			var timestamps = new Dictionary<string, DateTime> (StringComparer.Ordinal);
 			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
 				string path = Path.Combine (objDirPath, abi, "libbinary_blobs.so");
-				FileAssert.Exists (path);
+				Assert.IsTrue (File.Exists (path));
 				timestamps.Add (path, File.GetLastWriteTimeUtc (path));
 			}
 			return timestamps;
@@ -607,8 +609,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void CheckNothingIsDeletedByIncrementalClean ([Values] bool enableMultiDex, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckNothingIsDeletedByIncrementalClean (bool enableMultiDex, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -618,7 +621,7 @@ namespace Xamarin.Android.Build.Tests
 			// TODO: NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check. It adds some entries, needs verification
 			//       if it's a correct behavior or not.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check");
+				Assert.Inconclusive ("NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check");
 			}
 
 			var path = Path.Combine ("temp", TestName);
@@ -639,7 +642,7 @@ namespace Xamarin.Android.Build.Tests
 				var intermediate = Path.Combine (projectDir, proj.IntermediateOutputPath);
 				var output = Path.Combine (projectDir, proj.OutputPath);
 				var fileWrites = Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt");
-				FileAssert.Exists (fileWrites);
+				Assert.IsTrue (File.Exists (fileWrites));
 				var expected = File.ReadAllText (fileWrites);
 				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
 				files.AddRange (Directory.EnumerateFiles (output, "*", SearchOption.AllDirectories));
@@ -650,30 +653,31 @@ namespace Xamarin.Android.Build.Tests
  					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
  				};
 				foreach (var file in filesToTouch) {
-					FileAssert.Exists (file);
+					Assert.IsTrue (File.Exists (file));
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
 				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
 				var stampFiles = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
-				FileAssert.Exists (stampFiles, $"{stampFiles} should exist!");
+				Assert.IsTrue (File.Exists (stampFiles), $"{stampFiles} should exist!");
 				var libraryProjectImports = Path.Combine (intermediate, "libraryprojectimports.cache");
-				FileAssert.Exists (libraryProjectImports, $"{libraryProjectImports} should exist!");
+				Assert.IsTrue (File.Exists (libraryProjectImports), $"{libraryProjectImports} should exist!");
 
 				//No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third should have succeeded");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("IncrementalClean"), "`IncrementalClean` should have run!");
 				foreach (var file in files) {
-					FileAssert.Exists (file, $"{file} should not have been deleted!" );
+					Assert.IsTrue (File.Exists (file), $"{file} should not have been deleted!" );
 				}
-				FileAssert.Exists (fileWrites);
+				Assert.IsTrue (File.Exists (fileWrites));
 				var actual = File.ReadAllText (fileWrites);
 				Assert.AreEqual (expected, actual, $"`{fileWrites}` has changes!");
 			}
 		}
 
-		[Test]
-		public void CheckResourceDirectoryDoesNotGetHosed ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckResourceDirectoryDoesNotGetHosed ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -702,8 +706,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void IncrementalCleanDuringClean ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void IncrementalCleanDuringClean ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -719,36 +724,37 @@ namespace Xamarin.Android.Build.Tests
 				b.Target = "Compile";
 				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
 				var designTimeDesigner = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "_Microsoft.Android.Resource.Designer.dll");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should have been created.");
 				b.Target = "Build";
 				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Build.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after Build.");
 				b.Target = "Clean";
 				Assert.IsTrue(b.Build (proj), "Clean should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Clean.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after Clean.");
 				b.Target = "Compile";
 				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Compile.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after Compile.");
 				b.Target = "Build";
 				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Build.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after second Build.");
 				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after third Build.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after third Build.");
 				b.Target = "Compile";
 				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Compile.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after second Compile.");
 				b.Target = "Clean";
 				Assert.IsTrue(b.Build (proj), "Clean should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Clean.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after second Clean.");
 				b.Target = "ReBuild";
 				Assert.IsTrue(b.Build (proj), "ReBuild should have succeeded");
-				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after ReBuild.");
+				Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should still exist after ReBuild.");
 			}
 
 		}
 
-		[Test]
-		public void LibraryIncrementalBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void LibraryIncrementalBuild ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -768,15 +774,16 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (lib), "first build should have succeeded.");
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, lib.OutputPath, $"{lib.ProjectName}.aar");
-				FileAssert.Exists (aarPath);
+				Assert.IsTrue (File.Exists (aarPath));
 				lib.Touch ("Class1.cs");
 				Assert.IsTrue (b.Build (lib), "second build should have succeeded.");
-				FileAssert.Exists (aarPath);
+				Assert.IsTrue (File.Exists (aarPath));
 			}
 		}
 
-		[Test]
-		public void AllProjectsHaveSameOutputDirectory ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AllProjectsHaveSameOutputDirectory ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -810,8 +817,9 @@ namespace Xamarin.Android.Build.Tests
 			sb.Dispose ();
 		}
 
-		[Test]
-		public void BuildSolutionWithMultipleProjectsInParallel ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildSolutionWithMultipleProjectsInParallel ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -841,8 +849,9 @@ namespace Xamarin.Android.Build.Tests
 			sb.Dispose ();
 		}
 
-		[Test]
-		public void JavacTaskDoesNotRunOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void JavacTaskDoesNotRunOnSecondBuild ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -888,8 +897,9 @@ public class TestMe {
 			}
 		}
 
-		[Test]
-		public void ResolveNativeLibrariesInManagedReferences ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ResolveNativeLibrariesInManagedReferences ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1012,9 +1022,10 @@ namespace Lib2
 		}
 
 		//https://github.com/dotnet/android/issues/2247
-		[Test]
-		[NonParallelizable] // Do not run timing sensitive tests in parallel
-		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize] // Do not run timing sensitive tests in parallel
+		public void AppProjectTargetsDoNotBreak ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
@@ -1062,7 +1073,7 @@ namespace Lib2
 				}
 
 				foreach (var file in filesToTouch) {
-					FileAssert.Exists (file);
+					Assert.IsTrue (File.Exists (file));
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 
@@ -1090,8 +1101,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void LibraryProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void LibraryProjectTargetsDoNotBreak ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1148,7 +1160,7 @@ namespace Lib2
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateAarRunsOnceWithGeneratePackageOnBuild ()
 		{
 			// https://github.com/dotnet/android/issues/11514
@@ -1175,8 +1187,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void ManifestMergerIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ManifestMergerIncremental ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1202,8 +1215,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void ReleaseProjectReferenceDoesNotRebuildWithoutChanges ([Values] bool bindingLibrary)
+		[TestMethod]
+		[CombinatorialData]
+		public void ReleaseProjectReferenceDoesNotRebuildWithoutChanges (bool bindingLibrary)
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
@@ -1251,8 +1265,8 @@ namespace Lib2
 			var libraryIntermediate = Path.Combine (Root, libraryBuilder.ProjectDirectory, library.IntermediateOutputPath);
 			var libraryAssembly = Path.Combine (libraryIntermediate, $"{library.ProjectName}.dll");
 			var compileCache = Path.Combine (libraryIntermediate, $"{library.ProjectFilePath}.CoreCompileInputs.cache");
-			FileAssert.Exists (libraryAssembly);
-			FileAssert.Exists (compileCache);
+			Assert.IsTrue (File.Exists (libraryAssembly));
+			Assert.IsTrue (File.Exists (compileCache));
 			if (bindingLibrary) {
 				Assert.IsNotEmpty (Directory.GetFiles (Path.Combine (libraryIntermediate, "generated", "src"), "*.cs"),
 					"The AAR should produce binding sources.");
@@ -1274,7 +1288,7 @@ namespace Lib2
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void AndroidDefineConstantsAreOrderIndependent ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -1306,15 +1320,16 @@ namespace Lib2
 				Assert.AreEqual (firstDefineConstants, builder.Output.GetIntermediaryAsText ("define-constants.txt"),
 					"DefineConstants should not depend on target execution order.");
 				var defines = firstDefineConstants.Split (new [] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-				Assert.Less (Array.IndexOf (defines, "__ANDROID__"), Array.IndexOf (defines, "NET"),
+				Assert.IsLessThan (Array.IndexOf (defines, "NET"), Array.IndexOf (defines, "__ANDROID__"),
 					"Android define constants should retain their historical position before the .NET implicit constants.");
 				Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("Building target \"CoreCompile\" completely.")),
 					"CoreCompile should not run when define constants are reordered.");
 			}
 		}
 
-		[Test]
-		public void ProduceReferenceAssembly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ProduceReferenceAssembly ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1324,7 +1339,7 @@ namespace Lib2
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// Fails on NativeAOT with:
 				// Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(120,5): error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
-				Assert.Ignore ("NativeAOT doesn't support producing reference assemblies.");
+				Assert.Inconclusive ("NativeAOT doesn't support producing reference assemblies.");
 			}
 
 			var path = Path.Combine ("temp", TestName);
@@ -1381,8 +1396,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void TransitiveDependencyProduceReferenceAssembly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void TransitiveDependencyProduceReferenceAssembly ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1460,14 +1476,15 @@ namespace Lib2
 					var stagedAssemblies = Directory.GetFiles (assets, $"{lib2.ProjectName}.dll", SearchOption.AllDirectories);
 					Assert.IsNotEmpty (stagedAssemblies, "Library2 should be staged for packaging.");
 					foreach (string stagedAssembly in stagedAssemblies) {
-						FileAssert.AreEqual (lib2Output, stagedAssembly, "The staged Library2 should contain the updated implementation.");
+						CollectionAssert.AreEqual (File.ReadAllBytes (lib2Output), File.ReadAllBytes (stagedAssembly), "The staged Library2 should contain the updated implementation.");
 					}
 				}
 			}
 		}
 
-		[Test]
-		public void LinkAssembliesNoShrink ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void LinkAssembliesNoShrink ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -1498,8 +1515,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void CSProjUserFileChanges ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CSProjUserFileChanges ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1528,9 +1546,10 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		[NonParallelizable] // /restore can fail on Mac in parallel
-		public void ConvertCustomView ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize] // /restore can fail on Mac in parallel
+		public void ConvertCustomView ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1641,8 +1660,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void ResolveLibraryProjectImports ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ResolveLibraryProjectImports ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1657,7 +1677,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var cacheFile = Path.Combine (intermediate, "libraryprojectimports.cache");
-				FileAssert.Exists (cacheFile);
+				Assert.IsTrue (File.Exists (cacheFile));
 				var expected = ReadCache (cacheFile);
 				Assert.AreNotEqual (0, expected.Jars.Length,
 					$"{nameof (expected.Jars)} should not be empty");
@@ -1669,18 +1689,18 @@ namespace Lib2
 				// Delete the stamp file; this triggers <ResolveLibraryProjectImports/> to re-run.
 				// However, the task will skip everything, since the hashes of each assembly will be the same.
 				var stamp = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
-				FileAssert.Exists (stamp);
+				Assert.IsTrue (File.Exists (stamp));
 				File.Delete (stamp);
 
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
-				FileAssert.Exists (cacheFile);
+				Assert.IsTrue (File.Exists (cacheFile));
 				var actual = ReadCache (cacheFile);
-				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec).OrderBy (j => j),
-					expected.Jars.Select (j => j.ItemSpec).OrderBy (j => j));
-				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j),
-					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j));
+				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec).OrderBy (j => j).ToArray (),
+					expected.Jars.Select (j => j.ItemSpec).OrderBy (j => j).ToArray ());
+				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j).ToArray (),
+					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j).ToArray ());
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
@@ -1690,7 +1710,7 @@ namespace Lib2
 
 				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-				FileAssert.Exists (cacheFile);
+				Assert.IsTrue (File.Exists (cacheFile));
 				actual = ReadCache (cacheFile);
 				Assert.AreEqual (expected.Jars.Length + 1, actual.Jars.Length,
 					$"{nameof (expected.Jars)} should have one more item");
@@ -1699,13 +1719,13 @@ namespace Lib2
 				Assert.AreEqual (expected.ResolvedResourceDirectoryStamps.Length + 1, actual.ResolvedResourceDirectoryStamps.Length,
 					$"{nameof (expected.ResolvedResourceDirectoryStamps)} should have one more item");
 				foreach (var s in actual.ResolvedResourceDirectoryStamps) {
-					FileAssert.Exists (s.ItemSpec);
+					Assert.IsTrue (File.Exists (s.ItemSpec));
 				}
 
 				// Build with no changes, checking we are skipping targets appropriately
 				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj), "fourth build should have succeeded.");
-				FileAssert.Exists (cacheFile);
+				Assert.IsTrue (File.Exists (cacheFile));
 				var targets = new List<string> {
 					"_UpdateAndroidResgen",
 					"_CompileJava",
@@ -1721,7 +1741,7 @@ namespace Lib2
  					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
  				};
 				foreach (var file in filesToTouch) {
-					FileAssert.Exists (file);
+					Assert.IsTrue (File.Exists (file));
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 
@@ -1729,8 +1749,8 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "fifth build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
 				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
-				FileAssert.Exists (cacheFile);
-				FileAssert.Exists (stamp);
+				Assert.IsTrue (File.Exists (cacheFile));
+				Assert.IsTrue (File.Exists (stamp));
 			}
 		}
 
@@ -1744,9 +1764,10 @@ namespace Lib2
 			return task;
 		}
 
-		[Test]
-		[NonParallelizable]
-		public void AddNewAndroidResourceOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize]
+		public void AddNewAndroidResourceOnSecondBuild ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1775,9 +1796,10 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		[NonParallelizable]
-		public void InvalidAndroidResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize]
+		public void InvalidAndroidResource ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1818,8 +1840,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void CasingOnJavaLangObject ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CasingOnJavaLangObject ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1846,13 +1869,14 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void GenerateJavaStubsAndAssembly ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		public void GenerateJavaStubsAndAssembly ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
+				Assert.Inconclusive ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
 			}
 
 			var targets = new [] {
@@ -1903,7 +1927,7 @@ namespace Lib2
 					string projectDirectory = Path.Combine (Root, b.ProjectDirectory);
 					string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi));
 					string typemap = Path.Combine (intermediate, "typemap", $"_{proj.ProjectName}.TypeMap.dll");
-					FileAssert.Exists (typemap, "The managed application type map should be generated.");
+					Assert.IsTrue (File.Exists (typemap), "The managed application type map should be generated.");
 					string apk = Directory.GetFiles (Path.Combine (projectDirectory, proj.OutputPath), "*-Signed.apk", SearchOption.AllDirectories).Single ();
 					DateTime apkWriteTime = File.GetLastWriteTimeUtc (apk);
 					string apkHash = Files.HashFile (apk);
@@ -1932,14 +1956,15 @@ namespace Lib2
 			var lines = File.ReadAllLines (Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
 			var typeMapAssembly = Path.Combine (intermediate, "typemap", "_Microsoft.Android.TypeMaps.dll");
 			CollectionAssert.Contains (lines, typeMapAssembly, "The managed type map assembly should be in FileWrites.");
-			FileAssert.Exists (typeMapAssembly);
+			Assert.IsTrue (File.Exists (typeMapAssembly));
 		}
 
 #pragma warning disable 414
 #pragma warning restore 414
 
-		[Test]
-		public void DeterministicBuilds ([Values] bool deterministic, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void DeterministicBuilds (bool deterministic, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1956,7 +1981,7 @@ namespace Lib2
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
-				FileAssert.Exists (output);
+				Assert.IsTrue (File.Exists (output));
 				string expectedHash = Files.HashFile (output);
 				Guid expectedMvid;
 				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
@@ -1965,7 +1990,7 @@ namespace Lib2
 
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				FileAssert.Exists (output);
+				Assert.IsTrue (File.Exists (output));
 				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
 					if (deterministic) {
 						Assert.AreEqual (expectedMvid, assembly.MainModule.Mvid, "Mvid should match");
@@ -1978,8 +2003,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void DesignTimeBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void DesignTimeBuild ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2014,8 +2040,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void DesignTimeBuildSignAndroidPackage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void DesignTimeBuildSignAndroidPackage ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2051,8 +2078,9 @@ namespace Lib2
 			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true);
 		}
 
-		[Test]
-		public void ChangePackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ChangePackageNamingPolicy ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2073,7 +2101,7 @@ namespace Lib2
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				var javaFile = Directory.GetFiles (b.Output.GetIntermediaryPath (Path.Combine ("typemap", "java")), "Bar.java", SearchOption.AllDirectories).Single ();
 				var packageName = Path.GetFileName (Path.GetDirectoryName (javaFile));
-				StringAssert.StartsWith ("scrc64", packageName, "Crc64 should use the trimmable type map's package hash.");
+				Assert.StartsWith ("scrc64", packageName, "Crc64 should use the trimmable type map's package hash.");
 				var className = $"L{packageName}/Bar;";
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
@@ -2085,8 +2113,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void MissingProjectReference ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void MissingProjectReference ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2142,8 +2171,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void AaptError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AaptError ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2166,8 +2196,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void AndroidResourceChange ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AndroidResourceChange ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2215,8 +2246,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void AndroidAssetChange ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AndroidAssetChange ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2246,7 +2278,7 @@ namespace Lib2
 
 			void AssertAssetContents (string apk)
 			{
-				FileAssert.Exists (apk);
+				Assert.IsTrue (File.Exists (apk));
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var entry = zip.GetEntry ("assets/Foo.txt");
 					Assert.IsNotNull (entry, "Foo.txt should exist in apk!");
@@ -2260,8 +2292,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void AndroidAssetMissing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AndroidAssetMissing ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2281,7 +2314,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				FileAssert.Exists (apk);
+				Assert.IsTrue (File.Exists (apk));
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsNotNull (zip.GetEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
 				}
@@ -2291,15 +2324,16 @@ namespace Lib2
 				File.SetLastWriteTimeUtc (projectFile, DateTime.UtcNow.AddMinutes (1));
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
-				FileAssert.Exists (apk);
+				Assert.IsTrue (File.Exists (apk));
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsNotNull (zip.GetEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
 				}
 			}
 		}
 
-		[Test]
-		public void ChangeSupportedAbis ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ChangeSupportedAbis ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2329,8 +2363,9 @@ namespace Lib2
 			}
 		}
 
-		[Test]
-		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2371,7 +2406,7 @@ namespace Lib2
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void UniversalApkFromBundleIsIncremental ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
@@ -2413,8 +2448,9 @@ namespace Lib2
 			builder.Output.AssertTargetIsSkipped ("_CreateUniversalApkFromBundle");
 		}
 
-		[Test]
-		public void PostTrimmingPipelineIsSkippedOnSecondBuild ([Values ("arm64-v8a", "x86_64")] string abi)
+		[TestMethod]
+		[CombinatorialData]
+		public void PostTrimmingPipelineIsSkippedOnSecondBuild ([CombinatorialValues ("arm64-v8a", "x86_64")] string abi)
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			const bool isRelease = true;
@@ -2433,7 +2469,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_PostTrimmingPipeline");
 				var linkedAssembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi), "linked", $"{proj.ProjectName}.dll");
-				FileAssert.Exists (linkedAssembly, "The post-trimming pipeline should operate on the linked application assembly.");
+				Assert.IsTrue (File.Exists (linkedAssembly), "The post-trimming pipeline should operate on the linked application assembly.");
 				var assemblyHash = Files.HashFile (linkedAssembly);
 				var assemblyWriteTime = File.GetLastWriteTimeUtc (linkedAssembly);
 

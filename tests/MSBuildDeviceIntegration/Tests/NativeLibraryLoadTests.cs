@@ -8,24 +8,26 @@ using System.Text;
 using System.Threading;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Category ("UsesDevice")]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class NativeLibraryLoadTests : DeviceTest
 {
-	[Test]
-	public void AssemblyStoreDlopenResolvesOriginalPayload ([Values] bool is64Bit, [Values] bool extractNativeLibs)
+	[TestMethod]
+	[CombinatorialData]
+	public void AssemblyStoreDlopenResolvesOriginalPayload (bool is64Bit, bool extractNativeLibs)
 	{
 		string abi = RunAdbCommand ("shell getprop ro.product.cpu.abilist").Trim ().Split (',')
 			.FirstOrDefault (value => is64Bit ? value is "arm64-v8a" or "x86_64" : value == "armeabi-v7a");
 		if (abi == null) {
-			Assert.Ignore ($"The target does not support a {(is64Bit ? 64 : 32)}-bit CoreCLR ABI.");
+			Assert.Inconclusive ($"The target does not support a {(is64Bit ? 64 : 32)}-bit CoreCLR ABI.");
 			return;
 		}
 
@@ -102,9 +104,9 @@ public class NativeLibraryLoadTests : DeviceTest
 		Assert.IsTrue (builder.Install (proj), "The generated-store application should build and install.");
 		AssertExtractNativeLibs (builder.Output.GetIntermediaryPath (Path.Combine ("android", "AndroidManifest.xml")), extractNativeLibs);
 		string rawStore = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so"));
-		FileAssert.Exists (rawStore);
+		Assert.IsTrue (File.Exists (rawStore));
 		byte [] expected = File.ReadAllBytes (rawStore);
-		Assert.Greater (expected.Length, 0);
+		Assert.IsGreaterThan (0, expected.Length);
 		string expectedHash = Convert.ToHexString (SHA256.HashData (expected));
 		string successMarker = $"ASSEMBLY_STORE_PAYLOAD_MATCH:{expectedHash}";
 
@@ -121,12 +123,12 @@ public class NativeLibraryLoadTests : DeviceTest
 					"--ez", "expected-64-bit", is64Bit.ToString ().ToLowerInvariant (),
 				]);
 				Assert.AreEqual (0, code, $"The loader test activity should start: {output}\n{error}");
-				StringAssert.Contains ("Starting: Intent {", output);
+				Assert.Contains ("Starting: Intent {", output);
 			}),
 			"Android dlopen/dlsym must expose every byte of the generated assembly-store payload.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void UnknownSystemLibraryLoadsWithoutMainThreadDispatch ()
 	{
 		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
@@ -191,8 +193,9 @@ public class NativeLibraryLoadTests : DeviceTest
 		Assert.IsTrue (appCompleted, $"Output did not contain {completedMessage}.");
 	}
 
-	[Test]
-	public void ExemptJniLibraryLoadsOnWorkerThreadWithBlockedMainThread ([Values] bool extractNativeLibs)
+	[TestMethod]
+	[CombinatorialData]
+	public void ExemptJniLibraryLoadsOnWorkerThreadWithBlockedMainThread (bool extractNativeLibs)
 	{
 		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 			return;
@@ -612,7 +615,7 @@ public class NativeLibraryLoadTests : DeviceTest
 
 	byte [] CompileJniFixtureLibrary (string directory, string libraryFileName, string source)
 	{
-		var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out), nameof (NativeLibraryLoadTests));
+		var log = new TaskLoggingHelper (new MockBuildEngine (Console.Out), nameof (NativeLibraryLoadTests));
 		var ndk = AndroidNdkTools.Create (AndroidNdkPath, log)
 			?? throw new InvalidOperationException ("The configured Android NDK must be available.");
 		string clang = ndk.GetToolPath ("clang")
@@ -652,8 +655,9 @@ public class NativeLibraryLoadTests : DeviceTest
 		return File.ReadAllBytes (outputPath);
 	}
 
-	[Test]
-	public void MissingNativeLibraryHasUsefulErrorMessage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void MissingNativeLibraryHasUsefulErrorMessage ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		bool isRelease = runtime == AndroidRuntime.NativeAOT;
 		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

@@ -2,15 +2,15 @@ using System;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 
 namespace Xamarin.Android.Tools.BytecodeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class NullableAnnotationTests : ClassFileFixture
 	{
-		[Test]
+		[TestMethod]
 		public void RuntimeInvisibleAnnotations ()
 		{
 			var c = LoadClassFile ("NotNullClass.class");
@@ -26,10 +26,10 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			var return_ann = notnull_method.Attributes.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
 			var param_ann = notnull_method.Attributes.OfType<RuntimeInvisibleParameterAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
 
-			Assert.NotNull (return_ann);
+			Assert.IsNotNull (return_ann);
 			Assert.IsTrue (return_ann.Any (a => a.Type == "Landroid/annotation/NonNull;"));
 
-			Assert.NotNull (param_ann);
+			Assert.IsNotNull (param_ann);
 			Assert.IsTrue (param_ann.Any (a => a.ParameterIndex == 0 && a.Annotations[0].Type == "Landroid/annotation/NonNull;"));
 
 			// Field with no annotations
@@ -43,11 +43,11 @@ namespace Xamarin.Android.Tools.BytecodeTests
 
 			var field_ann = notnull_method.Attributes.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
 
-			Assert.NotNull (field_ann);
+			Assert.IsNotNull (field_ann);
 			Assert.IsTrue (field_ann.Any (a => a.Type == "Landroid/annotation/NonNull;"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NullableAnnotationOutput ()
 		{
 			var c = LoadClassFile ("NotNullClass.class");

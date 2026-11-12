@@ -1,13 +1,13 @@
 using System;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests;
 
-[TestFixture]
+[TestClassAttribute]
 class BlittableTypeTests : CodeGeneratorTestBase
 {
-	[Test]
+	[TestMethodAttribute]
 	public void MethodWithBoolReturnType ()
 	{
 		var klass = new TestClass ("Object", "java.code.MyClass");
@@ -18,17 +18,17 @@ class BlittableTypeTests : CodeGeneratorTestBase
 		var actual = GetGeneratedTypeOutput (klass);
 
 		// Return type should be byte
-		Assert.That (actual, Contains.Substring ("static unsafe sbyte n_IsEmpty"));
+		StringAssert.Contains (actual, "static unsafe sbyte n_IsEmpty");
 
 		// Return statement should convert to 0 or 1
-		Assert.That (actual, Contains.Substring ("return __this.IsEmpty () ? (sbyte)1 : (sbyte)0"));
+		StringAssert.Contains (actual, "return __this.IsEmpty () ? (sbyte)1 : (sbyte)0");
 
 		// Ensure the marshal delegate is byte
-		Assert.That (actual, Contains.Substring ("new _JniMarshal_PP_B"));
-		Assert.That (actual, Does.Not.Contains ("new _JniMarshal_PP_Z"));
+		StringAssert.Contains (actual, "new _JniMarshal_PP_B");
+		Assert.DoesNotContain ("new _JniMarshal_PP_Z", actual, StringComparison.Ordinal);
 	}
 
-	[Test]
+	[TestMethodAttribute]
 	public void MethodWithBoolParameter ()
 	{
 		var klass = new TestClass ("Object", "java.code.MyClass");
@@ -39,40 +39,40 @@ class BlittableTypeTests : CodeGeneratorTestBase
 		var actual = GetGeneratedTypeOutput (klass);
 
 		// Method parameter should be byte
-		Assert.That (actual, Contains.Substring ("static unsafe void n_SetEmpty_Z (IntPtr jnienv, IntPtr native__this, sbyte native_value)"));
+		StringAssert.Contains (actual, "static unsafe void n_SetEmpty_Z (IntPtr jnienv, IntPtr native__this, sbyte native_value)");
 
 		// Method should convert from 0 or 1
-		Assert.That (actual, Contains.Substring ("var value = native_value != 0;"));
+		StringAssert.Contains (actual, "var value = native_value != 0;");
 
 		// Ensure the marshal delegate is byte
-		Assert.That (actual, Contains.Substring ("new _JniMarshal_PPB_V"));
-		Assert.That (actual, Does.Not.Contains ("new _JniMarshal_PPZ_V"));
+		StringAssert.Contains (actual, "new _JniMarshal_PPB_V");
+		Assert.DoesNotContain ("new _JniMarshal_PPZ_V", actual, StringComparison.Ordinal);
 	}
 
-	[Test]
+	[TestMethodAttribute]
 	public void BoolProperty ()
 	{
 		var klass = SupportTypeBuilder.CreateClassWithProperty ("MyClass", "com.example.myClass", "IsEmpty", "boolean", options);
 		var actual = GetGeneratedTypeOutput (klass);
 
 		// Getter return type should be byte
-		Assert.That (actual, Contains.Substring ("static unsafe sbyte n_get_IsEmpty"));
+		StringAssert.Contains (actual, "static unsafe sbyte n_get_IsEmpty");
 
 		// Getter return statement should convert to 0 or 1
-		Assert.That (actual, Contains.Substring ("return __this.IsEmpty ? (sbyte)1 : (sbyte)0"));
+		StringAssert.Contains (actual, "return __this.IsEmpty ? (sbyte)1 : (sbyte)0");
 
 		// Setter parameter should be byte
-		Assert.That (actual, Contains.Substring ("static unsafe void n_set_IsEmpty_Z (IntPtr jnienv, IntPtr native__this, sbyte native_value)"));
+		StringAssert.Contains (actual, "static unsafe void n_set_IsEmpty_Z (IntPtr jnienv, IntPtr native__this, sbyte native_value)");
 
 		// Setter should convert from 0 or 1
-		Assert.That (actual, Contains.Substring ("var value = native_value != 0;"));
+		StringAssert.Contains (actual, "var value = native_value != 0;");
 
 		// Ensure the marshal delegate is byte
-		Assert.That (actual, Contains.Substring ("new _JniMarshal_PP_B"));
-		Assert.That (actual, Does.Not.Contains ("new _JniMarshal_PP_Z"));
+		StringAssert.Contains (actual, "new _JniMarshal_PP_B");
+		Assert.DoesNotContain ("new _JniMarshal_PP_Z", actual, StringComparison.Ordinal);
 	}
 
-	[Test]
+	[TestMethodAttribute]
 	public void MethodWithCharReturnType ()
 	{
 		var klass = new TestClass ("Object", "java.code.MyClass");
@@ -83,17 +83,17 @@ class BlittableTypeTests : CodeGeneratorTestBase
 		var actual = GetGeneratedTypeOutput (klass);
 
 		// Return type should be ushort
-		Assert.That (actual, Contains.Substring ("static unsafe ushort n_GetFirstLetter"));
+		StringAssert.Contains (actual, "static unsafe ushort n_GetFirstLetter");
 
 		// Return statement should convert to ushort
-		Assert.That (actual, Contains.Substring ("return (ushort)__this.GetFirstLetter ()"));
+		StringAssert.Contains (actual, "return (ushort)__this.GetFirstLetter ()");
 
 		// Ensure the marshal delegate is ushort
-		Assert.That (actual, Contains.Substring ("new _JniMarshal_PP_s"));
-		Assert.That (actual, Does.Not.Contains ("new _JniMarshal_PP_C"));
+		StringAssert.Contains (actual, "new _JniMarshal_PP_s");
+		Assert.DoesNotContain ("new _JniMarshal_PP_C", actual, StringComparison.Ordinal);
 	}
 
-	[Test]
+	[TestMethodAttribute]
 	public void MethodWithCharParameter ()
 	{
 		var klass = new TestClass ("Object", "java.code.MyClass");
@@ -104,36 +104,36 @@ class BlittableTypeTests : CodeGeneratorTestBase
 		var actual = GetGeneratedTypeOutput (klass);
 
 		// Method parameter should be ushort
-		Assert.That (actual, Contains.Substring ("static unsafe void n_SetFirstLetter_C (IntPtr jnienv, IntPtr native__this, ushort native_value)"));
+		StringAssert.Contains (actual, "static unsafe void n_SetFirstLetter_C (IntPtr jnienv, IntPtr native__this, ushort native_value)");
 
 		// Method should convert from ushort to char
-		Assert.That (actual, Contains.Substring ("var value = (char)native_value;"));
+		StringAssert.Contains (actual, "var value = (char)native_value;");
 
 		// Ensure the marshal delegate is ushort
-		Assert.That (actual, Contains.Substring ("new _JniMarshal_PPs_V"));
-		Assert.That (actual, Does.Not.Contains ("new _JniMarshal_PPC_V"));
+		StringAssert.Contains (actual, "new _JniMarshal_PPs_V");
+		Assert.DoesNotContain ("new _JniMarshal_PPC_V", actual, StringComparison.Ordinal);
 	}
 
-	[Test]
+	[TestMethodAttribute]
 	public void CharProperty ()
 	{
 		var klass = SupportTypeBuilder.CreateClassWithProperty ("MyClass", "com.example.myClass", "FirstLetter", "char", options);
 		var actual = GetGeneratedTypeOutput (klass);
 
 		// Getter return type should be ushort
-		Assert.That (actual, Contains.Substring ("static unsafe ushort n_get_FirstLetter"));
+		StringAssert.Contains (actual, "static unsafe ushort n_get_FirstLetter");
 
 		// Getter return statement should convert to ushort
-		Assert.That (actual, Contains.Substring ("return (ushort)__this.FirstLetter"));
+		StringAssert.Contains (actual, "return (ushort)__this.FirstLetter");
 
 		// Setter parameter should be ushort
-		Assert.That (actual, Contains.Substring ("static unsafe void n_set_FirstLetter_C (IntPtr jnienv, IntPtr native__this, ushort native_value)"));
+		StringAssert.Contains (actual, "static unsafe void n_set_FirstLetter_C (IntPtr jnienv, IntPtr native__this, ushort native_value)");
 
 		// Setter should convert from ushort to char
-		Assert.That (actual, Contains.Substring ("var value = (char)native_value;"));
+		StringAssert.Contains (actual, "var value = (char)native_value;");
 
 		// Ensure the marshal delegate is ushort
-		Assert.That (actual, Contains.Substring ("new _JniMarshal_PP_s"));
-		Assert.That (actual, Does.Not.Contains ("new _JniMarshal_PP_C"));
+		StringAssert.Contains (actual, "new _JniMarshal_PP_s");
+		Assert.DoesNotContain ("new _JniMarshal_PP_C", actual, StringComparison.Ordinal);
 	}
 }

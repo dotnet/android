@@ -1,9 +1,10 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class PackagingUtilsTests
 	{
 		void AssertIsValid (string path)
@@ -16,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (PackagingUtils.CheckEntryForPackaging (path), $"{path} should *not* be valid");
 		}
 
-		[Test]
+		[TestMethod]
 		public void SigningFiles ()
 		{
 			AssertIsNotValid ("META-INF/MANIFEST.MF");
@@ -31,7 +32,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertIsNotValid ("META-INF\\GOOG.RSA");
 		}
 
-		[Test]
+		[TestMethod]
 		public void SvnDirectories ()
 		{
 			AssertIsNotValid (".svn/foo");
@@ -40,14 +41,14 @@ namespace Xamarin.Android.Build.Tests
 			AssertIsNotValid ("bar\\.svn\\foo");
 		}
 
-		[Test]
+		[TestMethod]
 		public void KotlinServices ()
 		{
 			AssertIsValid ("META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory");
 			AssertIsValid ("META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler");
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaFiles ()
 		{
 			AssertIsNotValid ("foo.java");
@@ -61,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertIsNotValid ("foo\\bar.scala");
 		}
 
-		[Test]
+		[TestMethod]
 		public void HiddenFiles ()
 		{
 			AssertIsNotValid (".foo");
@@ -74,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertIsNotValid ("_foo/bar");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Directories ()
 		{
 			AssertIsNotValid ("foo/");

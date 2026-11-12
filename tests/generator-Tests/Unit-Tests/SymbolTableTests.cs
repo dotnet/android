@@ -1,13 +1,13 @@
 using System;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class SymbolTableTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void FindGenericTypes ()
 		{
 			var table = new SymbolTable ();

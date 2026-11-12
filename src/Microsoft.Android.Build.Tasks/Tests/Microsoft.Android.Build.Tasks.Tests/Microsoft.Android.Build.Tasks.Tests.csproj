@@ -11,7 +11,7 @@
     <Nullable>annotations</Nullable>
   </PropertyGroup>
 
-  <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
+  <Import Project="..\..\..\..\build-tools\scripts\MSTestReferences.projitems" />
 
   <ItemGroup>
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" Link="EnvironmentHelper.cs" />

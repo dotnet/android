@@ -1,3 +1,3 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[assembly: NonParallelizable]
+[assembly: DoNotParallelize]

@@ -1,36 +1,36 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.Bytecode;
 
 namespace Xamarin.Android.Tools.BytecodeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class ParameterFixupTests : ClassFileFixture {
 
-		[Test]
+		[TestMethod]
 		public void XmlDeclaration_FixedUpFromOtherClasses ()
 		{
 			AssertXmlDeclaration (new [] {"IParameterInterface.class","ParameterAbstractClass.class", "ParameterClass.class", "ParameterClass2.class"}, "ParameterFixup.xml");
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDeclaration_FixedUpFromDocumentation()
 		{
 			var androidSdkPath  = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
 			if (string.IsNullOrEmpty (androidSdkPath)) {
-				Assert.Ignore ("The `ANDROID_SDK_PATH` environment variable isn't set; " +
+				Assert.Inconclusive ("The `ANDROID_SDK_PATH` environment variable isn't set; " +
 						"cannot test importing parameter names from HTML. Skipping...");
 				return;
 			}
 			try {
 				AssertXmlDeclaration ("TypeEvaluator.class", "ParameterFixupFromDocs.xml", Path.Combine (Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH"), "docs", "reference"));
 			} catch (Exception ex) {
-				Assert.Fail ("An unexpected exception was thrown : {0}", ex);
+				Assert.Fail (string.Format ("An unexpected exception was thrown : {0}", ex));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDeclaration_FixedUpFromApiXmlDocumentation ()
 		{
 			string tempFile = null;
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetParameterNames_UsesMatchingOverloadWhenSignatureIsNotDocumented ()
 		{
 			var tempFile = LoadToTempFile ("ParameterFixupApiXmlDocs.xml");
@@ -66,7 +66,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDeclaration_FixedUpFromUnresolvedApiXmlDocumentation ()
 		{
 			string docsPath = null;
@@ -81,17 +81,17 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDeclaration_DoesNotThrowAnExceptionIfDocumentationNotFound ()
 		{
 			try {
 				AssertXmlDeclaration (new [] {"IParameterInterface.class","ParameterAbstractClass.class", "ParameterClass.class", "ParameterClass2.class"}, "ParameterFixup.xml", "SomeNonExistantPath");
 			} catch (Exception ex) {
-				Assert.Fail ("An unexpected exception was thrown : {0}", ex);
+				Assert.Fail (string.Format ("An unexpected exception was thrown : {0}", ex));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DocletType_ShouldDetectApiXml ()
 		{
 			string tempFile = null;
@@ -106,12 +106,12 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DocletType_ShouldDetectDroidDocs ()
 		{
 			var androidSdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
 			if (string.IsNullOrEmpty (androidSdkPath)) {
-				Assert.Ignore("The `ANDROID_SDK_PATH` environment variable isn't set; " +
+				Assert.Inconclusive("The `ANDROID_SDK_PATH` environment variable isn't set; " +
 						"cannot test importing parameter names from HTML. Skipping...");
 				return;
 			}
@@ -119,12 +119,12 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			var droidDocsPath = Path.Combine (androidSdkPath, "docs", "reference");
 
 			if (!Directory.Exists (droidDocsPath))
-				Assert.Fail("The Android SDK Documentation path `{0}` was not found.", droidDocsPath);
+				Assert.Fail (string.Format ("The Android SDK Documentation path `{0}` was not found.", droidDocsPath));
 				
 			Assert.AreEqual(JavaDocletType.DroidDoc2, JavaMethodParameterNameProvider.GetDocletType(droidDocsPath));
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDeclaration_FixedUpFromParameterDescription ()
 		{
 			string tempFile = null;
@@ -150,4 +150,3 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 	}
 }
-

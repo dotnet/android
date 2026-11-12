@@ -5,14 +5,15 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class NativeToolTestHelperTests : BaseTest
 {
-	[Test]
+	[TestMethod]
 	public void RuntimeNdkOverridesBuildHostPath ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -22,7 +23,7 @@ public class NativeToolTestHelperTests : BaseTest
 			directory, Path.Combine (directory, "home"), Path.Combine (directory, "missing-build-host-ndk")));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExecutingHostNdkOverridesExistingBuildHostPath ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -35,7 +36,7 @@ public class NativeToolTestHelperTests : BaseTest
 		Assert.AreEqual (runtimeNdk, NativeToolTestHelper.ResolveNdkDirectory (null, homeDirectory, buildNdk));
 	}
 
-	[Test]
+	[TestMethod]
 	public void StaleBuildHostPathUsesExecutingHostConvention ()
 	{
 		string homeDirectory = Path.Combine (Root, "temp", TestName, "home");
@@ -45,7 +46,7 @@ public class NativeToolTestHelperTests : BaseTest
 			NativeToolTestHelper.ResolveNdkDirectory (null, homeDirectory, missingBuildNdk));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExplicitRuntimeConfigurationIsNotSilentlyIgnored ()
 	{
 		string missingDirectory = Path.Combine (Root, "temp", TestName, "missing-runtime-ndk");
@@ -54,7 +55,7 @@ public class NativeToolTestHelperTests : BaseTest
 			missingDirectory, Path.Combine (Root, "temp", TestName, "home"), null));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExistingBuildHostNdkRemainsUsableLocally ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -63,7 +64,7 @@ public class NativeToolTestHelperTests : BaseTest
 		Assert.AreEqual (directory, NativeToolTestHelper.ResolveNdkDirectory ("", Path.Combine (directory, "home"), directory));
 	}
 
-	[Test]
+	[TestMethod]
 	public void CapturesBothStreamsBeyondPipeCapacity ()
 	{
 		const int lines = 1024;
@@ -80,7 +81,7 @@ public class NativeToolTestHelperTests : BaseTest
 		Assert.AreEqual (string.Concat (Enumerable.Repeat (errorLine + "\n", lines)), result.StandardError.Replace ("\r\n", "\n"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void CapturesDiagnosticsForNonzeroExit ()
 	{
 		var startInfo = CreateShell (
@@ -94,31 +95,31 @@ public class NativeToolTestHelperTests : BaseTest
 		Assert.AreEqual ("error", result.StandardError);
 	}
 
-	[Test]
+	[TestMethod]
 	public void TimesOutWhileWaitingForOutput ()
 	{
 		var startInfo = CreateShell ("exec sleep 30", "[Threading.Thread]::Sleep(30000)");
 		var elapsed = Stopwatch.StartNew ();
 
-		Assert.Throws<TimeoutException> (() => NativeToolTestHelper.Capture (startInfo, TimeSpan.FromSeconds (1)));
+		Assert.ThrowsExactly<TimeoutException> (() => NativeToolTestHelper.Capture (startInfo, TimeSpan.FromSeconds (1)));
 
-		Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (10), "The timeout must include output draining, not just process exit.");
+		Assert.IsLessThan (TimeSpan.FromSeconds (10), elapsed.Elapsed, "The timeout must include output draining, not just process exit.");
 	}
 
-	[Test]
-	[Platform (Exclude = "Win")]
+	[TestMethod]
+	[OSCondition (ConditionMode.Exclude, OperatingSystems.Windows)]
 	public void TimesOutAfterBothStreamsClose ()
 	{
 		var startInfo = CreateShell ("exec 1>&- 2>&-; exec sleep 30", "");
 		var elapsed = Stopwatch.StartNew ();
 
-		Assert.Throws<TimeoutException> (() => NativeToolTestHelper.Capture (startInfo, TimeSpan.FromSeconds (1)));
+		Assert.ThrowsExactly<TimeoutException> (() => NativeToolTestHelper.Capture (startInfo, TimeSpan.FromSeconds (1)));
 
-		Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (10), "Closing the streams must not start an unbounded process wait.");
+		Assert.IsLessThan (TimeSpan.FromSeconds (10), elapsed.Elapsed, "Closing the streams must not start an unbounded process wait.");
 	}
 
-	[Test]
-	[Platform (Exclude = "Win")]
+	[TestMethod]
+	[OSCondition (ConditionMode.Exclude, OperatingSystems.Windows)]
 	public void TimesOutWhenAnExitedParentLeavesInheritedPipesOpen ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -128,8 +129,8 @@ public class NativeToolTestHelperTests : BaseTest
 		startInfo.Environment ["CHILD_PID_FILE"] = childIdFile;
 		var elapsed = Stopwatch.StartNew ();
 		try {
-			Assert.Throws<TimeoutException> (() => NativeToolTestHelper.Capture (startInfo, TimeSpan.FromSeconds (1)));
-			Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (10), "Parent exit must not make inherited-pipe draining unbounded.");
+			Assert.ThrowsExactly<TimeoutException> (() => NativeToolTestHelper.Capture (startInfo, TimeSpan.FromSeconds (1)));
+			Assert.IsLessThan (TimeSpan.FromSeconds (10), elapsed.Elapsed, "Parent exit must not make inherited-pipe draining unbounded.");
 		} finally {
 			if (File.Exists (childIdFile)) {
 				using var child = Process.GetProcessById (int.Parse (File.ReadAllText (childIdFile), CultureInfo.InvariantCulture));

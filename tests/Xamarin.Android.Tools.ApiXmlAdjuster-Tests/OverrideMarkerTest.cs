@@ -2,17 +2,17 @@
 using System.IO;
 using System.Linq;
 using System.Xml;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class OverrideMarkerTest
 	{
-		JavaApi api;
+		static JavaApi api;
 		
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 			api.Resolve ();
@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			api.MarkOverrides ();
 		}
 		
-		[Test]
+		[TestMethod]
 		public void InstantiatedGenericArgumentName ()
 		{
 			var kls = api.FindNonGenericType ("android.database.ContentObservable") as JavaClass;
@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.AreEqual ("T", para.InstantiatedGenericArgumentName, "InstantiatedGenericArgumentName mismatch");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AncestralOverrides ()
 		{
 			string xml = @"<api>
@@ -58,7 +58,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.IsNotNull (m.BaseMethod, "base method not found");
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericConstructors ()
 		{
 			string xml = @"<api>

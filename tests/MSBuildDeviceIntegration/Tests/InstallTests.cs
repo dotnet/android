@@ -1,5 +1,6 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
@@ -12,8 +13,8 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class InstallTests : DeviceTest
 	{
 		string GetContentFromAllOverrideDirectories (string packageName, string abi, bool useRunAsCommand = true)
@@ -29,8 +30,9 @@ namespace Xamarin.Android.Build.Tests
 			return directorylist;
 		}
 
-		[Test]
-		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
+		[TestMethod]
+		[CombinatorialData]
+		public void ReInstallIfUserUninstalled ([CombinatorialValues (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -55,8 +57,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void InstallAndUnInstall ([Values (false, true)] bool isRelease)
+		[TestMethod]
+		[CombinatorialData]
+		public void InstallAndUnInstall ([CombinatorialValues (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -74,7 +77,7 @@ namespace Xamarin.Android.Build.Tests
 
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				if (!isRelease) {
-					StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
+					Assert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 				}
 				else {
 					Assert.AreEqual ("", directorylist.Trim (), "fastdev directory should NOT exist for Release builds.");
@@ -86,7 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ChangeKeystoreRedeploy ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -113,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void SwitchConfigurationsShouldRedeploy ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -130,7 +133,7 @@ namespace Xamarin.Android.Build.Tests
 					$"{proj.PackageName} is not installed on the device.");
 
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
+				Assert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 
 				proj.IsRelease = true;
 				Assert.IsTrue (builder.Build (proj));
@@ -148,7 +151,7 @@ namespace Xamarin.Android.Build.Tests
 					$"{proj.PackageName} is not installed on the device.");
 
 				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
+				Assert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 
 				Assert.IsTrue (builder.Uninstall (proj));
 				Assert.AreNotEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
@@ -156,8 +159,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
+		[TestMethod]
+		[CombinatorialData]
+		public void InstallWithoutSharedRuntime ([CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -185,25 +189,25 @@ namespace Xamarin.Android.Build.Tests
 					foreach (var abi in abis) {
 						string runtimeAbiName = AbiUtils.AbiToRuntimeIdentifier (abi);
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Runtime == "debug");
-						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
+						Assert.IsNotNull (runtime.Name, "Could not find the expected runtime.");
 						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
 						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Size == inApk.Length);
-						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
-						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", "debug", inApkRuntime.Runtime);
+						Assert.IsNotNull (inApkRuntime.Runtime, "Could not find the actual runtime used.");
+						Assert.AreEqual (runtime.Size, inApkRuntime.Size, string.Format ("expected {0} got {1}", "debug", inApkRuntime.Runtime));
 					}
 				}
 				//FIXME: https://github.com/xamarin/androidtools/issues/141
 				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,
 				//	"The Shared Runtime should not have been installed.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__/{DeviceAbi} directory.");
-				StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__/{DeviceAbi} directory.");
-				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__/{DeviceAbi} directory.");
+				Assert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__/{DeviceAbi} directory.");
+				Assert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__/{DeviceAbi} directory.");
+				Assert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__/{DeviceAbi} directory.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToggleFastDev ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -221,7 +225,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
+				Assert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 
 				//Now toggle FastDev to OFF
 				proj.EmbedAssembliesIntoApk = true;
@@ -238,8 +242,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void ToggleDebugReleaseWithSigning ([Values ("aab", "apk")] string packageFormat)
+		[TestMethod]
+		[CombinatorialData]
+		public void ToggleDebugReleaseWithSigning ([CombinatorialValues ("aab", "apk")] string packageFormat)
 		{
 			AssertHasDevices ();
 
@@ -282,7 +287,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void BlankAdbTarget ()
 		{
 			var serial = GetAttachedDeviceSerial ();
@@ -299,7 +304,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 #pragma warning disable 414
-		static object [] AndroidStoreKeyTests = new object [] {
+		static object [] [] AndroidStoreKeyTests = new object [] [] {
 				// useApkSigner, isRelease, PackageFormat, AndroidKeyStore, password, ExpectedResult, ShouldInstall
 			new object[] { true,  false , "apk"     , "False"        , "android",      "debug.keystore"         , true},
 			new object[] { true,  true  , "apk"     , "False"        , "android",      "debug.keystore"         , true},
@@ -331,12 +336,12 @@ namespace Xamarin.Android.Build.Tests
 		};
 #pragma warning restore 414
 
-		[Test]
-		[TestCaseSource (nameof (AndroidStoreKeyTests))]
+		[TestMethod]
+		[DynamicData (nameof (AndroidStoreKeyTests))]
 		public void TestAndroidStoreKey (bool useApkSigner, bool isRelease, string packageFormat, string androidKeyStore, string password, string expected, bool shouldInstall)
 		{
 			if (DeviceSdkVersion >= 30 && !useApkSigner && packageFormat == "apk") {
-				Assert.Ignore ($"Test Skipped. jarsigner and {packageFormat} does not work with API 30 and above");
+				Assert.Inconclusive ($"Test Skipped. jarsigner and {packageFormat} does not work with API 30 and above");
 				return;
 			}
 
@@ -397,9 +402,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		// https://xamarin.github.io/bugzilla-archives/31/31705/bug.html
-		[Test]
-		[TestCase ("apk")]
-		[TestCase ("aab")]
+		[TestMethod]
+		[DataRow ("apk")]
+		[DataRow ("aab")]
 		public void LocalizedAssemblies_ShouldBeFastDeployed (string packageFormat)
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -430,16 +435,16 @@ namespace Xamarin.Android.Build.Tests
 				Console.WriteLine ($"#grendel: overrideContents == {overrideContents}");
 				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
 				foreach (var res in resourceFilesFromDisk) {
-					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
+					Assert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
 				}
 				appBuilder.BuildLogFile = "uninstall.log";
 				appBuilder.Uninstall (app);
 			}
 		}
 
-		[Test]
-		[TestCase ("apk")]
-		[TestCase ("aab")]
+		[TestMethod]
+		[DataRow ("apk")]
+		[DataRow ("aab")]
 		public void IncrementalFastDeployment (string packageFormat)
 		{
 			var class1src = new BuildItem.Source ("Class1.cs") {
@@ -505,7 +510,7 @@ namespace Xamarin.Android.Build.Tests
 					Path.Combine (rootPath, app.ProjectName, "MainPage.xaml"),
 				};
 				foreach (var file in filesToTouch) {
-					FileAssert.Exists (file);
+					Assert.IsTrue (File.Exists (file));
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 
@@ -539,7 +544,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InstallAppBundleWithoutWarnings ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -556,7 +561,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Uninstall (proj), "Uninstall should have succeeded.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AdbTargetChangesAppBundle ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -569,19 +574,19 @@ namespace Xamarin.Android.Build.Tests
 
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 			var apkset = Path.Combine (intermediate, "android", "bin", $"{proj.PackageName}.apks");
-			FileAssert.Exists (apkset);
+			Assert.IsTrue (File.Exists (apkset));
 			var before = File.GetLastWriteTimeUtc (apkset);
 
 			// Change $(AdbTarget) to not be blank
 			var serial = GetAttachedDeviceSerial ();
 			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-s {serial}\"" }), "second build should have succeeded.");
 
-			FileAssert.Exists (apkset);
+			Assert.IsTrue (File.Exists (apkset));
 			var after = File.GetLastWriteTimeUtc (apkset);
 			Assert.AreNotEqual (before, after, $"{apkset} should change!");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AdbTargetArchitecture ()
 		{
 			AssertHasDevices ();
@@ -596,7 +601,7 @@ namespace Xamarin.Android.Build.Tests
 				$"`_GetPrimaryCpuAbi` should be skipped for $(AdbTargetArchitecture)!");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AppWithAndroidJavaSource ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -645,22 +650,22 @@ public class TestJavaClass {
 					"generated", "src", "Com.Test.Java.TestJavaClass.cs");
 				var generatedCode2 = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 					"generated", "src", "Com.Test.Java.TestJavaClass2.cs");
-				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have been generated.");
-				FileAssert.Exists (generatedCode2, $"'{generatedCode2}' should have been generated.");
+				Assert.IsTrue (File.Exists (generatedCode), $"'{generatedCode}' should have been generated.");
+				Assert.IsTrue (File.Exists (generatedCode2), $"'{generatedCode2}' should have been generated.");
 				Assert.IsTrue (b.DesignTimeBuild (proj, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on DTB build!");
-				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on DTB build.");
-				FileAssert.Exists (generatedCode2, $"'{generatedCode2}' should have not be deleted on DTB build.");
+				Assert.IsTrue (File.Exists (generatedCode), $"'{generatedCode}' should have not be deleted on DTB build.");
+				Assert.IsTrue (File.Exists (generatedCode2), $"'{generatedCode2}' should have not be deleted on DTB build.");
 				proj.AndroidJavaSources.Remove (itemToDelete);
 				File.Delete (Path.Combine (Root, b.ProjectDirectory, itemToDelete.Include ()));
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
-				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
-				FileAssert.DoesNotExist (generatedCode2, $"'{generatedCode2}' should have be deleted on second build.");
+				Assert.IsTrue (File.Exists (generatedCode), $"'{generatedCode}' should have not be deleted on second build.");
+				Assert.IsFalse (File.Exists (generatedCode2), $"'{generatedCode2}' should have be deleted on second build.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CompileBindingJava"), $"`_CompileBindingJava` should run on second build!");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
 				// Call Install directly so Build does not get called automatically
 				Assert.IsTrue (b.RunTarget (proj, "Install", doNotCleanupOnUpdate: true, saveProject: false), "Install build should have succeeded.");
-				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on Install build.");
+				Assert.IsTrue (File.Exists (generatedCode), $"'{generatedCode}' should have not be deleted on Install build.");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on Install build!");
 			}
 		}

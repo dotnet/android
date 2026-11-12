@@ -1,11 +1,11 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class Java_Lang_Object : BaseGeneratorTest
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void Generated_OK ()
 		{
 			RunTarget (

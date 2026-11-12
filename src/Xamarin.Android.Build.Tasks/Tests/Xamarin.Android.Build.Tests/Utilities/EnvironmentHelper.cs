@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 
 using ELFSharp.ELF;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -47,10 +47,10 @@ namespace Xamarin.Android.Build.Tests
 			byte [] data = File.ReadAllBytes (path);
 			uint Read (uint offset) => BinaryPrimitives.ReadUInt32LittleEndian (data.AsSpan (checked ((int)offset), 4));
 
-			Assert.GreaterOrEqual (data.Length, 84);
+			Assert.IsGreaterThanOrEqualTo (84, data.Length);
 			Assert.AreEqual (0x47464358u, Read (0), "Expected XCFG magic.");
 			Assert.AreEqual (2, BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (4, 2)));
-			Assert.AreEqual (data.Length, Read (8));
+			Assert.AreEqual ((uint) data.Length, Read (8));
 			uint environmentCount = Read (12);
 			uint dsoCount = Read (24);
 			uint preloadCount = Read (32);
@@ -65,10 +65,10 @@ namespace Xamarin.Android.Build.Tests
 				if (offset == 0 && allowEmpty) {
 					return "";
 				}
-				Assert.Greater (offset, stringsOffset);
-				Assert.Less (offset, (uint)data.Length);
+				Assert.IsGreaterThan (stringsOffset, offset);
+				Assert.IsLessThan ((uint)data.Length, offset);
 				int end = Array.IndexOf (data, (byte)0, checked ((int)offset));
-				Assert.Greater (end, (int)offset);
+				Assert.IsGreaterThan ((int)offset, end);
 				return Encoding.UTF8.GetString (data, checked ((int)offset), end - checked ((int)offset));
 			}
 
@@ -92,7 +92,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			for (uint i = 0; i < preloadCount; i++) {
 				uint index = Read (preloadOffset + i * 4);
-				Assert.Less (index, dsoCount);
+				Assert.IsLessThan (dsoCount, index);
 				preloads.Entries.Add (new JniPreloadsEntry {
 					Index = index,
 					LibraryName = ReadString (Read (dsoOffset + index * 16 + 8)),
@@ -131,15 +131,15 @@ namespace Xamarin.Android.Build.Tests
 			byte [] body = section.AsSpan (16, checked ((int)length)).ToArray ();
 			uint Read (int offset) => BinaryPrimitives.ReadUInt32LittleEndian (body.AsSpan (offset, 4));
 			Assert.AreEqual (0x4746434eu, Read (0));
-			Assert.AreEqual (body.Length, Read (8));
+			Assert.AreEqual ((uint) body.Length, Read (8));
 			uint count = Read (systemProperties ? 16 : 12);
 			uint table = systemProperties ? Read (20) : 32;
 			string ReadString (uint offset)
 			{
-				Assert.GreaterOrEqual (offset, Read (24));
-				Assert.Less (offset, length);
+				Assert.IsGreaterThanOrEqualTo (Read (24), offset);
+				Assert.IsLessThan (length, offset);
 				int end = Array.IndexOf (body, (byte)0, checked ((int)offset));
-				Assert.GreaterOrEqual (end, (int)offset);
+				Assert.IsGreaterThanOrEqualTo ((int)offset, end);
 				return Encoding.UTF8.GetString (body, checked ((int)offset), end - checked ((int)offset));
 			}
 			for (uint i = 0; i < count; i++) {

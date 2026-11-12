@@ -5,9 +5,10 @@ using Java.Interop.Tools.Maven_Tests.Extensions;
 
 namespace Java.Interop.Tools.Maven_Tests;
 
+[TestClass]
 public class ProjectResolverTests
 {
-	[Test]
+	[TestMethod]
 	public void ResolveRawProject_Success ()
 	{
 		var artifact = new Artifact ("bar", "foo", "1.0");
@@ -21,15 +22,15 @@ public class ProjectResolverTests
 		Assert.AreEqual (project, result);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ResolveRawProject_PomNotFound ()
 	{
 		var resolver = new DefaultProjectResolver ();
 
-		Assert.Throws<InvalidOperationException> (() => resolver.Resolve (new Artifact ("bar", "foo", "1.0")));
+		Assert.ThrowsExactly<InvalidOperationException> (() => resolver.Resolve (new Artifact ("bar", "foo", "1.0")));
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_Success ()
 	{
 		var artifact = new Artifact ("bar", "foo", "1.0");
@@ -49,7 +50,7 @@ public class ProjectResolverTests
 		Assert.AreEqual (parent_project, result.Parent.Raw);
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_ParentPomNotFound ()
 	{
 		var artifact = new Artifact ("bar", "foo", "1.0");
@@ -63,14 +64,14 @@ public class ProjectResolverTests
 		// Note we are not adding the parent project to the resolver, so it will not be found
 		resolver.Register (project);
 
-		Assert.Throws<InvalidOperationException> (() => ResolvedProject.FromArtifact (artifact, resolver));
+		Assert.ThrowsExactly<InvalidOperationException> (() => ResolvedProject.FromArtifact (artifact, resolver));
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_PomNotFound ()
 	{
 		var resolver = new DefaultProjectResolver ();
 
-		Assert.Throws<InvalidOperationException> (() => resolver.Resolve (new Artifact ("bar", "foo", "1.0")));
+		Assert.ThrowsExactly<InvalidOperationException> (() => resolver.Resolve (new Artifact ("bar", "foo", "1.0")));
 	}
 }

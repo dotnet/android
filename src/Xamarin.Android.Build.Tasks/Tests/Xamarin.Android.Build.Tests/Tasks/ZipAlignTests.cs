@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class ZipAlignTests : BaseTest
 	{
 		string path;
@@ -16,24 +17,24 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		List<BuildMessageEventArgs> messages;
 		MockBuildEngine engine;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			path = Path.Combine (Root, "temp", TestName);
-			engine = new MockBuildEngine (TestContext.Out,
+			engine = new MockBuildEngine (Console.Out,
 				errors: errors = new List<BuildErrorEventArgs> (),
 				messages: messages = new List<BuildMessageEventArgs> ());
 			Directory.CreateDirectory (path);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			if (Directory.Exists (path))
 				Directory.Delete (path, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CheckAZAErrorCodeIsRaised ()
 		{
 
@@ -46,7 +47,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				ToolPath = GetPathToLatestBuildTools (exe)
 			};
 			File.WriteAllText (source, "Invalid Zip File");
-			Assert.False (zipAlign.Execute (), "Execute should *not* succeed!");
+			Assert.IsFalse (zipAlign.Execute (), "Execute should *not* succeed!");
 			Assert.AreEqual (1, errors.Count, "1 error should have been raised.");
 			Assert.AreEqual ("ANDZA0000", errors [0].Code, $"Expected error code ANDZA0000 but got {errors [0].Code}");
 		}

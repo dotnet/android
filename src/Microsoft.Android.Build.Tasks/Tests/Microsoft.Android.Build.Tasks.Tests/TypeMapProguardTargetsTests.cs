@@ -7,26 +7,27 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class TypeMapProguardTargetsTests : BaseTest
 {
 	string directory => Path.Combine (Root, "temp", TestName);
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp () => Directory.CreateDirectory (directory);
 
-	[TestCase ("CoreCLR", "true", "disabled", "proguard-android-optimize.txt")]
-	[TestCase ("CoreCLR", "true", "private-members", "proguard-android-optimize.txt")]
-	[TestCase ("CoreCLR", "false", "disabled", "proguard-android.txt")]
-	[TestCase ("CoreCLR", "false", "private-members", "proguard-android-optimize.txt")]
-	[TestCase ("NativeAOT", "true", "disabled", "proguard-android.txt")]
-	[TestCase ("NativeAOT", "true", "private-members", "proguard-android.txt")]
-	[TestCase ("MonoVM", "false", "disabled", "proguard-android.txt")]
+	[TestMethod]
+	[DataRow ("CoreCLR", "true", "disabled", "proguard-android-optimize.txt")]
+	[DataRow ("CoreCLR", "true", "private-members", "proguard-android-optimize.txt")]
+	[DataRow ("CoreCLR", "false", "disabled", "proguard-android.txt")]
+	[DataRow ("CoreCLR", "false", "private-members", "proguard-android-optimize.txt")]
+	[DataRow ("NativeAOT", "true", "disabled", "proguard-android.txt")]
+	[DataRow ("NativeAOT", "true", "private-members", "proguard-android.txt")]
+	[DataRow ("MonoVM", "false", "disabled", "proguard-android.txt")]
 	public void PlatformConfigurationSeparatesCoreClrOptimizationFromObfuscation (string runtime, string typemap, string obfuscation, string expected)
 	{
 		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
@@ -74,11 +75,11 @@ public class TypeMapProguardTargetsTests : BaseTest
 	void AssertPathsAreEqual (string [] expected, string [] actual)
 	{
 		CollectionAssert.AreEqual (
-			expected.Select (path => Path.GetFullPath (path, directory)),
-			actual.Select (path => Path.GetFullPath (path, directory)));
+			expected.Select (path => Path.GetFullPath (path, directory)).ToArray (),
+			actual.Select (path => Path.GetFullPath (path, directory)).ToArray ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void ProguardCleanDirectoryConditionParsesAndRuns ()
 	{
 		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
@@ -104,10 +105,10 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Directory.CreateDirectory (proguardDirectory);
 		File.WriteAllText (Path.Combine (proguardDirectory, "rules.cfg"), "rules");
 		Build (project);
-		DirectoryAssert.DoesNotExist (proguardDirectory);
+		Assert.IsFalse (Directory.Exists (proguardDirectory));
 	}
 
-	[Test]
+	[TestMethod]
 	public void NativeObjectTargetUnionsRidsAndHonorsDisabledTrimming ()
 	{
 		var first = WriteNativeObject ("first", "test/Live", "test/Outer$Inner[0]");
@@ -121,13 +122,13 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Assert.AreEqual (TypeRules ("test.Live", "test.Outer$Inner", "test.Second"), File.ReadAllText (rules));
 		Assert.IsFalse (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
-		StringAssert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
+		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
 		File.Delete (second);
 		var output = Build (project, false, "-p:_AndroidEnableTypemapR8Trimming=true");
-		StringAssert.Contains ("XA4327", output);
+		Assert.Contains ("XA4327", output);
 	}
 
-	[Test]
+	[TestMethod]
 	public void NativeAotModeRoundTripsCannotReuseWrongRules ()
 	{
 		var nativeObject = WriteNativeObject ("app", "test/Live");
@@ -151,22 +152,23 @@ public class TypeMapProguardTargetsTests : BaseTest
 
 		void AssertLegacyRules ()
 		{
-			StringAssert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
-			StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+			Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
+			Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 		}
 
 		void AssertModernRules ()
 		{
 			Assert.AreEqual (TypeRules ("test.Live"), File.ReadAllText (rules));
-			FileAssert.DoesNotExist (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg"));
+			Assert.IsFalse (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
 			var writes = File.ReadAllText (Path.Combine (directory, "writes.txt"));
-			StringAssert.Contains ("UseTypeMap=true", writes);
-			StringAssert.DoesNotContain ("Members=", writes);
+			Assert.Contains ("UseTypeMap=true", writes);
+			Assert.DoesNotContain ("Members=", writes);
 		}
 	}
 
-	[TestCase ("")]
-	[TestCase ("false")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("false")]
 	public void UnoptimizedNativeAotReadsObjectWithoutGraphs (string runILLink)
 	{
 		var nativeObject = WriteNativeObject ("app", "test/Live");
@@ -180,10 +182,11 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Assert.AreEqual (TypeRules ("test.Live"), File.ReadAllText (rules));
 	}
 
-	[TestCase ("false", "false")]
-	[TestCase ("false", "true")]
-	[TestCase ("true", "false")]
-	[TestCase ("true", "true")]
+	[TestMethod]
+	[DataRow ("false", "false")]
+	[DataRow ("false", "true")]
+	[DataRow ("true", "false")]
+	[DataRow ("true", "true")]
 	public void TypemapInputsDoNotRequestGraphsOrChangeParallelism (string enabled, string diagnostics)
 	{
 		var project = CreateProject ("NativeAOT");
@@ -203,16 +206,17 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled, "-p:IlcGenerateDgmlFile=" + diagnostics, "-p:Optimize=true");
 		var lines = File.ReadAllLines (Path.Combine (directory, "ilc.txt"));
 		var output = string.Join ("\n", lines);
-		StringAssert.DoesNotContain ("--scandgmllog:", output);
-		StringAssert.DoesNotContain ("--dgmllog:", output);
+		Assert.DoesNotContain ("--scandgmllog:", output);
+		Assert.DoesNotContain ("--dgmllog:", output);
 		CollectionAssert.Contains (lines, "Parallel=");
 		CollectionAssert.Contains (lines, "Scoped=");
-		StringAssert.Contains ("Diagnostics=" + diagnostics, output);
+		Assert.Contains ("Diagnostics=" + diagnostics, output);
 	}
 
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void AssemblyTargetConsumesLinkedMetadataAcrossRidsAndEmptyStubs (
-		[Values (null, "", "llvm-ir", "trimmable", "unsupported")] string? obsoleteImplementation)
+		[CombinatorialValues (null, "", "llvm-ir", "trimmable", "unsupported")] string? obsoleteImplementation)
 	{
 		string EmitMap (string name, params string [] keys)
 		{
@@ -239,10 +243,10 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		Assert.AreEqual (TypeRules ("test.Alias", "test.Live", "test.Second"), File.ReadAllText (rules));
 		File.Delete (second);
-		StringAssert.Contains ("XA4327", Build (project, false, arguments));
+		Assert.Contains ("XA4327", Build (project, false, arguments));
 	}
 
-	[Test]
+	[TestMethod]
 	public void LinkedTypeMapChangeInvalidatesCompileToDalvik ()
 	{
 		string EmitMap (string key)
@@ -273,12 +277,13 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Assert.AreNotEqual (firstTime, File.GetLastWriteTimeUtc (stamp));
 	}
 
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void R8RemappingTargetsTrackProducerAssemblies (
-		[Values ("_AndroidGenerateR8JniRemapping", "_AndroidGenerateR8BinaryBlobs",
+		[CombinatorialValues ("_AndroidGenerateR8JniRemapping", "_AndroidGenerateR8BinaryBlobs",
 			"_AndroidGenerateNativeAotR8Remapping", "_AndroidGenerateNativeAotR8BinaryBlobs")] string targetName,
-		[Values ("_MicrosoftAndroidBuildTasksAssembly", "_XamarinAndroidBuildTasksAssembly")] string changedAssembly,
-		[Values (false, true)] bool relativePaths)
+		[CombinatorialValues ("_MicrosoftAndroidBuildTasksAssembly", "_XamarinAndroidBuildTasksAssembly")] string changedAssembly,
+		[CombinatorialValues (false, true)] bool relativePaths)
 	{
 		var runtime = targetName.Contains ("NativeAot", StringComparison.Ordinal) ? "NativeAOT" : "CoreCLR";
 		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks",
@@ -347,9 +352,10 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Assert.AreEqual (outputTimestamp, File.GetLastWriteTimeUtc (output), "The target must be incremental again after regeneration.");
 	}
 
-	[TestCase ("-p:_AndroidEnableTypemapR8Trimming=false")]
-	[TestCase ("-p:RunILLink=false")]
-	[TestCase ("-p:ProguardConfigFiles=custom.cfg")]
+	[TestMethod]
+	[DataRow ("-p:_AndroidEnableTypemapR8Trimming=false")]
+	[DataRow ("-p:RunILLink=false")]
+	[DataRow ("-p:ProguardConfigFiles=custom.cfg")]
 	public void CoreClrModeRoundTripsInvalidateCompileToDalvik (string disableArgument)
 	{
 		var map = Path.Combine (directory, "app.dll");
@@ -371,7 +377,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var mapTime = File.GetLastWriteTimeUtc (map);
 
 		Build (project, "-t:_CompileToDalvik", "-p:_AndroidEnableTypemapR8Trimming=true");
-		StringAssert.Contains ("UseTypeMap=true", File.ReadAllText (policy));
+		Assert.Contains ("UseTypeMap=true", File.ReadAllText (policy));
 		var cacheTime = File.GetLastWriteTimeUtc (cache);
 		var keysTime = File.GetLastWriteTimeUtc (keys);
 		AssertIncremental ("true");
@@ -380,17 +386,17 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Build (project, "-t:_CompileToDalvik", disableArgument,
 			"-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
 		Assert.AreNotEqual (enabledTime, File.GetLastWriteTimeUtc (stamp), "Opt-out must invalidate Dalvik.");
-		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (policy));
-		StringAssert.DoesNotContain ("Members=", File.ReadAllText (policy));
-		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (mode));
+		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (policy));
+		Assert.DoesNotContain ("Members=", File.ReadAllText (policy));
+		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (mode));
 		Assert.AreEqual (keysTime, File.GetLastWriteTimeUtc (keys), "Opt-out must not extract keys.");
 		AssertIncremental ("", disableArgument, "-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
 		var disabledTime = File.GetLastWriteTimeUtc (stamp);
 
 		Build (project, "-t:_CompileToDalvik", "-p:_AndroidEnableTypemapR8Trimming=true");
 		Assert.AreNotEqual (disabledTime, File.GetLastWriteTimeUtc (stamp), "Re-enabling must invalidate Dalvik.");
-		StringAssert.Contains ("UseTypeMap=true", File.ReadAllText (policy));
-		StringAssert.Contains ("Members=", File.ReadAllText (policy));
+		Assert.Contains ("UseTypeMap=true", File.ReadAllText (policy));
+		Assert.Contains ("Members=", File.ReadAllText (policy));
 		AssertIncremental ("true");
 		Assert.AreEqual (mapTime, File.GetLastWriteTimeUtc (map));
 		Assert.AreEqual (cacheTime, File.GetLastWriteTimeUtc (cache));
@@ -405,13 +411,14 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}
 	}
 
-	[TestCase ("NativeAOT", "true", "r8", "true", "", "true")]
-	[TestCase ("NativeAOT", "true", "r8", "true", "custom.cfg", "true")]
-	[TestCase ("NativeAOT", "false", "r8", "true", "", "true")]
-	[TestCase ("NativeAOT", "", "r8", "true", "", "true")]
-	[TestCase ("NativeAOT", "true", "", "true", "", "true")]
-	[TestCase ("NativeAOT", "true", "r8", "false", "", "true")]
-	[TestCase ("CoreCLR", "true", "r8", "true", "", "false")]
+	[TestMethod]
+	[DataRow ("NativeAOT", "true", "r8", "true", "", "true")]
+	[DataRow ("NativeAOT", "true", "r8", "true", "custom.cfg", "true")]
+	[DataRow ("NativeAOT", "false", "r8", "true", "", "true")]
+	[DataRow ("NativeAOT", "", "r8", "true", "", "true")]
+	[DataRow ("NativeAOT", "true", "", "true", "", "true")]
+	[DataRow ("NativeAOT", "true", "r8", "false", "", "true")]
+	[DataRow ("CoreCLR", "true", "r8", "true", "", "false")]
 	public void NdkDependencyFollowsRuntimeRatherThanTypemapPolicy (string runtime, string enabled, string linkTool, string trimmed, string proguardConfigFiles, string expected)
 	{
 		var common = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
@@ -437,12 +444,13 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Assert.AreEqual (expected, File.ReadAllText (Path.Combine (directory, "ndk-required.txt")).Trim ());
 	}
 
-	[TestCase ("NativeAOT", "true", "", "custom-object/retained.o")]
-	[TestCase ("NativeAOT", "false", "", "custom-object/retained.o")]
-	[TestCase ("NativeAOT", "true", "false", "custom-object/retained.o")]
-	[TestCase ("CoreCLR", "true", "", "obj/linked/_Binding.TypeMap.dll")]
-	[TestCase ("CoreCLR", "true", "true", "obj/linked/_Binding.TypeMap.dll")]
-	[TestCase ("CoreCLR", "true", "false", "")]
+	[TestMethod]
+	[DataRow ("NativeAOT", "true", "", "custom-object/retained.o")]
+	[DataRow ("NativeAOT", "false", "", "custom-object/retained.o")]
+	[DataRow ("NativeAOT", "true", "false", "custom-object/retained.o")]
+	[DataRow ("CoreCLR", "true", "", "obj/linked/_Binding.TypeMap.dll")]
+	[DataRow ("CoreCLR", "true", "true", "obj/linked/_Binding.TypeMap.dll")]
+	[DataRow ("CoreCLR", "true", "false", "")]
 	public void InnerBuildReturnsExactProducerPaths (string runtime, string optimize, string runILLink, string expected)
 	{
 		var project = CreateProject (runtime);
@@ -495,12 +503,13 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void HostCoverageCollectorArtifactsAreExcludedFromAndroidPublish (
-		[Values ("MonoVM", "CoreCLR", "NativeAOT")] string runtime,
-		[Values (false, true)] bool publishTrimmed,
-		[Values ("android-arm64", "android-x64")] string rid,
-		[Values (false, true)] bool hasCollector)
+		[CombinatorialValues ("MonoVM", "CoreCLR", "NativeAOT")] string runtime,
+		[CombinatorialValues (false, true)] bool publishTrimmed,
+		[CombinatorialValues ("android-arm64", "android-x64")] string rid,
+		[CombinatorialValues (false, true)] bool hasCollector)
 	{
 		var targets = Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.AssemblyResolution.targets");
 		var collectorTarget = hasCollector ? """
@@ -559,13 +568,14 @@ public class TypeMapProguardTargetsTests : BaseTest
 			"System.Text.Json.dll",
 		];
 		CollectionAssert.AreEquivalent (
-			applicationFiles.Select (file => $"{file}|{file}|{rid}|PreserveNewest"),
+			applicationFiles.Select (file => $"{file}|{file}|{rid}|PreserveNewest").ToArray (),
 			File.ReadAllLines (Path.Combine (directory, "published.txt")),
 			"Only application dependencies should be returned, with their publish metadata preserved.");
 	}
 
-	[TestCase ("")]
-	[TestCase ("true")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("true")]
 	public void CoreClrWithoutILLinkNeedsNoLinkedInputsOrModernTasks (string enabled)
 	{
 		var project = CreateProject ("CoreCLR",
@@ -577,15 +587,16 @@ public class TypeMapProguardTargetsTests : BaseTest
 			"proguard/proguard_project_references.cfg", "proguard/proguard_typemap_members.cfg" }) {
 			Assert.IsFalse (File.Exists (Path.Combine (directory, "obj", output)), output);
 		}
-		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 	}
 
-	[TestCase ("false", "", true)]
-	[TestCase ("false", "true", true)]
-	[TestCase ("false", "false", true)]
-	[TestCase ("true", "", false)]
-	[TestCase ("true", "true", false)]
-	[TestCase ("true", "false", true)]
+	[TestMethod]
+	[DataRow ("false", "", true)]
+	[DataRow ("false", "true", true)]
+	[DataRow ("false", "false", true)]
+	[DataRow ("true", "", false)]
+	[DataRow ("true", "true", false)]
+	[DataRow ("true", "false", true)]
 	public void CoreClrLegacyProducerRemainsEligibleWithoutILLink (string runILLink, string enabled, bool expected)
 	{
 		var targets = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks",
@@ -629,16 +640,17 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}
 	}
 
-	[TestCase ("MonoVM", "true", "r8", "true", false, "")]
-	[TestCase ("CoreCLR", "false", "r8", "true", false, "")]
-	[TestCase ("CoreCLR", "true", "", "true", false, "")]
-	[TestCase ("CoreCLR", "true", "r8", "false", false, "")]
-	[TestCase ("NativeAOT", "true", "r8", "false", false, "")]
-	[TestCase ("NativeAOT", "true", "r8", "", false, "")]
-	[TestCase ("CoreCLR", "true", "r8", "true", true, "")]
-	[TestCase ("CoreCLR", "true", "r8", "true", false, "custom.cfg")]
-	[TestCase ("NativeAOT", "true", "r8", "false", false, "custom.cfg")]
-	[TestCase ("NativeAOT", "true", "r8", "true", false, "custom.cfg")]
+	[TestMethod]
+	[DataRow ("MonoVM", "true", "r8", "true", false, "")]
+	[DataRow ("CoreCLR", "false", "r8", "true", false, "")]
+	[DataRow ("CoreCLR", "true", "", "true", false, "")]
+	[DataRow ("CoreCLR", "true", "r8", "false", false, "")]
+	[DataRow ("NativeAOT", "true", "r8", "false", false, "")]
+	[DataRow ("NativeAOT", "true", "r8", "", false, "")]
+	[DataRow ("CoreCLR", "true", "r8", "true", true, "")]
+	[DataRow ("CoreCLR", "true", "r8", "true", false, "custom.cfg")]
+	[DataRow ("NativeAOT", "true", "r8", "false", false, "custom.cfg")]
+	[DataRow ("NativeAOT", "true", "r8", "true", false, "custom.cfg")]
 	public void InactivePathsNeedNoTypemapInputsOrModernTasks (
 		string runtime, string trimmed, string linkTool, string enabled, bool innerBuild, string proguardConfigFiles)
 	{
@@ -656,7 +668,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 		if (proguardConfigFiles != "") {
 			Assert.IsFalse (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg")));
 		}
-		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 	}
 
 	static string TypeRules (params string [] names) =>

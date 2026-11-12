@@ -2,22 +2,23 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Microsoft.Android.Tasks.JniRemapping;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class R8ObfuscationTests : DeviceTest
 	{
 		const string SuccessMarker = "# R8_SELECTIVE_OBFUSCATION_RESULT 21";
 		const string JavaClassName = "example/ObfuscationProbe";
 
-		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.NativeAOT)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR)]
+		[DataRow (AndroidRuntime.NativeAOT)]
 		public void PrivateJavaMembersAreObfuscated (AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -140,10 +141,10 @@ namespace Xamarin.Android.Build.Tests
 					try {
 						builder.ThrowOnBuildFailure = false;
 						if (!builder.Uninstall (proj)) {
-							TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
+							Console.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
 						}
 					} catch (Exception ex) {
-						TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
+						Console.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
 					}
 				}
 			}

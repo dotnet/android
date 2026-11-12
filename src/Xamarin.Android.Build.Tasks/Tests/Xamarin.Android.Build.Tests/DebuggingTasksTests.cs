@@ -1,5 +1,5 @@
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
@@ -14,33 +14,29 @@ using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2")]
-	[TestFixture, NonParallelizable]
+	[TestCategory ("Node-2")]
+	[TestClass, DoNotParallelize]
 	public partial class DebuggingTasksTests : BaseTest
 	{
-		[OneTimeSetUp]
-		public void SetUp ()
-		{
-		}
-
-		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a,armeabi", "android-arm", "armeabi-v7a", "android-arm")]
-		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
-		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-x64;android-arm", "armeabi-v7a", "android-arm")]
-		[TestCase ("arm64-v8a", "arm64-v8a", "android-arm", "arm64-v8a", null)]
-		[TestCase ("armeabi-v7a", "armeabi-v7a,armeabi", "android-arm", "armeabi-v7a", "android-arm")]
-		[TestCase ("x86_64", "x86_64,x86", "android-x86", "x86", "android-x86")]
-		[TestCase ("x86_64", "x86_64,x86", "android-x86;android-x64", "x86_64", "android-x64")]
-		[TestCase ("x86_64", "x86_64,arm64-v8a,armeabi-v7a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
-		[TestCase ("arm64-v8a", "armeabi-v7a,arm64-v8a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
-		[TestCase ("arm64-v8a", "arm64-v8a, armeabi-v7a ", "android-arm", "armeabi-v7a", "android-arm")]
-		[TestCase ("arm64-v8a", "", "android-arm64", "arm64-v8a", "android-arm64")]
-		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", null, "arm64-v8a", null)]
-		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "", "arm64-v8a", null)]
-		[TestCase (null, "", "invalid", null, null)]
+		[TestMethod]
+		[DataRow ("arm64-v8a", "arm64-v8a,armeabi-v7a,armeabi", "android-arm", "armeabi-v7a", "android-arm")]
+		[DataRow ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
+		[DataRow ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-x64;android-arm", "armeabi-v7a", "android-arm")]
+		[DataRow ("arm64-v8a", "arm64-v8a", "android-arm", "arm64-v8a", null)]
+		[DataRow ("armeabi-v7a", "armeabi-v7a,armeabi", "android-arm", "armeabi-v7a", "android-arm")]
+		[DataRow ("x86_64", "x86_64,x86", "android-x86", "x86", "android-x86")]
+		[DataRow ("x86_64", "x86_64,x86", "android-x86;android-x64", "x86_64", "android-x64")]
+		[DataRow ("x86_64", "x86_64,arm64-v8a,armeabi-v7a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
+		[DataRow ("arm64-v8a", "armeabi-v7a,arm64-v8a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
+		[DataRow ("arm64-v8a", "arm64-v8a, armeabi-v7a ", "android-arm", "armeabi-v7a", "android-arm")]
+		[DataRow ("arm64-v8a", "", "android-arm64", "arm64-v8a", "android-arm64")]
+		[DataRow ("arm64-v8a", "arm64-v8a,armeabi-v7a", null, "arm64-v8a", null)]
+		[DataRow ("arm64-v8a", "arm64-v8a,armeabi-v7a", "", "arm64-v8a", null)]
+		[DataRow (null, "", "invalid", null, null)]
 		public void SelectRuntimeIdentifier (string deviceAbi, string supportedAbis, string runtimeIdentifiers, string expectedAbi, string expectedRid)
 		{
 			var task = new GetPrimaryCpuAbi {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				ResultingAbi = deviceAbi,
 				RuntimeIdentifiers = runtimeIdentifiers?.Split (';'),
 			};
@@ -51,14 +47,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedRid, task.RuntimeIdentifier);
 		}
 
-		[TestCase (null, "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
-		[TestCase ("", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
-		[TestCase (" , ", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
-		[TestCase ("", null, "armeabi-v7a", "armeabi-v7a")]
-		[TestCase ("", "arm64-v8a", null, "arm64-v8a")]
-		[TestCase ("", null, null, "")]
-		[TestCase ("", " ", "", "")]
-		[TestCase ("arm64-v8a", "arm64-v8a", "armeabi-v7a", "arm64-v8a")]
+		[TestMethod]
+		[DataRow (null, "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[DataRow ("", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[DataRow (" , ", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[DataRow ("", null, "armeabi-v7a", "armeabi-v7a")]
+		[DataRow ("", "arm64-v8a", null, "arm64-v8a")]
+		[DataRow ("", null, null, "")]
+		[DataRow ("", " ", "", "")]
+		[DataRow ("arm64-v8a", "arm64-v8a", "armeabi-v7a", "arm64-v8a")]
 		public void GetSupportedAbis (string reportedAbis, string primaryAbi, string secondaryAbi, string expectedAbis)
 		{
 			var supportedAbis = GetPrimaryCpuAbi.GetSupportedAbis (reportedAbis?.Split (',') ?? [], primaryAbi, secondaryAbi);
@@ -66,10 +63,11 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (expectedAbis.Split (',', StringSplitOptions.RemoveEmptyEntries), supportedAbis);
 		}
 
-		[TestCase ("arm64-v8a", "android-arm", "armeabi-v7a")]
-		[TestCase ("arm64-v8a", "android-arm64", "arm64-v8a")]
-		[TestCase (null, "android-arm", "armeabi-v7a")]
-		[TestCase ("", "android-arm64", "arm64-v8a")]
+		[TestMethod]
+		[DataRow ("arm64-v8a", "android-arm", "armeabi-v7a")]
+		[DataRow ("arm64-v8a", "android-arm64", "arm64-v8a")]
+		[DataRow (null, "android-arm", "armeabi-v7a")]
+		[DataRow ("", "android-arm64", "arm64-v8a")]
 		public void SelectRuntimeIdentifierFromDeviceCache (string deviceAbi, string runtimeIdentifier, string expectedAbi)
 		{
 			var doc = DeviceCache.Update (null, "device", deviceAbi, 36, "model:TestDevice", ["arm64-v8a", "armeabi-v7a"]);
@@ -80,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (new [] { "arm64-v8a", "armeabi-v7a" }, supportedAbis);
 
 			var task = new GetPrimaryCpuAbi {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				ResultingAbi = abi,
 				RuntimeIdentifiers = [runtimeIdentifier],
 			};
@@ -92,8 +90,9 @@ namespace Xamarin.Android.Build.Tests
 				"The cache must retain the device ABI, not the app ABI.");
 		}
 
-		[TestCase (null, "")]
-		[TestCase ("", " , ")]
+		[TestMethod]
+		[DataRow (null, "")]
+		[DataRow ("", " , ")]
 		public void DeviceCacheWithoutAnyAbiIsRefreshed (string deviceAbi, string supportedAbis)
 		{
 			var doc = DeviceCache.Update (null, "device", deviceAbi, 36, "model:TestDevice", supportedAbis.Split (','));
@@ -101,7 +100,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (DeviceCache.TryGet (doc, "device", "model:TestDevice", out _, out _, out _));
 		}
 
-		[Test]
+		[TestMethod]
 		public void DeviceCacheWithoutSupportedAbisIsRefreshed ()
 		{
 			var doc = XDocument.Parse (
@@ -118,7 +117,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (DeviceCache.TryGet (doc, "device", "model:TestDevice", out _, out _, out _));
 		}
 
-		[Test]
+		[TestMethod]
 		public void DeviceCacheWithNoAdditionalAbisIsValid ()
 		{
 			var doc = DeviceCache.Update (null, "device", "armeabi-v7a", 19, "model:TestDevice", []);
@@ -128,12 +127,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (supportedAbis);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetPrimaryCpuAbiHonorsAdbTargetArchitecture ()
 		{
 			var messages = new List<BuildMessageEventArgs> ();
 			var task = new GetPrimaryCpuAbi {
-				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+				BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 				AdbTargetArchitecture = "armeabi-v7a",
 				RuntimeIdentifiers = ["android-arm64", "android-arm"],
 			};
@@ -147,10 +146,11 @@ namespace Xamarin.Android.Build.Tests
 				m.Message.StartsWith ("  SdkVersion:", StringComparison.Ordinal)));
 		}
 
-		[TestCase (null, "physical")]
-		[TestCase ("-s physical", "physical")]
-		[TestCase ("-d", "physical")]
-		[TestCase ("-e", "emulator-5554")]
+		[TestMethod]
+		[DataRow (null, "physical")]
+		[DataRow ("-s physical", "physical")]
+		[DataRow ("-d", "physical")]
+		[DataRow ("-e", "emulator-5554")]
 		public void AndroidHelperSelectsDevice (string target, string expected)
 		{
 			var devices = new [] {
@@ -162,11 +162,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNull (AndroidHelper.SelectDevice (devices, "invalid"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void BuilderDoesNotWaitForInheritedRedirectedOutput ()
 		{
 			if (!IsWindows)
-				Assert.Ignore ("This test reproduces a Windows child process inheriting redirected output.");
+				Assert.Inconclusive ("This test reproduces a Windows child process inheriting redirected output.");
 
 			var psi = new ProcessStartInfo (Environment.GetEnvironmentVariable ("ComSpec") ?? "cmd.exe",
 				"/c start \"\" /b powershell -NoProfile -Command \"Start-Sleep -Seconds 8\"") {
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var stopwatch = Stopwatch.StartNew ();
 			Assert.IsFalse (Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task));
-			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (6), "Inherited output handles must not hold the test runner indefinitely.");
+			Assert.IsLessThan (TimeSpan.FromSeconds (6), stopwatch.Elapsed, "Inherited output handles must not hold the test runner indefinitely.");
 			Assert.IsTrue (outputDone.Task.Wait (TimeSpan.FromSeconds (10)));
 			Assert.IsTrue (errorDone.Task.Wait (TimeSpan.FromSeconds (10)));
 		}

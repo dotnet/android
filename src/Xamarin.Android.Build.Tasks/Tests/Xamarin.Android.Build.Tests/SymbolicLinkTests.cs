@@ -1,22 +1,22 @@
 using System;
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class SymbolicLinkTests
 	{
 		string tempDirectory = "";
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (tempDirectory);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			if (Directory.Exists (tempDirectory))
@@ -34,11 +34,11 @@ namespace Xamarin.Android.Build.Tests
 				Directory.CreateSymbolicLink (probe, tempDirectory);
 				Directory.Delete (probe);
 			} catch (Exception e) when ((e is IOException || e is UnauthorizedAccessException) && (e.HResult & 0xffff) == ErrorPrivilegeNotHeld) {
-				Assert.Ignore ("Creating symbolic links requires Windows Developer Mode or elevated permissions.");
+				Assert.Inconclusive ("Creating symbolic links requires Windows Developer Mode or elevated permissions.");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateDirectoryLink ()
 		{
 			RequireDirectorySymlinks ();
@@ -48,11 +48,11 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (SymbolicLink.Create (source, target));
 			Assert.AreEqual (target, new DirectoryInfo (source).LinkTarget);
-			DirectoryAssert.Exists (Path.Combine (source, "platforms"));
+			Assert.IsTrue (Directory.Exists (Path.Combine (source, "platforms")));
 			Assert.IsTrue (SymbolicLink.Create (source, target));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateWithRelativeTarget ()
 		{
 			RequireDirectorySymlinks ();
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedTarget, new DirectoryInfo (source).LinkTarget);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateWithMissingTarget ()
 		{
 			RequireDirectorySymlinks ();
@@ -78,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (danglingLinkExists, SymbolicLink.Create (source, target));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateWithExistingDirectory ()
 		{
 			var source = Path.Combine (tempDirectory, "existing");
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNull (new DirectoryInfo (source).LinkTarget);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateWithExistingFile ()
 		{
 			var source = Path.Combine (tempDirectory, "existing");
@@ -98,23 +98,23 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("existing file", File.ReadAllText (source));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateWithEmptyTarget ()
 		{
 			var source = Path.Combine (tempDirectory, "link");
 			if (OperatingSystem.IsWindows ()) {
 				Assert.IsFalse (SymbolicLink.Create (source, ""));
 			} else {
-				Assert.Throws<ArgumentException> (() => SymbolicLink.Create (source, ""));
+				Assert.ThrowsExactly<ArgumentException> (() => SymbolicLink.Create (source, ""));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateWithSourceWithoutParent ()
 		{
 			var source = $"symbolic-link-test-{Guid.NewGuid ():N}";
 			try {
-				Assert.Throws<ArgumentException> (() => SymbolicLink.Create (source, tempDirectory));
+				Assert.ThrowsExactly<ArgumentException> (() => SymbolicLink.Create (source, tempDirectory));
 			} finally {
 				if (new DirectoryInfo (source).LinkTarget != null)
 					Directory.Delete (source);

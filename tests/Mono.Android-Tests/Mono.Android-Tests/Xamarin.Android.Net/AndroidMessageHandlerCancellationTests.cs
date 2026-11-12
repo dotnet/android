@@ -42,7 +42,6 @@ namespace Xamarin.Android.NetTests
 			var server = stalledResponseServer;
 			stalledResponseServer = null;
 
-			// NUnitLite used by the on-device tests does not support async TearDown methods.
 			if (server != null)
 				server.Stop ();
 		}

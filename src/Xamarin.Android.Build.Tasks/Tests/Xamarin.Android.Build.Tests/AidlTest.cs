@@ -1,5 +1,6 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
@@ -9,8 +10,7 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class AidlTest : BaseTest
 	{
 		void TestAidl (string testName, string aidl, AndroidRuntime runtime)
@@ -25,8 +25,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void ListAndMap ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ListAndMap ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -45,8 +46,9 @@ interface Test {
 			TestAidl (TestName, aidl, runtime);
 		}
 
-		[Test]
-		public void NamespaceResolution ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void NamespaceResolution ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -63,8 +65,9 @@ interface Test {
 			TestAidl (TestName, aidl, runtime);
 		}
 
-		[Test]
-		public void PrimitiveTypes ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void PrimitiveTypes ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;

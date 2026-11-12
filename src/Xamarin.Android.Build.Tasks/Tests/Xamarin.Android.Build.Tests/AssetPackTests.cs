@@ -1,5 +1,6 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using System.IO;
 using System.Text;
 using Xamarin.Android.Tasks;
@@ -8,13 +9,14 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-3")]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
+	[TestCategory ("Node-3")]
 	public class AssetPackTests : BaseTest
 	{
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildLibraryWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("SmokeTests")]
+		public void BuildLibraryWithAssetPack ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
@@ -37,9 +39,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackThatHasInvalidName ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("SmokeTests")]
+		public void BuildApplicationWithAssetPackThatHasInvalidName ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
@@ -63,9 +66,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("SmokeTests")]
+		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
@@ -110,9 +114,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOverrides ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("SmokeTests")]
+		public void BuildApplicationWithAssetPackOverrides ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
@@ -150,9 +155,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("SmokeTests")]
+		public void BuildApplicationWithAssetPack ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
@@ -212,18 +218,18 @@ namespace Xamarin.Android.Build.Tests
 				appBuilder.Output.AssertTargetIsSkipped ("_CreateAssetPackManifests");
 				appBuilder.Output.AssertTargetIsSkipped ("_BuildAssetPacks");
 				appBuilder.Output.AssertTargetIsSkipped ("_GenerateAndroidAssetsDir");
-				FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
+				Assert.IsTrue (File.Exists (asset3File), $"file {asset3File} should exist.");
 				asset3.TextContent = () => "Asset3 Updated";
 				asset3.Timestamp = DateTime.UtcNow.AddSeconds(1);
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), $"{app.ProjectName} should succeed");
 				appBuilder.Output.AssertTargetIsNotSkipped ("_CreateAssetPackManifests");
 				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildAssetPacks");
 				appBuilder.Output.AssertTargetIsNotSkipped ("_GenerateAndroidAssetsDir");
-				FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
+				Assert.IsTrue (File.Exists (asset3File), $"file {asset3File} should exist.");
 				Assert.AreEqual (asset3.TextContent (), File.ReadAllText (asset3File), $"Contents of {asset3File} should have been updated.");
 				app.OtherBuildItems.Remove (asset3);
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true), $"{app.ProjectName} should succeed");
-				FileAssert.DoesNotExist (asset3File, $"file {asset3File} should not exist.");
+				Assert.IsFalse (File.Exists (asset3File), $"file {asset3File} should not exist.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsNotNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
 					Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");

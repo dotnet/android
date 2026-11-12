@@ -3,7 +3,7 @@ parameters:
   jobName: ''             # Name of the job
   jobDisplayName: ''      # Display name of the job
   agentCount: 1           # Number of build agents to run in parallel
-  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testFilter: ''          # MSTest filter expression used to select tests
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
@@ -37,7 +37,6 @@ jobs:
 
   - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
     parameters:
-      installTestSlicer: true
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
@@ -48,13 +47,13 @@ jobs:
       artifactName: $(TestAssembliesArtifactName)
       downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-  - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+  - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
     parameters:
       testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
       testFilter: ${{ parameters.testFilter }}
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
-      retryFailedTests: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      sliceTests: true
 
   - template: /build-tools/automation/yaml-templates/upload-results.yaml
     parameters:

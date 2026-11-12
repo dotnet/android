@@ -3,16 +3,16 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class TemporaryDirectoryTargetsTests : BaseTest
 {
-	[TestCase ("_PrepareUpdateAndroidResgen", "ResgenTemporaryDirectory", "_UpdateAndroidResgenInputs", "_AndroidResgenFlagFile")]
-	[TestCase ("_PrepareCreateBaseApk", "AaptTemporaryDirectory", "_CreateBaseApkInputs", "_PackagedResources")]
+	[TestMethod]
+	[DataRow ("_PrepareUpdateAndroidResgen", "ResgenTemporaryDirectory", "_UpdateAndroidResgenInputs", "_AndroidResgenFlagFile")]
+	[DataRow ("_PrepareCreateBaseApk", "AaptTemporaryDirectory", "_CreateBaseApkInputs", "_PackagedResources")]
 	public void TemporaryDirectoryIsOnlySetWhenTargetExecutes (string targetName, string propertyName, string inputProperty, string outputProperty)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -60,7 +60,7 @@ public class TemporaryDirectoryTargetsTests : BaseTest
 		File.SetLastWriteTimeUtc (stamp, File.GetLastWriteTimeUtc (input).AddSeconds (2));
 		var second = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", project, "-t:Build", "-v:normal", "-nr:false");
 		Assert.AreEqual (0, second.ExitCode, second.Output + second.Error);
-		StringAssert.Contains ($"Skipping target \"{targetName}\" because all output files are up-to-date", second.Output);
+		Assert.Contains ($"Skipping target \"{targetName}\" because all output files are up-to-date", second.Output);
 		CollectionAssert.AreEqual (new [] { "Directory=", "Exists=False" }, File.ReadAllLines (output),
 			"A fresh invocation that skips the target must not infer a temporary-directory property.");
 	}

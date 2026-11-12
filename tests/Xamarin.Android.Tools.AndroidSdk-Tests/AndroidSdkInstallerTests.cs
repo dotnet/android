@@ -6,7 +6,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Installer.AndroidSDK;
 using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.AndroidSDK.GoogleV2;
@@ -15,17 +16,18 @@ using Xamarin.Installer.Common;
 
 namespace Xamarin.Android.Tools.Tests;
 
-[TestFixture]
-[NonParallelizable]
+[TestClass]
+[DoNotParallelize]
 public class AndroidSdkInstallerTests
 {
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	[System.Diagnostics.CodeAnalysis.SuppressMessage ("Security", "CA5350", Justification = "Tests SHA-1 checksums supported by Android SDK manifests.")]
 	public void InstallValidatesAllArchivesBeforeExtraction (
-		[Values (true, false)] bool throwIfInvalidComponentsFound,
-		[Values (-1, 0, 1)] int invalidArchiveIndex,
-		[Values ("sha1", "sha256")] string checksumType,
-		[Values (false, true)] bool ignoreChecksumErrors)
+		[CombinatorialValues (true, false)] bool throwIfInvalidComponentsFound,
+		[CombinatorialValues (-1, 0, 1)] int invalidArchiveIndex,
+		[CombinatorialValues ("sha1", "sha256")] string checksumType,
+		[CombinatorialValues (false, true)] bool ignoreChecksumErrors)
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
 		var sdkPath = Path.Combine (root, "android-sdk");
@@ -88,18 +90,18 @@ public class AndroidSdkInstallerTests
 
 			bool rejectArchives = invalidArchiveIndex >= 0 && !ignoreChecksumErrors;
 			if (rejectArchives && throwIfInvalidComponentsFound) {
-				Assert.Throws<InvalidOperationException> (() =>
+				Assert.ThrowsExactly<InvalidOperationException> (() =>
 					installer.Install (instance, components, throwIfInvalidComponentsFound));
 			} else {
-				Assert.DoesNotThrow (() => installer.Install (instance, components, throwIfInvalidComponentsFound));
+				installer.Install (instance, components, throwIfInvalidComponentsFound);
 			}
 
 			if (rejectArchives) {
 				Assert.AreEqual (0, installationProgressCount, "Installation must not start for any component.");
 				Assert.IsFalse (Directory.Exists (sdkPath), "No component must be extracted.");
-				Assert.Greater (log.Errors, 0, "A rejected installation must report an error.");
+				Assert.IsGreaterThan (0, log.Errors, "A rejected installation must report an error.");
 			} else {
-				Assert.Greater (installationProgressCount, 0);
+				Assert.IsGreaterThan (0, installationProgressCount);
 				for (int i = 0; i < components.Count; i++) {
 					var componentPath = Path.Combine (sdkPath, "component-" + i);
 					Assert.AreEqual ("component-" + i, File.ReadAllText (Path.Combine (componentPath, "installed.txt")));
@@ -114,8 +116,9 @@ public class AndroidSdkInstallerTests
 		}
 	}
 
-	[TestCase (true)]
-	[TestCase (false)]
+	[TestMethod]
+	[DataRow (true)]
+	[DataRow (false)]
 	public void ChecksumOverrideDoesNotIgnoreInvalidHost (bool throwIfInvalidComponentsFound)
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
@@ -144,9 +147,9 @@ public class AndroidSdkInstallerTests
 			var instance = installer.FindInstance (sdkPath);
 			Assert.IsNotNull (instance);
 			if (throwIfInvalidComponentsFound)
-				Assert.Throws<InvalidOperationException> (() => installer.Install (instance, [component]));
+				Assert.ThrowsExactly<InvalidOperationException> (() => installer.Install (instance, [component]));
 			else
-				Assert.DoesNotThrow (() => installer.Install (instance, [component], throwIfInvalidComponentsFound: false));
+				installer.Install (instance, [component], throwIfInvalidComponentsFound: false);
 			Assert.IsFalse (Directory.Exists (sdkPath));
 		} finally {
 			Directory.Delete (root, recursive: true);
@@ -168,7 +171,7 @@ public class AndroidSdkInstallerTests
 		public void SetOperationStatus (OperationStatus status) {}
 	}
 
-	[Test]
+	[TestMethod]
 	public void DiscoverSdkFromSourceProperties ()
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
@@ -223,10 +226,11 @@ public class AndroidSdkInstallerTests
 		SystemImage.GpuSupport=true
 		""";
 
-	[TestCase ("UTF-8", false)]
-	[TestCase ("UTF-8", true)]
-	[TestCase ("UTF-16LE", true)]
-	[TestCase ("UTF-16BE", true)]
+	[TestMethod]
+	[DataRow ("UTF-8", false)]
+	[DataRow ("UTF-8", true)]
+	[DataRow ("UTF-16LE", true)]
+	[DataRow ("UTF-16BE", true)]
 	public void DiscoverAddonLibrariesFromManifestIni (string manifestEncoding, bool writePreamble)
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));
@@ -269,16 +273,17 @@ public class AndroidSdkInstallerTests
 					"com.android.future.usb.accessory|usb.jar|API for USB Accessories",
 					"com.google.android.media.effects|effects.jar|Collection of video effects",
 				};
-			CollectionAssert.AreEqual (expected, libraries.Select (l => $"{l.Name}|{l.LocalJarPath}|{l.Description}"));
+			CollectionAssert.AreEqual (expected, libraries.Select (l => $"{l.Name}|{l.LocalJarPath}|{l.Description}").ToArray ());
 		} finally {
 			Directory.Delete (root, recursive: true);
 		}
 	}
 
-	[TestCase ("JAVA_VERSION=\"21.0.3\"")]
-	[TestCase ("JAVA_VERSION='21.0.3'")]
-	[TestCase ("JAVA_VERSION=21.0.3")]
-	[TestCase ("JAVA_VERSION=\\\"21.0.\\u0033\\\"")]
+	[TestMethod]
+	[DataRow ("JAVA_VERSION=\"21.0.3\"")]
+	[DataRow ("JAVA_VERSION='21.0.3'")]
+	[DataRow ("JAVA_VERSION=21.0.3")]
+	[DataRow ("JAVA_VERSION=\\\"21.0.\\u0033\\\"")]
 	public void DiscoverJdkRevisionFromReleaseProperties (string contents)
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-jdk-installer-" + Guid.NewGuid ().ToString ("N"));
@@ -293,7 +298,7 @@ public class AndroidSdkInstallerTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void DiscoverMissingSdkForFirstTimeInstallation ()
 	{
 		var root = Path.Combine (Path.GetTempPath (), "android-sdk-installer-" + Guid.NewGuid ().ToString ("N"));

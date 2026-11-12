@@ -9,11 +9,14 @@
     <DebugSymbols>True</DebugSymbols>
     <DebugType>portable</DebugType>
     <Nullable>annotations</Nullable>
+    <!-- Xamarin.Android.Build.Tasks exposes its internal DynamicallyAccessedMemberTypes polyfill to these tests,
+         which conflicts with the MSTest.SourceGeneration output; use reflection-based discovery instead. -->
+    <UseMSTestSourceGeneration>false</UseMSTestSourceGeneration>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
+  <Import Project="..\..\build-tools\scripts\MSTestReferences.projitems" />
 
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\*.cs">
@@ -42,6 +45,8 @@
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.3.17" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageReference Include="Humanizer" Version="$(HumanizerVersion)" />
+    <!-- CI retries failed device tests once (see build-tools/automation/yaml-templates/run-mstest-tests.yaml) -->
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,19 +7,20 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
-		[Test]
-		public void CheckMultipleLibraryProjectReferenceAlias ([Values] bool withGlobal, [Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckMultipleLibraryProjectReferenceAlias (bool withGlobal, bool useDesignerAssembly, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -75,8 +76,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void BuildAppWithSystemNamespace ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildAppWithSystemNamespace ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -109,8 +111,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void DesignTimeBuild ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool useDesignerAssembly)
+		[TestMethod]
+		[CombinatorialData]
+		public void DesignTimeBuild ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration, bool useDesignerAssembly)
 		{
 			var (isRelease, runtime) = configuration;
 
@@ -145,19 +148,19 @@ namespace Xamarin.Android.Build.Tests
 						? Path.Combine (intermediateOutputPath, "designtime", "_Microsoft.Android.Resource.Designer.dll")
 						: Path.Combine (intermediateOutputPath, "Resource.designer.cs");
 					if (useDesignerAssembly) {
-						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
+						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should have been created.");
 					} else {
-						FileAssert.DoesNotExist (designTimeDesigner, "Design-time builds should not generate the legacy source designer.");
+						Assert.IsFalse (File.Exists (designTimeDesigner), "Design-time builds should not generate the legacy source designer.");
 					}
 					var resgenFlag = Path.Combine (intermediateOutputPath, "R.cs.flag");
-					FileAssert.DoesNotExist (resgenFlag, "Design-time builds should not create the normal resource-generation flag.");
+					Assert.IsFalse (File.Exists (resgenFlag), "Design-time builds should not create the normal resource-generation flag.");
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }), "second build failed");
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "R.txt"), "R.txt should exist after IncrementalClean!");
-					FileAssert.Exists (Path.Combine (intermediateOutputPath, "res.flag"), "res.flag should exist after IncrementalClean!");
+					Assert.IsTrue (File.Exists (Path.Combine (intermediateOutputPath, "R.txt")), "R.txt should exist after IncrementalClean!");
+					Assert.IsTrue (File.Exists (Path.Combine (intermediateOutputPath, "res.flag")), "res.flag should exist after IncrementalClean!");
 					if (useDesignerAssembly) {
-						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
+						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should not have been deleted.");
 					}
 					var items = new List<string> ();
 					if (!useDesignerAssembly) {
@@ -178,17 +181,18 @@ namespace Xamarin.Android.Build.Tests
 							"Design-time builds should retain the source designer from the last normal build.");
 						Assert.AreEqual (flagTimestamp, File.GetLastWriteTimeUtc (resgenFlag),
 							"Design-time builds must not mark normal resource generation up to date.");
-						FileAssert.DoesNotExist (Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs"));
+						Assert.IsFalse (File.Exists (Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs")));
 						Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Normal build after a design-time build should succeed.");
-						StringAssert.Contains ("updated_resource", File.ReadAllText (designTimeDesigner),
+						Assert.Contains ("updated_resource", File.ReadAllText (designTimeDesigner),
 							"The next normal build should refresh the source designer.");
 					}
 				}
 			}
 		}
 
-		[Test]
-		public void CheckEmbeddedAndroidXResources ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckEmbeddedAndroidXResources ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -210,8 +214,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void MoveResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void MoveResource ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -238,8 +243,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void ReportAaptErrorsInOriginalFileName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ReportAaptErrorsInOriginalFileName ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -262,8 +268,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void ReportAaptWarningsForBlankLevel ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ReportAaptWarningsForBlankLevel ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -288,8 +295,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void RepetiviteBuildUpdateSingleResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void RepetiviteBuildUpdateSingleResource ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -340,10 +348,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("XamarinBuildDownload")]
-		[NonParallelizable]
-		public void Check9PatchFilesAreProcessed ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("XamarinBuildDownload")]
+		[DoNotParallelize]
+		public void Check9PatchFilesAreProcessed ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -374,18 +383,15 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var path = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/packaged_resources");
 					var data = ZipHelper.ReadFileFromZip (path, "res/drawable/image1.9.png");
-					Assert.IsNotNull (data, "image1.9.png should be in {0}android/bin/packaged_resources",
-						proj.IntermediateOutputPath);
+					Assert.IsNotNull (data, string.Format ("image1.9.png should be in {0}android/bin/packaged_resources", proj.IntermediateOutputPath));
 					var png = PNGChecker.LoadFromBytes (data);
 					Assert.IsTrue (png.Is9Patch, "image1.9.png should have been processed into a 9 patch image.");
 					data = ZipHelper.ReadFileFromZip (path, "res/drawable/image2.9.png");
-					Assert.IsNotNull (data, "image2.9.png should be in {0}android/bin/packaged_resources",
-						proj.IntermediateOutputPath);
+					Assert.IsNotNull (data, string.Format ("image2.9.png should be in {0}android/bin/packaged_resources", proj.IntermediateOutputPath));
 					png = PNGChecker.LoadFromBytes (data);
 					Assert.IsTrue (png.Is9Patch, "image2.9.png should have been processed into a 9 patch image.");
 					data = ZipHelper.ReadFileFromZip (path, "res/drawable-hdpi-v4/common_google_signin_btn_icon_dark_normal_background.9.png");
-					Assert.IsNotNull (data, "common_google_signin_btn_icon_dark_normal_background.9.png.png should be in {0}android/bin/packaged_resources",
-						proj.IntermediateOutputPath);
+					Assert.IsNotNull (data, string.Format ("common_google_signin_btn_icon_dark_normal_background.9.png.png should be in {0}android/bin/packaged_resources", proj.IntermediateOutputPath));
 					png = PNGChecker.LoadFromBytes (data);
 					Assert.IsTrue (png.Is9Patch, "common_google_signin_btn_icon_dark_normal_background.9.png should have been processed into a 9 patch image.");
 					Directory.Delete (Path.Combine (Root,projectPath), recursive: true);
@@ -393,11 +399,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
-		public void CheckXmlResourcesFilesAreProcessed ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckXmlResourcesFilesAreProcessed ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -406,7 +413,7 @@ namespace Xamarin.Android.Build.Tests
 
 			// TODO: NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT fails here atm");
+				Assert.Inconclusive ("NativeAOT fails here atm");
 			}
 
 			var projectPath = Path.Combine ("temp", TestName);
@@ -528,7 +535,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
-				FileAssert.Exists (packaged_resources);
+				Assert.IsTrue (File.Exists (packaged_resources));
 				var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
 				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}.aar").ToString ();
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
@@ -579,7 +586,7 @@ namespace UnnamedProject
 		void CheckCustomView (System.IO.Compression.ZipArchive zip, params string [] paths)
 		{
 			var customViewPath = Path.Combine (paths);
-			FileAssert.Exists (customViewPath, $"custom_text.xml should exist at {customViewPath}");
+			Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
 			var doc = XDocument.Load (customViewPath);
 			Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
 			Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
@@ -630,9 +637,9 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		[Parallelizable (ParallelScope.Self)]
-		public void CheckResourceDesignerIsCreated ([Values (false, true)] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckResourceDesignerIsCreated ([CombinatorialValues (false, true)] bool isRelease, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -650,13 +657,12 @@ namespace UnnamedProject
 				string outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "__Microsoft.Android.Resource.Designer" + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), $"{outputFile} should have been created in {proj.IntermediateOutputPath}");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
+				Assert.IsFalse (File.Exists (outputFile), string.Format ("Resource.designer{1} should have been cleaned in {0}", proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension));
 			}
 		}
 
-		[Test]
-		[TestCaseSource(nameof (Get_ReleaseLanguageData))]
+		[TestMethod]
+		[DynamicData (nameof (Get_ReleaseLanguageData))]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -674,7 +680,7 @@ namespace UnnamedProject
 				var attr = File.GetAttributes (designerPath);
 				File.SetAttributes (designerPath, FileAttributes.ReadOnly);
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
-					"{0} should be read only", designerPath);
+					string.Format ("{0} should be read only", designerPath));
 				var main = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
 				main.Timestamp = DateTimeOffset.UtcNow;
 				main.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -695,12 +701,13 @@ namespace UnnamedProject
 </LinearLayout>";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) != FileAttributes.ReadOnly,
-					"{0} should be writable", designerPath);
+					string.Format ("{0} should be writable", designerPath));
 			}
 		}
 
-		[Test]
-		public void CheckOldResourceDesignerIsNotUsed ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckOldResourceDesignerIsNotUsed ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidApplicationProject () {
@@ -715,7 +722,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var fi = new FileInfo (Path.Combine (Root, b.ProjectDirectory, designer));
 				Assert.IsFalse (fi.Length > new [] { 0xef, 0xbb, 0xbf, 0x0d, 0x0a }.Length,
-					"{0} should not contain anything.", designer);
+					string.Format ("{0} should not contain anything.", designer));
 				var designerFile = "__Microsoft.Android.Resource.Designer";
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 					designerFile + proj.Language.DefaultDesignerExtension);
@@ -726,8 +733,9 @@ namespace UnnamedProject
 		}
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
-		[Test]
-		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidApplicationProject () {
@@ -744,7 +752,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (File.Exists (Path.Combine (Root, b.ProjectDirectory, "Resources",
 					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
-					"{0} should not exists", designer.Include ());
+					string.Format ("{0} should not exists", designer.Include ()));
 				var designerFile = "__Microsoft.Android.Resource.Designer";
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 					designerFile  + proj.Language.DefaultDesignerExtension);
@@ -754,8 +762,9 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void GenerateResourceDesigner_false ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void GenerateResourceDesigner_false (bool useDesignerAssembly, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -787,25 +796,26 @@ namespace UnnamedProject
 			var resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
 			if (useDesignerAssembly)
 				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
-			FileAssert.DoesNotExist (resource_designer_cs);
+			Assert.IsFalse (File.Exists (resource_designer_cs));
 
 			Assert.IsTrue (builder.Build (proj), "build should succeed");
 
 			resource_designer_cs =  Path.Combine (intermediate, "Resource.designer.cs");
 			if (useDesignerAssembly)
 				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
-			FileAssert.DoesNotExist (resource_designer_cs);
+			Assert.IsFalse (File.Exists (resource_designer_cs));
 
 			var assemblyPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
-			FileAssert.Exists (assemblyPath);
+			Assert.IsTrue (File.Exists (assemblyPath));
 			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
 			var typeName = $"{proj.ProjectName}.Resource";
 			var type = assembly.MainModule.GetType (typeName);
 			Assert.IsNull (type, $"{assemblyPath} should *not* contain {typeName}");
 		}
 
-		[Test]
-		public void ResourceDesignerBinaryLibraryCompatibility ([Values] bool designTimeBuild)
+		[TestMethod]
+		[CombinatorialData]
+		public void ResourceDesignerBinaryLibraryCompatibility (bool designTimeBuild)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var library = new XamarinAndroidLibraryProject {
@@ -884,8 +894,12 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void DesignTimeRetargetingDoesNotLeakIntoNormalBuild ([Values] bool isApplication, [Values (-1, 1)] int designTimeVersionOffset)
+		[TestMethod]
+		[DataRow (true, -1)]
+		[DataRow (true, 1)]
+		[DataRow (false, -1)]
+		[DataRow (false, 1)]
+		public void DesignTimeRetargetingDoesNotLeakIntoNormalBuild (bool isApplication, int designTimeVersionOffset)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			XamarinAndroidProject project = isApplication ? new XamarinAndroidApplicationProject () : new XamarinAndroidLibraryProject ();
@@ -948,8 +962,9 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 			string path = Path.Combine (Root, "temp", TestName);
@@ -993,8 +1008,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckAaptErrorRaisedForMissingResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckAaptErrorRaisedForMissingResource ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1027,8 +1043,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckAaptErrorRaisedForInvalidDirectoryName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckAaptErrorRaisedForInvalidDirectoryName ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1051,8 +1068,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckAaptErrorRaisedForInvalidFileName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckAaptErrorRaisedForInvalidFileName ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1079,8 +1097,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1109,8 +1128,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckAaptErrorRaisedForDuplicateResourceinApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckAaptErrorRaisedForDuplicateResourceinApp ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1138,8 +1158,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckFilesAreRemoved ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckFilesAreRemoved ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1173,8 +1194,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckDontUpdateResourceIfNotNeeded (bool useDesignerAssembly, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1246,7 +1268,7 @@ namespace Lib1 {
 
 					Assert.IsNotNull (rawContentBuildOne, "res/raw/test.txt should have been in the apk ");
 					string txt = Encoding.UTF8.GetString (rawContentBuildOne ?? Array.Empty<byte> ());
-					StringAssert.Contains ("Test Build 1", txt, $"res/raw/test.txt should have been 'Test Build 1' not {txt}");
+					Assert.Contains ("Test Build 1", txt, $"res/raw/test.txt should have been 'Test Build 1' not {txt}");
 					Assert.IsNotNull (ZipHelper.ReadFileFromZip (apk, "res/raw/test2.txt"), "res/raw/test2.txt should have been in the apk.");
 					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1262,7 +1284,7 @@ namespace Lib1 {
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					string resource_designer_cs = GetResourceDesignerPath (appBuilder, appProj);
 					string text = GetResourceDesignerText (appProj, resource_designer_cs);
-					StringAssert.Contains ("theme_devicedefault_background2", text, "Resource.designer.cs was not updated.");
+					Assert.Contains ("theme_devicedefault_background2", text, "Resource.designer.cs was not updated.");
 					appBuilder.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen");
 					appBuilder.Output.AssertTargetIsNotSkipped ("_CreateBaseApk");
 					appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
@@ -1270,7 +1292,7 @@ namespace Lib1 {
 						"res/raw/test.txt");
 					Assert.IsNotNull (rawContentBuildTwo, "res/raw/test.txt should have been in the apk ");
 					txt = Encoding.UTF8.GetString (rawContentBuildTwo ?? Array.Empty<byte> ());
-					StringAssert.Contains ("Test Build 2 Now", txt, $"res/raw/test.txt should have been 'Test Build 2' not {txt}");
+					Assert.Contains ("Test Build 2 Now", txt, $"res/raw/test.txt should have been 'Test Build 2' not {txt}");
 					rawToDelete.Deleted = true;
 					rawToDelete.Timestamp = DateTimeOffset.UtcNow;
 					theme.Deleted = true;
@@ -1288,8 +1310,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void BuildAppWithManagedResourceParser ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildAppWithManagedResourceParser ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1307,14 +1330,14 @@ namespace Lib1 {
 				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_GenerateResourceDesignerAssembly"),
 					"Target '_GenerateResourceDesignerAssembly' should have run.");
 				var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "_Microsoft.Android.Resource.Designer.dll");
-				FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
+				Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should have been created.");
 
 				var designerContents = GetResourceDesignerText (appProj, designerFile);
-				StringAssert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
-				StringAssert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
-				StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
-				StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
-				StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
+				Assert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
+				Assert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
+				Assert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
+				Assert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
+				Assert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
 				appBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true),
 					"Normal Application Build should have succeeded.");
@@ -1331,9 +1354,10 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		[NonParallelizable]
-		public void BuildAppWithManagedResourceParserAndLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize]
+		public void BuildAppWithManagedResourceParserAndLibraries ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1385,43 +1409,43 @@ namespace Lib1 {
 					Assert.IsTrue (appBuilder.RunTarget (appProj, "Restore"), "App project should have restored.");
 					appBuilder.ThrowOnBuildFailure = false;
 					Assert.IsTrue (libBuilder.DesignTimeBuild (libProj), "Library project should have built");
-					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
+					Assert.IsLessThanOrEqualTo (maxBuildTimeMs, libBuilder.LastBuildTime.TotalMilliseconds, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true),
 						"Target '_GenerateResourceDesignerAssembly' should have run.");
 					Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "Application project should have built");
-					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
+					Assert.IsLessThanOrEqualTo (maxBuildTimeMs, appBuilder.LastBuildTime.TotalMilliseconds, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true),
 						"Target '_GenerateResourceDesignerAssembly' should have run.");
 					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "_Microsoft.Android.Resource.Designer.dll");
-					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
+					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should have been created.");
 
 					var designerContents = GetResourceDesignerText (appProj, designerFile);
-					StringAssert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
-					StringAssert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
-					StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
-					StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
-					StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
-					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
-					StringAssert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
-					StringAssert.Contains ("theme_devicedefault_background", designerContents, $"{designerFile} should contain Resources.Color.theme_devicedefault_background");
+					Assert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
+					Assert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
+					Assert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
+					Assert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
+					Assert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
+					Assert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
+					Assert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
+					Assert.Contains ("theme_devicedefault_background", designerContents, $"{designerFile} should contain Resources.Color.theme_devicedefault_background");
 					Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
 					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true),
 						"Target '_GenerateResourceDesignerAssembly' should not have run.");
 					Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "App project should have built");
-					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
-					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
+					Assert.IsLessThanOrEqualTo (maxBuildTimeMs, appBuilder.LastBuildTime.TotalMilliseconds, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
+					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should have been created.");
 
 					designerContents = GetResourceDesignerText (appProj, designerFile);
-					StringAssert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
-					StringAssert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
-					StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
-					StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
-					StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
-					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
-					StringAssert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
-					StringAssert.Contains ("theme_devicedefault_background", designerContents, $"{designerFile} should contain Resources.Color.theme_devicedefault_background");
-					StringAssert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
-					StringAssert.Contains ("SomeColor", designerContents, $"{designerFile} should contain Resources.Color.SomeColor");
+					Assert.Contains ("hello", designerContents, $"{designerFile} should contain Resources.Strings.hello");
+					Assert.Contains ("app_name", designerContents, $"{designerFile} should contain Resources.Strings.app_name");
+					Assert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
+					Assert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
+					Assert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
+					Assert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
+					Assert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
+					Assert.Contains ("theme_devicedefault_background", designerContents, $"{designerFile} should contain Resources.Color.theme_devicedefault_background");
+					Assert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
+					Assert.Contains ("SomeColor", designerContents, $"{designerFile} should contain Resources.Color.SomeColor");
 					Assert.IsTrue (appBuilder.Build (appProj), "App project should have built");
 
 					Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
@@ -1433,8 +1457,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckMaxResWarningIsEmittedAsAWarning ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckMaxResWarningIsEmittedAsAWarning ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1461,8 +1486,9 @@ namespace Lib1 {
 			}
 		}
 
-		[Test]
-		public void CheckCodeBehindIsGenerated ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckCodeBehindIsGenerated ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1517,14 +1543,15 @@ namespace UnnamedProject
 			proj.SetProperty ("AndroidGenerateLayoutBindings", "True");
 			using (var builder = CreateApkBuilder (path)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "codebehind", "Binding.Main.g.cs"));
+				Assert.IsTrue (File.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "codebehind", "Binding.Main.g.cs")));
 				Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
-				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "codebehind", "Binding.Main.g.cs"));
+				Assert.IsTrue (File.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "codebehind", "Binding.Main.g.cs")));
 			}
 		}
 
-		[Test]
-		public void CheckInvalidXmlInManagedResourceParser ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckInvalidXmlInManagedResourceParser ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1544,10 +1571,9 @@ namespace UnnamedProject
 			}
 		}
 
-		//NOTE: This test was failing randomly before fixing a bug in `CopyIfChanged`.
-		//      Let's set it to run 3 times, it still completes in a reasonable time ~1.5 min.
-		[Test, Repeat(3)]
-		public void LightlyModifyLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void LightlyModifyLayout ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1562,7 +1588,7 @@ namespace UnnamedProject
 
 				//Just change something, doesn't matter
 				var layout = Path.Combine (Root, b.ProjectDirectory, "Resources", "layout", "Main.axml");
-				FileAssert.Exists (layout);
+				Assert.IsTrue (File.Exists (layout));
 				File.AppendAllText (layout, " ");
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
@@ -1570,8 +1596,9 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void CustomViewAddResourceId ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CustomViewAddResourceId ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1601,15 +1628,15 @@ namespace UnnamedProject
 					"The target _FixupCustomViewsForAapt2 should have been skipped");
 
 				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", proj.PackageNameJavaIntermediatePath, "R.java");
-				FileAssert.Exists (r_java);
+				Assert.IsTrue (File.Exists (r_java));
 				var r_java_contents = File.ReadAllLines (r_java);
 				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"{r_java} should contain `{textView1}`!");
 			}
 		}
 
-		[Test]
-		[Parallelizable (ParallelScope.Self)]
-		public void CheckNoVersionVectors ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckNoVersionVectors ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1626,7 +1653,7 @@ namespace UnnamedProject
 				string aaptCommand = "Executing link";
 				foreach (var line in b.LastBuildOutput) {
 					if (line.Contains (aaptCommand)) {
-						StringAssert.Contains ("--no-version-vectors", line, "The Xamarin.Android.Support.Vector.Drawable NuGet should set `--no-version-vectors`!");
+						Assert.Contains ("--no-version-vectors", line, "The Xamarin.Android.Support.Vector.Drawable NuGet should set `--no-version-vectors`!");
 						return;
 					}
 				}
@@ -1635,8 +1662,9 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void InvalidFilenames ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void InvalidFilenames ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1662,8 +1690,9 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void SolutionBuildSeveralProjects ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void SolutionBuildSeveralProjects ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1672,7 +1701,7 @@ namespace UnnamedProject
 
 			const int libraryCount = 10;
 			var path = Path.Combine ("temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, path);
+			TestOutputDirectories [TestId] = Path.Combine (Root, path);
 			using (var sb = new SolutionBuilder ($"{TestName}.sln") {
 				SolutionPath = Path.Combine (Root, path),
 				MaxCpuCount = 4,

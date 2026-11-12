@@ -5,21 +5,23 @@ using System.Xml.Linq;
 
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class TrimmableTypeMapManifestAliasTests
 {
 	const string GeneratedActivityName = "crc64deadbeefcafebabe.UnnamedActivity";
 
-	[TestCase ("${applicationId}.UnnamedAlias", "my.app.UnnamedAlias")]
-	[TestCase (".legacy-alias", ".legacy-alias")]
-	[TestCase ("my.app.legacy-alias", "my.app.legacy-alias")]
-	[TestCase ("${applicationId}.legacy-alias", "my.app.legacy-alias")]
-	[TestCase ("${applicationId}.\u00a2Alias", "my.app.\u00a2Alias")]
-	[TestCase ("${applicationId}.for", "my.app.for")]
+	[TestMethod]
+	[DataRow ("${applicationId}.UnnamedAlias", "my.app.UnnamedAlias")]
+	[DataRow (".legacy-alias", ".legacy-alias")]
+	[DataRow ("my.app.legacy-alias", "my.app.legacy-alias")]
+	[DataRow ("${applicationId}.legacy-alias", "my.app.legacy-alias")]
+	[DataRow ("${applicationId}.\u00a2Alias", "my.app.\u00a2Alias")]
+	[DataRow ("${applicationId}.for", "my.app.for")]
 	public void ActivityAliasKeepsNameWhileRootingAndRewritingTarget (string aliasName, string expectedAliasName)
 	{
 		var peer = new JavaPeerInfo {
@@ -62,7 +64,7 @@ public class TrimmableTypeMapManifestAliasTests
 		Assert.AreEqual (GeneratedActivityName, (string) alias.Attribute (android + "targetActivity"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void PackageNameTokenIsReplacedOnlyInGeneratedAttributes ()
 	{
 		var provider = new JavaPeerInfo {
@@ -110,7 +112,7 @@ public class TrimmableTypeMapManifestAliasTests
 		Assert.AreEqual ("my.app.permission.READ", (string) generatedProvider.Attribute (android + "readPermission"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void InstrumentationEmitsIntentFilters ()
 	{
 		var peer = new JavaPeerInfo {
@@ -142,7 +144,7 @@ public class TrimmableTypeMapManifestAliasTests
 		var instrumentation = document.Root?.Element ("instrumentation");
 		Assert.IsNotNull (instrumentation);
 		CollectionAssert.AreEqual (new [] { "meta-data", "intent-filter", "property" },
-			instrumentation.Elements ().Select (element => element.Name.LocalName));
+			instrumentation.Elements ().Select (element => element.Name.LocalName).ToArray ());
 		var filter = instrumentation.Element ("intent-filter");
 		Assert.IsNotNull (filter);
 		XNamespace android = "http://schemas.android.com/apk/res/android";
@@ -151,7 +153,7 @@ public class TrimmableTypeMapManifestAliasTests
 		Assert.AreEqual ("my.app.TEST", (string) filter.Element ("category")?.Attribute (android + "name"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void MultipleAssemblyApplicationAttributesAreRejected ()
 	{
 		var manifestGenerator = new ManifestGenerator {
@@ -169,7 +171,7 @@ public class TrimmableTypeMapManifestAliasTests
 			ApplicationAttributeCount = 2,
 		};
 
-		var exception = Assert.Throws<InvalidOperationException> (
+		var exception = Assert.ThrowsExactly<InvalidOperationException> (
 			() => manifestGenerator.Generate (manifest, [], assemblyInfo));
 		Assert.AreEqual ("There can be only one [assembly:Application] attribute defined.", exception.Message);
 	}

@@ -1,11 +1,11 @@
 using System;
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.SourceWriter;
 
 namespace generatortests.SourceWriters
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class SourceWritersTestBase
 	{
 		protected string GetOutput (ISourceWriter writer)

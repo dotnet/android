@@ -5,7 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.Interop.Tools.JavaSource;
 
@@ -14,10 +14,10 @@ using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class SourceJavadocToXmldocParserTests : SourceJavadocToXmldocGrammarFixture {
 
-		[Test, TestCaseSource (nameof (TryParse_Success))]
+		[TestMethod, DynamicData (nameof (TryParseRows))]
 		public void TryParse (ParseResult parseResult)
 		{
 			ParseTree parseTree;
@@ -43,6 +43,8 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			var e = new XElement ("member", members);
 			return e.ToString ();
 		}
+
+		public static IEnumerable<object []> TryParseRows => TryParse_Success.Select (result => new object [] { result });
 
 		public static readonly ParseResult[] TryParse_Success = new ParseResult[]{
 			new ParseResult {
@@ -259,7 +261,7 @@ bar()}} for more details.</param>
 			public  string  IntelliSenseXml;
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseActivityDoc ()
 		{
 			ParseTree parseTree;

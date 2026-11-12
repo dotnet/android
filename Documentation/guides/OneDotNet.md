@@ -191,8 +191,6 @@ of existing .NET templates:
     Class library                                 classlib             [C#],F#,VB  Common/Library
     WPF Application                               wpf                  [C#],VB     Common/WPF
     WPF Class library                             wpflib               [C#],VB     Common/WPF
-    NUnit 3 Test Project                          nunit                [C#],F#,VB  Test/NUnit
-    NUnit 3 Test Item                             nunit-test           [C#],F#,VB  Test/NUnit
 
 To create different types of Android projects:
 

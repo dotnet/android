@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -15,11 +15,11 @@ namespace Xamarin.Android.Build.Tests
 		static object DeviceCacheKey (string target, string adbPath) =>
 			Tuple.Create ("AndroidHelper_AndroidDevice", target, adbPath);
 
-		[Test]
+		[TestMethod]
 		public void FastDeployReusesDeviceSelectedByDebuggingTasks ()
 		{
 			string adbToolPath = Path.Combine (Path.GetTempPath (), "missing-" + Guid.NewGuid ().ToString ("N"));
-			IBuildEngine4 engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine4 engine = new MockBuildEngine (Console.Out);
 			engine.RegisterTaskObject (DeviceCacheKey ("-s emulator-5554", Path.Combine (adbToolPath, "adb")), new object [] {
 				"emulator-5554", "sdk_gphone64_arm64", (int) AdbDeviceType.Emulator, (int) AdbDeviceStatus.Online, null,
 				"sdk_gphone64_arm64", "sdk_gphone64_arm64", "emu64a", "1", "emulator-5554 device transport_id:1",
@@ -45,11 +45,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("emulator-5554 device transport_id:1", device.LongOutput);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployReusesMissingDeviceSelectedByDebuggingTasks ()
 		{
 			string adbToolPath = Path.Combine (Path.GetTempPath (), "missing-" + Guid.NewGuid ().ToString ("N"));
-			IBuildEngine4 engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine4 engine = new MockBuildEngine (Console.Out);
 			engine.RegisterTaskObject (DeviceCacheKey ("", Path.Combine (adbToolPath, "adb")), new object [0], RegisteredTaskObjectLifetime.Build, false);
 			var errors = new List<string> ();
 

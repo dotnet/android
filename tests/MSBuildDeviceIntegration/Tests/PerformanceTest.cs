@@ -6,7 +6,8 @@ using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredBuild = Microsoft.Build.Logging.StructuredLogger.Build;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -14,16 +15,16 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	// TODO: update for NativeAOT and CoreCLR
-	[TestFixture]
-	[Category ("Performance")]
+	[TestClass]
+	[TestCategory ("Performance")]
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
 		const int MaxEvaluationTimeInMs = 500;
 		static readonly Dictionary<string, int> csv_values = new Dictionary<string, int> ();
 
-		[OneTimeSetUp]
-		public static void Setup ()
+		[ClassInitialize]
+		public static void Setup (TestContext context)
 		{
 			var csv = Path.Combine (XABuildPaths.TopDirectory, "tests", "msbuild-times-reference", "MSBuildDeviceIntegration.csv");
 			using (var reader = File.OpenText (csv)) {
@@ -68,13 +69,13 @@ namespace Xamarin.Android.Build.Tests
 				var build = ReadBinLog (builder);
 				var actual = GetDuration (build, builder);
 				maxEvaluationTime = Math.Max (maxEvaluationTime, GetMaxEvaluationTime (build));
-				TestContext.Out.WriteLine ($"run {i} took: {actual}ms");
+				Console.Out.WriteLine ($"run {i} took: {actual}ms");
 				total += actual;
 				if (afterRun is not null)
 					afterRun (builder);
 			}
 			total /= iterations;
-			TestContext.Out.WriteLine ($"expected: {expected}ms, actual: {total}ms");
+			Console.Out.WriteLine ($"expected: {expected}ms, actual: {total}ms");
 			if (total > expected) {
 				AssertSlowMachine (maxEvaluationTime, expected, total);
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
@@ -93,11 +94,11 @@ namespace Xamarin.Android.Build.Tests
 				var build = ReadBinLog (builder);
 				var duration = GetTaskDuration (build, builder, task);
 				maxEvaluationTime = Math.Max (maxEvaluationTime, GetMaxEvaluationTime (build));
-				TestContext.Out.WriteLine($"run {i} took: {duration}ms");
+				Console.Out.WriteLine($"run {i} took: {duration}ms");
 				total += duration;
 			}
 			total /= iterations;
-			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
+			Console.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
 			if (total > expected) {
 				AssertSlowMachine (maxEvaluationTime, expected, total);
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void AssertSlowMachine (double maxEvaluationTime, int expected, double actual)
 		{
-			TestContext.Out.WriteLine ($"max evaluation time: {maxEvaluationTime}ms (threshold: {MaxEvaluationTimeInMs}ms)");
+			Console.Out.WriteLine ($"max evaluation time: {maxEvaluationTime}ms (threshold: {MaxEvaluationTimeInMs}ms)");
 			if (maxEvaluationTime > MaxEvaluationTimeInMs) {
 				Assert.Inconclusive ($"Exceeded expected time of {expected}ms, actual {actual}ms, but evaluation time was {maxEvaluationTime:F0}ms (threshold: {MaxEvaluationTimeInMs}ms), indicating a slow CI machine.");
 			}
@@ -121,7 +122,7 @@ namespace Xamarin.Android.Build.Tests
 		StructuredBuild ReadBinLog (ProjectBuilder builder)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
-			FileAssert.Exists (binlog);
+			Assert.IsTrue (File.Exists (binlog));
 			return BinaryLog.ReadBuild (binlog);
 		}
 
@@ -170,8 +171,8 @@ namespace Xamarin.Android.Build.Tests
 			return proj;
 		}
 
-		[Test]
-		[Retry (Retry)]
+		[TestMethod]
+		[Retry (Retry - 1)]
 		public void Build_No_Changes ()
 		{
 			var proj = CreateApplicationProject ();
@@ -194,8 +195,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Retry (Retry)]
+		[TestMethod]
+		[Retry (Retry - 1)]
 		public void Build_CSharp_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -212,8 +213,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Retry (Retry)]
+		[TestMethod]
+		[Retry (Retry - 1)]
 		public void Build_AndroidResource_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -229,8 +230,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Retry (Retry)]
+		[TestMethod]
+		[Retry (Retry - 1)]
 		public void Build_AndroidAsset_Change ()
 		{
 			var bytes = new byte [1024*1024*10];
@@ -266,8 +267,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Retry (Retry)]
+		[TestMethod]
+		[Retry (Retry - 1)]
 		public void Build_AndroidManifest_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -283,10 +284,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("UsesDevice")]
-		[Retry (Retry)]
-		public void Build_XAML_Change ([Values (true, false)] bool install)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("UsesDevice")]
+		[Retry (Retry - 1)]
+		public void Build_XAML_Change ([CombinatorialValues (true, false)] bool install)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var xaml =
@@ -353,9 +355,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("UsesDevice")]
-		[Retry (Retry)]
+		[TestMethod]
+		[TestCategory ("UsesDevice")]
+		[Retry (Retry - 1)]
 		public void Install_CSharp_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -372,9 +374,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[Category ("UsesDevice")]
-		[Retry (Retry)]
+		[TestMethod]
+		[TestCategory ("UsesDevice")]
+		[Retry (Retry - 1)]
 		public void Install_CSharp_FromClean ()
 		{
 			var proj = CreateApplicationProject ();
@@ -392,7 +394,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DesignTimeBuild_CSharp_From_Clean ()
 		{
 			var proj = CreateApplicationProject ();

@@ -1,7 +1,7 @@
 // https://github.com/dotnet/android/blob/34acbbae6795854cc4e9f8eb7167ab011e0266b4/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/MonoAndroidHelperTests.cs
 // https://github.com/dotnet/android/blob/799506a9dfb746b8bdc8a4ab77e19eee875f00e3/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/FilesTests.cs
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +18,7 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class FilesTests
 	{
 		bool IsWindows = RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
@@ -28,14 +28,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		string tempDir;
 		MemoryStream stream;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
-			tempDir = Path.Combine (TestContext.CurrentContext.WorkDirectory, "Microsoft.Android.Build.BaseTasks.Tests", TestContext.CurrentContext.Test.ID);
+			tempDir = Path.Combine (AppContext.BaseDirectory, "Microsoft.Android.Build.BaseTasks.Tests", Guid.NewGuid ().ToString ("N"));
 			stream = new MemoryStream ();
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			stream.Dispose ();
@@ -45,11 +45,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				Directory.Delete (dir, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToLongPathIsIdempotent ()
 		{
 			if (!IsWindows) {
-				Assert.Ignore ("Long path prefixes only apply on Windows.");
+				Assert.Inconclusive ("Long path prefixes only apply on Windows.");
 				return;
 			}
 
@@ -60,7 +60,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (longPath, Files.ToLongPath (longPath), "Long path prefix should not be added twice.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void SaveXmlUsesProjectPathAndRetrySettings ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -79,11 +79,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsFalse (doc.SaveIfChanged (path, null), "A null environment must use the fallback.");
 			using var locked = new FileStream (path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 			var stopwatch = Stopwatch.StartNew ();
-			Assert.Throws<IOException> (() => doc.SaveIfChanged ("devices.cache", environment));
-			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (2), "The project's retry limit must be used.");
+			Assert.ThrowsExactly<IOException> (() => doc.SaveIfChanged ("devices.cache", environment));
+			Assert.IsLessThan (TimeSpan.FromSeconds (2), stopwatch.Elapsed, "The project's retry limit must be used.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -91,13 +91,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			var foo = "bar";
 			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempFile), "Should write on new file.");
-			FileAssert.Exists (tempFile);
+			Assert.IsTrue (File.Exists (tempFile));
 			Assert.IsFalse (Files.CopyIfStringChanged (foo, tempFile), "Should *not* write unless changed.");
 			foo += "\n";
 			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempFile), "Should write when changed.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfBytesChanged ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -105,13 +105,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			var foo = new byte [32];
 			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write on new file.");
-			FileAssert.Exists (tempFile);
+			Assert.IsTrue (File.Exists (tempFile));
 			Assert.IsFalse (Files.CopyIfBytesChanged (foo, tempFile), "Should *not* write unless changed.");
 			foo [0] = 0xFF;
 			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write when changed.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -123,7 +123,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.Flush ();
 
 				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write on new file.");
-				FileAssert.Exists (tempFile);
+				Assert.IsTrue (File.Exists (tempFile));
 				Assert.IsFalse (Files.CopyIfStreamChanged (foo, tempFile), "Should *not* write unless changed.");
 				writer.WriteLine ();
 				writer.Flush ();
@@ -131,7 +131,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_TaskEnvironment ()
 		{
 			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new System.Collections.Generic.Dictionary<string, string> ());
@@ -146,8 +146,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			CollectionAssert.AreEqual (new byte [] { 43 }, File.ReadAllBytes (destination));
 		}
 
-		[TestCase (0)]
-		[TestCase (2)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
 		public void CopyIfStreamChanged_ProjectScopedRetries (int retries)
 		{
 			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new System.Collections.Generic.Dictionary<string, string> {
@@ -156,7 +157,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			});
 			using var source = new SharingViolationStream ();
 			source.WriteByte (42);
-			Assert.Throws<IOException> (() => Files.CopyIfStreamChanged (source, environment.GetAbsolutePath ("foo.txt"), environment));
+			Assert.ThrowsExactly<IOException> (() => Files.CopyIfStreamChanged (source, environment.GetAbsolutePath ("foo.txt"), environment));
 			Assert.AreEqual (retries + 1, source.Attempts);
 		}
 
@@ -171,7 +172,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged_NewDirectory ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -179,10 +180,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			var foo = "bar";
 			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempFile), "Should write on new file.");
-			FileAssert.Exists (tempFile);
+			Assert.IsTrue (File.Exists (tempFile));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfBytesChanged_NewDirectory ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -190,10 +191,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			var foo = new byte [32];
 			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write on new file.");
-			FileAssert.Exists (tempFile);
+			Assert.IsTrue (File.Exists (tempFile));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_NewDirectory ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -205,11 +206,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.Flush ();
 
 				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write on new file.");
-				FileAssert.Exists (tempFile);
+				Assert.IsTrue (File.Exists (tempFile));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfBytesChanged_Readonly ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -223,10 +224,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			var foo = new byte [32];
 			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write on new file.");
-			FileAssert.Exists (tempFile);
+			Assert.IsTrue (File.Exists (tempFile));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CleanBOM_Readonly ()
 		{
 			var encoding = Encoding.UTF8;
@@ -247,7 +248,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (before.Length, after.Length + preamble.Length, "BOM should be removed!");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_MemoryStreamPool_StreamWriter ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -262,15 +263,15 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.Flush ();
 
 				Assert.IsTrue (Files.CopyIfStreamChanged (writer.BaseStream, tempFile), "Should write on new file.");
-				FileAssert.Exists (tempFile);
+				Assert.IsTrue (File.Exists (tempFile));
 			}
 
 			var actual = pool.Rent ();
 			Assert.AreSame (expected, actual);
-			Assert.AreEqual (0, actual.Length);
+			Assert.AreEqual (0L, actual.Length);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_MemoryStreamPool_BinaryWriter ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -285,15 +286,15 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.Flush ();
 
 				Assert.IsTrue (Files.CopyIfStreamChanged (writer.BaseStream, tempFile), "Should write on new file.");
-				FileAssert.Exists (tempFile);
+				Assert.IsTrue (File.Exists (tempFile));
 			}
 
 			var actual = pool.Rent ();
 			Assert.AreSame (expected, actual);
-			Assert.AreEqual (0, actual.Length);
+			Assert.AreEqual (0L, actual.Length);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SetWriteable ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -309,7 +310,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			File.WriteAllText (tempFile, contents: "bar");
 		}
 
-		[Test]
+		[TestMethod]
 		public void SetDirectoryWriteable ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -328,13 +329,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		void AssertFile (string path, string contents)
 		{
 			var fullPath = Path.Combine (tempDir, path);
-			FileAssert.Exists (fullPath);
+			Assert.IsTrue (File.Exists (fullPath));
 			Assert.AreEqual (contents, File.ReadAllText (fullPath), $"Contents did not match at path: {path}");
 		}
 
 		void AssertFileDoesNotExist (string path)
 		{
-			FileAssert.DoesNotExist (Path.Combine (tempDir, path));
+			Assert.IsFalse (File.Exists (Path.Combine (tempDir, path)));
 		}
 
 		bool ExtractAll (MemoryStream stream)
@@ -371,181 +372,181 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 		Stream NewStream (string contents) => new MemoryStream (Encoding.Default.GetBytes (contents));
 
-		[Test]
+		[TestMethod]
 		public void CopyIfChanged_NoChanges ()
 		{
 			var src = NewFile ("foo");
 			var dest = NewFile ("foo");
 			Assert.IsFalse (Files.CopyIfChanged (src, dest), "No change should have occurred");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfChanged_NoExist ()
 		{
 			var src = NewFile ("foo");
 			var dest = NewFile ();
 			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfChanged_LongPath ()
 		{
 			var src = NewFile (contents: "foo");
 			var dest = NewFile (contents: "bar", fileName: "bar".PadRight (MaxFileName, 'N'));
 			dest = Files.ToLongPath (dest);
 			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfChanged_Changes ()
 		{
 			var src = NewFile ("foo");
 			var dest = NewFile ("bar");
 			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfChanged_Readonly ()
 		{
 			var src = NewFile ("foo");
 			var dest = NewFile ("bar");
 			File.SetAttributes (dest, FileAttributes.ReadOnly);
 			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfChanged_CasingChange ()
 		{
 			var src = NewFile (contents: "foo");
 			var dest = NewFile (contents: "Foo", fileName: "foo");
 			dest = dest.Replace ("foo", "Foo");
 			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 
 			var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
 			Assert.AreEqual ("Foo", Path.GetFileName (files [0]));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged_NoChanges ()
 		{
 			var dest = NewFile ("foo");
 			Assert.IsFalse (Files.CopyIfStringChanged ("foo", dest), "No change should have occurred");
-			FileAssert.Exists (dest);
+			Assert.IsTrue (File.Exists (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged_NoExist ()
 		{
 			var dest = NewFile ();
 			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
-			FileAssert.Exists (dest);
+			Assert.IsTrue (File.Exists (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged_LongPath ()
 		{
 			var dest = NewFile (fileName: "bar".PadRight (MaxFileName, 'N'));
 			dest = Files.ToLongPath (dest);
 			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
-			FileAssert.Exists (dest);
+			Assert.IsTrue (File.Exists (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged_Changes ()
 		{
 			var dest = NewFile ("bar");
 			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
-			FileAssert.Exists (dest);
+			Assert.IsTrue (File.Exists (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged_Readonly ()
 		{
 			var dest = NewFile ("bar");
 			File.SetAttributes (dest, FileAttributes.ReadOnly);
 			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
-			FileAssert.Exists (dest);
+			Assert.IsTrue (File.Exists (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStringChanged_CasingChange ()
 		{
 			var dest = NewFile (contents: "foo", fileName: "foo");
 			dest = dest.Replace ("foo", "Foo");
 			Assert.IsTrue (Files.CopyIfStringChanged ("Foo", dest), "Changes should have occurred");
-			FileAssert.Exists (dest);
+			Assert.IsTrue (File.Exists (dest));
 			Assert.AreEqual ("Foo", File.ReadAllText (dest), "File contents should match");
 
 			var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
 			Assert.AreEqual ("Foo", Path.GetFileName (files [0]), "File name should match");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_NoChanges ()
 		{
 			using (var src = NewStream ("foo")) {
 				var dest = NewFile ("foo");
 				Assert.IsFalse (Files.CopyIfStreamChanged (src, dest), "No change should have occurred");
-				FileAssert.Exists (dest);
+				Assert.IsTrue (File.Exists (dest));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_LongPath ()
 		{
 			using (var src = NewStream ("foo")) {
 				var dest = NewFile (fileName: "bar".PadRight (MaxFileName, 'N'));
 				dest = Files.ToLongPath (dest);
 				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
-				FileAssert.Exists (dest);
+				Assert.IsTrue (File.Exists (dest));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_NoExist ()
 		{
 			using (var src = NewStream ("foo")) {
 				var dest = NewFile ();
 				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
-				FileAssert.Exists (dest);
+				Assert.IsTrue (File.Exists (dest));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_Changes ()
 		{
 			using (var src = NewStream ("foo")) {
 				var dest = NewFile ("bar");
 				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
-				FileAssert.Exists (dest);
+				Assert.IsTrue (File.Exists (dest));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_Readonly ()
 		{
 			using (var src = NewStream ("foo")) {
 				var dest = NewFile ("bar");
 				File.SetAttributes (dest, FileAttributes.ReadOnly);
 				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
-				FileAssert.Exists (dest);
+				Assert.IsTrue (File.Exists (dest));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfStreamChanged_CasingChange ()
 		{
 			using (var src = NewStream ("Foo")) {
 				var dest = NewFile (contents: "foo", fileName: "foo");
 				dest = dest.Replace ("foo", "Foo");
 				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
-				FileAssert.Exists (dest);
+				Assert.IsTrue (File.Exists (dest));
 				Assert.AreEqual ("Foo", File.ReadAllText (dest), "File contents should match");
 
 				var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
@@ -553,13 +554,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task CopyIfChanged_LockedFile ()
 		{
 			var dest = NewFile (contents: "foo", fileName: "foo_locked");
 			var src = NewFile (contents: "foo0", fileName: "foo");
 			using (var file = File.OpenWrite (dest)) {
-				Assert.Throws<IOException> (() => Files.CopyIfChanged (src, dest));
+				Assert.ThrowsExactly<IOException> (() => Files.CopyIfChanged (src, dest));
 			}
 			src = NewFile (contents: "foo1", fileName: "foo");
 			Assert.IsTrue (Files.CopyIfChanged (src, dest));
@@ -581,7 +582,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			await task;
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -596,7 +597,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			AssertFile (Path.Combine ("b", "b.txt"), "b");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_NoChanges ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -621,7 +622,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			AssertFile (Path.Combine ("b", "b.txt"), "b");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_NewFile ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -648,7 +649,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			AssertFile (Path.Combine ("c", "c.txt"), "c");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_FileChanged ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -670,7 +671,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			AssertFile ("foo.txt", "bar");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_FileDeleted ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -691,10 +692,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 			AssertFile ("a.txt", "a");
-			FileAssert.DoesNotExist (Path.Combine (tempDir, "b", "b.txt"));
+			Assert.IsFalse (File.Exists (Path.Combine (tempDir, "b", "b.txt")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_ModifyCallback ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -712,7 +713,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			AssertFile (Path.Combine ("b", "b.txt"), "b");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_SkipCallback ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -730,7 +731,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			AssertFile (Path.Combine ("b", "b.txt"), "b");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_MacOSFiles ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -741,10 +742,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			bool changes = ExtractAll (stream);
 			Assert.IsFalse (changes, "ExtractAll should *not* report changes.");
-			DirectoryAssert.DoesNotExist (tempDir);
+			Assert.IsFalse (Directory.Exists (tempDir));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_RejectsPathTraversal ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -755,12 +756,12 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				// modifyCallback introduces a path traversal
-				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e));
+				Assert.ThrowsExactly<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e));
 			}
-			FileAssert.DoesNotExist (Path.Combine (tempDir, "a.txt"));
+			Assert.IsFalse (File.Exists (Path.Combine (tempDir, "a.txt")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractAll_RejectsTraversalBeforeWritingValidEntries ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -772,15 +773,16 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				// Only relative.txt gets a traversal prefix
-				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
+				Assert.ThrowsExactly<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
 					e == "relative.txt" ? "../" + e : e));
 			}
-			FileAssert.DoesNotExist (Path.Combine (destinationDir, "good.txt"));
-			FileAssert.DoesNotExist (Path.Combine (tempDir, "relative.txt"));
+			Assert.IsFalse (File.Exists (Path.Combine (destinationDir, "good.txt")));
+			Assert.IsFalse (File.Exists (Path.Combine (tempDir, "relative.txt")));
 		}
 
-		[TestCase ("../../")]
-		[TestCase ("foo/../../../")]
+		[TestMethod]
+		[DataRow ("../../")]
+		[DataRow ("foo/../../../")]
 		public void ExtractAll_RejectsPathTraversal_ForwardSlash (string prefix)
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -790,12 +792,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
-				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
+				Assert.ThrowsExactly<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
 			}
 		}
 
-		[TestCase ("..\\")]
-		[TestCase ("..\\..\\")]
+		[TestMethod]
+		[DataRow ("..\\")]
+		[DataRow ("..\\..\\")]
 		public void ExtractAll_RejectsPathTraversal_BackSlash (string prefix)
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
@@ -805,11 +808,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
-				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
+				Assert.ThrowsExactly<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToHashString ()
 		{
 			var bytes = new byte [] { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF };
@@ -817,7 +820,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (expected, Files.ToHexString (bytes));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfZipChanged_Stream ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -829,12 +832,12 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			stream.Position = 0;
 
 			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination), "Should copy on new file.");
-			FileAssert.Exists (destination);
+			Assert.IsTrue (File.Exists (destination));
 			stream.Position = 0;
 			Assert.IsFalse (Files.CopyIfZipChanged (stream, destination), "Should *not* copy when unchanged.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfZipChanged_String ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -850,11 +853,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 
 			Assert.IsTrue (Files.CopyIfZipChanged (source, destination), "Should copy on new file.");
-			FileAssert.Exists (destination);
+			Assert.IsTrue (File.Exists (destination));
 			Assert.IsFalse (Files.CopyIfZipChanged (source, destination), "Should *not* copy when unchanged.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyIfZipChanged_BareFileName ()
 		{
 			// Regression test: Path.GetDirectoryName("file.zip") returns "",
@@ -870,37 +873,37 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				stream.Position = 0;
 
 				Assert.IsTrue (Files.CopyIfZipChanged (stream, "bare.zip"), "Should copy bare filename.");
-				FileAssert.Exists (Path.Combine (tempDir, "bare.zip"));
+				Assert.IsTrue (File.Exists (Path.Combine (tempDir, "bare.zip")));
 			} finally {
 				Directory.SetCurrentDirectory (cwd);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void DeleteFile_NullLog_DoesNotThrow ()
 		{
 			var path = Path.Combine (tempDir, "directory-instead-of-file");
 			Directory.CreateDirectory (path);
-			Assert.DoesNotThrow (() => Files.DeleteFile (path, null));
+			Files.DeleteFile (path, null);
 		}
 
-		[Test]
+		[TestMethod]
 		public void DeleteFile_NonTaskLoggingHelperLog_DoesNotThrow ()
 		{
 			var path = Path.Combine (tempDir, "directory-instead-of-file-nontasklog");
 			Directory.CreateDirectory (path);
-			Assert.DoesNotThrow (() => Files.DeleteFile (path, "not a TaskLoggingHelper"));
+			Files.DeleteFile (path, "not a TaskLoggingHelper");
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryDeleteFile_LogsFailure ()
 		{
 			var path = Path.Combine (tempDir, "directory-instead-of-file-try-delete");
 			Directory.CreateDirectory (path);
 			string message = "";
 
-			Assert.DoesNotThrow (() => Files.TryDeleteFile (path, value => message = value));
-			Assert.That (message, Does.Contain (path));
+			Files.TryDeleteFile (path, value => message = value);
+			Assert.Contains (path, message);
 		}
 
 	}

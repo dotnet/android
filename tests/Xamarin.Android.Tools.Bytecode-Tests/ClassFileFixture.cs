@@ -6,7 +6,7 @@ using System.Reflection;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 
@@ -22,13 +22,13 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}
 		}
 
-		[SetUp]
+		[TestInitialize]
 		public void CreateLogger ()
 		{
 			Log.OnLog   = OnLog;
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void DestroyLogger ()
 		{
 			Log.OnLog   = null;
@@ -110,7 +110,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			var attr = klass.Attributes.OfType<RuntimeVisibleAnnotationsAttribute> ().FirstOrDefault ();
 			var kotlin = attr?.Annotations.FirstOrDefault (a => a.Type == "Lkotlin/Metadata;");
 
-			Assert.NotNull (kotlin);
+			Assert.IsNotNull (kotlin);
 
 			var meta = KotlinMetadata.FromAnnotation (kotlin);
 

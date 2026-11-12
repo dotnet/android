@@ -6,16 +6,18 @@ using System.Reflection.PortableExecutable;
 
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class TransferredReferenceActivationTests
 {
-	[TestCase (false, false)]
-	[TestCase (true, false)]
-	[TestCase (false, true)]
+	[TestMethod]
+	[DataRow (false, false)]
+	[DataRow (true, false)]
+	[DataRow (false, true)]
 	public void JavaInteropActivationCleanupMatchesConstructorAvailability (bool invoker, bool inherited)
 	{
 		var target = new TypeRefData { AssemblyName = "Binding", ManagedTypeName = "Binding.Peer" };

@@ -8,11 +8,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
 
-[TestFixture]
+[TestClass]
 public class CommandLineToolsResolverTests
 {
 	string sdkDirectory = "";
@@ -20,14 +20,14 @@ public class CommandLineToolsResolverTests
 	string SdkDirectory => sdkDirectory;
 	string ExecutableExtension => OS.IsWindows ? ".bat" : "";
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp ()
 	{
 		sdkDirectory = Path.Combine (Path.GetTempPath (), $"cmdline-tools-test-{Path.GetRandomFileName ()}");
 		Directory.CreateDirectory (sdkDirectory);
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void TearDown ()
 	{
 		if (Directory.Exists (sdkDirectory))
@@ -35,13 +35,13 @@ public class CommandLineToolsResolverTests
 		sdkDirectory = "";
 	}
 
-	[Test]
+	[TestMethod]
 	public void CommandLineTool_NullPath_Throws ()
 	{
-		Assert.Throws<ArgumentNullException> (() => new CommandLineTool (null));
+		Assert.ThrowsExactly<ArgumentNullException> (() => new CommandLineTool (null));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_LatestHasHigherPackageRevision_SelectsLatest ()
 	{
 		CreateCommandLineTool ("19.0", "sdkmanager", "19.0");
@@ -52,15 +52,13 @@ public class CommandLineToolsResolverTests
 		using var manager = CreateSdkManager ();
 		var selected = manager.FindSdkManager ();
 
-		Assert.That (selected?.Path, Is.EqualTo (expectedSdkManager));
-		Assert.That (selected?.Revision, Is.EqualTo ("22.0"));
-		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.EqualTo (expectedAvdManager));
+		Assert.AreEqual (expectedSdkManager, selected?.Path);
+		Assert.AreEqual ("22.0", selected?.Revision);
+		Assert.AreEqual (expectedSdkManager, manager.FindSdkManagerPath ());
+		Assert.AreEqual (expectedAvdManager, ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_NumericHasHigherPackageRevision_SelectsLatest ()
 	{
 		CreateCommandLineTool ("22.0", "sdkmanager", "22.0");
@@ -71,14 +69,12 @@ public class CommandLineToolsResolverTests
 		using var manager = CreateSdkManager ();
 		var selected = manager.FindSdkManager ();
 
-		Assert.That (selected?.Path, Is.EqualTo (expectedSdkManager));
-		Assert.That (selected?.Revision, Is.EqualTo ("19.0"));
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.EqualTo (expectedAvdManager));
+		Assert.AreEqual (expectedSdkManager, selected?.Path);
+		Assert.AreEqual ("19.0", selected?.Revision);
+		Assert.AreEqual (expectedAvdManager, ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_DirectoryNamesDisagreeWithPackageRevision_UsesPackageRevision ()
 	{
 		CreateCommandLineTool ("99.0", "sdkmanager", "19.0");
@@ -88,13 +84,11 @@ public class CommandLineToolsResolverTests
 
 		using var manager = CreateSdkManager ();
 
-		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.EqualTo (expectedAvdManager));
+		Assert.AreEqual (expectedSdkManager, manager.FindSdkManagerPath ());
+		Assert.AreEqual (expectedAvdManager, ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_LatestHasMalformedPackageRevision_SelectsLatest ()
 	{
 		CreateCommandLineTool ("22.0", "sdkmanager");
@@ -105,14 +99,12 @@ public class CommandLineToolsResolverTests
 		using var manager = CreateSdkManager ();
 		var selected = manager.FindSdkManager ();
 
-		Assert.That (selected?.Path, Is.EqualTo (expectedSdkManager));
-		Assert.That (selected?.Revision, Is.Null);
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.EqualTo (expectedAvdManager));
+		Assert.AreEqual (expectedSdkManager, selected?.Path);
+		Assert.IsNull (selected?.Revision);
+		Assert.AreEqual (expectedAvdManager, ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_LatestMissingTool_FallsBackToHighestVersioned ()
 	{
 		var expectedSdkManager = CreateCommandLineTool ("22.0", "sdkmanager", "22.0");
@@ -121,13 +113,11 @@ public class CommandLineToolsResolverTests
 
 		using var manager = CreateSdkManager ();
 
-		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.EqualTo (expectedAvdManager));
+		Assert.AreEqual (expectedSdkManager, manager.FindSdkManagerPath ());
+		Assert.AreEqual (expectedAvdManager, ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_LegacyToolsBin_IsNotSupported ()
 	{
 		var binDirectory = Path.Combine (SdkDirectory, "tools", "bin");
@@ -137,13 +127,11 @@ public class CommandLineToolsResolverTests
 
 		using var manager = CreateSdkManager ();
 
-		Assert.That (manager.FindSdkManagerPath (), Is.Null);
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.Null);
+		Assert.IsNull (manager.FindSdkManagerPath ());
+		Assert.IsNull (ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_StableAndPrereleaseHaveSameCoreRevision_PrefersStable ()
 	{
 		var expectedSdkManager = CreateCommandLineTool ("stable", "sdkmanager", "22.0");
@@ -153,13 +141,11 @@ public class CommandLineToolsResolverTests
 
 		using var manager = CreateSdkManager ();
 
-		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.EqualTo (expectedAvdManager));
+		Assert.AreEqual (expectedSdkManager, manager.FindSdkManagerPath ());
+		Assert.AreEqual (expectedAvdManager, ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCommandLineTool_PrereleaseRevisionsHaveNumericSuffix_SelectsHighest ()
 	{
 		CreateCommandLineTool ("rc2", "sdkmanager", "22.0 rc2");
@@ -167,10 +153,10 @@ public class CommandLineToolsResolverTests
 
 		using var manager = CreateSdkManager ();
 
-		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
+		Assert.AreEqual (expectedSdkManager, manager.FindSdkManagerPath ());
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task EnsureLatestCommandLineToolsAsync_MissingManager_BootstrapsAndInstallsLatest ()
 	{
 		var bootstrapCalls = 0;
@@ -184,7 +170,7 @@ public class CommandLineToolsResolverTests
 			CancellationToken.None,
 			(targetPath, bootstrapProgress, cancellationToken) => {
 				cancellationToken.ThrowIfCancellationRequested ();
-				Assert.That (targetPath, Is.EqualTo (SdkDirectory));
+				Assert.AreEqual (SdkDirectory, targetPath);
 				bootstrapCalls++;
 				bootstrapProgress?.Report (new SdkBootstrapProgress (SdkBootstrapPhase.ReadingManifest));
 				bootstrapProgress?.Report (new SdkBootstrapProgress (SdkBootstrapPhase.Complete));
@@ -196,24 +182,24 @@ public class CommandLineToolsResolverTests
 				cancellationToken.ThrowIfCancellationRequested ();
 				string[] expectedPackages = [LatestPackage];
 				CollectionAssert.AreEqual (expectedPackages, packages.ToArray ());
-				Assert.That (acceptLicenses, Is.True);
+				Assert.IsTrue (acceptLicenses);
 				installCalls++;
 				CreateCommandLineTool ("latest", "sdkmanager", "22.0");
 				return Task.CompletedTask;
 			});
 
-		Assert.That (selected.Revision, Is.EqualTo ("22.0"));
-		Assert.That (selected.Path, Does.Contain (Path.Combine ("latest", "bin")));
-		Assert.That (bootstrapCalls, Is.EqualTo (1));
-		Assert.That (installCalls, Is.EqualTo (1));
-		Assert.That (progress.Phases, Does.Contain (SdkBootstrapPhase.ReadingManifest));
-		Assert.That (progress.Phases, Does.Contain (SdkBootstrapPhase.CheckingForUpdates));
-		Assert.That (progress.Phases, Does.Contain (SdkBootstrapPhase.Installing));
-		Assert.That (progress.Phases, Does.Contain (SdkBootstrapPhase.Complete));
-		Assert.That (progress.Phases.Count (phase => phase == SdkBootstrapPhase.Complete), Is.EqualTo (1));
+		Assert.AreEqual ("22.0", selected.Revision);
+		Assert.Contains (Path.Combine ("latest", "bin"), selected.Path);
+		Assert.AreEqual (1, bootstrapCalls);
+		Assert.AreEqual (1, installCalls);
+		Assert.Contains (SdkBootstrapPhase.ReadingManifest, progress.Phases);
+		Assert.Contains (SdkBootstrapPhase.CheckingForUpdates, progress.Phases);
+		Assert.Contains (SdkBootstrapPhase.Installing, progress.Phases);
+		Assert.Contains (SdkBootstrapPhase.Complete, progress.Phases);
+		Assert.AreEqual (1, progress.Phases.Count (phase => phase == SdkBootstrapPhase.Complete));
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task EnsureLatestCommandLineToolsAsync_StaleManager_InstallsLatestWithoutBootstrap ()
 	{
 		CreateCommandLineTool ("19.0", "sdkmanager", "19.0");
@@ -236,12 +222,12 @@ public class CommandLineToolsResolverTests
 				return Task.CompletedTask;
 			});
 
-		Assert.That (selected.Revision, Is.EqualTo ("22.0"));
-		Assert.That (bootstrapCalls, Is.Zero);
-		Assert.That (installCalls, Is.EqualTo (1));
+		Assert.AreEqual ("22.0", selected.Revision);
+		Assert.AreEqual (0, bootstrapCalls);
+		Assert.AreEqual (1, installCalls);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task EnsureLatestCommandLineToolsAsync_CurrentManager_DoesNotInstall ()
 	{
 		CreateCommandLineTool ("latest", "sdkmanager", "22.0");
@@ -264,13 +250,13 @@ public class CommandLineToolsResolverTests
 				return Task.CompletedTask;
 			});
 
-		Assert.That (selected.Revision, Is.EqualTo ("22.0"));
-		Assert.That (bootstrapCalls, Is.Zero);
-		Assert.That (installCalls, Is.Zero);
-		Assert.That (progress.Phases, Does.Not.Contain (SdkBootstrapPhase.Installing));
+		Assert.AreEqual ("22.0", selected.Revision);
+		Assert.AreEqual (0, bootstrapCalls);
+		Assert.AreEqual (0, installCalls);
+		Assert.DoesNotContain (SdkBootstrapPhase.Installing, progress.Phases);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task EnsureLatestCommandLineToolsAsync_InstalledPackageHasAvailableUpdate_InstallsLatest ()
 	{
 		CreateCommandLineTool ("latest", "sdkmanager", "19.0");
@@ -293,15 +279,16 @@ public class CommandLineToolsResolverTests
 				return Task.CompletedTask;
 			});
 
-		Assert.That (selected.Revision, Is.EqualTo ("22.0"));
-		Assert.That (installCalls, Is.EqualTo (1));
+		Assert.AreEqual ("22.0", selected.Revision);
+		Assert.AreEqual (1, installCalls);
 	}
 
-	[TestCase (@"Available Packages:
+	[TestMethod]
+	[DataRow (@"Available Packages:
   Path                   | Version | Description
   cmdline-tools;latest   | 22.0    | Android SDK Command-line Tools (latest)
 ")]
-	[TestCase (@"Available packages:
+	[DataRow (@"Available packages:
   cmdline-tools/latest    22.0    Android SDK Command-line Tools (latest)
 ")]
 	public async Task EnsureLatestCommandLineToolsAsync_ParsedPackageFormats_RecognizesLatest (string output)
@@ -321,17 +308,17 @@ public class CommandLineToolsResolverTests
 				return Task.CompletedTask;
 			});
 
-		Assert.That (selected.Revision, Is.EqualTo ("22.0"));
-		Assert.That (installCalls, Is.Zero);
+		Assert.AreEqual ("22.0", selected.Revision);
+		Assert.AreEqual (0, installCalls);
 	}
 
-	[Test]
-	public void EnsureLatestCommandLineToolsAsync_MissingCatalogPackage_Throws ()
+	[TestMethod]
+	public async Task EnsureLatestCommandLineToolsAsync_MissingCatalogPackage_Throws ()
 	{
 		CreateCommandLineTool ("19.0", "sdkmanager", "19.0");
 		using var manager = CreateSdkManager ();
 
-		var exception = Assert.ThrowsAsync<InvalidOperationException> (() => manager.EnsureLatestCommandLineToolsAsync (
+		var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException> (() => manager.EnsureLatestCommandLineToolsAsync (
 			SdkDirectory,
 			new ProgressCollector (),
 			CancellationToken.None,
@@ -343,17 +330,17 @@ public class CommandLineToolsResolverTests
 			},
 			(_, _, _) => Task.CompletedTask));
 
-		Assert.That (exception?.Message, Does.Contain ("Could not determine the latest"));
+		Assert.Contains ("Could not determine the latest", exception?.Message);
 	}
 
-	[Test]
-	public void EnsureLatestCommandLineToolsAsync_InstallDoesNotUpdateManager_Throws ()
+	[TestMethod]
+	public async Task EnsureLatestCommandLineToolsAsync_InstallDoesNotUpdateManager_Throws ()
 	{
 		CreateCommandLineTool ("19.0", "sdkmanager", "19.0");
 		var installCalls = 0;
 		using var manager = CreateSdkManager ();
 
-		var exception = Assert.ThrowsAsync<InvalidOperationException> (() => manager.EnsureLatestCommandLineToolsAsync (
+		var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException> (() => manager.EnsureLatestCommandLineToolsAsync (
 			SdkDirectory,
 			new ProgressCollector (),
 			CancellationToken.None,
@@ -364,16 +351,16 @@ public class CommandLineToolsResolverTests
 				return Task.CompletedTask;
 			}));
 
-		Assert.That (exception?.Message, Does.Contain ("older than the catalog revision"));
-		Assert.That (installCalls, Is.EqualTo (1));
+		Assert.Contains ("older than the catalog revision", exception?.Message);
+		Assert.AreEqual (1, installCalls);
 	}
 
-	[Test]
-	public void EnsureLatestCommandLineToolsAsync_BootstrapDoesNotInstallManager_Throws ()
+	[TestMethod]
+	public async Task EnsureLatestCommandLineToolsAsync_BootstrapDoesNotInstallManager_Throws ()
 	{
 		using var manager = CreateSdkManager ();
 
-		var exception = Assert.ThrowsAsync<InvalidOperationException> (() => manager.EnsureLatestCommandLineToolsAsync (
+		var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException> (() => manager.EnsureLatestCommandLineToolsAsync (
 			SdkDirectory,
 			new ProgressCollector (),
 			CancellationToken.None,
@@ -381,16 +368,16 @@ public class CommandLineToolsResolverTests
 			_ => CreatePackageList ("22.0"),
 			(_, _, _) => Task.CompletedTask));
 
-		Assert.That (exception?.Message, Does.Contain ("without installing sdkmanager"));
+		Assert.Contains ("without installing sdkmanager", exception?.Message);
 	}
 
-	[Test]
-	public void EnsureLatestCommandLineToolsAsync_Disposed_Throws ()
+	[TestMethod]
+	public async Task EnsureLatestCommandLineToolsAsync_Disposed_Throws ()
 	{
 		using var manager = CreateSdkManager ();
 		manager.Dispose ();
 
-		Assert.ThrowsAsync<ObjectDisposedException> (() => manager.EnsureLatestCommandLineToolsAsync (
+		await Assert.ThrowsExactlyAsync<ObjectDisposedException> (() => manager.EnsureLatestCommandLineToolsAsync (
 			SdkDirectory,
 			new ProgressCollector (),
 			CancellationToken.None,
@@ -399,14 +386,14 @@ public class CommandLineToolsResolverTests
 			(_, _, _) => Task.CompletedTask));
 	}
 
-	[Test]
-	public void EnsureLatestCommandLineToolsAsync_Canceled_PropagatesCancellation ()
+	[TestMethod]
+	public async Task EnsureLatestCommandLineToolsAsync_Canceled_PropagatesCancellation ()
 	{
 		using var manager = CreateSdkManager ();
 		using var cancellation = new CancellationTokenSource ();
 		cancellation.Cancel ();
 
-		Assert.ThrowsAsync<OperationCanceledException> (() => manager.EnsureLatestCommandLineToolsAsync (
+		await Assert.ThrowsExactlyAsync<OperationCanceledException> (() => manager.EnsureLatestCommandLineToolsAsync (
 			SdkDirectory,
 			new ProgressCollector (),
 			cancellation.Token,
@@ -415,14 +402,14 @@ public class CommandLineToolsResolverTests
 			(_, _, _) => Task.CompletedTask));
 	}
 
-	[Test]
-	public void EnsureLatestCommandLineToolsAsync_CanceledDuringInstall_PropagatesCancellation ()
+	[TestMethod]
+	public async Task EnsureLatestCommandLineToolsAsync_CanceledDuringInstall_PropagatesCancellation ()
 	{
 		CreateCommandLineTool ("19.0", "sdkmanager", "19.0");
 		using var manager = CreateSdkManager ();
 		using var cancellation = new CancellationTokenSource ();
 
-		Assert.ThrowsAsync<OperationCanceledException> (() => manager.EnsureLatestCommandLineToolsAsync (
+		await Assert.ThrowsExactlyAsync<OperationCanceledException> (() => manager.EnsureLatestCommandLineToolsAsync (
 			SdkDirectory,
 			new ProgressCollector (),
 			cancellation.Token,

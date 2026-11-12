@@ -5,18 +5,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using System.Text;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class ExportAttributeBuildTest : DeviceTest
 	{
-		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.NativeAOT)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR)]
+		[DataRow (AndroidRuntime.NativeAOT)]
 		public void JavaOnlyExportsSurviveFullTrimming (AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
@@ -108,11 +110,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		public void ExportedPeerAppStarts (
-			[Values] bool embedAssemblies,
-			[Values] bool isRelease,
-			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+			bool embedAssemblies,
+			bool isRelease,
+			[CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
@@ -176,22 +179,23 @@ namespace UnnamedProject
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest>";
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.IsTrue (b.Install (proj), "Project should have installed.");
 				RunProjectAndAssert (proj, b, doNotCleanupOnUpdate: true);
-				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), InstallAndRunTests.ActivityStartTimeoutInSeconds), "Activity should have started.");
 				string expectedLogcatOutput = "ContainsExportedMethods: constructed! Handle=";
 				Assert.IsTrue (MonitorAdbLogcat ((line) => {
 					return line.Contains (expectedLogcatOutput);
 				}, Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+				Assert.IsTrue (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		public void ExportedMembersSurviveGarbageCollection (
-			[Values] bool isRelease,
-			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+			bool isRelease,
+			[CombinatorialValues (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
@@ -254,15 +258,15 @@ namespace UnnamedProject
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest>";
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.IsTrue (b.Install (proj), "Project should have installed.");
 				RunProjectAndAssert (proj, b, doNotCleanupOnUpdate: true);
-				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), InstallAndRunTests.ActivityStartTimeoutInSeconds), "Activity should have started.");
 				string expectedLogcatOutput = "ExportCallbackSurvivedGC";
 				Assert.IsTrue (MonitorAdbLogcat ((line) => {
 					return line.Contains (expectedLogcatOutput);
 				}, Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+				Assert.IsTrue (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
 	}

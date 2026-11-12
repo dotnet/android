@@ -3,18 +3,21 @@ using System.Linq;
 
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class TrimmableTypeMapJavaNameTests
 {
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void SourceReferencesDistinguishGeneratedAndExternalTypes (
-		[Values ("Outer$NamedComponent", "Outer$for", "Outer$var", "Outer$1")] string simpleName,
-		[Values ("constructor", "method", "field", "base", "constructor-throws", "method-throws")] string referenceKind,
-		[Values (false, true)] bool external)
+		[CombinatorialValues ("Outer$NamedComponent", "Outer$for", "Outer$var", "Outer$1")] string simpleName,
+		[CombinatorialValues ("constructor", "method", "field", "base", "constructor-throws", "method-throws")] string referenceKind,
+		[CombinatorialValues (false, true)] bool external)
 	{
 		string jniName = "example/components/" + simpleName;
 		var target = CreatePeer (jniName) with {
@@ -77,12 +80,13 @@ public class TrimmableTypeMapJavaNameTests
 		var java = new JcwJavaSourceGenerator ().GenerateContent ([target, consumer])
 			.Single (source => source.RelativePath == "example/Consumer.java").Content;
 		string expectedTypeName = "example.components." + (external ? simpleName.Replace ('$', '.') : simpleName);
-		StringAssert.Contains (expectedTypeName, java);
+		Assert.Contains (expectedTypeName, java);
 	}
 
-	[TestCase ("Outer$for")]
-	[TestCase ("Outer$var")]
-	[TestCase ("Outer$1")]
+	[TestMethod]
+	[DataRow ("Outer$for")]
+	[DataRow ("Outer$var")]
+	[DataRow ("Outer$1")]
 	public void DeferredRegistrationUsesWholeGeneratedIdentifier (string simpleName)
 	{
 		var peer = CreatePeer ("example/components/" + simpleName) with {
@@ -96,7 +100,7 @@ public class TrimmableTypeMapJavaNameTests
 			TrimmableTypeMapGenerator.CollectApplicationRegistrationTypes (peers));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ThrowsCanReferenceGeneratedTypeWithoutPackage ()
 	{
 		var target = CreatePeer ("Outer$for");
@@ -119,8 +123,9 @@ public class TrimmableTypeMapJavaNameTests
 		Assert.IsTrue (generator.ValidateJavaNames ([target, consumer]));
 	}
 
-	[TestCase ("Outer$Nested", true)]
-	[TestCase ("Outer$for", false)]
+	[TestMethod]
+	[DataRow ("Outer$Nested", true)]
+	[DataRow ("Outer$for", false)]
 	public void InterfacesKeepNestedTypeValidation (string simpleName, bool expectedValid)
 	{
 		var target = CreatePeer ("example/" + simpleName) with { IsInterface = true };
@@ -131,10 +136,11 @@ public class TrimmableTypeMapJavaNameTests
 		Assert.AreEqual (expectedValid, generator.ValidateJavaNames ([target, consumer]));
 	}
 
-	[TestCase ("example/for")]
-	[TestCase ("example/Outer-for")]
-	[TestCase ("example/1Outer$for")]
-	[TestCase ("for/Outer$for")]
+	[TestMethod]
+	[DataRow ("example/for")]
+	[DataRow ("example/Outer-for")]
+	[DataRow ("example/1Outer$for")]
+	[DataRow ("for/Outer$for")]
 	public void GeneratedWrappersStillRejectInvalidIdentifiers (string jniName)
 	{
 		var generator = new TrimmableTypeMapGenerator (new TrimmableTypeMapTestLogger ());

@@ -1,5 +1,5 @@
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,10 +12,10 @@ using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture, NonParallelizable]
+	[TestClass, DoNotParallelize]
 	public partial class FastDeployTests : BaseTest
 	{
-		[Test]
+		[TestMethod]
 		public void FastDeployParsesWarmStateProbe ()
 		{
 			var state = FastDeploy.ParseWarmStateProbeOutput (
@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, state.ForceStopStatus);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployRejectsIncompleteWarmStateProbe ()
 		{
 			var state = FastDeploy.ParseWarmStateProbeOutput (
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("true", state.RunAsDisabled);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployPlansOnlyNewStagingDirectories ()
 		{
 			var previousFiles = new [] {
@@ -72,10 +72,10 @@ namespace Xamarin.Android.Build.Tests
 
 			CollectionAssert.AreEquivalent (
 				new [] { "arm64-v8a/fr/App.resources.dll" },
-				files);
+				files.ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployPlansAllStagingDirectoriesAfterReset ()
 		{
 			var currentFiles = new [] {
@@ -86,34 +86,36 @@ namespace Xamarin.Android.Build.Tests
 
 			HashSet<string> files = FastDeploy.GetFilesRequiringStagingDirectories (currentFiles, previousFiles: null);
 
-			CollectionAssert.AreEquivalent (currentFiles, files);
+			CollectionAssert.AreEquivalent (currentFiles, files.ToArray ());
 		}
 
-		[TestCase ("adb: error: failed to copy: No such file or directory")]
-		[TestCase ("adb: error: target '/data/local/tmp/app/arm64-v8a' is not a directory")]
-		[TestCase ("remote couldn't create file: Is a directory")]
+		[TestMethod]
+		[DataRow ("adb: error: failed to copy: No such file or directory")]
+		[DataRow ("adb: error: target '/data/local/tmp/app/arm64-v8a' is not a directory")]
+		[DataRow ("remote couldn't create file: Is a directory")]
 		public void FastDeployDetectsInvalidRemoteFilesystem (string output)
 		{
 			Assert.IsTrue (FastDeploy.IsUnexpectedRemoteFilesystemError (output));
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployDoesNotResetForUnrelatedPushFailure ()
 		{
 			Assert.IsFalse (FastDeploy.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
 		}
 
-		[TestCase ("adb: error: device offline", false)]
-		[TestCase ("adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)", true)]
-		[TestCase ("adb: failed to install app.apk: Broken pipe (32)", false)]
-		[TestCase ("cmd: Failure calling service package: Security exception", false)]
-		[TestCase ("Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", false)]
+		[TestMethod]
+		[DataRow ("adb: error: device offline", false)]
+		[DataRow ("adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)", true)]
+		[DataRow ("adb: failed to install app.apk: Broken pipe (32)", false)]
+		[DataRow ("cmd: Failure calling service package: Security exception", false)]
+		[DataRow ("Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", false)]
 		public void FastDeployClassifiesOnlyKnownTransientInstallFailures (string output, bool expected)
 		{
 			Assert.AreEqual (expected, FastDeploy.IsTransientInstallFailure (output));
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task FastDeployRetriesTransientInstallOnce ()
 		{
 			var task = new TestFastDeploy (
@@ -126,7 +128,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task FastDeployRetriesTransientInstallAfterUninstall ()
 		{
 			var task = new TestFastDeploy (
@@ -141,38 +143,38 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		[Test]
-		public void FastDeployDoesNotRetryTransientInstallTwiceAcrossUninstall ()
+		[TestMethod]
+		public async Task FastDeployDoesNotRetryTransientInstallTwiceAcrossUninstall ()
 		{
 			var task = new TestFastDeploy (
 				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
 				CreateAdbResult (1, "third failure: cmd: Failure calling service package: Broken pipe (32)"));
 
-			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+			var exception = await Assert.ThrowsExactlyAsync<FastDeployInstallException> (
 				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
 
 			Assert.IsNotNull (exception);
 			Assert.AreEqual ("ADB0010", exception.ErrorCode);
-			Assert.That (exception.Message, Does.Contain ("Install attempt 1"));
-			Assert.That (exception.Message, Does.Contain ("first failure"));
-			Assert.That (exception.Message, Does.Contain ("Install attempt 2"));
-			Assert.That (exception.Message, Does.Contain ("INSTALL_FAILED_ALREADY_EXISTS"));
-			Assert.That (exception.Message, Does.Contain ("Install attempt 3"));
-			Assert.That (exception.Message, Does.Contain ("third failure"));
-			Assert.That (exception.Message, Does.Not.Contain ("Install attempt 4"));
+			Assert.Contains ("Install attempt 1", exception.Message);
+			Assert.Contains ("first failure", exception.Message);
+			Assert.Contains ("Install attempt 2", exception.Message);
+			Assert.Contains ("INSTALL_FAILED_ALREADY_EXISTS", exception.Message);
+			Assert.Contains ("Install attempt 3", exception.Message);
+			Assert.Contains ("third failure", exception.Message);
+			Assert.DoesNotContain ("Install attempt 4", exception.Message);
 			Assert.AreEqual (3, task.InstallAttempts);
 			Assert.AreEqual (1, task.UninstallAttempts);
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		[Test]
-		public void FastDeployDoesNotRetrySemanticInstallFailure ()
+		[TestMethod]
+		public async Task FastDeployDoesNotRetrySemanticInstallFailure ()
 		{
 			var task = new TestFastDeploy (
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"));
 
-			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+			var exception = await Assert.ThrowsExactlyAsync<FastDeployInstallException> (
 				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
 
 			Assert.IsNotNull (exception);
@@ -181,50 +183,51 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, task.RecoveryAttempts);
 		}
 
-		[Test]
-		public void FastDeployPreservesBothTransientInstallAttempts ()
+		[TestMethod]
+		public async Task FastDeployPreservesBothTransientInstallAttempts ()
 		{
 			var task = new TestFastDeploy (
 				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (1, "second failure: cmd: Failure calling service package: Broken pipe (32)"));
 
-			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+			var exception = await Assert.ThrowsExactlyAsync<FastDeployInstallException> (
 				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
 
 			Assert.IsNotNull (exception);
 			Assert.AreEqual ("ADB0010", exception.ErrorCode);
-			Assert.That (exception.Message, Does.Contain ("Install attempt 1"));
-			Assert.That (exception.Message, Does.Contain ("first failure"));
-			Assert.That (exception.Message, Does.Contain ("ADB transport recovery"));
-			Assert.That (exception.Message, Does.Contain ("Install attempt 2"));
-			Assert.That (exception.Message, Does.Contain ("second failure"));
+			Assert.Contains ("Install attempt 1", exception.Message);
+			Assert.Contains ("first failure", exception.Message);
+			Assert.Contains ("ADB transport recovery", exception.Message);
+			Assert.Contains ("Install attempt 2", exception.Message);
+			Assert.Contains ("second failure", exception.Message);
 			Assert.AreEqual (2, task.InstallAttempts);
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		[Test]
-		public void FastDeployPreservesOriginalFailureWhenRecoveryFails ()
+		[TestMethod]
+		public async Task FastDeployPreservesOriginalFailureWhenRecoveryFails ()
 		{
 			var task = new TestFastDeploy (
 				new InvalidOperationException ("package manager still unavailable"),
 				CreateAdbResult (1, "cmd: Failure calling service package: Broken pipe (32)"));
 
-			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+			var exception = await Assert.ThrowsExactlyAsync<FastDeployInstallException> (
 				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
 
 			Assert.IsNotNull (exception);
-			Assert.That (exception.Message, Does.Contain ("Failure calling service package: Broken pipe (32)"));
-			Assert.That (exception.Message, Does.Contain ("package manager still unavailable"));
+			Assert.Contains ("Failure calling service package: Broken pipe (32)", exception.Message);
+			Assert.Contains ("package manager still unavailable", exception.Message);
 			Assert.AreEqual (1, task.InstallAttempts);
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
 		// https://github.com/dotnet/android/issues/12878
-		[TestCase (137, "Killed")]
-		[TestCase (1, "")]
-		[TestCase (1, "error: closed")]
-		[TestCase (1, "adb: error: device offline")]
-		[TestCase (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0/lib': Permission denied")]
+		[TestMethod]
+		[DataRow (137, "Killed")]
+		[DataRow (1, "")]
+		[DataRow (1, "error: closed")]
+		[DataRow (1, "adb: error: device offline")]
+		[DataRow (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0/lib': Permission denied")]
 		public void FastDeployRejectsFailedStagingFileListing (int exitCode, string output)
 		{
 			using var device = new FakeAdbDevice (exitCode, output);
@@ -233,13 +236,14 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.AreEqual (1, device.Errors.Count);
 			Assert.AreEqual ("XA0129", device.Errors [0].Code);
-			Assert.That (device.Errors [0].Message, Does.Contain (FakeAdbDevice.StagingRoot));
-			Assert.That (device.Commands.Last (), Does.Contain ($"find '{FakeAdbDevice.StagingRoot}'"),
+			Assert.Contains (FakeAdbDevice.StagingRoot, device.Errors [0].Message);
+			Assert.Contains ($"find '{FakeAdbDevice.StagingRoot}'", device.Commands.Last (),
 				"Nothing may be changed on the device after the staging listing failed.");
 		}
 
-		[TestCase (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0': No such file or directory")]
-		[TestCase (0, "")]
+		[TestMethod]
+		[DataRow (1, "find: '/data/local/tmp/fastdeploy/com.example.app/0': No such file or directory")]
+		[DataRow (0, "")]
 		public void FastDeployTreatsMissingOrEmptyStagingDirectoryAsEmpty (int exitCode, string output)
 		{
 			using var device = new FakeAdbDevice (exitCode, output);
@@ -249,7 +253,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, device.Errors.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployCopiesFilesFromSuccessfulStagingFileListing ()
 		{
 			using var device = new FakeAdbDevice (
@@ -259,13 +263,14 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (device.RunFastDeploy ());
 
 			Assert.AreEqual (0, device.Errors.Count);
-			Assert.That (device.Commands, Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"));
+			Assert.IsTrue (device.Commands.Any (c => c.Contains ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll")), string.Join ("\n", device.Commands));
 		}
 
 		// https://github.com/dotnet/android/issues/13274
-		[TestCase ("Copy", false)]
-		[TestCase ("Symlink", false)]
-		[TestCase ("Copy", true)]
+		[TestMethod]
+		[DataRow ("Copy", false)]
+		[DataRow ("Symlink", false)]
+		[DataRow ("Copy", true)]
 		public void FastDeployRejectsPartialFileListing (string transferMode, bool overrideListing)
 		{
 			string root = overrideListing ? FakeAdbDevice.OverrideRoot : FakeAdbDevice.StagingRoot;
@@ -282,15 +287,15 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.AreEqual (1, device.Errors.Count);
 			Assert.AreEqual ("XA0129", device.Errors [0].Code);
-			Assert.That (device.Errors [0].Message, Does.Contain (root));
-			Assert.That (device.Commands.Last (), Does.Contain ("-exec stat"), "No commands after a failed listing.");
-			Assert.That (device.Commands, Has.None.Contain ($"rm -rf {FakeAdbDevice.OverrideRoot}"),
+			Assert.Contains (root, device.Errors [0].Message);
+			Assert.Contains ("-exec stat", device.Commands.Last (), "No commands after a failed listing.");
+			Assert.IsFalse (device.Commands.Any (c => c.Contains ($"rm -rf {FakeAdbDevice.OverrideRoot}")),
 				"The override directory must not be cleared.");
-			Assert.That (device.Commands, Has.None.Contain ("printf %s"), "No success marker may be written.");
+			Assert.IsFalse (device.Commands.Any (c => c.Contains ("printf %s")), "No success marker may be written.");
 			Assert.IsFalse (device.HasManifest);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployRejectsMissingRootWithValidEntries ()
 		{
 			string root = FakeAdbDevice.StagingRoot;
@@ -298,11 +303,11 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsFalse (device.RunFastDeploy ());
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
-			Assert.That (device.Commands, Has.None.Contain ("printf %s"));
+			Assert.IsFalse (device.Commands.Any (c => c.Contains ("printf %s")));
 			Assert.IsFalse (device.HasManifest);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployCopiesAfterClearingSymlinkState ()
 		{
 			using var device = new FakeAdbDevice (
@@ -313,14 +318,14 @@ namespace Xamarin.Android.Build.Tests
 
 			var commands = device.Commands.ToList ();
 			int clearIndex = commands.FindIndex (c => c.Contains ($"rm -rf {FakeAdbDevice.OverrideRoot}"));
-			Assert.Greater (clearIndex, commands.FindLastIndex (c => c.Contains ("-exec stat")),
+			Assert.IsGreaterThan (commands.FindLastIndex (c => c.Contains ("-exec stat")), clearIndex,
 				"Both listings must precede clearing the override directory.");
-			Assert.That (commands.Skip (clearIndex + 1), Has.Some.Contain ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll"),
+			Assert.IsTrue (commands.Skip (clearIndex + 1).Any (c => c.Contains ($"cp -p {FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll")),
 				"Cleared files must be copied even when the previous listing matched staging.");
 			Assert.IsTrue (device.HasManifest);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployPreservesManifestAfterPartialFileListing ()
 		{
 			using var device = new FakeAdbDevice (0, $"{FakeAdbDevice.StagingRoot}/arm64-v8a/Foo.dll|3|1700000000");
@@ -334,7 +339,7 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
 			Assert.AreEqual (previousManifest, device.Manifest, "A failed incremental deployment must not overwrite the successful host manifest.");
-			Assert.That (device.Commands.Skip (previousCommandCount), Has.None.Contain ("printf %s"),
+			Assert.IsFalse (device.Commands.Skip (previousCommandCount).Any (c => c.Contains ("printf %s")),
 				"A failed incremental deployment must not update the remote success marker.");
 		}
 
@@ -365,7 +370,7 @@ namespace Xamarin.Android.Build.Tests
 			{
 				this.results = new Queue<AdbCommandResult> (results);
 				this.recoveryException = recoveryException;
-				BuildEngine = new MockBuildEngine (TestContext.Out);
+				BuildEngine = new MockBuildEngine (Console.Out);
 				PackageName = "com.example.app";
 			}
 
@@ -451,7 +456,7 @@ namespace Xamarin.Android.Build.Tests
 			public FakeAdbDevice (int stagingListingExitCode, string stagingListing, string overrideListing = "files/.__override__/stale.dll|1|1700000000")
 			{
 				if (OperatingSystem.IsWindows ()) {
-					Assert.Ignore ("The fake adb is a bash script, which is not supported on Windows.");
+					Assert.Inconclusive ("The fake adb is a bash script, which is not supported on Windows.");
 				} else {
 					Directory.CreateDirectory (Path.Combine (directory, "obj"));
 					AddFile ("Foo.dll");
@@ -516,7 +521,7 @@ namespace Xamarin.Android.Build.Tests
 					File.WriteAllText (apk, "");
 				}
 				var task = new FastDeploy {
-					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					BuildEngine = new MockBuildEngine (Console.Out, errors),
 					AdbToolPath = directory,
 					AppFileTransferMode = symlink ? "Symlink" : "Copy",
 					EmbedAssembliesIntoApk = embedded,

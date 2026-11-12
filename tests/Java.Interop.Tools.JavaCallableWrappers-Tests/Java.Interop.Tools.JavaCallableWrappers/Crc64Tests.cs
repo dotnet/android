@@ -1,13 +1,13 @@
 using System.Text;
 using System.Security.Cryptography;
 using Java.Interop.Tools.JavaCallableWrappers;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable CS0618 // These tests intentionally exercise the obsolete public compatibility wrapper.
 
 namespace Java.Interop.Tools.JavaCallableWrappersTests
 {
-	[TestFixture]
+	[TestClass]
 	public class Crc64Tests
 	{
 		static string ToHash (string value)
@@ -26,27 +26,27 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Hello ()
 		{
 			var actual = ToHash ("hello");
 			Assert.AreEqual ("ad3d04bd697eb3c5", actual);
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDocument ()
 		{
 			var actual = ToHash ("System.Xml.XmlDocument, System.Xml");
 			Assert.AreEqual ("348bbd9fecf1b865", actual);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Collision ()
 		{
 			Assert.AreNotEqual (ToHash (""), ToHash (new byte [32]));
 		}
 
-		[Test]
+		[TestMethod]
 		public void AllBytesAreProcessed ()
 		{
 			// Slicing processes 8 bytes (a 64-bit word) at a time, and if any of the bytes are skipped we will have a

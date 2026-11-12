@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class MultithreadedAndroidTaskTests
 	{
 		class TransformTask : MultithreadedAndroidTask
@@ -24,15 +24,15 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[Test]
-		[TestCase (true)]
-		[TestCase (false)]
+		[TestMethod]
+		[DataRow (true)]
+		[DataRow (false)]
 		public void MultithreadedTaskPreservesResult (bool result)
 		{
 			Assert.AreEqual (result, new TransformTask { Result = result }.Execute ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void MultithreadedTaskPreservesUnhandledExceptionDiagnostic ()
 		{
 			var errors = new List<BuildErrorEventArgs> ();
@@ -42,13 +42,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			};
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual ("XATEST7004", errors [0].Code);
-			StringAssert.Contains ("Invalid transform input.", errors [0].Message);
+			StringAssert.Contains (errors [0].Message, "Invalid transform input.");
 		}
 
-		[TestCase (false, false, "XATEST7024")]
-		[TestCase (true, false, "XATEST7019")]
-		[TestCase (false, true, "XATEST7024")]
-		[TestCase (true, true, "XATEST7019")]
+		[TestMethod]
+		[DataRow (false, false, "XATEST7024")]
+		[DataRow (true, false, "XATEST7019")]
+		[DataRow (false, true, "XATEST7024")]
+		[DataRow (true, true, "XATEST7019")]
 		public void MultithreadedTaskPreservesFileLockDiagnostics (bool unauthorizedAccess, bool relativePath, string code)
 		{
 			string path = Path.GetTempFileName ();
@@ -74,9 +75,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				Assert.AreEqual (1, errors.Count);
 				Assert.AreEqual (code, errors [0].Code);
 				if (OperatingSystem.IsWindows ()) {
-					StringAssert.StartsWith ("The file is locked by:", errors [0].Message);
-					StringAssert.IsMatch (@"\d+", errors [0].Message);
-					StringAssert.EndsWith (error.ToString (), errors [0].Message);
+					StringAssert.StartsWith (errors [0].Message, "The file is locked by:");
+					StringAssert.Matches (errors [0].Message, new System.Text.RegularExpressions.Regex (@"\d+"));
+					StringAssert.EndsWith (errors [0].Message, error.ToString ());
 				} else {
 					Assert.AreEqual (error.ToString (), errors [0].Message);
 				}

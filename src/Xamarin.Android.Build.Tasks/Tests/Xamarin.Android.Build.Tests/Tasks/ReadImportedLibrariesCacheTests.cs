@@ -5,33 +5,34 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class ReadImportedLibrariesCacheTests : BaseTest
 	{
 		string projectDirectory = "";
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			projectDirectory = Path.Combine (Root, "temp", TestName, Guid.NewGuid ().ToString ("N"));
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = projectDirectory;
+			TestOutputDirectories [TestId] = projectDirectory;
 			Directory.CreateDirectory (Path.Combine (projectDirectory, "obj"));
 		}
 
 		ReadImportedLibrariesCache CreateTask (List<BuildErrorEventArgs> errors, List<BuildMessageEventArgs> messages) =>
 			new ReadImportedLibrariesCache {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages),
+				BuildEngine = new MockBuildEngine (Console.Out, errors: errors, messages: messages),
 				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (projectDirectory, new Dictionary<string, string> ()),
 				CacheFile = Path.Combine ("obj", "imports.cache"),
 			};
 
-		[Test]
+		[TestMethod]
 		public void MissingCachePreservesOutputs ()
 		{
 			var errors = new List<BuildErrorEventArgs> ();
@@ -49,7 +50,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ($"{task.CacheFile} does not exist. No Imported Libraries found", messages [0].Message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EmptyCache ()
 		{
 			new XDocument (new XElement ("Paths")).Save (Path.Combine (projectDirectory, "obj", "imports.cache"));
@@ -80,8 +81,9 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("ManifestDocuments",
 						new XElement ("ManifestDocument", new XAttribute ("ImportedFrom", "library.aar"), Path.Combine ("manifests", "AndroidManifest.xml")))));
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ConcurrentProjectsPreserveRelativeFullPaths (bool multithreaded)
 		{
 			string assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll");
@@ -145,9 +147,9 @@ namespace Xamarin.Android.Build.Tests
 			dotnet.ProcessLogFile = Path.Combine (projectDirectory, "malformed-process.log");
 			Assert.IsFalse (dotnet.Build (target: "CheckMalformed", msbuildArguments: arguments));
 			string log = string.Join (Environment.NewLine, dotnet.LastBuildOutput);
-			StringAssert.Contains ("XARIL7000", log);
-			StringAssert.Contains (typeof (XmlException).FullName, log);
-			StringAssert.DoesNotMatch (@"(?i)\b(?:warning|error) MSB428[678]\b", log);
+			Assert.Contains ("XARIL7000", log);
+			Assert.Contains (typeof (XmlException).FullName, log);
+			Assert.DoesNotMatchRegex (@"(?i)\b(?:warning|error) MSB428[678]\b", log);
 		}
 	}
 }

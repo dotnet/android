@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,11 +10,12 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class GenerateR8JniRemappingTests : BaseTest
 	{
 		List<BuildErrorEventArgs>? errors;
@@ -21,12 +23,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		MockBuildEngine? engine;
 		string? directory;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			errors = new List<BuildErrorEventArgs> ();
 			warnings = new List<BuildWarningEventArgs> ();
-			engine = new MockBuildEngine (TestContext.Out, errors, warnings);
+			engine = new MockBuildEngine (Console.Out, errors, warnings);
 			directory = Path.Combine (Root, "temp", TestName);
 			if (Directory.Exists (directory)) {
 				Directory.Delete (directory, recursive: true);
@@ -34,9 +36,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Directory.CreateDirectory (directory);
 		}
 
-		string TestDirectory => directory ?? throw new AssertionException ("Test directory was not initialized.");
-		List<BuildErrorEventArgs> Errors => errors ?? throw new AssertionException ("Error list was not initialized.");
-		List<BuildWarningEventArgs> Warnings => warnings ?? throw new AssertionException ("Warning list was not initialized.");
+		string TestDirectory => directory ?? throw new AssertFailedException ("Test directory was not initialized.");
+		List<BuildErrorEventArgs> Errors => errors ?? throw new AssertFailedException ("Error list was not initialized.");
+		List<BuildWarningEventArgs> Warnings => warnings ?? throw new AssertFailedException ("Warning list was not initialized.");
 
 		string Run (string mapping, string? nativeObject = null)
 		{
@@ -55,7 +57,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			return File.ReadAllText (outputFile);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GeneratesRuntimeLookupEntries ()
 		{
 			string xml = Run ("""
@@ -65,15 +67,15 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				""");
 
-			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", xml);
-			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer" />""", xml);
-			StringAssert.Contains ("source-method-signature=\"([Lcom/contoso/Peer;)Lcom/contoso/Peer;\"", xml);
-			StringAssert.Contains ("target-method-signature=\"([La/b;)La/b;\"", xml);
-			StringAssert.Contains ("source-field-signature=\"[Lcom/contoso/Peer;\"", xml);
-			StringAssert.Contains ("target-field-signature=\"[La/b;\"", xml);
+			Assert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", xml);
+			Assert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer" />""", xml);
+			Assert.Contains ("source-method-signature=\"([Lcom/contoso/Peer;)Lcom/contoso/Peer;\"", xml);
+			Assert.Contains ("target-method-signature=\"([La/b;)La/b;\"", xml);
+			Assert.Contains ("source-field-signature=\"[Lcom/contoso/Peer;\"", xml);
+			Assert.Contains ("target-field-signature=\"[La/b;\"", xml);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SkipsAmbiguousReverseTypeForMergedClasses ()
 		{
 			string xml = Run ("""
@@ -82,11 +84,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				""");
 
-			StringAssert.DoesNotContain ("reverse-type", xml);
+			Assert.DoesNotContain ("reverse-type", xml);
 		}
 
-		[TestCase ("method")]
-		[TestCase ("field")]
+		[TestMethod]
+		[DataRow ("method")]
+		[DataRow ("field")]
 		public void ConflictingMergedMembersFailInsteadOfChoosingOne (string memberKind)
 		{
 			string memberMappings = memberKind == "method"
@@ -102,11 +105,11 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			};
 
 			Assert.IsFalse (task.Execute ());
-			Assert.That (Errors, Has.Some.Property ("Code").EqualTo ("XA4325"));
-			FileAssert.DoesNotExist (outputFile);
+			Assert.IsTrue (Errors.Any (e => e.Code == "XA4325"));
+			Assert.IsFalse (File.Exists (outputFile));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NativeAotRetentionFiltersUnusedEntries ()
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer", "run.(I)V"]);
@@ -118,14 +121,15 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				""", objectFile);
 
-			StringAssert.Contains ("source-method-name=\"run\"", xml);
-			StringAssert.DoesNotContain ("removed", xml);
-			StringAssert.DoesNotContain ("Unused", xml);
+			Assert.Contains ("source-method-name=\"run\"", xml);
+			Assert.DoesNotContain ("removed", xml);
+			Assert.DoesNotContain ("Unused", xml);
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
 		public void NativeAotNestedNameDoesNotRetainMergedParent (bool utf8, bool commandStream)
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer$Inner"], utf8, commandStream: commandStream);
@@ -135,15 +139,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				""", objectFile);
 			var types = XDocument.Parse (xml).Root?.Elements ("replace-type").ToArray ()
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual (1, types.Length, "A substring is not evidence that the parent class survived.");
 			Assert.AreEqual ("com/contoso/Peer$Inner", (string?) types [0].Attribute ("from"));
-			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer$Inner" />""", xml);
+			Assert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer$Inner" />""", xml);
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
 		public void NativeAotRetainsCompleteClassAndDescriptorTokens (bool utf8, bool commandStream)
 		{
 			string objectFile = WriteNativeObject (
@@ -163,16 +168,17 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				""", objectFile);
 			var types = XDocument.Parse (xml).Root?.Elements ("replace-type")
 				.Select (element => (string?) element.Attribute ("from")).ToArray ()
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			CollectionAssert.AreEquivalent (new [] {
 				"com/contoso/Peer$Inner", "com/contoso/Argument", "com/contoso/Result",
 			}, types);
-			StringAssert.Contains ("target-method-signature=\"([La/d;)La/e;\"", xml);
+			Assert.Contains ("target-method-signature=\"([La/d;)La/e;\"", xml);
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
 		public void NativeAotTrulyRetainedMergedTypesRemainAmbiguous (bool utf8, bool commandStream)
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer", "com/contoso/Peer$Inner"], utf8, commandStream: commandStream);
@@ -181,40 +187,43 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				com.contoso.Peer$Inner -> a.b:
 
 				""", objectFile);
-			var root = XDocument.Parse (xml).Root ?? throw new AssertionException ("Generated XML has no root.");
+			var root = XDocument.Parse (xml).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual (2, root.Elements ("replace-type").Count ());
 			Assert.IsEmpty (root.Elements ("reverse-type"));
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
 		public void NativeAotRetainsUnicodeClasses (bool utf8, bool commandStream)
 		{
 			string objectFile = WriteNativeObject (["com/contoso/\u0100Peer", "run.()V"], utf8, commandStream: commandStream);
 			string xml = Run ("com.contoso.\u0100Peer -> a.b:\n    void run() -> c\n", objectFile);
-			StringAssert.Contains ("from=\"com/contoso/\u0100Peer\"", xml);
-			StringAssert.Contains ("source-method-name=\"run\"", xml);
+			Assert.Contains ("from=\"com/contoso/\u0100Peer\"", xml);
+			Assert.Contains ("source-method-name=\"run\"", xml);
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
 		public void NativeAotUnicodeBoundariesDoNotCreateSuffixOrParentMatches (bool utf8, bool commandStream)
 		{
 			string objectFile = WriteNativeObject (["\u0100Peer$Inner", "Other\u0100Suffix"], utf8, commandStream: commandStream);
 			string xml = Run (
 				"\u0100Peer -> a.b:\n\u0100Peer$Inner -> a.b:\n\u0100Suffix -> a.c:\n", objectFile);
 			var types = XDocument.Parse (xml).Root?.Elements ("replace-type").ToArray ()
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual (1, types.Length);
 			Assert.AreEqual ("\u0100Peer$Inner", (string?) types [0].Attribute ("from"));
 		}
 
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (false, true)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public void NativeAotUtf16ClassEdgesPreserveIdentity (bool commandStream, bool elf32)
 		{
 			string trailingName = "Pee\u0172";
@@ -230,7 +239,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				""";
 			var root = XDocument.Parse (Run (mapping, objectFile)).Root
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			CollectionAssert.AreEquivalent (new [] { "com/contoso/Pee\u0172", "\u0120Peer" },
 				root.Elements ("replace-type").Select (type => (string?) type.Attribute ("from")).ToArray ());
 			CollectionAssert.AreEquivalent (new [] { ("a/b", "com/contoso/Pee\u0172"), ("c/d", "\u0120Peer") },
@@ -245,15 +254,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				    int value -> retainedField
 
 				""", objectFile);
-			StringAssert.Contains ("target-method-name=\"retainedMethod\"", members);
-			StringAssert.Contains ("target-field-name=\"retainedField\"", members);
+			Assert.Contains ("target-method-name=\"retainedMethod\"", members);
+			Assert.Contains ("target-field-name=\"retainedField\"", members);
 			Assert.IsEmpty (Errors, "A phantom class must not cause a conflicting-member XA4325 error.");
 		}
 
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (false, true)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public void NativeAotStringHeadersAndOtherEncodingsAreNotClasses (bool elf32, bool headerCase)
 		{
 			string survivingClass = headerCase ? "com/contoso/" + new string ('B', 53) : "\u0141";
@@ -263,7 +273,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				A -> a.b:
 				{survivingClass.Replace ('/', '.')} -> a.b:
 
-				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+				""", objectFile)).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual (survivingClass, (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
 			Assert.AreEqual (survivingClass, (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
 			string members = Run ($"""
@@ -275,14 +285,15 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				    int value -> retainedField
 
 				""", objectFile);
-			StringAssert.Contains ("target-method-name=\"retainedMethod\"", members);
-			StringAssert.Contains ("target-field-name=\"retainedField\"", members);
+			Assert.Contains ("target-method-name=\"retainedMethod\"", members);
+			Assert.Contains ("target-field-name=\"retainedField\"", members);
 		}
 
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (false, true)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public void NativeAotPrimitiveDescriptorTokensAreNotClasses (bool commandStream, bool elf32)
 		{
 			string objectFile = WriteNativeObject (
@@ -298,30 +309,32 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				Z -> a.b:
 				J -> a.b:
 
-				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+				""", objectFile)).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
 			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
 			Assert.AreEqual ("retainedMethod", (string?) root.Elements ("replace-method").Single ().Attribute ("target-method-name"));
 			Assert.IsEmpty (Errors, "Primitive descriptor tokens must not claim absent classes or introduce member conflicts.");
 		}
 
-		[TestCase ("I", false, false)]
-		[TestCase ("LI;", false, true)]
-		[TestCase ("reference.(ILI;)V", true, false)]
-		[TestCase ("[LI;", true, true)]
+		[TestMethod]
+		[DataRow ("I", false, false)]
+		[DataRow ("LI;", false, true)]
+		[DataRow ("reference.(ILI;)V", true, false)]
+		[DataRow ("[LI;", true, true)]
 		public void NativeAotSingleLetterClassReferencesAreRetained (string reference, bool commandStream, bool elf32)
 		{
 			string objectFile = WriteNativeObject ([reference], commandStream: commandStream, elf32: elf32);
 			var root = XDocument.Parse (Run ("I -> a.b:\n", objectFile)).Root
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual ("I", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
 			Assert.AreEqual ("I", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
 		}
 
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (false, true)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public void NativeAotRawBytesAreNotClassEvidence (bool utf8, bool elf32)
 		{
 			string objectFile = WriteNativeObject (["", "\u0141"], utf8, elf32: elf32, unrelatedBytes: true);
@@ -331,42 +344,44 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				ExecutableOnly -> a.b:
 				DataOnly -> a.b:
 
-				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+				""", objectFile)).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual ("\u0141", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
 			Assert.AreEqual ("\u0141", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
 		}
 
-		[TestCase (false, true, false)]
-		[TestCase (true, true, false)]
-		[TestCase (false, false, false)]
-		[TestCase (true, false, false)]
-		[TestCase (false, true, true)]
-		[TestCase (true, true, true)]
+		[TestMethod]
+		[DataRow (false, true, false)]
+		[DataRow (true, true, false)]
+		[DataRow (false, false, false)]
+		[DataRow (true, false, false)]
+		[DataRow (false, true, true)]
+		[DataRow (true, true, true)]
 		public void NativeAotTypeMapKeysSelectOnlyJavaUniverse (bool elf32, bool javaGroup, bool commandStream)
 		{
 			string objectFile = WriteNativeObject (commandStream ? ["unrelated"] : [],
 				elf32: elf32, typeMap: true, javaGroup: javaGroup, commandStream: commandStream);
 			var root = XDocument.Parse (Run ("test.Live -> a.b:\n", objectFile)).Root
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual (javaGroup ? 1 : 0, root.Elements ("replace-type").Count ());
 			Assert.AreEqual (javaGroup ? 1 : 0, root.Elements ("reverse-type").Count ());
 		}
 
-		[TestCase (false, "Mono_Android_0_Java_Lang_Object", true)]
-		[TestCase (true, "Mono_Android_12_Java_Lang_Object", true)]
-		[TestCase (false, "_Owner_TypeMap_0___TypeMapAnchor", true)]
-		[TestCase (true, "_Owner_TypeMap_12___TypeMapAnchor", true)]
-		[TestCase (false, "Mono_Android_0_Java_Lang_Object_1", true)]
-		[TestCase (true, "_Owner_TypeMap_12___TypeMapAnchor_0", true)]
-		[TestCase (false, "Mono_Android_0_Android_Runtime_JavaDictionary", false)]
-		[TestCase (true, "Mono_Android_x_Java_Lang_Object", false)]
-		[TestCase (false, "_Owner_TypeMap_x___TypeMapAnchor", false)]
-		[TestCase (true, "_Owner_TypeMap_0___TypeMapAnchorExtra", false)]
+		[TestMethod]
+		[DataRow (false, "Mono_Android_0_Java_Lang_Object", true)]
+		[DataRow (true, "Mono_Android_12_Java_Lang_Object", true)]
+		[DataRow (false, "_Owner_TypeMap_0___TypeMapAnchor", true)]
+		[DataRow (true, "_Owner_TypeMap_12___TypeMapAnchor", true)]
+		[DataRow (false, "Mono_Android_0_Java_Lang_Object_1", true)]
+		[DataRow (true, "_Owner_TypeMap_12___TypeMapAnchor_0", true)]
+		[DataRow (false, "Mono_Android_0_Android_Runtime_JavaDictionary", false)]
+		[DataRow (true, "Mono_Android_x_Java_Lang_Object", false)]
+		[DataRow (false, "_Owner_TypeMap_x___TypeMapAnchor", false)]
+		[DataRow (true, "_Owner_TypeMap_0___TypeMapAnchorExtra", false)]
 		public void NativeAotMangledGroupsRespectJavaUniverse (bool elf32, string typeName, bool javaGroup)
 		{
 			string objectFile = WriteNativeObject ([], elf32: elf32, typeMap: true, groupSymbol: $"_ZTV{typeName.Length}{typeName}");
 			var root = XDocument.Parse (Run ("test.Live -> a.b:\n", objectFile)).Root
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			if (javaGroup) {
 				Assert.AreEqual ("test/Live", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
 				Assert.AreEqual ("test/Live", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
@@ -375,10 +390,11 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			}
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
+		[DataRow (true, true)]
 		public void NativeAotRelocationsDoNotCompleteUtf16CodeUnits (bool elf32, bool hydrationFileBacked)
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer"],
@@ -393,13 +409,14 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual ("XA4325", Errors.Single ().Code,
 				"A named frozen string truncated by an unknown relocation must fail closed.");
-			FileAssert.DoesNotExist (outputFile);
+			Assert.IsFalse (File.Exists (outputFile));
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
+		[DataRow (true, true)]
 		public void NativeAotMethodTableMarkerIsNotFrozenString (bool elf32, bool hydrationFileBacked)
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer", "run.()V"],
@@ -408,15 +425,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				com.contoso.Peer -> a.b:
 				    void run() -> c
 
-				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+				""", objectFile)).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
 			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
 			Assert.AreEqual ("c", (string?) root.Elements ("replace-method").Single ().Attribute ("target-method-name"));
 			Assert.IsEmpty (Errors, "An unrelated managed type must not be decoded as a frozen string.");
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void NativeAotRealDehydrationCommandsAreNotIdentifierBoundaries (bool elf32)
 		{
 			string objectFile = WriteNativeObject (
@@ -428,14 +446,14 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				com.contoso.Argument -> a.d:
 
 				""", objectFile);
-			var root = XDocument.Parse (xml).Root ?? throw new AssertionException ("Generated XML has no root.");
+			var root = XDocument.Parse (xml).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			CollectionAssert.AreEquivalent (new [] { "com/contoso/Peer$Inner", "com/contoso/Argument" },
 				root.Elements ("replace-type").Select (element => (string?) element.Attribute ("from")).ToArray ());
-			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer$Inner" />""", xml);
-			StringAssert.Contains ("target-method-signature=\"([La/d;)V\"", xml);
+			Assert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer$Inner" />""", xml);
+			Assert.Contains ("target-method-signature=\"([La/d;)V\"", xml);
 		}
 
-		[Test]
+		[TestMethod]
 		public void InvalidNativeAotDehydrationFailsClosed ()
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer"], commandStream: true, invalidCommand: true);
@@ -448,11 +466,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			};
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual ("XA4325", Errors.Single ().Code);
-			FileAssert.DoesNotExist (outputFile);
+			Assert.IsFalse (File.Exists (outputFile));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RejectedExistingXmlCannotClaimMappings (bool malformed)
 		{
 			string existingXml = malformed
@@ -470,14 +489,14 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				ExistingRemapXmlFiles = [new TaskItem (existingFile)],
 			};
 			Assert.IsTrue (task.Execute ());
-			var root = XDocument.Load (outputFile).Root ?? throw new AssertionException ("Generated XML has no root.");
+			var root = XDocument.Load (outputFile).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			var replacements = root.Elements ("replace-type")
 				.Where (element => (string?) element.Attribute ("from") == "com/contoso/Peer").ToArray ();
 			Assert.AreEqual (1, replacements.Length, "Rejected input must not contribute a conflicting mapping.");
 			Assert.AreEqual ("a/b", (string?) replacements [0].Attribute ("to"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExistingConflictingTypeMappingStillOwnsItsMembers ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
@@ -495,12 +514,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			};
 			Assert.IsTrue (task.Execute ());
 			var root = XDocument.Parse (File.ReadAllText (outputFile)).Root
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.IsEmpty (root.Elements ());
 			Assert.AreEqual ("XA4326", Warnings.Single ().Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingLinkedAssemblyReportsXA4325 ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
@@ -515,10 +534,10 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual ("XA4325", Errors.Single ().Code);
-			FileAssert.DoesNotExist (outputFile);
+			Assert.IsFalse (File.Exists (outputFile));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IdenticalExistingTypeMappingDoesNotSuppressMembers ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
@@ -543,11 +562,11 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			Assert.IsTrue (task.Execute (), string.Join ("; ", Errors.Select (error => error.Message)));
 			string xml = File.ReadAllText (outputFile);
-			StringAssert.DoesNotContain ("replace-type", xml);
-			StringAssert.Contains ("source-method-name=\"run\"", xml);
+			Assert.DoesNotContain ("replace-type", xml);
+			Assert.Contains ("source-method-name=\"run\"", xml);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MalformedMappingReportsXA4325 ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
@@ -562,7 +581,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("XA4325", Errors.Single ().Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnsupportedMethodSignatureWarningIncludesReturnType ()
 		{
 			Run ("""
@@ -571,11 +590,13 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				""");
 
-			Assert.AreEqual ("XA4326", Warnings.Single ().Code);
-			StringAssert.Contains ("run( ):void", Warnings [0].Message);
+			var warning = Warnings.Single ();
+			Assert.AreEqual ("XA4326", warning.Code);
+			Assert.IsNotNull (warning.Message);
+			Assert.Contains ("run( ):void", warning.Message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void DescriptorDistinctR8FieldsProduceDistinctMappings ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
@@ -592,11 +613,11 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsTrue (generate.Execute ());
 			var fields = XDocument.Load (xmlFile).Root?.Elements ("replace-field")
 				.Select (field => ((string?) field.Attribute ("source-field-signature"), (string?) field.Attribute ("target-field-name"))).ToArray ()
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			CollectionAssert.AreEqual (new [] { ("I", "integerTarget"), ("Ljava/lang/String;", "stringTarget") }, fields);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GeneratedDocumentIsWellFormed ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
@@ -613,7 +634,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			};
 			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
 
-			var root = XDocument.Load (outputFile).Root ?? throw new AssertionException ("Generated XML has no root.");
+			var root = XDocument.Load (outputFile).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual ("replacements", root.Name.LocalName);
 			Assert.AreEqual ("a/b", (string?) root.Elements ("replace-type").Single ().Attribute ("to"));
 			Assert.AreEqual ("doWork", (string?) root.Elements ("replace-method").Single ().Attribute ("source-method-name"));

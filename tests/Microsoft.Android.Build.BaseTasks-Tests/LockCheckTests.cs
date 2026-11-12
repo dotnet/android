@@ -5,11 +5,11 @@ using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests;
 
-[TestFixture]
+[TestClass]
 public class LockCheckTests
 {
 	string tempFile;
@@ -19,7 +19,7 @@ public class LockCheckTests
 	List<BuildMessageEventArgs> messages;
 	MockBuildEngine engine;
 
-	[SetUp]
+	[TestInitialize]
 	public void Setup ()
 	{
 		tempFile = Path.GetTempFileName ();
@@ -27,10 +27,10 @@ public class LockCheckTests
 		errors = new List<BuildErrorEventArgs> ();
 		warnings = new List<BuildWarningEventArgs> ();
 		messages = new List<BuildMessageEventArgs> ();
-		engine = new MockBuildEngine (TestContext.Out, errors, warnings, messages);
+		engine = new MockBuildEngine (System.Console.Out, errors, warnings, messages);
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void TearDown ()
 	{
 		tempStream.Dispose ();
@@ -54,11 +54,11 @@ public class LockCheckTests
 	void AssertFileLocked (string actual)
 	{
 		Assert.IsNotEmpty (actual);
-		StringAssert.StartsWith ("The file is locked by:", actual);
-		StringAssert.IsMatch (@"\d+", actual, "Should contain a PID!");
+		StringAssert.StartsWith (actual, "The file is locked by:");
+		StringAssert.Matches (actual, new System.Text.RegularExpressions.Regex (@"\d+"), "Should contain a PID!");
 	}
 
-	[Test]
+	[TestMethod]
 	public void LockCheck_FileLocked ()
 	{
 		string actual = LockCheck.GetLockedFileMessage (tempFile);
@@ -69,22 +69,22 @@ public class LockCheckTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void LockCheck_AndroidTask_FileCreate () =>
 		LockCheck_AndroidTask (() => File.Create (tempFile));
 
-	[Test]
+	[TestMethod]
 	public void LockCheck_AndroidTask_FileDelete () =>
 		LockCheck_AndroidTask (() => File.Delete (tempFile));
 
-	[Test]
+	[TestMethod]
 	public void LockCheck_AndroidTask_UnauthorizedAccessException () =>
 		LockCheck_AndroidTask (() => throw new UnauthorizedAccessException ($"Access to the path '{tempFile}' is denied."));
 
 	void LockCheck_AndroidTask (Action action)
 	{
 		if (!OperatingSystem.IsWindows ())
-			Assert.Ignore ("Test only valid on Windows");
+			Assert.Inconclusive ("Test only valid on Windows");
 
 		var task = new MyTask {
 			BuildEngine = engine,

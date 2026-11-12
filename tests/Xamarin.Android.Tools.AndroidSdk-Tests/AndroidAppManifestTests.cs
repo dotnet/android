@@ -7,26 +7,26 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AndroidAppManifestTests
 	{
-		[Test]
+		[TestMethod]
 		public void Load ()
 		{
 			var versions    = new AndroidVersions (new AndroidVersion [0]);
-			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load ((string) null, versions));
-			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load ("filename", null));
-			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load ((XDocument) null, versions));
-			Assert.Throws<ArgumentNullException> (() => AndroidAppManifest.Load (GetTestAppManifest (), null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => AndroidAppManifest.Load ((string) null, versions));
+			Assert.ThrowsExactly<ArgumentNullException> (() => AndroidAppManifest.Load ("filename", null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => AndroidAppManifest.Load ((XDocument) null, versions));
+			Assert.ThrowsExactly<ArgumentNullException> (() => AndroidAppManifest.Load (GetTestAppManifest (), null));
 
-			Assert.Throws<ArgumentException> (() => AndroidAppManifest.Load (XDocument.Parse ("<invalid-root/>"), versions));
+			Assert.ThrowsExactly<ArgumentException> (() => AndroidAppManifest.Load (XDocument.Parse ("<invalid-root/>"), versions));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParsePermissions ()
 		{
 			var versions    = new AndroidVersions (new AndroidVersion [0]);
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetLaunchableActivityNames ()
 		{
 			var versions	= new AndroidVersions (Array.Empty<AndroidVersion>());
@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (".ActivityAlias",	launchers [1]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SetNewPermissions ()
 		{
 			var versions = new AndroidVersions (new AndroidVersion [0]);
@@ -73,12 +73,12 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("FOO", manifest.AndroidPermissions.ElementAt (0));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanonicalizePackageName ()
 		{
-			Assert.Throws<ArgumentNullException>(() => AndroidAppManifest.CanonicalizePackageName (null));
-			Assert.Throws<ArgumentException>(() => AndroidAppManifest.CanonicalizePackageName (""));
-			Assert.Throws<ArgumentException>(() => AndroidAppManifest.CanonicalizePackageName ("  "));
+			Assert.ThrowsExactly<ArgumentNullException>(() => AndroidAppManifest.CanonicalizePackageName (null));
+			Assert.ThrowsExactly<ArgumentException>(() => AndroidAppManifest.CanonicalizePackageName (""));
+			Assert.ThrowsExactly<ArgumentException>(() => AndroidAppManifest.CanonicalizePackageName ("  "));
 
 			Assert.AreEqual ("A.A",
 					AndroidAppManifest.CanonicalizePackageName ("A"));
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tools.Tests
 					AndroidAppManifest.CanonicalizePackageName ("7Cats"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanParseNonNumericSdkVersion ()
 		{
 			var versions    = new AndroidVersions (new AndroidVersion [0]);
@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (21, target.Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnsureMinAndTargetSdkVersionsAreReadIndependently ()
 		{
 			// Regression test for https://bugzilla.xamarin.com/show_bug.cgi?id=21296
@@ -141,7 +141,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (12, target.Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnsureUsesPermissionElementOrder ()
 		{
 			var versions    = new AndroidVersions (new AndroidVersion [0]);
@@ -159,7 +159,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsTrue (app.ElementsBeforeSelf ().Any (x => x.Name == "uses-permission"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanGetAppTheme ()
 		{
 			var versions    = new AndroidVersions (new AndroidVersion [0]);
@@ -174,7 +174,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("@android:style/Theme.Material.Light", manifest.ApplicationTheme);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanAddAndRemoveUsesSdk ()
 		{
 			XNamespace aNS  = "http://schemas.android.com/apk/res/android";

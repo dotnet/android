@@ -1,13 +1,13 @@
 using System;
 using Java.Interop.Tools.JavaTypeSystem.Models;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaTypeReferenceTests
 	{
-		[Test]
+		[TestMethod]
 		public void TypeReferenceEquals ()
 		{
 			var int_ref = JavaTypeReference.Int;

@@ -3,9 +3,10 @@ using Java.Interop.Tools.Maven.Models;
 
 namespace Java.Interop.Tools.Maven_Tests;
 
+[TestClass]
 public class MavenVersionTests
 {
-	[Test]
+	[TestMethod]
 	public void ParseTest ()
 	{
 		TestParse ("", null, null, null, false);
@@ -27,7 +28,7 @@ public class MavenVersionTests
 		TestParse ("A-B.2.3", "A-B", "2", "3", false);
 	}
 
-	[Test]
+	[TestMethod]
 	public void SortTest ()
 	{
 		// Normal versions

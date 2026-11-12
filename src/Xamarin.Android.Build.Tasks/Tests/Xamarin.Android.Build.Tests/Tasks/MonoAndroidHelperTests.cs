@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,15 +9,17 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class MonoAndroidHelperTests : BaseTest
 	{
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void DetermineJavaLibrariesInSeparateProjects (bool multithreaded)
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			TestOutputDirectories [TestId] = directory;
 			Directory.CreateDirectory (directory);
 			string assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll");
 			string nestedJar = Path.Combine ("libs", "__reference__nested.jar");
@@ -83,14 +85,14 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				if (name == "second")
 					compile.Add ("copy.jar");
 				compile.AddRange (new [] { "source.jar", "library.jar", nestedJar });
-				CollectionAssert.AreEqual (compile.Select (file => $"{file}|{name}"),
+				CollectionAssert.AreEqual (compile.Select (file => $"{file}|{name}").ToArray (),
 					File.ReadAllLines (Path.Combine (directory, name, "compile.txt")));
 				CollectionAssert.AreEqual (new [] { $"external.jar|{name}", $"external.jar|{name}", $"prefix-block.jar|{name}" },
 					File.ReadAllLines (Path.Combine (directory, name, "reference.txt")));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestStringEquals_DefaultComparison ()
 		{
 			// Test default Ordinal comparison
@@ -100,7 +102,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsTrue (MonoAndroidHelper.StringEquals ("", ""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestStringEquals_OrdinalIgnoreCaseComparison ()
 		{
 			// Test explicit OrdinalIgnoreCase comparison
@@ -110,7 +112,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsTrue (MonoAndroidHelper.StringEquals ("", "", StringComparison.OrdinalIgnoreCase));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestStringEquals_NullHandling ()
 		{
 			// Test null handling
@@ -121,7 +123,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsFalse (MonoAndroidHelper.StringEquals (null, ""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestStringEquals_ReplaceStringCompareUseCases ()
 		{
 			// Test cases that replicate the original String.Compare use cases

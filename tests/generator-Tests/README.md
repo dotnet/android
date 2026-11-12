@@ -15,7 +15,7 @@ Tests that use `BaseGeneratorTest` are organized as:
 
 ./BaseGeneratorTest.cs - sets up generation and compilation options.
 ./Compiler.cs - implements C# compilation with Roslyn.
-./(others).cs - the actual `TestFixture`s.
+./(others).cs - the actual MSTest test classes.
 
 What those tests do are:
 

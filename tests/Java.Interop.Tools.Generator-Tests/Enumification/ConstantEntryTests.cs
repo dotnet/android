@@ -1,12 +1,13 @@
 using System;
 using Java.Interop.Tools.Generator.Enumification;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.Generator_Tests
 {
+	[TestClass]
 	public class ConstantEntryTests
 	{
-		[Test]
+		[TestMethod]
 		public void ParseEnumMapV1 ()
 		{
 			var csv = "10,Org.XmlPull.V1.XmlPullParserNode,Cdsect,I:org/xmlpull/v1/XmlPullParser.CDSECT,5";
@@ -19,10 +20,10 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
 			Assert.AreEqual ("Cdsect", entry.EnumMember);
 			Assert.AreEqual (FieldAction.Keep, entry.FieldAction);
-			Assert.False (entry.IsFlags);
+			Assert.IsFalse (entry.IsFlags);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseTransientEnumMapV1 ()
 		{
 			var csv = "10,Org.XmlPull.V1.XmlPullParserNode,Cdsect,I:org/xmlpull/v1/XmlPullParser.CDSECT,5";
@@ -35,10 +36,10 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
 			Assert.AreEqual ("Cdsect", entry.EnumMember);
 			Assert.AreEqual (FieldAction.Remove, entry.FieldAction);
-			Assert.False (entry.IsFlags);
+			Assert.IsFalse (entry.IsFlags);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseAddEnumMapV1 ()
 		{
 			var csv = "10,Org.XmlPull.V1.XmlPullParserNode,Cdsect,,5";
@@ -51,10 +52,10 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
 			Assert.AreEqual ("Cdsect", entry.EnumMember);
 			Assert.AreEqual (FieldAction.None, entry.FieldAction);
-			Assert.False (entry.IsFlags);
+			Assert.IsFalse (entry.IsFlags);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseRemoveEnumMapV1 ()
 		{
 			var csv = "10,,,I:org/xmlpull/v1/XmlPullParser.CDSECT,5";
@@ -67,10 +68,10 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual (string.Empty, entry.EnumFullType);
 			Assert.AreEqual (string.Empty, entry.EnumMember);
 			Assert.AreEqual (FieldAction.Remove, entry.FieldAction);
-			Assert.False (entry.IsFlags);
+			Assert.IsFalse (entry.IsFlags);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseEnumMapV2 ()
 		{
 			var csv = "E,10,I:org/xmlpull/v1/XmlPullParser.CDSECT,5,Org.XmlPull.V1.XmlPullParserNode,Cdsect,keep";
@@ -83,11 +84,11 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
 			Assert.AreEqual ("Cdsect", entry.EnumMember);
 			Assert.AreEqual (FieldAction.Keep, entry.FieldAction);
-			Assert.False (entry.IsFlags);
+			Assert.IsFalse (entry.IsFlags);
 			Assert.IsNull (entry.DeprecatedSince);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseAddEnumMapV2 ()
 		{
 			var csv = "A,10,,5,Org.XmlPull.V1.XmlPullParserNode,Cdsect";
@@ -101,10 +102,10 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Cdsect", entry.EnumMember);
 			Assert.AreEqual (FieldAction.None, entry.FieldAction);
 			Assert.IsNull (entry.DeprecatedSince);
-			Assert.False (entry.IsFlags);
+			Assert.IsFalse (entry.IsFlags);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseRemoveEnumMapV2 ()
 		{
 			var csv = "R,10,I:org/xmlpull/v1/XmlPullParser.CDSECT,5,,,remove,,33";
@@ -117,7 +118,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual (string.Empty, entry.EnumFullType);
 			Assert.AreEqual (string.Empty, entry.EnumMember);
 			Assert.AreEqual (FieldAction.Remove, entry.FieldAction);
-			Assert.False (entry.IsFlags);
+			Assert.IsFalse (entry.IsFlags);
 			Assert.AreEqual (33, entry.DeprecatedSince?.ApiLevel ?? 0);
 		}
 	}

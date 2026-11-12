@@ -1,20 +1,22 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class GetAndroidInstrumentationNameTests : BaseTest
 	{
 		string temp;
 		string manifest;
 		string [] referenceAssemblyPaths;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			string tempDirectoryName = Path.Combine ("temp", TestName);
@@ -30,7 +32,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (temp, recursive: true);
@@ -50,12 +52,12 @@ namespace Xamarin.Android.Build.Tests
 		GetAndroidInstrumentationName CreateTask (List<BuildErrorEventArgs> errors, bool noLaunchableActivity = false) =>
 			new GetAndroidInstrumentationName {
 				ReferenceAssemblyPaths = referenceAssemblyPaths,
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors),
 				ManifestFile = manifest,
 				NoLaunchableActivity = noLaunchableActivity,
 			};
 
-		[Test]
+		[TestMethod]
 		public void InstrumentationFound ()
 		{
 			WriteManifest ("""	<instrumentation android:name="com.mycompanyname.foo.MyInstrumentation" android:targetPackage="com.mycompanyname.foo" />""");
@@ -67,7 +69,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("com.mycompanyname.foo.MyInstrumentation", task.InstrumentationName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingInstrumentationIsXA1048 ()
 		{
 			// `$(AndroidUseInstrumentation)` opted in, but there is nothing to run.
@@ -81,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNull (task.InstrumentationName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingInstrumentationAndActivityIsXA1043 ()
 		{
 			// The fallback call site: no launchable `<activity/>` was found either.
@@ -95,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNull (task.InstrumentationName);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingAndroidNameIsXA1042 ()
 		{
 			WriteManifest ("""	<instrumentation android:targetPackage="com.mycompanyname.foo" />""");

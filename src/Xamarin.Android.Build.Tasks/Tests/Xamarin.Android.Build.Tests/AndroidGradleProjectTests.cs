@@ -5,19 +5,21 @@ using System.Linq;
 
 using Microsoft.Build.Framework;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class AndroidGradleProjectTests : BaseTest
 	{
 		string GradleTestProjectDir = string.Empty;
 
-		[SetUp]
+		[TestInitialize]
 		public void GradleTestSetUp ()
 		{
 			GradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
@@ -25,23 +27,23 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (GradleTestProjectDir, recursive: true);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void GradleTestTearDown ()
 		{
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
-				TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
+			if (TestContext.CurrentTestOutcome is UnitTestOutcome.Passed or UnitTestOutcome.Inconclusive) {
 				try {
 					if (Directory.Exists (GradleTestProjectDir))
 						Directory.Delete (GradleTestProjectDir, recursive: true);
 				} catch (Exception ex) {
 					// This happens on CI occasionally, let's not fail the test
-					TestContext.Out.WriteLine ($"Failed to delete '{GradleTestProjectDir}': {ex}");
+					Console.Out.WriteLine ($"Failed to delete '{GradleTestProjectDir}': {ex}");
 				}
 			}
 		}
 
-		[Test]
-		public void BuildApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildApp ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -49,7 +51,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, isApplication: true);
-			FileAssert.Exists (Path.Combine (GradleTestProjectDir, TestEnvironment.IsWindows ? "gradlew.bat" : "gradlew"));
+			Assert.IsTrue (File.Exists (Path.Combine (GradleTestProjectDir, TestEnvironment.IsWindows ? "gradlew.bat" : "gradlew")));
 			var moduleName = gradleProject.Modules.First ().Name;
 
 			var proj = new XamarinAndroidApplicationProject {
@@ -67,7 +69,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release-unsigned.apk"));
+			Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release-unsigned.apk")));
 		}
 
 		static IEnumerable<object[]> Get_AGPMetadataTestSources ()
@@ -114,8 +116,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[TestCaseSource (nameof (Get_AGPMetadataTestSources))]
+		[TestMethod]
+		[DynamicData (nameof (Get_AGPMetadataTestSources))]
 		public void BindLibrary (bool bind, string configuration, bool refOutputs, AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -155,15 +157,16 @@ namespace Xamarin.Android.Build.Tests
 			if (refOutputs && bind) {
 				Assert.IsTrue (buildResult, "Build should have succeeded.");
 				// Need to lowercase configuration name or the test will fail on case-sensitive systems
-				FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-{configuration.ToLowerInvariant ()}.aar"));
+				Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-{configuration.ToLowerInvariant ()}.aar")));
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("GenerateBindings"), "The 'GenerateBindings' target should run when Bind=true");
 			} else {
 				Assert.IsFalse (buildResult, "Build should have failed.");
 			}
 		}
 
-		[Test]
-		public void BindPackLibrary ([Values] bool packGradleRef, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BindPackLibrary (bool packGradleRef, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -194,10 +197,10 @@ namespace Xamarin.Android.Build.Tests
 
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 			Assert.IsTrue (dotnet.Pack (parameters: new [] { "Configuration=Release" }), "`dotnet pack` should succeed");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
+			Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar")));
 
 			var nupkgPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
-			FileAssert.Exists (nupkgPath);
+			Assert.IsTrue (File.Exists (nupkgPath));
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.dll");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.aar");
@@ -208,8 +211,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void BuildIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildIncremental ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -234,16 +238,16 @@ namespace Xamarin.Android.Build.Tests
 			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
 			var outputAar = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{gradleModule.Name}-release.aar");
-			FileAssert.Exists (outputAar);
+			Assert.IsTrue (File.Exists (outputAar));
 			var outputAarFirstWriteTime = File.GetLastWriteTime (outputAar);
 			var packagedManifestContent = System.Text.Encoding.UTF8.GetString (ZipHelper.ReadFileFromZip (outputAar, "AndroidManifest.xml"));
-			StringAssert.Contains (@"uses-sdk android:minSdkVersion=""24""", packagedManifestContent);
+			Assert.Contains (@"uses-sdk android:minSdkVersion=""24""", packagedManifestContent);
 
 			// Build again, _BuildAndroidGradleProjects should be skipped
 			builder.BuildLogFile = "build2.log";
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_BuildAndroidGradleProjects"), "The '_BuildAndroidGradleProjects' target should be skipped on incremental build");
-			FileAssert.Exists (outputAar);
+			Assert.IsTrue (File.Exists (outputAar));
 			var outputAarSecondWriteTime = File.GetLastWriteTime (outputAar);
 			Assert.IsTrue (outputAarFirstWriteTime == outputAarSecondWriteTime, $"Expected {outputAar} write time to be '{outputAarFirstWriteTime}', but was '{outputAarSecondWriteTime}'");
 
@@ -253,15 +257,16 @@ namespace Xamarin.Android.Build.Tests
 			gradleModule.WriteGradleBuildFile ();
 			Assert.IsTrue (builder.Build (proj), "Third build should have succeeded.");
 			Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildAndroidGradleProjects"), "The '_BuildAndroidGradleProjects' target should run on partial rebuild");
-			FileAssert.Exists (outputAar);
+			Assert.IsTrue (File.Exists (outputAar));
 			var outputAarThirdWriteTime = File.GetLastWriteTime (outputAar);
 			Assert.IsTrue (outputAarThirdWriteTime > outputAarFirstWriteTime, $"Expected '{outputAar}' write time of '{outputAarThirdWriteTime}' to be greater than first write '{outputAarFirstWriteTime}'");
 			packagedManifestContent = System.Text.Encoding.UTF8.GetString (ZipHelper.ReadFileFromZip (outputAar, "AndroidManifest.xml"));
-			StringAssert.Contains (@"uses-sdk android:minSdkVersion=""30""", packagedManifestContent);
+			Assert.Contains (@"uses-sdk android:minSdkVersion=""30""", packagedManifestContent);
 		}
 
-		[Test]
-		public void BuildCustomOutputPaths ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildCustomOutputPaths ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -291,11 +296,12 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			FileAssert.Exists (Path.Combine (proj.OutputPath, $"{moduleName}-release.aar"));
+			Assert.IsTrue (File.Exists (Path.Combine (proj.OutputPath, $"{moduleName}-release.aar")));
 		}
 
-		[Test]
-		public void BuildArtifactsOutputPaths ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildArtifactsOutputPaths ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -341,11 +347,12 @@ $@"<Project>
 				_ => Path.Combine (customOutputPathsRoot, "bin", proj.ProjectName, "debug")
 			};
 
-			FileAssert.Exists (Path.Combine (binPath, $"{moduleName}-release.aar"));
+			Assert.IsTrue (File.Exists (Path.Combine (binPath, $"{moduleName}-release.aar")));
 		}
 
-		[Test]
-		public void BuildMultipleModules ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildMultipleModules ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -384,11 +391,12 @@ $@"<Project>
 
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "TestLibModule-release.aar"));
+			Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "TestLibModule-release.aar")));
 		}
 
-		[Test]
-		public void BuildMultipleLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BuildMultipleLibraries ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -429,12 +437,13 @@ $@"<Project>
 
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "FirstModule-debug.aar"));
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "SecondModule-release.aar"));
+			Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "FirstModule-debug.aar")));
+			Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "SecondModule-release.aar")));
 		}
 
-		[Test]
-		public void InvalidItemRefError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void InvalidItemRefError ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -457,8 +466,9 @@ $@"<Project>
 			StringAssertEx.Contains ($"Executable 'gradlew' not found in project directory '{invalidProjectPath}{Path.DirectorySeparatorChar}'. Please ensure the path to your Gradle project folder is correct", builder.LastBuildOutput);
 		}
 
-		[Test]
-		public void InvalidModuleNameError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void InvalidModuleNameError ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -486,8 +496,9 @@ $@"<Project>
 			StringAssertEx.Contains ($"'{invalidModuleName}' not found in root project '{TestName}'", builder.LastBuildOutput);
 		}
 
-		[Test]
-		public void BindFacebook ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void BindFacebook ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -571,7 +582,7 @@ public class Foo {{
 
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
+			Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar")));
 		}
 
 		/// <summary>
@@ -595,12 +606,12 @@ public class Foo {{
 		/// This test ensures compatibility with Gradle's evolving Kotlin type checking behavior,
 		/// particularly the stricter null safety checks introduced in Gradle 9.x.
 		/// </summary>
-		[Test]
-		[TestCaseSource (nameof (GetAgpGradleVersionTestData))]
+		[TestMethod]
+		[DynamicData (nameof (GetAgpGradleVersionTestData))]
 		public void BindLibraryWithMultipleGradleVersions (string agpVersion, string gradleVersion, int compileSdk)
 		{
 			if (TestEnvironment.IsRunningOnCI)
-				Assert.Ignore ("Alternate Gradle distributions are not downloaded from public services in CI.");
+				Assert.Inconclusive ("Alternate Gradle distributions are not downloaded from public services in CI.");
 
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion, gradleVersion, compileSdk: compileSdk);
 			var gradleModule = gradleProject.Modules.First ();
@@ -627,7 +638,7 @@ public class Foo {{
 			using var builder = CreateDllBuilder ();
 			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), $"Build with AGP {agpVersion} and Gradle {gradleVersion} should have succeeded.");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
+			Assert.IsTrue (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar")));
 		}
 
 	}

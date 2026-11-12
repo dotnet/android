@@ -11,12 +11,11 @@ using System.Xml.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class GenerateResourceDesignerAssemblyTests : BaseTest
 {
 	const string DesignerNamespace = "_Microsoft.Android.Resource.Designer";
@@ -38,7 +37,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 	string OutputPath => Path.Combine (DirectoryPath, "_Microsoft.Android.Resource.Designer.dll");
 	string RtxtPath => Path.Combine (DirectoryPath, "R.txt");
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp ()
 	{
 		Directory.CreateDirectory (DirectoryPath);
@@ -46,7 +45,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 	}
 
 	GenerateResourceDesignerAssembly CreateTask (bool deterministic = true, bool isApplication = true) => new () {
-		BuildEngine = new MockBuildEngine (TestContext.Out),
+		BuildEngine = new MockBuildEngine (Console.Out),
 		RTxtFile = new TaskItem (RtxtPath),
 		OutputFile = new TaskItem (OutputPath),
 		CaseMapFile = Path.Combine (DirectoryPath, "case_map.txt"),
@@ -59,8 +58,9 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		AssemblyName = "TestApp",
 	};
 
-	[TestCase ("ar-SA")]
-	[TestCase ("tr-TR")]
+	[TestMethod]
+	[DataRow ("ar-SA")]
+	[DataRow ("tr-TR")]
 	public void ResourceFormattingUsesInvariantCulture (string cultureName)
 	{
 		var originalCulture = CultureInfo.CurrentCulture;
@@ -88,10 +88,11 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		}
 	}
 
-	[TestCase (true, true)]
-	[TestCase (true, false)]
-	[TestCase (false, true)]
-	[TestCase (false, false)]
+	[TestMethod]
+	[DataRow (true, true)]
+	[DataRow (true, false)]
+	[DataRow (false, true)]
+	[DataRow (false, false)]
 	public void ResourceDesignerAssemblyDeterministic (bool deterministic, bool isApplication)
 	{
 		var start = DateTimeOffset.UtcNow.ToUnixTimeSeconds ();
@@ -111,9 +112,9 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		if (deterministic)
 			Assert.AreEqual (0, pe.PEHeaders.CoffHeader.TimeDateStamp);
 		else
-			Assert.That ((long) pe.PEHeaders.CoffHeader.TimeDateStamp, Is.InRange (start, DateTimeOffset.UtcNow.ToUnixTimeSeconds ()));
+			Assert.IsInRange (start, DateTimeOffset.UtcNow.ToUnixTimeSeconds (), (long) pe.PEHeaders.CoffHeader.TimeDateStamp);
 		Assert.IsFalse (pe.PEHeaders.CorHeader?.Flags.HasFlag (CorFlags.StrongNameSigned));
-		Assert.That (pe.PEHeaders.CorHeader?.StrongNameSignatureDirectory.Size, Is.EqualTo (128));
+		Assert.AreEqual (128, pe.PEHeaders.CorHeader?.StrongNameSignatureDirectory.Size);
 	}
 
 	Guid ReadMvid ()
@@ -124,7 +125,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		return reader.GetGuid (reader.GetModuleDefinition ().Mvid);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ApplicationPropertiesAndConstants ()
 	{
 		Assert.IsTrue (CreateTask ().Execute ());
@@ -172,12 +173,13 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		}
 	}
 
-	[TestCase (10, true)]
-	[TestCase (10, false)]
-	[TestCase (11, true)]
-	[TestCase (11, false)]
-	[TestCase (12, true)]
-	[TestCase (12, false)]
+	[TestMethod]
+	[DataRow (10, true)]
+	[DataRow (10, false)]
+	[DataRow (11, true)]
+	[DataRow (11, false)]
+	[DataRow (12, true)]
+	[DataRow (12, false)]
 	public void DesignerUsesProjectTargetFramework (int version, bool isApplication)
 	{
 		var task = CreateTask (isApplication: isApplication);
@@ -186,7 +188,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		AssertTargetFramework (version);
 	}
 
-	[Test]
+	[TestMethod]
 	public void RetargetingRegeneratesDesigner ()
 	{
 		var task = CreateTask ();
@@ -199,10 +201,11 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		AssertTargetFramework (11);
 	}
 
-	[TestCase (10, true)]
-	[TestCase (10, false)]
-	[TestCase (12, true)]
-	[TestCase (12, false)]
+	[TestMethod]
+	[DataRow (10, true)]
+	[DataRow (10, false)]
+	[DataRow (12, true)]
+	[DataRow (12, false)]
 	public void DesignTimeTargetRetargetingRegeneratesDesigner (int originalVersion, bool isApplication)
 	{
 		string targets = Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (), "src", "Xamarin.Android.Build.Tasks",
@@ -232,10 +235,10 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 			BuildDesigner (version);
 			AssertTargetFramework (version);
 			var timestamp = File.GetLastWriteTimeUtc (OutputPath);
-			Assert.Less (rtxtTimestamp, timestamp, "The unchanged R.txt must remain older than the designer.");
+			Assert.IsLessThan (timestamp, rtxtTimestamp, "The unchanged R.txt must remain older than the designer.");
 			var image = File.ReadAllBytes (OutputPath);
 			string output = BuildDesigner (version);
-			StringAssert.Contains ("Skipping target \"_GenerateResourceDesignerAssembly\"", output, "An unchanged framework should skip generation.");
+			Assert.Contains ("Skipping target \"_GenerateResourceDesignerAssembly\"", output, "An unchanged framework should skip generation.");
 			AssertTargetFramework (version);
 			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (OutputPath), "A no-op build should preserve the designer timestamp.");
 			CollectionAssert.AreEqual (image, File.ReadAllBytes (OutputPath), "A no-op build should preserve the designer contents.");
@@ -268,7 +271,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.AreEqual ($".NETCoreApp,Version=v{version}.0", blob.ReadSerializedString ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void LibraryIsReferenceAssembly ()
 	{
 		Assert.IsTrue (CreateTask (isApplication: false).Execute ());
@@ -286,7 +289,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.IsFalse (attributes.Contains ("InternalsVisibleToAttribute"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void RemappingAndUnchangedOutput ()
 	{
 		File.WriteAllText (Path.Combine (DirectoryPath, "case_map.txt"),
@@ -311,7 +314,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.AreNotEqual (originalMvid, ReadMvid ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void TaskCanBeReused ()
 	{
 		var task = CreateTask ();
@@ -322,7 +325,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		CollectionAssert.AreEqual (original, File.ReadAllBytes (OutputPath));
 	}
 
-	[Test]
+	[TestMethod]
 	public void RelativePathsUseProjectDirectories ()
 	{
 		Assert.IsNotNull (typeof (GenerateResourceDesignerAssembly).GetCustomAttribute<MSBuildMultiThreadableTaskAttribute> ());
@@ -360,7 +363,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingRtxtProducesEmptyDesigner ()
 	{
 		File.Delete (RtxtPath);
@@ -370,7 +373,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		Assert.AreEqual (3, pe.GetMetadataReader ().TypeDefinitions.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void RealResourceSet ()
 	{
 		using (var input = typeof (GenerateResourceDesignerAssemblyTests).Assembly.GetManifestResourceStream ("ResourceDesigner.R.txt")
@@ -410,16 +413,17 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 				}
 				count++;
 			}
-			Assert.That (count, Is.GreaterThan (6000));
+			Assert.IsGreaterThan (6000, count);
 		} finally {
 			context.Unload ();
 		}
 	}
 
-	[TestCase ("Xamarin.Android.Common.targets", false)]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false)]
-	[TestCase ("Xamarin.Android.Common.targets", true)]
-	[TestCase ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true)]
+	[TestMethod]
+	[DataRow ("Xamarin.Android.Common.targets", false)]
+	[DataRow ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", false)]
+	[DataRow ("Xamarin.Android.Common.targets", true)]
+	[DataRow ("MSBuild/Xamarin/Android/Xamarin.Android.Resource.Designer.targets", true)]
 	public void MetadataTaskRegistration (string relativePath, bool multithreaded)
 	{
 		var repository = new DirectoryInfo (AppContext.BaseDirectory);
@@ -523,7 +527,7 @@ public class GenerateResourceDesignerAssemblyTests : BaseTest
 		return output;
 	}
 
-	[Test]
+	[TestMethod]
 	public void TaskAssemblyDoesNotReferenceCecil ()
 	{
 		Assert.IsFalse (typeof (GenerateResourceDesignerAssembly).Assembly.GetReferencedAssemblies ()

@@ -1,5 +1,5 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
@@ -12,7 +12,7 @@ using System.Linq;
 using VerifyCSSuppressor = CSharpSuppressorVerifier <DNAS0001Tests.IDE0002AnalyserWrapper, ResourceDesignerDiagnosticSuppressor>;
 using System.Security.Cryptography;
 
-[TestFixture]
+[TestClass]
 public class DNAS0001Tests
 {
 	static string brokenCode = @"
@@ -41,7 +41,7 @@ namespace _Microsoft.Android.Resource.Designer {
     }
 }
 ";
-	[Test]
+	[TestMethod]
 	[Ignore ("needs https://github.com/dotnet/roslyn-sdk/issues/1175 to be figured out")]
 	public async Task IDE0002IsSuppressed ()
 	{

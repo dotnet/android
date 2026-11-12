@@ -6,7 +6,7 @@ using System.Xml.Linq;
 using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
@@ -15,8 +15,8 @@ namespace Xamarin.Android.Build.Tests;
 /// In-process tests for how <see cref="ManifestDocument"/> merges the computed
 /// minSdkVersion/targetSdkVersion into a user-authored &lt;uses-sdk/&gt; element.
 /// </summary>
-[TestFixture]
-[Parallelizable (ParallelScope.Self)]
+[TestClass]
+[DoNotParallelize]
 public class ManifestDocumentTest : BaseTest
 {
 	const string DefaultMinSdkVersion = "21";
@@ -47,7 +47,7 @@ public class ManifestDocumentTest : BaseTest
 				},
 			};
 
-			var engine = new MockBuildEngine (TestContext.Out);
+			var engine = new MockBuildEngine (Console.Out);
 			var log = new TaskLoggingHelper (engine, nameof (ManifestDocumentTest));
 			manifest.Merge (log, new TypeDefinitionCache (), new List<TypeDefinition> (), applicationClass: null, embed: false, bundledWearApplicationName: null);
 
@@ -71,30 +71,30 @@ public class ManifestDocumentTest : BaseTest
 		Assert.AreEqual (expectedTargetSdkVersion, element.Attribute (AndroidNs + "targetSdkVersion")?.Value, "unexpected android:targetSdkVersion");
 
 		foreach (var comment in document.DescendantNodes ().OfType<XComment> ()) {
-			StringAssert.DoesNotContain ("UsesMinSdkAttributes", comment.Value, "the lint suppression comment should no longer be emitted");
+			Assert.DoesNotContain ("UsesMinSdkAttributes", comment.Value, "the lint suppression comment should no longer be emitted");
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void NoUsesSdkElement ()
 	{
 		AssertUsesSdk ("", DefaultMinSdkVersion, DefaultTargetSdkVersion);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MinSdkVersionOnly ()
 	{
 		// Regression test: targetSdkVersion was never written, so `aapt2` defaulted it to minSdkVersion.
 		AssertUsesSdk (@"<uses-sdk android:minSdkVersion=""24"" />", "24", DefaultTargetSdkVersion);
 	}
 
-	[Test]
+	[TestMethod]
 	public void TargetSdkVersionOnly ()
 	{
 		AssertUsesSdk (@"<uses-sdk android:targetSdkVersion=""30"" />", DefaultMinSdkVersion, "30");
 	}
 
-	[Test]
+	[TestMethod]
 	public void MinAndTargetSdkVersion ()
 	{
 		AssertUsesSdk (@"<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""30"" />", "24", "30");

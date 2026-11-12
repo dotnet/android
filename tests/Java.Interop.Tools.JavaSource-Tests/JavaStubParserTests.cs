@@ -1,27 +1,27 @@
 using System;
 using System.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.Interop.Tools.JavaSource;
 using Xamarin.Android.Tools.ApiXmlAdjuster;
 
 namespace Java.Interop.Tools.JavaSource.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaStubParserTests
 	{
-		[Test]
+		[TestMethod]
 		public void TryParse_EmptySource ()
 		{
 			var parser  = new JavaStubParser ();
 			var package = parser.TryParse ("");
 			Assert.IsNotNull (package);
-			Assert.AreEqual (null, package.Name);
+			Assert.IsNull (package.Name);
 			Assert.AreEqual (0, package.Types.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryParse_SimpleClass ()
 		{
 			var parser  = new JavaStubParser ();
@@ -32,7 +32,7 @@ class Example {
 }
 ");
 			Assert.IsNotNull (package);
-			Assert.AreEqual (null, package.Name);
+			Assert.IsNull (package.Name);
 			Assert.AreEqual (1, package.Types.Count);
 
 			var Example_Type = package.AllTypes.First ();

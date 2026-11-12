@@ -36,7 +36,6 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installTestSlicer: true
         installApkDiff: false
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
@@ -61,12 +60,14 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: $(ExcludedNightlyNUnitCategories)
+        testFilter: $(ExcludedNightlyTestCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        sliceTests: true
+        retryFailedTests: 1
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: start-stop-emulator.yaml

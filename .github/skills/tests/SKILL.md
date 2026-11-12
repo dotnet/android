@@ -3,7 +3,7 @@ name: tests
 description: >-
   Runs, discovers, or recommends dotnet/android tests. Handles standalone tests
   (plain dotnet test), full-build tests (local SDK required), and on-device
-  MTP/NUnit tests. Maps source files to relevant test suites. Trigger on test
+  MTP tests. Maps source files to relevant test suites. Trigger on test
   execution requests, questions about available tests, or "which tests should I
   run for this change?"
 ---

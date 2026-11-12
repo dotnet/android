@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
@@ -12,8 +13,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Build.Tests {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class ManagedResourceParserTests : BaseTest {
 		class ResourceDesignerAttributeLibraryProject : DotNetXamarinProject
 		{
@@ -388,8 +388,8 @@ int xml myxml 0x7f140000
 
 		void CompareFilesIgnoreRuntimeInfoString (string file1, string file2)
 		{
-			FileAssert.Exists (file1);
-			FileAssert.Exists (file2);
+			Assert.IsTrue (File.Exists (file1));
+			Assert.IsTrue (File.Exists (file2));
 			var content1 = File.ReadAllText (file1);
 			var content2 = File.ReadAllText (file2);
 			// This string is only generated when running on mono, replace with a new line that will be stripped when comparing.
@@ -404,8 +404,8 @@ int xml myxml 0x7f140000
 			using (var s1 = new MemoryStream (Encoding.UTF8.GetBytes (content1)))
 			using (var s2 = new MemoryStream (Encoding.UTF8.GetBytes (content2))) {
 				if (!StreamCompare (s1, s2)) {
-					TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
-					TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
+					TestContext.AddResultFile (file1);
+					TestContext.AddResultFile (file2);
 					Assert.Fail ($"{file1} and {file2} do not match.");
 				}
 			}
@@ -414,7 +414,7 @@ int xml myxml 0x7f140000
 		GenerateResourceCaseMap CreateCaseMapTask (string path)
 		{
 			var task = new GenerateResourceCaseMap () {
-				BuildEngine = new MockBuildEngine (TestContext.Out)
+				BuildEngine = new MockBuildEngine (Console.Out)
 			};
 			task.ProjectDir = Path.Combine (Root, path);
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
@@ -433,7 +433,7 @@ int xml myxml 0x7f140000
 		GenerateResourceDesigner CreateTask (string path)
 		{
 			var task = new GenerateResourceDesigner {
-				BuildEngine = new MockBuildEngine (TestContext.Out)
+				BuildEngine = new MockBuildEngine (Console.Out)
 			};
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
@@ -463,11 +463,11 @@ int xml myxml 0x7f140000
 		{
 			var expected = Path.Combine (ExpectedOutputDir, expectedFile);
 
-			FileAssert.Exists (task.NetResgenOutputFile);
+			Assert.IsTrue (File.Exists (task.NetResgenOutputFile));
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenerateDesignerFileWithÜmläüts ()
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
@@ -480,14 +480,15 @@ int xml myxml 0x7f140000
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		public void GenerateDesignerFileFromRtxt ([Values] bool withLibraryReference, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void GenerateDesignerFileFromRtxt (bool withLibraryReference, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			// TODO: fix NativeAOT, it currently fails with:
 			//
 			//  bin/TestDebug/temp/GenerateDesignerFileFromRtxtTrueNativeAOT Some Space/Resource.designer.cs and bin/TestDebug/Expected/GenerateDesignerFileWithLibraryReferenceExpected.cs do not match.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT currently doesn't work with this test.");
+				Assert.Inconclusive ("NativeAOT currently doesn't work with this test.");
 			}
 
 			var path = Path.Combine ("temp", TestName + " Some Space");
@@ -509,8 +510,9 @@ int xml myxml 0x7f140000
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[TestCase ("Library.Resource, Library")]
-		[TestCase ("Library.Resource")]
+		[TestMethod]
+		[DataRow ("Library.Resource, Library")]
+		[DataRow ("Library.Resource")]
 		public void ResourceDesignerImportGeneratorHandlesResourceDesignerAttributeFormats (string resourceDesignerTypeName)
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
@@ -532,11 +534,11 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			var designer = File.ReadAllText (task.NetResgenOutputFile);
 			// The import generator can only emit this assignment if it found "Library.Resource".
-			StringAssert.Contains ("global::Library.Resource.Animator.slide_in_bottom = global::Foo.Foo.Resource.Animator.slide_in_bottom;", designer);
+			Assert.Contains ("global::Library.Resource.Animator.slide_in_bottom = global::Foo.Foo.Resource.Animator.slide_in_bottom;", designer);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenerateDesignerFileFromEmptyRtxt ()
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
@@ -549,8 +551,9 @@ int xml myxml 0x7f140000
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		public void UpdateLayoutIdIsIncludedInDesigner ([Values(true, false)] bool useRtxt)
+		[TestMethod]
+		[CombinatorialData]
+		public void UpdateLayoutIdIsIncludedInDesigner ([CombinatorialValues (true, false)] bool useRtxt)
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
@@ -558,7 +561,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (mapTask.Execute (), "Map Task should have executed successfully.");
 			if (useRtxt)
 			    File.WriteAllText (Path.Combine (Root, path, "R.txt"), Rtxt);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine engine = new MockBuildEngine (Console.Out);
 			var task = new GenerateResourceDesigner {
 				BuildEngine = engine
 			};
@@ -599,7 +602,7 @@ int xml myxml 0x7f140000
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void RtxtGeneratorOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -611,7 +614,7 @@ int xml myxml 0x7f140000
 			File.WriteAllText (expectedrTxt, Rtxt);
 			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
 			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors: errors, messages: messages);
 			var generateRtxt = new GenerateRtxt () {
 				BuildEngine = engine,
 				RTxtFile = rTxt,
@@ -624,14 +627,14 @@ int xml myxml 0x7f140000
 				},
 			};
 			Assert.IsTrue (generateRtxt.Execute (), "Task should have succeeded.");
-			FileAssert.Exists (rTxt, $"{rTxt} should have been created.");
+			Assert.IsTrue (File.Exists (rTxt), $"{rTxt} should have been created.");
 
 			CompareFilesIgnoreRuntimeInfoString (rTxt, expectedrTxt);
 
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CompareAapt2AndManagedParserOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -640,7 +643,7 @@ int xml myxml 0x7f140000
 			Directory.CreateDirectory (Path.Combine (Root, path, "java"));
 			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
 			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors: errors, messages: messages);
 			var aapt2Compile = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -676,7 +679,7 @@ int xml myxml 0x7f140000
 			};
 			Assert.IsTrue (aapt2Link.Execute (), "Aapt2 Link should have succeeded.");
 
-			FileAssert.Exists (rTxt, $"{rTxt} should have been created.");
+			Assert.IsTrue (File.Exists (rTxt), $"{rTxt} should have been created.");
 
 			var task = new GenerateResourceDesigner {
 				BuildEngine = engine
@@ -716,13 +719,13 @@ int xml myxml 0x7f140000
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		[NonParallelizable] // Test measures performance
+		[TestMethod]
+		[DoNotParallelize] // Test measures performance
 		public void CheckPerformanceOfManagedParser ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			CreateResourceDirectory (path);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine engine = new MockBuildEngine (Console.Out);
 			TaskLoggingHelper loggingHelper = new TaskLoggingHelper (engine, nameof (ManagedResourceParser));
 			string resPath = Path.Combine (Root, path, "res");
 			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
@@ -739,16 +742,16 @@ int xml myxml 0x7f140000
 				sw.Start ();
 				var codeDom = parser.Parse (resPath, "R.txt", lp, isApp: true, resourceMap: new Dictionary<string, string> ());
 				sw.Stop ();
-				TestContext.Out.WriteLine ($"Pass {i} took {sw.ElapsedMilliseconds} ms");
+				Console.Out.WriteLine ($"Pass {i} took {sw.ElapsedMilliseconds} ms");
 				totalMS += sw.ElapsedMilliseconds;
 				sw.Reset ();
 				Assert.AreEqual (20, codeDom.Members.Count, "Expected 20 Classes to be generated");
 			}
-			TestContext.Out.WriteLine ($"Average {totalMS / i} ms");
-			Assert.LessOrEqual (totalMS / i, 160, "Parser should have taken on average less than 160 ms.");
+			Console.Out.WriteLine ($"Average {totalMS / i} ms");
+			Assert.IsLessThanOrEqualTo (160, totalMS / i, "Parser should have taken on average less than 160 ms.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenerateDesignerFileWithElevenStyleableAttributesFromRtxt ()
 		{
 			var styleable = @"<resources>
@@ -797,7 +800,7 @@ int styleable ElevenAttributes_attr10 10";
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
 			File.WriteAllText (Path.Combine (Root, path, "res", "values", "attrs.xml"), styleable);
 			File.WriteAllText (Path.Combine (Root, path, "R.txt"), rtxt);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine engine = new MockBuildEngine (Console.Out);
 			var task = new GenerateResourceDesigner {
 				BuildEngine = engine
 			};

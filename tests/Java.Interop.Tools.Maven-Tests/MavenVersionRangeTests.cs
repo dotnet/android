@@ -3,9 +3,10 @@ using Java.Interop.Tools.Maven.Models;
 
 namespace Java.Interop.Tools.Maven_Tests;
 
+[TestClass]
 public class MavenVersionRangeTests
 {
-	[Test]
+	[TestMethod]
 	public void ParseTest ()
 	{
 		TestSingleRange ("1.0", "1.0", null, true, false, true, false);
@@ -24,7 +25,7 @@ public class MavenVersionRangeTests
 		TestSingleRange (multi_range_2 [1], "1.1", null, true, false, false, false);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ContainsVersionTest ()
 	{
 		TestContainsVersion ("1.0", false, true, true, true, true);

@@ -1,6 +1,6 @@
 using System;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,7 +11,8 @@ using System.Linq;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class KeyToolTests : BaseTest
 	{
 		List<BuildErrorEventArgs> errors;
@@ -21,15 +22,15 @@ namespace Xamarin.Android.Build.Tests
 		string temp;
 		string keyToolPath;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup()
 		{
-			engine = new MockBuildEngine (TestContext.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> (), messages = new List<BuildMessageEventArgs> ());
+			engine = new MockBuildEngine (Console.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> (), messages = new List<BuildMessageEventArgs> ());
 			temp = Path.GetTempFileName ();
 			keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			File.Delete (temp);
@@ -55,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ListEmptyKey ()
 		{
 			var task = new KeyTool {
@@ -75,7 +76,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("ANDKT0000", error.Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ListInvalidAlias ()
 		{
 			GetValidKeyStore ();
@@ -97,7 +98,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("ANDKT0000", error.Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ListSuccessWithPassword ()
 		{
 			GetValidKeyStore ();
@@ -116,7 +117,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ListInvalidPassword ()
 		{
 			GetValidKeyStore ();
@@ -134,11 +135,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, errors.Count, "Task should have one error.");
 			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
 			var error = errors [0];
-			Assert.That (error.Message, Does.Contain ("password was incorrect"));
+			Assert.Contains ("password was incorrect", error.Message);
 			Assert.AreEqual ("ANDKT0000", error.Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateDebugKeyStore ()
 		{
 			string keyfile = Path.Combine (TestName, "debug.keystore");
@@ -173,7 +174,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (keyToolTask.Execute (), "Task should have succeeded.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateDebugKeyStoreWithStrongPassword ()
 		{
 			string keyfile = Path.Combine (TestName, "debug.keystore");

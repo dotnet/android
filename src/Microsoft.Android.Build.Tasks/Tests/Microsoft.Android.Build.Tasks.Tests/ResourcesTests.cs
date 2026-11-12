@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.Resources;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class ResourcesTests
 {
 	// The tasks in this assembly report XA#### diagnostics through resources linked from
@@ -12,8 +13,9 @@ public class ResourcesTests
 	// Both must keep resolving their satellite assemblies after the move to this assembly.
 	// Assert that a translation exists and differs from English rather than asserting on the
 	// translated text itself, which the localization pipeline regenerates regularly.
-	[TestCase ("de")]
-	[TestCase ("ja")]
+	[TestMethod]
+	[DataRow ("de")]
+	[DataRow ("ja")]
 	public void TaskDiagnosticsAreLocalized (string culture)
 	{
 		AssertLocalized (Xamarin.Android.Tasks.Properties.Resources.ResourceManager, "XA4250", culture);
