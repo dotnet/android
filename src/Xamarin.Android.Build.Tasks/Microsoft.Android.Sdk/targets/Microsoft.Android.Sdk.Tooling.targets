@@ -62,14 +62,18 @@ This file contains .NET 6+ Java version validation and calls to the
 
   <!--
     Validates the JDK against $(MinimumSupportedJavaVersion) and $(LatestSupportedJavaVersion).
-    The version comes from $(_JavaSdkDirectory)release, falling back to `java -version`.
+    The version comes from the selected executable's ../release, then the SDK's release,
+    falling back to `java -version` when no version is available.
   -->
   <Target Name="_ValidateJavaVersion"
       Condition=" '$(_AndroidUseResolvedTooling)' != 'true' and '$(DesignTimeBuild)' != 'true' ">
     <PropertyGroup>
       <_DefaultJdkVersion>$([System.Version]::Parse('$(MinimumSupportedJavaVersion)'))</_DefaultJdkVersion>
       <_JdkVersion />
-      <_JdkVersion Condition=" '$(_JavaSdkDirectory)' != '' and Exists('$(_JavaSdkDirectory)/release') ">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText($([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'release')))), '(?m)(?&lt;=^JAVA_VERSION=")\d+(\.\d+){0,3}'))</_JdkVersion>
+      <_AndroidJavaTool>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'bin', '$([MSBuild]::ValueOrDefault('$(JavaToolExe)', 'java'))'))</_AndroidJavaTool>
+      <_AndroidJavaReleaseFile>$([MSBuild]::NormalizePath($([System.IO.Path]::GetDirectoryName('$(_AndroidJavaTool)')), '..', 'release'))</_AndroidJavaReleaseFile>
+      <_AndroidJavaReleaseFile Condition=" !Exists('$(_AndroidJavaReleaseFile)') ">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'release'))</_AndroidJavaReleaseFile>
+      <_JdkVersion Condition=" '$(_JavaSdkDirectory)' != '' and Exists('$(_AndroidJavaReleaseFile)') ">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(_AndroidJavaReleaseFile)')), '(?m)(?&lt;=^JAVA_VERSION=")\d+(\.\d+){0,3}'))</_JdkVersion>
     </PropertyGroup>
     <AndroidError
         Condition=" '$(_JavaSdkDirectory)' == '' "
@@ -81,7 +85,7 @@ This file contains .NET 6+ Java version validation and calls to the
     <Exec
         Condition=" '$(_JavaSdkDirectory)' != '' and '$(_JdkVersion)' == '' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-        Command="&quot;$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_JavaSdkDirectory)', 'bin', '$([MSBuild]::ValueOrDefault('$(JavaToolExe)', 'java'))'))&quot; -version"
+        Command="&quot;$(_AndroidJavaTool)&quot; -version"
         ConsoleToMSBuild="true"
         EchoOff="true"
         IgnoreExitCode="true"

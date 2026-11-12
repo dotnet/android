@@ -17,6 +17,8 @@
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" Link="EnvironmentHelper.cs" />
     <EmbeddedResource Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Resources\R.txt" LogicalName="ResourceDesigner.R.txt" />
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
+    <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tasks\AndroidError.cs" Link="AndroidError.cs" />
+    <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tasks\AndroidWarning.cs" Link="AndroidWarning.cs" />
     <None Update="Resources\NativeAotBootstrap\**" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Expected\CheckPackageManagerAssemblyOrder.java" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="ILLinkPath" Value="$([MSBuild]::NormalizePath('$(PkgMicrosoft_NET_ILLink_Tasks)', 'tools', 'net', 'illink.dll'))" />
