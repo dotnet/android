@@ -440,10 +440,13 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.DoesNotExist (strippedLibrary);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void FailedNativeStripReportsBothStreamsAndRemovesPartialOutput (bool timeout)
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void FailedNativeStripReportsBothStreamsAndRemovesPartialOutput (bool timeout, bool inheritedPipe)
 		{
+			if (inheritedPipe && OperatingSystem.IsWindows ())
+				Assert.Ignore ("The inherited-pipe fixture uses a Unix shell descendant.");
 			string directory = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (directory);
 			try {
@@ -459,9 +462,8 @@ namespace Xamarin.Android.Build.Tests
 					#!/bin/sh
 					[ "$#" = 3 ] && [ "$1" = -o ] || exit 42
 					echo partial > "$2"
-					echo strip stdout
-					echo strip stderr >&2
-					{(timeout ? "sleep 60" : "exit 7")}
+					{(inheritedPipe ? "printf 'strip stdout'; printf 'strip stderr' >&2; sleep 60 &\necho $! > \"$0.pid\"" : "echo strip stdout\necho strip stderr >&2")}
+					{(inheritedPipe ? "exit 0" : timeout ? "sleep 60" : "exit 7")}
 					""");
 				if (!OperatingSystem.IsWindows ())
 					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
@@ -492,6 +494,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsEmpty (task.StrippedLibraries);
 				FileAssert.DoesNotExist (Path.Combine (directory, "android-arm64", "stripped", "lib invalid.so"));
 			} finally {
+				string pidFile = Path.Combine (directory, "llvm-strip.pid");
+				if (File.Exists (pidFile) && Process.TryGetProcessById (int.Parse (File.ReadAllText (pidFile)), out var descendant)) {
+					using (descendant)
+						descendant.SafeHandle.Kill ();
+				}
 				Directory.Delete (directory, recursive: true);
 			}
 		}

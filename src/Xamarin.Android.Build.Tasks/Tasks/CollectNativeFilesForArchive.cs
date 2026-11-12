@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Threading;
+using Task = System.Threading.Tasks.Task;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
@@ -145,29 +147,36 @@ public class CollectNativeFilesForArchive : AndroidTask
 		Log.LogDebugMessage ($"Stripping native library: '{filesystemPath}' to '{outputFilePath}'");
 		Log.LogDebugMessage ($"llvm-strip: {command}");
 		using var process = new Process { StartInfo = startInfo };
-		var diagnostics = new StringBuilder ();
+		var stdout = new StringBuilder ();
+		var stderr = new StringBuilder ();
+		using var timeout = new CancellationTokenSource (TimeSpan.FromSeconds (30));
 		bool success = false;
 		bool started = false;
 		try {
 			process.Start ();
 			started = true;
 			var elapsed = Stopwatch.StartNew ();
-			foreach (var line in process.ReadAllLines (TimeSpan.FromSeconds (30)))
-				diagnostics.AppendLine ($"{(line.StandardError ? "stderr" : "stdout")} | {line.Content}");
+			// Capture chunks so timeout does not discard a final line buffered before EOF.
+			var output = CaptureDiagnosticsAsync (process.StandardOutput, stdout);
+			var error = CaptureDiagnosticsAsync (process.StandardError, stderr);
+			try {
+				Task.WhenAll (output, error).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (timeout.IsCancellationRequested) {
+				throw new TimeoutException ($"Timed out running '{command}'.");
+			}
 			var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
 			if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status))
 				throw new TimeoutException ($"Timed out running '{command}'.");
 			Log.LogDebugMessage ($"llvm-strip: exit code == {status.ExitCode}");
 			if (status.ExitCode != 0) {
-				Log.LogCodedError ("XA0142", Properties.Resources.XA0142, command, diagnostics.ToString ());
+				Log.LogCodedError ("XA0142", Properties.Resources.XA0142, command, $"stdout:\n{stdout}\nstderr:\n{stderr}");
 				return null;
 			}
 			strippedLibraries.Add (new TaskItem (outputFilePath));
 			success = true;
 			return outputFilePath;
 		} catch (TimeoutException ex) {
-			diagnostics.AppendLine (ex.Message);
-			Log.LogCodedError ("XA0142", Properties.Resources.XA0142, command, diagnostics.ToString ());
+			Log.LogCodedError ("XA0142", Properties.Resources.XA0142, command, $"stdout:\n{stdout}\nstderr:\n{stderr}\n{ex.Message}");
 			return null;
 		} finally {
 			try {
@@ -184,6 +193,14 @@ public class CollectNativeFilesForArchive : AndroidTask
 				if (!success)
 					File.Delete (outputFilePath);
 			}
+		}
+
+		async Task CaptureDiagnosticsAsync (StreamReader reader, StringBuilder destination)
+		{
+			var buffer = new char [4096];
+			int count;
+			while ((count = await reader.ReadAsync (buffer.AsMemory (), timeout.Token).ConfigureAwait (false)) != 0)
+				destination.Append (buffer, 0, count);
 		}
 	}
 
