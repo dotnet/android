@@ -37,7 +37,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AndroidComputeResPaths : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class AndroidComputeResPaths : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "CRP";
 
@@ -98,7 +99,8 @@ namespace Xamarin.Android.Tasks
 			for (int i = 0; i < ResourceFiles.Length; i++) {
 				var item = ResourceFiles [i];
 
-				if (Directory.Exists (item.ItemSpec))
+				var source = TaskEnvironment.GetAbsolutePath (item.ItemSpec);
+				if (Directory.Exists (source))
 					continue;
 				//compute the target path
 				string rel;
@@ -113,8 +115,8 @@ namespace Xamarin.Android.Tasks
 					if (rel.IsNullOrEmpty ()) {
 						rel = item.GetMetadata ("Identity");
 						if (!ProjectDir.IsNullOrEmpty ()) {
-							var fullRelPath = Path.GetFullPath (rel).Normalize (NormalizationForm.FormC);
-							var fullProjectPath = Path.GetFullPath (ProjectDir).Normalize (NormalizationForm.FormC);
+							var fullRelPath = TaskEnvironment.GetAbsolutePath (rel).GetCanonicalForm ().Value.Normalize (NormalizationForm.FormC);
+							var fullProjectPath = TaskEnvironment.GetAbsolutePath (ProjectDir).GetCanonicalForm ().Value.Normalize (NormalizationForm.FormC);
 							if (fullRelPath.StartsWith (fullProjectPath, StringComparison.OrdinalIgnoreCase)) {
 								rel = fullRelPath.Replace (fullProjectPath, string.Empty);
 							}
@@ -144,20 +146,20 @@ namespace Xamarin.Android.Tasks
 				if (baseFileName != rel) {
 					nameCaseMap [baseFileName] = rel;
 				}
-				string dest = Path.GetFullPath (Path.Combine (IntermediateDir, baseFileName));
-				string intermediateDirFullPath = Path.GetFullPath (IntermediateDir);
+				string dest = TaskEnvironment.GetAbsolutePath (Path.Combine (IntermediateDir, baseFileName)).GetCanonicalForm ();
+				string intermediateDirFullPath = TaskEnvironment.GetAbsolutePath (IntermediateDir).GetCanonicalForm ();
 				if (!assetPack.IsNullOrEmpty () &&
-						(string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) != 0) &&
+						!string.Equals (assetPack, "base", StringComparison.OrdinalIgnoreCase) &&
 						!AssetPackIntermediateDir.IsNullOrEmpty ()) {
-					dest = Path.GetFullPath (Path.Combine (AssetPackIntermediateDir, assetPack, "assets", baseFileName));
-					intermediateDirFullPath = Path.GetFullPath (AssetPackIntermediateDir);
+					dest = TaskEnvironment.GetAbsolutePath (Path.Combine (AssetPackIntermediateDir, assetPack, "assets", baseFileName)).GetCanonicalForm ();
+					intermediateDirFullPath = TaskEnvironment.GetAbsolutePath (AssetPackIntermediateDir).GetCanonicalForm ();
 				}
 				
 				// if the path ends up "outside" of our target intermediate directory, just use the filename
 				if (!dest.StartsWith (intermediateDirFullPath, StringComparison.OrdinalIgnoreCase)) {
-					dest = Path.GetFullPath (Path.Combine (IntermediateDir, Path.GetFileName (baseFileName)));
+					dest = TaskEnvironment.GetAbsolutePath (Path.Combine (IntermediateDir, Path.GetFileName (baseFileName))).GetCanonicalForm ();
 				}
-				if (!File.Exists (item.ItemSpec)) {
+				if (!File.Exists (source)) {
 					Log.LogCodedError ("XA2001", file: item.ItemSpec, lineNumber: 0, message: Properties.Resources.XA2001, item.ItemSpec);
 					continue;
 				}

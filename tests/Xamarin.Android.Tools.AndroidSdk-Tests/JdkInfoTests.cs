@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tools.Tests
 
 		static void CreateShellScript (string path, string contents)
 		{
-			if (OS.IsWindows && string.Compare (Path.GetExtension (path), ".dll", true) != 0)
+			if (OS.IsWindows && !string.Equals (Path.GetExtension (path), ".dll", StringComparison.CurrentCultureIgnoreCase))
 				path += ".cmd";
 			using (var script = new StreamWriter (path)) {
 				if (!OS.IsWindows) {

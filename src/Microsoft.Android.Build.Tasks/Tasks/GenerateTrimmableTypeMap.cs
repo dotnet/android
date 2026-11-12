@@ -88,6 +88,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	public override string TaskPrefix => "GTT";
 
+	public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 	public ITaskItem [] ResolvedFrameworkAssemblies { get; set; } = [];
@@ -151,10 +153,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
 		var frameworkAssemblyPaths = new HashSet<string> (
-			ResolvedFrameworkAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
+			ResolvedFrameworkAssemblies.Select (i => Path.GetFullPath (TaskEnvironment.GetAbsolutePath (i.ItemSpec))),
 			StringComparer.OrdinalIgnoreCase);
 		var assemblyInputs = ResolvedAssemblies
-			.GroupBy (i => Path.GetFullPath (i.ItemSpec), StringComparer.OrdinalIgnoreCase)
+			.GroupBy (i => Path.GetFullPath (TaskEnvironment.GetAbsolutePath (i.ItemSpec)), StringComparer.OrdinalIgnoreCase)
 			.Select (g => (
 				Path: g.Key,
 				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem)))
@@ -164,29 +166,30 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			frameworkAssemblyNames.Add (assemblyName);
 		}
 		if (CleanJavaSourceOutputDirectory && !JavaSourceInputDirectory.IsNullOrEmpty ()) {
-			var inputDirectory = Path.GetFullPath (JavaSourceInputDirectory);
-			var outputDirectory = Path.GetFullPath (JavaSourceOutputDirectory);
+			var inputDirectory = Path.GetFullPath (TaskEnvironment.GetAbsolutePath (JavaSourceInputDirectory));
+			var outputDirectory = Path.GetFullPath (TaskEnvironment.GetAbsolutePath (JavaSourceOutputDirectory));
 			if (string.Equals (inputDirectory, outputDirectory, StringComparison.OrdinalIgnoreCase)) {
 				Log.LogCodedError ("XA4254", Properties.Resources.XA4254, inputDirectory, outputDirectory);
 				return false;
 			}
 		}
 
-		Directory.CreateDirectory (OutputDirectory);
+		Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (OutputDirectory));
+		var javaSourceOutputDirectory = TaskEnvironment.GetAbsolutePath (JavaSourceOutputDirectory);
 		string[]? priorJavaSnapshot = null;
 		if (CleanJavaSourceOutputDirectory) {
 			// Capture the previously generated set before wiping it, so DeleteStaleJavaSources can
 			// report which Java sources are no longer produced (e.g. a type that was trimmed away).
 			// An empty snapshot (first run, nothing to wipe) still routes through the snapshot-diff
 			// path so clean mode is handled consistently.
-			if (Directory.Exists (JavaSourceOutputDirectory)) {
-				priorJavaSnapshot = Directory.GetFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories);
-				Directory.Delete (JavaSourceOutputDirectory, recursive: true);
+			if (Directory.Exists (javaSourceOutputDirectory)) {
+				priorJavaSnapshot = Directory.GetFiles (javaSourceOutputDirectory, "*.java", SearchOption.AllDirectories);
+				Directory.Delete (javaSourceOutputDirectory, recursive: true);
 			} else {
 				priorJavaSnapshot = [];
 			}
 		}
-		Directory.CreateDirectory (JavaSourceOutputDirectory);
+		Directory.CreateDirectory (javaSourceOutputDirectory);
 
 		var peReaders = new List<PEReader> ();
 		var assemblies = new List<AssemblyInput> ();
@@ -232,12 +235,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 
 			XDocument? manifestTemplate = null;
-			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
-				manifestTemplate = XDocument.Load (ManifestTemplate);
+			if (!ManifestTemplate.IsNullOrEmpty ()) {
+				var manifestPath = TaskEnvironment.GetAbsolutePath (ManifestTemplate);
+				if (File.Exists (manifestPath)) {
+					manifestTemplate = XDocument.Load (manifestPath);
+				}
 			}
 			IReadOnlyCollection<string>? customViewTypeNames = CustomViewMapFile.IsNullOrEmpty ()
 				? null
-				: LoadCustomViewTypeNames (CustomViewMapFile);
+				: LoadCustomViewTypeNames (TaskEnvironment.GetAbsolutePath (CustomViewMapFile));
 
 			result = generator.Execute (
 				assemblies,
@@ -272,28 +278,30 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 			// Write manifest to disk if generated
 			if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
-				var manifestDir = Path.GetDirectoryName (MergedAndroidManifestOutput);
+				var manifestPath = TaskEnvironment.GetAbsolutePath (MergedAndroidManifestOutput);
+				var manifestDir = Path.GetDirectoryName (manifestPath);
 				if (!manifestDir.IsNullOrEmpty ()) {
 					Directory.CreateDirectory (manifestDir);
 				}
 				using (var ms = new MemoryStream ()) {
 					result.Manifest.Document.Save (ms);
 					ms.Position = 0;
-					Files.CopyIfStreamChanged (ms, MergedAndroidManifestOutput);
+					Files.CopyIfStreamChanged (ms, manifestPath, TaskEnvironment);
 				}
 				AdditionalProviderSources = result.Manifest.AdditionalProviderSources;
 			}
 
 			// Write merged acw-map.txt if requested
 			if (!AcwMapOutputFile.IsNullOrEmpty ()) {
-				var acwDirectory = Path.GetDirectoryName (AcwMapOutputFile);
+				var acwPath = TaskEnvironment.GetAbsolutePath (AcwMapOutputFile);
+				var acwDirectory = Path.GetDirectoryName (acwPath);
 				if (!acwDirectory.IsNullOrEmpty ()) {
 					Directory.CreateDirectory (acwDirectory);
 				}
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					AcwMapWriter.Write (sw, result.AllPeers);
 					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, AcwMapOutputFile);
+					Files.CopyIfStreamChanged (sw.BaseStream, acwPath, TaskEnvironment);
 				}
 				Log.LogDebugMessage ($"Wrote merged acw-map.txt with {result.AllPeers.Count} types to {AcwMapOutputFile}.");
 			}
@@ -301,11 +309,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			// Generate ApplicationRegistration.java with registerNatives calls for
 			// Application/Instrumentation types whose static initializers were skipped.
 			if (!ApplicationRegistrationOutputFile.IsNullOrEmpty ()) {
-				var appRegDir = Path.GetDirectoryName (ApplicationRegistrationOutputFile);
+				var appRegPath = TaskEnvironment.GetAbsolutePath (ApplicationRegistrationOutputFile);
+				var appRegDir = Path.GetDirectoryName (appRegPath);
 				if (!appRegDir.IsNullOrEmpty ()) {
 					Directory.CreateDirectory (appRegDir);
 				}
-				Files.CopyIfStringChanged (GenerateApplicationRegistrationJava (result.ApplicationRegistrationTypes), ApplicationRegistrationOutputFile);
+				Files.CopyIfStringChanged (GenerateApplicationRegistrationJava (result.ApplicationRegistrationTypes), appRegPath);
 				Log.LogDebugMessage ($"Generated ApplicationRegistration.java with {result.ApplicationRegistrationTypes.Count} deferred registration(s).");
 			}
 		} finally {
@@ -326,7 +335,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			typeMapAssemblyNames.Add (assemblyName);
 			string fingerprintText = Files.ToHexString (fingerprint);
 			typeMapFingerprints.Add (assemblyName, fingerprintText);
-			string outputPath = Path.Combine (OutputDirectory, assemblyName + ".dll");
+			string outputPath = TaskEnvironment.GetAbsolutePath (Path.Combine (OutputDirectory, assemblyName + ".dll"));
 			bool generate = !File.Exists (outputPath) ||
 				!priorTypeMapFingerprints.TryGetValue (assemblyName, out var priorFingerprint) ||
 				!string.Equals (fingerprintText, priorFingerprint, StringComparison.Ordinal);
@@ -338,11 +347,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	internal Dictionary<string, string> ReadTypeMapFingerprints ()
 	{
 		var fingerprints = new Dictionary<string, string> (StringComparer.Ordinal);
-		if (TypeMapFingerprintsFile.IsNullOrEmpty () || !File.Exists (TypeMapFingerprintsFile)) {
+		if (TypeMapFingerprintsFile.IsNullOrEmpty ()) {
+			return fingerprints;
+		}
+		var fingerprintsPath = TaskEnvironment.GetAbsolutePath (TypeMapFingerprintsFile);
+		if (!File.Exists (fingerprintsPath)) {
 			return fingerprints;
 		}
 		try {
-			foreach (var line in File.ReadLines (TypeMapFingerprintsFile)) {
+			foreach (var line in File.ReadLines (fingerprintsPath)) {
 				int separator = line.IndexOf ('\t');
 				if (separator <= 0 || separator == line.Length - 1) {
 					Log.LogDebugMessage ($"Ignoring invalid trimmable typemap fingerprint cache '{TypeMapFingerprintsFile}'.");
@@ -362,14 +375,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		if (TypeMapFingerprintsFile.IsNullOrEmpty ()) {
 			return;
 		}
-		var directory = Path.GetDirectoryName (TypeMapFingerprintsFile);
+		var fingerprintsPath = TaskEnvironment.GetAbsolutePath (TypeMapFingerprintsFile);
+		var directory = Path.GetDirectoryName (fingerprintsPath);
 		if (!directory.IsNullOrEmpty ()) {
 			Directory.CreateDirectory (directory);
 		}
 		var text = fingerprints.Count == 0
 			? ""
 			: string.Join (Environment.NewLine, fingerprints.Select (entry => $"{entry.Key}\t{entry.Value}")) + Environment.NewLine;
-		Files.CopyIfStringChanged (text, TypeMapFingerprintsFile);
+		Files.CopyIfStringChanged (text, fingerprintsPath);
 	}
 
 	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
@@ -404,7 +418,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			return;
 		}
 
-		var directory = Path.GetDirectoryName (GeneratedAssembliesListFile);
+		var listPath = TaskEnvironment.GetAbsolutePath (GeneratedAssembliesListFile);
+		var directory = Path.GetDirectoryName (listPath);
 		if (!directory.IsNullOrEmpty ()) {
 			Directory.CreateDirectory (directory);
 		}
@@ -412,26 +427,27 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var text = assemblies.Count == 0
 			? ""
 			: string.Join (Environment.NewLine, assemblies.Select (a => a.ItemSpec)) + Environment.NewLine;
-		Files.CopyIfStringChanged (text, GeneratedAssembliesListFile);
+		Files.CopyIfStringChanged (text, listPath);
 	}
 
 	ITaskItem [] CopyJavaSourcesFromInputDirectory (IReadOnlyList<GeneratedJavaSource> javaSources)
 	{
 		var items = new List<ITaskItem> ();
 		foreach (var source in javaSources) {
-			string inputPath = Path.Combine (JavaSourceInputDirectory ?? "", source.RelativePath);
+			string inputPath = TaskEnvironment.GetAbsolutePath (Path.Combine (JavaSourceInputDirectory ?? "", source.RelativePath));
 			if (!File.Exists (inputPath)) {
 				Log.LogCodedError ("XA4255", Properties.Resources.XA4255, inputPath);
 				continue;
 			}
 
 			string outputPath = Path.Combine (JavaSourceOutputDirectory, source.RelativePath);
-			string? dir = Path.GetDirectoryName (outputPath);
+			string physicalOutputPath = TaskEnvironment.GetAbsolutePath (outputPath);
+			string? dir = Path.GetDirectoryName (physicalOutputPath);
 			if (!string.IsNullOrEmpty (dir)) {
 				Directory.CreateDirectory (dir);
 			}
 			using (var stream = File.OpenRead (inputPath)) {
-				Files.CopyIfStreamChanged (stream, outputPath);
+				Files.CopyIfStreamChanged (stream, physicalOutputPath, TaskEnvironment);
 			}
 			items.Add (new TaskItem (outputPath));
 		}
@@ -445,7 +461,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		foreach (var assemblyName in assemblyNames) {
 			string outputPath = Path.Combine (OutputDirectory, assemblyName + ".dll");
 			if (generatedByName.TryGetValue (assemblyName, out var assembly)) {
-				Files.CopyIfStreamChanged (assembly.Content, outputPath);
+				Files.CopyIfStreamChanged (assembly.Content, TaskEnvironment.GetAbsolutePath (outputPath), TaskEnvironment);
 				Log.LogDebugMessage ($"  {assemblyName}: written");
 			}
 			items.Add (new TaskItem (outputPath));
@@ -458,14 +474,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var items = new List<ITaskItem> ();
 		foreach (var source in javaSources) {
 			string outputPath = Path.Combine (JavaSourceOutputDirectory, source.RelativePath);
-			string? dir = Path.GetDirectoryName (outputPath);
+			string physicalOutputPath = TaskEnvironment.GetAbsolutePath (outputPath);
+			string? dir = Path.GetDirectoryName (physicalOutputPath);
 			if (!string.IsNullOrEmpty (dir)) {
 				Directory.CreateDirectory (dir);
 			}
 			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				sw.Write (source.Content);
 				sw.Flush ();
-				Files.CopyIfStreamChanged (sw.BaseStream, outputPath);
+				Files.CopyIfStreamChanged (sw.BaseStream, physicalOutputPath, TaskEnvironment);
 			}
 			items.Add (new TaskItem (outputPath));
 		}
@@ -490,7 +507,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		var expectedFiles = new HashSet<string> (
-			generatedJavaFiles.Select (i => Path.GetFullPath (i.ItemSpec)),
+			generatedJavaFiles.Select (i => Path.GetFullPath (TaskEnvironment.GetAbsolutePath (i.ItemSpec))),
 			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 		var deleted = new List<ITaskItem> ();
 
@@ -508,7 +525,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			return deleted.ToArray ();
 		}
 
-		foreach (var path in Directory.EnumerateFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories)) {
+		foreach (var path in Directory.EnumerateFiles (TaskEnvironment.GetAbsolutePath (JavaSourceOutputDirectory), "*.java", SearchOption.AllDirectories)) {
 			var fullPath = Path.GetFullPath (path);
 			if (expectedFiles.Contains (fullPath)) {
 				continue;
@@ -525,7 +542,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	TaskItem CreateDeletedJavaItem (string fullPath)
 	{
 		var item = new TaskItem (fullPath);
-		item.SetMetadata ("RelativePath", Path.GetRelativePath (JavaSourceOutputDirectory, fullPath));
+		item.SetMetadata ("RelativePath", Path.GetRelativePath (TaskEnvironment.GetAbsolutePath (JavaSourceOutputDirectory), fullPath));
 		return item;
 	}
 

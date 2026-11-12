@@ -176,7 +176,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                 {
                     byte[] hash = sha1.ComputeHash(fs);
                     string shash = BitConverter.ToString(hash).Replace("-", "");
-                    return String.Compare(shash, sha1hash, StringComparison.OrdinalIgnoreCase) == 0;
+                    return string.Equals(shash, sha1hash, StringComparison.OrdinalIgnoreCase);
                 }
             }
         }
@@ -193,7 +193,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                 {
                     byte[] hash = sha256.ComputeHash(fs);
                     string shash = BitConverter.ToString(hash).Replace("-", "");
-                    return String.Compare(shash, sha256hash, StringComparison.OrdinalIgnoreCase) == 0;
+                    return string.Equals(shash, sha256hash, StringComparison.OrdinalIgnoreCase);
                 }
             }
         }
