@@ -83,9 +83,9 @@ namespace Xamarin.Android.Tasks {
 		}
 
 		// This is set in Execute()
-		Aapt2Daemon daemon = null!;
+		Aapt2Daemon? daemon;
 
-		internal Aapt2Daemon Daemon => daemon;
+		internal Aapt2Daemon Daemon => daemon ?? throw new InvalidOperationException ("The AAPT2 daemon has not been initialized.");
 		public override bool Execute ()
 		{
 			// Must register on the UI thread!
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks {
 		protected long RunAapt (string [] args, string outputFile)
 		{
 			LogDebugMessage ($"Executing {string.Join (" ", args)}");
-			long jobid = daemon.QueueCommand (args, outputFile, CancellationToken);
+			long jobid = Daemon.QueueCommand (args, outputFile, CancellationToken);
 			jobs.Add (jobid);
 			return jobid;
 		}

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -9,6 +11,7 @@ using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
+using TPL = System.Threading.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -116,6 +119,273 @@ namespace Xamarin.Android.Build.Tests
 			protected override int ProcessorCount { get; }
 
 			public Aapt2CompileWithProcessorCount (int processorCount) => ProcessorCount = processorCount;
+		}
+
+		[Test]
+		[Platform ("Linux,MacOsX")]
+		public async TPL.Task Aapt2DaemonDrainsStdoutAndPreservesResponses ()
+		{
+			using var tool = new Aapt2DaemonTool ("""
+				while IFS= read -r command; do
+				    [ "$command" = quit ] && exit 0
+				    printf '%s\n' "$command" >> "$0.commands"
+				    while IFS= read -r argument && [ -n "$argument" ]; do
+				        printf '%s\n' "$argument" >> "$0.arguments"
+				    done
+				    for ((i=0; i<128; i++)); do printf '%01024d\n' 0; done
+				    printf '%s\n' 'res/values/strings.xml:1: warning: warn: keep this warning' >&2
+				    if [ "$command" = fail ]; then
+				        printf '%s\n' 'res/values/strings.xml:2: error: invalid resource' Error >&2
+				    fi
+				    printf 'Done\n' >&2
+				done
+				""");
+			using var daemon = new Aapt2Daemon (tool.Path, 1, 1, TestContext.Out.WriteLine);
+			var failed = daemon.QueueCommand (["fail", "argument with spaces", "Ümläüt"], "", CancellationToken.None);
+			var succeeded = daemon.QueueCommand (["succeed"], "", CancellationToken.None);
+			var jobs = await WaitForDaemonJobsAsync (daemon, [failed, succeeded]);
+
+			Assert.IsFalse (jobs [0].Succeeded);
+			Assert.IsTrue (jobs [1].Succeeded);
+			CollectionAssert.AreEqual (new [] { "fail", "succeed" }, File.ReadAllLines (tool.Path + ".commands"));
+			CollectionAssert.AreEqual (new [] { "argument with spaces", "Ümläüt" }, File.ReadAllLines (tool.Path + ".arguments"));
+			Assert.AreEqual (2, jobs [0].Output.Count);
+			Assert.IsFalse (jobs [0].Output [0].StdError);
+			Assert.IsTrue (jobs [0].Output [1].StdError);
+			Assert.IsTrue (jobs [0].Output.All (line => line.Errored && line.JobId == failed));
+			Assert.IsTrue (jobs [1].Output.All (line => !line.Errored && line.JobId == succeeded));
+			Assert.AreEqual (1, File.ReadAllLines (tool.Path + ".pids").Length, "Completed commands must reuse the daemon.");
+			daemon.Dispose ();
+			tool.AssertProcessesExited ();
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Platform ("Linux,MacOsX")]
+		public async TPL.Task Aapt2DaemonCancellationRestartsOnlyTheActiveProcess (bool blockInput)
+		{
+			using var tool = new Aapt2DaemonTool ("""
+				while IFS= read -r command; do
+				    [ "$command" = quit ] && exit 0
+				    if [ "$command" = block-input ]; then
+				        printf '%s\n' "$command" >> "$0.commands"
+				        sleep 60 &
+				        printf '%s\n' "$!" >> "$0.children"
+				        : > "$0.active"
+				        wait
+				    fi
+				    while IFS= read -r argument && [ -n "$argument" ]; do :; done
+				    printf '%s\n' "$command" >> "$0.commands"
+				    if [ "$command" = block ]; then
+				        : > "$0.active"
+				        IFS= read -r ignored
+				    else
+				        printf 'Done\n' >&2
+				    fi
+				done
+				""");
+			using var daemon = new Aapt2Daemon (tool.Path, 1, 1, TestContext.Out.WriteLine);
+			using var cancellation = new CancellationTokenSource ();
+			string command = blockInput ? "block-input" : "block";
+			var active = daemon.QueueCommand (blockInput ? [command, new string ('x', 1024 * 1024)] : [command], "", cancellation.Token);
+			var canceled = daemon.QueueCommand (["must-not-run"], "", cancellation.Token);
+			var next = daemon.QueueCommand (["succeed"], "", CancellationToken.None);
+			tool.WaitForMarker (".active");
+			cancellation.Cancel ();
+			var jobs = await WaitForDaemonJobsAsync (daemon, [active, canceled, next]);
+
+			Assert.IsFalse (jobs [0].Succeeded);
+			Assert.IsFalse (jobs [1].Succeeded);
+			Assert.IsTrue (jobs [2].Succeeded, string.Join ("\n", jobs [2].Output.Select (line => line.Line)));
+			CollectionAssert.AreEqual (new [] { command, "succeed" }, File.ReadAllLines (tool.Path + ".commands"));
+			Assert.AreEqual (2, File.ReadAllLines (tool.Path + ".pids").Length);
+			daemon.Dispose ();
+			tool.AssertProcessesExited ();
+		}
+
+		[TestCase ("exit")]
+		[TestCase ("stderr")]
+		[TestCase ("inherited")]
+		[Platform ("Linux,MacOsX")]
+		public async TPL.Task Aapt2DaemonRequiresDone (string end)
+		{
+			var finish = end == "stderr" ? """
+				exec 2>&-
+				IFS= read -r ignored
+				""" : end == "inherited" ? """
+				sleep 60 &
+				printf '%s\n' "$!" >> "$0.children"
+				exit 0
+				""" : "exit 0";
+			using var tool = new Aapt2DaemonTool ("""
+				IFS= read -r command
+				while IFS= read -r argument && [ -n "$argument" ]; do :; done
+				printf 'diagnostic before EOF\n' >&2
+				""" + "\n" + finish);
+			using var daemon = new Aapt2Daemon (tool.Path, 1, 1, TestContext.Out.WriteLine);
+			var ids = Enumerable.Range (0, 4).Select (_ => daemon.QueueCommand (["compile"], "", CancellationToken.None)).ToArray ();
+			var jobs = await WaitForDaemonJobsAsync (daemon, ids, timeoutSeconds: 15);
+
+			Assert.IsTrue (jobs.All (job => !job.Succeeded && job.Output.Count > 0));
+			Assert.AreEqual ("diagnostic before EOF", jobs [0].Output [0].Line);
+			Assert.IsTrue (jobs [0].Output.All (line => line.Errored));
+			daemon.Dispose ();
+			tool.AssertProcessesExited ();
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Platform ("Linux,MacOsX")]
+		public async TPL.Task Aapt2DaemonBoundsMissingOutput (bool exitAfterDone)
+		{
+			using var tool = new Aapt2DaemonTool ("""
+				IFS= read -r command
+				while IFS= read -r argument && [ -n "$argument" ]; do :; done
+				printf 'Done\n' >&2
+				""" + (exitAfterDone ? "\nexit 0\n" : "\nIFS= read -r ignored\n"));
+			using var daemon = new Aapt2Daemon (tool.Path, 1, 1, TestContext.Out.WriteLine);
+			var outputFile = tool.Path + ".missing";
+			var timer = Stopwatch.StartNew ();
+			var active = daemon.QueueCommand (["compile"], outputFile, CancellationToken.None);
+			var queued = daemon.QueueCommand (["compile"], "", CancellationToken.None);
+			var jobs = await WaitForDaemonJobsAsync (daemon, [active, queued], timeoutSeconds: 40);
+
+			Assert.IsTrue (jobs.All (job => !job.Succeeded && job.Output.Count > 0));
+			StringAssert.Contains (outputFile, string.Join ("\n", jobs [0].Output.Select (line => line.Line)));
+			if (exitAfterDone)
+				Assert.Less (timer.Elapsed, TimeSpan.FromSeconds (10), "Daemon exit must interrupt the output-file wait.");
+			else
+				Assert.GreaterOrEqual (timer.Elapsed, TimeSpan.FromSeconds (29), "Exercise the actual output-file deadline.");
+			daemon.Dispose ();
+			tool.AssertProcessesExited ();
+		}
+
+		[Test]
+		[Platform ("Linux,MacOsX")]
+		public async TPL.Task Aapt2DaemonDisposeCompletesActiveAndQueuedJobs ()
+		{
+			using var tool = new Aapt2DaemonTool ("""
+				IFS= read -r command
+				while IFS= read -r argument && [ -n "$argument" ]; do :; done
+				printf '%s\n' "$$" >> "$0.active"
+				IFS= read -r ignored
+				""");
+			using var daemon = new Aapt2Daemon (tool.Path, 2, 2, TestContext.Out.WriteLine);
+			var ids = Enumerable.Range (0, 4).Select (_ => daemon.QueueCommand (["block"], "", CancellationToken.None)).ToArray ();
+			Assert.IsTrue (SpinWait.SpinUntil (() => File.Exists (tool.Path + ".active") &&
+				File.ReadAllLines (tool.Path + ".active").Length == 2, TimeSpan.FromSeconds (5)), "Both workers must be active.");
+			var timer = Stopwatch.StartNew ();
+			daemon.Dispose ();
+			var jobs = await WaitForDaemonJobsAsync (daemon, ids);
+
+			Assert.Less (timer.Elapsed, TimeSpan.FromSeconds (10));
+			Assert.IsTrue (jobs.All (job => !job.Succeeded && job.Output.Count > 0));
+			Assert.IsFalse (daemon.JobsRunning);
+			Assert.IsFalse (daemon.JobsInQueue);
+			var rejected = daemon.QueueCommand (["compile"], "", CancellationToken.None);
+			Assert.IsFalse (daemon.WaitForJobsToComplete ([rejected]) [0].Succeeded);
+			tool.AssertProcessesExited ();
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Platform ("Linux,MacOsX")]
+		public async TPL.Task Aapt2DaemonBoundsGracefulShutdown (bool ignoreQuit)
+		{
+			using var tool = new Aapt2DaemonTool ("""
+				while IFS= read -r command; do
+				    while IFS= read -r argument && [ -n "$argument" ]; do :; done
+				    if [ "$command" = quit ]; then
+				        : > "$0.quit"
+				""" + (ignoreQuit ? "\n        IFS= read -r ignored\n" : "\n") + """
+				        exit 0
+				    fi
+				    printf 'Done\n' >&2
+				done
+				""");
+			using var daemon = new Aapt2Daemon (tool.Path, 1, 1, TestContext.Out.WriteLine);
+			var id = daemon.QueueCommand (["compile"], "", CancellationToken.None);
+			Assert.IsTrue ((await WaitForDaemonJobsAsync (daemon, [id])) [0].Succeeded);
+			var timer = Stopwatch.StartNew ();
+			daemon.Stop ();
+			tool.WaitForMarker (".quit");
+			tool.AssertProcessesExited (timeoutMilliseconds: 10000);
+			daemon.Dispose ();
+
+			Assert.Less (timer.Elapsed, TimeSpan.FromSeconds (12));
+			if (ignoreQuit)
+				Assert.GreaterOrEqual (timer.Elapsed, TimeSpan.FromSeconds (4), "Allow the graceful deadline before killing the owned process.");
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public async TPL.Task Aapt2DaemonStartupFailureCanBeReplaced (bool registerInDomain)
+		{
+			var engine = new MockBuildEngine (TestContext.Out);
+			var missingTool = Path.Combine (Root, Guid.NewGuid ().ToString ("N"), "missing-aapt2");
+			using var failed = Aapt2Daemon.GetInstance (engine, TestContext.Out.WriteLine, missingTool, 2, 2, registerInDomain);
+			var ids = Enumerable.Range (0, 4).Select (_ => failed.QueueCommand (["version"], "", CancellationToken.None)).ToArray ();
+			var jobs = await WaitForDaemonJobsAsync (failed, ids);
+			Assert.IsTrue (jobs.All (job => !job.Succeeded && job.Output.Count > 0));
+			var aapt2 = Path.Combine (GetPathToAapt2 (), IsWindows ? "aapt2.exe" : "aapt2");
+			using var replacement = Aapt2Daemon.GetInstance (engine, TestContext.Out.WriteLine, aapt2, 1, 1, registerInDomain);
+			Assert.AreNotSame (failed, replacement);
+			Assert.AreSame (replacement, Aapt2Daemon.GetInstance (engine, TestContext.Out.WriteLine, aapt2, 1, 1, registerInDomain));
+			var version = replacement.QueueCommand (["version"], "", CancellationToken.None);
+			Assert.IsTrue ((await WaitForDaemonJobsAsync (replacement, [version])) [0].Succeeded);
+		}
+
+		static TPL.Task<Aapt2Daemon.Job []> WaitForDaemonJobsAsync (Aapt2Daemon daemon, long [] ids, int timeoutSeconds = 10) =>
+			TPL.Task.Run (() => daemon.WaitForJobsToComplete (ids)).WaitAsync (TimeSpan.FromSeconds (timeoutSeconds));
+
+		sealed class Aapt2DaemonTool : IDisposable
+		{
+			readonly string directory = System.IO.Path.Combine (System.IO.Path.GetTempPath (), "aapt2-daemon-" + Guid.NewGuid ().ToString ("N"));
+
+			public string Path => System.IO.Path.Combine (directory, "aapt2");
+
+			public Aapt2DaemonTool (string body)
+			{
+				Directory.CreateDirectory (directory);
+				File.WriteAllText (Path, "#!/bin/bash\nprintf '%s\\n' \"$$\" >> \"$0.pids\"\nprintf 'Ready\\n'\n" + body + "\n", Files.UTF8withoutBOM);
+				if (!OperatingSystem.IsWindows ())
+					File.SetUnixFileMode (Path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			}
+
+			public void WaitForMarker (string suffix) =>
+				Assert.IsTrue (SpinWait.SpinUntil (() => File.Exists (Path + suffix), TimeSpan.FromSeconds (5)), $"The daemon must reach {suffix}.");
+
+			public void AssertProcessesExited (int timeoutMilliseconds = 5000)
+			{
+				FileAssert.Exists (Path + ".pids");
+				foreach (var pid in File.ReadAllLines (Path + ".pids")) {
+					try {
+						using var process = Process.GetProcessById (int.Parse (pid));
+						Assert.IsTrue (process.WaitForExit (timeoutMilliseconds), "The daemon must terminate its owned process.");
+					} catch (ArgumentException) {
+						// The owned process has already been reaped.
+					}
+				}
+			}
+
+			public void Dispose ()
+			{
+				foreach (var suffix in new [] { ".pids", ".children" }) {
+					if (!File.Exists (Path + suffix))
+						continue;
+					foreach (var pid in File.ReadAllLines (Path + suffix)) {
+						try {
+							using var process = Process.GetProcessById (int.Parse (pid));
+							if (!process.HasExited)
+								process.Kill (entireProcessTree: true);
+							Assert.IsTrue (process.WaitForExit (5000), "Fixture-owned processes must stop before cleanup.");
+						} catch (ArgumentException) {
+							// The fixture process has already been reaped.
+						}
+					}
+				}
+				Directory.Delete (directory, recursive: true);
+			}
 		}
 
 		class ApiMetadataBuildEngine : MockBuildEngine, IBuildEngine4
