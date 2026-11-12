@@ -1203,6 +1203,78 @@ namespace Lib2
 		}
 
 		[Test]
+		public void ReleaseProjectReferenceDoesNotRebuildWithoutChanges ([Values] bool bindingLibrary)
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var path = Path.Combine ("temp", TestName);
+			XamarinAndroidProject library = bindingLibrary ? new XamarinAndroidBindingProject () : new XamarinAndroidLibraryProject ();
+			library.ProjectName = "Library";
+			library.IsRelease = true;
+			library.SetRuntime (runtime);
+			if (bindingLibrary) {
+				library.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("tiny.aar") {
+					BinaryContent = () => {
+						using var stream = new MemoryStream ();
+						using (var aar = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+							using var entry = aar.CreateEntry ("classes.jar").Open ();
+							entry.Write (ResourceData.JavaSourceJarTestJar);
+						}
+						return stream.ToArray ();
+					},
+				});
+			}
+
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				IsRelease = true,
+			};
+			app.SetRuntime (runtime);
+			app.SetRuntimeIdentifier ("arm64-v8a");
+			app.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			app.SetProperty ("AndroidPackageFormat", "apk");
+			app.SetProperty ("PublishReadyToRun", "false");
+			app.AddReference (library);
+
+			using var libraryBuilder = CreateDllBuilder (Path.Combine (path, library.ProjectName));
+			libraryBuilder.Save (library);
+			using var builder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+			builder.BuildingInsideVisualStudio = false;
+			builder.Target = "Build";
+			builder.Verbosity = LoggerVerbosity.Diagnostic;
+			builder.BuildLogFile = "build-1.log";
+			Assert.IsTrue (builder.Build (app), "The initial app build should succeed.");
+
+			var libraryIntermediate = Path.Combine (Root, libraryBuilder.ProjectDirectory, library.IntermediateOutputPath);
+			var libraryAssembly = Path.Combine (libraryIntermediate, $"{library.ProjectName}.dll");
+			var compileCache = Path.Combine (libraryIntermediate, $"{library.ProjectFilePath}.CoreCompileInputs.cache");
+			FileAssert.Exists (libraryAssembly);
+			FileAssert.Exists (compileCache);
+			if (bindingLibrary) {
+				Assert.IsNotEmpty (Directory.GetFiles (Path.Combine (libraryIntermediate, "generated", "src"), "*.cs"),
+					"The AAR should produce binding sources.");
+			}
+			var assemblyTimestamp = File.GetLastWriteTimeUtc (libraryAssembly);
+			var compileCacheTimestamp = File.GetLastWriteTimeUtc (compileCache);
+
+			for (int build = 2; build <= 3; build++) {
+				builder.BuildLogFile = $"build-{build}.log";
+				Assert.IsTrue (builder.Build (app, doNotCleanupOnUpdate: true, saveProject: false),
+					$"Unchanged build {build} should succeed.");
+				Assert.AreEqual (assemblyTimestamp, File.GetLastWriteTimeUtc (libraryAssembly),
+					$"Unchanged build {build} should not recompile the library.");
+				Assert.AreEqual (compileCacheTimestamp, File.GetLastWriteTimeUtc (compileCache),
+					$"Unchanged build {build} should not rewrite the library's compile-input cache.");
+				Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("Task \"ResolveLibraryProjectImports\"")),
+					$"Unchanged build {build} should not resolve library imports again.");
+				builder.Output.AssertTargetIsSkipped ("_BuildApkEmbed");
+			}
+		}
+
+		[Test]
 		public void AndroidDefineConstantsAreOrderIndependent ()
 		{
 			var path = Path.Combine ("temp", TestName);

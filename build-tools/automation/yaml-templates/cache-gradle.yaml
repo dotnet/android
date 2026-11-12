@@ -24,7 +24,6 @@ parameters:
 
 steps:
 - pwsh: |
-    git log -1 --format=%H external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
     $gradleUserHome = Join-Path "$(Agent.TempDirectory)" "gradle-user-home"
     if (Test-Path -LiteralPath $gradleUserHome) {
       Remove-Item -LiteralPath $gradleUserHome -Recurse -Force
@@ -39,7 +38,7 @@ steps:
 - task: Cache@2
   displayName: cache Gradle dependencies
   inputs:
-    key: '"gradle" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | $(Agent.TempDirectory)/java-interop-submodule-hash.txt'
+    key: '"gradle" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | ${{ parameters.xaSourcePath }}/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/*.gradle.kts'
     restoreKeys: |
       "gradle" | "v2" | "$(Agent.OS)"
     path: $(GRADLE_USER_HOME)/caches/modules-2

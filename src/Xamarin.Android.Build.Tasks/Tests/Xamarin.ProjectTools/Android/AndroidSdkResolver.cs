@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using System.Threading;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
@@ -105,7 +106,7 @@ namespace Xamarin.ProjectTools
 		}
 
 		static Version? maxInstalled;
-		static object maxInstalledLock = new object ();
+		static readonly Lock maxInstalledLock = new Lock ();
 
 		/// <summary>
 		/// Searches the Android SDK 'platforms' folder for the latest version that we support and consider stable.

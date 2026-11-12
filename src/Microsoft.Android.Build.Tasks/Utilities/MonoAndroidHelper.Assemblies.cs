@@ -112,7 +112,7 @@ partial class MonoAndroidHelper
 			return String.Empty;
 		}
 
-		if (!String.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
+		if (!string.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
 			return $"{ret}.so";
 		}
 

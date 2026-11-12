@@ -48,7 +48,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (!ReferenceEquals (this, other))
 				return false;
 
-			return String.Compare (LocalJarPath, other.LocalJarPath, StringComparison.Ordinal) == 0;
+			return string.Equals (LocalJarPath, other.LocalJarPath, StringComparison.Ordinal);
 		}
 
 		/// <summary>

@@ -17,7 +17,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
   </ItemGroup>
 
   <!-- Generates manifest attributes from Android SDK -->

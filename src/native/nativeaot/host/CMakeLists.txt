@@ -1,8 +1,3 @@
-# Needed modules
-
-include(CheckIncludeFile)
-include(CheckCXXSymbolExists)
-
 if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
   # will force a -O0 on us and our "debug" build is not really for debugging of our native code but
@@ -12,14 +7,9 @@ if(DEBUG_BUILD)
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
 endif()
 
-# Library directories
-set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
-
-# Header checks
-
 # Sources
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NAOT_ANDROID_SUFFIX)
-set(XAMARIN_NAOT_ANDROID_STATIC_LIB "naot-android${CHECKED_BUILD_INFIX}.${XAMARIN_NAOT_ANDROID_SUFFIX}-static")
+set(XAMARIN_NAOT_ANDROID_STATIC_LIB "naot-android.${XAMARIN_NAOT_ANDROID_SUFFIX}-static")
 
 set(CLR_SOURCES_PATH "../../clr")
 
@@ -30,19 +20,12 @@ set(XAMARIN_MONODROID_SOURCES
   # Sources shared with the CoreCLR host
   ${CLR_SOURCES_PATH}/host/host-shared.cc
   ${CLR_SOURCES_PATH}/host/gc-bridge.cc
-  ${CLR_SOURCES_PATH}/host/os-bridge.cc
   ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
   ${CLR_SOURCES_PATH}/runtime-base/binary-blob-loader.cc
   ${CLR_SOURCES_PATH}/runtime-base/util.cc
   ${CLR_SOURCES_PATH}/shared/helpers.cc
   ${CLR_SOURCES_PATH}/shared/log_functions.cc
 )
-
-list(APPEND LOCAL_CLANG_CHECK_SOURCES
-  ${XAMARIN_MONODROID_SOURCES}
-)
-
-add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
 
 # Build
 add_library(

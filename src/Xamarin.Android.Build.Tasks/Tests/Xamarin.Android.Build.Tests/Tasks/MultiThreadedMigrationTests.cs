@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -17,6 +18,42 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class MultiThreadedMigrationTests
 	{
+		[TestCase ("activity", ".First")]
+		[TestCase ("activity-alias", ".First")]
+		[TestCase ("service", null)]
+		public void GetAndroidActivityNamePreservesLauncherSelection (string elementName, string? expected)
+		{
+			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			Directory.CreateDirectory (directory);
+			try {
+				XNamespace android = "http://schemas.android.com/apk/res/android";
+				XElement Launcher (string element, string? name) =>
+					new XElement (element,
+						name == null ? null : new XAttribute (android + "name", name),
+						new XElement ("intent-filter",
+							new XElement ("category", new XAttribute (android + "name", "android.intent.category.LAUNCHER"))));
+				var application = new XElement ("application",
+					elementName == "activity" ? Launcher ("activity-alias", ".EarlierAlias") : null,
+					Launcher (elementName, "mono.android.__FastDevLauncher"),
+					Launcher (elementName, null),
+					Launcher (elementName, ""),
+					new XElement (elementName, new XAttribute (android + "name", ".NotALauncher")),
+					Launcher (elementName, ".First"),
+					Launcher (elementName, ".Second"));
+				new XDocument (new XElement ("manifest", application))
+					.Save (Path.Combine (directory, "AndroidManifest.xml"));
+				var task = new GetAndroidActivityName {
+					BuildEngine = new MockBuildEngine (TextWriter.Null),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
+					ManifestFile = "AndroidManifest.xml",
+				};
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual (expected, task.ActivityName);
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
 		[Test]
 		public void PrepareSatelliteAssembliesPreservesMetadataAndOrder ()
 		{

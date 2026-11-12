@@ -176,12 +176,8 @@ sealed class TypeMapAssemblyEmitter
 	/// </param>
 	internal void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
-		if (stream is null) {
-			throw new ArgumentNullException (nameof (stream));
-		}
+		ArgumentNullException.ThrowIfNull (model);
+		ArgumentNullException.ThrowIfNull (stream);
 
 		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		_pe.WritePE (stream);
@@ -194,9 +190,7 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	internal Stream EmitToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
+		ArgumentNullException.ThrowIfNull (model);
 
 		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		return _pe.CreatePEStream ();
@@ -1135,7 +1129,7 @@ sealed class TypeMapAssemblyEmitter
 				encodeSig,
 				(encoder, cfb) => EmitUcoForwarderBoundary (encoder, cfb, returnKind, EmitCall),
 				blob => EncodeUcoForwarderLocals (blob, returnKind));
-			AddForwarderDebuggerAttribute (handle);
+			_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
 		}
 
 		AddUnmanagedCallersOnlyAttribute (handle);
@@ -1217,15 +1211,6 @@ sealed class TypeMapAssemblyEmitter
 		if (!isVoid)
 			JniSignatureHelper.EncodeClrTypeName (new SignatureTypeEncoder (instantiation), returnType);
 		return _pe.Metadata.AddMethodSpecification (member, _pe.Metadata.GetOrAddBlob (instantiation));
-	}
-
-	void AddForwarderDebuggerAttribute (MethodDefinitionHandle handle)
-	{
-		var attribute = _pe.Metadata.AddTypeReference (_pe.SystemRuntimeRef, _pe.Metadata.GetOrAddString ("System.Diagnostics"),
-			_pe.Metadata.GetOrAddString ("DebuggerDisableUserUnhandledExceptionsAttribute"));
-		var constructor = _pe.AddMemberRef (attribute, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), _ => { }));
-		_pe.Metadata.AddCustomAttribute (handle, constructor, _pe.BuildAttributeBlob (_ => { }));
 	}
 
 	void EmitUcoForwarderBoundary (TrackedInstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<TrackedInstructionEncoder> emitCallback)
@@ -1443,11 +1428,13 @@ sealed class TypeMapAssemblyEmitter
 		Action<TrackedInstructionEncoder> emitActivation,
 		Action<BlobBuilder> encodeLocals)
 	{
-		return _pe.EmitBody (wrapperName,
+		var handle = _pe.EmitBody (wrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, emitActivation),
 			encodeLocals);
+		_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
+		return handle;
 	}
 
 	void EmitManagedConstructorActivation (

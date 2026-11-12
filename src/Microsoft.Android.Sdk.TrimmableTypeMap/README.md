@@ -23,6 +23,12 @@ The work happens in the `GenerateTrimmableTypeMap` task, invoked from the
 (`*.Trimmable.CoreCLR.targets`, `*.Trimmable.NativeAOT.targets`) extend the
 shared pipeline.
 
+Generated JCWs are top-level Java classes, even when an explicit component or
+registration name contains `$` (for example, `example.components.Outer$for`).
+Name validation and source references preserve that identifier as a whole.
+External Java nested types still use dotted source references and validate each
+nested identifier separately.
+
 ## JNI callback boundary ownership
 
 The scanner reads each resolved `n_*` callback's implementation body and managed
@@ -250,6 +256,6 @@ builds), the generator runs exactly once per outer build.
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.targets` | Shared pipeline: generation, Java stubs, packaging hookup, incremental `FileWrites`. |
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets` | CoreCLR specifics, incl. the post-trim `linked-java` regeneration. |
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets` | NativeAOT specifics (ILC inputs, proguard). |
-| `../Microsoft.Android.Build.Tasks/Tasks/GenerateTrimmableTypeMap.cs` | The net11.0 MSBuild task front-end for the generator. |
-| `../Microsoft.Android.Build.Tasks/Tasks/GetAndroidPackageName.cs` | The net11.0 package-name task; shares Java identifier validation with the generator. |
-| `Microsoft.Android.Sdk.TrimmableTypeMap/**` | The net11.0 generator/scanner library invoked by the task. |
+| `../Microsoft.Android.Build.Tasks/Tasks/GenerateTrimmableTypeMap.cs` | The net12.0 MSBuild task front-end for the generator. |
+| `../Microsoft.Android.Build.Tasks/Tasks/GetAndroidPackageName.cs` | The net12.0 package-name task; shares Java identifier validation with the generator. |
+| `Microsoft.Android.Sdk.TrimmableTypeMap/**` | The net12.0 generator/scanner library invoked by the task. |

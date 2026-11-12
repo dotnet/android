@@ -13,6 +13,41 @@ namespace Java.Lang {
 	{
 		protected bool is_generated;
 
+		/// <summary>
+		/// Initializes an empty peer for a derived binding to construct its Java throwable.
+		/// </summary>
+		/// <param name="options">
+		/// Must be <see cref="JniObjectReferenceOptions.None"/>.
+		/// </param>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="options"/> is not <see cref="JniObjectReferenceOptions.None"/>.
+		/// </exception>
+		/// <remarks>
+		/// No JNI reference is accepted or transferred. The peer remains empty until the derived binding
+		/// constructs it; JNI-dependent members cannot be used before then.
+		/// </remarks>
+		internal Throwable (JniObjectReferenceOptions options)
+			: base (default (JniObjectReference), GetEmptyPeerInitializationOptions (options))
+		{
+			if (GetType () == typeof (Throwable))
+				is_generated = true;
+
+			SetHandle (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+		}
+
+		static JniObjectReferenceOptions GetEmptyPeerInitializationOptions (JniObjectReferenceOptions options)
+		{
+			if (options != JniObjectReferenceOptions.None)
+				throw new ArgumentException ("Only JniObjectReferenceOptions.None is supported for empty peer initialization.", nameof (options));
+			return JniObjectReferenceOptions.CopyAndDispose;
+		}
+
+		/// <safety>
+		/// <paramref name="handle"/> is zero for an empty peer, or a live JNI throwable compatible with this type.
+		/// Use an attached JNI thread, and the creating thread for local references. Keep borrowed references valid for the whole constructor;
+		/// no alias may delete them concurrently. <paramref name="transfer"/> must match the reference kind and ownership:
+		/// transferred references must not be used or released by the caller afterward, including when construction throws.
+		/// </safety>
 		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
 			: base (GetThrowableReference (handle, transfer), JniObjectReferenceOptions.CopyAndDispose)
 		{
@@ -96,12 +131,15 @@ namespace Java.Lang {
 			return ThresholdType;
 		}
 
-		public unsafe Java.Lang.Class? Class {
+		public Java.Lang.Class? Class {
 			[Register ("getClass", "()Ljava/lang/Class;", "GetGetClassHandler")]
 			get {
 				IntPtr value;
 				const string __id = "getClass.()Ljava/lang/Class;";
-				value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
+				unsafe {
+					// SAFETY: getClass() has no arguments; transfer its returned local reference to the managed class wrapper below.
+					value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
+				}
 				return global::Java.Lang.Object.GetObject<Java.Lang.Class> (value, JniHandleOwnership.TransferLocalRef);
 			}
 		}

@@ -8,6 +8,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Xamarin.Android.Tools;
@@ -146,13 +147,22 @@ namespace Xamarin.Android.Tasks
 
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
-			var psi = new ProcessStartInfo (name, args) {
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
+			return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError, environmentVariables);
+		}
+
+		public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
+		{
+			if (taskEnvironment == null)
+				throw new ArgumentNullException (nameof (taskEnvironment));
+
+			var psi = taskEnvironment.GetProcessStartInfo ();
+			psi.FileName = name;
+			psi.Arguments = args;
+			psi.UseShellExecute = false;
+			psi.RedirectStandardOutput = true;
+			psi.RedirectStandardError = true;
+			psi.CreateNoWindow = true;
+			psi.WindowStyle = ProcessWindowStyle.Hidden;
 			if (environmentVariables != null) {
 				foreach (var pair in environmentVariables) {
 					psi.EnvironmentVariables [pair.Key] = pair.Value;
@@ -200,8 +210,10 @@ namespace Xamarin.Android.Tasks
 		// Path which contains OS-specific binaries; formerly known as $prefix/bin
 		internal static string GetOSBinPath ()
 		{
-			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
-			return Path.Combine (toolsDir, uname.Value);
+			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
+			var os = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
+				RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
+			return Path.Combine (toolsDir, os);
 		}
 
 		internal static string GetOSLibPath ()
@@ -216,6 +228,15 @@ namespace Xamarin.Android.Tasks
 #endif  // MSBUILD
 		{
 			public  static  readonly  SizeAndContentFileComparer  DefaultComparer     = new SizeAndContentFileComparer ();
+
+#if MSBUILD
+			readonly TaskEnvironment taskEnvironment;
+
+			public SizeAndContentFileComparer (TaskEnvironment? taskEnvironment = null)
+			{
+				this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
+			}
+#endif
 
 			public bool Equals (FileInfo x, FileInfo y)
 			{
@@ -234,12 +255,12 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 			public bool Equals (ITaskItem x, ITaskItem y)
 			{
-				return Equals (new FileInfo (x.ItemSpec), new FileInfo (y.ItemSpec));
+				return Equals (new FileInfo (taskEnvironment.GetAbsolutePath (x.ItemSpec)), new FileInfo (taskEnvironment.GetAbsolutePath (y.ItemSpec)));
 			}
 
 			public int GetHashCode (ITaskItem obj)
 			{
-				return GetHashCode (new FileInfo (obj.ItemSpec));
+				return GetHashCode (new FileInfo (taskEnvironment.GetAbsolutePath (obj.ItemSpec)));
 			}
 #endif  // MSBUILD
 		}
@@ -268,6 +289,17 @@ namespace Xamarin.Android.Tasks
 		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths)
 		{
 			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
+		}
+
+		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer (taskEnvironment));
+		}
+
+		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Select (p => new FileInfo (taskEnvironment.GetAbsolutePath (p))).ToArray ()
+				.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
 		}
 #endif
 
@@ -336,13 +368,13 @@ namespace Xamarin.Android.Tasks
 			return bool.TryParse (hasReference, out bool value) && value;
 		}
 
-		public static bool HasMonoAndroidReference (ITaskItem assembly)
+		public static bool HasMonoAndroidReference (ITaskItem assembly, TaskEnvironment taskEnvironment)
 		{
 			// Check item metadata and return early
 			if (IsMonoAndroidAssembly (assembly))
 				return true;
 
-			using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
+			using var pe = new PEReader (File.OpenRead (taskEnvironment.GetAbsolutePath (assembly.ItemSpec)));
 			if (!pe.HasMetadata) {
 				return false; // not a .NET assembly (no CLI metadata)
 			}
@@ -459,17 +491,7 @@ namespace Xamarin.Android.Tasks
 		public static Dictionary<string, string> LoadMapFile (IBuildEngine4 engine, string mapFile, StringComparer comparer)
 		{
 			var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (mapFile, RegisteredTaskObjectLifetime.Build);
-			if (cachedMap != null)
-				return cachedMap;
-			var acw_map = new Dictionary<string, string> (comparer);
-			if (!File.Exists (mapFile))
-				return acw_map;
-			foreach (var s in File.ReadLines (mapFile)) {
-				var items = s.Split (new char[] { ';' }, count: 2);
-				if (!acw_map.ContainsKey (items [0]))
-					acw_map.Add (items [0], items [1]);
-			}
-			return acw_map;
+			return cachedMap ?? LoadMapFile (File.Exists (mapFile) ? File.ReadLines (mapFile) : [], comparer);
 		}
 
 		public static Dictionary<string, HashSet<string>> LoadCustomViewMapFile (IBuildEngine4 engine, string mapFile)
@@ -527,13 +549,13 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (platformPath, "android.jar");
 		}
 
-		static readonly string ResourceCaseMapKey = $"{nameof (MonoAndroidHelper)}_ResourceCaseMap";
-
-		public static void SaveResourceCaseMap (IBuildEngine4 engine, Dictionary<string, string> map, Func<object, object> keyCallback) =>
-			engine.RegisterTaskObjectAssemblyLocal (keyCallback (ResourceCaseMapKey), map, RegisteredTaskObjectLifetime.Build);
-
-		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine, Func<object, object> keyCallback) =>
-			engine.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (keyCallback (ResourceCaseMapKey), RegisteredTaskObjectLifetime.Build) ?? new Dictionary<string, string> (0);
+		public static Dictionary<string, string> ItemGroupToCaseMap (ITaskItem [] items)
+		{
+			var map = new Dictionary<string, string> (items.Length, StringComparer.Ordinal);
+			foreach (var item in items)
+				map [item.ItemSpec] = item.GetMetadata ("OriginalName");
+			return map;
+		}
 #endif // MSBUILD
 		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{

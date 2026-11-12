@@ -1,5 +1,4 @@
-#include <sys/types.h>
-#include <dirent.h>
+#include <sys/stat.h>
 #include <dlfcn.h>
 
 #include <cerrno>
@@ -8,8 +7,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
-
-#include <android/looper.h>
 
 #include <coreclrhost.h>
 
@@ -21,8 +18,6 @@
 #include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
-#include <host/host-util.hh>
-#include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/binary-blob-loader.hh>
@@ -30,6 +25,7 @@
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/monodroid-dl.hh>
+#include <runtime-base/runtime-environment.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
 #include <shared/log_functions.hh>
@@ -76,67 +72,35 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 }
 
 [[gnu::always_inline]]
-void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
+void Host::load_assembly_store_from_filesystem () noexcept
 {
+	if (found_assembly_store) {
+		return;
+	}
+
 	const char *native_lib_dir = AndroidSystem::get_native_libraries_dir ();
-	log_debugf (LOG_ASSEMBLY, "Looking for assemblies in '%s'", native_lib_dir);
+	char stack_buffer [Util::LocalPathBufferSize];
+	char *store_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), native_lib_dir, Constants::assembly_store_file_name);
 
-	DIR *lib_dir = opendir (native_lib_dir);
-	if (lib_dir == nullptr) [[unlikely]] {
+	struct stat sbuf;
+	if (::lstat (store_path, &sbuf) == 0) {
+		log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s'", store_path);
+		map_assembly_store_via_dlopen (store_path);
+	} else if (errno != ENOENT || !Util::dir_exists (native_lib_dir)) [[unlikely]] {
 		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
 			std::source_location::current (),
-			"Unable to open native library directory '%s'. %s",
-			native_lib_dir,
+			"Unable to locate assembly store '%s': %s",
+			store_path,
 			std::strerror (errno)
 		);
+	} else {
+		log_debugf (LOG_ASSEMBLY, "Assembly store '%s' not found", store_path);
 	}
 
-	int dir_fd = dirfd (lib_dir);
-	if (dir_fd < 0) [[unlikely]] {
-		Helpers::abort_applicationf (
-			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"Unable to obtain file descriptor for opened directory '%s'. %s",
-			native_lib_dir,
-			std::strerror (errno)
-		);
+	if (store_path != stack_buffer) {
+		std::free (store_path);
 	}
-
-	do {
-		errno = 0;
-		dirent *cur = readdir (lib_dir);
-		if (cur == nullptr) {
-			if (errno != 0) {
-				log_warnf (LOG_ASSEMBLY, "Failed to open a directory entry from '%s': %s", native_lib_dir, std::strerror (errno));
-				continue; // No harm, keep going
-			}
-			break; // we're done
-		}
-
-		// We can ignore the obvious entries
-		if (cur->d_name[0] == '.') {
-			continue;
-		}
-
-		if (!found_assembly_store) {
-			found_assembly_store = Constants::assembly_store_file_name.compare (cur->d_name) == 0;
-			if (!found_assembly_store) {
-				continue;
-			}
-
-			log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s/%s'", native_lib_dir, Constants::assembly_store_file_name.data ());
-
-			char stack_buffer [Util::LocalPathBufferSize];
-			char *store_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), native_lib_dir, cur->d_name);
-			map_assembly_store_via_dlopen (store_path);
-			if (store_path != stack_buffer) {
-				std::free (store_path);
-			}
-			break; // we've found all we need
-		}
-	} while (true);
-	closedir (lib_dir);
 }
 
 void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
@@ -147,7 +111,7 @@ void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapp
 	}
 
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		scan_filesystem_for_assemblies_and_libraries ();
+		load_assembly_store_from_filesystem ();
 		return;
 	}
 
@@ -274,18 +238,7 @@ void Host::preload_jni_libraries () noexcept
 
 void Host::Java_mono_android_Runtime_initInternal (
 	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
-
-	// TODO: MonoVM used this to load the profiler, probably won't be needed anymore
-	[[maybe_unused]] jstring runtimeNativeLibDir,
-	jobjectArray appDirs,
-
-	// TODO: MonoVM used this to improve performance of System.DateTime + friends, might not be needed anymore
-	[[maybe_unused]] jint localDateTimeOffset,
-	jobject loader,
-
-	// TODO: was used in the past to pre-load assemblies (some versions of Xamarin.Forms needed that).
-	// Might not be needed anymore.
-	[[maybe_unused]] jobjectArray assembliesJava,
+	jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
 	HostCommon::init_logging_categories ();
@@ -317,11 +270,12 @@ void Host::Java_mono_android_Runtime_initInternal (
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
 	// These indices are load-bearing: the application build emits the property names in this
-	// exact order (see `ApplicationConfigNativeAssemblyGeneratorCLR`) so that we can fill in
+	// exact order (see `CoreClrBootstrapBlob`) so that we can fill in
 	// the values here without searching the names array.
 	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_LOCAL_DATE_TIME_OFFSET = 3;
 
 	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
 
@@ -345,6 +299,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
 	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
 	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
+
+	// Java calculated the device's current UTC offset in seconds; the blob only reserves the slot.
+	static char local_date_time_offset_buffer[16] {};
+	std::snprintf (local_date_time_offset_buffer, sizeof (local_date_time_offset_buffer), "%d", localDateTimeOffset);
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_LOCAL_DATE_TIME_OFFSET] = local_date_time_offset_buffer;
 
 	const char **prop_names = CoreClrBootstrap::property_names;
 	const char **prop_values = const_cast<const char**>(CoreClrBootstrap::property_values);
@@ -428,15 +387,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	DsoLoader::init (
 		env,
-		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true),
-		ALooper_forThread (), // main thread looper
-		gettid ()
+		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_NativeLibraryHelper", true)
 	);
 
 	preload_jni_libraries ();
 
 	struct JnienvInitializeArgs init = {};
-	init.javaVm                                         = jvm;
+	init.javaVm                                         = RuntimeEnvironment::get_java_vm ();
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
 	init.brokenExceptionTransitions                     = 0;
@@ -482,9 +439,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
 	CoreClrBootstrap::initialize ();
-	jvm = vm;
-
-	OSBridge::initialize_on_onload (vm);
+	RuntimeEnvironment::initialize (vm);
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
 }

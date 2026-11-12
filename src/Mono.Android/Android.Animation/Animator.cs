@@ -61,10 +61,14 @@ namespace Android.Animation {
 
 		public AnimatorEventDispatcher ()
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/animation/AnimatorEventDispatcher", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/animation/AnimatorEventDispatcher"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+			}
 		}
 
 		public EventHandler? AnimationCancel;

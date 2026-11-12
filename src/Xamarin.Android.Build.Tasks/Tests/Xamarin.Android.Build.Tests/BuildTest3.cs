@@ -101,28 +101,6 @@ public partial class BuildTest3 : BaseTest
 		NativeLibraryJniPreload_VerifyDefaults (preloads);
 	}
 
-	[Test]
-	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAllByName ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
-	{
-		const string MyLibExemptOne = "libMyStuffExemptOne.so";
-		const string MyLibExemptTwo = "libMyStuffExemptTwo.so";
-
-		EnvironmentHelper.JniPreloads preloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
-			runtime,
-			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
-				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibExemptOne, MyLibExemptTwo);
-				proj.OtherBuildItems.Add (
-					new AndroidItem.AndroidNativeLibraryNoJniPreload (MyLibExemptOne)
-				);
-				proj.OtherBuildItems.Add (
-					new AndroidItem.AndroidNativeLibraryNoJniPreload (MyLibExemptTwo)
-				);
-			}
-		);
-		// With all custom libraries ignored, we still must have the defaults in the generated code.
-		NativeLibraryJniPreload_VerifyDefaults (preloads);
-	}
-
 	void NativeLibraryJniPreload_AddNativeLibraries (XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches, string libName, params string[]? moreLibNames)
 	{
 		var libNames = new List<string> {

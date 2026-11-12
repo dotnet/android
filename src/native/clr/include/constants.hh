@@ -56,30 +56,29 @@ namespace xamarin::android {
 		static constexpr std::string_view android_abi        { "armeabi_v7a" };
 		static constexpr std::string_view android_lib_abi    { "armeabi-v7a" };
 		static constexpr std::string_view runtime_identifier { "android-arm" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.armeabi_v7a.apk" };
 #elif defined(__aarch64__)
 		static constexpr std::string_view android_abi        { "arm64_v8a" };
 		static constexpr std::string_view android_lib_abi    { "arm64-v8a" };
 		static constexpr std::string_view runtime_identifier { "android-arm64" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.arm64_v8a.apk" };
 #elif defined(__x86_64__)
 		static constexpr std::string_view android_abi        { "x86_64" };
 		static constexpr std::string_view android_lib_abi    { "x86_64" };
 		static constexpr std::string_view runtime_identifier { "android-x64" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.x86_64.apk" };
 #elif defined(__i386__)
 		static constexpr std::string_view android_abi        { "x86" };
 		static constexpr std::string_view android_lib_abi    { "x86" };
 		static constexpr std::string_view runtime_identifier { "android-x86" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.x86.apk" };
 #endif
 
 		static constexpr std::string_view split_config_prefix { "/split_config." };
 		static constexpr std::string_view split_config_extension { ".apk" };
 
-	private:
-		static constexpr size_t split_config_abi_apk_name_size = calc_size (split_config_prefix, android_abi, split_config_extension);
-
-	public:
 		static constexpr std::string_view assembly_store_file_name { "libassembly-store.so" };
 
-		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
 		static constexpr std::string_view base_apk_name = { "/base.apk" };
 
 		//
@@ -115,12 +114,7 @@ namespace xamarin::android {
 		static constexpr std::string_view JNIENVINIT_CLASS_NAME               { "JNIEnvInit" };
 		static constexpr std::string_view JNIENV_CLASS_NAME                   { "JNIEnv" };
 
-	private:
-		static constexpr size_t JNIENVINIT_FULL_TYPE_NAME_SIZE = calc_size (ANDROID_RUNTIME_NS_NAME, "."sv, JNIENVINIT_CLASS_NAME);
-		static constexpr auto JNIENVINIT_FULL_TYPE_NAME_ARRAY = concat_string_views<JNIENVINIT_FULL_TYPE_NAME_SIZE> (ANDROID_RUNTIME_NS_NAME, "."sv, JNIENVINIT_CLASS_NAME);
-
-	public:
-		static constexpr std::string_view JNIENVINIT_FULL_TYPE_NAME { JNIENVINIT_FULL_TYPE_NAME_ARRAY.data () };
+		static constexpr std::string_view JNIENVINIT_FULL_TYPE_NAME { "Android.Runtime.JNIEnvInit" };
 
 		static constexpr std::string_view ANDROID_ENVIRONMENT_CLASS_NAME      { "AndroidEnvironment" };
 	};

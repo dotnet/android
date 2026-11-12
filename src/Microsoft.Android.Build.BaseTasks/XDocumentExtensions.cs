@@ -43,14 +43,18 @@ namespace Microsoft.Android.Build.Tasks
 		}
 
 		public static bool SaveIfChanged (this XDocument document, string fileName)
+			=> SaveIfChanged (document, fileName, TaskEnvironment.Fallback);
+
+		public static bool SaveIfChanged (this XDocument document, string fileName, TaskEnvironment? taskEnvironment)
 		{
+			taskEnvironment ??= TaskEnvironment.Fallback;
 			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
 			using (var xw = new LinePreservedXmlWriter (sw)) {
 				xw.WriteNode (document.CreateNavigator (), false);
 				xw.Flush ();
-				return Files.CopyIfStreamChanged (sw.BaseStream, fileName);
+				return Files.CopyIfStreamChanged (sw.BaseStream, taskEnvironment.GetAbsolutePath (fileName), taskEnvironment);
 			}
 		}
+
 	}
 }
-

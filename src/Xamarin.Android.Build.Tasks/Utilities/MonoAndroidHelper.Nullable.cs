@@ -52,6 +52,20 @@ public partial class MonoAndroidHelper
 	}
 
 #if MSBUILD
+	public static string GetExecutablePath (string? dir, string exe, TaskEnvironment taskEnvironment)
+	{
+		if (dir is not { Length: > 0 })
+			return exe;
+		var path = taskEnvironment.GetAbsolutePath (dir);
+		var extensions = taskEnvironment.GetEnvironmentVariable ("PATHEXT")?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? [];
+		foreach (var extension in extensions) {
+			var candidate = Path.ChangeExtension (exe, extension);
+			if (File.Exists (Path.Combine (path, candidate)))
+				return candidate;
+		}
+		return exe;
+	}
+
 	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths)
 		=> GetSupportedVersions (engine, referenceAssemblyPaths?.Select (Path.GetFullPath).ToArray (), TaskEnvironment.Fallback);
 

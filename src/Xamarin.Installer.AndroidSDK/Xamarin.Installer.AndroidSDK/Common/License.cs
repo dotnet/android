@@ -47,13 +47,13 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (ReferenceEquals (this, other))
 				return true;
 
-			if (String.Compare (ID, other.ID, StringComparison.Ordinal) != 0)
+			if (!string.Equals (ID, other.ID, StringComparison.Ordinal))
 				return false;
 
-			if (String.Compare (Type, other.Type, StringComparison.Ordinal) != 0)
+			if (!string.Equals (Type, other.Type, StringComparison.Ordinal))
 				return false;
 
-			if (String.Compare (Text, other.Text, StringComparison.Ordinal) != 0)
+			if (!string.Equals (Text, other.Text, StringComparison.Ordinal))
 				return false;
 
 			return true;

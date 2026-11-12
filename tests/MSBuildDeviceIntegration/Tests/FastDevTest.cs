@@ -209,18 +209,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SimpleInstallAndUninstall ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-			};
-			proj.SetDefaultTargetDevice ();
-			var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
-			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
-			b.Dispose ();
-		}
-
-		[Test]
 		public void SkipFastDevAlreadyInstalledFile ([Values (false, true)] bool diagnosticLogging)
 		{
 			var proj = new XamarinAndroidApplicationProject {

@@ -4,8 +4,8 @@
     "android": {
       "description": ".NET SDK Workload for building Android applications.",
       "packs": [
+        "Microsoft.Android.Sdk.net12",
         "Microsoft.Android.Sdk.net11",
-        "Microsoft.Android.Sdk.net10",
         "Microsoft.Android.Ref.37",
         "Microsoft.Android.Runtime.37.android",
         "Microsoft.Android.Runtime.CoreCLR.37.android-arm",
@@ -18,14 +18,13 @@
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
       "extends": [
-        "microsoft-net-runtime-mono-tooling-net10",
         "microsoft-net-runtime-mono-tooling-net11",
         "microsoft-net-runtime-mono-tooling"
       ]
     }
   },
   "packs": {
-    "Microsoft.Android.Sdk.net11": {
+    "Microsoft.Android.Sdk.net12": {
       "kind": "sdk",
       "version": "@WORKLOAD_VERSION@",
       "alias-to": {
@@ -38,7 +37,7 @@
         "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
     },
-    "Microsoft.Android.Sdk.net10": {
+    "Microsoft.Android.Sdk.net11": {
       "kind": "sdk",
       "version": "@NET_PREVIOUS_VERSION@",
       "alias-to": {

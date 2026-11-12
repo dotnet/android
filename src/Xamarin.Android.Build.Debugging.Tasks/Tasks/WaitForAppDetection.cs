@@ -1,37 +1,39 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
-	public class WaitForAppDetection : AsyncTask
+	[MSBuildMultiThreadableTask]
+	public class WaitForAppDetection : MultithreadedAndroidTask, ICancelableTask
 	{
 		public override string TaskPrefix => "WFAD";
 
-		System.Threading.Tasks.Task<Exception?>? getPackagesAsync;
+		readonly CancellationTokenSource cancellation = new CancellationTokenSource ();
 
-		public override bool Execute ()
-		{
-			var key =  ProjectSpecificTaskObjectKey (DetectIfAppWasUninstalled.GetPackagesAsyncKey);
-			getPackagesAsync = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<System.Threading.Tasks.Task<Exception?>> (key, RegisteredTaskObjectLifetime.Build);
-			return base.Execute ();
-		}
+		public void Cancel () => cancellation.Cancel ();
 
-		public async override System.Threading.Tasks.Task RunTaskAsync ()
+		public override bool RunTask ()
 		{
-			LogDebugMessage ("Waiting for DetectIfAppWasUninstalled...");
+			var key = (DetectIfAppWasUninstalled.GetPackagesAsyncKey, TaskEnvironment.ProjectDirectory);
+			var getPackagesAsync = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Task<Exception?>> (key, RegisteredTaskObjectLifetime.Build);
+			Log.LogDebugMessage ("Waiting for DetectIfAppWasUninstalled...");
 			if (getPackagesAsync == null)
-				return;
-			var error = await getPackagesAsync;
-			if (error != null)
-				LogDebugMessage ($"DetectIfAppWasUninstalled failed with {error}");
-			LogDebugMessage ("DetectIfAppWasUninstalled Completed.");
-			return;
+				return !Log.HasLoggedErrors;
+			try {
+				// Cancel only the wait, not the adb query.
+				var error = getPackagesAsync.ContinueWith (task => task.GetAwaiter ().GetResult (),
+					cancellation.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+					.GetAwaiter ().GetResult ();
+				if (error != null)
+					Log.LogDebugMessage ($"DetectIfAppWasUninstalled failed with {error}");
+				Log.LogDebugMessage ("DetectIfAppWasUninstalled Completed.");
+			} catch (OperationCanceledException) {
+				// Cancellation is not a build error.
+			}
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

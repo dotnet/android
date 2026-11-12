@@ -68,7 +68,7 @@ Create a new project with `./dotnet-local.sh new android`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net11.0-android</TargetFramework>
+    <TargetFramework>net12.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
@@ -168,6 +168,12 @@ The same pattern works for
 `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj`.
 
 Results are written as `.trx` files into the `--results-directory` directory.
+
+Individual results stream as tests finish; use `--output Detailed` to display
+them. If instrumentation is interrupted, the adapter also prints observed
+outcomes, partial counts, and unfinished tests without needing a TRX file.
+Unfinished tests are context, not proven crash causes, and partial counts do
+not establish that every intended test ran. Normal TRX reporting is unchanged.
 
 ### Running Specific On-Device Tests
 

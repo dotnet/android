@@ -1,2 +1,10 @@
 [*.{cs,vb}]
 dotnet_diagnostic.CA1305.severity = error		# Specify IFormatProvider
+
+# Require explicit ConfigureAwait in shared tooling; retain root defaults for apps and tests.
+[{Microsoft.Android.Build.BaseTasks,Xamarin.Android.Tools.AndroidSdk}/**.{cs,vb}]
+dotnet_diagnostic.CA2007.severity = error		# Consider calling ConfigureAwait on the awaited task
+
+# Preserve the existing analyzer baseline for the relocated Java.Interop tooling.
+[{Java.Interop.Tools.*,Xamarin.Android.Tools.AnnotationSupport,Xamarin.Android.Tools.ApiXmlAdjuster,Xamarin.Android.Tools.Bytecode,Xamarin.SourceWriter,generator,class-parse,utils}/**.{cs,vb}]
+dotnet_diagnostic.CA1305.severity = none

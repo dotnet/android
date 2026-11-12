@@ -93,10 +93,6 @@ Overridable MSBuild properties include:
     check when building Mono.Android if set to `True`. The check is performed
     by default.
 
-  * `$(JavaInteropSourceDirectory)`: The Java.Interop source directory to
-    build and reference projects from. By default, this is
-    `external/Java.Interop` directory, maintained by `git submodule update`.
-
   * `$(JavaSdkDirectory)`: The JDK directory.  `$(JavaSdkDirectory)\bin\java`,
     `$(JavaSdkDirectory)\bin\javac`, and `$(JavaSdkDirectory)\bin\jar` must
     exist.

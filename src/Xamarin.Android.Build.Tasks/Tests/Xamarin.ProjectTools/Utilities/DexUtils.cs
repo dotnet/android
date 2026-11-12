@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
@@ -371,7 +372,7 @@ namespace Xamarin.ProjectTools
 		static IReadOnlyList<string> DexDump (string dexFile, string androidSdkDirectory)
 		{
 			var lines = new List<string> ();
-			var linesLock = new object ();
+			var linesLock = new Lock ();
 			var androidSdk = new AndroidSdkInfo ((l, m) => {
 				Console.WriteLine ($"{l}: {m}");
 				if (l == TraceLevel.Error) {
