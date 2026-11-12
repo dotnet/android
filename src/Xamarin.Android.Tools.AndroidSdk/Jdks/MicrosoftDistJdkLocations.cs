@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tools {
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
-		static IEnumerable<string> GetMacOSMicrosoftDistJdkPaths ()
+		IEnumerable<string> GetMacOSMicrosoftDistJdkPaths ()
 		{
 			if (!OS.IsMac) {
 				return Array.Empty<string> ();
@@ -25,7 +25,9 @@ namespace Xamarin.Android.Tools {
 			var jdks    = AppDomain.CurrentDomain.GetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}")
 				?.ToString ();
 			if (jdks == null) {
-				var home    = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
+				var home    = ProcessUtils.GetUnixHome (environmentVariables);
+				if (home is not { Length: > 0 })
+					return Array.Empty<string> ();
 				jdks        = Path.Combine (home, "Library", "Developer", "Xamarin", "jdk");
 			}
 			if (!Directory.Exists (jdks))

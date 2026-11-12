@@ -14,9 +14,12 @@ namespace Xamarin.Android.Tools {
 			return FromPaths (GetXAPrepareJdkPaths (), logger, "android-toolchain");
 		}
 
-		static IEnumerable<string> GetXAPrepareJdkPaths ()
+		IEnumerable<string> GetXAPrepareJdkPaths ()
 		{
-			var androidToolchainDir = Path.Combine (Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "android-toolchain");
+			var home = OS.IsWindows ? Environment.GetFolderPath (Environment.SpecialFolder.UserProfile) : ProcessUtils.GetUnixHome (environmentVariables);
+			if (home is not { Length: > 0 })
+				return Array.Empty<string> ();
+			var androidToolchainDir = Path.Combine (home, "android-toolchain");
 			if (!Directory.Exists (androidToolchainDir)) {
 				return Array.Empty<string> ();
 			}

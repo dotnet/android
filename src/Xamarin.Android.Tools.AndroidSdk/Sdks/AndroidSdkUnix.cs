@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tools
 
 		public override string? PreferedAndroidSdkPath {
 			get {
-				var config_file = GetUnixConfigFile (Logger);
+				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables);
 				var androidEl = config_file.Element ("android-sdk");
 
 				if (androidEl != null) {
@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tools
 
 		public override string? PreferedAndroidNdkPath {
 			get {
-				var config_file = GetUnixConfigFile (Logger);
+				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables);
 				var androidEl = config_file.Element ("android-ndk");
 
 				if (androidEl != null) {
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tools
 
 		public override string? PreferedJavaSdkPath {
 			get {
-				var config_file = GetUnixConfigFile (Logger);
+				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables);
 				var javaEl = config_file.Element ("java-sdk");
 
 				if (javaEl != null) {
@@ -111,12 +111,15 @@ namespace Xamarin.Android.Tools
 			}
 
 			// Check some hardcoded paths for good measure
+			var home = ProcessUtils.GetUnixHome (EnvironmentVariables);
+			if (home is not { Length: > 0 })
+				yield break;
 			// macOS: ~/Library/Android/sdk
-			var macSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Android", "sdk");
+			var macSdkPath = Path.Combine (home, "Library", "Android", "sdk");
 			if (Directory.Exists (macSdkPath))
 				yield return macSdkPath;
 			// Linux: ~/Android/Sdk
-			var linuxSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Android", "Sdk");
+			var linuxSdkPath = Path.Combine (home, "Android", "Sdk");
 			if (Directory.Exists (linuxSdkPath))
 				yield return linuxSdkPath;
 		}
@@ -238,9 +241,11 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static XElement GetUnixConfigFile (Action<TraceLevel, string> logger)
+		internal static XElement GetUnixConfigFile (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
 		{
-			var file = UnixConfigPath;
+			var home = ProcessUtils.GetUnixHome (environmentVariables);
+			var file = environmentVariables == null ? UnixConfigPath :
+				home is { Length: > 0 } ? Path.Combine (home, ".config", "xbuild", "monodroid-config.xml") : null;
 			XDocument? doc = null;
 			if (File.Exists (file)) {
 				try {

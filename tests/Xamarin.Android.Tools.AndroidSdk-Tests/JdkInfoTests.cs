@@ -21,8 +21,8 @@ namespace Xamarin.Android.Tools.Tests
 				CreateFauxJdk (root, "999.123.456", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
 				var messages    = new List<string> ();
 				var environment = new Dictionary<string, string> {
-					[variable] = variable == "PATH" ? Path.Combine (root, "bin") : root,
-					["PATHEXT"] = ".CMD",
+					[OS.IsWindows && variable == "PATH" ? "Path" : variable] = variable == "PATH" ? Path.Combine (root, "bin") : root,
+					[OS.IsWindows ? "PathExt" : "PATHEXT"] = ".CMD",
 					["DISCOVERY_JAVA_VERSION"] = variable,
 				};
 				if (variable != "JI_JAVA_HOME")

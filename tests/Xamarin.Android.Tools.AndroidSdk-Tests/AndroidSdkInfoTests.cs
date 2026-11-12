@@ -105,7 +105,7 @@ namespace Xamarin.Android.Tools.Tests
 				var info    = environmentExtension != null ? AndroidSdkInfo.CreateWithEnvironment (logger, null, ndk, jdk, new Dictionary<string, string> {
 					["ANDROID_HOME"] = Path.Combine (root, "missing"),
 					["ANDROID_SDK_ROOT"] = sdk,
-					["PATHEXT"] = $".{environmentExtension}",
+					[OS.IsWindows ? "PathExt" : "PATHEXT"] = $".{environmentExtension}",
 					["XAMARIN_ANDROID_REGKEY"] = $@"Software\AndroidSdkInfoTests\{Guid.NewGuid ():N}",
 				}) : new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
 
@@ -119,6 +119,55 @@ namespace Xamarin.Android.Tools.Tests
 			}
 			finally {
 				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void UnixDiscoveryUsesSnapshotHome (bool configured)
+		{
+			var configOverride = AppDomain.CurrentDomain.GetData (GetUnixConfigDirOverrideName);
+			for (int i = 0; i < 2; i++) {
+				CreateSdks (out var home, out var jdk, out _, out var sdk);
+				try {
+					var environment = new Dictionary<string, string> {
+						["HOME"] = home,
+						["PATHEXT"] = $".EXE{Path.PathSeparator}.CMD",
+					};
+					if (configured) {
+						var configDirectory = Path.Combine (home, ".config", "xbuild");
+						Directory.CreateDirectory (configDirectory);
+						new XElement ("monodroid",
+							new XElement ("android-sdk", new XAttribute ("path", sdk)),
+							new XElement ("java-sdk", new XAttribute ("path", jdk)))
+							.Save (Path.Combine (configDirectory, "monodroid-config.xml"));
+						JdkInfoTests.CreateFauxJdk (jdk, "999.123.456", "", "999.123.456");
+						if (!OS.IsWindows)
+							Assert.AreEqual (jdk, JdkInfo.GetKnownSystemJdkInfos ((_, _) => { }, environment)
+								.First (candidate => candidate.Locator == "monodroid-config.xml").HomePath);
+					} else {
+						var fallback = Path.Combine (home, "Android", "Sdk");
+						Directory.CreateDirectory (Path.GetDirectoryName (fallback));
+						Directory.Move (sdk, fallback);
+						sdk = fallback;
+					}
+					var discovery = new AndroidSdkUnix ((_, _) => { }, environment);
+					discovery.Initialize (javaSdkPath: configured ? null : jdk);
+					Assert.AreEqual (sdk, discovery.AndroidSdkPath);
+					Assert.AreEqual (jdk, discovery.JavaSdkPath);
+					if (configured) {
+						AppDomain.CurrentDomain.SetData (GetUnixConfigDirOverrideName, Path.Combine (home, ".config", "xbuild"));
+						Assert.IsNotEmpty (AndroidSdkUnix.GetUnixConfigFile ((_, _) => { }).Elements ());
+						environment.Remove ("HOME");
+						Assert.IsEmpty (AndroidSdkUnix.GetUnixConfigFile ((_, _) => { }, environment).Elements ());
+						if (OS.IsWindows)
+							Assert.AreEqual (jdk, JdkInfo.GetKnownSystemJdkInfos ((_, _) => { }, environment)
+								.First (candidate => candidate.Locator == "monodroid-config.xml").HomePath);
+					}
+				} finally {
+					AppDomain.CurrentDomain.SetData (GetUnixConfigDirOverrideName, configOverride);
+					Directory.Delete (home, recursive: true);
+				}
 			}
 		}
 

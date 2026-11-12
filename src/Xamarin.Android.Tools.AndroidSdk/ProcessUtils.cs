@@ -349,8 +349,22 @@ namespace Xamarin.Android.Tools
 		}
 
 		internal static string? GetEnvironmentVariable (string name, IDictionary<string, string>? environmentVariables)
-			=> environmentVariables == null ? Environment.GetEnvironmentVariable (name) :
-				environmentVariables.TryGetValue (name, out var value) ? value : null;
+		{
+			if (environmentVariables == null)
+				return Environment.GetEnvironmentVariable (name);
+			if (environmentVariables.TryGetValue (name, out var value))
+				return value;
+			if (OS.IsWindows)
+				foreach (var pair in environmentVariables)
+					if (string.Equals (pair.Key, name, StringComparison.OrdinalIgnoreCase))
+						return pair.Value;
+			return null;
+		}
+
+		internal static string? GetUnixHome (IDictionary<string, string>? environmentVariables)
+			=> environmentVariables == null
+				? Environment.GetFolderPath (Environment.SpecialFolder.UserProfile)
+				: GetEnvironmentVariable ("HOME", environmentVariables);
 
 		internal static IEnumerable<string> ExecutableFiles (string executable, IDictionary<string, string>? environmentVariables = null)
 		{

@@ -16,9 +16,9 @@ namespace Xamarin.Android.Tools {
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
-		static IEnumerable<string> GetUnixConfiguredJdkPaths (Action<TraceLevel, string> logger)
+		IEnumerable<string> GetUnixConfiguredJdkPaths (Action<TraceLevel, string> logger)
 		{
-			var config = AndroidSdkUnix.GetUnixConfigFile (logger);
+			var config = AndroidSdkUnix.GetUnixConfigFile (logger, OS.IsWindows ? null : environmentVariables);
 
 			foreach (var java_sdk in config.Elements ("java-sdk")) {
 				var path    = (string?) java_sdk.Attribute ("path");
@@ -37,7 +37,10 @@ namespace Xamarin.Android.Tools {
 			}
 
 			// Search ~/Library/Android/*jdk*/ (matches microsoft-21.jdk, jdk-21, etc.)
-			var libraryAndroidRoot = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Android");
+			var home = ProcessUtils.GetUnixHome (environmentVariables);
+			if (home is not { Length: > 0 })
+				return Array.Empty<JdkInfo> ();
+			var libraryAndroidRoot = Path.Combine (home, "Library", "Android");
 			if (!Directory.Exists (libraryAndroidRoot)) {
 				return Array.Empty<JdkInfo> ();
 			}
