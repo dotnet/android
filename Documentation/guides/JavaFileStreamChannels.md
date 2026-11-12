@@ -13,7 +13,6 @@ For two open `AssetFileDescriptor` objects, `inputDescriptor` and
 ```csharp
 using System;
 using Android.Runtime;
-using Java.Interop;
 
 using var input = inputDescriptor.CreateInputStream ();
 using var output = outputDescriptor.CreateOutputStream ();
