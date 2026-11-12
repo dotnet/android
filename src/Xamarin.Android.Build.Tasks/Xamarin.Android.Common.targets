@@ -894,7 +894,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_AndroidLintToolExe Condition=" '$(_AndroidLintToolExe)' == '' ">lint</_AndroidLintToolExe>
 		<_AndroidLintTool>$([System.IO.Path]::Combine('$(LintToolPath)', '$(_AndroidLintToolExe)'))</_AndroidLintTool>
 		<_AndroidLintCommand>&quot;$(_AndroidLintTool)&quot;</_AndroidLintCommand>
-		<_AndroidLintCommand Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">&quot;$([System.Text.RegularExpressions.Regex]::Replace('$(_AndroidLintTool)', '([\\&quot;$\x60])', '\$1'))&quot;</_AndroidLintCommand>
+		<_AndroidLintCommand Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">'$(_AndroidLintTool.Replace(`'`, `'&quot;'&quot;'`))'</_AndroidLintCommand>
 	</PropertyGroup>
 	<AndroidError Condition=" '$(LintToolPath)' == '' or !Exists('$(_AndroidLintTool)') "
 		Code="XA5205" ResourceName="XA5205_Lint" FormatArguments="$(_AndroidLintToolExe)" />
@@ -964,8 +964,8 @@ because xbuild doesn't support framework reference assemblies.
 		<_AndroidLintArgument Include="$([MSBuild]::NormalizePath('$(IntermediateOutputPath)android'))" />
 		<_AndroidLintArgument>
 			<QuotedValue>&quot;%(_AndroidLintArgument.Identity)&quot;</QuotedValue>
-			<!-- Double quotes alone do not prevent Unix shell expansion. -->
-			<QuotedValue Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">&quot;$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidLintArgument.Identity)', '([\\&quot;$\x60])', '\$1'))&quot;</QuotedValue>
+			<!-- Single quotes prevent shell expansion without backslashes that MSBuild normalizes in paths. -->
+			<QuotedValue Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">'$([System.String]::Copy(&quot;%(_AndroidLintArgument.Identity)&quot;).Replace(`'`, `'&quot;'&quot;'`))'</QuotedValue>
 		</_AndroidLintArgument>
 	</ItemGroup>
 	<!-- Commit to the first file/line header rather than searching severity inside its message. -->

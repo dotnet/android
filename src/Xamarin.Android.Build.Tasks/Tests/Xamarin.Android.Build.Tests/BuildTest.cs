@@ -2303,7 +2303,7 @@ public class ToolbarEx {
 				Assert.IsTrue (b.LastBuildOutput.Any (line =>
 					line.Contains (": warning :") && line.Contains ("Warning:") && line.Contains ("Status: Error: retry") &&
 					line.Contains ("[HardcodedText]") &&
-					line.Replace ('\\', '/').Contains ("res/layout/test.xml")),
+					line.Replace ('\\', '/').Replace ("/./", "/").Contains ("res/layout/test.xml")),
 					"The lint warning should preserve the intermediate resource path and issue text.");
 			}
 		}
