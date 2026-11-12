@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
+using AndroidTest1;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
@@ -16,6 +18,7 @@ namespace Microsoft.Android.Run.Tests;
 public class AndroidTestAdapterTests
 {
 	string responsePath = "";
+	string AdbTarget => $"-s {Convert.ToBase64String (Encoding.UTF8.GetBytes (responsePath))}";
 
 	static string FakeAdbPath => Path.Combine (AppContext.BaseDirectory,
 		"Microsoft.Android.Run.Tests" + (OperatingSystem.IsWindows () ? ".exe" : ""));
@@ -23,7 +26,7 @@ public class AndroidTestAdapterTests
 	[SetUp]
 	public void SetUp ()
 	{
-		responsePath = Path.Combine (TestContext.CurrentContext.WorkDirectory, Guid.NewGuid ().ToString ("N") + ".json");
+		responsePath = Path.Combine (TestContext.CurrentContext.WorkDirectory, $"fake adb {Guid.NewGuid ():N}.json");
 		Assert.That (File.Exists (FakeAdbPath), Is.True, $"Fake adb apphost not found: {FakeAdbPath}");
 	}
 
@@ -32,21 +35,28 @@ public class AndroidTestAdapterTests
 	{
 		File.Delete (responsePath);
 		File.Delete (responsePath + ".args");
+		File.Delete (responsePath + ".calls");
+		File.Delete (responsePath + ".uids");
 	}
 
-	void Respond (string output, string error = "", int exitCode = 0)
-		=> File.WriteAllText (responsePath, JsonSerializer.Serialize (new FakeAdb.Response (output, error, exitCode)));
+	void Respond (string output, string error = "", int exitCode = 0, string? filterDirectory = "/storage/emulated/10/Android/data/test.package/files", int pushExitCode = 0)
+		=> File.WriteAllText (responsePath, JsonSerializer.Serialize (new FakeAdb.Response (output, error, exitCode, filterDirectory, pushExitCode)));
 
 	string[] ReadAdbArguments ()
 		=> JsonSerializer.Deserialize<string[]> (File.ReadAllText (responsePath + ".args"))
 			?? throw new InvalidOperationException ("Missing adb arguments.");
+
+	string[][] ReadAdbCalls ()
+		=> File.ReadAllLines (responsePath + ".calls")
+			.Select (line => JsonSerializer.Deserialize<string[]> (line) ?? throw new InvalidOperationException ("Missing adb call."))
+			.ToArray ();
 
 	async Task<(int ExitCode, TestNode[] Nodes)> RunAsync (params string[] args)
 	{
 		var builder = await TestApplication.CreateBuilderAsync ([
 			"--internal-testingplatform-skipbuildercheck", "--no-banner", .. args,
 		]);
-		var adapter = new AndroidTestAdapter (FakeAdbPath, $"-s {responsePath}", "test.package", "test.Runner", false);
+		var adapter = new AndroidTestAdapter (FakeAdbPath, AdbTarget, "test.package", "test.Runner", false);
 		var consumer = new NodeConsumer ();
 		builder.RegisterTestFramework (_ => new AndroidTestCapabilities (), (_, _) => adapter);
 		builder.TestHost.AddDataConsumer (_ => consumer);
@@ -64,7 +74,7 @@ public class AndroidTestAdapterTests
 				"--internal-testingplatform-skipbuildercheck", "--no-banner", .. args,
 			]);
 			builder.RegisterTestFramework (_ => new AndroidTestCapabilities (), (_, _) =>
-				new AndroidTestAdapter (FakeAdbPath, $"-s {responsePath}", "test.package", "test.Runner", false));
+				new AndroidTestAdapter (FakeAdbPath, AdbTarget, "test.package", "test.Runner", false));
 			using var app = await builder.BuildAsync ();
 			return await app.RunAsync ();
 		}, cancellationToken: timeout.Token);
@@ -105,7 +115,7 @@ public class AndroidTestAdapterTests
 		Respond (Status ("discover") + """
 			INSTRUMENTATION_RESULT: discovered=1
 			INSTRUMENTATION_CODE: -1
-			""");
+			""", error: "* daemon started successfully\n");
 
 		var nodes = await DiscoverAsync ();
 		Assert.That (nodes, Has.Length.EqualTo (1));
@@ -119,7 +129,7 @@ public class AndroidTestAdapterTests
 	[Test]
 	public async Task EmptyDiscoverySucceeds ()
 	{
-		Respond ("INSTRUMENTATION_RESULT: discovered=0\nINSTRUMENTATION_CODE: -1\n");
+		Respond ("INSTRUMENTATION_RESULT: discovered=0\nINSTRUMENTATION_CODE: -1\n", error: "* daemon started successfully\n");
 		var nodes = await DiscoverAsync ();
 		Assert.That (nodes, Is.Empty);
 	}
@@ -127,6 +137,7 @@ public class AndroidTestAdapterTests
 	[TestCase ("INSTRUMENTATION_RESULT: discovered=1\nINSTRUMENTATION_CODE: -1\n")]
 	[TestCase ("INSTRUMENTATION_RESULT: passed=1\nINSTRUMENTATION_CODE: -1\n")]
 	[TestCase ("INSTRUMENTATION_RESULT: error=Discovery failed\nINSTRUMENTATION_CODE: 0\n")]
+	[TestCase ("INSTRUMENTATION_RESULT: discovered=0\nINSTRUMENTATION_RESULT: error=Discovery failed\nINSTRUMENTATION_CODE: -1\n")]
 	[TestCase ("INSTRUMENTATION_RESULT: discovered=0\nINSTRUMENTATION_CODE: 0\n")]
 	[TestCase ("INSTRUMENTATION_RESULT: discovered=0\n")]
 	[TestCase ("INSTRUMENTATION_FAILED: Process crashed\n")]
@@ -166,6 +177,66 @@ public class AndroidTestAdapterTests
 	}
 
 	[Test]
+	public async Task LargeSelectionsUseOneInstrumentationRunAndCleanUp ()
+	{
+		var uids = Enumerable.Range (0, 2_000).Select (i => $"Tests.Fixture.TestWithLongName_{i:D5}").ToArray ();
+		Assert.That (InstrumentationProtocol.EncodeTestUids (uids).Length, Is.GreaterThan (32_767));
+		Respond (Status ("finish", uids [0], "passed") + """
+			INSTRUMENTATION_RESULT: passed=1
+			INSTRUMENTATION_RESULT: resultsPath=/device/results.trx
+			INSTRUMENTATION_CODE: -1
+			""", error: "* daemon started successfully\n");
+
+		var (exitCode, nodes) = await RunAsync (["--filter-uid", .. uids]);
+		Assert.That (exitCode, Is.Zero);
+		Assert.That (nodes.Select (node => node.Uid.Value), Is.EqualTo (new [] { uids [0] }));
+		Assert.That (InstrumentationProtocol.DecodeTestUids (File.ReadAllText (responsePath + ".uids")), Is.EqualTo (uids));
+
+		var calls = ReadAdbCalls ();
+		Assert.That (calls, Has.Length.EqualTo (4));
+		Assert.That (calls [0], Does.Contain (InstrumentationProtocol.TestUidsDirectoryRequest));
+		Assert.That (calls [1] [2], Is.EqualTo ("push"));
+		var arguments = ReadAdbArguments ();
+		int filterIndex = Array.IndexOf (arguments, InstrumentationProtocol.ExtraTestUids);
+		Assert.That (filterIndex, Is.GreaterThanOrEqualTo (0));
+		var fileArgument = arguments [filterIndex + 1];
+		Assert.That (fileArgument, Does.StartWith (InstrumentationProtocol.TestUidsFilePrefix));
+		var token = fileArgument.Substring (InstrumentationProtocol.TestUidsFilePrefix.Length);
+		var devicePath = "/storage/emulated/10/Android/data/test.package/files/" + InstrumentationProtocol.GetTestUidsFileName (token);
+		Assert.That (calls [1] [4], Is.EqualTo (devicePath));
+		Assert.That (calls [2], Is.EqualTo (arguments));
+		Assert.That (calls [3] [2..], Is.EqualTo (new [] { "shell", "rm", "-f", $"'{devicePath}'" }));
+		Assert.That (calls.All (call => call.Sum (argument => argument.Length + 3) < 32_767), Is.True);
+		Assert.That (File.Exists (calls [1] [3]), Is.False, "The local filter file must be removed.");
+	}
+
+	[Test]
+	public void FailedFilterPushDoesNotRunTestsAndCleansUp ()
+	{
+		var uids = Enumerable.Range (0, 2_000).Select (i => $"Tests.Fixture.TestWithLongName_{i:D5}").ToArray ();
+		Respond ("", pushExitCode: 1);
+		var error = Assert.ThrowsAsync<InvalidOperationException> (() => RunAsync (["--filter-uid", .. uids]));
+		Assert.That (error?.Message, Does.Contain ("fake adb push failed"));
+		var calls = ReadAdbCalls ();
+		Assert.That (calls, Has.Length.EqualTo (3));
+		Assert.That (calls [1] [2], Is.EqualTo ("push"));
+		Assert.That (calls [2] [2..4], Is.EqualTo (new [] { "shell", "rm" }));
+		Assert.That (File.Exists (calls [1] [3]), Is.False);
+		Assert.That (File.Exists (responsePath + ".args"), Is.False);
+	}
+
+	[Test]
+	public void OlderInstrumentationRejectsLargeSelectionsWithoutRunningTests ()
+	{
+		var uids = Enumerable.Range (0, 2_000).Select (i => $"Tests.Fixture.TestWithLongName_{i:D5}").ToArray ();
+		Respond ("", filterDirectory: null);
+		var error = Assert.ThrowsAsync<InvalidOperationException> (() => RunAsync (["--filter-uid", .. uids]));
+		Assert.That (error?.Message, Does.Contain ("File filters are unsupported"));
+		Assert.That (ReadAdbCalls (), Has.Length.EqualTo (1));
+		Assert.That (File.Exists (responsePath + ".args"), Is.False);
+	}
+
+	[Test]
 	public async Task UnfilteredExecutionKeepsStreamingResults ()
 	{
 		Respond (Status ("start") + Status ("finish", outcome: "failed") + """
@@ -185,6 +256,50 @@ public class AndroidTestAdapterTests
 	{
 		string[] ids = ["Tests.Test(\"with spaces, commas; 'quotes' & <xml>\")", "a\r\nb", "", "unicode-\u00e9"];
 		Assert.That (InstrumentationProtocol.DecodeTestUids (InstrumentationProtocol.EncodeTestUids (ids)), Is.EqualTo (ids));
+	}
+
+	[Test]
+	public void FileFilterArgumentsAreValidatedAndDecoded ()
+	{
+		var token = Guid.NewGuid ().ToString ("N");
+		var file = Path.Combine (TestContext.CurrentContext.WorkDirectory, InstrumentationProtocol.GetTestUidsFileName (token));
+		string[] uids = ["Test(\"a b; 'quoted' & <xml>\")", "unicode-\u00e9"];
+		try {
+			File.WriteAllText (file, InstrumentationProtocol.EncodeTestUids (uids));
+			var encoded = InstrumentationProtocol.ReadTestUidsArgument (InstrumentationProtocol.TestUidsFilePrefix + token, TestContext.CurrentContext.WorkDirectory);
+			Assert.That (InstrumentationProtocol.DecodeTestUids (encoded), Is.EqualTo (uids));
+			Assert.Throws<FormatException> (() => InstrumentationProtocol.ReadTestUidsArgument ("file:../other", TestContext.CurrentContext.WorkDirectory));
+			Assert.Throws<InvalidOperationException> (() => InstrumentationProtocol.ReadTestUidsArgument ("file:" + token, null));
+			File.Delete (file);
+			Assert.Throws<FileNotFoundException> (() => InstrumentationProtocol.ReadTestUidsArgument ("file:" + token, TestContext.CurrentContext.WorkDirectory));
+		} finally {
+			File.Delete (file);
+		}
+	}
+
+	[Test]
+	public void ManagedMethodNamesDistinguishGenericTypesAndMethodArities ()
+	{
+		var methods = typeof (ManagedNameSamples).GetMethods (System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+		var list = methods.Single (method => ManagedTestName.Matches (method, "Overload(System.Collections.Generic.List`1<System.String>)", 0));
+		Assert.That (list.GetParameters () [0].ParameterType, Is.EqualTo (typeof (List<string>)));
+		var nested = methods.Single (method => ManagedTestName.Matches (method,
+			"Overload(Microsoft.Android.Run.Tests.ManagedNameOuter`1+Inner`1<System.String,System.Int32>[,])", 0));
+		Assert.That (nested.GetParameters () [0].ParameterType, Is.EqualTo (typeof (ManagedNameOuter<string>.Inner<int> [,])));
+		var generic = methods.Single (method => ManagedTestName.Matches (method, "Generic(System.Collections.Generic.List`1<!!0>)", 2));
+		Assert.That (generic.GetGenericArguments (), Has.Length.EqualTo (2));
+		Assert.That (methods.Count (method => ManagedTestName.Matches (method, "Generic(System.Collections.Generic.List`1<!!0>)", 1)), Is.EqualTo (1));
+		Assert.That (ManagedTestName.GetTypeName (typeof (ManagedNameOuter<>).GetGenericArguments () [0]), Is.EqualTo ("!0"));
+	}
+
+	[Test]
+	public void ManagedTypeNamesFollowMSTestIdentifierEscaping ()
+	{
+		var assembly = System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly (
+			new System.Reflection.AssemblyName ("ManagedNameSamples"), System.Reflection.Emit.AssemblyBuilderAccess.Run);
+		var type = assembly.DefineDynamicModule ("Samples").DefineType ("Example Namespace.Generic<Placeholder>").CreateType ()
+			?? throw new InvalidOperationException ("Could not create the sample type.");
+		Assert.That (ManagedTestName.GetTypeName (type), Is.EqualTo ("'Example Namespace'.Generic<Placeholder>"));
 	}
 
 	[TestCase ("--server")]
@@ -209,7 +324,7 @@ public class AndroidTestAdapterTests
 		};
 		foreach (var argument in new [] {
 			typeof (AndroidTestAdapter).Assembly.Location,
-			"--adb", FakeAdbPath, "--adb-target", $"-s {responsePath}",
+			"--adb", FakeAdbPath, "--adb-target", AdbTarget,
 			"--package", "test.package", "--instrument", "test.Runner",
 		}.Concat (serverArguments.Split (' ')).Concat (["--client-port", port.ToString (System.Globalization.CultureInfo.InvariantCulture)]))
 			startInfo.ArgumentList.Add (argument);
@@ -248,6 +363,36 @@ public class AndroidTestAdapterTests
 			Assert.That (filterIndex, Is.GreaterThanOrEqualTo (0));
 			Assert.That (InstrumentationProtocol.DecodeTestUids (args [filterIndex + 1]), Is.EqualTo (new [] { selectedUid }));
 
+			var largeSelection = Enumerable.Range (0, 2_000).Select (i => $"Tests.Fixture.TestWithLongName_{i:D5}").ToArray ();
+			Respond (Status ("finish", largeSelection [0], "passed") + """
+				INSTRUMENTATION_RESULT: passed=1
+				INSTRUMENTATION_RESULT: resultsPath=/device/results.trx
+				INSTRUMENTATION_CODE: -1
+				""");
+			nodes.Clear ();
+			await client.RunTestsAsync (largeSelection, timeout.Token);
+			Assert.That (nodes.Select (node => node.Uid), Is.EqualTo (new [] { largeSelection [0] }));
+			Assert.That (InstrumentationProtocol.DecodeTestUids (File.ReadAllText (responsePath + ".uids")), Is.EqualTo (largeSelection));
+			var largeCalls = ReadAdbCalls ().TakeLast (4).ToArray ();
+			Assert.That (largeCalls [0], Does.Contain (InstrumentationProtocol.TestUidsDirectoryRequest));
+			Assert.That (largeCalls [1] [2], Is.EqualTo ("push"));
+			Assert.That (largeCalls [2], Does.Contain (InstrumentationProtocol.ExtraTestUids));
+			Assert.That (largeCalls [3] [2..4], Is.EqualTo (new [] { "shell", "rm" }));
+			Assert.That (largeCalls.All (call => call.Sum (argument => argument.Length + 3) < 32_767), Is.True);
+
+			Respond (Status ("discover", largeSelection [0]) + """
+				INSTRUMENTATION_RESULT: discovered=1
+				INSTRUMENTATION_CODE: -1
+				""");
+			nodes.Clear ();
+			await client.DiscoverTestsAsync (largeSelection, timeout.Token);
+			Assert.That (nodes.Select (node => node.Uid), Is.EqualTo (new [] { largeSelection [0] }));
+			Assert.That (InstrumentationProtocol.DecodeTestUids (File.ReadAllText (responsePath + ".uids")), Is.EqualTo (largeSelection));
+			largeCalls = ReadAdbCalls ().TakeLast (4).ToArray ();
+			Assert.That (largeCalls [0], Does.Contain (InstrumentationProtocol.TestUidsDirectoryRequest));
+			Assert.That (largeCalls [2], Does.Contain (InstrumentationProtocol.ExtraDiscover));
+			Assert.That (largeCalls [3] [2..4], Is.EqualTo (new [] { "shell", "rm" }));
+
 			File.Delete (responsePath + ".args");
 			nodes.Clear ();
 			await client.RunTestsAsync (testNodeUids: [], cancellationToken: timeout.Token);
@@ -282,5 +427,20 @@ public class AndroidTestAdapterTests
 				Nodes.Add (update.TestNode);
 			return Task.CompletedTask;
 		}
+
 	}
+
+	sealed class ManagedNameSamples
+	{
+		public void Overload (List<string> value) { }
+		public void Overload (List<int> value) { }
+		public void Overload (ManagedNameOuter<string>.Inner<int> [,] value) { }
+		public void Generic<T> (List<T> value) { }
+		public void Generic<T, U> (List<T> value) { }
+	}
+}
+
+public class ManagedNameOuter<T>
+{
+	public class Inner<U> { }
 }
