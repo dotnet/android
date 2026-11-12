@@ -7,8 +7,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <!-- Test apps do not need XML documentation. -->
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <ApplicationId>com.companyname.AndroidTest1</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
