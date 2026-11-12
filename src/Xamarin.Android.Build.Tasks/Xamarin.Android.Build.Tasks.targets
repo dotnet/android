@@ -35,16 +35,6 @@
       <Link>Xamarin.Android.Bindings.Core.targets</Link>
     </None>
     <None
-        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Documentation.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Xamarin.Android.Bindings.Documentation.targets</Link>
-    </None>
-    <None
-        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.JarToXml.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Xamarin.Android.Bindings.JarToXml.targets</Link>
-    </None>
-    <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.JavaDependencyVerification.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Bindings.JavaDependencyVerification.targets</Link>
