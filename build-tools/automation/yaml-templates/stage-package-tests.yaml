@@ -4,6 +4,7 @@ parameters:
   macTestAgentsUseCleanImages: 
   usePublicSetupTemplate: false
   use1ESTemplate: true
+  useAgentJdkPath: true
   macPool:
     name: Azure Pipelines
     vmImage: $(HostedMacImageWithEmulator)
@@ -26,11 +27,12 @@ stages:
       - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
         parameters:
           jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-          useAgentJdkPath: true
+          useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
           use1ESTemplate: ${{ parameters.use1ESTemplate }}
     - ${{ else }}:
       - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
         parameters:
+          useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
           use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
@@ -116,11 +118,12 @@ stages:
       - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
         parameters:
           jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-          useAgentJdkPath: true
+          useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
           use1ESTemplate: ${{ parameters.use1ESTemplate }}
     - ${{ else }}:
       - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
         parameters:
+          useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
           use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
