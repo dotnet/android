@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using Microsoft.Android.Build.Tasks;
@@ -198,7 +197,7 @@ namespace Xamarin.Android.Tasks
 
 		bool GetAapt2Version (string aapt2Exe)
 		{
-			var sb = new StringBuilder ();
+			string versionInfo;
 			ArgumentNullException.ThrowIfNull (Aapt2ToolPath);
 			var aapt2Tool = new FileInfo (TaskEnvironment.GetAbsolutePath (Path.Combine (Aapt2ToolPath, aapt2Exe))).FullName;
 
@@ -214,18 +213,21 @@ namespace Xamarin.Android.Tasks
 			}
 
 			try {
-				DataReceivedEventHandler appendOutput = (s, e) => {
-					if (!e.Data.IsNullOrEmpty ()) {
-						lock (sb)
-							sb.AppendLine (e.Data);
-					}
-				};
-				MonoAndroidHelper.RunProcess (TaskEnvironment, aapt2Tool, "version", appendOutput, appendOutput);
+				var startInfo = TaskEnvironment.GetProcessStartInfo ();
+				startInfo.FileName = aapt2Tool;
+				startInfo.ArgumentList.Add ("version");
+				startInfo.UseShellExecute = false;
+				startInfo.RedirectStandardOutput = true;
+				startInfo.RedirectStandardError = true;
+				startInfo.CreateNoWindow = true;
+				var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (30));
+				if (result.ExitStatus.Canceled)
+					throw new TimeoutException ($"Timed out running '{aapt2Tool} version'.");
+				versionInfo = result.StandardOutput + Environment.NewLine + result.StandardError;
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
 				return false;
 			}
-			var versionInfo = sb.ToString ();
 			var versionNumberMatch = Aapt2VersionRegex.Match (versionInfo);
 			Log.LogDebugMessage ($"`{aapt2Tool} version` returned: ```{versionInfo}```");
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out var versionNumber)) {

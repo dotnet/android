@@ -10,7 +10,6 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using Xamarin.Android.Tools;
 using Mono.Cecil;
 
@@ -49,155 +48,26 @@ namespace Xamarin.Android.Tasks
 			return res;
 		}
 
-		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
-		{
-			var sb = new StringBuilder ();
-
-			sb.AppendLine ();
-			AppendLines ("stdout", stdout, sb);
-			sb.AppendLine ();
-			AppendLines ("stderr", stderr, sb);
-			sb.AppendLine ();
-
-			return sb;
-
-			void AppendLines (string prefix, List<string> lines, StringBuilder sb)
-			{
-				if (lines == null || lines.Count == 0) {
-					return;
-				}
-
-				foreach (string line in lines) {
-					sb.AppendLine ($"{prefix} | {line}");
-				}
-			}
-		}
-
-		public static int RunProcess (string command, string arguments, TaskLoggingHelper log, DataReceivedEventHandler? onOutput = null, DataReceivedEventHandler? onError = null, CancellationToken? cancellationToken = null, Action? cancelTask = null, bool logWarningOnFailure = true)
-		{
-			return RunProcess ("Running process", command, arguments, log, onOutput, onError, cancellationToken, cancelTask, logWarningOnFailure);
-		}
-
-		public static int RunProcess (string logLabel, string command, string arguments, TaskLoggingHelper log, DataReceivedEventHandler? onOutput = null, DataReceivedEventHandler? onError = null,
-			CancellationToken? cancellationToken = null, Action? cancelTask = null, bool logWarningOnFailure = true)
-		{
-			var psi = new ProcessStartInfo () {
-				FileName = command,
-				Arguments = arguments,
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
-
-			var stdoutLines = new List<string> ();
-			var stderrLines = new List<string> ();
-
-			log.LogDebugMessage ($"{logLabel}: {psi.FileName} {psi.Arguments}");
-			using var proc = new Process ();
-			proc.OutputDataReceived += (s, e) => {
-				if (e.Data != null) {
-					onOutput?.Invoke (s, e);
-					stdoutLines.Add (e.Data);
-				}
-			};
-
-			proc.ErrorDataReceived += (s, e) => {
-				if (e.Data != null) {
-					onError?.Invoke (s, e);
-					stderrLines.Add (e.Data);
-				}
-			};
-
-			proc.StartInfo = psi;
-			proc.Start ();
-			proc.BeginOutputReadLine ();
-			proc.BeginErrorReadLine ();
-			using (cancellationToken.GetValueOrDefault ().Register (() => {
-				try {
-					proc.Kill ();
-				} catch (InvalidOperationException) {
-					// The process can exit before cancellation reaches it.
-				} catch (System.ComponentModel.Win32Exception ex) {
-					log.LogDebugMessage ($"{logLabel}: could not kill process: {ex.Message}");
-				}
-			})) {
-				// The parameterless overload also waits for both asynchronous readers and their callbacks.
-				proc.WaitForExit ();
-			}
-
-			log.LogDebugMessage ($"{logLabel}: exit code == {proc.ExitCode}");
-			if (proc.ExitCode != 0) {
-				if (logWarningOnFailure) {
-					var sb = MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
-					log.LogCodedError ("XA0142", Properties.Resources.XA0142, $"{psi.FileName} {psi.Arguments}", sb.ToString ());
-				}
-				cancelTask?.Invoke ();
-			}
-
-			return proc.ExitCode;
-		}
-
-		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
-		{
-			return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError, environmentVariables);
-		}
-
-		public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
-		{
-			if (taskEnvironment == null)
-				throw new ArgumentNullException (nameof (taskEnvironment));
-
-			var psi = taskEnvironment.GetProcessStartInfo ();
-			psi.FileName = name;
-			psi.Arguments = args;
-			psi.UseShellExecute = false;
-			psi.RedirectStandardOutput = true;
-			psi.RedirectStandardError = true;
-			psi.CreateNoWindow = true;
-			psi.WindowStyle = ProcessWindowStyle.Hidden;
-			if (environmentVariables != null) {
-				foreach (var pair in environmentVariables) {
-					psi.EnvironmentVariables [pair.Key] = pair.Value;
-				}
-			}
-			Process p = new Process ();
-			p.StartInfo = psi;
-
-			p.OutputDataReceived += onOutput;
-			p.ErrorDataReceived += onError;
-			p.Start ();
-			p.BeginErrorReadLine ();
-			p.BeginOutputReadLine ();
-			p.WaitForExit ();
-			try {
-				return p.ExitCode;
-			} finally {
-				p.Close ();
-			}
-		}
-
 		static string GetOSBinDirName ()
 		{
 			if (OS.IsWindows)
 				return "";
-			string os = null;
-			DataReceivedEventHandler output = (o, e) => {
-				if (string.IsNullOrWhiteSpace (e.Data))
-					return;
-				os = e.Data.Trim ();
-			};
-			DataReceivedEventHandler error = (o, e) => {};
-
 			string uname = "/usr/bin/uname";
 			if (!File.Exists (uname)) {
 				uname = "uname";
 			}
 
-			int r = RunProcess (uname, "-s", output, error);
-			if (r == 0)
-				return os;
+			var result = Process.RunAndCaptureText (new ProcessStartInfo (uname) {
+				ArgumentList = { "-s" },
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
+			}, TimeSpan.FromSeconds (30));
+			if (result.ExitStatus.Canceled)
+				throw new TimeoutException ($"Timed out running '{uname} -s'.");
+			if (result.ExitStatus.ExitCode == 0)
+				return result.StandardOutput.Trim ();
 			return null;
 		}
 

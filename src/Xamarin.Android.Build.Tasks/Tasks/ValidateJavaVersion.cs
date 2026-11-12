@@ -1,7 +1,7 @@
 #nullable enable
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
@@ -122,19 +122,17 @@ namespace Xamarin.Android.Tasks
 				return cached;
 			}
 
-			var sb = new StringBuilder ();
-			MonoAndroidHelper.RunProcess (TaskEnvironment, javaTool, "-version", (s, e) => {
-				if (!e.Data.IsNullOrEmpty ()) {
-					lock (sb)
-						sb.AppendLine (e.Data);
-				}
-			}, (s, e) => {
-				if (!e.Data.IsNullOrEmpty ()) {
-					lock (sb)
-						sb.AppendLine (e.Data);
-				}
-			});
-			var versionInfo = sb.ToString ();
+			var startInfo = TaskEnvironment.GetProcessStartInfo ();
+			startInfo.FileName = javaTool;
+			startInfo.ArgumentList.Add ("-version");
+			startInfo.UseShellExecute = false;
+			startInfo.RedirectStandardOutput = true;
+			startInfo.RedirectStandardError = true;
+			startInfo.CreateNoWindow = true;
+			var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (30));
+			if (result.ExitStatus.Canceled)
+				throw new TimeoutException ($"Timed out running '{javaTool} -version'.");
+			var versionInfo = result.StandardOutput + Environment.NewLine + result.StandardError;
 			var versionNumberMatch = versionRegex.Match (versionInfo);
 			Version? versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {

@@ -3,8 +3,10 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
+using System.Text;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
@@ -131,24 +133,56 @@ public class CollectNativeFilesForArchive : AndroidTask
 		Directory.CreateDirectory (outputDir);
 
 		string outputFilePath = Path.Combine (outputDir, Path.GetFileName (archiveFileName));
-		var args = new List<string> {
-			"-o",
-			MonoAndroidHelper.QuoteFileNameArgument (outputFilePath),
-			MonoAndroidHelper.QuoteFileNameArgument (filesystemPath),
+		var startInfo = new ProcessStartInfo (StripToolPath) {
+			ArgumentList = { "-o", outputFilePath, filesystemPath },
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			CreateNoWindow = true,
 		};
+		string command = $"{StripToolPath} -o {MonoAndroidHelper.QuoteFileNameArgument (outputFilePath)} {MonoAndroidHelper.QuoteFileNameArgument (filesystemPath)}";
 
 		Log.LogDebugMessage ($"Stripping native library: '{filesystemPath}' to '{outputFilePath}'");
+		Log.LogDebugMessage ($"llvm-strip: {command}");
+		using var process = new Process { StartInfo = startInfo };
+		var diagnostics = new StringBuilder ();
 		bool success = false;
+		bool started = false;
 		try {
-			if (MonoAndroidHelper.RunProcess ("llvm-strip", StripToolPath, String.Join (" ", args), Log) != 0) {
-				return null; // RunProcess logged XA0142; never package an unstripped fallback.
+			process.Start ();
+			started = true;
+			var elapsed = Stopwatch.StartNew ();
+			foreach (var line in process.ReadAllLines (TimeSpan.FromSeconds (30)))
+				diagnostics.AppendLine ($"{(line.StandardError ? "stderr" : "stdout")} | {line.Content}");
+			var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
+			if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status))
+				throw new TimeoutException ($"Timed out running '{command}'.");
+			Log.LogDebugMessage ($"llvm-strip: exit code == {status.ExitCode}");
+			if (status.ExitCode != 0) {
+				Log.LogCodedError ("XA0142", Properties.Resources.XA0142, command, diagnostics.ToString ());
+				return null;
 			}
 			strippedLibraries.Add (new TaskItem (outputFilePath));
 			success = true;
 			return outputFilePath;
+		} catch (TimeoutException ex) {
+			diagnostics.AppendLine (ex.Message);
+			Log.LogCodedError ("XA0142", Properties.Resources.XA0142, command, diagnostics.ToString ());
+			return null;
 		} finally {
-			if (!success) {
-				File.Delete (outputFilePath);
+			try {
+				if (started && !process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process can exit between HasExited and Kill.
+					}
+					if (!process.SafeHandle.TryWaitForExit (TimeSpan.FromSeconds (5), out _))
+						throw new TimeoutException ($"Native strip process did not exit after being killed: {command}");
+				}
+			} finally {
+				if (!success)
+					File.Delete (outputFilePath);
 			}
 		}
 	}

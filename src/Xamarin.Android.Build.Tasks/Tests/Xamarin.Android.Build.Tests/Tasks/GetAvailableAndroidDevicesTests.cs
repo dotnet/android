@@ -3,6 +3,8 @@ using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -21,6 +23,128 @@ namespace Xamarin.Android.Build.Tests
 		public void Setup ()
 		{
 			engine = new MockBuildEngine (TestContext.Out, errors = [], warnings = [], messages = []);
+		}
+
+		class DiscoveryTask : GetAvailableAndroidDevices
+		{
+			public List<string> ListEmulators () => GetAvailableEmulators ();
+			public string? GetAvdName (string serial) => GetEmulatorAvdName (serial);
+		}
+
+		[Test]
+		public void EmulatorListingDrainsBothStreamsAndPreservesNonzeroOutput ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			try {
+				string executable = Path.Combine (directory, IsWindows ? "emulator.cmd" : "emulator");
+				File.WriteAllText (executable, IsWindows ? """
+					@echo off
+					if not "%~1"=="-list-avds" exit /b 42
+					echo   Pixel_9
+					echo.
+					for /L %%i in (1,1,10000) do @echo diagnostic noise 1>&2
+					<nul set /p "=Pixel_No_Newline"
+					exit /b 7
+					""" : """
+					#!/bin/sh
+					[ "$#" = 1 ] && [ "$1" = -list-avds ] || exit 42
+					printf '  Pixel_9  \n\n'
+					i=0
+					while [ "$i" -lt 10000 ]; do echo 'diagnostic noise' >&2; i=$((i + 1)); done
+					printf Pixel_No_Newline
+					exit 7
+					""");
+				if (!OperatingSystem.IsWindows ())
+					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				var task = new DiscoveryTask {
+					BuildEngine = engine,
+					EmulatorToolPath = directory,
+					EmulatorToolExe = Path.GetFileName (executable),
+				};
+				CollectionAssert.AreEqual (new [] { "Pixel_9", "Pixel_No_Newline" }, task.ListEmulators ());
+				Assert.IsEmpty (errors);
+				Assert.IsEmpty (warnings);
+				Assert.IsTrue (messages.Any (m => m.Message.Contains ("exit code == 7")));
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[Test]
+		public void AvdNameQueryPassesSerialAsOneArgument ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			try {
+				string executable = Path.Combine (directory, IsWindows ? "adb.cmd" : "adb");
+				File.WriteAllText (executable, IsWindows ? """
+					@echo off
+					if not "%~1"=="-s" exit /b 42
+					if not "%~2"=="emulator with spaces" exit /b 42
+					if not "%~3"=="emu" exit /b 42
+					if not "%~4"=="avd" exit /b 42
+					if not "%~5"=="name" exit /b 42
+					echo diagnostic 1>&2
+					echo.
+					echo Pixel_9
+					echo OK
+					""" : """
+					#!/bin/sh
+					[ "$#" = 5 ] && [ "$1" = -s ] && [ "$2" = 'emulator with spaces' ] &&
+					    [ "$3" = emu ] && [ "$4" = avd ] && [ "$5" = name ] || exit 42
+					echo diagnostic >&2
+					printf '\nPixel_9\nOK\n'
+					""");
+				if (!OperatingSystem.IsWindows ())
+					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				var task = new DiscoveryTask {
+					BuildEngine = engine,
+					ToolPath = directory,
+					ToolExe = Path.GetFileName (executable),
+				};
+				Assert.AreEqual ("Pixel_9", task.GetAvdName ("emulator with spaces"));
+				Assert.IsEmpty (errors);
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[Test]
+		[Platform (Exclude = "Win")]
+		public void EmulatorListingBoundsInheritedOutputPipe ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			try {
+				string executable = Path.Combine (directory, "emulator");
+				File.WriteAllText (executable, """
+					#!/bin/sh
+					echo Pixel_9
+					sleep 60 &
+					echo $! > "$0.pid"
+					""");
+				if (!OperatingSystem.IsWindows ())
+					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				var task = new DiscoveryTask {
+					BuildEngine = engine,
+					EmulatorToolPath = directory,
+					EmulatorToolExe = "emulator",
+				};
+				var elapsed = Stopwatch.StartNew ();
+				CollectionAssert.AreEqual (new [] { "Pixel_9" }, task.ListEmulators ());
+				Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (35), "A descendant retaining output must not turn the finite probe into an unlimited wait.");
+				Assert.IsTrue (messages.Any (m => m.Message.Contains ("Failed to run 'emulator -list-avds'")));
+			} finally {
+				string pidFile = Path.Combine (directory, "emulator.pid");
+				if (File.Exists (pidFile)) {
+					if (Process.TryGetProcessById (int.Parse (File.ReadAllText (pidFile)), out var descendant)) {
+						using (descendant)
+							descendant.SafeHandle.Kill ();
+					}
+				}
+				Directory.Delete (directory, recursive: true);
+			}
 		}
 
 		/// <summary>

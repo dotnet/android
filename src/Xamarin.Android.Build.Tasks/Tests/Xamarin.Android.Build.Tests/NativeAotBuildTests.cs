@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,8 @@ using System.Xml.Linq;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -435,6 +438,62 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (builder.Clean (proj), "Clean should remove intermediate stripped libraries.");
 			FileAssert.DoesNotExist (strippedLibrary);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void FailedNativeStripReportsBothStreamsAndRemovesPartialOutput (bool timeout)
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			try {
+				string executable = Path.Combine (directory, IsWindows ? "llvm-strip.cmd" : "llvm-strip");
+				File.WriteAllText (executable, IsWindows ? $"""
+					@echo off
+					if not "%~1"=="-o" exit /b 42
+					echo partial > "%~2"
+					echo strip stdout
+					echo strip stderr 1>&2
+					{(timeout ? "ping -n 61 127.0.0.1 >nul" : "exit /b 7")}
+					""" : $"""
+					#!/bin/sh
+					[ "$#" = 3 ] && [ "$1" = -o ] || exit 42
+					echo partial > "$2"
+					echo strip stdout
+					echo strip stderr >&2
+					{(timeout ? "sleep 60" : "exit 7")}
+					""");
+				if (!OperatingSystem.IsWindows ())
+					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				string library = Path.Combine (directory, "lib invalid.so");
+				File.WriteAllBytes (library, [1, 2, 3, 4]);
+				var item = new TaskItem (library);
+				item.SetMetadata ("Abi", "arm64-v8a");
+				var errors = new System.Collections.Generic.List<BuildErrorEventArgs> ();
+				var task = new CollectNativeFilesForArchive {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+					ApkOutputPath = Path.Combine (directory, "test.apk"),
+					IntermediateOutputPath = directory,
+					StripNativeLibraries = true,
+					StripToolPath = executable,
+					SupportedAbis = ["arm64-v8a"],
+					NativeLibraries = [item],
+				};
+				var elapsed = Stopwatch.StartNew ();
+				Assert.IsFalse (task.RunTask ());
+				var error = errors.Single (e => e.Code == "XA0142");
+				StringAssert.Contains ("strip stdout", error.Message);
+				StringAssert.Contains ("strip stderr", error.Message);
+				if (timeout) {
+					StringAssert.Contains ("timed out", error.Message.ToLowerInvariant ());
+					Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (35), "Native strip timeout must include bounded process cleanup.");
+				}
+				Assert.IsEmpty (task.FilesToAddToArchive);
+				Assert.IsEmpty (task.StrippedLibraries);
+				FileAssert.DoesNotExist (Path.Combine (directory, "android-arm64", "stripped", "lib invalid.so"));
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
 		}
 
 		[Test]

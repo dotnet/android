@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text.RegularExpressions;
@@ -369,16 +370,20 @@ namespace Xamarin.Android.Tasks
 
 		Version GetLintVersion (string tool, Dictionary<string, string> environmentVariables)
 		{
-			var sb = new StringBuilder ();
-			var result = MonoAndroidHelper.RunProcess (tool, "--version", (s, e) => {
-				if (!e.Data.IsNullOrEmpty ())
-					sb.AppendLine (e.Data);
-			}, (s, e) => {
-				if (!e.Data.IsNullOrEmpty ())
-					sb.AppendLine (e.Data);
-			}, environmentVariables);
-			var versionInfo = sb.ToString ();
-			if (result != 0 || versionInfo.Contains ("unknown")) {
+			var startInfo = new ProcessStartInfo (tool) {
+				ArgumentList = { "--version" },
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
+			};
+			foreach (var pair in environmentVariables)
+				startInfo.Environment [pair.Key] = pair.Value;
+			var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (30));
+			if (result.ExitStatus.Canceled)
+				throw new TimeoutException ($"Timed out running '{tool} --version'.");
+			var versionInfo = result.StandardOutput + Environment.NewLine + result.StandardError;
+			if (result.ExitStatus.ExitCode != 0 || versionInfo.Contains ("unknown")) {
 				// lets try to parse the lint-xx-x-x-dev.jar filename to get the version
 				var libPath = Path.Combine (Path.GetDirectoryName (tool) ?? throw new ArgumentException ("Lint tool path must have a directory.", nameof (tool)), "..", "lib");
 				if (Directory.Exists (libPath)) {

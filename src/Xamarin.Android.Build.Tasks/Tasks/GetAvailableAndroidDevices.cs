@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -160,22 +161,41 @@ public class GetAvailableAndroidDevices : AndroidToolTask
         }
 
         try {
-            var exitCode = MonoAndroidHelper.RunProcess (
-                emulatorPath,
-                "-list-avds",
-                Log,
-                onOutput: (sender, e) => {
-                    if (!e.Data.IsNullOrWhiteSpace ()) {
-                        var avdName = e.Data.Trim ();
+            Log.LogDebugMessage ($"Running process: {emulatorPath} -list-avds");
+            var startInfo = new ProcessStartInfo (emulatorPath) {
+                ArgumentList = { "-list-avds" },
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+            using var process = new Process { StartInfo = startInfo };
+            process.Start ();
+            var elapsed = Stopwatch.StartNew ();
+            try {
+                foreach (var line in process.ReadAllLines (TimeSpan.FromSeconds (30))) {
+                    if (!line.StandardError && !line.Content.IsNullOrWhiteSpace ()) {
+                        var avdName = line.Content.Trim ();
                         emulators.Add (avdName);
                         Log.LogDebugMessage ($"Found available emulator: {avdName}");
                     }
-                },
-                logWarningOnFailure: false
-            );
-
-            if (exitCode != 0) {
-                Log.LogDebugMessage ($"'emulator -list-avds' returned exit code: {exitCode}");
+                }
+                var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
+                if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status))
+                    throw new TimeoutException ($"Timed out running '{emulatorPath} -list-avds'.");
+                Log.LogDebugMessage ($"Running process: exit code == {status.ExitCode}");
+                if (status.ExitCode != 0)
+                    Log.LogDebugMessage ($"'emulator -list-avds' returned exit code: {status.ExitCode}");
+            } finally {
+                if (!process.HasExited) {
+                    try {
+                        process.Kill (entireProcessTree: true);
+                    } catch (InvalidOperationException) when (process.HasExited) {
+                        // The process can exit between HasExited and Kill.
+                    }
+                    if (!process.SafeHandle.TryWaitForExit (TimeSpan.FromSeconds (5), out _))
+                        throw new TimeoutException ($"Emulator listing process did not exit after being killed: {emulatorPath}");
+                }
             }
         } catch (Exception ex) {
             Log.LogDebugMessage ($"Failed to run 'emulator -list-avds': {ex.Message}");
@@ -192,22 +212,23 @@ public class GetAvailableAndroidDevices : AndroidToolTask
     {
         try {
             var adbPath = Path.Combine (ToolPath, ToolExe);
-            var outputLines = new List<string> ();
-
-            var exitCode = MonoAndroidHelper.RunProcess (
-                adbPath,
-                $"-s {serial} emu avd name",
-                Log,
-                onOutput: (sender, e) => {
-                    if (!e.Data.IsNullOrEmpty ()) {
-                        outputLines.Add (e.Data);
-                    }
-                },
-                logWarningOnFailure: false
-            );
-
-            if (exitCode == 0 && outputLines.Count > 0) {
-                var avdName = outputLines [0].Trim ();
+            Log.LogDebugMessage ($"Running process: {adbPath} -s {serial} emu avd name");
+            var result = Process.RunAndCaptureText (new ProcessStartInfo (adbPath) {
+                ArgumentList = { "-s", serial, "emu", "avd", "name" },
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            }, TimeSpan.FromSeconds (30));
+            if (result.ExitStatus.Canceled)
+                throw new TimeoutException ($"Timed out retrieving the AVD name for '{serial}'.");
+            Log.LogDebugMessage ($"Running process: exit code == {result.ExitStatus.ExitCode}");
+            using var reader = new StringReader (result.StandardOutput);
+            string? line;
+            while ((line = reader.ReadLine ()) != null && line.Length == 0) {
+            }
+            if (result.ExitStatus.ExitCode == 0 && line != null) {
+                var avdName = line.Trim ();
                 // Verify it's not the "OK" response
                 if (!avdName.IsNullOrEmpty () && !avdName.Equals ("OK", StringComparison.OrdinalIgnoreCase)) {
                     Log.LogDebugMessage ($"Emulator {serial} has AVD name: {avdName}");

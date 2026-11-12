@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -88,15 +89,21 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
 			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
-			var arguments = $"-genkeypair -v -storetype pkcs12 -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
-			var stderr = new List<string> ();
-			int exitCode = MonoAndroidHelper.RunProcess (
-				keytoolPath, arguments,
-				onOutput: (s, e) => { },
-				onError: (s, e) => { if (e.Data != null) stderr.Add (e.Data); }
-			);
-			if (exitCode != 0) {
-				throw new InvalidOperationException ($"keytool failed with exit code {exitCode}: {string.Join (Environment.NewLine, stderr)}");
+			var result = Process.RunAndCaptureText (new ProcessStartInfo (keytoolPath) {
+				ArgumentList = {
+					"-genkeypair", "-v", "-storetype", "pkcs12", "-keystore", keystorePath,
+					"-alias", keyAlias, "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000",
+					"-storepass", storePass, "-keypass", keyPass, "-dname", "CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US",
+				},
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
+			}, TimeSpan.FromSeconds (30));
+			if (result.ExitStatus.Canceled)
+				throw new TimeoutException ("Timed out generating the test keystore.");
+			if (result.ExitStatus.ExitCode != 0) {
+				throw new InvalidOperationException ($"keytool failed with exit code {result.ExitStatus.ExitCode}: {result.StandardError}");
 			}
 		}
 	}
