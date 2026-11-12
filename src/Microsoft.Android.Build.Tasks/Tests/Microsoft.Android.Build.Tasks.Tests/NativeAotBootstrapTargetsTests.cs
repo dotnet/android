@@ -315,6 +315,30 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			new [] { "TargetName=App", "Provider=NativeAotRuntimeProvider_1", "Provider=NativeAotRuntimeProvider_9" },
 			File.ReadAllLines (Path.Combine (path, "nativeaot-bootstrap.inputs")));
 		FileAssert.Exists (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_9.java"), "An added provider must be generated on an incremental build.");
+
+		var numberedProviderNames = new [] {
+			"net.dot.jni.nativeaot.NativeAotRuntimeProvider_1",
+			"net.dot.jni.nativeaot.NativeAotRuntimeProvider_9",
+			"net.dot.jni.nativeaot.NativeAotRuntimeProvider_12",
+		};
+		manifest.Descendants ("provider")
+			.Where (provider => provider.Attribute (android + "name") is XAttribute name && numberedProviderNames.Contains (name.Value))
+			.Remove ();
+		manifest.Save (manifestFile);
+		var noNumberedProviders = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, noNumberedProviders.ExitCode, noNumberedProviders.Output + noNumberedProviders.Error);
+		CollectionAssert.AreEqual (
+			new [] { "TargetName=App" },
+			File.ReadAllLines (Path.Combine (path, "nativeaot-bootstrap.inputs")));
+		CollectionAssert.IsEmpty (Directory.GetFiles (sourceDirectory, "NativeAotRuntimeProvider_*.java"),
+			"All numbered providers must be cleaned up when the manifest no longer declares any.");
+		FileAssert.Exists (sourceFile);
+		DateTime singleProcessTimestamp = File.GetLastWriteTimeUtc (sourceFile);
+
+		var noNumberedProvidersAgain = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, noNumberedProvidersAgain.ExitCode, noNumberedProvidersAgain.Output + noNumberedProvidersAgain.Error);
+		Assert.AreEqual (singleProcessTimestamp, File.GetLastWriteTimeUtc (sourceFile), "A no-op build without numbered providers must skip the source generator.");
+		CollectionAssert.IsEmpty (Directory.GetFiles (sourceDirectory, "NativeAotRuntimeProvider_*.java"));
 	}
 
 	[Test]
