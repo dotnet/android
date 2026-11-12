@@ -66,16 +66,33 @@ This file contains MSBuild targets that support building and operating on Androi
 
   <Target Name="_AndroidPrepareGradleProjects"
       Condition=" '@(AndroidGradleProject->Count())' != '0' ">
+    <!--
+      Exec runs the command through /bin/sh on Unix and cmd.exe on Windows, so every argument is
+      shell-quoted: single quotes (with ' escaped as '\'') on Unix, double quotes (with % escaped as %%)
+      on Windows. The opening quote is added with Insert() so MSBuild does not treat the result as a
+      Unix path and rewrite the backslash in '\'' to a slash.
+    -->
     <PropertyGroup>
       <_AndroidGradleToolName>gradlew</_AndroidGradleToolName>
       <_AndroidGradleToolName Condition=" $([MSBuild]::IsOSPlatform('windows')) ">gradlew.bat</_AndroidGradleToolName>
+      <_AndroidGradleShellQuote>'</_AndroidGradleShellQuote>
+      <_AndroidGradleShellEscapeFrom>'</_AndroidGradleShellEscapeFrom>
+      <_AndroidGradleShellEscapeTo>'\''</_AndroidGradleShellEscapeTo>
+      <_AndroidGradleShellQuote Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">&quot;</_AndroidGradleShellQuote>
+      <_AndroidGradleShellEscapeFrom Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25</_AndroidGradleShellEscapeFrom>
+      <_AndroidGradleShellEscapeTo Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25%25</_AndroidGradleShellEscapeTo>
+      <_AndroidGradleQuotedInitScriptPath>$([System.String]::Copy('$(_AGPInitScriptPath)').Replace('$(_AndroidGradleShellEscapeFrom)', '$(_AndroidGradleShellEscapeTo)').Insert(0, '$(_AndroidGradleShellQuote)'))$(_AndroidGradleShellQuote)</_AndroidGradleQuotedInitScriptPath>
     </PropertyGroup>
+    <!-- OutputPath has a trailing separator; the final dot prevents it from escaping the closing quote on Windows. -->
     <ItemGroup>
-      <_AndroidGradleEnvironment Include="ANDROID_HOME=$(AndroidSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(AndroidSdkDirectory)')) " />
-      <_AndroidGradleEnvironment Include="JAVA_HOME=$(JavaSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(JavaSdkDirectory)')) " />
       <AndroidGradleProject>
-        <_AndroidGradleWrapperCommand>&quot;%(RootDir)%(Directory)$(_AndroidGradleToolName)&quot;</_AndroidGradleWrapperCommand>
+        <_AndroidGradleWrapperPath>%(RootDir)%(Directory)$(_AndroidGradleToolName)</_AndroidGradleWrapperPath>
+        <_AndroidGradleBuildDirOverride>-PnetAndroidBuildDirOverride=%(OutputPath).</_AndroidGradleBuildDirOverride>
         <_AndroidGradleModule Condition=" '%(ModuleName)' != '' ">%(ModuleName):</_AndroidGradleModule>
+      </AndroidGradleProject>
+      <AndroidGradleProject>
+        <_AndroidGradleWrapperCommand>$([System.String]::Copy('%(_AndroidGradleWrapperPath)').Replace('$(_AndroidGradleShellEscapeFrom)', '$(_AndroidGradleShellEscapeTo)').Insert(0, '$(_AndroidGradleShellQuote)'))$(_AndroidGradleShellQuote)</_AndroidGradleWrapperCommand>
+        <_AndroidGradleInitScriptArguments Condition=" Exists('$(_AGPInitScriptPath)') ">$([System.String]::Copy('%(_AndroidGradleBuildDirOverride)').Replace('$(_AndroidGradleShellEscapeFrom)', '$(_AndroidGradleShellEscapeTo)').Insert(0, '$(_AndroidGradleShellQuote)'))$(_AndroidGradleShellQuote) --init-script $(_AndroidGradleQuotedInitScriptPath)</_AndroidGradleInitScriptArguments>
       </AndroidGradleProject>
     </ItemGroup>
   </Target>
@@ -103,17 +120,18 @@ This file contains MSBuild targets that support building and operating on Androi
         ResourceName="XAGRDL1000"
         FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
     />
-    <!-- OutputPath has a trailing separator; the final dot prevents it from escaping the closing quote on Windows. -->
+    <!-- AndroidPrepareForBuild resolves the SDK/JDK; a preceding Clean may have run _AndroidPrepareGradleProjects before it. -->
     <ItemGroup>
+      <_AndroidGradleAssembleEnvironment Include="ANDROID_HOME=$(AndroidSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(AndroidSdkDirectory)')) " />
+      <_AndroidGradleAssembleEnvironment Include="JAVA_HOME=$(JavaSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(JavaSdkDirectory)')) " />
       <AndroidGradleProject>
-        <_AndroidGradleAssembleArguments Condition=" Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleAssembleArguments>
-        <_AndroidGradleAssembleCommand>%(_AndroidGradleWrapperCommand) &quot;%(_AndroidGradleModule)assemble%(Configuration)&quot; %(_AndroidGradleAssembleArguments) --no-daemon</_AndroidGradleAssembleCommand>
+        <_AndroidGradleAssembleCommand>%(AndroidGradleProject._AndroidGradleWrapperCommand) &quot;%(AndroidGradleProject._AndroidGradleModule)assemble%(AndroidGradleProject.Configuration)&quot; %(AndroidGradleProject._AndroidGradleInitScriptArguments) --no-daemon</_AndroidGradleAssembleCommand>
       </AndroidGradleProject>
     </ItemGroup>
     <Exec
         Command="%(AndroidGradleProject._AndroidGradleAssembleCommand)"
         WorkingDirectory="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
-        EnvironmentVariables="@(_AndroidGradleEnvironment)"
+        EnvironmentVariables="@(_AndroidGradleAssembleEnvironment)"
         StandardOutputImportance="Low"
     />
 
@@ -151,15 +169,16 @@ This file contains MSBuild targets that support building and operating on Androi
         FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
     />
     <ItemGroup>
+      <_AndroidGradleCleanEnvironment Include="ANDROID_HOME=$(AndroidSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(AndroidSdkDirectory)')) " />
+      <_AndroidGradleCleanEnvironment Include="JAVA_HOME=$(JavaSdkDirectory)" Condition=" $([System.IO.Directory]::Exists('$(JavaSdkDirectory)')) " />
       <AndroidGradleProject>
-        <_AndroidGradleCleanArguments Condition=" Exists('$(_AGPInitScriptPath)') ">-P&quot;netAndroidBuildDirOverride=%(OutputPath).&quot; --init-script &quot;$(_AGPInitScriptPath)&quot;</_AndroidGradleCleanArguments>
-        <_AndroidGradleCleanCommand>%(_AndroidGradleWrapperCommand) &quot;%(_AndroidGradleModule)clean&quot; %(_AndroidGradleCleanArguments) --no-daemon</_AndroidGradleCleanCommand>
+        <_AndroidGradleCleanCommand>%(AndroidGradleProject._AndroidGradleWrapperCommand) &quot;%(AndroidGradleProject._AndroidGradleModule)clean&quot; %(AndroidGradleProject._AndroidGradleInitScriptArguments) --no-daemon</_AndroidGradleCleanCommand>
       </AndroidGradleProject>
     </ItemGroup>
     <Exec
         Command="%(AndroidGradleProject._AndroidGradleCleanCommand)"
         WorkingDirectory="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
-        EnvironmentVariables="@(_AndroidGradleEnvironment)"
+        EnvironmentVariables="@(_AndroidGradleCleanEnvironment)"
         StandardOutputImportance="Low"
     />
   </Target>

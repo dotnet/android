@@ -22,6 +22,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 |-----------|---------|---------|
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
+| **Gradle targets command quoting/environment** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~AndroidGradleTargetsTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
 | **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
 | **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
