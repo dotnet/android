@@ -827,11 +827,19 @@ namespace Microsoft.Android.Tasks
 			} finally {
 				reading.Cancel ();
 				execution.Cancel ();
+				await WaitForCommandCompletionAsync (capture, exit, reading.Token).ConfigureAwait (false);
+			}
+		}
+
+		static async Task WaitForCommandCompletionAsync (Task capture, Task exit, CancellationToken readingToken)
+		{
+			try {
 				try {
 					await capture.ConfigureAwait (false);
-				} catch (OperationCanceledException) when (reading.IsCancellationRequested) {
+				} catch (OperationCanceledException) when (readingToken.IsCancellationRequested) {
 					// Stop client reads without terminating a persistent ADB server.
 				}
+			} finally {
 				await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
 			}
 		}

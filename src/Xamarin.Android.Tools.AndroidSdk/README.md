@@ -43,6 +43,9 @@ per-device protocols at `AdbRunner`. Root exit is distinct from output EOF:
 `AdbRunner`, FastDeploy and the instrumentation CLI's `AdbHelper` bound
 post-exit capture to 30 seconds and terminate only their owned
 client on cancellation, never a shared server or persistent emulator.
+Cleanup still observes the owned client's exit when output capture fails, with
+a five-second termination bound; successful cleanup preserves the original
+capture exception.
 `EmulatorRunner.LaunchEmulator` still returns a caller-owned persistent process;
 the caller retains responsibility for terminating it.
 

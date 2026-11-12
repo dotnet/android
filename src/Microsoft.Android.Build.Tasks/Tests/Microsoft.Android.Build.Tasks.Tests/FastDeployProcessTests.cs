@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
@@ -10,10 +11,28 @@ using NUnit.Framework;
 namespace Xamarin.Android.Build.Tests;
 
 [TestFixture]
-[Platform ("Linux,MacOsX")]
 public class FastDeployProcessTests
 {
 	[Test]
+	public void CleanupObservesExitWhenCaptureFaults ()
+	{
+		var fault = new IOException ("Injected output capture failure.");
+		var exit = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+		var method = typeof (FastDeploy).GetMethod ("WaitForCommandCompletionAsync", BindingFlags.Static | BindingFlags.NonPublic);
+		Assert.IsNotNull (method);
+		var cleanup = method.Invoke (null, new object [] { Task.FromException (fault), exit.Task, CancellationToken.None }) as Task ??
+			throw new InvalidOperationException ("Expected asynchronous command cleanup.");
+		try {
+			Assert.IsFalse (cleanup.IsCompleted, "Capture failure must not bypass the owned exit wait.");
+		} finally {
+			exit.SetResult (true);
+		}
+		var error = Assert.ThrowsAsync<IOException> (async () => await cleanup.WaitAsync (TimeSpan.FromSeconds (5)));
+		Assert.AreSame (fault, error, "Successful exit cleanup must preserve the original capture failure.");
+	}
+
+	[Test]
+	[Platform ("Linux,MacOsX")]
 	public void BoundsPostExitDrainWithoutKillingServer ()
 	{
 		using var tool = new OwnedAdb ("""
@@ -34,6 +53,7 @@ public class FastDeployProcessTests
 
 	[TestCase (0)]
 	[TestCase (7)]
+	[Platform ("Linux,MacOsX")]
 	public async Task PreservesOutputAndCompletedStatus (int exitCode)
 	{
 		using var tool = new OwnedAdb ($$"""

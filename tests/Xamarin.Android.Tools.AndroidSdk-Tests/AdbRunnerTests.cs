@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -1357,6 +1358,25 @@ public class AdbRunnerTests
 			File.Delete (adbPath + ".server");
 			CleanupFakeAdb (adbPath);
 		}
+	}
+
+	[TestCase (typeof (AdbRunner))]
+	[TestCase (typeof (AdbHelper))]
+	public void CommandCleanup_ObservesExitWhenCaptureFaults (Type commandOwner)
+	{
+		var fault = new IOException ("Injected output capture failure.");
+		var exit = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+		var method = commandOwner.GetMethod ("WaitForCommandCompletionAsync", BindingFlags.Static | BindingFlags.NonPublic);
+		Assert.IsNotNull (method);
+		var cleanup = method.Invoke (null, new object [] { Task.FromException (fault), exit.Task, CancellationToken.None }) as Task ??
+			throw new InvalidOperationException ("Expected asynchronous command cleanup.");
+		try {
+			Assert.IsFalse (cleanup.IsCompleted, "Capture failure must not bypass the owned exit wait.");
+		} finally {
+			exit.SetResult (true);
+		}
+		var error = Assert.ThrowsAsync<IOException> (async () => await cleanup.WaitAsync (TimeSpan.FromSeconds (5)));
+		Assert.AreSame (fault, error, "Successful exit cleanup must preserve the original capture failure.");
 	}
 
 	[Test]
