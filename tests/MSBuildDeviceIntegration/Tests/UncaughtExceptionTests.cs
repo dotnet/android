@@ -32,7 +32,13 @@ namespace Xamarin.Android.Build.Tests
 			app.SetRuntime (runtime);
 			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			app.SetDefaultTargetDevice ();
+			app.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "logging.env") {
+				TextContent = () => "debug.dotnet.log=timing\ndebug.dotnet.max_grefc=1234",
+			});
 			app.MainActivity = app.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				#pragma warning disable CS0618
+				using var timing = new Android.Runtime.TimingLogger ("FatalExceptionTiming");
+				#pragma warning restore CS0618
 				throw new InvalidOperationException ("FatalManagedExceptionTerminatesProcess");
 				""");
 
@@ -73,6 +79,10 @@ namespace Xamarin.Android.Build.Tests
 				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
 			var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
 			Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
+			StringAssert.IsMatch (@"\bW\s+dotnet-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
+				"Native GC diagnostics should retain their warning level under the dotnet-gc tag.");
+			StringAssert.IsMatch (@"\bI\s+dotnet-timing\s*:\s+FatalExceptionTiming", logOutput,
+				"Managed timing diagnostics should use the dotnet-timing tag when timing is enabled.");
 			Assert.IsFalse (logOutput.Contains (
 				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
 				"The uncaught exception handler should not call a missing native method.");

@@ -12,7 +12,7 @@ import android.os.Build;
 import android.util.Log;
 
 public final class NativeLibraryHelper {
-	static final String TAG = "monodroid";
+	static final String TAG = "dotnet";
 
 	private NativeLibraryHelper ()
 	{

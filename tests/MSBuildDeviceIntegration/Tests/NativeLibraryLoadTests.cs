@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
@@ -720,7 +721,9 @@ public class NativeLibraryLoadTests : DeviceTest
 		string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "native-library-load.log");
 		bool foundDiagnostic = MonitorAdbLogcat (
 			line => {
-				expectedMessages.RemoveWhere (message => line.Contains (message, StringComparison.Ordinal));
+				if (Regex.IsMatch (line, @"\bE\s+dotnet\s*:")) {
+					expectedMessages.RemoveWhere (message => line.Contains (message, StringComparison.Ordinal));
+				}
 				return expectedMessages.Count == 0;
 			},
 			logcatPath,

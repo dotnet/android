@@ -18,7 +18,7 @@ namespace Android.App {
 		{
 			if (looper == null) {
 				var message = $"No Android message loop is available. Skipping invocation of `{d.Method.DeclaringType?.FullName}.{d.Method.Name}`!";
-				Logger.Log (LogLevel.Error, "monodroid-synccontext", message);
+				Logger.Log (LogLevel.Error, "dotnet-synccontext", message);
 				return false;
 			}
 

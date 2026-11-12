@@ -195,7 +195,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 						// SAFETY: the value manager borrows this live reference throughout the cast check and retains both class references until finally.
 						string? instanceName = unsafe(JNIEnv.GetClassNameFromInstance (reference.Handle));
 						var message = $"Handle 0x{reference.Handle:x} is of type '{instanceName}' which is not assignable to '{targetSig.SimpleReference}'";
-						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+						Logger.Log (LogLevel.Debug, "dotnet-assembly", message);
 					}
 
 					if (RuntimeFeature.IsAssignableFromCheck) {
