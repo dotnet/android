@@ -34,8 +34,6 @@ This item group populates the Build Action drop-down in IDEs.
     <AvailableItemName Include="AndroidGradleProject" />
     <AvailableItemName Include="TransformFile" />
     <AvailableItemName Include="LibraryProjectProperties" />
-    <AvailableItemName Include="JavaDocIndex" />
-    <AvailableItemName Include="JavaDocJar" />
     <AvailableItemName Include="JavaSourceJar" />
   </ItemGroup>
 
