@@ -46,6 +46,8 @@ namespace Xamarin.Android.Build.Tests
 		[DataRow ("21.0", true, "", true)]
 		[DataRow ("21.0.8", true, "", false)]
 		[DataRow ("21.0.8", true, "", true)]
+		[DataRow ("21.0.13.0.2", true, "", false, "21.0.13.0")]
+		[DataRow ("21.0.13.0.2", true, "", true, "21.0.13.0")]
 		[DataRow ("25.0.1", true, "", false)]
 		[DataRow ("25.0.1", true, "", true)]
 		[DataRow ("25.0.99", true, "", false)]
@@ -54,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 		[DataRow ("25.0.100", false, "XA0030", true)]
 		[DataRow ("26.0.0", false, "XA0030", false)]
 		[DataRow ("26.0.0", false, "XA0030", true)]
-		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, bool useJavaExeVersion)
+		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, bool useJavaExeVersion, string expectedVersion = null)
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), version, out string javaExe, out string javacExe);
 			if (useJavaExeVersion)
@@ -70,8 +72,9 @@ namespace Xamarin.Android.Build.Tests
 			};
 			Assert.AreEqual (succeeds, validateJavaVersion.Execute ());
 			Assert.AreEqual ("21.0", validateJavaVersion.MinimumRequiredJdkVersion);
-			Assert.AreEqual (version, validateJavaVersion.JdkVersion);
+			Assert.AreEqual (expectedVersion ?? version, validateJavaVersion.JdkVersion);
 			Assert.AreEqual (!useJavaExeVersion, messages.Any (m => m.Message.Contains ("contains JAVA_VERSION")));
+			Assert.IsEmpty (warnings);
 			Assert.AreEqual (succeeds ? 0 : 1, errors.Count);
 			if (!succeeds)
 				Assert.AreEqual (errorCode, errors [0].Code);

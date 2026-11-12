@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -137,9 +138,9 @@ namespace Xamarin.Android.Tasks
 			var versionInfo = sb.ToString ();
 			var versionNumberMatch = versionRegex.Match (versionInfo);
 			Version? versionNumber;
-			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
+			if (versionNumberMatch.Success && TryParseJavaVersion (versionNumberMatch.Groups ["version"].Value, out versionNumber)) {
 				BuildEngine4.RegisterTaskObject (key, versionNumber, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);
-				JdkVersion = versionNumberMatch.Groups ["version"].Value;
+				JdkVersion = versionNumber.ToString ();
 				return versionNumber;
 			} else {
 				Log.LogCodedWarning ("XA0033", Properties.Resources.XA0033, javaExe, versionInfo);
@@ -172,7 +173,8 @@ namespace Xamarin.Android.Tasks
 					if (index != -1) {
 						versionString = versionString.Substring (0, index);
 					}
-					if (Version.TryParse (versionString, out version)) {
+					if (TryParseJavaVersion (versionString, out var parsed)) {
+						version = parsed;
 						Log.LogDebugMessage ($"{path} contains JAVA_VERSION.");
 						return true;
 					}
@@ -182,6 +184,15 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"{path} did not contain a valid JAVA_VERSION.");
 			version = new ();
 			return false;
+		}
+
+		// Ignore parts 5+ (e.g. 21.0.13.0.2), as JdkInfo does.
+		static bool TryParseJavaVersion (string value, [NotNullWhen (true)] out Version? version)
+		{
+			var parts = value.Split ('.');
+			if (parts.Length > 4)
+				value = string.Join (".", parts, 0, 4);
+			return Version.TryParse (value, out version);
 		}
 	}
 }
