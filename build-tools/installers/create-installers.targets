@@ -41,8 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)android-support-multidex.jar" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)HtmlAgilityPack.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)HtmlAgilityPack.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Irony.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.pdb" />
@@ -50,11 +48,14 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)LayoutBinding.cs" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MonoRuntimeProvider.Bundled.java" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NativeAotRuntimeProvider.java" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net.android.init.gradle.kts" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
@@ -140,7 +141,6 @@
   <ItemGroup>
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)INIFileParser.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.pdb" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)%(Identity)\Xamarin.Android.Build.Debugging.Tasks.resources.dll')" />

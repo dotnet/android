@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -63,7 +64,7 @@ namespace Xamarin.Android.Build.Tests
 			return m.ToArray ();
 		}
 
-		static readonly object keystoreLock = new object ();
+		static readonly Lock keystoreLock = new Lock ();
 		static byte [] cachedKeystore;
 
 		public static byte [] GetKeystore ()

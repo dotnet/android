@@ -29,7 +29,7 @@ namespace Microsoft.Android.Runtime;
 /// </remarks>
 static class JavaMarshalGCBridge
 {
-	static readonly object initializeLock = new ();
+	static readonly Lock initializeLock = new ();
 	static bool initialized;
 	static int bridgeProcessingGeneration;
 	static readonly Lazy<JavaMarshalGCBridgeJni> jni = new (CreateJni);

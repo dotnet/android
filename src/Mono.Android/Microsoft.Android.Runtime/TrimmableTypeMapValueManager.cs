@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
@@ -409,6 +410,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	[Register ("net/dot/jni/internal/TrimmableJavaProxyObject")]
 	private sealed class TrimmableJavaProxyObject : Java.Lang.Object
 	{
+		static readonly Lock CachedValuesLock = new ();
 		static readonly ConditionalWeakTable<object, TrimmableJavaProxyObject> CachedValues = new ();
 
 		private TrimmableJavaProxyObject (object value) => Value = value;
@@ -423,7 +425,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		{
 			ArgumentNullException.ThrowIfNull (value);
 
-			lock (CachedValues) {
+			lock (CachedValuesLock) {
 				return CachedValues.GetOrAdd (value, static (value) => new TrimmableJavaProxyObject (value));
 			}
 		}

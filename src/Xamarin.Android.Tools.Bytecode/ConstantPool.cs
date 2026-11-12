@@ -13,8 +13,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public ConstantPool (Stream stream)
 		{
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+			ArgumentNullException.ThrowIfNull (stream);
 
 			// indexes are one-based;
 			// "The constant_pool table is indexed from 1 to constant_pool_count-1."
@@ -63,10 +62,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public ConstantPoolItem (ConstantPool constantPool, Stream stream)
 		{
-			if (constantPool == null)
-				throw new ArgumentNullException ("constantPool");
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+			ArgumentNullException.ThrowIfNull (constantPool);
+			ArgumentNullException.ThrowIfNull (stream);
 
 			ConstantPool    = constantPool;
 		}
@@ -245,15 +242,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public ConstantPoolFloatItem (ConstantPool constantPool, Stream stream)
 			: base (constantPool, stream)
 		{
-			var data = new byte[]{
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-			};
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse (data);
-			value   = BitConverter.ToSingle (data, 0);
+			value   = BitConverter.UInt32BitsToSingle (stream.ReadNetworkUInt32 ());
 		}
 
 		public override ConstantPoolItemType Type {
@@ -306,19 +295,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public ConstantPoolDoubleItem (ConstantPool constantPool, Stream stream)
 			: base (constantPool, stream)
 		{
-			var data = new byte[]{
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-				stream.ReadNetworkByte (),
-			};
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse (data);
-			value   = BitConverter.ToDouble (data, 0);
+			value   = BitConverter.Int64BitsToDouble (stream.ReadNetworkInt64 ());
 		}
 
 		public override ConstantPoolItemType Type {

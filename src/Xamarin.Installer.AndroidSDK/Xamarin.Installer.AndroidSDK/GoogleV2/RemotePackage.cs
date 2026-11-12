@@ -142,7 +142,7 @@ namespace Xamarin.Installer.AndroidSDK.GoogleV2
 				throw new ArgumentNullException (nameof (metadata));
 
 			bool haveChanges = false;
-			if (String.Compare (metadata.ChannelID, ChannelID, StringComparison.Ordinal) != 0) {
+			if (!string.Equals (metadata.ChannelID, ChannelID, StringComparison.Ordinal)) {
 				if (update) {
 					ChannelID = metadata.ChannelID;
 					haveChanges = true;
@@ -150,7 +150,7 @@ namespace Xamarin.Installer.AndroidSDK.GoogleV2
 					return true;
 			}
 
-			if (String.Compare (metadata.LicenseID, LicenseID, StringComparison.Ordinal) != 0) {
+			if (!string.Equals (metadata.LicenseID, LicenseID, StringComparison.Ordinal)) {
 				if (update) {
 					LicenseID = metadata.LicenseID;
 					haveChanges = true;
@@ -207,7 +207,7 @@ namespace Xamarin.Installer.AndroidSDK.GoogleV2
 
 		bool BasicMetadataEquals (RemotePackage other)
 		{
-			if (String.Compare (ChannelID, other.ChannelID, StringComparison.Ordinal) != 0)
+			if (!string.Equals (ChannelID, other.ChannelID, StringComparison.Ordinal))
 				return false;
 
 			return true;

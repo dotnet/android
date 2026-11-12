@@ -112,12 +112,12 @@ namespace MonoDroid.Generation
 						// that are known to be property. AbstractSelectionKey.IsValid is an example.
 						unmatched.Add (m);
 					else {
-						if (prop_hash.ContainsKey (prop_name)) {
+						if (prop_hash.TryGetValue (prop_name, out var existing)) {
 							if (m.Name.StartsWith ("Get", StringComparison.Ordinal))
 								unmatched.Add (m);
 							else {
-								unmatched.Add (prop_hash [prop_name].Getter);
-								prop_hash [prop_name].Getter = m;
+								unmatched.Add (existing.Getter);
+								existing.Getter = m;
 							}
 						} else {
 							var prop = new Property (prop_name) {
@@ -141,9 +141,8 @@ namespace MonoDroid.Generation
 
 				if (Ancestors ().All (a => !a.prop_hash.ContainsKey (m.PropertyName)) && Ancestors ().Any (a => a.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches (m, mm) && ParameterList.Equals (mm.Parameters, m.Parameters))))
 					unmatched.Add (m); // base setter exists, and it was not a property.
-				else if (prop_hash.ContainsKey (m.PropertyName)) {
+				else if (prop_hash.TryGetValue (m.PropertyName, out var prop)) {
 					Property baseProp = BaseGen?.Properties.FirstOrDefault (p => p.Name == m.PropertyName);
-					var prop = prop_hash [m.PropertyName];
 					if (prop.Getter.RetVal.FullName == m.Parameters [0].Type &&
 							prop.Getter.IsAbstract == m.IsAbstract && // SearchIterator abstract getIndex() and non-abstract setIndex()
 							prop.Getter.Visibility == m.Visibility &&
@@ -152,8 +151,7 @@ namespace MonoDroid.Generation
 						prop.Setter = m;
 					else
 						unmatched.Add (m);
-				} else if (prop_hash.ContainsKey ("Is" + m.PropertyName)) {
-					var prop = prop_hash ["Is" + m.PropertyName];
+				} else if (prop_hash.TryGetValue ("Is" + m.PropertyName, out prop)) {
 					if (prop.Getter.RetVal.FullName == m.Parameters [0].Type &&
 							prop.Getter.Visibility == m.Visibility &&
 							CanMethodBeIsStyleSetter (m) &&
@@ -166,8 +164,8 @@ namespace MonoDroid.Generation
 						unmatched.Add (m);
 				} else
 					unmatched.Add (m);
-				if (m.GenerateDispatchingSetter && prop_hash.ContainsKey (m.PropertyName))
-					prop_hash [m.PropertyName].GenerateDispatchingSetter = true;
+				if (m.GenerateDispatchingSetter && prop_hash.TryGetValue (m.PropertyName, out var dispatchingProp))
+					dispatchingProp.GenerateDispatchingSetter = true;
 			}
 			Methods = unmatched;
 		}
@@ -226,8 +224,7 @@ namespace MonoDroid.Generation
 			// not "abstract member not implemented" (it is *implemented* in different visibility and brings confusion).
 			// For virtual methods, just check the visibility difference and treat as different method.
 			// Regardless of whether it is actually an override or not, we just invoke Java method.
-			if (jni_sig_hash.ContainsKey (method.JavaName + method.JniSignature)) {
-				var bm = jni_sig_hash [method.JavaName + method.JniSignature];
+			if (jni_sig_hash.TryGetValue (method.JavaName + method.JniSignature, out var bm)) {
 				if (bm.Visibility == method.Visibility || bm.IsAbstract)
 					return true;
 			}
@@ -647,8 +644,8 @@ namespace MonoDroid.Generation
 
 		public Property GetPropertyByName (string name, bool check_ifaces, bool check_base_ifaces)
 		{
-			if (prop_hash.ContainsKey (name))
-				return prop_hash [name];
+			if (prop_hash.TryGetValue (name, out var prop))
+				return prop;
 
 			if (check_ifaces) {
 				foreach (ISymbol isym in Interfaces) {

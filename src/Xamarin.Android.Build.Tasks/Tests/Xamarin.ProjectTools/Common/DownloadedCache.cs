@@ -6,13 +6,14 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Threading;
 using NUnit.Framework;
 
 namespace Xamarin.ProjectTools
 {
 	public class DownloadedCache
 	{
-		static readonly ConcurrentDictionary<string, object> locks = new ConcurrentDictionary<string, object> ();
+		static readonly ConcurrentDictionary<string, Lock> locks = new ConcurrentDictionary<string, Lock> ();
 		static readonly HttpClient httpClient = new HttpClient ();
 
 		public DownloadedCache ()
@@ -34,7 +35,7 @@ namespace Xamarin.ProjectTools
 			Directory.CreateDirectory (CacheDirectory);
 
 			filename = Path.Combine (CacheDirectory, string.IsNullOrEmpty (filename) ? Path.GetFileName (new Uri (url).LocalPath) : filename);
-			lock (locks.GetOrAdd (filename, _ => new object ())) {
+			lock (locks.GetOrAdd (filename, _ => new Lock ())) {
 				if (File.Exists (filename))
 					return filename;
 				// FIXME: should be clever enough to resolve name conflicts.

@@ -102,7 +102,7 @@ public class MavenDownload : AsyncTask
 		result.SetMetadata ("JavaArtifact", artifact.VersionedArtifactString);
 
 		// Allow user to opt out of dependency verification
-		if (string.Compare (item.GetMetadataOrDefault ("VerifyDependencies", "true"), "false", true) == 0)
+		if (string.Equals (item.GetMetadataOrDefault ("VerifyDependencies", "true"), "false", StringComparison.CurrentCultureIgnoreCase))
 			return result;
 
 		// Resolve and download POM, and any parent or imported POMs

@@ -368,13 +368,13 @@ namespace Xamarin.Android.Tasks
 			return bool.TryParse (hasReference, out bool value) && value;
 		}
 
-		public static bool HasMonoAndroidReference (ITaskItem assembly)
+		public static bool HasMonoAndroidReference (ITaskItem assembly, TaskEnvironment taskEnvironment)
 		{
 			// Check item metadata and return early
 			if (IsMonoAndroidAssembly (assembly))
 				return true;
 
-			using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
+			using var pe = new PEReader (File.OpenRead (taskEnvironment.GetAbsolutePath (assembly.ItemSpec)));
 			if (!pe.HasMetadata) {
 				return false; // not a .NET assembly (no CLI metadata)
 			}
@@ -491,17 +491,7 @@ namespace Xamarin.Android.Tasks
 		public static Dictionary<string, string> LoadMapFile (IBuildEngine4 engine, string mapFile, StringComparer comparer)
 		{
 			var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (mapFile, RegisteredTaskObjectLifetime.Build);
-			if (cachedMap != null)
-				return cachedMap;
-			var acw_map = new Dictionary<string, string> (comparer);
-			if (!File.Exists (mapFile))
-				return acw_map;
-			foreach (var s in File.ReadLines (mapFile)) {
-				var items = s.Split (new char[] { ';' }, count: 2);
-				if (!acw_map.ContainsKey (items [0]))
-					acw_map.Add (items [0], items [1]);
-			}
-			return acw_map;
+			return cachedMap ?? LoadMapFile (File.Exists (mapFile) ? File.ReadLines (mapFile) : [], comparer);
 		}
 
 		public static Dictionary<string, HashSet<string>> LoadCustomViewMapFile (IBuildEngine4 engine, string mapFile)

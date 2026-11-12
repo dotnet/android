@@ -18,8 +18,6 @@ using System.Threading.Tasks;
 using Xamarin.Installer.AndroidSDK.Common;
 using System.Threading;
 using System.Linq;
-using Polly;
-using Polly.Retry;
 
 #if !WINDOWS
 using Mono.Unix.Native;
@@ -402,14 +400,30 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			config.SaveProperties ();
 		}
 
+		const int NetworkCheckRetryCount = 3;
+		static readonly TimeSpan NetworkCheckRetryDelay = TimeSpan.FromSeconds (1);
+
 		public async Task<bool> CheckIfNetworkIsAvailableAsync ()
 		{
-			var policyResult  = await ResiliencyPolicies.AsyncRetryIfTimeout (3)
-				.ExecuteAndCaptureAsync (() => CheckIfNetworkAvailable ());
-			if (policyResult.Outcome == OutcomeType.Successful)
-				return policyResult.Result;
+			try {
+				return await RetryIfTimeoutAsync (CheckIfNetworkAvailable, NetworkCheckRetryCount, NetworkCheckRetryDelay);
+			} catch (TimeoutException) {
+				return false;
+			} catch (TaskCanceledException) {
+				return false;
+			}
+		}
 
-			return false;
+		static async Task<T> RetryIfTimeoutAsync<T> (Func<Task<T>> action, int retryCount, TimeSpan retryDelay)
+		{
+			for (int attempt = 0; ; attempt++) {
+				try {
+					return await action ().ConfigureAwait (false);
+				} catch (Exception exception) when (attempt < retryCount && (exception is TimeoutException || exception is TaskCanceledException)) {
+					Logger.Warning ($"[Resiliency.Polly.Policies]: Delegate has thrown {exception}, retrying...");
+				}
+				await Task.Delay (retryDelay).ConfigureAwait (false);
+			}
 		}
 
 		private Uri GetUrlToCheckIfNetworkAvailable()
@@ -452,22 +466,6 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 			} catch (Exception ex) {
 				Logger.Warning ($"An exception occurred while checking network availability.\n{ex}");
 				return false;
-			}
-		}
-
-		public static class ResiliencyPolicies
-		{
-			public static AsyncRetryPolicy AsyncRetryIfTimeout (int numberOfRetries, Action actionToPerformOnRetry = null)
-			{
-				return Policy
-					.Handle<TimeoutException> ()
-					.Or<TaskCanceledException>()
-					.WaitAndRetryAsync (numberOfRetries,
-						(x) => TimeSpan.FromSeconds (1),
-							(exception, timespan) => {
-								Logger.Warning ($"[Resiliency.Polly.Policies]: Delegate has thrown {exception}, retrying...");
-								actionToPerformOnRetry?.Invoke ();
-							});
 			}
 		}
 	}

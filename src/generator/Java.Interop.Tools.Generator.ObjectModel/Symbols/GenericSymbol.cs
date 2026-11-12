@@ -77,10 +77,7 @@ namespace MonoDroid.Generation {
 			foreach (var tp in type_params) {
 				if (sb.Length > 1)
 					sb.Append (", ");
-				if (mappings.ContainsKey (tp.FullName))
-					sb.Append (mappings[tp.FullName]);
-				else
-					sb.Append (tp.FullName);
+				sb.Append (mappings.TryGetValue (tp.FullName, out var mapped) ? mapped : tp.FullName);
 			}
 			sb.Append (">");
 			return sb.ToString ();

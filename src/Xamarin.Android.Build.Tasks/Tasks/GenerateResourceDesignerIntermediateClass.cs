@@ -55,7 +55,7 @@ type %MODIFIER% Resource = %BASECLASS%
 		{
 			string baseClass = IsApplication ? ResourceDesignerConstants : ResourceDesigner;
 			var extension = Path.GetExtension (OutputFile.ItemSpec);
-			var language = string.Compare (extension, ".fs", StringComparison.OrdinalIgnoreCase) == 0 ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
+			var language = string.Equals (extension, ".fs", StringComparison.OrdinalIgnoreCase) ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
 			//bool isVB = string.Equals (extension, ".vb", StringComparison.OrdinalIgnoreCase);
 			bool isFSharp = string.Equals (language, "F#", StringComparison.OrdinalIgnoreCase);
 			bool isCSharp = string.Equals (language, "C#", StringComparison.OrdinalIgnoreCase);

@@ -221,7 +221,7 @@ public class AssemblyStoreExplorer
 		assemblyName = EnsureCorrectAssemblyName (assemblyName);
 		var items = new List<AssemblyStoreItem> ();
 		foreach (AssemblyStoreItem item in Assemblies) {
-			if (String.CompareOrdinal (assemblyName, item.Name) != 0) {
+			if (!string.Equals (assemblyName, item.Name, StringComparison.Ordinal)) {
 				continue;
 			}
 
