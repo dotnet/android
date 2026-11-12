@@ -330,7 +330,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CRM` - `CreateResgenManifest`
 * `CRN` - `Crunch`
 * `CRP` - `AndroidComputeResPaths`
-* `CTD` - `CreateTemporaryDirectory`
 * `CTX` - `CompileToDalvik`
 * `DES` - `Desugar`
 * `DJL` - `DetermineJavaLibrariesToCompile`

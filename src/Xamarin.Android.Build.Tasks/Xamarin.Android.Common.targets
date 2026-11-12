@@ -58,7 +58,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1143,9 +1142,9 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(_AndroidResgenFlagFile)">
 
   <!-- Create a temporary directory to work in -->
-  <CreateTemporaryDirectory>
-    <Output TaskParameter="TemporaryDirectory" PropertyName="ResgenTemporaryDirectory" />
-  </CreateTemporaryDirectory>
+  <MakeDir Directories="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
+    <Output TaskParameter="DirectoriesCreated" PropertyName="ResgenTemporaryDirectory" />
+  </MakeDir>
 
   <!-- Create a dummy manifest file for aapt to work with -->
   <CreateResgenManifest
@@ -1650,9 +1649,9 @@ because xbuild doesn't support framework reference assemblies.
   -->
 
   <!-- Create a temporary directory to work in, or else R.java will always get updated -->
-  <CreateTemporaryDirectory>
-    <Output TaskParameter="TemporaryDirectory" PropertyName="AaptTemporaryDirectory" />
-  </CreateTemporaryDirectory>
+  <MakeDir Directories="$([System.IO.Path]::Combine ($([System.IO.Path]::GetTempPath ()), $([System.IO.Path]::GetRandomFileName ())))">
+    <Output TaskParameter="DirectoriesCreated" PropertyName="AaptTemporaryDirectory" />
+  </MakeDir>
 
   <GetExtraPackages
       IntermediateOutputPath="$(IntermediateOutputPath)"
