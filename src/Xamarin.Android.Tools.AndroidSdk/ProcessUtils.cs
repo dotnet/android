@@ -72,12 +72,13 @@ namespace Xamarin.Android.Tools
 				//
 				// We wrap `stdout` and `stderr` in syncronized wrappers for safety in case they
 				// end up writing to the same buffer, or they are the same object.
+				// Redirected streams without a writer must still be drained so the process cannot block.
 				using (cancellationToken.Register (() => KillProcess (process))) {
 					if (psi.RedirectStandardOutput)
-						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout!));
+						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout ?? TextWriter.Null));
 
 					if (psi.RedirectStandardError)
-						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr!));
+						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr ?? TextWriter.Null));
 
 					await Task.WhenAll (new [] { output, error, exit }).ConfigureAwait (false);
 				}

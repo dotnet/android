@@ -84,7 +84,7 @@ returns the original items, including their relative paths and metadata.
 Its AppDomain cache stores immutable results keyed by assembly MVID. Concurrent
 cache misses can compute the same result without a shared task-level lock.
 
-The task projects reference MSBuild 18.9.6, which supplies the attribute.
+The task projects reference MSBuild 18.12, which supplies the attribute.
 Use `TaskEnvironment` for any further project-relative path or environment
 access; the attribute alone does not make process-wide APIs safe.
 
@@ -99,6 +99,10 @@ calls within one compilation.
 Review helpers in referenced assemblies separately.
 For example, pass `TaskEnvironment` to `AndroidRidAbiHelper.GetNativeLibraryAbi`
 so relative `Link` metadata and item paths use the project's directory.
+For generated files, use `Files.CopyIfStreamChanged` with a resolved
+`AbsolutePath` and the task's `TaskEnvironment`. This keeps unchanged timestamps
+and reads file-write retry settings from the project-scoped environment rather
+than the process-wide cache.
 Do not enable all-task migration checks across legacy tasks just to opt in a
 small set of tasks.
 

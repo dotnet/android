@@ -70,7 +70,7 @@ ms.date: 04/11/2024
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
 + [XA0113](xa0113.md): Legacy Google Play target API warning; no longer emitted by current SDKs.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
-+ [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
++ [XA0116](xa0116.md): Unable to find required SDK file `{FilePath}`.
 + [XA0117](xa0117.md): Legacy deprecated `TargetFrameworkVersion` warning; no longer emitted by current SDKs.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
@@ -133,7 +133,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + XA1018: Specified AndroidManifest file does not exist: {file}.
 + XA1019: No longer emitted by current SDKs.
 + XA1020: At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).
-+ XA1021: Specified source Java library not found: {file}
++ XA1021: No longer emitted by current SDKs.
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
 + XA1024: Removed in .NET 11.
@@ -324,13 +324,11 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
-* `CPR` - `CopyResource`
 * `CPT` - `ComputeHash`
 * `CRC` - `ConvertResourcesCases`
 * `CRM` - `CreateResgenManifest`
 * `CRN` - `Crunch`
 * `CRP` - `AndroidComputeResPaths`
-* `CTD` - `CreateTemporaryDirectory`
 * `CTX` - `CompileToDalvik`
 * `DES` - `Desugar`
 * `DJL` - `DetermineJavaLibrariesToCompile`
@@ -353,14 +351,11 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GPM` - `GeneratePackageManagerJava`
 * `GRD` - `GenerateResourceDesigner`
 * `IAS` - `InstallApkSet`
-* `JDC` - `JavaDoc`
 * `JVC` - `Javac`
-* `JTX` - `JarToXml`
 * `KEY` - `KeyTool`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
-* `MDC` - `MDoc`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
 * `PWA` - `PrepareWearApplicationFiles`
@@ -376,7 +371,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `RSA` - `ResolveAssemblies`
 * `RSD` - `ResolveSdks`
 * `RUF` - `RemoveUnknownFiles`
-* `SPL` - `SplitProperty`
 * `SVM` - `SetVsMonoAndroidRegistryKey`
 * `UNZ` - `Unzip`
 * `VJV` - `ValidateJavaVersion`
