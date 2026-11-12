@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -333,6 +334,44 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreSame (replacement, Aapt2Daemon.GetInstance (engine, TestContext.Out.WriteLine, aapt2, 1, 1, registerInDomain));
 			var version = replacement.QueueCommand (["version"], "", CancellationToken.None);
 			Assert.IsTrue ((await WaitForDaemonJobsAsync (replacement, [version])) [0].Succeeded);
+		}
+
+		[Test]
+		[NonParallelizable]
+		[Platform ("Linux,MacOsX")]
+		public async TPL.Task Aapt2DaemonDisposesReadersWithoutFinalization ()
+		{
+			var aapt2 = Path.Combine (GetPathToAapt2 (), "aapt2");
+			var descriptors = OperatingSystem.IsMacOS () ? "/dev/fd" : "/proc/self/fd";
+			for (int i = 0; i < 10; i++)
+				await RunDaemonAsync ();
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
+			Assert.IsTrue (GC.TryStartNoGCRegion (64 * 1024 * 1024), "Measure explicit cleanup without reader finalization.");
+			try {
+				int collections = GC.CollectionCount (0);
+				int before = Directory.GetFileSystemEntries (descriptors).Length;
+				Assert.Greater (before, 2, "Count actual open file descriptors.");
+				for (int i = 0; i < 100; i++)
+					await RunDaemonAsync ();
+				int after = Directory.GetFileSystemEntries (descriptors).Length;
+
+				TestContext.Out.WriteLine ($"Runtime: {typeof (object).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute> ()?.InformationalVersion}");
+				TestContext.Out.WriteLine ($"100 daemon start/stop cycles without GC: file descriptors {before} -> {after} (delta {after - before}).");
+				Assert.AreEqual (collections, GC.CollectionCount (0), "No collection may mask undisposed readers.");
+				Assert.LessOrEqual (after, before + 4, "Readers must close promptly, not retain two pipe handles per daemon until finalization.");
+			} finally {
+				GC.EndNoGCRegion ();
+			}
+
+			async TPL.Task RunDaemonAsync ()
+			{
+				using var daemon = new Aapt2Daemon (aapt2, 1, 1, TextWriter.Null.WriteLine);
+				var id = daemon.QueueCommand (["version"], "", CancellationToken.None);
+				var jobs = await WaitForDaemonJobsAsync (daemon, [id]);
+				Assert.IsTrue (jobs [0].Succeeded, string.Join ("\n", jobs [0].Output.Select (line => line.Line)));
+				daemon.Stop ();
+			}
 		}
 
 		static TPL.Task<Aapt2Daemon.Job []> WaitForDaemonJobsAsync (Aapt2Daemon daemon, long [] ids, int timeoutSeconds = 10) =>
