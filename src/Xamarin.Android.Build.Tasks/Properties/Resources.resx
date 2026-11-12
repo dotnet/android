@@ -320,11 +320,6 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
     <value>At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).</value>
     <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
   </data>
-  <data name="XA1021" xml:space="preserve">
-    <value>Specified source Java library not found: {0}</value>
-    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
-{0} - The file name of the library</comment>
-  </data>
   <data name="XA1022" xml:space="preserve">
     <value>Specified reference Java library not found: {0}</value>
     <comment>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.

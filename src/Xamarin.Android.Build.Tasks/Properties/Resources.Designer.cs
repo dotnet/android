@@ -581,15 +581,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specified source Java library not found: {0}.
-        /// </summary>
-        public static string XA1021 {
-            get {
-                return ResourceManager.GetString("XA1021", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Specified reference Java library not found: {0}.
         /// </summary>
         public static string XA1022 {

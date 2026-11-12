@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
-	public partial class DebuggingTasksTests
+	public partial class FastDeployTests
 	{
 		[Test]
 		public void FastDeployRejectsFailedOverrideCommand (

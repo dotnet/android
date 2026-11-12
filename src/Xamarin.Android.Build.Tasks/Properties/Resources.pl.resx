@@ -328,11 +328,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
     <value>Do powiązania wymagana jest co najmniej jedna biblioteka języka Java. Sprawdź, czy biblioteka języka Java jest dołączona do projektu i czy ma odpowiednią akcję kompilacji: „LibraryProjectZip” (w przypadku pliku AAR lub ZIP), „EmbeddedJar”, „InputJar” (w przypadku pliku JAR) lub „LibraryProjectProperties” (w przypadku pliku project.properties).</value>
     <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
   </data>
-  <data name="XA1021" xml:space="preserve">
-    <value>Nie odnaleziono określonej źródłowej biblioteki języka Java: {0}</value>
-    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
-{0} - The file name of the library</comment>
-  </data>
   <data name="XA1022" xml:space="preserve">
     <value>Nie odnaleziono biblioteki języka Java określonej przez odwołanie: {0}</value>
     <comment>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.
