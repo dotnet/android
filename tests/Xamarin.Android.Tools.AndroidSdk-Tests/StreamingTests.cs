@@ -229,14 +229,43 @@ public class StreamingTests
 		Assert.That (await application.RunAsync (), Is.Zero);
 	}
 
+	[Test]
+	public async Task InstrumentationWithoutStreamingReportsResultsFromTrx ()
+	{
+		// The androidtest template from .NET 11 does not stream results, so the host pulls its TRX file.
+		using var application = await CreateApplication ("""
+			INSTRUMENTATION_RESULT: passed=1
+			INSTRUMENTATION_RESULT: failed=1
+			INSTRUMENTATION_RESULT: resultsPath=/device/device.trx
+			INSTRUMENTATION_CODE: -1
+			""", deviceTrx: """
+			<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+			  <TestDefinitions>
+			    <UnitTest id="1" name="One"><TestMethod className="Tests" /></UnitTest>
+			    <UnitTest id="2" name="Two"><TestMethod className="Tests" /></UnitTest>
+			  </TestDefinitions>
+			  <Results>
+			    <UnitTestResult testId="1" testName="One" outcome="Passed" />
+			    <UnitTestResult testId="2" testName="Two" outcome="Failed"><Output><ErrorInfo><Message>boom</Message></ErrorInfo></Output></UnitTestResult>
+			  </Results>
+			</TestRun>
+			""");
+		Assert.That (await application.RunAsync (), Is.Not.Zero);
+		XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+		var results = XDocument.Load (Path.Combine (directory, "results.trx")).Descendants (ns + "UnitTestResult")
+			.ToDictionary (e => e.Attribute ("testName")?.Value ?? "", e => e.Attribute ("outcome")?.Value);
+		Assert.That (results, Is.EquivalentTo (new Dictionary<string, string?> { ["One"] = "Passed", ["Two"] = "Failed" }));
+	}
+
 	async Task<ITestApplication> CreateApplication (string transcript, bool reportFailure = false, int exitCode = 0, bool missingAdb = false,
-		CancellableAdapter? cancellationAdapter = null, bool listTests = false)
+		CancellableAdapter? cancellationAdapter = null, bool listTests = false, string? deviceTrx = null)
 	{
 		if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
 			Assert.Ignore ("The fake adb is a Unix shell executable.");
 		string adb = Path.Combine (directory, "fake-adb");
 		var ending = cancellationAdapter == null ? $"exit {exitCode}" : "exec sleep 30";
-		File.WriteAllText (adb, $"#!/bin/sh\ncat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
+		var pull = deviceTrx == null ? "" : $"if [ \"$1\" = pull ]; then\ncat > \"$3\" <<'TRX'\n{deviceTrx}\nTRX\nexit 0\nfi\n";
+		File.WriteAllText (adb, $"#!/bin/sh\n{pull}cat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
 		if (!OperatingSystem.IsWindows ())
 			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 		if (reportFailure)
