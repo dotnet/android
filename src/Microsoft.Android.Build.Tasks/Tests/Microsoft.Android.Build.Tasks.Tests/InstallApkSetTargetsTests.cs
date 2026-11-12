@@ -126,6 +126,7 @@ public class InstallApkSetTargetsTests : BaseTest
 					new XElement ("AndroidInstallModules", new XAttribute ("Include", "feature $PATH %25PATH%25 %2525 apostrophe's `literal`")),
 				} : []),
 			new XElement ("Target", new XAttribute ("Name", "_BuildApkSet")),
+			new XElement ("Target", new XAttribute ("Name", "_AndroidAdbToolPath")),
 			target)).Save (project);
 		string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
 		return NativeAotBootstrapTestTools.Run (dotnet, "msbuild", project, "-t:_DeployAppBundle", "-v:normal", "-nr:false");
