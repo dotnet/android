@@ -692,15 +692,20 @@ public class UsesDependency {
 		static readonly DateTimeOffset FixedAarEntryTime = new DateTimeOffset (2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
 		// Entries use a fixed timestamp so that only the content differs between archives of the same size.
-		static byte [] CreateAarWithFixedTimestamp (string content)
+		static byte [] CreateAarWithFixedTimestamp (string content) =>
+			CreateAarWithFixedTimestamp (("classes.jar", content));
+
+		static byte [] CreateAarWithFixedTimestamp (params (string Name, string Content) [] entries)
 		{
 			using var stream = new MemoryStream ();
 			using (var aar = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				var entry = aar.CreateEntry ("classes.jar");
-				entry.LastWriteTime = FixedAarEntryTime;
-				using var entryStream = entry.Open ();
-				var bytes = Encoding.ASCII.GetBytes (content);
-				entryStream.Write (bytes, 0, bytes.Length);
+				foreach (var (name, content) in entries) {
+					var entry = aar.CreateEntry (name);
+					entry.LastWriteTime = FixedAarEntryTime;
+					using var entryStream = entry.Open ();
+					var bytes = Encoding.ASCII.GetBytes (content);
+					entryStream.Write (bytes, 0, bytes.Length);
+				}
 			}
 			return stream.ToArray ();
 		}
@@ -766,6 +771,62 @@ public class UsesDependency {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			var classesJar = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "classes.jar"));
 			Assert.AreEqual ("other", File.ReadAllText (classesJar), "The later archive should win.");
+		}
+
+		[Test]
+		public void ExtractAarRepairsBackslashEntries ()
+		{
+			if (IsWindows) {
+				Assert.Ignore ("Windows extracts backslash-separated entries into directories.");
+			}
+			var content = "version-1";
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("classes.jar", "classes"), ("libs\\two.jar", content), ("libs\\a\\b.jar", content)),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			var outputDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar"));
+			var twoJar = Path.Combine (outputDirectory, "libs", "two.jar");
+			var nestedJar = Path.Combine (outputDirectory, "libs", "a", "b.jar");
+			Assert.AreEqual ("version-1", File.ReadAllText (twoJar));
+			Assert.AreEqual ("version-1", File.ReadAllText (nestedJar));
+			FileAssert.DoesNotExist (Path.Combine (outputDirectory, "libs\\two.jar"));
+
+			// An updated archive must replace the previously repaired files.
+			content = "version-2";
+			proj.Touch ("foo.aar");
+			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false), "Second _ExtractAar should have succeeded.");
+			Assert.AreEqual ("version-2", File.ReadAllText (twoJar));
+			Assert.AreEqual ("version-2", File.ReadAllText (nestedJar));
+			Assert.AreEqual (3, Directory.GetFiles (outputDirectory, "*", SearchOption.AllDirectories).Length, "Only the repaired files should be extracted.");
+		}
+
+		[Test]
+		public void ExtractAarRejectsEscapingEntries ()
+		{
+			if (IsWindows) {
+				Assert.Ignore ("Windows extracts backslash-separated entries into directories.");
+			}
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("classes.jar", "classes"), ("libs\\..\\..\\..\\evil.jar", "evil")),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("XA4332", builder.LastBuildOutput, "XA4332 should have been raised.");
+			var intermediate = builder.Output.GetIntermediaryPath ("");
+			Assert.IsEmpty (Directory.GetFiles (Path.Combine (Root, builder.ProjectDirectory), "evil.jar", SearchOption.AllDirectories), "Escaping entry should not have been written.");
+			DirectoryAssert.DoesNotExist (Path.Combine (intermediate, "extract_aar_staging"), "Staging directory should be removed after failure.");
 		}
 
 		[Test]

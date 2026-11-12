@@ -743,6 +743,15 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
+  <data name="XA4332" xml:space="preserve">
+    <value>The library '{0}' contains the entry '{1}', which cannot be extracted safely because it would be written outside of its extraction directory or is nested too deeply.</value>
+    <comment>{0} - The library file name.
+{1} - The archive entry name.</comment>
+  </data>
+  <data name="XA4333" xml:space="preserve">
+    <value>The extraction output path '{0}' is a symbolic link or junction. Delete it and rebuild the project.</value>
+    <comment>{0} - The path of the symbolic link or junction.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
