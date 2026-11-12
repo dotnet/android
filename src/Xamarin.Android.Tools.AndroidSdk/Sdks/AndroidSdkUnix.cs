@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tools
 				return;
 
 			user = Environment.GetEnvironmentVariable ("USER");
-			if (String.IsNullOrEmpty (user) || String.Compare (user, sudo_user, StringComparison.Ordinal) == 0)
+			if (String.IsNullOrEmpty (user) || string.Equals (user, sudo_user, StringComparison.Ordinal))
 				return;
 			need_chown = true;
 		}

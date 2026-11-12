@@ -393,7 +393,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 
         protected void DeleteDirTreeIfEmpty(DirectoryInfo stopAt, DirectoryInfo di)
         {
-            if (String.Compare(stopAt.FullName, di.FullName, StringComparison.Ordinal) == 0)
+            if (string.Equals(stopAt.FullName, di.FullName, StringComparison.Ordinal))
                 return;
 
             if (di.EnumerateFileSystemInfos().Any())
@@ -432,7 +432,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                     return true;
             }
 
-            if (String.Compare(metadata.DisplayName, DisplayName, StringComparison.Ordinal) != 0)
+            if (!string.Equals(metadata.DisplayName, DisplayName, StringComparison.Ordinal))
             {
                 if (update)
                 {
@@ -443,7 +443,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                     return true;
             }
 
-            if (String.Compare(metadata.FileSystemPath, FileSystemPath, StringComparison.Ordinal) != 0)
+            if (!string.Equals(metadata.FileSystemPath, FileSystemPath, StringComparison.Ordinal))
             {
                 if (update)
                 {
@@ -498,7 +498,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                     return true;
             }
 
-            if (String.Compare(metadata.Path, Path, StringComparison.OrdinalIgnoreCase) != 0)
+            if (!string.Equals(metadata.Path, Path, StringComparison.OrdinalIgnoreCase))
             {
                 if (update)
                 {
@@ -737,7 +737,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                 {
                     foreach (var kvp in Repository.Namespaces)
                     {
-                        if (String.Compare("xsi", kvp.Key, StringComparison.Ordinal) == 0)
+                        if (string.Equals("xsi", kvp.Key, StringComparison.Ordinal))
                             continue;
                         writer.WriteAttributeString("xmlns", kvp.Key, null, kvp.Value.NamespaceName);
                     }
@@ -815,7 +815,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
             if (IsPlatformSpecific && !SupportedPlatforms.SequenceEqual((other as BasePackage).SupportedPlatforms))
                 return false;
 
-            return String.Compare(Path, other.Path, StringComparison.Ordinal) == 0 &&
+            return string.Equals(Path, other.Path, StringComparison.Ordinal) &&
                         Revision == other.Revision &&
                         Channel == other.Channel;
         }
@@ -829,7 +829,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
                 return true;
 
             // We compare only the properties that actually matter
-            if (String.Compare(Path, other.Path, StringComparison.Ordinal) != 0)
+            if (!string.Equals(Path, other.Path, StringComparison.Ordinal))
                 return false;
 
             if (!AreInfosEqual(Info, other.Info))

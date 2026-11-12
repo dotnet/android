@@ -187,12 +187,12 @@ namespace Xamarin.Android.Tools
 			var ndkInstances = new SortedDictionary<Version, string> (Comparer<Version>.Create ((Version l, Version r) => r.CompareTo (l)));
 
 			foreach (string ndkPath in Directory.EnumerateDirectories (androidSdkPath, "ndk*", SearchOption.TopDirectoryOnly)) {
-				if (String.Compare ("ndk-bundle", Path.GetFileName (ndkPath), StringComparison.OrdinalIgnoreCase) == 0) {
+				if (string.Equals ("ndk-bundle", Path.GetFileName (ndkPath), StringComparison.OrdinalIgnoreCase)) {
 					LoadNDKVersion (ndkPath);
 					continue;
 				}
 
-				if (String.Compare ("ndk", Path.GetFileName (ndkPath), StringComparison.OrdinalIgnoreCase) != 0) {
+				if (!string.Equals ("ndk", Path.GetFileName (ndkPath), StringComparison.OrdinalIgnoreCase)) {
 					continue;
 				}
 

@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -77,6 +76,64 @@ public class EmulatorRunnerTests
 	}
 
 	[Test]
+	public async Task CommandsCopySuppliedProcessEnvironment ()
+	{
+		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
+		var directory = Directory.CreateDirectory (Path.Combine (tempDir, "working directory")).FullName;
+		var marker = Path.Combine (directory, "environment.txt");
+		WriteEnvironmentProbe (emuPath, "environment.txt");
+		try {
+			var startInfo = new ProcessStartInfo { WorkingDirectory = directory };
+			startInfo.EnvironmentVariables.Clear ();
+			if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
+				startInfo.EnvironmentVariables ["SystemRoot"] = systemRoot;
+			startInfo.EnvironmentVariables ["EMULATOR_TEST_VALUE"] = "original";
+			var runner = EmulatorRunner.CreateWithProcessEnvironment (emuPath, startInfo);
+			startInfo.WorkingDirectory = Path.GetTempPath ();
+			startInfo.EnvironmentVariables ["EMULATOR_TEST_VALUE"] = "changed";
+
+			CollectionAssert.AreEqual (new [] { "TestAVD" }, await runner.ListAvdNamesAsync ());
+			CollectionAssert.AreEqual (new [] { "original", "" }, File.ReadAllLines (marker));
+			File.Delete (marker);
+
+			using var process = runner.LaunchEmulator ("TestAVD");
+			Assert.IsTrue (process.WaitForExit (5000), "The fake emulator should exit promptly.");
+			Assert.AreEqual (0, process.ExitCode);
+			CollectionAssert.AreEqual (new [] { "original", "" }, File.ReadAllLines (marker));
+		} finally {
+			DeleteDirectoryWithRetry (tempDir);
+		}
+	}
+
+	[Test]
+	public async Task ConstructorPreservesInheritedEnvironmentAndWorkingDirectory ()
+	{
+		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
+		var markerName = $"emulator-environment-{Guid.NewGuid ():N}.txt";
+		var marker = Path.Combine (Directory.GetCurrentDirectory (), markerName);
+		WriteEnvironmentProbe (emuPath, markerName);
+		try {
+			var runner = new EmulatorRunner (emuPath, new Dictionary<string, string> {
+				["EMULATOR_TEST_VALUE"] = "override",
+			});
+			var inheritedValue = Environment.GetEnvironmentVariable (OS.IsWindows ? "USERNAME" : "HOME") ?? "";
+			var expected = new [] { "override", inheritedValue };
+
+			CollectionAssert.AreEqual (new [] { "TestAVD" }, await runner.ListAvdNamesAsync ());
+			CollectionAssert.AreEqual (expected, File.ReadAllLines (marker));
+			File.Delete (marker);
+
+			using var process = runner.LaunchEmulator ("TestAVD");
+			Assert.IsTrue (process.WaitForExit (5000), "The fake emulator should exit promptly.");
+			Assert.AreEqual (0, process.ExitCode);
+			CollectionAssert.AreEqual (expected, File.ReadAllLines (marker));
+		} finally {
+			File.Delete (marker);
+			DeleteDirectoryWithRetry (tempDir);
+		}
+	}
+
+	[Test]
 	public async Task AlreadyOnlineDevice_PassesThrough ()
 	{
 		var devices = new List<AdbDeviceInfo> {
@@ -134,9 +191,9 @@ public class EmulatorRunnerTests
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
 		var launchedPath = Path.Combine (tempDir, "launched");
 		if (OS.IsWindows) {
-			File.WriteAllText (emuPath, $"@echo off\r\necho launched > \"{launchedPath}\"\r\nexit /b 0\r\n");
+			File.WriteAllText (emuPath, $"@echo off\r\necho %* > \"{launchedPath}\"\r\nexit /b 0\r\n");
 		} else {
-			File.WriteAllText (emuPath, $"#!/bin/sh\necho launched > \"{launchedPath}\"\n");
+			File.WriteAllText (emuPath, $"#!/bin/sh\necho \"$@\" > \"{launchedPath}\"\n");
 		}
 
 		int pollCount = 0;
@@ -157,6 +214,8 @@ public class EmulatorRunnerTests
 			var options = new EmulatorBootOptions {
 				BootTimeout = TimeSpan.FromSeconds (10),
 				PollInterval = TimeSpan.FromMilliseconds (50),
+				ColdBoot = true,
+				AdditionalArgs = new List<string> { "-gpu", "auto", "-no-audio" },
 			};
 
 			var result = await runner.BootEmulatorAsync ("Pixel_7_API_35", mockAdb, options);
@@ -164,6 +223,11 @@ public class EmulatorRunnerTests
 			Assert.IsTrue (result.Success);
 			Assert.AreEqual ("emulator-5554", result.Serial);
 			Assert.IsTrue (pollCount >= 2);
+			Assert.IsTrue (await WaitForFileAsync (launchedPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments.");
+			var logged = File.ReadAllText (launchedPath);
+			Assert.That (logged, Does.Contain ("-avd Pixel_7_API_35"));
+			Assert.That (logged, Does.Contain ("-no-snapshot-load"));
+			Assert.That (logged, Does.Contain ("-gpu auto -no-audio"));
 		} finally {
 			DeleteDirectoryWithRetry (tempDir);
 		}
@@ -297,61 +361,6 @@ public class EmulatorRunnerTests
 	}
 
 	[Test]
-	public async Task AdditionalArgs_PassedToLaunchEmulator ()
-	{
-		// Verify that AdditionalArgs from EmulatorBootOptions are forwarded
-		// to the emulator process. We use a fake emulator script that logs
-		// its arguments before reporting that the emulator is online.
-		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
-		var argsLogPath = Path.Combine (tempDir, "args.log");
-
-		// Rewrite the fake emulator to log its arguments
-		if (OS.IsWindows) {
-			File.WriteAllText (emuPath, $"@echo off\r\necho %* > \"{argsLogPath}\"\r\nexit /b 0\r\n");
-		} else {
-			File.WriteAllText (emuPath, $"#!/bin/sh\necho \"$@\" > \"{argsLogPath}\"\nexit 0\n");
-		}
-
-		try {
-			var devices = new List<AdbDeviceInfo> ();
-			var mockAdb = new MockAdbRunner (devices);
-			mockAdb.ShellProperties ["sys.boot_completed"] = "1";
-			mockAdb.ShellCommands ["pm path android"] = "package:/system/framework/framework-res.apk";
-			mockAdb.OnListDevices = () => {
-				if (devices.Count == 0 && File.Exists (argsLogPath) && IsFileUnlocked (emuPath)) {
-					devices.Add (new AdbDeviceInfo {
-						Serial = "emulator-5554",
-						Type = AdbDeviceType.Emulator,
-						Status = AdbDeviceStatus.Online,
-						AvdName = "Test_AVD",
-					});
-				}
-			};
-
-			var runner = new EmulatorRunner (emuPath);
-			var options = new EmulatorBootOptions {
-				BootTimeout = TimeSpan.FromSeconds (10),
-				PollInterval = TimeSpan.FromMilliseconds (50),
-				AdditionalArgs = new List<string> { "-gpu", "auto", "-no-audio" },
-			};
-
-			var result = await runner.BootEmulatorAsync ("Test_AVD", mockAdb, options);
-
-			Assert.IsTrue (result.Success, result.ErrorMessage);
-
-			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
-			var logged = File.ReadAllText (argsLogPath);
-			Assert.That (logged, Does.Contain ("-gpu"), "Should contain -gpu arg");
-			Assert.That (logged, Does.Contain ("auto"), "Should contain auto value");
-			Assert.That (logged, Does.Contain ("-no-audio"), "Should contain -no-audio arg");
-			Assert.That (logged, Does.Contain ("-avd"), "Should contain -avd flag");
-			Assert.That (logged, Does.Contain ("Test_AVD"), "Should contain AVD name");
-		} finally {
-			DeleteDirectoryWithRetry (tempDir);
-		}
-	}
-
-	[Test]
 	public async Task CancellationToken_AbortsBoot ()
 	{
 		// Verify that cancelling the token during the polling phase causes
@@ -382,53 +391,6 @@ public class EmulatorRunnerTests
 				Assert.That (sw.Elapsed.TotalSeconds, Is.LessThan (5),
 					"Cancellation should abort within a few seconds, not wait for full timeout");
 			}
-		} finally {
-			DeleteDirectoryWithRetry (tempDir);
-		}
-	}
-
-	[Test]
-	public async Task ColdBoot_PassesNoSnapshotLoad ()
-	{
-		// Verify that ColdBoot = true causes -no-snapshot-load to be passed.
-		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
-		var argsLogPath = Path.Combine (tempDir, "args.log");
-
-		if (OS.IsWindows) {
-			File.WriteAllText (emuPath, $"@echo off\r\necho %* > \"{argsLogPath}\"\r\nexit /b 0\r\n");
-		} else {
-			File.WriteAllText (emuPath, $"#!/bin/sh\necho \"$@\" > \"{argsLogPath}\"\nexit 0\n");
-		}
-
-		try {
-			var devices = new List<AdbDeviceInfo> ();
-			var mockAdb = new MockAdbRunner (devices);
-			mockAdb.ShellProperties ["sys.boot_completed"] = "1";
-			mockAdb.ShellCommands ["pm path android"] = "package:/system/framework/framework-res.apk";
-			mockAdb.OnListDevices = () => {
-				if (devices.Count == 0 && File.Exists (argsLogPath) && IsFileUnlocked (emuPath)) {
-					devices.Add (new AdbDeviceInfo {
-						Serial = "emulator-5554",
-						Type = AdbDeviceType.Emulator,
-						Status = AdbDeviceStatus.Online,
-						AvdName = "Test_AVD",
-					});
-				}
-			};
-
-			var runner = new EmulatorRunner (emuPath);
-			var options = new EmulatorBootOptions {
-				BootTimeout = TimeSpan.FromSeconds (10),
-				PollInterval = TimeSpan.FromMilliseconds (50),
-				ColdBoot = true,
-			};
-
-			var result = await runner.BootEmulatorAsync ("Test_AVD", mockAdb, options);
-
-			Assert.IsTrue (result.Success, result.ErrorMessage);
-			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
-			var logged = File.ReadAllText (argsLogPath);
-			Assert.That (logged, Does.Contain ("-no-snapshot-load"), "ColdBoot should pass -no-snapshot-load");
 		} finally {
 			DeleteDirectoryWithRetry (tempDir);
 		}
@@ -469,11 +431,18 @@ public class EmulatorRunnerTests
 			Assert.IsFalse (process.HasExited, "Process should be running after launch");
 
 			// Send SIGINT to the emulator process
-			Assert.IsTrue (process.SafeHandle.Signal (PosixSignal.SIGINT), "SIGINT should be delivered to the owned emulator.");
+			var killPsi = new ProcessStartInfo ("kill") {
+				ArgumentList = { "-INT", process.Id.ToString () },
+				UseShellExecute = false,
+			};
+			using var kill = new Process { StartInfo = killPsi };
+			kill.Start ();
+			Assert.IsTrue (kill.WaitForExit (5000), "kill command should exit promptly");
+			Assert.AreEqual (0, kill.ExitCode, "kill -INT should succeed");
 
 			Assert.IsFalse (process.WaitForExit (500), "Emulator process should survive SIGINT");
 		} finally {
-			try { process?.Kill (entireProcessTree: true); process?.WaitForExit (5000); } catch { }
+			try { process?.Kill (); process?.WaitForExit (5000); } catch { }
 			process?.Dispose ();
 			Directory.Delete (tempDir, true);
 		}
@@ -531,13 +500,26 @@ public class EmulatorRunnerTests
 
 			Assert.IsFalse (process.HasExited, "Process should start even with single-quote in path");
 		} finally {
-			try { process?.Kill (entireProcessTree: true); process?.WaitForExit (5000); } catch { }
+			try { process?.Kill (); process?.WaitForExit (5000); } catch { }
 			process?.Dispose ();
 			Directory.Delete (tempDir, true);
 		}
 	}
 
 	// --- Helpers ---
+
+	static void WriteEnvironmentProbe (string emulatorPath, string marker)
+	{
+		File.WriteAllText (emulatorPath, OS.IsWindows ? $"""
+			@echo off
+			(echo %EMULATOR_TEST_VALUE%&echo.%USERNAME%) > "{marker}"
+			echo TestAVD
+			""" : $"""
+			#!/bin/sh
+			printf '%s\n' "$EMULATOR_TEST_VALUE" "$HOME" > "{marker}"
+			echo TestAVD
+			""");
+	}
 
 	static (string tempDir, string emulatorPath) CreateFakeEmulatorSdk (bool keepRunning = false)
 	{

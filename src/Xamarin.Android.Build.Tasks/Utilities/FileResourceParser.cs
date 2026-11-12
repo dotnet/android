@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tasks
 						var ext = Path.GetExtension (entry.FullName);
 						var path = (Directory.GetParent (entry.FullName) ?? throw new InvalidOperationException ($"Resource archive entry has no parent directory: {entry.FullName}")).Name;
 						if (ext == ".xml" || ext == ".axml") {
-							if (string.Compare (path, "raw", StringComparison.OrdinalIgnoreCase) != 0) {
+							if (!string.Equals (path, "raw", StringComparison.OrdinalIgnoreCase)) {
 								var ms = MemoryStreamPool.Shared.Rent ();
 								try {
 									using (var entryStream = entry.Open ()) {

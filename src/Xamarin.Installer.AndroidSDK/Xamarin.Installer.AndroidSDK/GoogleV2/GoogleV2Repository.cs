@@ -172,7 +172,7 @@ namespace Xamarin.Installer.AndroidSDK.GoogleV2
 				return;
 
 			foreach (RemotePackage rp in packages) {
-				if (rp == null || String.Compare (getID (rp), item.ID, StringComparison.Ordinal) != 0)
+				if (rp == null || !string.Equals (getID (rp), item.ID, StringComparison.Ordinal))
 					continue;
 				setID (rp);
 			}

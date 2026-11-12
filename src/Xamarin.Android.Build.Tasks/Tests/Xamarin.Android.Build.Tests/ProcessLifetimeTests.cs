@@ -1,11 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -74,9 +72,8 @@ public class ProcessLifetimeTests : BaseTest
 		tool.AssertChildExited ();
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
-	public void AdbOwnersBoundPostExitDrainWithoutKillingServer (bool fastDeploy)
+	[Test]
+	public void AdbHelperBoundsPostExitDrainWithoutKillingServer ()
 	{
 		using var tool = new OwnedTool ("""
 			sleep 60 &
@@ -85,12 +82,7 @@ public class ProcessLifetimeTests : BaseTest
 			exit 0
 			""");
 		using var caller = new CancellationTokenSource ();
-		Task run;
-		if (fastDeploy) {
-			run = RunFastDeployCommand (tool.Path);
-		} else {
-			run = AdbHelper.RunAsync (tool.Path, null, "devices", caller.Token);
-		}
+		var run = AdbHelper.RunAsync (tool.Path, null, "devices", caller.Token);
 		var timer = Stopwatch.StartNew ();
 		var exception = Assert.ThrowsAsync<TimeoutException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (40)));
 		Assert.IsNotNull (exception);
@@ -100,38 +92,19 @@ public class ProcessLifetimeTests : BaseTest
 		tool.AssertChildAlive ();
 	}
 
-	[TestCase (false, 0)]
-	[TestCase (false, 7)]
-	[TestCase (true, 0)]
-	[TestCase (true, 7)]
-	public async Task AdbOwnersPreserveOutputAndCompletedStatus (bool fastDeploy, int exitCode)
+	[TestCase (0)]
+	[TestCase (7)]
+	public async Task AdbHelperPreservesOutputAndCompletedStatus (int exitCode)
 	{
 		using var tool = new OwnedTool ($$"""
 			printf ' output\r\n\nout-tail '
 			printf ' diagnostic\r\n\nerr-tail ' >&2
 			exit {{exitCode}}
 			""");
-		if (fastDeploy) {
-			var result = await RunFastDeployCommand (tool.Path).WaitAsync (TimeSpan.FromSeconds (5));
-			Assert.AreEqual (exitCode, result.ExitCode);
-			Assert.AreEqual ("output\r\n\nout-tail", result.StandardOutput);
-			Assert.AreEqual ("diagnostic\r\n\nerr-tail", result.StandardError);
-		} else {
-			var result = await AdbHelper.RunAsync (tool.Path, null, "devices", CancellationToken.None).WaitAsync (TimeSpan.FromSeconds (5));
-			Assert.AreEqual (exitCode, result.ExitCode);
-			Assert.AreEqual (" output\r\n\nout-tail ", result.Output);
-			Assert.AreEqual (" diagnostic\r\n\nerr-tail ", result.Error);
-		}
-	}
-
-	static Task<FastDeploy.AdbCommandResult> RunFastDeployCommand (string path)
-	{
-		var task = new FastDeploy { AdbToolPath = System.IO.Path.GetDirectoryName (path), AdbToolExe = System.IO.Path.GetFileName (path) };
-		var method = typeof (FastDeploy).GetMethod ("RunAdbCommand", BindingFlags.Instance | BindingFlags.NonPublic,
-			null, [typeof (string []), typeof (System.Collections.Generic.Dictionary<string, string>)], null);
-		Assert.IsNotNull (method);
-		return method.Invoke (task, [new [] { "devices" }, null]) as Task<FastDeploy.AdbCommandResult> ??
-			throw new InvalidOperationException ("Expected an asynchronous FastDeploy command.");
+		var result = await AdbHelper.RunAsync (tool.Path, null, "devices", CancellationToken.None).WaitAsync (TimeSpan.FromSeconds (5));
+		Assert.AreEqual (exitCode, result.ExitCode);
+		Assert.AreEqual (" output\r\n\nout-tail ", result.Output);
+		Assert.AreEqual (" diagnostic\r\n\nerr-tail ", result.Error);
 	}
 
 	sealed class OwnedTool : IDisposable

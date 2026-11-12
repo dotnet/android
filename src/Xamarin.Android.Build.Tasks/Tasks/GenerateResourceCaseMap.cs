@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tasks
 			to = NormalizeAlternative (to);
 
 			if (resource_fixup.TryGetValue (from, out var curTo)) {
-				if (string.Compare (to, curTo, StringComparison.OrdinalIgnoreCase) != 0) {
+				if (!string.Equals (to, curTo, StringComparison.OrdinalIgnoreCase)) {
 					var ext = Path.GetExtension (android);
 					var dir = Path.GetDirectoryName (user) ?? throw new InvalidOperationException ($"Resource path has no directory: {user}");
 

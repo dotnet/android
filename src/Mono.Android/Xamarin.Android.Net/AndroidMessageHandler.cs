@@ -178,7 +178,7 @@ namespace Xamarin.Android.Net
 			readonly CancellationTokenSource abortCts = new CancellationTokenSource ();
 
 			// Guards the draining state machine (inUseCount / disposeRequested / disposed).
-			readonly object stateLock = new object ();
+			readonly Lock stateLock = new ();
 			int inUseCount;          // operations (read/write/copy/flush) currently in flight (normally 0 or 1)
 			int disconnectRequested; // coalesces caller cancellation and Dispose() into one background disconnect
 			bool disposeRequested;   // Dispose() called: reject new operations; close once the last one unwinds
@@ -1469,9 +1469,9 @@ namespace Xamarin.Android.Net
 
 		AuthenticationScheme GetAuthScheme (string scheme)
 		{
-			if (String.Compare ("basic", scheme, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("basic", scheme, StringComparison.OrdinalIgnoreCase))
 				return AuthenticationScheme.Basic;
-			if (String.Compare ("digest", scheme, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("digest", scheme, StringComparison.OrdinalIgnoreCase))
 				return AuthenticationScheme.Digest;
 
 			return AuthenticationScheme.Unsupported;
@@ -1519,12 +1519,12 @@ namespace Xamarin.Android.Net
 				}
 
 				IEnumerable<string> values = headers [key];
-				if (removeContentLength && String.Compare (ContentLengthHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+				if (removeContentLength && string.Equals (ContentLengthHeaderName, key, StringComparison.OrdinalIgnoreCase)) {
 					removeContentLength = false;
 					continue;
 				}
 
-				if ((removeContentEncoding || setNewContentEncodingValue) && String.Compare (ContentEncodingHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+				if ((removeContentEncoding || setNewContentEncodingValue) && string.Equals (ContentEncodingHeaderName, key, StringComparison.OrdinalIgnoreCase)) {
 					if (removeContentEncoding) {
 						removeContentEncoding = false;
 						continue;

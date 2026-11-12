@@ -100,6 +100,7 @@ namespace Xamarin.Android.Tasks
 		string CreateResponseFile ()
 		{
 			var responseFile    = Path.GetTempFileName ();
+			responseFilePath = responseFile;
 
 			using var response  = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
 			Log.LogDebugMessage ("[java-source-utils] response file contents: {0}", responseFile);

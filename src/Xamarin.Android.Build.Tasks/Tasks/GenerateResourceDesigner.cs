@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var extension = Path.GetExtension (NetResgenOutputFile);
-			var language = string.Compare (extension, ".fs", StringComparison.OrdinalIgnoreCase) == 0 ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
+			var language = string.Equals (extension, ".fs", StringComparison.OrdinalIgnoreCase) ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
 			bool isVB = string.Equals (extension, ".vb", StringComparison.OrdinalIgnoreCase);
 			bool isFSharp = string.Equals (language, "F#", StringComparison.OrdinalIgnoreCase);
 			bool isCSharp = string.Equals (language, "C#", StringComparison.OrdinalIgnoreCase);
@@ -135,7 +135,7 @@ namespace Xamarin.Android.Tasks
 						foreach (var alias in aliasMetaData.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries)) {
 							string aliasName = alias.Trim ();
 							// don't emit an `extern alias global` as it is implicitly done.
-							if (string.Compare ("global", aliasName, StringComparison.Ordinal) == 0)
+							if (string.Equals ("global", aliasName, StringComparison.Ordinal))
 								continue;
 							aliases.Add (aliasName);
 							// only add the first alias for each reference.
@@ -239,7 +239,7 @@ namespace Xamarin.Android.Tasks
 			to = NormalizeAlternative (to);
 
 			if (resource_fixup.TryGetValue (from, out var curTo)) {
-				if (string.Compare (to, curTo, StringComparison.OrdinalIgnoreCase) != 0) {
+				if (!string.Equals (to, curTo, StringComparison.OrdinalIgnoreCase)) {
 					var ext = Path.GetExtension (android);
 					var dir = Path.GetDirectoryName (user) ?? throw new InvalidOperationException ($"Resource path has no directory: {user}");
 

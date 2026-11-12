@@ -42,7 +42,7 @@ namespace generator.SourceWriters
 
 			NewFirst = true;
 
-			if (method.ManagedOverride?.ToLowerInvariant () == "override")
+			if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase))
 				IsOverride = true;
 
 			method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);

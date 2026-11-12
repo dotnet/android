@@ -20,6 +20,8 @@ public class EmulatorRunner
 	readonly string emulatorPath;
 	readonly IDictionary<string, string>? environmentVariables;
 	readonly Action<TraceLevel, string> logger;
+	readonly IDictionary<string, string>? processEnvironment;
+	readonly string workingDirectory = "";
 
 	/// <summary>
 	/// Creates a new EmulatorRunner with the full path to the emulator executable.
@@ -34,6 +36,40 @@ public class EmulatorRunner
 		this.emulatorPath = emulatorPath;
 		this.environmentVariables = environmentVariables;
 		this.logger = logger ?? RunnerDefaults.NullLogger;
+	}
+
+	/// <summary>
+	/// Creates a runner with a copy of the supplied working directory and complete environment.
+	/// Variables absent from the supplied environment are not inherited.
+	/// </summary>
+	/// <param name="emulatorPath">Executable path resolved by the caller.</param>
+	/// <param name="processStartInfo">Only the working directory and environment are copied.</param>
+	/// <param name="logger">Optional logger callback for diagnostic messages.</param>
+	public static EmulatorRunner CreateWithProcessEnvironment (string emulatorPath, ProcessStartInfo processStartInfo, Action<TraceLevel, string>? logger = null) =>
+		new EmulatorRunner (emulatorPath, processStartInfo, logger);
+
+	EmulatorRunner (string emulatorPath, ProcessStartInfo processStartInfo, Action<TraceLevel, string>? logger)
+		: this (emulatorPath, logger: logger)
+	{
+		if (processStartInfo == null)
+			throw new ArgumentNullException (nameof (processStartInfo));
+		workingDirectory = processStartInfo.WorkingDirectory;
+		processEnvironment = new Dictionary<string, string> ();
+		foreach (string name in processStartInfo.EnvironmentVariables.Keys) {
+			if (processStartInfo.EnvironmentVariables [name] is string value)
+				processEnvironment.Add (name, value);
+		}
+	}
+
+	void ApplyProcessEnvironment (ProcessStartInfo psi)
+	{
+		if (processEnvironment == null)
+			return;
+
+		psi.WorkingDirectory = workingDirectory;
+		psi.EnvironmentVariables.Clear ();
+		foreach (var pair in processEnvironment)
+			psi.EnvironmentVariables [pair.Key] = pair.Value;
 	}
 
 	/// <summary>
@@ -86,6 +122,7 @@ public class EmulatorRunner
 			foreach (var kvp in environmentVariables)
 				psi.Environment [kvp.Key] = kvp.Value;
 		}
+		ApplyProcessEnvironment (psi);
 
 		// Redirect stdout/stderr so the emulator process doesn't inherit the
 		// caller's pipes. Without this, parent processes (e.g. VS Code spawn)
@@ -134,6 +171,7 @@ public class EmulatorRunner
 			foreach (var variable in environmentVariables)
 				psi.Environment [variable.Key] = variable.Value;
 		}
+		ApplyProcessEnvironment (psi);
 
 		logger.Invoke (TraceLevel.Verbose, "Running: emulator -list-avds");
 		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);

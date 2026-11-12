@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks
 		{
 			if (a == null || b == null)
 				return ReferenceEquals (a, b);
-			return string.Compare (a.ItemSpec, b.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0;
+			return string.Equals (a.ItemSpec, b.ItemSpec, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public int GetHashCode (ITaskItem value)

@@ -146,7 +146,7 @@ namespace Xamarin.Installer.AndroidSDK.GoogleV2.Parsing
 			string value = attr.Value;
 			if (String.IsNullOrEmpty (value))
 				return;
-			Obsolete = String.Compare ("true", value, StringComparison.OrdinalIgnoreCase) == 0;
+			Obsolete = string.Equals ("true", value, StringComparison.OrdinalIgnoreCase);
 		}
 
 		void ParseAttribute_Path (XAttribute attr)
