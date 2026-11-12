@@ -379,9 +379,29 @@ namespace Xamarin.Android.Tasks
 			};
 			foreach (var pair in environmentVariables)
 				startInfo.Environment [pair.Key] = pair.Value;
-			var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (30));
-			if (result.ExitStatus.Canceled)
-				throw new TimeoutException ($"Timed out running '{tool} --version'.");
+			using var process = new Process { StartInfo = startInfo };
+			var elapsed = Stopwatch.StartNew ();
+			process.Start ();
+			ProcessTextOutput result;
+			try {
+				var text = process.ReadAllText (TimeSpan.FromSeconds (30));
+				var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
+				if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status))
+					throw new TimeoutException ($"Timed out running '{tool} --version'.");
+				result = new ProcessTextOutput (status, text.StandardOutput, text.StandardError, process.Id);
+			} finally {
+				using var stdout = process.StandardOutput;
+				using var stderr = process.StandardError;
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process can exit between HasExited and Kill.
+					}
+					if (!process.WaitForExit (5000))
+						throw new TimeoutException ($"The lint version process did not exit after being killed: {tool}");
+				}
+			}
 			var versionInfo = result.StandardOutput + Environment.NewLine + result.StandardError;
 			if (result.ExitStatus.ExitCode != 0 || versionInfo.Contains ("unknown")) {
 				// lets try to parse the lint-xx-x-x-dev.jar filename to get the version

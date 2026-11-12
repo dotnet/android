@@ -68,7 +68,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 				File.Delete (temporaryOutputFile);
 			}
 		} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is BadImageFormatException ||
-			e is JsonException || e is InvalidOperationException || e is FormatException || e is ArgumentException || e is Win32Exception) {
+			e is JsonException || e is InvalidOperationException || e is FormatException || e is ArgumentException || e is Win32Exception || e is TimeoutException) {
 			LogCodedError ("XA4327", Properties.Resources.XA4327, currentFile, e.Message);
 		}
 	}
@@ -91,13 +91,45 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 		};
-		var capture = await Process.RunAndCaptureTextAsync (startInfo, CancellationToken).ConfigureAwait (false);
+		using var process = new Process { StartInfo = startInfo };
+		process.Start ();
+		using var execution = CancellationTokenSource.CreateLinkedTokenSource (CancellationToken);
+		var exit = ObserveToolExitAsync (process, execution);
+		var output = ReadTextAsync (process.StandardOutput);
+		var error = ReadTextAsync (process.StandardError);
+		try {
+			await Task.WhenAll (output, error, exit).ConfigureAwait (false);
+		} catch (OperationCanceledException) when (!CancellationToken.IsCancellationRequested) {
+			throw new TimeoutException ("Timed out draining llvm-readobj output after process exit.");
+		} finally {
+			execution.Cancel ();
+			if (!process.HasExited) {
+				try {
+					process.Kill (entireProcessTree: true);
+				} catch (InvalidOperationException) when (process.HasExited) {
+					// The process can exit between HasExited and Kill.
+				}
+				await process.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+			}
+		}
 		CancellationToken.ThrowIfCancellationRequested ();
-		if (capture.ExitStatus.ExitCode != 0) {
-			throw new InvalidOperationException ($"llvm-readobj exited with code {capture.ExitStatus.ExitCode}: {capture.StandardError}");
+		if (process.ExitCode != 0) {
+			throw new InvalidOperationException ($"llvm-readobj exited with code {process.ExitCode}: {await error.ConfigureAwait (false)}");
 		}
 
-		using var document = JsonDocument.Parse (capture.StandardOutput);
+		async Task<string> ReadTextAsync (StreamReader reader)
+		{
+			try {
+				using (reader) {
+					return await reader.ReadToEndAsync (execution.Token).ConfigureAwait (false);
+				}
+			} catch {
+				execution.Cancel ();
+				throw;
+			}
+		}
+
+		using var document = JsonDocument.Parse (await output.ConfigureAwait (false));
 		if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength () != 1) {
 			throw new BadImageFormatException ("Expected llvm-readobj metadata for one native object.");
 		}
@@ -195,7 +227,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 		using var process = new Process { StartInfo = startInfo };
 		process.Start ();
 		using var execution = CancellationTokenSource.CreateLinkedTokenSource (CancellationToken);
-		var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+		var exit = ObserveToolExitAsync (process, execution);
 		var stderr = new StringBuilder ();
 		try {
 			await foreach (var line in process.ReadAllLinesAsync (execution.Token).ConfigureAwait (false)) {
@@ -204,15 +236,42 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 				else
 					stdout.WriteLine (line.Content);
 			}
-			var status = await exit.WaitAsync (CancellationToken).ConfigureAwait (false);
+			await exit.ConfigureAwait (false);
+			execution.Token.ThrowIfCancellationRequested ();
 			CancellationToken.ThrowIfCancellationRequested ();
-			if (status.ExitCode != 0)
-				throw new InvalidOperationException ($"llvm-objdump exited with code {status.ExitCode}: {stderr}");
+			if (process.ExitCode != 0)
+				throw new InvalidOperationException ($"llvm-objdump exited with code {process.ExitCode}: {stderr}");
+		} catch (OperationCanceledException) when (!CancellationToken.IsCancellationRequested) {
+			throw new TimeoutException ("Timed out draining llvm-objdump output after process exit.");
 		} finally {
 			execution.Cancel ();
-			process.StandardOutput.Dispose ();
-			process.StandardError.Dispose ();
-			await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+			try {
+				await exit.ConfigureAwait (false);
+			} finally {
+				using var outputReader = process.StandardOutput;
+				using var errorReader = process.StandardError;
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process can exit between HasExited and Kill.
+					}
+					await process.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+				}
+			}
+		}
+	}
+
+	static async Task ObserveToolExitAsync (Process process, CancellationTokenSource execution)
+	{
+		try {
+			await process.WaitForExitAsync (execution.Token).ConfigureAwait (false);
+			execution.CancelAfter (TimeSpan.FromSeconds (30));
+		} catch (OperationCanceledException) when (execution.IsCancellationRequested) {
+			// Cancellation is surfaced by the joined capture or line enumeration.
+		} catch {
+			execution.Cancel ();
+			throw;
 		}
 	}
 

@@ -1,10 +1,12 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 using ELFSharp.ELF;
@@ -17,6 +19,82 @@ namespace Xamarin.Android.Build.Tests;
 [TestFixture]
 public class NativeAotBootstrapTargetsTests : BaseTest
 {
+	[TestCase (false, false)]
+	[TestCase (true, false)]
+	[TestCase (false, true)]
+	[Platform (Exclude = "Win")]
+	public async Task NativeLinkBoundsOnlyPostExitOutputDrain (bool inheritedPipe, bool cancel)
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		string tool = Path.Combine (directory, "linker");
+		try {
+			File.WriteAllText (tool, $"""
+				#!/bin/sh
+				echo linker-output
+				echo linker-diagnostic >&2
+				echo partial > "$3"
+				{(inheritedPipe ? "sleep 60 &\necho $! > \"$0.pid\"" : cancel ? "echo $$ > \"$0.pid\"\nexec sleep 60" : "sleep 31")}
+				""");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (tool, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new ObservedLinkTask {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+				LinkerToolPath = tool,
+				ObjcopyToolPath = tool,
+				IntermediateOutputPath = directory,
+				NativeObject = Path.Combine (directory, "input.o"),
+				OutputSharedLibrary = Path.Combine (directory, "liboutput.so"),
+				Abi = "arm64-v8a",
+				DebugBuild = true,
+			};
+			var elapsed = Stopwatch.StartNew ();
+			if (cancel) {
+				var execution = Task.Run (() => task.Execute ());
+				try {
+					while (!File.Exists (tool + ".pid") && elapsed.Elapsed < TimeSpan.FromSeconds (5))
+						await Task.Delay (50);
+					Assert.IsTrue (File.Exists (tool + ".pid"), "The tool must start before task cancellation.");
+				} finally {
+					task.Cancel ();
+				}
+				await execution.WaitAsync (TimeSpan.FromSeconds (5));
+				var operation = task.Operation ?? throw new InvalidOperationException ("The task did not start its asynchronous work.");
+				Assert.CatchAsync<OperationCanceledException> (async () => await operation.WaitAsync (TimeSpan.FromSeconds (5)));
+				Assert.IsFalse (File.Exists (task.OutputSharedLibrary));
+				Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (10));
+			} else if (inheritedPipe) {
+				Assert.IsFalse (task.Execute ());
+				Assert.That (errors, Has.Count.EqualTo (1));
+				Assert.AreEqual ("XA3007", errors [0].Code);
+				StringAssert.Contains ("linker-output", errors [0].Message);
+				StringAssert.Contains ("linker-diagnostic", errors [0].Message);
+				Assert.IsFalse (File.Exists (task.OutputSharedLibrary));
+			} else {
+				Assert.IsTrue (task.Execute ());
+				Assert.IsEmpty (errors, "An active link must not receive the post-exit drain deadline.");
+				Assert.IsTrue (File.Exists (task.OutputSharedLibrary));
+			}
+			Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (35));
+		} finally {
+			if (File.Exists (tool + ".pid") && Process.TryGetProcessById (int.Parse (File.ReadAllText (tool + ".pid"), System.Globalization.CultureInfo.InvariantCulture), out var descendant)) {
+				using (descendant) {
+					descendant.Kill ();
+					Assert.IsTrue (descendant.WaitForExit (5000), "The fixture descendant must terminate.");
+				}
+			}
+			Directory.Delete (directory, recursive: true);
+		}
+	}
+
+	sealed class ObservedLinkTask : LinkNativeAotSharedLibrary
+	{
+		public Task? Operation { get; private set; }
+
+		public override Task RunTaskAsync () => Operation = base.RunTaskAsync ();
+	}
+
 	static string TargetsPath => Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
 		"src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.NativeAOT.targets");
 

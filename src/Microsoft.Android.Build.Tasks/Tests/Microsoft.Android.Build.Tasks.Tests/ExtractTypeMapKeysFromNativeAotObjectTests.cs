@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -15,6 +16,82 @@ namespace Xamarin.Android.Build.Tests;
 public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 {
 	const string JavaGroup = "_ZTV29Mono_Android_Java_Lang_Object";
+
+	[TestCase (true, false)]
+	[TestCase (false, false)]
+	[TestCase (true, true)]
+	[TestCase (false, true)]
+	[Platform (Exclude = "Win")]
+	public void NativeMetadataToolsBoundOutputAfterRootExit (bool readobj, bool cancel)
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		string tool = Path.Combine (directory, readobj ? "llvm-readobj" : "llvm-objdump");
+		try {
+			File.WriteAllText (tool, $"""
+				#!/bin/sh
+				printf '[]\n'
+				echo diagnostic >&2
+				{(cancel ? "echo $$ > \"$0.pid\"\nexec sleep 60" : "sleep 60 &\necho $! > \"$0.pid\"")}
+				""");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (tool, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			string objectFile = Path.Combine (directory, "map.o");
+			string outputFile = Path.Combine (directory, "keys.txt");
+			File.WriteAllBytes (objectFile, []);
+			File.WriteAllText (outputFile, "existing output");
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new NativeCaptureTask {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				LlvmReadObjPath = Path.Combine (directory, "llvm-readobj"),
+				NativeObjectFiles = [new TaskItem (objectFile)],
+				OutputFile = outputFile,
+				CaptureOnly = cancel,
+				Readobj = readobj,
+			};
+			var elapsed = Stopwatch.StartNew ();
+			if (cancel) {
+				var execution = Task.Run (() => task.Execute ());
+				bool started = System.Threading.SpinWait.SpinUntil (() => File.Exists (tool + ".pid"), 5000);
+				task.Cancel ();
+				execution.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+				var capture = task.Operation ?? throw new InvalidOperationException ("The task did not start its asynchronous work.");
+				Assert.CatchAsync<OperationCanceledException> (async () => await capture.WaitAsync (TimeSpan.FromSeconds (5)));
+				Assert.IsTrue (started, "The tool must start before task cancellation.");
+				Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (10));
+			} else if (readobj) {
+				Assert.IsFalse (task.Execute ());
+				Assert.That (errors, Has.Count.EqualTo (1));
+				Assert.AreEqual ("XA4327", errors [0].Code);
+				StringAssert.Contains (objectFile, errors [0].Message);
+				StringAssert.Contains ("Timed out draining llvm-readobj output", errors [0].Message);
+				Assert.AreEqual ("existing output", File.ReadAllText (outputFile));
+			} else {
+				Assert.ThrowsAsync<TimeoutException> (async () => await task.CaptureAsync (readobj));
+			}
+			Assert.Less (elapsed.Elapsed, TimeSpan.FromSeconds (35), "Root exit must start a bounded drain even without MSBuild cancellation.");
+		} finally {
+			if (File.Exists (tool + ".pid") && Process.TryGetProcessById (int.Parse (File.ReadAllText (tool + ".pid"), System.Globalization.CultureInfo.InvariantCulture), out var descendant)) {
+				using (descendant) {
+					descendant.Kill ();
+					Assert.IsTrue (descendant.WaitForExit (5000), "The fixture descendant must terminate.");
+				}
+			}
+			Directory.Delete (directory, recursive: true);
+		}
+	}
+
+	sealed class NativeCaptureTask : ExtractTypeMapKeysFromNativeAotObject
+	{
+		public bool CaptureOnly { get; set; }
+		public bool Readobj { get; set; }
+		public Task? Operation { get; private set; }
+
+		public override Task RunTaskAsync () => Operation = CaptureOnly ? CaptureAsync (Readobj) : base.RunTaskAsync ();
+
+		public Task<string> CaptureAsync (bool readobj) => readobj ?
+			base.ReadObjectMetadataAsync ("map.o") : base.ReadObjectRelocationsAsync ("map.o", ".rodata", 0, 4);
+	}
 
 	[TestCase ("Mono_Android_Android_Runtime_JavaDictionary")]
 	[TestCase ("Mono_Android_Java_Lang_ObjectExtra")]

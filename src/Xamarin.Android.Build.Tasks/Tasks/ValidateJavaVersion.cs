@@ -129,10 +129,29 @@ namespace Xamarin.Android.Tasks
 			startInfo.RedirectStandardOutput = true;
 			startInfo.RedirectStandardError = true;
 			startInfo.CreateNoWindow = true;
-			var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (30));
-			if (result.ExitStatus.Canceled)
-				throw new TimeoutException ($"Timed out running '{javaTool} -version'.");
-			var versionInfo = result.StandardOutput + Environment.NewLine + result.StandardError;
+			using var process = new Process { StartInfo = startInfo };
+			var elapsed = Stopwatch.StartNew ();
+			process.Start ();
+			string versionInfo;
+			try {
+				var text = process.ReadAllText (TimeSpan.FromSeconds (30));
+				var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
+				if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out _))
+					throw new TimeoutException ($"Timed out running '{javaTool} -version'.");
+				versionInfo = text.StandardOutput + Environment.NewLine + text.StandardError;
+			} finally {
+				using var stdout = process.StandardOutput;
+				using var stderr = process.StandardError;
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process can exit between HasExited and Kill.
+					}
+					if (!process.WaitForExit (5000))
+						throw new TimeoutException ($"The Java version process did not exit after being killed: {javaTool}");
+				}
+			}
 			var versionNumberMatch = versionRegex.Match (versionInfo);
 			Version? versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {

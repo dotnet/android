@@ -187,6 +187,8 @@ public class GetAvailableAndroidDevices : AndroidToolTask
                 if (status.ExitCode != 0)
                     Log.LogDebugMessage ($"'emulator -list-avds' returned exit code: {status.ExitCode}");
             } finally {
+                using var stdout = process.StandardOutput;
+                using var stderr = process.StandardError;
                 if (!process.HasExited) {
                     try {
                         process.Kill (entireProcessTree: true);
@@ -213,15 +215,35 @@ public class GetAvailableAndroidDevices : AndroidToolTask
         try {
             var adbPath = Path.Combine (ToolPath, ToolExe);
             Log.LogDebugMessage ($"Running process: {adbPath} -s {serial} emu avd name");
-            var result = Process.RunAndCaptureText (new ProcessStartInfo (adbPath) {
+            using var process = new Process { StartInfo = new ProcessStartInfo (adbPath) {
                 ArgumentList = { "-s", serial, "emu", "avd", "name" },
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
-            }, TimeSpan.FromSeconds (30));
-            if (result.ExitStatus.Canceled)
-                throw new TimeoutException ($"Timed out retrieving the AVD name for '{serial}'.");
+            } };
+            var elapsed = Stopwatch.StartNew ();
+            process.Start ();
+            ProcessTextOutput result;
+            try {
+                var text = process.ReadAllText (TimeSpan.FromSeconds (30));
+                var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
+                if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status))
+                    throw new TimeoutException ($"Timed out retrieving the AVD name for '{serial}'.");
+                result = new ProcessTextOutput (status, text.StandardOutput, text.StandardError, process.Id);
+            } finally {
+                using var stdout = process.StandardOutput;
+                using var stderr = process.StandardError;
+                if (!process.HasExited) {
+                    try {
+                        process.Kill (entireProcessTree: true);
+                    } catch (InvalidOperationException) when (process.HasExited) {
+                        // The process can exit between HasExited and Kill.
+                    }
+                    if (!process.WaitForExit (5000))
+                        throw new TimeoutException ($"The AVD name process did not exit after being killed: {adbPath}");
+                }
+            }
             Log.LogDebugMessage ($"Running process: exit code == {result.ExitStatus.ExitCode}");
             using var reader = new StringReader (result.StandardOutput);
             string? line;

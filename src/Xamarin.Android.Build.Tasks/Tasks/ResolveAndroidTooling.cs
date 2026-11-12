@@ -220,10 +220,28 @@ namespace Xamarin.Android.Tasks
 				startInfo.RedirectStandardOutput = true;
 				startInfo.RedirectStandardError = true;
 				startInfo.CreateNoWindow = true;
-				var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (30));
-				if (result.ExitStatus.Canceled)
-					throw new TimeoutException ($"Timed out running '{aapt2Tool} version'.");
-				versionInfo = result.StandardOutput + Environment.NewLine + result.StandardError;
+				using var process = new Process { StartInfo = startInfo };
+				var elapsed = Stopwatch.StartNew ();
+				process.Start ();
+				try {
+					var text = process.ReadAllText (TimeSpan.FromSeconds (30));
+					var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
+					if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out _))
+						throw new TimeoutException ($"Timed out running '{aapt2Tool} version'.");
+					versionInfo = text.StandardOutput + Environment.NewLine + text.StandardError;
+				} finally {
+					using var stdout = process.StandardOutput;
+					using var stderr = process.StandardError;
+					if (!process.HasExited) {
+						try {
+							process.Kill (entireProcessTree: true);
+						} catch (InvalidOperationException) when (process.HasExited) {
+							// The process can exit between HasExited and Kill.
+						}
+						if (!process.WaitForExit (5000))
+							throw new TimeoutException ($"The aapt2 version process did not exit after being killed: {aapt2Tool}");
+					}
+				}
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
 				return false;

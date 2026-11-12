@@ -32,6 +32,46 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[NonParallelizable]
+		[Platform (Exclude = "Win")]
+		public void RepeatedDiscoveryReleasesNativeCapturePipesWithoutFinalization ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			try {
+				string executable = Path.Combine (directory, "discovery");
+				File.WriteAllText (executable, "#!/bin/sh\necho Pixel_9\necho diagnostic >&2\n");
+				if (!OperatingSystem.IsWindows ())
+					File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+				var task = new DiscoveryTask {
+					BuildEngine = engine,
+					ToolPath = directory,
+					ToolExe = "discovery",
+					EmulatorToolPath = directory,
+					EmulatorToolExe = "discovery",
+				};
+				for (int i = 0; i < 3; i++) {
+					task.GetAvdName ("emulator-5554");
+					task.ListEmulators ();
+				}
+				if (!GC.TryStartNoGCRegion (64 * 1024 * 1024))
+					Assert.Ignore ("The runtime could not reserve a no-GC region for the pipe ownership check.");
+				try {
+					int before = Directory.GetFiles ("/dev/fd").Length;
+					for (int i = 0; i < 50; i++) {
+						Assert.AreEqual ("Pixel_9", task.GetAvdName ("emulator-5554"));
+						CollectionAssert.AreEqual (new [] { "Pixel_9" }, task.ListEmulators ());
+					}
+					Assert.LessOrEqual (Directory.GetFiles ("/dev/fd").Length, before + 4, "Discovery must close both pipes without waiting for finalizers.");
+				} finally {
+					GC.EndNoGCRegion ();
+				}
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[Test]
 		public void EmulatorListingDrainsBothStreamsAndPreservesNonzeroOutput ()
 		{
 			string directory = Path.Combine (Root, "temp", TestName);

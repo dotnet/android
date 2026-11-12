@@ -57,15 +57,35 @@ namespace Xamarin.Android.Tasks
 				uname = "uname";
 			}
 
-			var result = Process.RunAndCaptureText (new ProcessStartInfo (uname) {
+			using var process = new Process { StartInfo = new ProcessStartInfo (uname) {
 				ArgumentList = { "-s" },
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				CreateNoWindow = true,
-			}, TimeSpan.FromSeconds (30));
-			if (result.ExitStatus.Canceled)
-				throw new TimeoutException ($"Timed out running '{uname} -s'.");
+			} };
+			var elapsed = Stopwatch.StartNew ();
+			process.Start ();
+			ProcessTextOutput result;
+			try {
+				var text = process.ReadAllText (TimeSpan.FromSeconds (30));
+				var remaining = TimeSpan.FromSeconds (30) - elapsed.Elapsed;
+				if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status))
+					throw new TimeoutException ($"Timed out running '{uname} -s'.");
+				result = new ProcessTextOutput (status, text.StandardOutput, text.StandardError, process.Id);
+			} finally {
+				using var stdout = process.StandardOutput;
+				using var stderr = process.StandardError;
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process can exit between HasExited and Kill.
+					}
+					if (!process.WaitForExit (5000))
+						throw new TimeoutException ($"The uname process did not exit after being killed: {uname}");
+				}
+			}
 			if (result.ExitStatus.ExitCode == 0)
 				return result.StandardOutput.Trim ();
 			return null;

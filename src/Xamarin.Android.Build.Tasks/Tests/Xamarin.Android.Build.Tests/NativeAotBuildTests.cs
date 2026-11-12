@@ -496,8 +496,10 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				string pidFile = Path.Combine (directory, "llvm-strip.pid");
 				if (File.Exists (pidFile) && Process.TryGetProcessById (int.Parse (File.ReadAllText (pidFile)), out var descendant)) {
-					using (descendant)
+					using (descendant) {
 						descendant.SafeHandle.Kill ();
+						Assert.IsTrue (descendant.WaitForExit (5000), "The inherited-output fixture descendant must terminate.");
+					}
 				}
 				Directory.Delete (directory, recursive: true);
 			}

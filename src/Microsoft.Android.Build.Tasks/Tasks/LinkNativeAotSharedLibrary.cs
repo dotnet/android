@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -217,22 +218,75 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 		foreach (string argument in arguments) {
 			startInfo.ArgumentList.Add (argument);
 		}
-		ProcessTextOutput result;
+		var stdout = new StringBuilder ();
+		var stderr = new StringBuilder ();
+		int exitCode;
 		try {
-			result = await Process.RunAndCaptureTextAsync (startInfo, CancellationToken).ConfigureAwait (false);
-		} catch (Win32Exception e) {
-			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary), Environment.NewLine + e.Message);
+			using var process = new Process { StartInfo = startInfo };
+			process.Start ();
+			using var execution = CancellationTokenSource.CreateLinkedTokenSource (CancellationToken);
+			var exit = ObserveExitAsync ();
+			try {
+				await Task.WhenAll (
+					CaptureDiagnosticsAsync (process.StandardOutput, stdout),
+					CaptureDiagnosticsAsync (process.StandardError, stderr),
+					exit).ConfigureAwait (false);
+				exitCode = process.ExitCode;
+			} catch (OperationCanceledException) when (!CancellationToken.IsCancellationRequested) {
+				throw new TimeoutException ($"Timed out draining output from '{tool}' after process exit.");
+			} finally {
+				execution.Cancel ();
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process can exit between HasExited and Kill.
+					}
+					await process.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+				}
+			}
+
+			async Task ObserveExitAsync ()
+			{
+				try {
+					await process.WaitForExitAsync (execution.Token).ConfigureAwait (false);
+					// Active linking is controlled by MSBuild, not an arbitrary tool deadline.
+					execution.CancelAfter (TimeSpan.FromSeconds (30));
+				} catch (OperationCanceledException) when (execution.IsCancellationRequested) {
+					// The joined readers carry cancellation; release the root observer too.
+				} catch {
+					execution.Cancel ();
+					throw;
+				}
+			}
+
+			async Task CaptureDiagnosticsAsync (StreamReader reader, StringBuilder destination)
+			{
+				try {
+					using (reader) {
+						var buffer = new char [4096];
+						int count;
+						while ((count = await reader.ReadAsync (buffer.AsMemory (), execution.Token).ConfigureAwait (false)) != 0)
+							destination.Append (buffer, 0, count);
+					}
+				} catch {
+					execution.Cancel ();
+					throw;
+				}
+			}
+		} catch (Exception e) when (e is Win32Exception || e is TimeoutException) {
+			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary),
+				$"{Environment.NewLine}{e.Message}{Environment.NewLine}{stdout}{stderr}");
 			return false;
 		}
 		CancellationToken.ThrowIfCancellationRequested ();
-		int exitCode = result.ExitStatus.ExitCode;
 		if (exitCode != 0) {
 			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary),
-				$"{Environment.NewLine}{Path.GetFileName (tool)} exited with code {exitCode}.{Environment.NewLine}{result.StandardOutput}{result.StandardError}");
+				$"{Environment.NewLine}{Path.GetFileName (tool)} exited with code {exitCode}.{Environment.NewLine}{stdout}{stderr}");
 			return false;
 		}
-		LogDebugMessage (result.StandardOutput);
-		LogDebugMessage (result.StandardError);
+		LogDebugMessage (stdout.ToString ());
+		LogDebugMessage (stderr.ToString ());
 		return true;
 	}
 

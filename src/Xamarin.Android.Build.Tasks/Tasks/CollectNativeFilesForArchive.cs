@@ -197,10 +197,17 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 		async Task CaptureDiagnosticsAsync (StreamReader reader, StringBuilder destination)
 		{
-			var buffer = new char [4096];
-			int count;
-			while ((count = await reader.ReadAsync (buffer.AsMemory (), timeout.Token).ConfigureAwait (false)) != 0)
-				destination.Append (buffer, 0, count);
+			try {
+				using (reader) {
+					var buffer = new char [4096];
+					int count;
+					while ((count = await reader.ReadAsync (buffer.AsMemory (), timeout.Token).ConfigureAwait (false)) != 0)
+						destination.Append (buffer, 0, count);
+				}
+			} catch {
+				timeout.Cancel ();
+				throw;
+			}
 		}
 	}
 
