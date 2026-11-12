@@ -2318,12 +2318,42 @@ because xbuild doesn't support framework reference assemblies.
 		<_KeytoolToolExe>$(KeytoolToolExe)</_KeytoolToolExe>
 		<_KeytoolToolExe Condition=" '$(_KeytoolToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">keytool.exe</_KeytoolToolExe>
 		<_KeytoolToolExe Condition=" '$(_KeytoolToolExe)' == '' ">keytool</_KeytoolToolExe>
-		<_KeytoolCommand>&quot;$([System.IO.Path]::Combine('$(KeytoolToolPath)', '$(_KeytoolToolExe)'))&quot;</_KeytoolCommand>
+		<_AndroidDebugKeyDirectory>$([System.IO.Path]::GetDirectoryName(`$(_ApkDebugKeyStore)`))</_AndroidDebugKeyDirectory>
 	</PropertyGroup>
-	<MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_ApkDebugKeyStore)'))"
-		Condition=" '$([System.IO.Path]::GetDirectoryName('$(_ApkDebugKeyStore)'))' != '' " />
+	<ItemGroup>
+		<_AndroidDebugKeyArgument Remove="@(_AndroidDebugKeyArgument)" />
+		<_AndroidDebugKeyArgument Include="Tool">
+			<Value>$([System.IO.Path]::Combine(`$(KeytoolToolPath)`, `$(_KeytoolToolExe)`))</Value>
+		</_AndroidDebugKeyArgument>
+		<_AndroidDebugKeyArgument Include="Keystore">
+			<Switch>-keystore</Switch>
+			<Value>$(_ApkDebugKeyStore)</Value>
+		</_AndroidDebugKeyArgument>
+		<_AndroidDebugKeyArgument Include="Algorithm">
+			<Switch>-keyalg</Switch>
+			<Value>$(AndroidDebugKeyAlgorithm)</Value>
+		</_AndroidDebugKeyArgument>
+		<_AndroidDebugKeyArgument Include="Validity">
+			<Switch>-validity</Switch>
+			<Value>$(AndroidDebugKeyValidity)</Value>
+		</_AndroidDebugKeyArgument>
+		<_AndroidDebugKeyArgument Include="StoreType">
+			<Switch>-storetype</Switch>
+			<Value>$(AndroidDebugStoreType)</Value>
+		</_AndroidDebugKeyArgument>
+		<_AndroidDebugKeyArgument>
+			<!-- Protect percent sequences through argument unescaping and the final Unescape.
+			     Delay shell backslashes until Exec to avoid Unix path normalization. -->
+			<QuotedValue Condition="$([MSBuild]::IsOSPlatform('windows'))">&quot;$([System.String]::Copy(`%(_AndroidDebugKeyArgument.Value)`).Replace(`%`, `%252525%252525`))&quot;</QuotedValue>
+			<QuotedValue Condition="!$([MSBuild]::IsOSPlatform('windows'))">'$([System.String]::Copy(`%(_AndroidDebugKeyArgument.Value)`).Replace(`%`, `%252525`).Replace(`'`, `'%255c''`))'</QuotedValue>
+		</_AndroidDebugKeyArgument>
+	</ItemGroup>
+	<PropertyGroup>
+		<_KeytoolCommand>@(_AndroidDebugKeyArgument->'%(Switch) %(QuotedValue)', ' ')</_KeytoolCommand>
+	</PropertyGroup>
+	<MakeDir Directories="$(_AndroidDebugKeyDirectory)" Condition=" '$(_AndroidDebugKeyDirectory)' != '' " />
 	<Exec
-		Command="$(_KeytoolCommand) -genkeypair -alias androiddebugkey -storepass android -keypass android -keystore &quot;$(_ApkDebugKeyStore)&quot; -dname &quot;CN=Android Debug,O=Android,C=US&quot; -keyalg &quot;$(AndroidDebugKeyAlgorithm)&quot; -validity &quot;$(AndroidDebugKeyValidity)&quot; -storetype &quot;$(AndroidDebugStoreType)&quot;"
+		Command="$([MSBuild]::Unescape(`$(_KeytoolCommand)`)) -genkeypair -alias androiddebugkey -storepass android -keypass android -dname &quot;CN=Android Debug,O=Android,C=US&quot;"
 		IgnoreExitCode="True"
 		IgnoreStandardErrorWarningFormat="True"
 		ConsoleToMSBuild="True"
