@@ -1,0 +1,14 @@
+<Project>
+  <Import Project="$(JavaDependencyVerificationTargets)" />
+  <ItemGroup>
+    <AndroidLibrary Include="material.jar" Manifest="$(MSBuildProjectDirectory)/material.pom" />
+    <PackageReference Include="Xamarin.Google.Material.Core" Version="1.0" />
+  </ItemGroup>
+  <Target Name="Verify">
+    <JavaDependencyVerification
+        AndroidLibraries="@(AndroidLibrary)"
+        PackageReferences="@(PackageReference)"
+        ProjectAssetsLockFile="$(MSBuildProjectDirectory)/project.assets.json" />
+    <Message Text="Verified $(MSBuildProjectDirectory)" Importance="high" />
+  </Target>
+</Project>

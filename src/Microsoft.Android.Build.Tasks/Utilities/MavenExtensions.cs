@@ -25,12 +25,6 @@ static class MavenExtensions
 		return value ?? [];
 	}
 
-	public static string GetMetadataOrDefault (this ITaskItem item, string name, string defaultValue)
-	{
-		var value = item.GetMetadata (name);
-		return string.IsNullOrWhiteSpace (value) ? defaultValue : value;
-	}
-
 	public static bool HasMetadata (this ITaskItem item, string name)
 		=> item.MetadataNames.OfType<string> ().Contains (name, StringComparer.OrdinalIgnoreCase);
 

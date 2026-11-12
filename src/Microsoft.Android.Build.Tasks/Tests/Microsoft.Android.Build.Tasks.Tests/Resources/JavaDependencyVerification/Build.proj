@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="Build">
+    <MSBuild Projects="first/Binding.proj;second/Binding.proj" Targets="Verify" BuildInParallel="true" />
+  </Target>
+</Project>
