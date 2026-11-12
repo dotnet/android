@@ -112,7 +112,7 @@
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
       DependsOnTargets="_CopyXmlLocal"
-      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml"
+      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml;$(MicrosoftAndroidSdkOutDir)generator.dll"
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems;$(_MonoAndroidUnmanagedCallersOnlyCallbacksStamp)">
     <PropertyGroup>
       <_PlatformIdVersions>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\api-versions.xml</_PlatformIdVersions>

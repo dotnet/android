@@ -111,9 +111,9 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			ArgumentNullException.ThrowIfNull (args);
 			unsafe {
 				// SAFETY: the native host calls this entry point with its matching live descriptor, current-thread environment and runtime-lifetime VM/global references.
+				ArgumentNullException.ThrowIfNull (args);
 				if (RuntimeFeature.IsNativeAotRuntime) {
 					throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
 				}

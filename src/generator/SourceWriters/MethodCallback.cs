@@ -137,16 +137,22 @@ namespace generator.SourceWriters
 			// has a parameter requiring post-call cleanup, so the `__ret` dance is unnecessary.
 			var useRetTemporary = typed_shape == null && method.Parameters.HasCleanup;
 			string ToReturn (string call) => typed_shape != null && typed_shape.ReturnsPeer ? call : method.RetVal.ToNative (opt, call);
+			var arguments = opt.SupportNullableReferenceTypes && method.IsInterfaceDefaultMethod && method.OverriddenInterfaceMethod != null
+				? string.Join (", ", method.Parameters.Select (p =>
+					opt.GetSafeIdentifier (p.Name) + (p.NotNull && p.NativeType == "IntPtr" && p.Type != "IntPtr" && !p.Symbol.IsEnum
+						? " ?? throw new global::Java.Lang.NullPointerException ()"
+						: "")))
+				: method.Parameters.GetCall (opt);
 
 			if (string.IsNullOrEmpty (property_name)) {
-				var call = "__this." + method.Name + (is_formatted ? "Formatted" : string.Empty) + " (" + method.Parameters.GetCall (opt) + ")";
+				var call = "__this." + method.Name + (is_formatted ? "Formatted" : string.Empty) + " (" + arguments + ")";
 				if (method.IsVoid)
 					writer.WriteLine (call + ";");
 				else
 					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn (call));
 			} else {
 				if (method.IsVoid)
-					writer.WriteLine ("__this.{0} = {1};", property_name, method.Parameters.GetCall (opt));
+					writer.WriteLine ("__this.{0} = {1};", property_name, arguments);
 				else
 					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn ("__this." + property_name));
 			}

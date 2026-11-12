@@ -17,6 +17,7 @@ namespace MonoDroid.Generation
 		public string ArgsType { get; set; }
 		public string CustomAttributes { get; set; }
 		public string EventName { get; set; }
+		internal string EventDefaultReturn { get; set; }
 		public bool GenerateAsyncWrapper { get; set; }
 		public bool GenerateDispatchingSetter { get; set; }
 		public bool IsAbstract { get; set; }
@@ -144,6 +145,7 @@ namespace MonoDroid.Generation
 			clone.ArgsType = ArgsType;
 			clone.CustomAttributes = CustomAttributes;
 			clone.EventName = EventName;
+			clone.EventDefaultReturn = EventDefaultReturn;
 			clone.GenerateAsyncWrapper = GenerateAsyncWrapper;
 			clone.GenerateDispatchingSetter = GenerateDispatchingSetter;
 			clone.IsAbstract = IsAbstract;
