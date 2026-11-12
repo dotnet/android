@@ -1439,8 +1439,13 @@ public sealed class JavaPeerScanner : IDisposable
 			return type;
 		}
 
-		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName) ? type with { IsEnum = true, IsValueType = true } : type;
+		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName)
+			? type with { IsEnum = true, IsValueType = true }
+			: EnrichTypeRefWithAndroidGraphicsColorInfo (type);
 	}
+
+	TypeRefData EnrichTypeRefWithAndroidGraphicsColorInfo (TypeRefData type)
+		=> !type.IsAndroidGraphicsColor && IsAndroidGraphicsColor (type) ? type with { IsAndroidGraphicsColor = true } : type;
 
 	static bool IsEnumType (TypeDefinition typeDef, AssemblyIndex index)
 	{
@@ -2988,7 +2993,11 @@ public sealed class JavaPeerScanner : IDisposable
 					signature.Append (ManagedTypeToJniDescriptor (parameter));
 				}
 				signature.Append (')');
-				constructors.Add (new (sig.ParameterTypes, signature.ToString ()));
+				var parameterTypes = ImmutableArray.CreateBuilder<TypeRefData> (sig.ParameterTypes.Length);
+				foreach (var parameter in sig.ParameterTypes) {
+					parameterTypes.Add (EnrichTypeRefWithAndroidGraphicsColorInfo (parameter));
+				}
+				constructors.Add (new (parameterTypes.MoveToImmutable (), signature.ToString ()));
 			}
 		}
 		return constructors;

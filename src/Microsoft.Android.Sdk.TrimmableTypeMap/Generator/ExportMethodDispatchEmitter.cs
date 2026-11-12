@@ -332,7 +332,7 @@ sealed class ExportMethodDispatchEmitter
 			return;
 		}
 
-		if (jniKind == JniParamKind.Int && managedTypeName == "Android.Graphics.Color") {
+		if (jniKind == JniParamKind.Int && managedType.IsAndroidGraphicsColor) {
 			encoder.LoadArgument (argumentIndex);
 			encoder.NewObject (_context.GetColorConstructorRef (), parameterCount: 1);
 			return;
@@ -366,7 +366,7 @@ sealed class ExportMethodDispatchEmitter
 		if (returnKind != JniParamKind.Object) {
 			if (managedReturnTypeName == "System.Boolean") {
 				encoder.OpCode (ILOpCode.Conv_u1);
-			} else if (returnKind == JniParamKind.Int && managedReturnTypeName == "Android.Graphics.Color") {
+			} else if (returnKind == JniParamKind.Int && managedReturnType.IsAndroidGraphicsColor) {
 				encoder.Call (_context.GetColorToInt32Ref (), parameterCount: 1, returnsValue: true);
 			}
 			return;

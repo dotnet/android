@@ -192,6 +192,7 @@ static class MetadataHelper
 		writer.WriteString (sink, type.AssemblyName);
 		writer.WriteByte (sink, type.IsValueType ? (byte) 1 : (byte) 0);
 		writer.WriteByte (sink, type.IsEnum ? (byte) 1 : (byte) 0);
+		writer.WriteByte (sink, type.IsAndroidGraphicsColor ? (byte) 1 : (byte) 0);
 		writer.WriteInt32 (sink, type.GenericArguments.Count);
 		foreach (var argument in type.GenericArguments) {
 			WriteTypeRef (writer, sink, argument);

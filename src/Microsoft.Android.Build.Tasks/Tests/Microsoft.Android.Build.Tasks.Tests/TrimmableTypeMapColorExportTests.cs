@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 
@@ -56,8 +57,50 @@ public class TrimmableTypeMapColorExportTests
 		Assert.IsEmpty (ScanExport (arrayDepth, frameworkAssemblyName: "Lookalike").MarshalMethods);
 	}
 
+	[TestCase ("EchoColor", "Mono.Android", false, true)]
+	[TestCase (".ctor", "Mono.Android", false, true)]
+	[TestCase ("EchoColor", "Lookalike", true, false)]
+	[TestCase (".ctor", "Lookalike", true, false)]
+	public void ColorConversionRequiresFrameworkColorIdentity (string methodName, string frameworkAssemblyName, bool colorIsEnum, bool expectColorConversion)
+	{
+		var peer = ScanExport (0, methodName: methodName, frameworkAssemblyName: frameworkAssemblyName, colorIsEnum: colorIsEnum);
+		string signature = methodName == ".ctor" ? peer.JavaConstructors.Single ().JniSignature : peer.MarshalMethods.Single ().JniSignature;
+		Assert.AreEqual (methodName == ".ctor" ? "(I)V" : "(I)I", signature);
+
+		var colorMembers = GetColorMemberReferences (peer);
+		string [] expected = !expectColorConversion ? [] : methodName == ".ctor" ? [".ctor"] : [".ctor", "op_Implicit"];
+		CollectionAssert.AreEquivalent (expected, colorMembers);
+	}
+
+	static List<string> GetColorMemberReferences (JavaPeerInfo peer)
+	{
+		// The synthetic peer has no activation ctor; give it one so a proxy with UCO wrappers is emitted.
+		peer = peer with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = peer.ManagedTypeName,
+				DeclaringAssemblyName = peer.AssemblyName,
+				Style = ActivationCtorStyle.XamarinAndroid,
+			},
+		};
+		using var stream = new MemoryStream ();
+		new TypeMapAssemblyGenerator (new Version (11, 0)).Generate ([peer], stream, "_ColorExports.TypeMap");
+		stream.Position = 0;
+		using var reader = new PEReader (stream);
+		var metadata = System.Reflection.Metadata.PEReaderExtensions.GetMetadataReader (reader);
+		var members = new List<string> ();
+		foreach (var handle in metadata.MemberReferences) {
+			var member = metadata.GetMemberReference (handle);
+			if (member.Parent.Kind != System.Reflection.Metadata.HandleKind.TypeReference)
+				continue;
+			var type = metadata.GetTypeReference ((System.Reflection.Metadata.TypeReferenceHandle) member.Parent);
+			if (metadata.GetString (type.Namespace) == "Android.Graphics" && metadata.GetString (type.Name) == "Color")
+				members.Add (metadata.GetString (member.Name));
+		}
+		return members;
+	}
+
 	static JavaPeerInfo ScanExport (int arrayDepth, string methodName = "EchoColor", bool isStatic = false,
-		string frameworkAssemblyName = "Mono.Android")
+		string frameworkAssemblyName = "Mono.Android", bool colorIsEnum = false)
 	{
 		using var framework = AssemblyDefinition.CreateAssembly (
 			new AssemblyNameDefinition (frameworkAssemblyName, new Version (1, 0)),
@@ -70,8 +113,13 @@ public class TrimmableTypeMapColorExportTests
 			"java/lang/Object"));
 		module.Types.Add (javaObject);
 		var color = new TypeDefinition ("Android.Graphics", "Color",
-			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout,
-			module.ImportReference (typeof (ValueType)));
+			TypeAttributes.Public | TypeAttributes.Sealed | (colorIsEnum ? default : TypeAttributes.SequentialLayout),
+			module.ImportReference (colorIsEnum ? typeof (Enum) : typeof (ValueType)));
+		if (colorIsEnum) {
+			color.Fields.Add (new FieldDefinition ("value__",
+				FieldAttributes.Public | FieldAttributes.SpecialName | FieldAttributes.RTSpecialName,
+				module.TypeSystem.Int32));
+		}
 		module.Types.Add (color);
 
 		using var application = AssemblyDefinition.CreateAssembly (
