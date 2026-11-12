@@ -117,22 +117,44 @@ public class BootAndroidEmulator : MultithreadedAndroidTask, ICancelableTask
 			AdditionalArgs = ParseExtraArguments (EmulatorExtraArguments),
 		};
 
-		var logLock = new object ();
+		var messages = new Queue<(TraceLevel Level, string Message)> ();
 		bool logging = true;
 		EmulatorBootResult result;
 		try {
-			result = ExecuteBootAsync (adbPath, emulatorPath, (level, message) => {
-				lock (logLock) {
-					if (logging)
-						logger (level, message);
+			var boot = ExecuteBootAsync (adbPath, emulatorPath, (level, message) => {
+				lock (messages) {
+					if (logging) {
+						messages.Enqueue ((level, message));
+						Monitor.Pulse (messages);
+					}
 				}
-			}, Device, options, CancellationToken).GetAwaiter ().GetResult ();
+			}, Device, options, CancellationToken);
+			_ = boot.ContinueWith (_ => {
+				lock (messages)
+					Monitor.Pulse (messages);
+			}, System.Threading.CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+			// IDE logging must run on the executing thread, not a runner callback.
+			while (true) {
+				(TraceLevel Level, string Message) message;
+				lock (messages) {
+					while (messages.Count == 0 && !boot.IsCompleted)
+						Monitor.Wait (messages);
+					if (boot.IsCompleted)
+						logging = false;
+					if (messages.Count == 0)
+						break;
+					message = messages.Dequeue ();
+				}
+				logger (message.Level, message.Message);
+			}
+			result = boot.GetAwaiter ().GetResult ();
 		} catch (OperationCanceledException) when (CancellationToken.IsCancellationRequested) {
 			Log.LogMessage ($"Emulator boot for '{Device}' was cancelled.");
 			return !Log.HasLoggedErrors;
 		} finally {
 			// A successfully booted emulator can outlive this task.
-			lock (logLock)
+			lock (messages)
 				logging = false;
 		}
 
@@ -260,6 +282,8 @@ public class BootAndroidEmulator : MultithreadedAndroidTask, ICancelableTask
 
 	string ResolveToolPath (string path)
 	{
+		if (OS.IsWindows && string.IsNullOrEmpty (Path.GetExtension (path)))
+			path += ".exe";
 		var projectPath = TaskEnvironment.GetAbsolutePath (path);
 		if (string.IsNullOrEmpty (Path.GetDirectoryName (path)) && !File.Exists (projectPath)) {
 			foreach (var directory in (TaskEnvironment.GetEnvironmentVariable ("PATH") ?? "").Split (Path.PathSeparator)) {
