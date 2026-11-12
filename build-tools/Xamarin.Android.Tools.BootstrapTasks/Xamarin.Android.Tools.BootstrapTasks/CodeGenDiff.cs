@@ -153,7 +153,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						throw new InvalidOperationException ($"GenAPI failed with exit code {status.ExitCode} for '{assembly}'.");
 					}
 				} finally {
-					genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
+					try {
+						genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
+					} finally {
+						using var stdout = genApiProcess.StandardOutput;
+						using var stderr = genApiProcess.StandardError;
+					}
 				}
 			}
 

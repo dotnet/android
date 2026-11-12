@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
+using Xamarin.Android.BuildTools.PrepTasks;
 using Xamarin.Android.Tools.BootstrapTasks;
 
 using Task = System.Threading.Tasks.Task;
@@ -560,16 +562,69 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				if (ownedEmulator)
 					startInfo.ArgumentList.Add ("-p:_EmuPid=" + emulator.Id);
 
-				var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (15));
-
-				Assert.IsFalse (result.ExitStatus.Canceled, result.StandardOutput + result.StandardError);
-				Assert.AreEqual (0, result.ExitStatus.ExitCode, result.StandardOutput + result.StandardError);
+				var timeout = TimeSpan.FromSeconds (15);
+				var timer = Stopwatch.StartNew ();
+				using var process = Process.Start (startInfo)
+					?? throw new InvalidOperationException ("Could not start the release-target fixture.");
+				try {
+					var (stdout, stderr) = process.ReadAllText (timeout);
+					var remaining = timeout - timer.Elapsed;
+					Assert.IsTrue (process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status), stdout + stderr);
+					Assert.AreEqual (0, status.ExitCode, stdout + stderr);
+				} finally {
+					try {
+						StopOwnedProcess (process);
+					} finally {
+						using var stdout = process.StandardOutput;
+						using var stderr = process.StandardError;
+					}
+				}
 				CollectionAssert.AreEqual (ownedEmulator
 					? new [] { "-s emulator-5599 emu kill", "kill-server" }
 					: new [] { "kill-server" }, File.ReadAllLines (log));
 				Assert.AreEqual (ownedEmulator, emulator.HasExited);
 			} finally {
 				StopOwnedProcess (emulator);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[NonParallelizable]
+		public void VersionProbeReleasesRedirectedReadersWithoutGarbageCollection (bool commandFails)
+		{
+			string descriptors = OperatingSystem.IsMacOS () ? "/dev/fd" : "/proc/self/fd";
+			var program = new TaskItem ("sh");
+			program.SetMetadata ("MinimumVersion", "1.0");
+			program.SetMetadata ("CurrentVersionCommand", "printf 'version 2.3\\n'" + (commandFails ? "; exit 7" : ""));
+			var task = new Which {
+				BuildEngine = engine,
+				Program = program,
+				Directories = [new TaskItem ("/bin")],
+				Required = true,
+				HostOS = OperatingSystem.IsMacOS () ? "Darwin" : "Linux",
+			};
+			for (int i = 0; i < 5; i++)
+				CheckVersion ();
+
+			Assert.IsTrue (GC.TryStartNoGCRegion (64 * 1024 * 1024), "Could not isolate deterministic descriptor ownership from finalization.");
+			try {
+				int before = Directory.GetFileSystemEntries (descriptors).Length;
+				for (int i = 0; i < 100; i++)
+					CheckVersion ();
+				int delta = Directory.GetFileSystemEntries (descriptors).Length - before;
+				TestContext.Out.WriteLine ($"Version probe descriptor delta after 100 commands: {delta} ({RuntimeInformation.FrameworkDescription})");
+				Assert.LessOrEqual (delta, 4, "Version probes retain redirected pipe descriptors until garbage collection.");
+			} finally {
+				GC.EndNoGCRegion ();
+			}
+
+			void CheckVersion ()
+			{
+				if (commandFails)
+					Assert.Throws<InvalidOperationException> (() => task.Execute ());
+				else
+					Assert.IsTrue (task.Execute ());
 			}
 		}
 
