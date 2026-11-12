@@ -38,6 +38,7 @@ dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Buil
 - **Check for existing work first:** search PRs and branches (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --grep "<keywords>"`) and prior sessions; extend rather than redo, including before fanning out.
 - **Reuse before inventing:** look for an existing MSBuild, SDK, `global.json`, or Arcade mechanism, in-repo helper, or CI template first.
 - **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller.
+- **Look up dependencies, don't guess URLs:** for .NET source matching our pins, search the VMR at the `Sha` in `eng/Version.Details.xml` (`gh search code --repo dotnet/dotnet "<symbol>"`, `gh api "repos/dotnet/dotnet/contents/<path>?ref=<sha>"`); for package versions, `dotnet package search <id> --exact-match --prerelease --source <feed from NuGet.config>`; for MS Learn, `microsoft_docs_search`.
 - **Ask before adding** workflows, scripts, `.editorconfig`/`Directory.*` files, tests for build scripts, or build-time-generated files.
 - **Measure performance claims** before and after with the same configuration; drop changes without a measured win.
 - **Validate proportionally:** use the smallest sufficient validation (table in the `tests` skill).

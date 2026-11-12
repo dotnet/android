@@ -16,8 +16,11 @@ PRs are squash-merged, so the PR title and description become the commit message
 - [ ] No existing PR covers this (gh pr list --state all --search "<keywords>")
 - [ ] Validated (tests skill); commands and results recorded
 - [ ] Title and body follow the format below and the PR template
-- [ ] Pushed; PR opened with the body from a file
+- [ ] Committed and pushed (git push -u origin HEAD) BEFORE creating the PR
+- [ ] PR opened with the body from a file
 ```
+
+Creating a PR from an unpushed branch fails with `422 ... field: head, code: invalid`; push first, then create.
 
 - Follow `.github/PULL_REQUEST_TEMPLATE.md`: keep its HTML comment and don't add checklists.
 - Never amend or rewrite pushed history; maintainers squash. For stacked PRs, use the `gh-stack` skill.
