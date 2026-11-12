@@ -75,8 +75,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			var separator = metadata.IndexOf (':');
 			Assert.Greater (separator, 0, $"Expected staged metadata argument in: {metadata}");
 			var temporaryArchivePath = "BUNDLE-METADATA/" + metadata.Substring (0, separator);
-			var stagingDirectory = task.MetaDataStagingDirectory;
-			Assert.IsNotNull (stagingDirectory, "Metadata should be staged in a private directory.");
+			var stagingDirectory = task.MetaDataStagingDirectory
+				?? throw new AssertionException ("Metadata should be staged in a private directory.");
 			var temporarySourcePath = Path.Combine (stagingDirectory, metadata.Substring (separator + 1));
 			FileAssert.Exists (temporarySourcePath);
 
@@ -91,8 +91,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				using var restoredBundle = ZipFile.OpenRead (output);
 				Assert.IsNull (restoredBundle.GetEntry (temporaryArchivePath), "Temporary metadata entry should be removed.");
-				var restored = restoredBundle.GetEntry ("BUNDLE-METADATA/" + archivePath);
-				Assert.IsNotNull (restored, "Metadata entry should use its original Unicode path.");
+				var restored = restoredBundle.GetEntry ("BUNDLE-METADATA/" + archivePath)
+					?? throw new AssertionException ("Metadata entry should use its original Unicode path.");
 				using var reader = new StreamReader (restored.Open ());
 				Assert.AreEqual ("symbols", reader.ReadToEnd ());
 			} finally {
@@ -120,8 +120,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			};
 
 			task.PrepareMetaDataFiles ();
-			var stagingDirectory = task.MetaDataStagingDirectory;
-			Assert.IsNotNull (stagingDirectory, "Metadata should be staged in a private directory.");
+			var stagingDirectory = task.MetaDataStagingDirectory
+				?? throw new AssertionException ("Metadata should be staged in a private directory.");
 			StringAssert.Contains ("テスト", stagingDirectory, "Test requires a non-ASCII staging directory path.");
 
 			var metadata = task.BundleToolMetaDataFiles.Single ();
@@ -162,8 +162,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				};
 
 				task.PrepareMetaDataFiles ();
-				var stagingDirectory = task.MetaDataStagingDirectory;
-				Assert.IsNotNull (stagingDirectory, "Unicode metadata should be staged.");
+				var stagingDirectory = task.MetaDataStagingDirectory
+					?? throw new AssertionException ("Unicode metadata should be staged.");
 
 				foreach (var metadata in task.BundleToolMetaDataFiles) {
 					Assert.IsTrue (metadata.All (c => c <= 0x7f), $"Metadata argument should be ASCII: {metadata}");
@@ -210,10 +210,10 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				task.PrepareConfigFile ("{}");
 				task.PrepareMetaDataFiles ();
 
-				var stagingDirectory = task.MetaDataStagingDirectory;
-				Assert.IsNotNull (stagingDirectory, "Config should be staged when the temporary directory is not ASCII.");
-				var configFile = task.ConfigFile;
-				Assert.IsNotNull (configFile);
+				var stagingDirectory = task.MetaDataStagingDirectory
+					?? throw new AssertionException ("Config should be staged when the temporary directory is not ASCII.");
+				var configFile = task.ConfigFile
+					?? throw new AssertionException ("Config file should be created.");
 				FileAssert.Exists (configFile);
 
 				var commandLine = task.GetCommandLineBuilder ().ToString ();
@@ -272,13 +272,13 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual (count + 1, restoredBundle.Entries.Count, "Temporary metadata entries should be replaced.");
 			Assert.IsFalse (restoredBundle.Entries.Any (e => e.FullName.Contains ("xamarin-android-")), "Temporary metadata entries should be removed.");
 			for (int i = 0; i < count; i++) {
-				var restored = restoredBundle.GetEntry ($"BUNDLE-METADATA/com.android.tools.build.debugsymbols/arm64-v8a/libテスト{i}.so.dbg");
-				Assert.IsNotNull (restored, $"Metadata entry {i} should use its original Unicode path.");
+				var restored = restoredBundle.GetEntry ($"BUNDLE-METADATA/com.android.tools.build.debugsymbols/arm64-v8a/libテスト{i}.so.dbg")
+					?? throw new AssertionException ($"Metadata entry {i} should use its original Unicode path.");
 				using var reader = new StreamReader (restored.Open ());
 				Assert.AreEqual ($"symbols{i}", reader.ReadToEnd ());
 			}
-			var manifest = restoredBundle.GetEntry ("base/manifest/AndroidManifest.xml");
-			Assert.IsNotNull (manifest);
+			var manifest = restoredBundle.GetEntry ("base/manifest/AndroidManifest.xml")
+				?? throw new AssertionException ("Manifest entry should be preserved.");
 			using (var reader = new StreamReader (manifest.Open ()))
 				Assert.AreEqual ("manifest", reader.ReadToEnd ());
 		}
