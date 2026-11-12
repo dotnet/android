@@ -17,6 +17,8 @@ namespace Xamarin.Android.Tools;
 /// </summary>
 public class EmulatorRunner
 {
+	const int ListAvdsTimeoutSeconds = 30;
+
 	readonly string emulatorPath;
 	readonly IDictionary<string, string>? environmentVariables;
 	readonly Action<TraceLevel, string> logger;
@@ -157,6 +159,8 @@ public class EmulatorRunner
 		return process;
 	}
 
+	/// <summary>Lists AVD names with a 30-second budget for command execution and complete output capture.</summary>
+	/// <exception cref="TimeoutException">The finite discovery command or its redirected output did not complete within 30 seconds.</exception>
 	public async Task<IReadOnlyList<string>> ListAvdNamesAsync (CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested ();
@@ -174,11 +178,37 @@ public class EmulatorRunner
 		ApplyProcessEnvironment (psi);
 
 		logger.Invoke (TraceLevel.Verbose, "Running: emulator -list-avds");
-		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
-		cancellationToken.ThrowIfCancellationRequested ();
-		if (result.ExitStatus.ExitCode != 0)
-			throw new InvalidOperationException ($"'emulator -list-avds' failed with exit code {result.ExitStatus.ExitCode}. stderr:{Environment.NewLine}{result.StandardError} stdout:{Environment.NewLine}{result.StandardOutput}");
-		return ParseListAvdsOutput (result.StandardOutput);
+		using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		execution.CancelAfter (TimeSpan.FromSeconds (ListAvdsTimeoutSeconds));
+		using var process = new Process { StartInfo = psi };
+		process.Start ();
+		var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+		var capture = process.ReadAllTextAsync (execution.Token);
+		using var stdout = process.StandardOutput;
+		using var stderr = process.StandardError;
+		try {
+			var result = await capture.ConfigureAwait (false);
+			var status = await exit.ConfigureAwait (false);
+			execution.Token.ThrowIfCancellationRequested ();
+			if (status.ExitCode != 0)
+				throw new InvalidOperationException ($"'emulator -list-avds' failed with exit code {status.ExitCode}. stderr:{Environment.NewLine}{result.StandardError} stdout:{Environment.NewLine}{result.StandardOutput}");
+			return ParseListAvdsOutput (result.StandardOutput);
+		} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+			throw new TimeoutException ($"emulator -list-avds did not complete within {ListAvdsTimeoutSeconds} seconds.");
+		} catch (OperationCanceledException ex) {
+			throw new OperationCanceledException (ex.Message, ex, cancellationToken);
+		} finally {
+			execution.Cancel ();
+			try {
+				try {
+					await capture.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (execution.IsCancellationRequested) {
+					// Stop reads without terminating any persistent pipe-holding descendant.
+				}
+			} finally {
+				await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+			}
+		}
 	}
 
 	internal static List<string> ParseListAvdsOutput (string output)

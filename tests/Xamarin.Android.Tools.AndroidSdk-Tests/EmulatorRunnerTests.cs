@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,6 +65,72 @@ public class EmulatorRunnerTests
 	public void Constructor_ThrowsOnInvalidPath (string path)
 	{
 		Assert.Throws<ArgumentException> (() => new EmulatorRunner (path));
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	[Platform ("Linux,MacOsX")]
+	public void ListAvdNamesAsync_DefaultDeadlineBoundsExecutionAndInheritedOutput (bool inheritedOutput)
+	{
+		using var command = new ListAvdsCommand (inheritedOutput);
+		var timer = Stopwatch.StartNew ();
+		var error = Assert.ThrowsAsync<TimeoutException> (async () =>
+			await command.Runner.ListAvdNamesAsync ().WaitAsync (TimeSpan.FromSeconds (40)));
+		if (error == null)
+			throw new InvalidOperationException ("Expected the finite discovery deadline to fail.");
+		StringAssert.Contains ("emulator -list-avds did not complete within 30 seconds", error.Message);
+		Assert.GreaterOrEqual (timer.Elapsed, TimeSpan.FromSeconds (29));
+		command.AssertProcessesAfterCompletion ();
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	[Platform ("Linux,MacOsX")]
+	public async Task ListAvdNamesAsync_CancellationRetainsCallerTokenAndStopsOnlyTheCommand (bool inheritedOutput)
+	{
+		using var command = new ListAvdsCommand (inheritedOutput);
+		using var caller = new CancellationTokenSource ();
+		var run = command.Runner.ListAvdNamesAsync (caller.Token);
+		try {
+			Assert.IsTrue (await WaitForFileAsync (command.ReadyPath, TimeSpan.FromSeconds (5)), "The owned command must be running before cancellation.");
+		} finally {
+			caller.Cancel ();
+		}
+		var error = Assert.CatchAsync<OperationCanceledException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (5)));
+		if (error == null)
+			throw new InvalidOperationException ("Expected caller cancellation to fail discovery.");
+		Assert.AreEqual (caller.Token, error.CancellationToken);
+		command.AssertProcessesAfterCompletion ();
+	}
+
+	[TestCase (0)]
+	[TestCase (7)]
+	[Platform ("Linux,MacOsX")]
+	public async Task ListAvdNamesAsync_PreservesNamesAndFailureDiagnostics (int exitCode)
+	{
+		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
+		File.WriteAllText (emuPath, $$"""
+			#!/bin/sh
+			[ "$#" = 1 ] && [ "$1" = "-list-avds" ] || exit 99
+			printf 'First_AVD\r\n\nSecond_AVD'
+			printf 'diagnostic-tail' >&2
+			exit {{exitCode}}
+			""");
+		try {
+			var runner = new EmulatorRunner (emuPath);
+			if (exitCode == 0) {
+				CollectionAssert.AreEqual (new [] { "First_AVD", "Second_AVD" }, await runner.ListAvdNamesAsync ());
+			} else {
+				var error = Assert.ThrowsAsync<InvalidOperationException> (() => runner.ListAvdNamesAsync ());
+				if (error == null)
+					throw new InvalidOperationException ("Expected nonzero discovery exit to fail.");
+				StringAssert.Contains ("exit code 7", error.Message);
+				StringAssert.Contains ("diagnostic-tail", error.Message);
+				StringAssert.Contains ("First_AVD\r\n\nSecond_AVD", error.Message);
+			}
+		} finally {
+			DeleteDirectoryWithRetry (tempDir);
+		}
 	}
 
 	[TestCase (null)]
@@ -507,6 +574,73 @@ public class EmulatorRunnerTests
 	}
 
 	// --- Helpers ---
+
+	sealed class ListAvdsCommand : IDisposable
+	{
+		readonly string directory;
+		readonly string executable;
+		readonly bool inheritedOutput;
+
+		public string ReadyPath => executable + ".ready";
+		public EmulatorRunner Runner { get; }
+
+		public ListAvdsCommand (bool inheritedOutput)
+		{
+			(directory, executable) = CreateFakeEmulatorSdk ();
+			this.inheritedOutput = inheritedOutput;
+			string lifetime = inheritedOutput ? """
+				sleep 90 &
+				echo $! > "$0.child"
+				echo ready > "$0.ready"
+				exit 0
+				""" : """
+				echo ready > "$0.ready"
+				exec sleep 90
+				""";
+			File.WriteAllText (executable, $$"""
+				#!/bin/sh
+				echo $$ > "$0.pid"
+				[ "$#" = 1 ] && [ "$1" = "-list-avds" ] || exit 99
+				printf 'First_AVD\r\n\nSecond_AVD'
+				printf 'diagnostic-tail' >&2
+				{{lifetime}}
+				""");
+			Runner = new EmulatorRunner (executable);
+		}
+
+		public void AssertProcessesAfterCompletion ()
+		{
+			try {
+				using var process = Process.GetProcessById (ReadPid (".pid"));
+				Assert.IsTrue (process.HasExited, "Finite discovery must observe the owned command's exit before returning.");
+			} catch (ArgumentException) {
+				// The owned command has already been reaped.
+			}
+			if (inheritedOutput) {
+				using var child = Process.GetProcessById (ReadPid (".child"));
+				Assert.IsFalse (child.HasExited, "A descendant must not be tree-killed to close inherited output.");
+			}
+		}
+
+		int ReadPid (string suffix) => int.Parse (File.ReadAllText (executable + suffix).Trim (), CultureInfo.InvariantCulture);
+
+		public void Dispose ()
+		{
+			foreach (var suffix in new [] { ".pid", ".child" }) {
+				if (!File.Exists (executable + suffix))
+					continue;
+				try {
+					using var process = Process.GetProcessById (ReadPid (suffix));
+					if (!process.HasExited)
+						process.Kill ();
+					Assert.IsTrue (process.WaitForExit (5000), "The owned fixture process must exit before deleting its files.");
+				} catch (ArgumentException) {
+					// The owned fixture process has already been reaped.
+				}
+			}
+			DeleteDirectoryWithRetry (directory);
+		}
+	}
 
 	static void WriteEnvironmentProbe (string emulatorPath, string marker)
 	{

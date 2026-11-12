@@ -46,6 +46,11 @@ client on cancellation, never a shared server or persistent emulator.
 Cleanup still observes the owned client's exit when output capture fails, with
 a five-second termination bound; successful cleanup preserves the original
 capture exception.
+Finite `EmulatorRunner.ListAvdNamesAsync` discovery has a 30-second total budget
+for execution and complete output capture, including default-token callers.
+Expiration throws `TimeoutException`; caller cancellation retains the caller's
+token. Cleanup stops only the discovery command, observes its exit for up to five
+seconds, and does not terminate descendants merely to close inherited pipes.
 `EmulatorRunner.LaunchEmulator` still returns a caller-owned persistent process;
 the caller retains responsibility for terminating it.
 
