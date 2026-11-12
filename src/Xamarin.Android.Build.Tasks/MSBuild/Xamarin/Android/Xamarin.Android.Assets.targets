@@ -137,18 +137,42 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Inputs="@(_AssetPacks->'%(AssetPackCacheFile)')"
     Outputs="@(_AssetPacks->'%(AssetPackOutput)')">
 
+  <!--
+    Exec runs the command through /bin/sh on Unix and cmd.exe on Windows, so every argument is
+    shell-quoted: single quotes (with ' escaped as '\'') on Unix, double quotes (with % escaped as %%)
+    on Windows. The opening quote is added with Insert() so MSBuild does not treat the result as a
+    Unix path and rewrite the backslash in '\'' to a slash.
+  -->
   <PropertyGroup>
+    <_AndroidAssetPackShellQuote>'</_AndroidAssetPackShellQuote>
+    <_AndroidAssetPackShellEscapeFrom>'</_AndroidAssetPackShellEscapeFrom>
+    <_AndroidAssetPackShellEscapeTo>'\''</_AndroidAssetPackShellEscapeTo>
+    <_AndroidAssetPackShellQuote Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">&quot;</_AndroidAssetPackShellQuote>
+    <_AndroidAssetPackShellEscapeFrom Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25</_AndroidAssetPackShellEscapeFrom>
+    <_AndroidAssetPackShellEscapeTo Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25%25</_AndroidAssetPackShellEscapeTo>
     <_AndroidAssetPackAapt2ToolExe>aapt2</_AndroidAssetPackAapt2ToolExe>
     <_AndroidAssetPackAapt2ToolExe Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">aapt2.exe</_AndroidAssetPackAapt2ToolExe>
     <_AndroidAssetPackAapt2ToolExe Condition=" '$(Aapt2ToolExe)' != '' ">$(Aapt2ToolExe)</_AndroidAssetPackAapt2ToolExe>
-    <_AndroidAssetPackAapt2ToolCommand>&quot;$([System.IO.Path]::Combine('$(Aapt2ToolPath)', '$(_AndroidAssetPackAapt2ToolExe)'))&quot;</_AndroidAssetPackAapt2ToolCommand>
+    <_AndroidAssetPackAapt2ToolCommand>$([System.IO.Path]::Combine('$(Aapt2ToolPath)', '$(_AndroidAssetPackAapt2ToolExe)'))</_AndroidAssetPackAapt2ToolCommand>
+    <_AndroidAssetPackAapt2ToolCommand>$([System.String]::Copy('$(_AndroidAssetPackAapt2ToolCommand)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</_AndroidAssetPackAapt2ToolCommand>
     <_AndroidAssetPackLinkArguments>link</_AndroidAssetPackLinkArguments>
-    <_AndroidAssetPackLinkArguments Condition=" '$([System.Environment]::GetEnvironmentVariable('__XA_LOG_ERRORS__'))' == 'icanhaz' ">$(_AndroidAssetPackLinkArguments) -v</_AndroidAssetPackLinkArguments>
+    <_AndroidAssetPackLinkArguments Condition=" '$(__XA_LOG_ERRORS__)' == 'icanhaz' ">$(_AndroidAssetPackLinkArguments) -v</_AndroidAssetPackLinkArguments>
   </PropertyGroup>
   <ItemGroup>
     <_AndroidAssetPackLink Include="@(_AssetPacks)">
       <AssetDirectory>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.AssetPackDirectory)'))</AssetDirectory>
-      <Arguments>$(_AndroidAssetPackLinkArguments) --manifest &quot;$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.ManifestFile)'))&quot; --proto-format --custom-package &quot;$(_AndroidPackage).%(_AssetPacks.AssetPack)&quot; -A &quot;%(AssetDirectory)&quot; -o &quot;$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.AssetPackOutput)'))&quot;</Arguments>
+      <ManifestPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.ManifestFile)'))</ManifestPath>
+      <OutputPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.AssetPackOutput)'))</OutputPath>
+      <CustomPackage>$(_AndroidPackage).%(_AssetPacks.AssetPack)</CustomPackage>
+    </_AndroidAssetPackLink>
+    <_AndroidAssetPackLink>
+      <QuotedManifestPath>$([System.String]::Copy('%(ManifestPath)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedManifestPath>
+      <QuotedCustomPackage>$([System.String]::Copy('%(CustomPackage)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedCustomPackage>
+      <QuotedAssetDirectory>$([System.String]::Copy('%(AssetDirectory)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedAssetDirectory>
+      <QuotedOutputPath>$([System.String]::Copy('%(OutputPath)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedOutputPath>
+    </_AndroidAssetPackLink>
+    <_AndroidAssetPackLink>
+      <Arguments>$(_AndroidAssetPackLinkArguments) --manifest %(QuotedManifestPath) --proto-format --custom-package %(QuotedCustomPackage) -A %(QuotedAssetDirectory) -o %(QuotedOutputPath)</Arguments>
     </_AndroidAssetPackLink>
   </ItemGroup>
   <AndroidError
