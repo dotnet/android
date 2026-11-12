@@ -231,6 +231,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void GetProxyForJavaObject_SealedTarget_ReturnsProxy ()
 		{
 			using var value = new Java.Lang.String ("value");
@@ -241,9 +242,11 @@ namespace Java.InteropTests
 				return;
 			}
 			Assert.AreEqual (typeof (Java.Lang.String), proxy.TargetType);
+			Assert.IsInstanceOf<JavaPeerProxyForSealedFrameworkClass> (proxy);
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void GetProxyForJavaObject_IncompatibleSealedTarget_ReturnsNull ()
 		{
 #pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
@@ -255,6 +258,32 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetProxyForJavaObject_NonSealedTarget_UsesObjectHierarchy ()
+		{
+			using var value = new Java.Lang.String ("value");
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.Object));
+
+			Assert.AreEqual (typeof (Java.Lang.String), proxy?.TargetType);
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetProxyForJavaObject_SealedExternalTarget_UsesUnmarkedProxy ()
+		{
+			var handle = JNIEnv.CreateInstance ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer", "()V");
+			try {
+				var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (handle, typeof (TrimmableRuntimeJavaInteropPeer));
+
+				Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), proxy?.TargetType);
+				Assert.IsNotInstanceOf<JavaPeerProxyForSealedFrameworkClass> (proxy);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void CreateInstance_SealedClosedGenericTarget_ReturnsClosedPeer ()
 		{
 			using var value = new Java.Util.ArrayList ();

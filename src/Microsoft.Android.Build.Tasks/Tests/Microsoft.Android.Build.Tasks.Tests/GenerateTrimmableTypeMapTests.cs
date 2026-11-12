@@ -15,6 +15,55 @@ namespace Xamarin.Android.Build.Tests {
 	public class GenerateTrimmableTypeMapTests : BaseTest {
 
 		[Test]
+		public void SealedFrameworkProxiesUseMarkerBase (
+			[Values ("Mono.Android", "Other")] string assemblyName,
+			[Values] bool isSealed,
+			[Values] bool alias,
+			[Values] bool generic)
+		{
+			var peer = new JavaPeerInfo {
+				JavaName = "example/Peer",
+				CompatJniName = "example/Peer",
+				ManagedTypeName = generic ? "Example.Peer`1" : "Example.Peer",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = generic ? "Peer`1" : "Peer",
+				AssemblyName = assemblyName,
+				IsFrameworkAssembly = true,
+				IsSealed = isSealed,
+				IsGenericDefinition = generic,
+				DoNotGenerateAcw = true,
+			};
+			var peers = new List<JavaPeerInfo> { peer };
+			if (alias) {
+				peers.Add (peer with {
+					ManagedTypeName = "Example.OtherPeer",
+					ManagedTypeShortName = "OtherPeer",
+					IsSealed = false,
+					IsGenericDefinition = false,
+				});
+			}
+
+			var generator = new TypeMapAssemblyGenerator (new Version (12, 0));
+			var model = generator.CreateModel (peers, "_Example.TypeMap");
+			using var stream = new MemoryStream ();
+			generator.Generate (model, stream, useSharedTypemapUniverse: true);
+			stream.Position = 0;
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
+			foreach (var proxy in model.ProxyTypes) {
+				bool eligible = assemblyName == "Mono.Android" && isSealed && proxy.TargetType.ManagedTypeName == peer.ManagedTypeName;
+				string expectedBase = eligible ? "Java.Interop.JavaPeerProxyForSealedFrameworkClass" : "Java.Interop.JavaPeerProxy";
+				var type = assembly.MainModule.Types.Single (type => type.Name == proxy.TypeName);
+				Assert.AreEqual (expectedBase, type.BaseType.FullName, type.FullName);
+				var constructor = type.Methods.Single (method => method.IsConstructor);
+				var baseConstructor = constructor.Body.Instructions
+					.Select (instruction => instruction.Operand)
+					.OfType<Mono.Cecil.MethodReference> ()
+					.Single (method => method.Name == ".ctor");
+				Assert.AreEqual (expectedBase, baseConstructor.DeclaringType.FullName, "The constructor must call the selected base.");
+			}
+		}
+
+		[Test]
 		public void AssemblyQualifiedApplicationTypeReferencesSelectCorrectPeer ()
 		{
 			var wrongPeer = new JavaPeerInfo {

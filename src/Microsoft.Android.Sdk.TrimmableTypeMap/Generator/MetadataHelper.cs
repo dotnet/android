@@ -97,6 +97,7 @@ static class MetadataHelper
 				writer.WriteString (incremental, proxy.Namespace);
 			}
 			WriteTypeRef (writer, both, proxy.TargetType);
+			writer.WriteBoolean (both, proxy.CanResolveFromSealedTargetType);
 			if (includeIncremental) {
 				WriteOptionalTypeRef (writer, incremental, proxy.InvokerType);
 			}

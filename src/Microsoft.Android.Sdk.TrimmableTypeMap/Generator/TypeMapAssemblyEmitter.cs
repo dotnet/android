@@ -79,6 +79,7 @@ sealed class TypeMapAssemblyEmitter
 	AssemblyReferenceHandle _javaInteropRef;
 
 	TypeReferenceHandle _javaPeerProxyRef;
+	TypeReferenceHandle _sealedFrameworkProxyRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
@@ -325,6 +326,8 @@ sealed class TypeMapAssemblyEmitter
 		var metadata = _pe.Metadata;
 		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
+		_sealedFrameworkProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxyForSealedFrameworkClass"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -669,8 +672,8 @@ sealed class TypeMapAssemblyEmitter
 		// open generic definitions (whose T isn't available via the TypeMapLazyDictionary loader),
 		// and interfaces (which have no constructors). Peers are activated from their generated
 		// CreateInstance / InvokerType, never by reflecting over the target type.
-		var proxyBaseType = (EntityHandle) _javaPeerProxyRef;
-		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
+		var proxyBaseType = proxy.CanResolveFromSealedTargetType ? _sealedFrameworkProxyRef : _javaPeerProxyRef;
+		var baseCtorRef = _pe.AddMemberRef (proxyBaseType, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
