@@ -31,8 +31,6 @@ jobs:
   - ${{ if eq(parameters.testOS, 'Windows') }}:
     - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
-    - template: /build-tools/automation/yaml-templates/kill-processes.yaml
-
     - template: /build-tools/automation/yaml-templates/clean.yaml
 
   - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml

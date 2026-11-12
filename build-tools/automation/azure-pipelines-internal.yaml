@@ -716,8 +716,6 @@ extends:
         steps:
         - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
-        - template: /build-tools/automation/yaml-templates/kill-processes.yaml@self
-
         - template: /build-tools/automation/yaml-templates/clean.yaml@self
 
         - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
