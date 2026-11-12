@@ -1469,9 +1469,9 @@ namespace Xamarin.Android.Net
 
 		AuthenticationScheme GetAuthScheme (string scheme)
 		{
-			if (String.Compare ("basic", scheme, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("basic", scheme, StringComparison.OrdinalIgnoreCase))
 				return AuthenticationScheme.Basic;
-			if (String.Compare ("digest", scheme, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("digest", scheme, StringComparison.OrdinalIgnoreCase))
 				return AuthenticationScheme.Digest;
 
 			return AuthenticationScheme.Unsupported;
@@ -1519,12 +1519,12 @@ namespace Xamarin.Android.Net
 				}
 
 				IEnumerable<string> values = headers [key];
-				if (removeContentLength && String.Compare (ContentLengthHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+				if (removeContentLength && string.Equals (ContentLengthHeaderName, key, StringComparison.OrdinalIgnoreCase)) {
 					removeContentLength = false;
 					continue;
 				}
 
-				if ((removeContentEncoding || setNewContentEncodingValue) && String.Compare (ContentEncodingHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+				if ((removeContentEncoding || setNewContentEncodingValue) && string.Equals (ContentEncodingHeaderName, key, StringComparison.OrdinalIgnoreCase)) {
 					if (removeContentEncoding) {
 						removeContentEncoding = false;
 						continue;

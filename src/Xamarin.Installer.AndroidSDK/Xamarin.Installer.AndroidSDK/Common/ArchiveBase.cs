@@ -101,13 +101,13 @@ namespace Xamarin.Installer.AndroidSDK.Common
             if (ReferenceEquals(this, other))
                 return true;
 
-            if (String.Compare(Checksum, other.Checksum, StringComparison.Ordinal) != 0)
+            if (!string.Equals(Checksum, other.Checksum, StringComparison.Ordinal))
                 return false;
 
             if (HostBits != other.HostBits)
                 return false;
 
-            if (String.Compare(HostOS, other.HostOS, StringComparison.Ordinal) != 0)
+            if (!string.Equals(HostOS, other.HostOS, StringComparison.Ordinal))
                 return false;
 
             if (Size != other.Size)

@@ -166,7 +166,7 @@ namespace Xamarin.Installer.AndroidSDK
 				return null;
 			}
 
-			return discoveredInstances.FirstOrDefault (sdk => String.Compare (sdk.Path, path, filesystemComparison) == 0);
+			return discoveredInstances.FirstOrDefault (sdk => string.Equals (sdk.Path, path, filesystemComparison));
 		}
 
 		/// <summary>
@@ -275,7 +275,7 @@ namespace Xamarin.Installer.AndroidSDK
 
 				var sdkInstance = new AndroidSdkInstance {
 					Path = asdkPath,
-					IsDefault = String.Compare (path, defaultPath, filesystemComparison) == 0
+					IsDefault = string.Equals (path, defaultPath, filesystemComparison)
 				};
 				if (instanceComponentStatusChangeHandler != null) {
 					sdkInstance.ComponentStatusChanged -= instanceComponentStatusChangeHandler;

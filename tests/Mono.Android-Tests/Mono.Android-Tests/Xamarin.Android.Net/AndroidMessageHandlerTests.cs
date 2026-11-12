@@ -56,7 +56,7 @@ namespace Xamarin.Android.NetTests
 			EnsureSuccessStatusCode (response);
 
 			foreach (string enc in response.Content.Headers.ContentEncoding) {
-				if (String.Compare (enc, encoding, StringComparison.Ordinal) == 0) {
+				if (string.Equals (enc, encoding, StringComparison.Ordinal)) {
 					Assert.Fail ($"Encoding '{encoding}' should have been removed from the Content-Encoding header");
 				}
 			}

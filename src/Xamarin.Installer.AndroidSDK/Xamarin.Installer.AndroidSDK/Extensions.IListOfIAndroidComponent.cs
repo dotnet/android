@@ -156,7 +156,7 @@ namespace Xamarin.Installer.AndroidSDK
 
 				if (matchPathStartOnly)
 					return c.Path.StartsWith (path, StringComparison.Ordinal);
-				return String.Compare (c.Path, path, StringComparison.Ordinal) == 0;
+				return string.Equals (c.Path, path, StringComparison.Ordinal);
 			}
 		}
 
@@ -253,7 +253,7 @@ namespace Xamarin.Installer.AndroidSDK
 		{
 			bool haveApiLevel = !String.IsNullOrEmpty (apiLevel);
 			return components?.OfType<IAndroidApiLevel> ()?.
-				              Where (c => c != null && (!haveApiLevel || String.Compare(c.ApiLevel, apiLevel, StringComparison.OrdinalIgnoreCase) == 0))?.
+				              Where (c => c != null && (!haveApiLevel || string.Equals(c.ApiLevel, apiLevel, StringComparison.OrdinalIgnoreCase)))?.
 				              Select (c => c as IAndroidComponent).
 				              Where (c => shouldInclude == null || shouldInclude(c));
 		}
