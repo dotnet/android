@@ -27,6 +27,24 @@ dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Buil
 dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0
 ```
 
+## SDK package channels
+
+`SdkManager.ListAsync`, `InstallAsync`, and `UpdateAsync` use the stable channel
+by default. Their channel overloads accept `SdkChannel.Stable`, `Beta`, `Dev`,
+or `Canary`. Each channel includes packages from lower-numbered channels.
+For example:
+
+```csharp
+await manager.ListAsync (SdkChannel.Beta, cancellationToken);
+await manager.InstallAsync (["platform-tools"], SdkChannel.Canary, acceptLicenses: true, cancellationToken);
+await manager.UpdateAsync (SdkChannel.Dev, cancellationToken);
+```
+
+These overloads pass `--channel=N` to `sdkmanager`. They do not invoke the
+separate Android CLI, which uses `--beta` and `--canary` instead.
+The new overloads require all arguments so existing calls, including calls with
+`default` literals, continue to select the original overloads.
+
 ## Contributing
 
 Follow the repository's [contribution guidelines](../../CONTRIBUTING.md).

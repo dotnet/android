@@ -477,7 +477,59 @@ AVAILABLE UPDATES:
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
 		Assert.ThrowsAsync<InvalidOperationException> (
-			async () => await manager.InstallAsync (new[] { "platform-tools" }));
+			async () => await manager.InstallAsync (new[] { "platform-tools" }, default, default));
+	}
+
+	[TestCase (null, "")]
+	[TestCase (SdkChannel.Stable, "")]
+	[TestCase (SdkChannel.Beta, " --channel=1")]
+	[TestCase (SdkChannel.Dev, " --channel=2")]
+	[TestCase (SdkChannel.Canary, " --channel=3")]
+	public async Task PackageCommands_PassChannel (SdkChannel? channel, string suffix)
+	{
+		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-channel-{Guid.NewGuid ()}");
+		var binDir = Path.Combine (sdkDir, "cmdline-tools", "latest", "bin");
+		try {
+			Directory.CreateDirectory (binDir);
+			var script = Path.Combine (binDir, OS.IsWindows ? "sdkmanager.bat" : "sdkmanager");
+			File.WriteAllText (script, OS.IsWindows
+				? "@echo off\r\n>> \"%~dp0arguments.txt\" echo %*\r\nexit /b 0\r\n"
+				: "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$(dirname \"$0\")/arguments.txt\"\n");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+			manager.AndroidSdkPath = sdkDir;
+			using var timeout = new CancellationTokenSource (TimeSpan.FromSeconds (10));
+			if (channel is SdkChannel selected) {
+				await manager.ListAsync (selected, timeout.Token);
+				await manager.InstallAsync (["platform-tools", "platforms;android-35"], selected, acceptLicenses: false, timeout.Token);
+				await manager.UpdateAsync (selected, timeout.Token);
+			} else {
+				await manager.ListAsync (timeout.Token);
+				await manager.InstallAsync (["platform-tools", "platforms;android-35"], acceptLicenses: false, timeout.Token);
+				await manager.UpdateAsync (timeout.Token);
+			}
+
+			Assert.AreEqual (new[] {
+				"--list" + suffix,
+				"platform-tools" + suffix,
+				"platforms;android-35" + suffix,
+				"--update" + suffix,
+			}, File.ReadAllLines (Path.Combine (binDir, "arguments.txt")));
+		}
+		finally {
+			if (Directory.Exists (sdkDir))
+				Directory.Delete (sdkDir, recursive: true);
+		}
+	}
+
+	[TestCase ((SdkChannel) (-1))]
+	[TestCase ((SdkChannel) 4)]
+	public void PackageCommands_InvalidChannel_Throws (SdkChannel channel)
+	{
+		Assert.ThrowsAsync<ArgumentOutOfRangeException> (async () => await manager.ListAsync (channel, default));
+		Assert.ThrowsAsync<ArgumentOutOfRangeException> (async () => await manager.InstallAsync (["platform-tools"], channel, true, default));
+		Assert.ThrowsAsync<ArgumentOutOfRangeException> (async () => await manager.UpdateAsync (channel, default));
 	}
 
 	[Test]
@@ -514,7 +566,7 @@ AVAILABLE UPDATES:
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
 		Assert.ThrowsAsync<InvalidOperationException> (
-			async () => await manager.ListAsync ());
+			async () => await manager.ListAsync (default));
 	}
 
 	[Test]
@@ -522,7 +574,7 @@ AVAILABLE UPDATES:
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
 		Assert.ThrowsAsync<InvalidOperationException> (
-			async () => await manager.UpdateAsync ());
+			async () => await manager.UpdateAsync (default));
 	}
 
 	[Test]

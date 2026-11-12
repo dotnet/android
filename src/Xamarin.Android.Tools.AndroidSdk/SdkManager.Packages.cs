@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -20,26 +21,41 @@ public partial class SdkManager
 	};
 	static readonly Regex WhitespaceColumnSeparator = new Regex (@"\s{2,}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-	public async Task<(IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available)> ListAsync (CancellationToken cancellationToken = default)
+#pragma warning disable RS0027 // Preserve the original overload and its optional parameters.
+	public Task<(IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available)> ListAsync (CancellationToken cancellationToken = default)
+#pragma warning restore RS0027
+		=> ListAsync (SdkChannel.Stable, cancellationToken);
+
+	/// <summary>Lists installed packages and packages available through the specified channel.</summary>
+	public async Task<(IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available)> ListAsync (SdkChannel channel, CancellationToken cancellationToken)
 	{
+		var args = CreatePackageArguments ("--list", channel);
 		var sdkManagerPath = RequireSdkManagerPath ();
 		logger (TraceLevel.Info, "Running sdkmanager --list...");
-		var (exitCode, stdout, stderr) = await RunSdkManagerAsync (sdkManagerPath, new[] { "--list" }, cancellationToken: cancellationToken).ConfigureAwait (false);
+		var (exitCode, stdout, stderr) = await RunSdkManagerAsync (sdkManagerPath, args, cancellationToken: cancellationToken).ConfigureAwait (false);
 		ThrowOnSdkManagerFailure (exitCode, "sdkmanager --list", stderr);
 		return ParseSdkManagerList (stdout);
 	}
 
-	public async Task InstallAsync (IEnumerable<string> packages, bool acceptLicenses = true, CancellationToken cancellationToken = default)
+#pragma warning disable RS0027 // Preserve the original overload and its optional parameters.
+	public Task InstallAsync (IEnumerable<string> packages, bool acceptLicenses = true, CancellationToken cancellationToken = default)
+#pragma warning restore RS0027
+		=> InstallAsync (packages, SdkChannel.Stable, acceptLicenses, cancellationToken);
+
+	/// <summary>Installs packages from channels up to and including the specified channel.</summary>
+	public async Task InstallAsync (IEnumerable<string> packages, SdkChannel channel, bool acceptLicenses, CancellationToken cancellationToken)
 	{
 		var packageArray = ValidatePackages (packages);
+		var args = CreatePackageArguments (packageArray [0], channel);
 		var sdkManagerPath = RequireSdkManagerPath ();
 		logger (TraceLevel.Info, $"Installing packages: {string.Join (", ", packageArray)}");
 
 		// Install one at a time to work around sdkmanager shell script quoting issues
 		foreach (var package in packageArray) {
+			args [0] = package;
 			logger (TraceLevel.Info, $"Installing package: {package}");
 			var (exitCode, _, stderr) = await RunSdkManagerAsync (
-				sdkManagerPath, new[] { package }, acceptLicenses, cancellationToken).ConfigureAwait (false);
+				sdkManagerPath, args, acceptLicenses, cancellationToken).ConfigureAwait (false);
 			ThrowOnSdkManagerFailure (exitCode, $"Package installation ({package})", stderr);
 		}
 		logger (TraceLevel.Info, "Packages installed successfully.");
@@ -58,14 +74,31 @@ public partial class SdkManager
 		logger (TraceLevel.Info, "Packages uninstalled successfully.");
 	}
 
-	public async Task UpdateAsync (CancellationToken cancellationToken = default)
+#pragma warning disable RS0027 // Preserve the original overload and its optional parameters.
+	public Task UpdateAsync (CancellationToken cancellationToken = default)
+#pragma warning restore RS0027
+		=> UpdateAsync (SdkChannel.Stable, cancellationToken);
+
+	/// <summary>Updates installed packages using channels up to and including the specified channel.</summary>
+	public async Task UpdateAsync (SdkChannel channel, CancellationToken cancellationToken)
 	{
+		var args = CreatePackageArguments ("--update", channel);
 		var sdkManagerPath = RequireSdkManagerPath ();
 		logger (TraceLevel.Info, "Updating all installed packages...");
 		var (exitCode, _, stderr) = await RunSdkManagerAsync (
-			sdkManagerPath, new[] { "--update" }, acceptLicenses: true, cancellationToken: cancellationToken).ConfigureAwait (false);
+			sdkManagerPath, args, acceptLicenses: true, cancellationToken: cancellationToken).ConfigureAwait (false);
 		ThrowOnSdkManagerFailure (exitCode, "Package update", stderr);
 		logger (TraceLevel.Info, "All packages updated successfully.");
+	}
+
+	static string[] CreatePackageArguments (string argument, SdkChannel channel)
+	{
+		if (channel < SdkChannel.Stable || channel > SdkChannel.Canary)
+			throw new ArgumentOutOfRangeException (nameof (channel), channel, "Unknown SDK channel.");
+
+		return channel == SdkChannel.Stable
+			? [argument]
+			: [argument, "--channel=" + ((int) channel).ToString (CultureInfo.InvariantCulture)];
 	}
 
 	static string[] ValidatePackages (IEnumerable<string> packages)

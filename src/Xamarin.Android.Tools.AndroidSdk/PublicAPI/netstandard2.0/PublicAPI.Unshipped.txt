@@ -1,4 +1,12 @@
 #nullable enable
+Xamarin.Android.Tools.SdkChannel
+Xamarin.Android.Tools.SdkChannel.Stable = 0 -> Xamarin.Android.Tools.SdkChannel
+Xamarin.Android.Tools.SdkChannel.Beta = 1 -> Xamarin.Android.Tools.SdkChannel
+Xamarin.Android.Tools.SdkChannel.Dev = 2 -> Xamarin.Android.Tools.SdkChannel
+Xamarin.Android.Tools.SdkChannel.Canary = 3 -> Xamarin.Android.Tools.SdkChannel
+Xamarin.Android.Tools.SdkManager.ListAsync(Xamarin.Android.Tools.SdkChannel channel, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<(System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.SdkPackage!>! Installed, System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.SdkPackage!>! Available)>!
+Xamarin.Android.Tools.SdkManager.InstallAsync(System.Collections.Generic.IEnumerable<string!>! packages, Xamarin.Android.Tools.SdkChannel channel, bool acceptLicenses, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.UpdateAsync(Xamarin.Android.Tools.SdkChannel channel, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Xamarin.Android.Tools.AndroidSdkInfo.GetBuildToolsPaths(string! androidSdkPath, string! preferredBuildToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
 static Xamarin.Android.Tools.AndroidSdkInfo.GetCommandLineToolsPaths(string! androidSdkPath, string! preferredCommandLineToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
 static Xamarin.Android.Tools.AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel(string! androidSdkPath, string! idOrApiLevel, Xamarin.Android.Tools.AndroidVersions! versions) -> string?
