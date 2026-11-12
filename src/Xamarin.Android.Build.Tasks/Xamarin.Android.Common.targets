@@ -1876,6 +1876,7 @@ because xbuild doesn't support framework reference assemblies.
       Debug="$(AndroidIncludeDebugSymbols)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
   />
 </Target>
 
@@ -1956,6 +1957,7 @@ because xbuild doesn't support framework reference assemblies.
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
       ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
       ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
       SupportedAbis="@(_BuildTargetAbis)">

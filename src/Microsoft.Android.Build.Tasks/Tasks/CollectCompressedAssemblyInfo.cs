@@ -33,6 +33,9 @@ public class CollectCompressedAssemblyInfo : MultithreadedAndroidTask
 	[Required]
 	public string ProjectFullPath { get; set; } = "";
 
+	[Required]
+	public string IntermediateOutputPath { get; set; } = "";
+
 	public override bool RunTask ()
 	{
 		if (Debug || !EnableCompression) {
@@ -86,7 +89,9 @@ public class CollectCompressedAssemblyInfo : MultithreadedAndroidTask
 			}
 		}
 
-		string key = CompressedAssemblyInfo.GetKey (TaskEnvironment.GetAbsolutePath (ProjectFullPath));
+		string key = CompressedAssemblyInfo.GetKey (
+			Path.GetFullPath (TaskEnvironment.GetAbsolutePath (ProjectFullPath).Value),
+			Path.TrimEndingDirectorySeparator (Path.GetFullPath (TaskEnvironment.GetAbsolutePath (IntermediateOutputPath).Value)));
 		Log.LogDebugMessage ($"Storing compression assemblies info with key '{key}'");
 		BuildEngine4.RegisterTaskObjectAssemblyLocal (key, archAssemblies, RegisteredTaskObjectLifetime.Build);
 		return !Log.HasLoggedErrors;

@@ -36,6 +36,9 @@ public class CollectAssemblyFilesToCompress : MultithreadedAndroidTask
 	public string ProjectFullPath { get; set; } = "";
 
 	[Required]
+	public string IntermediateOutputPath { get; set; } = "";
+
+	[Required]
 	public ITaskItem [] ResolvedFrameworkAssemblies { get; set; } = [];
 
 	[Required]
@@ -114,7 +117,9 @@ public class CollectAssemblyFilesToCompress : MultithreadedAndroidTask
 
 	IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> GetCompressedAssemblyInfo ()
 	{
-		var key = CompressedAssemblyInfo.GetKey (TaskEnvironment.GetAbsolutePath (ProjectFullPath));
+		var key = CompressedAssemblyInfo.GetKey (
+			Path.GetFullPath (TaskEnvironment.GetAbsolutePath (ProjectFullPath).Value),
+			Path.TrimEndingDirectorySeparator (Path.GetFullPath (TaskEnvironment.GetAbsolutePath (IntermediateOutputPath).Value)));
 		Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
 
 		var compressedAssembliesInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
