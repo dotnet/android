@@ -1420,8 +1420,13 @@ public sealed class JavaPeerScanner : IDisposable
 			return type;
 		}
 
-		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName) ? type with { IsEnum = true, IsValueType = true } : type;
+		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName)
+			? type with { IsEnum = true, IsValueType = true }
+			: EnrichTypeRefWithAndroidGraphicsColorInfo (type);
 	}
+
+	TypeRefData EnrichTypeRefWithAndroidGraphicsColorInfo (TypeRefData type)
+		=> !type.IsAndroidGraphicsColor && IsAndroidGraphicsColor (type) ? type with { IsAndroidGraphicsColor = true } : type;
 
 	static bool IsEnumType (TypeDefinition typeDef, AssemblyIndex index)
 	{
@@ -2241,6 +2246,11 @@ public sealed class JavaPeerScanner : IDisposable
 			return false;
 		}
 
+		if (IsAndroidGraphicsColor (managedType)) {
+			descriptor = "I";
+			return true;
+		}
+
 		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
 		if (primitive is not null &&
 		    IsSpecialManagedType (
@@ -2352,6 +2362,9 @@ public sealed class JavaPeerScanner : IDisposable
 		return TryResolveType (managedTypeName, managedType.AssemblyName, out _, out var resolvedIndex) &&
 			assemblyNames.Contains (resolvedIndex.MetadataAssemblyName, StringComparer.Ordinal);
 	}
+
+	bool IsAndroidGraphicsColor (TypeRefData managedType)
+		=> IsSpecialManagedType (managedType, "Android.Graphics.Color", "Mono.Android");
 
 	/// <summary>
 	/// Returns the JNI descriptor for primitive types and System.String.
@@ -2961,7 +2974,11 @@ public sealed class JavaPeerScanner : IDisposable
 					signature.Append (ManagedTypeToJniDescriptor (parameter));
 				}
 				signature.Append (')');
-				constructors.Add (new (sig.ParameterTypes, signature.ToString ()));
+				var parameterTypes = ImmutableArray.CreateBuilder<TypeRefData> (sig.ParameterTypes.Length);
+				foreach (var parameter in sig.ParameterTypes) {
+					parameterTypes.Add (EnrichTypeRefWithAndroidGraphicsColorInfo (parameter));
+				}
+				constructors.Add (new (parameterTypes.MoveToImmutable (), signature.ToString ()));
 			}
 		}
 		return constructors;
@@ -3108,6 +3125,10 @@ public sealed class JavaPeerScanner : IDisposable
 			};
 			var elementDescriptor = TryGetConstructorJniDescriptor (elementType);
 			return elementDescriptor is null ? null : $"[{elementDescriptor}";
+		}
+
+		if (IsAndroidGraphicsColor (parameterType)) {
+			return "I";
 		}
 
 		var primitiveDescriptor = TryGetPrimitiveJniDescriptor (parameterType);

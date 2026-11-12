@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 
+using Android.Graphics;
 using Android.Runtime;
 using Android.Views;
 
@@ -116,6 +117,152 @@ namespace Java.InteropTests
 
 			Assert.AreEqual (2, JNIEnv.CallIntMethod (peer.Handle, intMethod, new JValue (1)));
 			Assert.AreEqual (long.MaxValue, JNIEnv.CallLongMethod (peer.Handle, longMethod, new JValue (1L)));
+		}
+
+		[TestCase (unchecked ((int) 0xff80a1c2))]
+		[Category ("ColorExport")]
+		public void ColorExports_MarshalPackedArgbIntegers (int argb)
+		{
+			using var peer = new TrimmableExportColorPeer ();
+			var set = GetRequiredMethodID (peer.Class.Handle, "setColor", "(I)V");
+			var get = GetRequiredMethodID (peer.Class.Handle, "getColor", "()I");
+			var echo = GetRequiredMethodID (peer.Class.Handle, "echoColor", "(I)I");
+
+			JNIEnv.CallVoidMethod (peer.Handle, set, new JValue (argb));
+			Assert.AreEqual (argb, peer.LastColor.ToArgb ());
+			Assert.AreEqual (argb, JNIEnv.CallIntMethod (peer.Handle, get));
+			Assert.AreEqual (argb, JNIEnv.CallIntMethod (peer.Handle, echo, new JValue (argb)));
+
+			var staticEcho = JNIEnv.GetStaticMethodID (peer.Class.Handle, "echoStaticColor", "(I)I");
+			Assert.AreNotEqual (IntPtr.Zero, staticEcho);
+			Assert.AreEqual (argb ^ 0x005500aa, JNIEnv.CallStaticIntMethod (peer.Class.Handle, staticEcho, new JValue (argb)));
+		}
+
+		[Test]
+		[Category ("ColorExport")]
+		public void ColorExportConstructor_MarshalsPackedArgbInteger ()
+		{
+			const int argb = unchecked ((int) 0xff80a1c2);
+			var handle = JNIEnv.StartCreateInstance (typeof (TrimmableExportColorPeer), "(I)V", new JValue (argb));
+			try {
+				JNIEnv.FinishCreateInstance (handle, "(I)V", new JValue (argb));
+				using var peer = Java.Lang.Object.GetObject<TrimmableExportColorPeer> (handle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsNotNull (peer);
+				Assert.AreEqual (argb, peer.LastColor.ToArgb ());
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
+		[Category ("ColorExport")]
+		public void ColorArrayExport_MarshalsJavaIntArrayAndCopiesBack ()
+		{
+			const int first = unchecked ((int) 0xff80a1c2);
+			const int second = 0x12345678;
+			const int changed = first ^ 0x005500aa;
+			using var peer = new TrimmableExportColorPeer ();
+			var values = new [] { first, second };
+			IntPtr input = JNIEnv.NewArray (values);
+			try {
+				var method = GetRequiredMethodID (peer.Class.Handle, "echoColorArray", "([I)[I");
+				IntPtr result = JNIEnv.CallObjectMethod (peer.Handle, method, new JValue (input));
+				try {
+					var colors = JNIEnv.GetArray<Color> (result);
+					Assert.IsNotNull (colors);
+					if (colors == null)
+						return;
+					Assert.AreEqual (changed, colors [0].ToArgb ());
+					Assert.AreEqual (second, colors [1].ToArgb ());
+
+					var copiedColors = new Color [values.Length];
+					JNIEnv.CopyArray (result, (Array) copiedColors);
+					Assert.AreEqual (changed, copiedColors [0].ToArgb ());
+					Assert.AreEqual (second, copiedColors [1].ToArgb ());
+
+					var copiedBack = new int [values.Length];
+					JNIEnv.CopyArray (input, copiedBack);
+					Assert.AreEqual (changed, copiedBack [0]);
+					Assert.AreEqual (second, copiedBack [1]);
+				} finally {
+					JNIEnv.DeleteLocalRef (result);
+				}
+			} finally {
+				JNIEnv.DeleteLocalRef (input);
+			}
+		}
+
+		[Test]
+		[Category ("ColorExport")]
+		public void DeepJaggedColorArrayExport_MapsEachArrayLevel ()
+		{
+			const int first = unchecked ((int) 0xff80a1c2);
+			const int changed = first ^ 0x005500aa;
+			using var peer = new TrimmableExportColorPeer ();
+			var values = new int [][][] {
+				new int [][] { null, [first, 0x12345678] },
+				null,
+			};
+			IntPtr input = JNIEnv.NewArray (values);
+			try {
+				var method = GetRequiredMethodID (peer.Class.Handle, "echoDeepJaggedColorArray", "([[[I)[[[I");
+				IntPtr result = JNIEnv.CallObjectMethod (peer.Handle, method, new JValue (input));
+				try {
+					var colors = JNIEnv.GetArray<Color [] []> (result);
+					Assert.IsNotNull (colors);
+					if (colors == null)
+						return;
+					Assert.IsNull (colors [0] [0]);
+					Assert.AreEqual (changed, colors [0] [1] [0].ToArgb ());
+					Assert.AreEqual (0x12345678, colors [0] [1] [1].ToArgb ());
+					Assert.IsNull (colors [1]);
+
+					var copiedBack = JNIEnv.GetArray<int [] []> (input);
+					Assert.IsNotNull (copiedBack);
+					if (copiedBack == null)
+						return;
+					Assert.AreEqual (changed, copiedBack [0] [1] [0]);
+					Assert.IsNull (copiedBack [0] [0]);
+					Assert.IsNull (copiedBack [1]);
+				} finally {
+					JNIEnv.DeleteLocalRef (result);
+				}
+			} finally {
+				JNIEnv.DeleteLocalRef (input);
+			}
+		}
+
+		[Test]
+		[Category ("ColorExport")]
+		public void JaggedColorArrayExport_CopiesBackRowReplacements ()
+		{
+			const int first = unchecked ((int) 0xff80a1c2);
+			const int replacement = unchecked ((int) 0xff102030);
+			using var peer = new TrimmableExportColorPeer ();
+			var values = new int [][] {
+				null,
+				null,
+				[0x12345678],
+				[first, 0x0abcdef0],
+			};
+			IntPtr input = JNIEnv.NewArray (values);
+			try {
+				var method = GetRequiredMethodID (peer.Class.Handle, "replaceColorRows", "([[I)V");
+				JNIEnv.CallVoidMethod (peer.Handle, method, new JValue (input));
+
+				var copiedBack = JNIEnv.GetArray<int []> (input);
+				Assert.IsNotNull (copiedBack);
+				if (copiedBack == null)
+					return;
+				Assert.AreEqual (4, copiedBack.Length);
+				Assert.IsNotNull (copiedBack [0], "null Java row replaced by a managed row must be installed");
+				CollectionAssert.AreEqual (new [] { replacement, first }, copiedBack [0]);
+				Assert.IsNull (copiedBack [1]);
+				Assert.IsNull (copiedBack [2]);
+				CollectionAssert.AreEqual (new [] { first ^ 0x005500aa, 0x0abcdef0 }, copiedBack [3]);
+			} finally {
+				JNIEnv.DeleteLocalRef (input);
+			}
 		}
 
 		[Test]
@@ -309,6 +456,55 @@ namespace Java.InteropTests
 
 		[Export ("makeList")]
 		public IList MakeList () => new ArrayList { "alpha" };
+	}
+
+	class TrimmableExportColorPeer : Java.Lang.Object
+	{
+		public Color LastColor;
+
+		public TrimmableExportColorPeer ()
+		{
+		}
+
+		[Export (SuperArgumentsString = "")]
+		public TrimmableExportColorPeer (Color color)
+		{
+			LastColor = color;
+		}
+
+		[Export ("setColor")]
+		public void SetColor (Color color) => LastColor = color;
+
+		[Export ("getColor")]
+		public Color GetColor () => LastColor;
+
+		[Export ("echoColor")]
+		public Color EchoColor (Color color) => color;
+
+		[Export ("echoColorArray")]
+		public Color [] EchoColorArray (Color [] colors)
+		{
+			colors [0] = new Color (colors [0].ToArgb () ^ 0x005500aa);
+			return colors;
+		}
+
+		[Export ("echoDeepJaggedColorArray")]
+		public Color [][][] EchoDeepJaggedColorArray (Color [][][] colors)
+		{
+			colors [0] [1] [0] = new Color (colors [0] [1] [0].ToArgb () ^ 0x005500aa);
+			return colors;
+		}
+
+		[Export ("replaceColorRows")]
+		public void ReplaceColorRows (Color [][] colors)
+		{
+			colors [0] = [new Color (unchecked ((int) 0xff102030)), colors [3] [0]];
+			colors [2] = null;
+			colors [3] [0] = new Color (colors [3] [0].ToArgb () ^ 0x005500aa);
+		}
+
+		[Export ("echoStaticColor")]
+		public static Color EchoStaticColor (Color color) => new Color (color.ToArgb () ^ 0x005500aa);
 	}
 
 	class TrimmableExportUserPeer : Java.Lang.Object

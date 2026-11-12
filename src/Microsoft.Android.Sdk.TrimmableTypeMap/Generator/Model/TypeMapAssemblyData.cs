@@ -197,6 +197,13 @@ sealed record TypeRefData
 	/// </summary>
 	public bool IsEnum { get; init; }
 
+	/// <summary>
+	/// True if the scanner resolved this exact (non-array) type to Mono.Android's
+	/// <c>Android.Graphics.Color</c>. Name-only checks are insufficient because
+	/// other assemblies may define unrelated types with the same full name.
+	/// </summary>
+	public bool IsAndroidGraphicsColor { get; init; }
+
 	public bool EncodeAsValueType => IsValueType || IsEnum;
 
 	public string DisplayName {
@@ -222,6 +229,7 @@ sealed record TypeRefData
 		    !string.Equals (AssemblyName, other.AssemblyName, StringComparison.Ordinal) ||
 		    IsValueType != other.IsValueType ||
 		    IsEnum != other.IsEnum ||
+		    IsAndroidGraphicsColor != other.IsAndroidGraphicsColor ||
 		    GenericArguments.Count != other.GenericArguments.Count) {
 			return false;
 		}
@@ -241,6 +249,7 @@ sealed record TypeRefData
 			hash = hash * 31 + StringComparer.Ordinal.GetHashCode (AssemblyName);
 			hash = hash * 31 + IsValueType.GetHashCode ();
 			hash = hash * 31 + IsEnum.GetHashCode ();
+			hash = hash * 31 + IsAndroidGraphicsColor.GetHashCode ();
 			foreach (var argument in GenericArguments) {
 				hash = hash * 31 + argument.GetHashCode ();
 			}
