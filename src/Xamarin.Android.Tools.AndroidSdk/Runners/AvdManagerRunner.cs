@@ -153,6 +153,49 @@ public class AvdManagerRunner
 		return ParseCompactDeviceListOutput (stdout.ToString ());
 	}
 
+	/// <summary>
+	/// Lists skin directory names from the SDK's shared, platform, and system-image skins.
+	/// </summary>
+	/// <param name="sdkPath">Root directory of the Android SDK.</param>
+	/// <param name="cancellationToken">Token used to cancel directory enumeration.</param>
+	/// <returns>Sorted, unique skin names. Missing directories are ignored; enumeration errors are propagated.</returns>
+	public Task<IReadOnlyList<string>> ListAvdSkinsAsync (string sdkPath, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (sdkPath))
+			throw new ArgumentException ("SDK path must not be empty.", nameof (sdkPath));
+
+		return Task.Run<IReadOnlyList<string>> (() => {
+			cancellationToken.ThrowIfCancellationRequested ();
+			var skins = new SortedSet<string> (OS.IsWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+			AddSkins (sdkPath);
+			foreach (var platform in GetDirectories (Path.Combine (sdkPath, "platforms")))
+				AddSkins (platform);
+			foreach (var api in GetDirectories (Path.Combine (sdkPath, "system-images")))
+				foreach (var tag in GetDirectories (api))
+					foreach (var abi in GetDirectories (tag))
+						AddSkins (abi);
+
+			return skins.ToList ();
+
+			void AddSkins (string parent)
+			{
+				foreach (var skin in GetDirectories (Path.Combine (parent, "skins")))
+					skins.Add (Path.GetFileName (skin));
+			}
+
+			IEnumerable<string> GetDirectories (string directory)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+				if (!Directory.Exists (directory))
+					yield break;
+				foreach (var child in Directory.EnumerateDirectories (directory)) {
+					cancellationToken.ThrowIfCancellationRequested ();
+					yield return child;
+				}
+			}
+		}, cancellationToken);
+	}
+
 	internal static IReadOnlyList<AvdDeviceProfile> ParseCompactDeviceListOutput (string output)
 	{
 		var profiles = new List<AvdDeviceProfile> ();

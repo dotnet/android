@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -13,6 +14,58 @@ namespace Xamarin.Android.Tools.Tests;
 [TestFixture]
 public class AvdManagerRunnerTests
 {
+	[Test]
+	public async Task ListAvdSkinsAsync_DiscoversUniqueSortedNames ()
+	{
+		var sdk = Path.Combine (Path.GetTempPath (), $"sdk-skins-{Path.GetRandomFileName ()}");
+		try {
+			Directory.CreateDirectory (Path.Combine (sdk, "skins", "Pixel"));
+			Directory.CreateDirectory (Path.Combine (sdk, "platforms", "android-35", "skins", "HVGA"));
+			Directory.CreateDirectory (Path.Combine (sdk, "system-images", "android-35", "google_apis", "x86_64", "skins", "Pixel"));
+			Directory.CreateDirectory (Path.Combine (sdk, "system-images", "android-36", "google_apis", "arm64-v8a", "skins", "Tablet"));
+			Directory.CreateDirectory (Path.Combine (sdk, "system-images", "android-36", "google_apis", "arm64-v8a", "skins", "pixel"));
+			Directory.CreateDirectory (Path.Combine (sdk, "system-images", "android-36", "default", "x86_64"));
+			File.WriteAllText (Path.Combine (sdk, "skins", "not-a-skin"), "");
+
+			var runner = new AvdManagerRunner ("unused");
+			var skins = await runner.ListAvdSkinsAsync (sdk);
+
+			CollectionAssert.AreEqual (OS.IsWindows
+				? new [] { "HVGA", "Pixel", "Tablet" }
+				: new [] { "HVGA", "Pixel", "Tablet", "pixel" }, skins);
+		} finally {
+			Directory.Delete (sdk, true);
+		}
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	public async Task ListAvdSkinsAsync_MissingDirectories (bool createSdk)
+	{
+		var sdk = Path.Combine (Path.GetTempPath (), $"sdk-skins-{Path.GetRandomFileName ()}");
+		if (createSdk)
+			Directory.CreateDirectory (sdk);
+		try {
+			var runner = new AvdManagerRunner ("unused");
+			Assert.IsEmpty (await runner.ListAvdSkinsAsync (sdk));
+			using var cancellation = new CancellationTokenSource ();
+			cancellation.Cancel ();
+			Assert.CatchAsync<OperationCanceledException> (() => runner.ListAvdSkinsAsync (sdk, cancellation.Token));
+		} finally {
+			if (createSdk)
+				Directory.Delete (sdk, true);
+		}
+	}
+
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase (" \t ")]
+	public void ListAvdSkinsAsync_InvalidSdkPath (string sdkPath)
+	{
+		var runner = new AvdManagerRunner ("unused");
+		Assert.Throws<ArgumentException> (() => runner.ListAvdSkinsAsync (sdkPath));
+	}
+
 	[TestCase ("hw.gpu.enabled=no\nhw.gpu.mode=auto\n")]
 	[TestCase (" hw.gpu.enabled = no \nhw.gpu.mode = off\n")]
 	[TestCase ("hw.gpu.enabled=no\nhw.gpu.enabled=yes\nhw.gpu.mode=host\n")]

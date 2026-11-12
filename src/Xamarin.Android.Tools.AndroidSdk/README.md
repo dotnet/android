@@ -11,6 +11,14 @@ reference those assemblies directly. Use this library's `AndroidSdkInfo`,
 `AdbRunner`, and `ProcessUtils` APIs instead; installers can use
 `AndroidSdkInfo.DiscoverInstallationPaths` before an SDK or JDK is installed.
 
+## AVD skins
+
+`AvdManagerRunner.ListAvdSkinsAsync (sdkPath)` lists sorted, unique skin directory
+names from `skins/`, `platforms/<api>/skins/`, and
+`system-images/<api>/<tag>/<abi>/skins/` under the given SDK root. Names are
+compared without case on Windows and with case on other platforms. Missing
+directories produce no entries; enumeration errors are propagated.
+
 ## Build
 
 From the repository root:
