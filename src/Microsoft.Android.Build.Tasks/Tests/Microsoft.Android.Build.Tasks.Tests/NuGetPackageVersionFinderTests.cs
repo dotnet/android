@@ -1,6 +1,8 @@
 #nullable enable
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -61,6 +63,48 @@ public class NuGetPackageVersionFinderTests : BaseTest
 
 		Assert.IsTrue (task.RunTask ());
 		Assert.IsEmpty (engine.Errors);
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	public void ShortTaskNameResolvesWithNuGetMetadata (bool multithreaded)
+	{
+		var fixture = Path.Combine (TestContext.CurrentContext.TestDirectory, "Resources", "JavaDependencyVerification");
+		var taskAssembly = typeof (NuGetPackageVersionFinderTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
+			.Single (attribute => attribute.Key == "AndroidTaskAssembly").Value
+			?? throw new InvalidOperationException ("Missing task assembly path.");
+		var targets = Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (), "src", "Xamarin.Android.Build.Tasks",
+			"MSBuild", "Xamarin", "Android", "Xamarin.Android.Bindings.JavaDependencyVerification.targets");
+		FileAssert.Exists (taskAssembly);
+		var cache = Path.Combine (TestDirectory, "packages");
+		CreateNuspec (cache);
+
+		foreach (var name in new [] { "first", "second" }) {
+			var directory = Path.Combine (TestDirectory, name);
+			Directory.CreateDirectory (directory);
+			File.Copy (Path.Combine (fixture, "Binding.proj"), Path.Combine (directory, "Binding.proj"));
+			File.WriteAllText (Path.Combine (directory, "material.pom"), new PomBuilder ("com.google.android", "material", "1.0")
+				.WithDependency ("com.google.android", "material-core", "1.0").Build ());
+			File.WriteAllText (Path.Combine (directory, "project.assets.json"), CreateAssets ("1.0.0", [cache]).ToJsonString ());
+		}
+		var project = Path.Combine (TestDirectory, "Build.proj");
+		File.Copy (Path.Combine (fixture, "Build.proj"), project);
+		string [] arguments = [
+			"msbuild", project, "-m:2", "-nr:false", "-v:diagnostic",
+			"-p:_MicrosoftAndroidBuildTasksAssembly=" + taskAssembly,
+			"-p:JavaDependencyVerificationTargets=" + targets,
+		];
+		if (multithreaded)
+			arguments = [.. arguments, "-mt", "-warnaserror:MSB4286,MSB4287,MSB4288"];
+		var dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
+		var result = NativeAotBootstrapTestTools.Run (dotnet, arguments);
+		var output = result.Output + result.Error;
+
+		Assert.AreEqual (0, result.ExitCode, output);
+		foreach (var name in new [] { "first", "second" })
+			StringAssert.Contains ("Verified " + Path.Combine (TestDirectory, name), output);
+		StringAssert.Contains ($"Using \"JavaDependencyVerification\" task from assembly \"{taskAssembly}\"", output);
+		StringAssert.Contains ("Found Java dependency 'com.google.android:material-core' version '1.0' from PackageReference", output);
 	}
 
 	[Test]
