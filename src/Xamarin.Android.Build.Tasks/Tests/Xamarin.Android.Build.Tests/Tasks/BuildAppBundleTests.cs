@@ -169,6 +169,54 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void StagesConfigWithAsciiArgumentUnderNonAsciiTemporaryDirectory ()
+		{
+			var workingDirectory = Directory.GetCurrentDirectory ();
+			var projectDir = Path.Combine (workingDirectory, "BuildAppBundleTests_" + Guid.NewGuid ().ToString ("N"));
+			var temporaryDirectory = Path.Combine (tempDir, "Tëmp-ünïcode");
+			Directory.CreateDirectory (temporaryDirectory);
+			try {
+				var mappingPath = Path.Combine (projectDir, "bin", "mapping.txt");
+				Directory.CreateDirectory (Path.GetDirectoryName (mappingPath) ?? throw new InvalidOperationException ());
+				File.WriteAllText (mappingPath, "mapping");
+				var relativeProjectDir = Path.GetRelativePath (workingDirectory, projectDir);
+
+				var task = new BuildAppBundle {
+					BuildEngine = engine,
+					JarPath = Path.Combine (tempDir, "bundletool.jar"),
+					BaseZip = Path.Combine (relativeProjectDir, "base.zip"),
+					Output = Path.Combine (relativeProjectDir, "bin", "output.aab"),
+					IntermediateOutputPath = Path.Combine (relativeProjectDir, "obj"),
+					TemporaryDirectory = temporaryDirectory,
+					MetaDataFiles = new ITaskItem [] {
+						new TaskItem ($"com.android.tools.build.obfuscation/proguard.map:{Path.Combine (relativeProjectDir, "bin", "mapping.txt")}"),
+					},
+				};
+
+				task.PrepareConfigFile ("{}");
+				task.PrepareMetaDataFiles ();
+
+				var stagingDirectory = task.MetaDataStagingDirectory;
+				Assert.IsNotNull (stagingDirectory, "Config should be staged when the temporary directory is not ASCII.");
+				var configFile = task.ConfigFile;
+				Assert.IsNotNull (configFile);
+				FileAssert.Exists (configFile);
+
+				var commandLine = task.GetCommandLineBuilder ().ToString ();
+				Assert.IsTrue (commandLine.All (c => c <= 0x7f), $"Command line should be ASCII: {commandLine}");
+				Assert.IsFalse (commandLine.Contains (temporaryDirectory), "Command line should not reference the non-ASCII temporary directory.");
+				StringAssert.Contains ("--config BundleConfig.json", commandLine);
+				Assert.AreEqual (Path.GetFullPath (configFile), Path.GetFullPath (Path.Combine (stagingDirectory, "BundleConfig.json")));
+
+				var metadata = task.BundleToolMetaDataFiles.Single ();
+				FileAssert.Exists (Path.Combine (stagingDirectory, metadata.Substring (metadata.IndexOf (':') + 1)), $"Metadata source should resolve from the BundleTool working directory: {metadata}");
+			} finally {
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, recursive: true);
+			}
+		}
+
+		[Test]
 		public void RestoresMetadataEntriesInBatches ()
 		{
 			const int count = 5;

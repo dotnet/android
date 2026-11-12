@@ -74,13 +74,18 @@ namespace Xamarin.Android.Tasks
 
 		public string? UncompressedFileExtensions { get; set; }
 
-		string? temp;
+		const string StagedConfigFileName = "BundleConfig.json";
+
+		string? configFile;
+		string? configArgument;
 		string? metaDataStagingDirectory;
 		string? stagingDirectoryToWorkingDirectory;
 		readonly List<string> bundleToolMetaDataFiles = new List<string> ();
 		readonly List<StagedMetaDataFile> stagedMetaDataFiles = new List<StagedMetaDataFile> ();
 		internal IReadOnlyList<string> BundleToolMetaDataFiles => bundleToolMetaDataFiles;
 		internal string? MetaDataStagingDirectory => metaDataStagingDirectory;
+		internal string? ConfigFile => configFile;
+		internal string TemporaryDirectory { get; set; } = Path.GetTempPath ();
 
 		// ZipArchiveMode.Update keeps replacement entries in memory until the archive is disposed.
 		internal long MetaDataRestoreBatchSizeLimit { get; set; } = 100 * 1024 * 1024;
@@ -88,7 +93,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			temp = Path.GetTempFileName ();
 			try {
 				var uncompressed = new List<string> (UncompressedByDefault);
 				if (!UncompressedFileExtensions.IsNullOrEmpty ()) {
@@ -117,7 +121,8 @@ namespace Xamarin.Android.Tasks
 				var output = mergedJson?.ToJsonString (new JsonSerializerOptions { WriteIndented = true });
 
 				Log.LogDebugMessage ($"BundleConfig.json: {output}");
-				File.WriteAllText (temp, output);
+				// The config may create the staging directory, which changes how metadata paths are rebased.
+				PrepareConfigFile (output ?? "");
 				PrepareMetaDataFiles ();
 				JarPath = GetToolPath (JarPath);
 
@@ -129,12 +134,33 @@ namespace Xamarin.Android.Tasks
 				if (!Log.HasLoggedErrors)
 					RestoreMetaDataFileNames ();
 			} finally {
-				File.Delete (temp);
+				if (configFile != null)
+					File.Delete (configFile);
+				configFile = null;
+				configArgument = null;
 				DeleteMetaDataStagingDirectory ();
 			}
 
 			return !Log.HasLoggedErrors;
 		}
+
+		// Java on Windows can replace non-ASCII command-line characters, so the config path must be ASCII.
+		// When the temporary directory's full path is not ASCII, stage the config in the tool's working
+		// directory and pass a relative file name instead.
+		internal void PrepareConfigFile (string contents)
+		{
+			var tempFile = Path.Combine (TemporaryDirectory, $"bundletool-config-{Guid.NewGuid ():N}.json");
+			if (IsAscii (tempFile)) {
+				configFile = tempFile;
+				configArgument = tempFile;
+			} else {
+				configFile = Path.Combine (GetOrCreateMetaDataStagingDirectory (), StagedConfigFileName);
+				configArgument = StagedConfigFileName;
+			}
+			File.WriteAllText (configFile, contents);
+		}
+
+		static bool IsAscii (string value) => value.All (character => character <= 0x7f);
 
 		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
@@ -146,7 +172,7 @@ namespace Xamarin.Android.Tasks
 				modules.AddRange (Modules.Select (GetToolPath));
 			cmd.AppendSwitchIfNotNull ("--modules ", string.Join (",", modules));
 			cmd.AppendSwitchIfNotNull ("--output ", GetToolPath (Output));
-			cmd.AppendSwitchIfNotNull ("--config ", temp);
+			cmd.AppendSwitchIfNotNull ("--config ", configArgument);
 			foreach (var file in bundleToolMetaDataFiles) {
 				cmd.AppendSwitchIfNotNull ("--metadata-file=", file);
 			}
@@ -173,10 +199,9 @@ namespace Xamarin.Android.Tasks
 		{
 			bundleToolMetaDataFiles.Clear ();
 			stagedMetaDataFiles.Clear ();
-			DeleteMetaDataStagingDirectory ();
 			var unstagedMetaDataFiles = new List<string> ();
 			foreach (var file in MetaDataFiles ?? []) {
-				if (file.ItemSpec.All (character => character <= 0x7f)) {
+				if (IsAscii (file.ItemSpec)) {
 					unstagedMetaDataFiles.Add (file.ItemSpec);
 					continue;
 				}
@@ -225,7 +250,7 @@ namespace Xamarin.Android.Tasks
 			var stagingDirectoryName = $"bundletool-metadata-{Guid.NewGuid ():N}";
 			string directory;
 			if (IntermediateOutputPath.IsNullOrEmpty ()) {
-				directory = Path.Combine (Path.GetTempPath (), stagingDirectoryName);
+				directory = Path.Combine (TemporaryDirectory, stagingDirectoryName);
 				stagingDirectoryToWorkingDirectory = null;
 			} else {
 				directory = Path.Combine (WorkingDirectory, IntermediateOutputPath, stagingDirectoryName);
