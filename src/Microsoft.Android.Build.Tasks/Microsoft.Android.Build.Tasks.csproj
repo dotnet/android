@@ -79,7 +79,6 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
   </ItemGroup>
 
   <!--
