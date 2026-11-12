@@ -32,7 +32,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <_OtherGeneratorStampFile Condition=" '$(_AndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_GeneratorUcoCallbacksTrueStamp)</_OtherGeneratorStampFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_UseLegacyJavadocImport)' != 'true' ">
+  <PropertyGroup>
     <DocumentationFile Condition=" '$(GenerateDocumentationFile)' != 'true' " />
     <DocumentationFile Condition=" '$(DocumentationFile)' == '' and '$(GenerateDocumentationFile)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>

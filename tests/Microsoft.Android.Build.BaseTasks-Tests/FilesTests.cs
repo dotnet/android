@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -127,6 +128,47 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.WriteLine ();
 				writer.Flush ();
 				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write when changed.");
+			}
+		}
+
+		[TestMethod]
+		public void CopyIfStreamChanged_TaskEnvironment ()
+		{
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new System.Collections.Generic.Dictionary<string, string> ());
+			var destination = environment.GetAbsolutePath ("nested/foo.txt");
+			stream.WriteByte (42);
+			Assert.IsTrue (Files.CopyIfStreamChanged (stream, destination, environment));
+			CollectionAssert.AreEqual (new byte [] { 42 }, File.ReadAllBytes (destination));
+			Assert.IsFalse (Files.CopyIfStreamChanged (stream, destination, environment));
+			stream.SetLength (0);
+			stream.WriteByte (43);
+			Assert.IsTrue (Files.CopyIfStreamChanged (stream, destination, environment));
+			CollectionAssert.AreEqual (new byte [] { 43 }, File.ReadAllBytes (destination));
+		}
+
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (2)]
+		public void CopyIfStreamChanged_ProjectScopedRetries (int retries)
+		{
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new System.Collections.Generic.Dictionary<string, string> {
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = retries.ToString (CultureInfo.InvariantCulture),
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+			});
+			using var source = new SharingViolationStream ();
+			source.WriteByte (42);
+			Assert.ThrowsExactly<IOException> (() => Files.CopyIfStreamChanged (source, environment.GetAbsolutePath ("foo.txt"), environment));
+			Assert.AreEqual (retries + 1, source.Attempts);
+		}
+
+		sealed class SharingViolationStream : MemoryStream
+		{
+			public int Attempts { get; private set; }
+
+			public override void CopyTo (Stream destination, int bufferSize)
+			{
+				Attempts++;
+				throw new IOException ("Simulated sharing violation.", unchecked ((int) 0x80070020));
 			}
 		}
 

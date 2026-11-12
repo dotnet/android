@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Xamarin.Android.Build.Tests
 {
-	public partial class DebuggingTasksTests
+	public partial class FastDeployTests
 	{
 		[TestMethod]
 		[CombinatorialData]

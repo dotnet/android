@@ -302,7 +302,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
+        ///   Looks up a localized string similar to Unable to find required SDK file `{0}`..
         /// </summary>
         public static string XA0116 {
             get {
@@ -586,15 +586,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1020 {
             get {
                 return ResourceManager.GetString("XA1020", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Specified source Java library not found: {0}.
-        /// </summary>
-        public static string XA1021 {
-            get {
-                return ResourceManager.GetString("XA1021", resourceCulture);
             }
         }
         

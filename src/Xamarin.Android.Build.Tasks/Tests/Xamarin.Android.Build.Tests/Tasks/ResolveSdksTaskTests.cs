@@ -654,14 +654,6 @@ namespace Xamarin.Android.Build.Tests {
 					var libraries = manifest.UsesLibraries;
 					Assert.IsNotNull (libraries);
 					Assert.AreEqual (optionalJar, libraries.Single ().ItemSpec);
-					var jarToXml = new JarToXmlCommandLine {
-						BuildEngine = engine,
-						AndroidSdkDirectory = sdk,
-						AndroidApiLevel = "37",
-						MonoAndroidToolsDirectory = resolveSdks.MonoAndroidToolsPath,
-						OutputFile = Path.Combine (Root, path, "api.xml"),
-					};
-					Assert.Contains (platformJar, jarToXml.GetCommandLine ());
 				}
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
@@ -676,20 +668,14 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var engine = new MockBuildEngine (Console.Out, errors);
-			var jarToXml = new JarToXml {
+			var platform = new GetJavaPlatformJar {
 				BuildEngine = engine,
 				AndroidSdkDirectory = sdkPath == "missing" ? Path.Combine (Root, "temp", TestName, "missing-sdk") : sdkPath,
 				AndroidApiLevel = "37",
-				SourceJars = [new TaskItem ("source.jar")],
+				SupportedOSPlatformVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.ToString (),
 			};
-			Assert.IsFalse (jarToXml.Execute ());
+			Assert.IsFalse (platform.Execute ());
 			Assert.AreEqual (expectedError, errors.Single ().Code);
 		}
-
-		class JarToXmlCommandLine : JarToXml
-		{
-			public string GetCommandLine () => GenerateCommandLineCommands ();
-		}
-
 	}
 }
