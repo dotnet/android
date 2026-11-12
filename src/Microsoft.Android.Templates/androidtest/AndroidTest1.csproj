@@ -7,6 +7,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <!-- Test apps do not need XML documentation. -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <ApplicationId>com.companyname.AndroidTest1</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -19,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.3.2" />
+    <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="2.5.3" />
   </ItemGroup>
 
   <ItemGroup>

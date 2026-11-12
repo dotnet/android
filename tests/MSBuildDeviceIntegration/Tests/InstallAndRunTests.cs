@@ -3409,6 +3409,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[TestCase ("run", MSTestPackageChannel.Nightly)]
 		[TestCase ("test", MSTestPackageChannel.Stable)]
 		[TestCase ("test", MSTestPackageChannel.Nightly)]
+		[TestCase ("list", MSTestPackageChannel.Stable)]
 		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
 		{
 			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
@@ -3444,6 +3445,8 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
 			if (mode == "test")
 				runParameters.Add ("--report-trx");
+			else if (mode == "list")
+				runParameters.Add ("--list-tests");
 
 			using var process = mode == "run"
 				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
@@ -3493,6 +3496,11 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
 				Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
 				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			} else if (mode == "list") {
+				Assert.AreEqual (0, process.ExitCode, $"`dotnet test --list-tests` should succeed. See {logPath} for details.");
+				StringAssert.Contains ("TestMethod1", outputText, $"Output should list TestMethod1. See {logPath} for details.");
+				StringAssert.Contains ("TestMethod2", outputText, $"Output should list TestMethod2. See {logPath} for details.");
+				StringAssert.Contains ("TestMethod3", outputText, $"Output should list TestMethod3. See {logPath} for details.");
 			} else {
 				// dotnet test reports results via MTP protocol
 				// Verify non-zero exit code (there is a failing test) and stable summary counts
