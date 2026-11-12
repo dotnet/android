@@ -328,11 +328,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
     <value>至少需要一个 Java 库才能进行绑定。请检查项目中是否包含了 Java 库且该库是否具有适当的生成操作: "LibraryProjectZip" (对于 AAR 或 ZIP)、"EmbeddedJar"、"InputJar"(对于 JAR)或 "LibraryProjectProperties" (project.properties)。</value>
     <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
   </data>
-  <data name="XA1021" xml:space="preserve">
-    <value>未找到指定的源 Java 库: {0}</value>
-    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
-{0} - The file name of the library</comment>
-  </data>
   <data name="XA1022" xml:space="preserve">
     <value>未找到指定的引用 Java 库: {0}</value>
     <comment>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.
