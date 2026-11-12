@@ -5,6 +5,7 @@ parameters:
   matrixDirectory: $(Build.StagingDirectory)/MauiR2RMatrix
   payloadDirectory: $(Build.StagingDirectory)/MauiR2RHelix
   extraBuildArguments: ''
+  submissionTimeoutMinutes: 60 # Host submission/queue wait, independent of the remote WorkItemTimeout.
   testCases:
   - name: android-arm64-default
     runtimeIdentifier: android-arm64
@@ -247,7 +248,7 @@ steps:
 
 - powershell: |
     & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.Tests.ps1'
-  displayName: Test MAUI R2R Helix environment
+  displayName: Test MAUI R2R Helix environment and submission cleanup
 
 - powershell: |
     $ErrorActionPreference = 'Stop'
@@ -257,6 +258,7 @@ steps:
     New-Item -ItemType Directory -Force -Path $logsDirectory | Out-Null
 
     . (Join-Path $xaSourcePath 'build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.ps1')
+    . (Join-Path $xaSourcePath 'build-tools/automation/scripts/InvokeMauiR2RHelixSubmissions.ps1')
 
     if ([Environment]::OSVersion.Platform -eq "Unix") {
       $dotnetRoot = Join-Path $xaSourcePath 'bin/$(XA.Build.Configuration)/dotnet'
@@ -272,11 +274,6 @@ steps:
 
     $helixProject = Join-Path $xaSourcePath 'build-tools/automation/MauiR2RHelix.proj'
     $pathSeparator = [IO.Path]::PathSeparator
-    $powerShellExe = (Get-Process -Id $PID).Path
-    if (-not $powerShellExe) {
-      $powerShellExe = 'powershell.exe'
-    }
-
     $cases = @'
     ${{ convertToJson(parameters.testCases) }}
     '@ | ConvertFrom-Json
@@ -316,57 +313,16 @@ steps:
       )
       Set-Content -LiteralPath $scriptPath -Value $scriptLines -Encoding ASCII
 
-      Write-Host "Starting MAUI R2R Helix submission: $($case.displayName)"
-      $process = Start-Process -FilePath $powerShellExe -ArgumentList @('-NoLogo', '-NoProfile', '-File', $scriptPath) -RedirectStandardOutput $outputPath -RedirectStandardError $errorPath -PassThru
-      # Windows PowerShell requires the process handle to be cached before waiting when output is redirected.
-      $null = $process.Handle
       $submissions += [pscustomobject]@{
         Name = $case.name
         DisplayName = $case.displayName
-        Process = $process
+        ScriptPath = $scriptPath
         OutputPath = $outputPath
         ErrorPath = $errorPath
       }
     }
 
-    while (($submissions | Where-Object { -not $_.Process.HasExited }).Count -ne 0) {
-      $runningNames = $submissions |
-        Where-Object { -not $_.Process.HasExited } |
-        ForEach-Object { $_.DisplayName }
-      Write-Host "Waiting for MAUI R2R Helix submissions: $($runningNames -join ', ')"
-      Start-Sleep -Seconds 30
-    }
-
-    foreach ($submission in $submissions) {
-      $submission.Process.WaitForExit()
-    }
-
-    $failedSubmissions = @()
-    foreach ($submission in $submissions) {
-      Write-Host "##[group]MAUI R2R Helix submission log - $($submission.DisplayName)"
-      if (Test-Path $submission.OutputPath) {
-        Get-Content -LiteralPath $submission.OutputPath
-      }
-      if (Test-Path $submission.ErrorPath) {
-        Get-Content -LiteralPath $submission.ErrorPath
-      }
-      Write-Host "##[endgroup]"
-
-      $exitCode = $submission.Process.ExitCode
-      if ($null -eq $exitCode) {
-        throw "Could not determine the exit code for MAUI R2R Helix submission $($submission.DisplayName)."
-      }
-
-      if ($exitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error]MAUI R2R Helix submission failed for $($submission.DisplayName) with exit code $exitCode."
-        $failedSubmissions += $submission
-      }
-    }
-
-    if ($failedSubmissions.Count -ne 0) {
-      $failedNames = $failedSubmissions | ForEach-Object { $_.DisplayName }
-      throw "Failed MAUI R2R Helix submissions: $($failedNames -join ', ')"
-    }
+    Invoke-MauiR2RHelixSubmissions -Submissions $submissions -Timeout ([TimeSpan]::FromMinutes(${{ parameters.submissionTimeoutMinutes }}))
   displayName: Run MAUI R2R APKs on Helix
   continueOnError: false
   env:
