@@ -38,7 +38,8 @@ namespace Xamarin.Android.Tasks
 				0,
 				Properties.Resources.ResourceManager.GetString (ResourceName, Properties.Resources.Culture)
 					?? $"(Missing resource: {ResourceName})",
-				FormatArguments ?? []
+				// MSBuild omits empty array parameters, including an empty RID.
+				FormatArguments ?? [""]
 			);
 			return false;
 		}

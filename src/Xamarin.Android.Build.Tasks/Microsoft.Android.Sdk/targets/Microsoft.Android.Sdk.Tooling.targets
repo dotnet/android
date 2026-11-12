@@ -113,7 +113,10 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
       </_AndroidRuntimeIdentifierAbi>
     </ItemGroup>
     <AndroidError
-        Condition=" '$(AndroidApplication)' == 'true' and ('%(_AndroidRuntimeIdentifierAbi.Abi)' == '' or !$([System.String]::Copy('%(_AndroidRuntimeIdentifierAbi.Identity)').StartsWith('android', StringComparison.OrdinalIgnoreCase))) "
+        Condition=" '$(AndroidApplication)' == 'true'
+          and ('%(_AndroidRuntimeIdentifierAbi.Identity)' != '' or '$(AndroidSupportedAbis)' == '')
+          and ('%(_AndroidRuntimeIdentifierAbi.Abi)' == '' or !$([System.String]::Copy('%(_AndroidRuntimeIdentifierAbi.Identity)').StartsWith('android', StringComparison.OrdinalIgnoreCase))) "
+        ContinueOnError="ErrorAndContinue"
         Code="XA0035"
         ResourceName="XA0035"
         FormatArguments="%(_AndroidRuntimeIdentifierAbi.Identity)" />

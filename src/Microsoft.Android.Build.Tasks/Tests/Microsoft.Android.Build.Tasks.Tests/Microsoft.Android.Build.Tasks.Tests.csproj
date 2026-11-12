@@ -14,6 +14,8 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
+    <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tasks\AndroidError.cs" Link="Tasks\AndroidError.cs" />
+    <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tasks\AndroidWarning.cs" Link="Tasks\AndroidWarning.cs" />
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" Link="EnvironmentHelper.cs" />
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
     <None Update="Resources\NativeAotBootstrap\**" CopyToOutputDirectory="PreserveNewest" />
