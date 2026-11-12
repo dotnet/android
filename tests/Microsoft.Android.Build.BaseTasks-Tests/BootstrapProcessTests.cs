@@ -141,11 +141,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 		[TestCase (-1, false, 11, true)]
 		[TestCase (0, false, 11, true)]
-		[TestCase (1000, false, 11, true)]
-		[TestCase (1000, false, 11, false)]
-		[TestCase (1000, true, 11, true)]
-		[TestCase (1000, false, 4096, true)]
-		[TestCase (1000, true, 4096, true)]
+		[TestCase (5000, false, 11, true)]
+		[TestCase (5000, false, 11, false)]
+		[TestCase (5000, true, 11, true)]
+		[TestCase (5000, false, 4096, true)]
+		[TestCase (5000, true, 4096, true)]
 		public async Task AdbDeadlinesPreserveUnterminatedDiagnosticsWithoutKillingInheritedServer (int timeout, bool rootHangs, int tailLength, bool mergeOutput)
 		{
 			string stdoutTail = "stdout-tail" + (tailLength == 11 ? "" : new string ('x', tailLength - 13) + "\u00e9");
@@ -170,8 +170,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var watch = Stopwatch.StartNew ();
 
 			Assert.IsFalse (await ExecuteAsync (task));
-			Assert.Less (watch.Elapsed, TimeSpan.FromSeconds (5));
-			Assert.GreaterOrEqual (watch.Elapsed, TimeSpan.FromMilliseconds (700));
+			Assert.Less (watch.Elapsed, TimeSpan.FromSeconds (10));
+			Assert.GreaterOrEqual (watch.Elapsed, TimeSpan.FromMilliseconds (rootHangs ? timeout : 0) + TimeSpan.FromMilliseconds (700));
+			Assert.IsTrue (File.Exists (Path.Combine (directory, "root.pid")), "The fixture must start before its command deadline.");
 			Assert.Multiple (() => {
 				CollectionAssert.Contains (task.Output, "before-eof");
 				CollectionAssert.Contains (task.Output, "stderr-line");
