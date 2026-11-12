@@ -23,6 +23,8 @@ class AndroidTestAdapter(
 	string instrumentation,
 	bool verbose) : ITestFramework, IDataProducer
 {
+	const int MaxInlineTestUidsLength = 8_000;
+
 	public string Uid => "android-test-adapter";
 	public string DisplayName => "Android Instrumentation Test Adapter";
 	public string Description => "Runs Android instrumentation tests on a device or emulator.";
@@ -128,13 +130,73 @@ class AndroidTestAdapter(
 	/// </summary>
 	async Task<InstrumentationBundleResult> RunInstrumentationOnDeviceAsync (ExecuteRequestContext context, SessionUid sessionUid, StreamingState state, CancellationToken cancellationToken, bool discover, string[]? testUids)
 	{
+		var encodedUids = testUids == null ? null : InstrumentationProtocol.EncodeTestUids (testUids);
+		if (encodedUids == null || encodedUids.Length <= MaxInlineTestUidsLength)
+			return await RunInstrumentationAsync (context, sessionUid, state, cancellationToken, discover, encodedUids);
+
+		var token = Guid.NewGuid ().ToString ("N");
+		var localPath = Path.Combine (Path.GetTempPath (), InstrumentationProtocol.GetTestUidsFileName (token));
+		string? devicePath = null;
+		try {
+			await File.WriteAllTextAsync (localPath, encodedUids, cancellationToken);
+			var directory = await GetTestUidsDirectoryAsync (cancellationToken);
+			devicePath = $"{directory.TrimEnd ('/')}/{InstrumentationProtocol.GetTestUidsFileName (token)}";
+			var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget,
+				["push", localPath, devicePath], cancellationToken, verbose);
+			if (exitCode != 0)
+				throw new InvalidOperationException ($"Failed to push the selected-test filter to the device: {(string.IsNullOrWhiteSpace (error) ? output : error)}");
+
+			return await RunInstrumentationAsync (context, sessionUid, state, cancellationToken, discover,
+				InstrumentationProtocol.TestUidsFilePrefix + token);
+		} finally {
+			if (devicePath != null) {
+				try {
+					using var cleanupTimeout = new CancellationTokenSource (TimeSpan.FromSeconds (10));
+					var quotedPath = "'" + devicePath.Replace ("'", "'\\''", StringComparison.Ordinal) + "'";
+					var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget,
+						["shell", "rm", "-f", quotedPath], cleanupTimeout.Token, verbose);
+					if (exitCode != 0)
+						Console.Error.WriteLine ($"[AndroidTestAdapter] Failed to remove the device test filter: {(string.IsNullOrWhiteSpace (error) ? output : error)}");
+				} catch (Exception ex) {
+					Console.Error.WriteLine ($"[AndroidTestAdapter] Failed to remove the device test filter: {ex}");
+				}
+			}
+			try {
+				File.Delete (localPath);
+			} catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+				Console.Error.WriteLine ($"[AndroidTestAdapter] Failed to remove the local test filter: {ex}");
+			}
+		}
+	}
+
+	async Task<string> GetTestUidsDirectoryAsync (CancellationToken cancellationToken)
+	{
+		// The invalid-Base64 request makes older instrumentation fail rather than
+		// accidentally running the complete suite.
+		var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, [
+			"shell", "am", "instrument", "-w", "-r",
+			"-e", InstrumentationProtocol.ExtraTestUids, InstrumentationProtocol.TestUidsDirectoryRequest,
+			$"{package}/{instrumentation}",
+		], cancellationToken, verbose);
+		var result = ParseInstrumentationBundle (output, error);
+		if (exitCode != 0 || result.Error != null || result.InstrumentationCode != -1 ||
+			output.Contains ("INSTRUMENTATION_FAILED", StringComparison.Ordinal))
+			throw new InvalidOperationException ($"Could not determine the device test-filter directory: {result.Error ?? $"instrumentation exited with code {exitCode} and result {result.InstrumentationCode}."}");
+		if (string.IsNullOrEmpty (result.TestUidsDirectory) || !result.TestUidsDirectory.StartsWith ('/') ||
+			result.TestUidsDirectory.Contains ('\0'))
+			throw new InvalidOperationException ("The installed instrumentation did not provide a valid test-filter directory. Rebuild and install a test application with file-based filter support.");
+		return result.TestUidsDirectory;
+	}
+
+	async Task<InstrumentationBundleResult> RunInstrumentationAsync (ExecuteRequestContext context, SessionUid sessionUid, StreamingState state, CancellationToken cancellationToken, bool discover, string? encodedUids)
+	{
 		// '-r' prints raw INSTRUMENTATION_STATUS results (so we can stream them);
 		// '-w' waits for the run to complete.
 		var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
 		if (discover)
 			cmdArgs.AddRange (["-e", InstrumentationProtocol.ExtraDiscover, "true"]);
-		if (testUids != null)
-			cmdArgs.AddRange (["-e", InstrumentationProtocol.ExtraTestUids, InstrumentationProtocol.EncodeTestUids (testUids)]);
+		if (encodedUids != null)
+			cmdArgs.AddRange (["-e", InstrumentationProtocol.ExtraTestUids, encodedUids]);
 		cmdArgs.Add ($"{package}/{instrumentation}");
 		var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
 
@@ -508,13 +570,16 @@ class AndroidTestAdapter(
 			result.Skipped = skipped;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyDiscoveredCount, out var discoveredStr) && int.TryParse (discoveredStr, out int discovered))
 			result.DiscoveredCount = discovered;
+		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyTestUidsDirectory, out var testUidsDirectory))
+			result.TestUidsDirectory = testUidsDirectory;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyResultsPath, out var resultsPath))
 			result.ResultsPath = resultsPath;
 		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyError, out var bundleError))
 			result.Error = bundleError;
 
 		// Surface adb stderr if no results were parsed
-		if (!string.IsNullOrWhiteSpace (error) && result.ResultsPath == null && result.Error == null)
+		if (!string.IsNullOrWhiteSpace (error) && result.ResultsPath == null && result.DiscoveredCount == null &&
+			result.TestUidsDirectory == null && result.Error == null)
 			result.Error = error;
 
 		return result;
@@ -588,6 +653,7 @@ class AndroidTestAdapter(
 class InstrumentationBundleResult
 {
 	public int? DiscoveredCount { get; set; }
+	public string? TestUidsDirectory { get; set; }
 	public int Passed { get; set; }
 	public int Failed { get; set; }
 	public int Skipped { get; set; }

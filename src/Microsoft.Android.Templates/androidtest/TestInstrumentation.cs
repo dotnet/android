@@ -35,11 +35,29 @@ public class TestInstrumentation : Instrumentation
         var bundle = new Bundle();
         try
         {
-            var writeablePath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? Path.GetTempPath();
+            var externalFilesPath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath;
+            var writeablePath = externalFilesPath ?? Path.GetTempPath();
             var resultsPath = Path.Combine(writeablePath, "TestResults");
             string[]? testUids = null;
             if (instrumentationArguments?.GetString("test-uids") is string encodedUids)
             {
+                if (encodedUids == "file-location")
+                {
+                    if (externalFilesPath is null)
+                        throw new InvalidOperationException("The app's external files directory is unavailable.");
+                    bundle.PutString("test-uids-directory", externalFilesPath);
+                    Finish(Result.Ok, bundle);
+                    return;
+                }
+                if (encodedUids.StartsWith("file:", StringComparison.Ordinal))
+                {
+                    var token = encodedUids["file:".Length..];
+                    if (!Guid.TryParseExact(token, "N", out _))
+                        throw new FormatException("Invalid instrumentation filter file token.");
+                    if (externalFilesPath is null)
+                        throw new InvalidOperationException("The app's external files directory is unavailable.");
+                    encodedUids = File.ReadAllText(Path.Combine(externalFilesPath, $"test-uids-{token}.txt"));
+                }
                 testUids = XElement.Parse(Encoding.UTF8.GetString(Convert.FromBase64String(encodedUids)))
                     .Elements("test").Select(test => (string?)test.Attribute("uid")
                         ?? throw new FormatException("Missing test UID in the instrumentation filter.")).ToArray();
@@ -162,17 +180,12 @@ public class TestInstrumentation : Instrumentation
         var arity = node.Node.TryGetValue("location.method-arity", out var arityValue)
             ? Convert.ToInt32(arityValue, System.Globalization.CultureInfo.InvariantCulture) : 0;
         var method = type.GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static
-            | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic).Single(candidate =>
-        {
-            var parameters = candidate.GetParameters();
-            var candidateSignature = parameters.Length == 0 ? candidate.Name
-                : $"{candidate.Name}({string.Join(",", parameters.Select(parameter => parameter.ParameterType.FullName ?? parameter.ParameterType.Name))})";
-            return candidateSignature == signature && candidate.GetGenericArguments().Length == arity;
-        });
+            | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
+            .Single(candidate => ManagedTestName.Matches(candidate, signature, arity));
         return new TestMethodIdentifierProperty(
             type.Assembly.FullName ?? throw new InvalidOperationException("The test assembly has no full name."),
             type.Namespace ?? "", type.Namespace is null ? typeName : typeName[(type.Namespace.Length + 1)..], method.Name, arity,
-            method.GetParameters().Select(parameter => parameter.ParameterType.FullName ?? parameter.ParameterType.Name).ToArray(),
+            method.GetParameters().Select(parameter => ManagedTestName.GetTypeName(parameter.ParameterType)).ToArray(),
             method.ReturnType.FullName ?? method.ReturnType.Name);
     }
 

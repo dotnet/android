@@ -65,11 +65,19 @@ public abstract class TestInstrumentation : Instrumentation
 
 		var bundle = new Bundle ();
 		try {
-			var writeablePath = Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath ();
+			var externalFilesPath = Application.Context.GetExternalFilesDir (null)?.AbsolutePath;
+			var writeablePath = externalFilesPath ?? Path.GetTempPath ();
+			if (GetStringExtra (InstrumentationProtocol.ExtraTestUids) == InstrumentationProtocol.TestUidsDirectoryRequest) {
+				if (externalFilesPath == null)
+					throw new InvalidOperationException ("The app's external files directory is unavailable.");
+				bundle.PutString (InstrumentationProtocol.KeyTestUidsDirectory, externalFilesPath);
+				Finish (Result.Ok, bundle);
+				return;
+			}
 			var resultsDir = Path.Combine (writeablePath, "TestResults");
 			Directory.CreateDirectory (resultsDir);
 
-			var filter = BuildNUnitFilter ();
+			var filter = BuildNUnitFilter (externalFilesPath);
 			bool discover = GetBoolExtra (InstrumentationProtocol.ExtraDiscover);
 			int passed = 0, failed = 0, skipped = 0;
 			int discovered = 0;
@@ -156,13 +164,13 @@ public abstract class TestInstrumentation : Instrumentation
 	/// Builds an NUnit TestFilter from excluded categories, excluded test names,
 	/// and instrumentation extras (include/exclude).
 	/// </summary>
-	TestFilter BuildNUnitFilter ()
+	TestFilter BuildNUnitFilter (string? externalFilesPath)
 	{
 		bool noExclusions = GetBoolExtra ("noexclusions");
 		var filterElements = new List<XElement> ();
 		var selectedUids = GetStringExtra (InstrumentationProtocol.ExtraTestUids);
 		if (selectedUids != null) {
-			var tests = InstrumentationProtocol.DecodeTestUids (selectedUids);
+			var tests = InstrumentationProtocol.DecodeTestUids (InstrumentationProtocol.ReadTestUidsArgument (selectedUids, externalFilesPath));
 			if (tests.Length == 0)
 				throw new ArgumentException ("The selected-test filter must not be empty.");
 			filterElements.Add (new XElement ("or", tests.Select (uid => new XElement ("test", uid))));
