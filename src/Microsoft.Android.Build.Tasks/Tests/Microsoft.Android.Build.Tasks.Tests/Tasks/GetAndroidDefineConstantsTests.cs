@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -60,18 +61,14 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("Microsoft.Android.Tasks.GetAndroidDefineConstants")]
 		public void RegisteredTaskNamesExecuteWithFullMSBuild (string taskName)
 		{
-			string vswhere = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86),
-				"Microsoft Visual Studio", "Installer", "vswhere.exe");
-			Assert.IsTrue (File.Exists (vswhere), $"Visual Studio discovery tool not found: {vswhere}");
-			var discovery = NativeAotBootstrapTestTools.Run (vswhere,
-				"-latest", "-prerelease", "-property", "installationPath", "-requires", "Microsoft.Component.MSBuild");
-			Assert.AreEqual (0, discovery.ExitCode, discovery.Output + discovery.Error);
-			string installationPath = discovery.Output.Trim ();
-			Assert.IsNotEmpty (installationPath, "No Visual Studio installation with MSBuild was found.");
-			string msbuild = Path.Combine (installationPath, "MSBuild", "Current", "Bin", "MSBuild.exe");
+			string msbuild = Path.GetFullPath (Path.Combine (TestContext.CurrentContext.TestDirectory, "..", "FullMSBuild", "MSBuild.exe"));
 			Assert.IsTrue (File.Exists (msbuild), $"Full-framework MSBuild not found: {msbuild}");
 			RegisteredTaskNamesExecute (taskName, "Full", msbuild);
 		}
+
+		static string GetAssemblyMetadata (string name) =>
+			typeof (GetAndroidDefineConstantsTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
+				.Single (a => a.Key == name).Value ?? throw new InvalidOperationException ($"Missing assembly metadata: {name}");
 
 		void RegisteredTaskNamesExecute (string taskName, string runtimeType, string executable, params string [] arguments)
 		{
@@ -89,7 +86,9 @@ namespace Xamarin.Android.Build.Tests
 			string output = Path.Combine (directory, "constants.txt");
 			new XDocument (new XElement ("Project",
 				new XElement ("PropertyGroup",
-					new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GetAndroidDefineConstants).Assembly.Location)),
+					new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GetAndroidDefineConstants).Assembly.Location),
+					new XElement ("NetCoreSdkRoot", GetAssemblyMetadata ("NetCoreSdkRoot")),
+					new XElement ("DOTNET_HOST_PATH", GetAssemblyMetadata ("DotNetHostPath"))),
 				registrations,
 				new XElement ("Target", new XAttribute ("Name", "Build"),
 					new XElement ("Error",
