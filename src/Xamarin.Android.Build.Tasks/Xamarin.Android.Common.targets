@@ -2780,15 +2780,56 @@ because xbuild doesn't support framework reference assemblies.
     <_InstallApkSetJdk24 Condition=" '$(_JdkVersion)' != '' And $([MSBuild]::VersionGreaterThanOrEquals('$(_JdkVersion)', '24')) ">true</_InstallApkSetJdk24>
     <_InstallApkSetJavaOptions Condition=" '$(_InstallApkSetJdk24)' == 'true' And !$(_InstallApkSetJavaOptions.Contains('--enable-native-access=ALL-UNNAMED')) ">$(_InstallApkSetJavaOptions) --enable-native-access=ALL-UNNAMED</_InstallApkSetJavaOptions>
     <_InstallApkSetJavaOptions Condition=" '$(_InstallApkSetJdk24)' == 'true' And !$(_InstallApkSetJavaOptions.Contains('--sun-misc-unsafe-memory-access=allow')) ">$(_InstallApkSetJavaOptions) --sun-misc-unsafe-memory-access=allow</_InstallApkSetJavaOptions>
-    <_InstallApkSetHeap Condition=" '$(JavaMaximumHeapSize)' != '' ">-Xmx$(JavaMaximumHeapSize)</_InstallApkSetHeap>
     <!-- `-s emulator-5554` becomes `emulator-5554`; a value without a space is passed through unchanged. -->
-    <_InstallApkSetDeviceId Condition=" '$(AdbTarget)' != '' ">--device-id $(AdbTarget.Substring($([MSBuild]::Add($(AdbTarget.IndexOf(' ')), 1))))</_InstallApkSetDeviceId>
+    <_InstallApkSetDeviceId Condition=" '$(AdbTarget)' != '' ">$(AdbTarget.Substring($([MSBuild]::Add($(AdbTarget.IndexOf(' ')), 1))))</_InstallApkSetDeviceId>
     <!-- `_ALL_` installs every module; on-demand modules are not supported. -->
     <_InstallApkSetModules>_ALL_</_InstallApkSetModules>
-    <_InstallApkSetModules Condition=" '@(AndroidInstallModules)' != '' ">@(AndroidInstallModules->'&quot;%(Identity)&quot;', ',')</_InstallApkSetModules>
+    <_InstallApkSetModules Condition=" '@(AndroidInstallModules->Count())' != '0' ">@(AndroidInstallModules, ',')</_InstallApkSetModules>
+  </PropertyGroup>
+  <ItemGroup>
+    <_AndroidInstallApkSetArgument Include="Java">
+      <Value>$([System.IO.Path]::Combine(`$(JavaToolPath)`, `$(_InstallApkSetJava)`))</Value>
+    </_AndroidInstallApkSetArgument>
+    <_AndroidInstallApkSetArgument Include="Heap" Condition=" '$(JavaMaximumHeapSize)' != '' ">
+      <Value>-Xmx$(JavaMaximumHeapSize)</Value>
+    </_AndroidInstallApkSetArgument>
+    <_AndroidInstallApkSetArgument Include="Jar">
+      <Switch>-jar</Switch>
+      <Value>$(AndroidBundleToolJarPath)</Value>
+    </_AndroidInstallApkSetArgument>
+    <_AndroidInstallApkSetArgument Include="ApkSet">
+      <Switch>install-apks --apks</Switch>
+      <Value>$(_ApkSetIntermediate)</Value>
+    </_AndroidInstallApkSetArgument>
+    <_AndroidInstallApkSetArgument Include="Adb">
+      <Switch>--adb</Switch>
+      <Value>$([System.IO.Path]::Combine(`$(AdbToolPath)`, `$(AdbToolExe)`))</Value>
+    </_AndroidInstallApkSetArgument>
+    <_AndroidInstallApkSetArgument Include="Device" Condition=" '$(AdbTarget)' != '' ">
+      <Switch>--device-id</Switch>
+      <Value>$(_InstallApkSetDeviceId)</Value>
+    </_AndroidInstallApkSetArgument>
+    <_AndroidInstallApkSetArgument Include="Modules">
+      <Switch>--allow-downgrade --modules</Switch>
+      <Value>$(_InstallApkSetModules)</Value>
+    </_AndroidInstallApkSetArgument>
+    <_AndroidInstallApkSetArgument>
+      <!-- Protect percent sequences through MSBuild unescaping; delay shell backslashes until Exec. -->
+      <QuotedValue Condition="$([MSBuild]::IsOSPlatform('windows'))">&quot;$([System.String]::Copy(&quot;%(_AndroidInstallApkSetArgument.Value)&quot;).Replace(`%`, `%252525%252525`))&quot;</QuotedValue>
+      <QuotedValue Condition="!$([MSBuild]::IsOSPlatform('windows'))">'$([System.String]::Copy(&quot;%(_AndroidInstallApkSetArgument.Value)&quot;).Replace(`%`, `%252525`).Replace(`'`, `'%25255c''`))'</QuotedValue>
+    </_AndroidInstallApkSetArgument>
+  </ItemGroup>
+  <PropertyGroup>
+    <_AndroidInstallApkSetJava>@(_AndroidInstallApkSetArgument->WithMetadataValue('Identity', 'Java')->'%(QuotedValue)')</_AndroidInstallApkSetJava>
+  </PropertyGroup>
+  <ItemGroup>
+    <_AndroidInstallApkSetArgument Remove="Java" />
+  </ItemGroup>
+  <PropertyGroup>
+    <_AndroidInstallApkSetArguments>@(_AndroidInstallApkSetArgument->'%(Switch) %(QuotedValue)', ' ')</_AndroidInstallApkSetArguments>
   </PropertyGroup>
   <Exec
-      Command="&quot;$([System.IO.Path]::Combine('$(JavaToolPath)', '$(_InstallApkSetJava)'))&quot; $(_InstallApkSetJavaOptions.Trim()) $(_InstallApkSetHeap) -jar &quot;$(AndroidBundleToolJarPath)&quot; install-apks --apks &quot;$(_ApkSetIntermediate)&quot; --adb &quot;$([System.IO.Path]::Combine('$(AdbToolPath)', '$(AdbToolExe)'))&quot; $(_InstallApkSetDeviceId) --allow-downgrade --modules $(_InstallApkSetModules)"
+      Command="$([MSBuild]::Unescape(`$(_AndroidInstallApkSetJava)`)) $(_InstallApkSetJavaOptions.Trim()) $([MSBuild]::Unescape(`$(_AndroidInstallApkSetArguments)`))"
       ConsoleToMSBuild="True"
       IgnoreExitCode="True">
     <Output TaskParameter="ExitCode" PropertyName="_InstallApkSetExitCode" />
