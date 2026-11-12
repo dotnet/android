@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public partial class FastDeploy
 	{
@@ -547,7 +548,7 @@ namespace Xamarin.Android.Tasks
 				builder.Append (entry.Key).Append ('\t')
 					.Append (entry.Value.RelativePath).Append ('\t')
 					.Append (entry.Value.Size).Append ('\t')
-					.AppendLine (entry.Value.LastWriteTimeUtcTicks.ToString ());
+					.AppendLine (entry.Value.LastWriteTimeUtcTicks.ToString (System.Globalization.CultureInfo.CurrentCulture));
 			}
 			return builder.ToString ();
 		}
