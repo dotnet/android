@@ -57,9 +57,10 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 |-----------|-----|-------------|
 | android-api-docs | https://github.com/dotnet/android-api-docs | (not a third-party dep) |
 
-#### Vendored Java.Interop (`external/Java.Interop/`)
-Java.Interop is vendored source, not a submodule. Keep its `dotnet/java-interop`
-notice; its license is in `external/Java.Interop/LICENSE`.
+#### Integrated Java.Interop (`src/Java.Interop*/`)
+Java.Interop is integrated source, not a submodule. Keep its `dotnet/java-interop`
+notice; its license is in `Documentation/Java.Interop/LICENSE` and its additional
+third-party notices are in `Documentation/Java.Interop/ThirdPartyNotices.txt`.
 
 #### Vendored Source (`src-ThirdParty/`)
 List contents of `src-ThirdParty/` directory. Current vendored code and license sources:
@@ -67,9 +68,6 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | Directory | Name | License Source |
 |-----------|------|---------------|
 | `android-platform-tools-base/` | android/platform/tools/base | https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE (Apache 2.0) |
-| `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
-
-Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
 
 #### NuGet Packages
 Search `.csproj` files for `<PackageReference>` elements. Current third-party NuGet packages needing TPNs:
@@ -77,7 +75,6 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 | Package | Name in TPN | License URL |
 |---------|------------|-------------|
 | ELFSharp | KonradKuczynski/ELFSharp | https://elfsharp.it/ (MIT + LLVM) |
-| K4os.Compression.LZ4 | MiloszKrajewski/K4os.Compression.LZ4 | https://github.com/MiloszKrajewski/K4os.Compression.LZ4/ (MIT) |
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
 | NuGet.Versioning | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
 | Mono.Cecil | mono/cecil | https://github.com/mono/cecil/ (MIT) |

@@ -321,7 +321,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12879")]
 		public void BasicApplicationRepetitiveReleaseBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -330,31 +329,47 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			string compilationTarget = runtime == AndroidRuntime.NativeAOT ? "IlcCompile" : KnownTargets.LinkAssembliesShrink;
 			using (var b = CreateApkBuilder ()) {
-				var foo = new BuildItem.Source ("Foo.cs") {
-					TextContent = () => @"using System;
-	namespace UnnamedProject {
-		public class Foo {
-		}
-	}"
-				};
-
-				proj.SetRuntime (runtime);
-				proj.Sources.Add (foo);
 				Assert.IsTrue (b.Build (proj), "first build failed");
-				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				Assert.IsTrue (
-					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-					b.LastBuildTime, firstBuildTime
-				);
+				string outputDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				string [] packages = [
+					Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.aab"),
+					Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.apk"),
+				];
+				var packageHashes = packages.Select (Files.HashFile).ToArray ();
+				var packageWriteTimes = packages.Select (File.GetLastWriteTimeUtc).ToArray ();
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
+				b.Output.AssertTargetIsSkipped ("CoreCompile");
 				b.Output.AssertTargetIsSkipped ("_Sign");
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
-				proj.Touch ("Foo.cs");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
+				b.Output.AssertTargetIsSkipped (compilationTarget);
+				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile), "An unchanged build should preserve package contents.");
+				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc), "An unchanged build should not rewrite packages.");
+
+				// A timestamp-only touch can produce identical binaries and legitimately skip signing.
+				proj.MainActivity = proj.DefaultMainActivity.Replace ("count = 1;", "count = 2;");
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build failed");
 				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+				b.Output.AssertTargetIsNotSkipped (compilationTarget);
 				b.Output.AssertTargetIsNotSkipped ("_Sign");
-				b.Output.AssertTargetIsPartiallyBuilt ("_CompressAssemblies");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					b.Output.AssertTargetIsPartiallyBuilt ("_CompressAssemblies");
+				}
+				for (int i = 0; i < packages.Length; i++) {
+					Assert.AreNotEqual (packageHashes [i], Files.HashFile (packages [i]), $"Changing reachable code should update {packages [i]}.");
+				}
+				packageHashes = packages.Select (Files.HashFile).ToArray ();
+				packageWriteTimes = packages.Select (File.GetLastWriteTimeUtc).ToArray ();
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "fourth build failed");
+				b.Output.AssertTargetIsSkipped ("CoreCompile");
+				b.Output.AssertTargetIsSkipped (compilationTarget);
+				b.Output.AssertTargetIsSkipped ("_Sign");
+				CollectionAssert.AreEqual (packageHashes, packages.Select (Files.HashFile), "An unchanged build after a code change should preserve package contents.");
+				CollectionAssert.AreEqual (packageWriteTimes, packages.Select (File.GetLastWriteTimeUtc), "An unchanged build after a code change should not rewrite packages.");
 			}
 		}
 
@@ -1184,6 +1199,78 @@ namespace Lib2
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build should succeed");
 				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+			}
+		}
+
+		[Test]
+		public void ReleaseProjectReferenceDoesNotRebuildWithoutChanges ([Values] bool bindingLibrary)
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var path = Path.Combine ("temp", TestName);
+			XamarinAndroidProject library = bindingLibrary ? new XamarinAndroidBindingProject () : new XamarinAndroidLibraryProject ();
+			library.ProjectName = "Library";
+			library.IsRelease = true;
+			library.SetRuntime (runtime);
+			if (bindingLibrary) {
+				library.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("tiny.aar") {
+					BinaryContent = () => {
+						using var stream = new MemoryStream ();
+						using (var aar = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+							using var entry = aar.CreateEntry ("classes.jar").Open ();
+							entry.Write (ResourceData.JavaSourceJarTestJar);
+						}
+						return stream.ToArray ();
+					},
+				});
+			}
+
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				IsRelease = true,
+			};
+			app.SetRuntime (runtime);
+			app.SetRuntimeIdentifier ("arm64-v8a");
+			app.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			app.SetProperty ("AndroidPackageFormat", "apk");
+			app.SetProperty ("PublishReadyToRun", "false");
+			app.AddReference (library);
+
+			using var libraryBuilder = CreateDllBuilder (Path.Combine (path, library.ProjectName));
+			libraryBuilder.Save (library);
+			using var builder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+			builder.BuildingInsideVisualStudio = false;
+			builder.Target = "Build";
+			builder.Verbosity = LoggerVerbosity.Diagnostic;
+			builder.BuildLogFile = "build-1.log";
+			Assert.IsTrue (builder.Build (app), "The initial app build should succeed.");
+
+			var libraryIntermediate = Path.Combine (Root, libraryBuilder.ProjectDirectory, library.IntermediateOutputPath);
+			var libraryAssembly = Path.Combine (libraryIntermediate, $"{library.ProjectName}.dll");
+			var compileCache = Path.Combine (libraryIntermediate, $"{library.ProjectFilePath}.CoreCompileInputs.cache");
+			FileAssert.Exists (libraryAssembly);
+			FileAssert.Exists (compileCache);
+			if (bindingLibrary) {
+				Assert.IsNotEmpty (Directory.GetFiles (Path.Combine (libraryIntermediate, "generated", "src"), "*.cs"),
+					"The AAR should produce binding sources.");
+			}
+			var assemblyTimestamp = File.GetLastWriteTimeUtc (libraryAssembly);
+			var compileCacheTimestamp = File.GetLastWriteTimeUtc (compileCache);
+
+			for (int build = 2; build <= 3; build++) {
+				builder.BuildLogFile = $"build-{build}.log";
+				Assert.IsTrue (builder.Build (app, doNotCleanupOnUpdate: true, saveProject: false),
+					$"Unchanged build {build} should succeed.");
+				Assert.AreEqual (assemblyTimestamp, File.GetLastWriteTimeUtc (libraryAssembly),
+					$"Unchanged build {build} should not recompile the library.");
+				Assert.AreEqual (compileCacheTimestamp, File.GetLastWriteTimeUtc (compileCache),
+					$"Unchanged build {build} should not rewrite the library's compile-input cache.");
+				Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("Task \"ResolveLibraryProjectImports\"")),
+					$"Unchanged build {build} should not resolve library imports again.");
+				builder.Output.AssertTargetIsSkipped ("_BuildApkEmbed");
 			}
 		}
 
@@ -2327,7 +2414,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void PostTrimmingPipelineIsSkippedOnSecondBuild ()
+		public void PostTrimmingPipelineIsSkippedOnSecondBuild ([Values ("arm64-v8a", "x86_64")] string abi)
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			const bool isRelease = true;
@@ -2338,13 +2425,14 @@ namespace Lib2
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifier ("arm64-v8a");
+			proj.SetRuntimeIdentifier (abi);
 			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("AndroidAddKeepAlives", "true");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_PostTrimmingPipeline");
-				var linkedAssembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked", $"{proj.ProjectName}.dll");
+				var linkedAssembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi), "linked", $"{proj.ProjectName}.dll");
 				FileAssert.Exists (linkedAssembly, "The post-trimming pipeline should operate on the linked application assembly.");
 				var assemblyHash = Files.HashFile (linkedAssembly);
 				var assemblyWriteTime = File.GetLastWriteTimeUtc (linkedAssembly);
@@ -2353,6 +2441,19 @@ namespace Lib2
 				b.Output.AssertTargetIsSkipped ("_PostTrimmingPipeline");
 				Assert.AreEqual (assemblyHash, Files.HashFile (linkedAssembly), "A no-change build should preserve the linked assembly.");
 				Assert.AreEqual (assemblyWriteTime, File.GetLastWriteTimeUtc (linkedAssembly), "A no-change build should not rewrite the linked assembly.");
+
+				foreach (string keepAlives in new [] { "false", "true" }) {
+					var parameters = new [] { $"AndroidAddKeepAlives={keepAlives}" };
+					Assert.IsTrue (b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true, saveProject: false),
+						"Changing a cached Android property should succeed without changing the project or assemblies.");
+					b.Output.AssertTargetIsNotSkipped ("_AndroidInvalidateLinkerCache");
+					b.Output.AssertTargetIsNotSkipped ("_RunILLink");
+
+					Assert.IsTrue (b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true, saveProject: false),
+						"An unchanged build after a property change should succeed.");
+					b.Output.AssertTargetIsSkipped ("_AndroidInvalidateLinkerCache");
+					b.Output.AssertTargetIsSkipped ("_RunILLink");
+				}
 			}
 		}
 	}

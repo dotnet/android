@@ -15,6 +15,5 @@ network:
     - android.googlesource.com
     - docs.oracle.com
     - gstatic.com
-    - httpbin.org
     - source.dot.net
 ---

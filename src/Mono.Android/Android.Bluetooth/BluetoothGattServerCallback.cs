@@ -30,19 +30,22 @@ namespace Android.Bluetooth
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_OnServiceAdded_ILandroid_bluetooth_BluetoothGattService_ext (IntPtr jnienv, IntPtr native__this, int native_status, IntPtr native_service)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
+			unsafe {
+				// SAFETY: the VM supplies the current-thread environment and borrowed callback/service references for this registered JNI signature.
+				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
 
-			try {
-				Android.Bluetooth.BluetoothGattServerCallback __this = global::Java.Lang.Object.GetObject<Android.Bluetooth.BluetoothGattServerCallback> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-				Android.Bluetooth.ProfileState status = (Android.Bluetooth.ProfileState) native_status;
-				var service = global::Java.Lang.Object.GetObject<Android.Bluetooth.BluetoothGattService> (native_service, JniHandleOwnership.DoNotTransfer);
-				__this.ActualOnServiceAdded (status, service);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				try {
+					Android.Bluetooth.BluetoothGattServerCallback __this = global::Java.Lang.Object.GetObject<Android.Bluetooth.BluetoothGattServerCallback> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+					Android.Bluetooth.ProfileState status = (Android.Bluetooth.ProfileState) native_status;
+					var service = global::Java.Lang.Object.GetObject<Android.Bluetooth.BluetoothGattService> (native_service, JniHandleOwnership.DoNotTransfer);
+					__this.ActualOnServiceAdded (status, service);
+				} catch (global::System.Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+					return;
+				} finally {
+					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 		}
 #pragma warning restore 0169

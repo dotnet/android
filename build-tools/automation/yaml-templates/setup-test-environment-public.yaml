@@ -8,7 +8,6 @@ parameters:
   useAgentJdkPath: false
   remove_dotnet: false
   dotnetVersion: $(DotNetSdkVersion)
-  dotnetQuality: $(DotNetSdkQuality)
   installTestSlicer: false
   installApkDiff: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
@@ -31,7 +30,6 @@ steps:
     useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
     remove_dotnet: ${{ parameters.remove_dotnet }}
     dotnetVersion: ${{ parameters.dotnetVersion }}
-    dotnetQuality: ${{ parameters.dotnetQuality }}
     installTestSlicer: ${{ parameters.installTestSlicer }}
     installApkDiff: ${{ parameters.installApkDiff }}
     androidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -948,6 +949,42 @@ namespace Xamarin.Android.Build.Tests
 			// Ensure items excluded from check do not produce warnings.
 			StringAssertEx.DoesNotContain ("TestContent2.txt : warning XA0101", libBuilder.LastBuildOutput,
 				"Build Output contains 'TestContent2.txt : warning XA0101'.");
+		}
+
+		[TestCase (0, "normal")]
+		[TestCase (2, "error")]
+		[TestCase (2, "suppress")]
+		public void ContentWarnings (int count, string mode)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			var files = Enumerable.Range (0, count).Select (i => $"content{i}.txt").ToArray ();
+			foreach (string file in files) {
+				proj.OtherBuildItems.Add (new BuildItem.Content (file) { TextContent = () => "Test content" });
+			}
+			if (mode == "error") {
+				proj.SetProperty ("WarningsAsErrors", "XA0101");
+			} else if (mode == "suppress") {
+				proj.SetProperty ("NoWarn", "XA0101");
+			}
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckForContent";
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (mode != "error", builder.Build (proj));
+			builder.AssertHasSomeWarnings (mode == "normal" ? (uint) count : 0);
+			StringAssertEx.Contains ($" {(mode == "error" ? count : 0)} Error(s)", builder.LastBuildOutput);
+			if (mode == "suppress") {
+				StringAssertEx.DoesNotContain (": warning XA0101:", builder.LastBuildOutput);
+				StringAssertEx.DoesNotContain (": error XA0101:", builder.LastBuildOutput);
+				StringAssertEx.Contains ("@(Content) build action is not supported", builder.LastBuildOutput);
+			} else {
+				foreach (string file in files) {
+					StringAssertEx.Contains ($"{file} : {(mode == "error" ? "error" : "warning")} XA0101: @(Content) build action is not supported", builder.LastBuildOutput);
+				}
+			}
+			if (count == 0) {
+				StringAssertEx.DoesNotContain ("Task \"AndroidWarning\"", builder.LastBuildOutput);
+			}
 		}
 
 		[Test]

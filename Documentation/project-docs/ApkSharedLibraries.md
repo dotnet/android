@@ -11,6 +11,9 @@ packaged as data-only ELF libraries written directly by managed code. No
 assembler, native linker, or objcopy executable is needed to create them.
 NativeAOT compilation and optional native-library stripping use the official
 Android NDK; ordinary CoreCLR packaging does not require the NDK.
+CoreCLR's fixed host is built using static support archives, but those archives
+are build intermediates, not runtime-pack assets for application linking.
+NativeAOT's static host archives remain part of its runtime packs.
 
 ## Assembly store payload library
 
@@ -78,6 +81,16 @@ no native tools.
 The required CoreCLR `coreclr_bootstrap` symbol contains the XCFG application
 configuration. The optional `remapping_data` symbol contains JNI remapping data
 and is absent when there are no semantic mappings.
+
+XCFG version 2 stores each DSO cache entry as a 32-bit alias hash, two one-byte
+flags (`ignore`, `is_jni_library`), two reserved zero bytes, a 32-bit real load-name
+offset, and a 32-bit alias offset. Both offsets refer to the shared UTF-8 string
+pool; identical strings share an offset. An alias offset of zero represents an
+empty generated alias. Entries remain sorted by hash, and lookup compares the
+requested name against the stored alias across the entire collision run. Loading
+and JNI preloading still use the real name, with preload groups referring to the
+same cache indices. Producers and readers must agree on version 2; version 1 used
+12-byte entries without alias offsets and cannot be read with the new layout.
 
 The shared native loader owns `dlopen`/`dlsym`, BLBB envelope decoding, optional
 Zstandard decompression, and process-lifetime storage. Managed remapping lookup

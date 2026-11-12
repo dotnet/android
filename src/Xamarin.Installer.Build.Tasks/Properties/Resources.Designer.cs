@@ -59,6 +59,13 @@ namespace Xamarin.Installer.Build.Tasks.Properties {
                 resourceCulture = value;
             }
         }
+
+        internal static string XA5305 {
+            get {
+                return ResourceManager.GetString("XA5305", resourceCulture);
+            }
+        }
+
         
         /// <summary>
         ///   Looks up a localized string similar to Failed to locate Android SDK at path `{0}`..

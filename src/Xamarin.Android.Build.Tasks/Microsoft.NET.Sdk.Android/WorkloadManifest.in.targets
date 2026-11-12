@@ -1,14 +1,18 @@
 <Project>
   <ImportGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' ">
+    <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net12"
+        Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '12.0')) " />
     <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net11"
         Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '11.0')) " />
-    <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net10"
-        Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) " />
-    <Import Project="Eol.targets" Sdk="Microsoft.Android.Sdk.net11"
-        Condition=" $([MSBuild]::VersionLessThanOrEquals($(TargetFrameworkVersion), '9.0')) " />
+    <Import Project="Eol.targets" Sdk="Microsoft.Android.Sdk.net12"
+        Condition=" $([MSBuild]::VersionLessThanOrEquals($(TargetFrameworkVersion), '10.0')) " />
   </ImportGroup>
 
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '11.0')) ">
+    <!-- The initial .NET 12 SDK bundles a preview linker incompatible with the .NET 11 Android RC2 steps. -->
+    <KnownILLinkPack Update="Microsoft.NET.ILLink.Tasks">
+      <ILLinkPackVersion Condition=" '%(KnownILLinkPack.TargetFramework)' == 'net11.0' and '%(KnownILLinkPack.ILLinkPackVersion)' == '11.0.0-preview.7.26381.103' ">@NET_PREVIOUS_ILLINK_VERSION@</ILLinkPackVersion>
+    </KnownILLinkPack>
     <KnownFrameworkReference
         Update="Microsoft.Android;Microsoft.Android.Runtimes"
         LatestRuntimeFrameworkVersion="@NET_PREVIOUS_VERSION@"
@@ -16,7 +20,7 @@
     />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '10.0')) ">
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0')) ">
     <SdkSupportedTargetPlatformIdentifier Include="android" DisplayName="Android" />
   </ItemGroup>
 </Project>

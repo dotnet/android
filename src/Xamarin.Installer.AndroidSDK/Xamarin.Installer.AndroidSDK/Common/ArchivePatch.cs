@@ -72,7 +72,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (Url != other.Url)
 				return false;
 
-			if (String.Compare (Checksum, other.Checksum, StringComparison.Ordinal) != 0)
+			if (!string.Equals (Checksum, other.Checksum, StringComparison.Ordinal))
 				return false;
 
 			if (BasedOn == null) {

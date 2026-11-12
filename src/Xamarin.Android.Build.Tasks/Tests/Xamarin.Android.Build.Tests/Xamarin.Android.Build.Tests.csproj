@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
-    <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
   </ItemGroup>
 
@@ -26,6 +25,7 @@
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Xamarin.Android.Build.Debugging.Tasks\Xamarin.Android.Build.Debugging.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Xamarin.Installer.AndroidSDK\Xamarin.Installer.AndroidSDK.csproj" />
+    <ProjectReference Include="..\..\..\Xamarin.Installer.Build.Tasks\Xamarin.Installer.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
   </ItemGroup>
@@ -35,8 +35,7 @@
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelper.cs" Link="Utilities\NativeToolTestHelper.cs" />
     <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelperTests.cs" Link="NativeToolTestHelperTests.cs" />
-    <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\*.cs" />
-    <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
+    <Compile Include="..\..\..\..\tests\Utilities\AssemblyStore\**\*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -47,10 +46,6 @@
     </Content>
     <Content Include="Expected\GenerateDesignerFileWithLibraryReferenceExpected.cs">
       <Link>..\Expected\GenerateDesignerFileWithLibraryReferenceExpected.cs</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Expected\CheckPackageManagerAssemblyOrder.java">
-      <Link>..\Expected\CheckPackageManagerAssemblyOrder.java</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

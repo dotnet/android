@@ -87,7 +87,7 @@ namespace Xamarin.Android.Tools.Aidl
 			if (identifiers == null)
 				throw new ArgumentNullException ("identifiers");
 			if (identifiers.Any (i => i == null))
-				throw new ArgumentException ("'identifiers' contain one or more null values: {0}", String.Concat (identifiers));
+				throw new ArgumentException ($"'identifiers' contain one or more null values: {String.Concat (identifiers)}", "identifiers");
 			this.Identifiers = identifiers;
 		}
 
@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tools.Aidl
 			if (identifiers == null)
 				throw new ArgumentNullException ("identifiers");
 			if (identifiers.Any (i => i == null))
-				throw new ArgumentException ("'identifiers' contain one or more null values: {0}", String.Concat (identifiers));
+				throw new ArgumentException ($"'identifiers' contain one or more null values: {String.Concat (identifiers)}", "identifiers");
 			if (genericArguments != null && genericArguments.Any (g => g == null))
 				throw new ArgumentException (String.Format ("With {0} elementType, 'genericArguments' contain one or more null values", String.Concat (".", identifiers)));
 			this.Identifiers = identifiers;

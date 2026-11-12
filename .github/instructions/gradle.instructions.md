@@ -37,8 +37,8 @@ rootProject.name = '<project>'
 ```
 
 Adjust the `../..` depth to reach the repo root from that project; it is not
-always two levels (e.g. `external/Java.Interop/tools/java-source-utils` uses
-four).
+always two levels (e.g. `tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle`
+uses three).
 
 Kotlin DSL (`settings.gradle.kts`) applies the same two Groovy files, but passes
 the receiver as `to = this`:

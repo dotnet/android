@@ -94,6 +94,7 @@ namespace Xamarin.Android.Tasks
 		protected virtual string CreateResponseFile ()
 		{
 			var responseFile = CreateResponseFilePath ();
+			responseFilePath = responseFile;
 			Log.LogDebugMessage ($"[{MainClass}] response file: {responseFile}");
 
 			using var response = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);

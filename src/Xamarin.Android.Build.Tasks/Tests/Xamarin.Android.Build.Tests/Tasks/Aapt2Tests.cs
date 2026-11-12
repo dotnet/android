@@ -479,32 +479,29 @@ namespace Xamarin.Android.Build.Tests
 			var errors = new List<BuildErrorEventArgs> ();
 			var engine = new MockBuildEngine (TestContext.Out, errors);
 			var directorySeperator = Path.DirectorySeparatorChar;
-			var current = Directory.GetCurrentDirectory ();
-			try {
-				Directory.SetCurrentDirectory (path);
-				MonoAndroidHelper.SaveResourceCaseMap (engine, new Dictionary<string, string> {
-					{ $"layout{directorySeperator}main.axml", $"Layout{directorySeperator}Main.xml" },
-					{ $"values{directorySeperator}strings.xml", $"Values{directorySeperator}Strings.xml" },
- 				}, (o) => { return (o, path);} );
-				var task = new Aapt2Compile {
-					BuildEngine = engine,
-					ToolPath = GetPathToAapt2 (),
-					ResourceDirectories = new ITaskItem [] {
-						new TaskItem (resPath, new Dictionary<string, string> () {
-								{ "ResourceDirectory", resPath },
-							}
-						)
-					},
-					FlatArchivesDirectory = archivePath,
-					FlatFilesDirectory = flatFilePath,
-				};
-				Assert.False (task.Execute (), "task should not have succeeded.");
-			} finally {
-				Directory.SetCurrentDirectory (current);
-			}
+			var task = new Aapt2Compile {
+				BuildEngine = engine,
+				ResourceCaseMap = new ITaskItem [] {
+					new TaskItem ($"values{directorySeperator}strings.xml", new Dictionary<string, string> {
+						{ "OriginalName", $"Values{directorySeperator}Strings.xml" },
+					}),
+				},
+				ToolPath = GetPathToAapt2 (),
+				ResourceDirectories = new ITaskItem [] {
+					new TaskItem (resPath, new Dictionary<string, string> () {
+							{ "ResourceDirectory", resPath },
+						}
+					)
+				},
+				FlatArchivesDirectory = archivePath,
+				FlatFilesDirectory = flatFilePath,
+			};
+			Assert.False (task.Execute (), "task should not have succeeded.");
 			Assert.AreEqual (2, errors.Count, $"Two Error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors[0].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
 			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors [1].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
+			Assert.AreEqual (1, errors [0].LineNumber);
+			Assert.AreEqual (0, errors [1].LineNumber);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 

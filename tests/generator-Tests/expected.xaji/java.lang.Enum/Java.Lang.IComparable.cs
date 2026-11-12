@@ -1,0 +1,91 @@
+using System;
+using System.Collections.Generic;
+using Android.Runtime;
+using Java.Interop;
+
+namespace Java.Lang {
+
+	// Metadata.xml XPath interface reference: path="/api/package[@name='java.lang']/interface[@name='Comparable']"
+	[Register ("java/lang/Comparable", "", "Java.Lang.IComparableInvoker")]
+	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
+	public partial interface IComparable : IJavaObject, IJavaPeerable {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/interface[@name='Comparable']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='T']]"
+		[Register ("compareTo", "(Ljava/lang/Object;)I", "GetCompareTo_Ljava_lang_Object_Handler:Java.Lang.IComparableInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+		int CompareTo (global::Java.Lang.Object another);
+
+	}
+
+	[global::Android.Runtime.Register ("java/lang/Comparable", DoNotGenerateAcw=true)]
+	internal partial class IComparableInvoker : global::Java.Lang.Object, IComparable {
+		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members_java_lang_Comparable; }
+		}
+
+		static readonly JniPeerMembers _members_java_lang_Comparable = new JniPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
+
+		public IComparableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+
+		static Delegate cb_compareTo_CompareTo_Ljava_lang_Object__I;
+#pragma warning disable 0169
+		static Delegate GetCompareTo_Ljava_lang_Object_Handler ()
+		{
+			unsafe {
+				// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+				return cb_compareTo_CompareTo_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_CompareTo_Ljava_lang_Object_);
+			}
+		}
+
+		/// <safety>
+		/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+		/// must match the registered types and stay live without concurrent deletion for this call;
+		/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+		/// failures and may return default; invalid addresses are not validated.
+		/// </safety>
+		static unsafe int n_CompareTo_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_another)
+		{
+			unsafe {
+				// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_another, &__n_CompareTo_Ljava_lang_Object_);
+			}
+		}
+		/// <safety>
+		/// Requires the entry point's live, type-correct borrowed references in its active JNI
+		/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+		/// failures propagate to the marshal helper.
+		/// </safety>
+		private static unsafe int __n_CompareTo_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_another)
+		{
+			unsafe {
+				// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.IComparable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var another = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_another, JniHandleOwnership.DoNotTransfer);
+				int __ret = __this.CompareTo (another);
+				return __ret;
+			}
+		}
+#pragma warning restore 0169
+
+		public int CompareTo (global::Java.Lang.Object another)
+		{
+			const string __id = "compareTo.(Ljava/lang/Object;)I";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				IntPtr native_another = JNIEnv.ToLocalJniHandle (another);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_another);
+					var __rm = _members_java_lang_Comparable.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+					return __rm;
+				} finally {
+					JNIEnv.DeleteLocalRef (native_another);
+					global::System.GC.KeepAlive (another);
+				}
+			}
+		}
+
+	}
+}

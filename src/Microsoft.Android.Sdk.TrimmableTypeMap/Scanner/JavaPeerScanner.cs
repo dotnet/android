@@ -344,32 +344,13 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static void ForceUnconditionalIfPresent (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, string? managedTypeName)
 	{
-		if (managedTypeName is null) {
+		if (managedTypeName is null || managedTypeName.IsNullOrWhiteSpace ()) {
 			return;
 		}
-
-		managedTypeName = managedTypeName.Trim ();
-		if (managedTypeName.Length == 0) {
-			return;
-		}
-
-		// TryGetTypeProperty may return assembly-qualified names like "Ns.Type, Assembly, ..."
-		// Strip to just the type name for lookup
-		var commaIndex = managedTypeName.IndexOf (',');
-		if (commaIndex > 0) {
-			managedTypeName = managedTypeName.Substring (0, commaIndex).Trim ();
-		}
-
-		if (managedTypeName.Length == 0) {
-			return;
-		}
-
-		// Search by managed type name across all assemblies (BackupAgent/ManageSpaceActivity
-		// attribute values are not assembly-qualified).
-		foreach (var key in results.Keys) {
-			if (string.Equals (key.ManagedName, managedTypeName, StringComparison.Ordinal)) {
-				results [key] = results [key] with { IsUnconditional = true };
-			}
+		var peers = results.Values.ToList ();
+		var peer = AssemblyLevelElementBuilder.FindPeerByAssemblyQualifiedName (peers, managedTypeName);
+		if (peer is not null) {
+			peer.IsUnconditional = true;
 		}
 	}
 
@@ -423,8 +404,8 @@ public sealed class JavaPeerScanner : IDisposable
 				} else {
 					// A managed class that implements Android.Runtime.IJavaObject but does not
 					// derive from a Java peer (Java.Lang.Object / Java.Lang.Throwable) cannot be
-					// marshaled to Java. Mirror the legacy XAJavaTypeScanner XA4212 diagnostic,
-					// which the managed/llvm-ir typemap paths raise via GenerateJavaStubs.
+					// marshaled to Java. Preserve the XA4212 diagnostic from the former
+					// XAJavaTypeScanner / GenerateJavaStubs pipeline.
 					if (IsCustomJavaObject (typeHandle, typeDef, index)) {
 						if (errorOnCustomJavaObject) {
 							logger?.LogCustomJavaObjectError (fullName);
@@ -1290,8 +1271,8 @@ public sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Maps a managed type name to its JNI descriptor for constructor signature
 	/// computation. Returns null for types that can't be mapped to JNI
-	/// (matching legacy GetJniSignature behavior). For Java peer object types
-	/// (types with [Register]), resolves to "L&lt;jniName&gt;;" via assembly cache.
+	/// (matching legacy GetJniSignature behavior). For Java peer object types,
+	/// resolves to "L&lt;jniName&gt;;" via assembly cache.
 	/// </summary>
 	string? ManagedTypeToJniDescriptorOrNull (string managedType)
 	{
@@ -1310,8 +1291,8 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Looks up a managed type in its referenced assembly. If the type has
-	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
+	/// Looks up a managed type in its referenced assembly and returns its JNI
+	/// object descriptor, or null if it is not a Java peer.
 	/// </summary>
 	string? TryResolveJniObjectDescriptor (TypeRefData managedType)
 	{
@@ -1341,8 +1322,11 @@ public sealed class JavaPeerScanner : IDisposable
 			return $"L{registerInfo.JniName};";
 		}
 
-		// User peer types (extend a Java peer but lack [Register]) get a CRC64-based
-		// JNI name in ScanAssembly. Mirror that for exported signatures.
+		if (index.AttributesByType.TryGetValue (handle, out var attributeInfo) && attributeInfo.JniName is not null) {
+			return $"L{attributeInfo.JniName};";
+		}
+
+		// Match ScanAssembly's CRC64 fallback when the peer has no explicit JNI name.
 		var typeDef = index.Reader.GetTypeDefinition (handle);
 		if (ExtendsJavaPeer (handle, typeDef, index)) {
 			var (jniName, _) = ComputeAutoJniNames (typeDef, index);
@@ -3346,7 +3330,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo)
 	{
-		if (attrInfo is null) {
+		if (attrInfo is null || !attrInfo.IsComponentAttribute) {
 			return null;
 		}
 
@@ -3369,6 +3353,9 @@ public sealed class JavaPeerScanner : IDisposable
 			Properties = attrInfo.Properties,
 			IntentFilters = attrInfo.IntentFilters,
 			MetaData = attrInfo.MetaData,
+			ManifestProperties = attrInfo.ManifestProperties,
+			UsesLibraries = attrInfo.UsesLibraries,
+			GrantUriPermissions = attrInfo.GrantUriPermissions,
 			LayoutProperties = attrInfo.LayoutProperties,
 		};
 	}

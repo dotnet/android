@@ -11,17 +11,15 @@ implication, estoppel or otherwise.
 
 1.  Android API documentation (https://developer.android.com/license)
 2.  android/platform/tools/base (https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE)
-3.  brutaldev/StrongNameSigner (https://github.com/brutaldev/StrongNameSigner/)
-4.  dotnet/java-interop (https://github.com/dotnet/java-interop/)
-5.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
-6.  google/bundletool (https://github.com/google/bundletool)
-7.  google/r8 (https://r8.googlesource.com/r8/)
-8.  IronyProject/Irony (https://github.com/IronyProject/Irony)
-9.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
-10.  MiloszKrajewski/K4os.Compression.LZ4 (https://github.com/MiloszKrajewski/K4os.Compression.LZ4/)
-11.  mono/cecil (https://github.com/mono/cecil/)
-12.  mono/linker (https://github.com/mono/linker/)
-13.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
+3.  dotnet/java-interop (https://github.com/dotnet/java-interop/)
+4.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
+5.  google/bundletool (https://github.com/google/bundletool)
+6.  google/r8 (https://r8.googlesource.com/r8/)
+7.  IronyProject/Irony (https://github.com/IronyProject/Irony)
+8.  KonradKuczynski/ELFSharp (https://elfsharp.it/)
+9.  mono/cecil (https://github.com/mono/cecil/)
+10.  mono/linker (https://github.com/mono/linker/)
+11.  NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
 
 %% Android API documentation NOTICES AND INFORMATION BEGIN HERE
 ================================================================
@@ -622,27 +620,6 @@ END OF Android API documentation NOTICES AND INFORMATION
 END OF android/platform/tools/base NOTICES AND INFORMATION
 
 
-%% brutaldev/StrongNameSigner NOTICES AND INFORMATION BEGIN HERE
-================================================================
-Copyright (c) Werner van Deventer (werner@brutaldev.com).  All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the 'License'); you
-may not use this file except in compliance with the License. You may
-obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an 'AS IS' BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-implied. See the License for the specific language governing permissions
-and limitations under the License.
-
-
-================================================================
-END OF brutaldev/StrongNameSigner NOTICES AND INFORMATION
-
-
 %% dotnet/java-interop NOTICES AND INFORMATION BEGIN HERE
 =========================================================
 Xamarin SDK
@@ -1235,35 +1212,6 @@ SOFTWARE.
 ==============================================================
 END OF KonradKuczynski/ELFSharp NOTICES AND INFORMATION
 
-
-
-%% MiloszKrajewski/K4os.Compression.LZ4 NOTICES AND INFORMATION BEGIN HERE
-==========================================================================
-MIT License
-
-Copyright (c) 2017 Milosz Krajewski
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
-==========================================================================
-END OF MiloszKrajewski/K4os.Compression.LZ4 NOTICES AND INFORMATION
 
 
 %% mono/cecil NOTICES AND INFORMATION BEGIN HERE

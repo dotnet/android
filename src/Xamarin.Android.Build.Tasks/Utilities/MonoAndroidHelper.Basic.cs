@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO.Hashing;
 using System.Text;
 
 using Xamarin.Android.Tools;
@@ -11,6 +10,17 @@ namespace Xamarin.Android.Tasks;
 
 partial class MonoAndroidHelper
 {
+	public static Dictionary<string, string> LoadMapFile (IEnumerable<string> lines, StringComparer comparer)
+	{
+		var map = new Dictionary<string, string> (comparer);
+		foreach (var line in lines) {
+			var items = line.Split (new char [] { ';' }, count: 2);
+			if (!map.ContainsKey (items [0]))
+				map.Add (items [0], items [1]);
+		}
+		return map;
+	}
+
 	public static class AndroidAbi
 	{
 		public const string Arm32 = "armeabi-v7a";
@@ -35,13 +45,6 @@ partial class MonoAndroidHelper
 	};
 
 	static readonly char[] ZipPathTrimmedChars = {'/', '\\'};
-
-	static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
-		{"arm64-v8a",   "aarch64"},
-		{"armeabi-v7a", "arm"},
-		{"x86",         "i686"},
-		{"x86_64",      "x86_64"}
-	};
 
 	static readonly Dictionary<string, AndroidTargetArch> AbiToArchMap = new Dictionary<string, AndroidTargetArch> (StringComparer.OrdinalIgnoreCase) {
 		{ AndroidAbi.Arm32, AndroidTargetArch.Arm },
@@ -161,14 +164,6 @@ partial class MonoAndroidHelper
 		return Convert.ToString (obj, CultureInfo.InvariantCulture);
 	}
 
-	public static string? MapAndroidAbiToClang (string androidAbi)
-	{
-		if (ClangAbiMap.TryGetValue (androidAbi, out string? clangAbi)) {
-			return clangAbi;
-		}
-		return null;
-	}
-
 	public static string MakeZipArchivePath (string part1, params string[]? pathParts)
 	{
 		return MakeZipArchivePath (part1, (ICollection<string>?)pathParts);
@@ -218,18 +213,6 @@ partial class MonoAndroidHelper
 	}
 
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
-	public static byte[] Utf16StringToBytes (string str) => Encoding.Unicode.GetBytes (str);
-
-	public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (Utf8StringToBytes (str), is64Bit);
-
-	public static ulong GetXxHash (byte[] stringBytes, bool is64Bit)
-	{
-		if (is64Bit) {
-			return XxHash3.HashToUInt64 (stringBytes);
-		}
-
-		return (ulong)XxHash32.HashToUInt32 (stringBytes);
-	}
 
 	/// <summary>
 	/// Helper method to compare two strings with specified comparison mode.

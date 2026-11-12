@@ -197,7 +197,7 @@ $@"<Project>
 		}
 
 		/// <summary>
-		/// Gets or sets the target framework for the project (e.g., "net11.0-android").
+		/// Gets or sets the target framework for the project (e.g., "net12.0-android").
 		/// </summary>
 		/// <seealso cref="TargetFrameworks"/>
 		public string TargetFramework {
@@ -624,7 +624,7 @@ $@"<Project>
 				// Set a local PackageReference installation folder if specified
 				if (!string.IsNullOrEmpty (GlobalPackagesFolder)) {
 					var doc = XDocument.Load (projNugetConfig);
-					XElement gpfElement = doc.Descendants ().FirstOrDefault (c => c.Name.LocalName.ToLowerInvariant () == "add"
+					XElement gpfElement = doc.Descendants ().FirstOrDefault (c => string.Equals (c.Name.LocalName, "add", StringComparison.OrdinalIgnoreCase)
 						&& c.Attributes ().Any (a => a.Name.LocalName.ToLowerInvariant () == "key" && a.Value.ToLowerInvariant () == "globalpackagesfolder"));
 					if (gpfElement != default (XElement)) {
 						gpfElement.SetAttributeValue ("value", GlobalPackagesFolder);
@@ -632,7 +632,7 @@ $@"<Project>
 						var configElement = new XElement ("add");
 						configElement.SetAttributeValue ("key", "globalPackagesFolder");
 						configElement.SetAttributeValue ("value", GlobalPackagesFolder);
-						XElement configParentElement = doc.Descendants ().FirstOrDefault (c => c.Name.LocalName.ToLowerInvariant () == "config");
+						XElement configParentElement = doc.Descendants ().FirstOrDefault (c => string.Equals (c.Name.LocalName, "config", StringComparison.OrdinalIgnoreCase));
 						if (configParentElement != default (XElement)) {
 							configParentElement.Add (configElement);
 						} else {

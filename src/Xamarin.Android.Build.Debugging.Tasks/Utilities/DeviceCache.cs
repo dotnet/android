@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 
 			string cachedLongOutput = element.Element ("LongOutput")?.Value ?? string.Empty;
-			if (string.Compare (cachedLongOutput, longOutput, System.StringComparison.OrdinalIgnoreCase) != 0) {
+			if (!string.Equals (cachedLongOutput, longOutput, System.StringComparison.OrdinalIgnoreCase)) {
 				// The device LongOutput changed. So lets find the device again.
 				// This can happen if the emulator is different but has the same id or
 				// if the device changed usb ports.

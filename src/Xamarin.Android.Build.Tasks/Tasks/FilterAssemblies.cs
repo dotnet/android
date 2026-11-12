@@ -17,7 +17,8 @@ namespace Xamarin.Android.Tasks
 	/// * An EmbeddedResource ending with *.jar
 	/// * An EmbeddedResource beginning with __Android
 	/// </summary>
-	public class FilterAssemblies : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class FilterAssemblies : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "FLT";
 
@@ -54,9 +55,9 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void ProcessAssembly(ITaskItem assemblyItem, List<ITaskItem> output)
+		void ProcessAssembly (ITaskItem assemblyItem, List<ITaskItem> output)
 		{
-			using var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec));
+			using var pe = new PEReader (File.OpenRead (TaskEnvironment.GetAbsolutePath (assemblyItem.ItemSpec)));
 			if (!pe.HasMetadata) {
 				Log.LogDebugMessage ($"Skipping non-.NET assembly: {assemblyItem.ItemSpec}");
 				return;

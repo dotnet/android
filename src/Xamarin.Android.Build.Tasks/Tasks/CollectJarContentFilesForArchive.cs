@@ -123,7 +123,7 @@ public class CollectJarContentFilesForArchive : AndroidTask
 						}
 					}
 
-					if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
+					if (string.Equals (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase)) {
 						Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 						continue;
 					}

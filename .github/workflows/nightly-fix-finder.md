@@ -109,9 +109,11 @@ steps:
     } > /tmp/gh-aw/agent/scan-results.md
     echo "✅ Script $SCRIPT_NAME complete → /tmp/gh-aw/agent/scan-results.md"
 description: Nightly scan that implements one random code improvement and opens a PR
-model: gpt-5.6-sol
+model: gpt-6.1-sol
 engine:
   id: copilot
+  # GPT-6.1 Sol requires Copilot CLI 1.0.90 or newer.
+  version: 1.0.102
   env:
     COPILOT_GITHUB_TOKEN: |
       ${{ case(

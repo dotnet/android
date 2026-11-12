@@ -86,13 +86,16 @@ namespace Android.OS {
 
 		public ActionHandlerCallback (Action<Message> handler)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/os/ActionHandlerCallback", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/os/ActionHandlerCallback"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+			}
 
-			if (handler == null)
-				throw new ArgumentNullException ("handler");
+			ArgumentNullException.ThrowIfNull (handler);
 			this.handler = handler;
 		}
 
@@ -103,4 +106,3 @@ namespace Android.OS {
 		}
 	}
 }
-

@@ -9,12 +9,13 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class DetermineJavaLibrariesToCompile : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class DetermineJavaLibrariesToCompile : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "DJL";
 
 		[Required]
-		public ITaskItem[]? MonoPlatformJarPaths { get; set; }
+		public ITaskItem[] MonoPlatformJarPaths { get; set; } = [];
 
 		public ITaskItem[]? JavaSourceFiles { get; set; }
 
@@ -47,7 +48,7 @@ namespace Xamarin.Android.Tasks
 					if (!MonoAndroidHelper.IsEmbeddedReferenceJar (jar.ItemSpec))
 						jars.Add (jar);
 
-			var distinct  = MonoAndroidHelper.DistinctFilesByContent (jars);
+			var distinct  = MonoAndroidHelper.DistinctFilesByContent (jars, TaskEnvironment);
 
 			var javaLibrariesToCompile = new List<ITaskItem> ();
 			var referenceJavaLibraries = new List<ITaskItem> ();
@@ -80,7 +81,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool Equals (ITaskItem a, ITaskItem b)
 		{
-			return string.Compare (a.ItemSpec, b.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0;
+			return string.Equals (a.ItemSpec, b.ItemSpec, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public int GetHashCode (ITaskItem value)
@@ -89,4 +90,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-

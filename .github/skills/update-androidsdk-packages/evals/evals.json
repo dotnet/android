@@ -48,6 +48,17 @@
       "prompt": "Add a new macOS arm64 command-line-tools archive. It extracts to the same SDK directory as the x64 archive, so source.properties can stay as the shared output stamp.",
       "expected_output": "The arm64 archive may share the destination, but source.properties is rejected as the sole incremental output. Extraction uses a stamp containing archive identity and expected SHA-256 so switching architectures or hashes forces replacement with the correct package.",
       "assertions": []
+    },
+    {
+      "id": 9,
+      "prompt": "The SDK package scan stopped because extras;android;m2repository was not found in repository2-3.xml. Finish checking m2repository, docs, and the API 29 system images without dropping any existing packages.",
+      "expected_output": "Queries run sequentially. Android Support Repository is queried in addon2-3.xml, docs in repository-12.xml using the helper's legacy doc support, and API 29 images in sys-img/android/sys-img2-3.xml. Matching existing revisions and archives remain unchanged. The legacy docs entry has no channel metadata, which is not treated as evidence of a new stable release. A genuine no-match remains an error rather than being silently skipped.",
+      "assertions": [
+        "The m2repository query explicitly selects addon2-3.xml.",
+        "The docs query explicitly selects repository-12.xml and reports the legacy revision, archive URL, SHA-1, and size.",
+        "The API 29 image query explicitly selects sys-img/android/sys-img2-3.xml.",
+        "No package is removed or skipped because it is absent from the default manifest."
+      ]
     }
   ]
 }

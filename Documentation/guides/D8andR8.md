@@ -1,4 +1,5 @@
-This is the D8 and R8 integration specification for .NET for Android.
+This guide describes the current retained-typemap R8 pipeline, followed by
+historical notes from the original D8 and R8 integration.
 
 # Retained typemap type roots
 
@@ -9,7 +10,6 @@ every class in the ACW map:
 | Runtime and typemap | Retained-key source |
 | --- | --- |
 | NativeAOT, trimmable | Retained external typemap records in each RID's final ILC object |
-| CoreCLR, LLVM IR | The generated LLVM Java-name blob, after `GenerateTypeMappings` |
 | CoreCLR, trimmable | Surviving `TypeMapAttribute<T>` records in linked typemap assemblies, including empty stubs |
 
 Inner builds return their exact source paths to the outer build. Keys are
@@ -19,7 +19,7 @@ discovered by globbing. NativeAOT locates external typemap blobs with
 relocations, reads their object-file byte ranges, and decodes the retained
 NativeFormat keys. It does not require an ACW map or generate dependency graphs.
 
-All three adapters and both ProGuard generators are `Microsoft.Android.Tasks`
+Both adapters and both ProGuard generators are `Microsoft.Android.Tasks`
 tasks in `Microsoft.Android.Build.Tasks.dll`.
 The adapters write `typemap.keys.txt` in the outer intermediate directory.
 The format is UTF-8 without a BOM, one canonical JNI type name per line,
@@ -84,12 +84,12 @@ to `false` to use legacy ACW retention without running the new tasks. Disabling
 it avoids NativeAOT object inspection. The switch does not enable R8 or managed
 trimming in otherwise ineligible builds.
 
-NativeAOT object inspection currently requires explicit `true` and the Android
-NDK's `llvm-readobj` and adjacent `llvm-objdump`, even when using the
-workload-provided native linker. The workload's native tools do not yet include them.
-`GetAndroidDependencies` includes the NDK for this opt-in configuration.
-Leaving the override unset or `false` preserves NativeAOT's no-NDK build path
-and keeps all ACW classes.
+NativeAOT object inspection currently requires explicit `true` and uses
+`llvm-readobj` and adjacent `llvm-objdump` from the resolved Android NDK.
+NativeAOT also requires that NDK for its normal application link;
+`GetAndroidDependencies` includes it independently of this opt-in.
+Leaving the override unset or `false` skips typemap object inspection and
+keeps all ACW classes, but does not remove the NativeAOT NDK requirement.
 
 This pipeline disables all obfuscation, including private-member
 obfuscation, with both `-dontobfuscate` and R8's `--no-minification` option.
@@ -97,14 +97,40 @@ CoreCLR uses `proguard-android-optimize.txt` so optimization remains enabled
 independently of obfuscation. Its JNI class/member keep rules still protect
 the names and signatures required by managed code. NativeAOT retains its
 existing non-optimizing defaults.
-MonoVM, nonshrinking/multidex-only builds, and the existing complete
-`ProguardConfigFiles` override keep their previous behavior.
+Nonshrinking/multidex-only builds and the existing complete
+`ProguardConfigFiles` override do not use this retained-key pipeline.
 
 Both extraction and rule generation use their real files as incremental
 outputs. A content-sensitive input manifest also tracks source-list and
 runtime/trim-policy changes, so removing a RID or switching modes cannot
 reuse stale type roots. The outputs are registered in `FileWrites` and
 regenerated if deleted.
+
+# Runtime JNI remapping
+
+[`AndroidR8ObfuscationMode=runtime-remapping`](../docs-mobile/building-apps/build-properties.md#androidr8obfuscationmode)
+selects a separate pipeline instead of the retained-key policy above.
+R8 runs after managed trimming (CoreCLR) or ILC (NativeAOT), while managed
+assemblies keep their original JNI names.
+
+CoreCLR packages the final mappings as optional `remapping_data` alongside its
+required `coreclr_bootstrap` in each ABI's `libbinary_blobs.so`. NativeAOT
+instead links raw remapping and bootstrap data objects into the existing
+application shared library after R8, without recompiling the ILC object.
+Neither path uses application-generated LLVM or native source code.
+See [application shared libraries](../project-docs/ApkSharedLibraries.md)
+and [NativeAOT startup data](../workflow/SystemProperties.md#bundled-nativeaot-startup-data)
+for the payload and initialization contracts.
+
+# Historical D8/R8 integration proposal
+
+The remaining sections preserve the original integration proposal and its
+measurements. They are not current property defaults, supported tool choices,
+or toolchain acquisition instructions. In particular, the `dx` and standalone
+ProGuard paths described historically must not be inferred from these notes.
+See the current
+[build properties](../docs-mobile/building-apps/build-properties.md) for
+supported application settings.
 
 # What is D8? What is R8?
 

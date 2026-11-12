@@ -16,6 +16,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
+	[Category ("GeneratedJniDebuggerBoundary")]
 	public class ConstructorActivationTests
 	{
 		[Test]
@@ -28,6 +29,36 @@ namespace Java.InteropTests
 				Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
 				Assert.AreEqual (1, instance.ConstructorOrdinal);
 				AssertRegisteredSame (instance);
+			}
+		}
+
+		[Test]
+		[Category ("ManagedConstruction")]
+		[Category ("JniUtf8Construction")]
+		public void JavaSideExceptionConstructorCapturesStackFromPreinstalledPeer ()
+		{
+			ConstructorActivationJavaException.Reset ();
+
+			// SAFETY: AllocObject allocates a real current-thread local reference.
+			// Keep it through peer assertions/disposal; finally deletes it even if initialization throws.
+			var handle = JNIEnv.AllocObject (typeof (ConstructorActivationJavaException));
+			try {
+				JNIEnv.FinishCreateInstance (handle, "()V"u8);
+				var reference = new JniObjectReference (handle);
+				using var instance = JniEnvironment.Runtime.ValueManager.PeekPeer (reference) as ConstructorActivationJavaException;
+				Assert.IsNotNull (instance, "Java construction must activate and register the managed constructor.");
+				if (instance == null)
+					throw new InvalidOperationException ("The Java constructor did not register its managed peer.");
+
+				Assert.AreEqual (1, ConstructorActivationJavaException.ConstructorInvocations);
+				Assert.AreEqual (0, ConstructorActivationJavaException.ActivationConstructorInvocations);
+				Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, instance.PeerReference));
+				Assert.AreEqual (JniObjectReferenceType.Global, instance.PeerReference.Type);
+				Assert.IsNotEmpty (instance.StackAtConstruction, "The base constructor must capture the preinstalled peer's stack.");
+				StringAssert.Contains (ConstructorActivationJavaException.JavaName.Replace ('/', '.'), instance.JavaStackTrace);
+				Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
 			}
 		}
 
@@ -91,6 +122,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("JniUtf8Construction")]
 		public void JavaSideConstructorReinvokesExistingActivatablePeer ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -99,7 +131,7 @@ namespace Java.InteropTests
 				var peer = (IJavaPeerable) instance;
 				peer.SetJniManagedPeerState (instance.JniManagedPeerState | JniManagedPeerStates.Activatable | JniManagedPeerStates.Replaceable);
 
-				JNIEnv.FinishCreateInstance (instance.Handle, "()V");
+				JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
 
 				Assert.AreEqual (2, ConstructorActivationDefault.ConstructorInvocations);
 				Assert.AreEqual (2, instance.ConstructorOrdinal);
@@ -112,10 +144,56 @@ namespace Java.InteropTests
 		{
 			ConstructorActivationThrowing.Reset ();
 
+			// A user-code catch avoids another debugger stop when JNI rethrows into NUnit's external Assert.Catch.
+			try {
+				CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V");
+			} catch (Exception exception) {
+				Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
+				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+				Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+				return;
+			}
+			Assert.Fail ("Expected the original constructor exception.");
+		}
+
+		[Test]
+		public void JavaSideThrowingConstructorDoesNotLeakPendingException ()
+		{
+			ConstructorActivationThrowing.Reset ();
+			ConstructorActivationDefault.Reset ();
+
 			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
-			Assert.IsNotNull (exception);
-			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
-			Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+			Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
+			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			AssertRegisteredSame (instance);
+		}
+
+		[Test]
+		public void JavaSideHandledConstructorExceptionDeliversPolicyOnce ()
+		{
+			ConstructorActivationThrowing.Reset ();
+			int notifications = 0;
+			Exception? notifiedException = null;
+			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+				notifiedException = args.Exception;
+				notifications++;
+				args.Handled = true;
+			};
+			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			try {
+				Assert.DoesNotThrow (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+				Assert.AreEqual (1, notifications);
+				Assert.AreSame (ConstructorActivationThrowing.LastException, notifiedException);
+				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+			} finally {
+				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
+			}
+
+			ConstructorActivationDefault.Reset ();
+			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			AssertRegisteredSame (instance);
 		}
 
 		[Test]
@@ -541,7 +619,7 @@ namespace Java.InteropTests
 			T> (string constructorSignature, params JValue [] arguments)
 			where T : Java.Lang.Object
 		{
-			var instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
+			var instance = JNIEnv.AllocObject (typeof (T));
 			JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
@@ -565,7 +643,7 @@ namespace Java.InteropTests
 		{
 			IntPtr instance = IntPtr.Zero;
 			try {
-				instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
+				instance = JNIEnv.AllocObject (typeof (T));
 				JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
 			} finally {
 				if (instance != IntPtr.Zero) {
@@ -599,22 +677,57 @@ namespace Java.InteropTests
 		}
 	}
 
+	[JniTypeSignature (ConstructorActivationJavaException.JavaName)]
+	public class ConstructorActivationJavaException : JavaException
+	{
+		public const string JavaName = "net/dot/android/test/ConstructorActivationJavaException";
+		static readonly JniPeerMembers members = new JniPeerMembers (JavaName, typeof (ConstructorActivationJavaException));
+
+		public static int ConstructorInvocations;
+		public static int ActivationConstructorInvocations;
+		public string? StackAtConstruction { get; }
+
+		public override JniPeerMembers JniPeerMembers => members;
+
+		[JniConstructorSignature ("()V")]
+		public ConstructorActivationJavaException ()
+		{
+			ConstructorInvocations++;
+			StackAtConstruction = JavaStackTrace;
+		}
+
+		public ConstructorActivationJavaException (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
+			ActivationConstructorInvocations++;
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+			ActivationConstructorInvocations = 0;
+		}
+	}
+
 	[Register ("net/dot/android/test/ConstructorActivationThrowing")]
 	public class ConstructorActivationThrowing : Java.Lang.Object
 	{
 		public const string ExceptionMessage = "constructor activation throw";
 
 		public static int ConstructorInvocations;
+		public static Exception? LastException;
 
 		public ConstructorActivationThrowing ()
 		{
 			ConstructorInvocations++;
-			throw new InvalidOperationException (ExceptionMessage);
+			LastException = new InvalidOperationException (ExceptionMessage);
+			throw LastException;
 		}
 
 		public static void Reset ()
 		{
 			ConstructorInvocations = 0;
+			LastException = null;
 		}
 	}
 

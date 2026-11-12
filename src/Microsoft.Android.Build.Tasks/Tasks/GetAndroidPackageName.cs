@@ -36,7 +36,8 @@ using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks
 {
-	public class GetAndroidPackageName : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class GetAndroidPackageName : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "GAP";
 
@@ -52,13 +53,16 @@ namespace Microsoft.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (!ManifestFile.IsNullOrEmpty () && File.Exists (ManifestFile)) {
-				using var stream = File.OpenRead (ManifestFile);
-				using var reader = XmlReader.Create (stream);
-				if (reader.MoveToContent () == XmlNodeType.Element) {
-					var package = reader.GetAttribute ("package");
-					if (!package.IsNullOrEmpty ()) {
-						PackageName = ManifestPlaceholderResolver.Replace (ManifestPlaceholders, package);
+			if (!ManifestFile.IsNullOrEmpty ()) {
+				var manifestFile = TaskEnvironment.GetAbsolutePath (ManifestFile);
+				if (File.Exists (manifestFile)) {
+					using var stream = File.OpenRead (manifestFile);
+					using var reader = XmlReader.Create (stream);
+					if (reader.MoveToContent () == XmlNodeType.Element) {
+						var package = reader.GetAttribute ("package");
+						if (!package.IsNullOrEmpty ()) {
+							PackageName = ManifestPlaceholderResolver.Replace (ManifestPlaceholders, package);
+						}
 					}
 				}
 			}

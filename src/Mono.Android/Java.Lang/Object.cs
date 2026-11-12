@@ -32,9 +32,20 @@ namespace Java.Lang {
 		{
 		}
 
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live JNI object reference compatible
+		/// with this peer's Java type and VM throughout construction and cleanup, including failure.
+		/// Local references must belong to the calling thread; aliases must not delete the reference
+		/// concurrently. TransferLocalRef/TransferGlobalRef must match its actual reference kind.
+		/// SetHandle releases transferred references in its finally, even if peer construction fails;
+		/// an earlier base-constructor failure does not enter that cleanup. DoNotTransfer retains
+		/// the caller's ownership. Zero is accepted and does not supply a new Java peer.
+		/// </safety>
 		public unsafe Object (IntPtr handle, JniHandleOwnership transfer)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+			: base (JniObjectReferenceOptions.None)
 		{
+			// SAFETY: The caller supplies the reference and transfer rights described above.
+			// SetHandle delegates peer construction and releases the transferred handle in its finally.
 			SetHandle (handle, transfer);
 		}
 
@@ -45,10 +56,13 @@ namespace Java.Lang {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			SetHandle (
-					JNIEnv.StartCreateInstance (GetType (), "()V"),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the ()V constructor with the matching arguments before this constructor returns.
+				SetHandle (
+						JNIEnv.AllocObject (GetType ()),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+			}
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -137,11 +151,19 @@ namespace Java.Lang {
 			return (T?)PeekObject (handle, typeof (T));
 		}
 
-		public static T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread and runtime.
+		/// <paramref name="handle"/> must be null or a live object reference usable by that environment
+		/// for the call; <paramref name="transfer"/> must match reference ownership the caller holds.
+		/// </safety>
+		public static unsafe T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
 			IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
-			JNIEnv.CheckHandle (jnienv);
+			unsafe {
+				// SAFETY: the caller retains the current-thread JNI environment and borrowed object reference for this transition.
+				JNIEnv.CheckHandle (jnienv);
+			}
 			return GetObject<T> (handle, transfer);
 		}
 
@@ -180,7 +202,12 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public T[]? ToArray<T>()
 		{
-			return JNIEnv.GetArray<T>(Handle);
+			try {
+				// SAFETY: this peer owns the JNI object reference; GetArray checks its compatible array kind before native access.
+				return unsafe(JNIEnv.GetArray<T> (Handle));
+			} finally {
+				GC.KeepAlive (this);
+			}
 		}
 
 		public static Java.Lang.Object? FromArray<T>(T[] value)

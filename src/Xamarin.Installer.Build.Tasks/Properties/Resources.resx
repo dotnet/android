@@ -175,4 +175,8 @@ Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a 
   <data name="Licenses_Acceptance_Failed" xml:space="preserve">
     <value>an error occurred trying to accept the Android SDK licenses. {0}</value>
   </data>
+  <data name="XA5305" xml:space="preserve">
+    <value>Could not verify the Microsoft OpenJDK archive signature for '{0}'. The archive will not be installed. {1}</value>
+    <comment>{0} - Archive URL. {1} - Signature verification error.</comment>
+  </data>
 </root>

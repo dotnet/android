@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,6 +77,87 @@ namespace Xamarin.Android.Tools.Tests
 				if (Directory.Exists (dir))
 					Directory.Delete (dir, recursive: true);
 			}
+		}
+
+		[TestCase ("invalid", false)]
+		[TestCase ("invalid", true)]
+		[TestCase ("cancel", true)]
+		[TestCase ("valid", true)]
+		public async Task ExtractArchiveAsync_ValidatesBeforeCommitting (string outcome, bool existingTarget)
+		{
+			var dir = Path.Combine (Path.GetTempPath (), $"jdk-rollback-test-{Guid.NewGuid ():N}");
+			var target = Path.Combine (dir, "target");
+			var staging = Path.Combine (dir, "staging");
+			var root = Path.Combine (staging, "jdk");
+			var jdkRoot = OS.IsMac ? Path.Combine (root, "Contents", "Home") : root;
+			var archive = Path.Combine (dir, "jdk" + FileUtil.GetArchiveExtension ());
+			Directory.CreateDirectory (jdkRoot);
+			try {
+				if (outcome != "invalid")
+					JdkInfoTests.CreateFauxJdk (jdkRoot, releaseVersion: "21.0.1", releaseBuildNumber: "1", javaVersion: "21.0.1-1");
+				File.WriteAllText (Path.Combine (jdkRoot, "new.txt"), "replacement");
+				if (OS.IsWindows)
+					ZipFile.CreateFromDirectory (staging, archive);
+				else {
+					var psi = ProcessUtils.CreateProcessStartInfo ("/usr/bin/tar", "-czf", archive, "-C", staging, "jdk");
+					Assert.AreEqual (0, await ProcessUtils.StartProcess (psi, null, null, CancellationToken.None));
+				}
+				if (existingTarget) {
+					JdkInfoTests.CreateFauxJdk (target, releaseVersion: "17.0.1", releaseBuildNumber: "1", javaVersion: "17.0.1-1");
+					Directory.CreateDirectory (Path.Combine (target, "custom"));
+					File.WriteAllText (Path.Combine (target, "custom", "preserve.txt"), "previous installation");
+				}
+				var previousFiles = existingTarget
+					? Directory.GetFiles (target, "*", SearchOption.AllDirectories).ToDictionary (p => Path.GetRelativePath (target, p), File.ReadAllBytes)
+					: new Dictionary<string, byte []> ();
+				var unrelatedBackup = target + ".old-unrelated";
+				Directory.CreateDirectory (unrelatedBackup);
+				File.WriteAllText (Path.Combine (unrelatedBackup, "preserve.txt"), "unrelated");
+				using var cts = new CancellationTokenSource ();
+				var progress = new InlineProgress (p => {
+					if (p.Phase != JdkInstallPhase.Validating)
+						return;
+					Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")));
+					Assert.AreEqual (existingTarget ? 2 : 1, Directory.GetDirectories (dir, "target.old-*").Length);
+					if (outcome == "cancel")
+						cts.Cancel ();
+				});
+
+				if (outcome == "valid") {
+					await installer.ExtractArchiveAsync (archive, target, cts.Token, progress);
+					Assert.IsTrue (installer.IsValid (target));
+					Assert.AreEqual ("replacement", File.ReadAllText (Path.Combine (target, "new.txt")));
+					Assert.IsFalse (Directory.Exists (Path.Combine (target, "custom")));
+				} else {
+					if (outcome == "cancel")
+						Assert.ThrowsAsync<OperationCanceledException> (async () => await installer.ExtractArchiveAsync (archive, target, cts.Token, progress));
+					else
+						Assert.ThrowsAsync<InvalidOperationException> (async () => await installer.ExtractArchiveAsync (archive, target, cts.Token, progress));
+
+					Assert.AreEqual (existingTarget, Directory.Exists (target));
+					if (existingTarget) {
+						Assert.IsTrue (installer.IsValid (target));
+						Assert.That (Directory.GetFiles (target, "*", SearchOption.AllDirectories).Select (p => Path.GetRelativePath (target, p)), Is.EquivalentTo (previousFiles.Keys));
+						foreach (var file in previousFiles)
+							Assert.That (File.ReadAllBytes (Path.Combine (target, file.Key)), Is.EqualTo (file.Value), file.Key);
+					}
+				}
+				Assert.IsEmpty (Directory.GetDirectories (dir, ".jdk-extract-*"));
+				Assert.That (Directory.GetDirectories (dir, "target.old-*"), Is.EquivalentTo (new [] { unrelatedBackup }));
+				Assert.AreEqual ("unrelated", File.ReadAllText (Path.Combine (unrelatedBackup, "preserve.txt")));
+			}
+			finally {
+				Directory.Delete (dir, recursive: true);
+			}
+		}
+
+		sealed class InlineProgress : IProgress<JdkInstallProgress>
+		{
+			readonly Action<JdkInstallProgress> report;
+
+			public InlineProgress (Action<JdkInstallProgress> report) => this.report = report;
+
+			public void Report (JdkInstallProgress value) => report (value);
 		}
 
 		[Test]

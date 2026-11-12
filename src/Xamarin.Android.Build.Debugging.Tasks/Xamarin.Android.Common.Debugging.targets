@@ -20,7 +20,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.DetectIfAppWasUninstalled" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetPrimaryCpuAbi" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.FastDeploy" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.FastDeploy" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.MoveSubfolder" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RunTests" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WaitForAppDetection" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
@@ -105,6 +106,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 		<Output TaskParameter="ResultingAbi" PropertyName="_PrimaryCpuAbi" />
 		<Output TaskParameter="RuntimeIdentifier" PropertyName="_PrimaryRuntimeIdentifier" />
 		<Output TaskParameter="SdkVersion" PropertyName="_DeviceSdkVersion" />
+		<Output TaskParameter="AdbTarget" PropertyName="AdbTarget" />
 	</GetPrimaryCpuAbi>
 	<PropertyGroup>
 		<_PrimaryCpuAbi Condition="$(_PrimaryCpuAbi) == ''">@(_BuildTargetAbis)</_PrimaryCpuAbi>
@@ -128,7 +130,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 			PackageName="$(_AndroidPackage)"
 			UploadFlagFile="$(_UploadFlag)"
 			UserID="$(AndroidDeviceUserId)"
-	/>
+	>
+		<Output TaskParameter="AdbTarget" PropertyName="AdbTarget" />
+	</DetectIfAppWasUninstalled>
 </Target>
 
 <Target Name="_lldb"

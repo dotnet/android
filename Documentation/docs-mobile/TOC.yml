@@ -360,8 +360,6 @@
         href: messages/xa4263.md
       - name: XA4264
         href: messages/xa4264.md
-      - name: XA4265
-        href: messages/xa4265.md
       - name: XA4266
         href: messages/xa4266.md
       - name: XA4301
@@ -430,6 +428,8 @@
         href: messages/xa5301.md
       - name: XA5302
         href: messages/xa5302.md
+      - name: XA5305
+        href: messages/xa5305.md
     - name: "XA6xxx: Internal tools"
       href: "messages/index.md#xa6xxx-internal-tools"
     - name: "XAccc7xxx: Unhandled MSBuild exceptions"

@@ -380,7 +380,7 @@ stages:
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
-      parallel: 12
+      parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
     pool:
@@ -409,8 +409,8 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Microsoft.Android.slnx
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
-        displayName: prepare java.interop $(XA.Build.Configuration)
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
@@ -497,7 +497,6 @@ stages:
         xaSourcePath: $(Build.SourcesDirectory)/android
         androidSdkPlatforms: $(DefaultTestSdkPlatforms)
         dotnetVersion: $(DotNetSdkVersion)
-        dotnetQuality: $(DotNetSdkQuality)
         jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
         useAgentJdkPath: true
         use1ESTemplate: false
@@ -534,6 +533,8 @@ stages:
       displayName: Install .NET
       retryCountOnTaskFailure: 3
       workingDirectory: $(Build.SourcesDirectory)/maui
+      env:
+        _SkipUpdateBuildNumber: 'true'
 
     - task: NodeTool@0
       displayName: Install Node.js
@@ -573,6 +574,7 @@ stages:
       displayName: Pack .NET Maui
       workingDirectory: $(Build.SourcesDirectory)/maui
       env:
+        _SkipUpdateBuildNumber: 'true'
         NoWarn: CS0618
 
     - task: DotNetCoreCLI@2

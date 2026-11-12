@@ -12,9 +12,10 @@ _ResolveAssemblies MSBuild target.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ProcessRuntimePackLibraryDirectories" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <!-- Rebuilding references with inner-build properties invalidates their compile-input caches. -->
+    <BuildProjectReferences>false</BuildProjectReferences>
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
     <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
     <PublishDir>$(OutputPath)</PublishDir>
@@ -28,6 +29,14 @@ _ResolveAssemblies MSBuild target.
       $(CompileDependsOn);
     </CompileDependsOn>
   </PropertyGroup>
+
+  <Target Name="_AndroidInvalidateLinkerCache"
+      BeforeTargets="_RunILLink"
+      DependsOnTargets="_CreatePropertiesCache"
+      Inputs="$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_LinkSemaphore)">
+    <Delete Files="$(_LinkSemaphore)" />
+  </Target>
 
   <!-- Some NuGet packages add assemblies as @(Reference) items with CopyToOutputDirectory
        metadata, or as @(None) items with CopyToOutputDirectory. Both paths flow into
@@ -220,27 +229,36 @@ _ResolveAssemblies MSBuild target.
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
         ;_OuterCustomViewMapFile=$(_CustomViewMapFile)
-        ;_AndroidNdkDirectory=$(_AndroidNdkDirectory)
+        ;_AndroidNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))
+        ;$(_AndroidResolvedToolingProperties)
       </_AdditionalProperties>
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>
     <ItemGroup>
-      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)" />
+      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity)" />
     </ItemGroup>
 
     <MSBuild
         Condition=" '$(DesignTimeBuild)' != 'true' "
         Projects="@(_ProjectToBuild)"
+        Properties="$(_AdditionalProperties)"
         BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
 
     <!-- Exclude runtime-pack system library stubs before native-library packaging. -->
-    <ProcessRuntimePackLibraryDirectories
-        ResolvedFilesToPublish="@(ResolvedFileToPublish)">
-      <Output TaskParameter="NativeLibrariesToRemove" ItemName="_NativeLibraryToRemove" />
-    </ProcessRuntimePackLibraryDirectories>
+    <ItemGroup>
+      <_AndroidRuntimePackSystemLibrary Include="libc.so;libdl.so;liblog.so;libm.so;libz.so" />
+      <_NativeLibraryToRemove Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' != '' and
+            ($([System.String]::Copy('%(ResolvedFileToPublish.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.CoreCLR.', StringComparison.OrdinalIgnoreCase)) or
+             $([System.String]::Copy('%(ResolvedFileToPublish.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.NativeAOT.', StringComparison.OrdinalIgnoreCase))) " />
+      <_AndroidRuntimePackLibraryToKeep Include="@(_NativeLibraryToRemove)" />
+      <_AndroidRuntimePackLibraryToKeep Remove="@(_AndroidRuntimePackSystemLibrary)"
+          MatchOnMetadata="Filename;Extension" MatchOnMetadataOptions="CaseInsensitive" />
+      <_NativeLibraryToRemove Remove="@(_AndroidRuntimePackLibraryToKeep)" />
+    </ItemGroup>
 
     <ItemGroup>
       <ResolvedFileToPublish Include="$(_AndroidHotReloadAgentAssemblyPath)" Condition="Exists('$(_AndroidHotReloadAgentAssemblyPath)')" RuntimeIdentifier="%(_RIDs.Identity)" />

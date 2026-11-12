@@ -1,0 +1,46 @@
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
+[Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
+public partial interface IMyInterface : IJavaObject, IJavaPeerable {
+	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+
+	static int Value {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Value' and count(parameter)=0]"
+		[Register ("get_Value", "()I", "")]
+		get {
+			const string __id = "get_Value.()I";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+				return __rm;
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Value' and count(parameter)=1 and parameter[1][@type='int']]"
+		[Register ("set_Value", "(I)V", "")]
+		set {
+			const string __id = "set_Value.(I)V";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			}
+		}
+	}
+
+}
+
+[global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members_java_code_IMyInterface; }
+	}
+
+	static readonly JniPeerMembers _members_java_code_IMyInterface = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+	{
+	}
+
+}

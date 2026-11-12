@@ -17,7 +17,7 @@ You will see the following prompt.
 Waiting for debugger to attach (dotnet PID 13001).  Press enter to continue...
 ```
 
-You can then use VS or VSCode to attach to this process and debug you tasks.
+You can then use Visual Studio or another .NET debugger to attach to this process and debug your tasks.
 
 You can start your test app with the `dotnet-local` script (so it uses your build).
 
@@ -50,13 +50,65 @@ Once MSBuild starts it will print the following
 Waiting for debugger to attach (dotnet PID xxxx).  Press enter to continue...
 ```
 
-You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the `Microsoft.Android.slnx` solution open. For VSCode open the workspace then use the `Attach to Process` Run and Debug option. You will be prompted for the PID and it will then connect.
+You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the `Microsoft.Android.slnx` solution open.
 
 Once connected go back to your command prompt and press ENTER so that the MSBuild process can continue.
 
 You will be able to set breakpoints in Tasks (but not Targets) and step through code from this point on.
 
-If you want to test in-tree using the same the `build-sample-under-dotnet` command will ask you if you want to debug MSBuild tasks and fill in the `MSBUILDDEBUGONSTART` for you. The PID text will appear in the `Terminal` window in VSCode. In addition the `run-sample-under-dotnet` command will ask the same.
+## Multithreaded tasks
+
+For tasks that only transform strings or items, use `MultithreadedAndroidTask`
+and put `[MSBuildMultiThreadableTask]` directly on each concrete task class.
+The attribute is not inherited. This base keeps the `AndroidTask` exception
+codes and file-lock diagnostics without capturing the process working
+directory. It implements `IMultiThreadableTask` so the engine supplies the
+`TaskEnvironment` used to resolve paths in exception messages. Its default
+`TaskEnvironment.Fallback` also supports direct task instantiation.
+Keep other tasks on their existing base until all their code paths are safe.
+
+`FilterAssemblies` resolves input file paths through `TaskEnvironment` but
+returns the original items, including their relative paths and metadata.
+Its AppDomain cache stores immutable results keyed by assembly MVID. Concurrent
+cache misses can compute the same result without a shared task-level lock.
+
+The task projects reference MSBuild 18.12, which supplies the attribute.
+Use `TaskEnvironment` for any further project-relative path or environment
+access; the attribute alone does not make process-wide APIs safe.
+
+`Microsoft.Build.TaskAuthoring.Analyzer` is a separate, private build dependency.
+It checks directly marked tasks and their source call chains by default.
+The analyzer also checks direct API calls in `MultithreadedAndroidTask`, which
+declares `IMultiThreadableTask`. The transitive rule skips abstract task roots,
+so review helpers called by that base manually. For concrete marked tasks,
+unsafe environment APIs, relative file access, unsafe source helper calls,
+and invalid task declarations are build errors. The analyzer follows source
+calls within one compilation.
+Review helpers in referenced assemblies separately.
+For example, pass `TaskEnvironment` to `AndroidRidAbiHelper.GetNativeLibraryAbi`
+so relative `Link` metadata and item paths use the project's directory.
+For generated files, use `Files.CopyIfStreamChanged` with a resolved
+`AbsolutePath` and the task's `TaskEnvironment`. This keeps unchanged timestamps
+and reads file-write retry settings from the project-scoped environment rather
+than the process-wide cache.
+Do not enable all-task migration checks across legacy tasks just to opt in a
+small set of tasks.
+
+Check both ordinary builds and `-m -mt -nr:false` builds with the local SDK.
+Use `-warnaserror:MSB4286,MSB4287,MSB4288` for the strict checks. Inspect a
+binary log to confirm that each migrated task ran in-process and that item
+paths still belong to the correct project.
+
+`GeneratePackageManagerJava` runs from `Microsoft.Android.Build.Tasks.dll` on
+.NET, using the .NET task host when invoked by .NET Framework MSBuild.
+It resolves its output directory through `TaskEnvironment` and preserves the
+timestamp of unchanged `MonoPackageManager_Resources.java` files. Its copy
+helper reads retry settings from the task environment rather than the process.
+Custom build extensions must register `Microsoft.Android.Tasks.GeneratePackageManagerJava`
+from the modern task assembly; the old `Xamarin.Android.Tasks` entry point has
+been removed.
+
+See [Microsoft's task migration guide](https://learn.microsoft.com/visualstudio/msbuild/update-task-multithreaded).
 
 ## Naming
 

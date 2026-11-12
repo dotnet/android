@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			public string SourceFile;
 		}
 
-		public static (ApplicationConfig Config, JniPreloads Preloads, Dictionary<string, string> EnvironmentVariables) ReadCoreClrBootstrap (string intermediateDirectory)
+		public static (ApplicationConfig Config, JniPreloads Preloads, Dictionary<string, string> EnvironmentVariables, Dictionary<string, string> SystemProperties) ReadCoreClrBootstrap (string intermediateDirectory)
 		{
 			string [] files = Directory.GetFiles (intermediateDirectory, "coreclr-bootstrap.bin", SearchOption.AllDirectories);
 			Assert.AreEqual (1, files.Length, "Expected one shared CoreCLR bootstrap intermediate.");
@@ -49,7 +49,7 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.GreaterOrEqual (data.Length, 84);
 			Assert.AreEqual (0x47464358u, Read (0), "Expected XCFG magic.");
-			Assert.AreEqual (1, BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (4, 2)));
+			Assert.AreEqual (2, BinaryPrimitives.ReadUInt16LittleEndian (data.AsSpan (4, 2)));
 			Assert.AreEqual (data.Length, Read (8));
 			uint environmentCount = Read (12);
 			uint dsoCount = Read (24);
@@ -95,17 +95,21 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Less (index, dsoCount);
 				preloads.Entries.Add (new JniPreloadsEntry {
 					Index = index,
-					LibraryName = ReadString (Read (dsoOffset + index * 12 + 8)),
+					LibraryName = ReadString (Read (dsoOffset + index * 16 + 8)),
 				});
 			}
-			var environment = new Dictionary<string, string> (StringComparer.Ordinal);
-			for (uint i = 0; i < environmentCount; i++) {
-				uint offset = checked (environmentOffset + i * 8);
-				string name = ReadString (Read (offset));
-				Assert.IsNotEmpty (name, "Environment variable names must not be empty.");
-				environment.Add (name, ReadString (Read (offset + 4), allowEmpty: true));
+			Dictionary<string, string> ReadPairs (uint count, uint tableOffset)
+			{
+				var pairs = new Dictionary<string, string> (StringComparer.Ordinal);
+				for (uint i = 0; i < count; i++) {
+					uint offset = checked (tableOffset + i * 8);
+					string name = ReadString (Read (offset));
+					Assert.IsNotEmpty (name, "Environment variable and system property names must not be empty.");
+					pairs.Add (name, ReadString (Read (offset + 4), allowEmpty: true));
+				}
+				return pairs;
 			}
-			return (config, preloads, environment);
+			return (config, preloads, ReadPairs (environmentCount, environmentOffset), ReadPairs (config.system_property_count, Read (44)));
 		}
 
 		public static Dictionary<string, string> ReadNativeAotEnvironmentVariables (string outputDirectoryRoot, bool required = true, bool systemProperties = false)

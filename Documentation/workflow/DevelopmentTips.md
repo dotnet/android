@@ -88,38 +88,8 @@ that, run the `xa-lldb` script as described in README.md.
 
 ## Adding debug symbols for `libmonosgen-2.0.so`
 
-First, you'll need to get a version of `libmonosgen-2.0.so` that includes debug
-symbols.  You can either use a custom local build or download the debug version
-of `libmonosgen-2.0.so` for a published .NET for Android version:
-
- 1. Go to <https://github.com/dotnet/android/tags> and click on the
-    .NET for Android version you are debugging.
-
- 2. Find the **OSS core** section at the bottom of the release information and
-    click the link to the open-source build.
-
- 3. Navigate to **Azure Artifacts** in the left sidebar and download the
-    `xamarin-android/xamarin-android/bin/Release/bundle*.7z` file.  For the
-    `d16-2` branch and earlier, the file extension will be `.zip` instead of
-    `.7z`.
-
- 4. Extract the `libmonosgen-2.0.d.so` files from the bundle.  For example, if
-    you have `brew` installed, run:
-
-        $ brew install p7zip
-        $ 7z x -r bundle*.7z libmonosgen-2.0.d.so
-
-    On Windows, Visual Studio includes the `7z.exe` executable when the **Mobile
-    development with .NET** workload is installed, so you can use that:
-
-        "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\Extensions\Xamarin.VisualStudio\7-Zip\7z.exe" x -r bundle*.7z libmonosgen-2.0.d.so
-
-    For `d16-2` and earlier, use `unzip` instead:
-
-        $ unzip bundle*.zip '**libmonosgen-2.0.d.so'
-
-    (On Windows, the Git Bash command prompt includes the `unzip` command, so
-    that's one way to complete this step.)
+First, obtain a version of `libmonosgen-2.0.so` that includes debug symbols,
+such as from a custom local build.
 
 Next, there are a few options to get LLDB to see the debug symbols.
 
@@ -556,7 +526,7 @@ download the incorrect manifest pack.
 
 Note that this will not provision the `maui-ios`, `maui-maccatalyst`,
 or `maui-windows` parts of .NET MAUI. Simply specify a single
-`<TargetFramework>net11.0-android</TargetFramework>` in MAUI projects
+`<TargetFramework>net12.0-android</TargetFramework>` in MAUI projects
 to build them.
 
 [maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6%40Local

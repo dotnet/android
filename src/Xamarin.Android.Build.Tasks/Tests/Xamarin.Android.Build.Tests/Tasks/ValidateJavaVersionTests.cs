@@ -163,6 +163,62 @@ namespace Xamarin.Android.Build.Tests
 					$"Want no XA0033 warnings! Got: ```{string.Join (Environment.NewLine, warnings.Select (m => $"warning {m.Code}: {m.Message}"))}```");
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void RelativeJavaPathsUseProjectDirectory (bool useJavaExeVersion)
+		{
+			var projectDirectory = Path.Combine (Root, path, "project");
+			CreateFauxJavaSdkDirectory (Path.Combine (path, "project", "jdk"), "21.0.8", out string javaExe, out string javacExe);
+			// Ignore a release file outside the selected JDK.
+			File.WriteAllText (Path.Combine (Root, path, "release"), "JAVA_VERSION=\"17.0.1\"");
+			var task = new ValidateJavaVersion {
+				BuildEngine = engine,
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (projectDirectory, new Dictionary<string, string> ()),
+				JavaSdkPath = "jdk",
+				JavaToolExe = javaExe,
+				JavacToolExe = javacExe,
+				MinimumSupportedJavaVersion = "21.0",
+				LatestSupportedJavaVersion = "25.0.99",
+				UseJavaExeVersion = useJavaExeVersion,
+			};
+
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual ("21.0.8", task.JdkVersion);
+		}
+
+		[Test]
+		public void JavaProcessUsesProjectEnvironment ()
+		{
+			var projectDirectory = Path.Combine (Root, path);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out string javacExe);
+			File.WriteAllText (Path.Combine (javaPath, "bin", javaExe), IsWindows ?
+				"@echo java version \"%JAVA_TOOL_OPTIONS%\"" :
+				"""
+				#!/bin/sh
+				echo "java version \"$JAVA_TOOL_OPTIONS\""
+				""");
+			var processOptions = Environment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS");
+
+			var task = new ValidateJavaVersion {
+				BuildEngine = engine,
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (projectDirectory,
+					new Dictionary<string, string> { ["JAVA_TOOL_OPTIONS"] = "21.0.8" }),
+				JavaSdkPath = javaPath,
+				JavaToolExe = javaExe,
+				JavacToolExe = javacExe,
+				MinimumSupportedJavaVersion = "21.0",
+				LatestSupportedJavaVersion = "25.0.99",
+			};
+
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual ("21.0.8", task.JdkVersion);
+
+			task.TaskEnvironment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS", "17.0.1");
+			Assert.IsFalse (task.Execute ());
+			Assert.AreEqual ("17.0.1", task.JdkVersion);
+			Assert.AreEqual (processOptions, Environment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS"));
+		}
+
 		[Test]
 		public void CacheWorks ()
 		{
@@ -177,6 +233,8 @@ namespace Xamarin.Android.Build.Tests
 			};
 			Assert.IsTrue (validateJavaVersion.Execute (), "first Execute should succeed!");
 
+			validateJavaVersion.JavaToolExe = Path.Combine (javaPath, "bin", "..", "bin", javaExe);
+			validateJavaVersion.JavacToolExe = Path.Combine ("..", "bin", javacExe);
 			messages.Clear ();
 
 			Assert.IsTrue (validateJavaVersion.Execute (), "second Execute should succeed!");

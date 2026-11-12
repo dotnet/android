@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -42,12 +43,8 @@ static class ModelBuilder
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
 	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
-		if (peers is null) {
-			throw new ArgumentNullException (nameof (peers));
-		}
-		if (outputPath is null) {
-			throw new ArgumentNullException (nameof (outputPath));
-		}
+		ArgumentNullException.ThrowIfNull (peers);
+		ArgumentNullException.ThrowIfNull (outputPath);
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
 
 		var model = new TypeMapAssemblyData {
@@ -251,7 +248,10 @@ static class ModelBuilder
 			return true;
 		}
 
-		return false;
+		// Explicit exports are Java entry points even without a managed caller.
+		// Root the proxy, whose callback and constructor references preserve only
+		// the Java-facing surface, rather than all members of the declaring type.
+		return !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Any (method => method.IsExport);
 	}
 
 	static void AddIfCrossAssembly (SortedSet<string> set, string? asmName, string outputAssemblyName)
@@ -403,9 +403,9 @@ static class ModelBuilder
 					continue;
 				}
 
-				var reuseKey = CreateUcoWrapperReuseKey (uco);
-				if (!sharedWrapperTargets.ContainsKey (reuseKey)) {
-					sharedWrapperTargets.Add (reuseKey, UcoWrapperTargetData.From (proxy, uco.WrapperName));
+				ref var target = ref CollectionsMarshal.GetValueRefOrAddDefault (sharedWrapperTargets, CreateUcoWrapperReuseKey (uco), out bool exists);
+				if (!exists) {
+					target = UcoWrapperTargetData.From (proxy, uco.WrapperName);
 				}
 			}
 		}

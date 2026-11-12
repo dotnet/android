@@ -65,7 +65,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (ReferenceEquals (this, other))
 				return true;
 
-			if (String.Compare (Path, other.Path, StringComparison.Ordinal) != 0)
+			if (!string.Equals (Path, other.Path, StringComparison.Ordinal))
 				return false;
 
 			if (MinRevision == null) {

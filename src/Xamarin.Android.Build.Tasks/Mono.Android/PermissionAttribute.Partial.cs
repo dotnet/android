@@ -38,7 +38,6 @@ namespace Android.App {
 
 		internal class PermissionAttributeComparer : IEqualityComparer<PermissionAttribute>
 		{
-			#region IEqualityComparer<PermissionAttribute> Members
 			public bool Equals (PermissionAttribute x, PermissionAttribute y)
 			{
 				return
@@ -54,7 +53,6 @@ namespace Android.App {
 			{
 				return (obj.Name ?? String.Empty).GetHashCode ();
 			}
-			#endregion
 		}
 	}
 }

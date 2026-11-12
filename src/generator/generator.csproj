@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Version>11.0.0</Version>
+    <LangVersion>13.0</LangVersion>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>false</UseAppHost>
+    <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="generator.slnf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\utils\StringRocks.cs">
+      <Link>utils\StringRocks.cs</Link>
+    </Compile>
+    <Compile Include="..\utils\EnumMappings.Xml.cs">
+      <Link>utils\EnumMappings.Xml.cs</Link>
+    </Compile>
+    <Compile Include="..\utils\XmlExtensions.cs">
+      <Link>utils\XmlExtensions.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Irony" Version="1.5.3" />
+    <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(PkgMono_Options)\lib\netstandard2.0\Mono.Options.pdb" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Java.Interop.Localization\Java.Interop.Localization.csproj" />
+    <ProjectReference Include="..\Java.Interop.Tools.Generator\Java.Interop.Tools.Generator.csproj" />
+    <ProjectReference Include="..\Java.Interop.Tools.JavaTypeSystem\Java.Interop.Tools.JavaTypeSystem.csproj" />
+    <ProjectReference Include="..\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj" />
+    <ProjectReference Include="..\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
+    <ProjectReference Include="..\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
+    <ProjectReference Include="..\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <ProjectReference Include="..\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj" />
+    <ProjectReference Include="..\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
+  </ItemGroup>
+
+  <!--
+    In the .NET for Android build these tools share the SDK pack tools directory with the
+    netstandard2.0 task assemblies, which deposit the netstandard2.0 System.IO.Hashing there.
+    Do not overwrite it with this project's .NET flavor; the tool resolves it from that directory.
+  -->
+  <Target Name="_SkipSharedToolsHashingCopy" BeforeTargets="_CopyFilesMarkedCopyLocal">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+    </ItemGroup>
+  </Target>
+
+</Project>

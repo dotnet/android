@@ -160,6 +160,12 @@ namespace Xamarin.ProjectTools
 
 		public bool New (string template, string output = null, bool noRestore = false, string framework = null)
 		{
+			Directory.CreateDirectory (ProjectDirectory);
+			var nugetConfig = Path.Combine (ProjectDirectory, "NuGet.config");
+			if (!File.Exists (nugetConfig)) {
+				File.Copy (Path.Combine (XABuildPaths.TopDirectory, "NuGet.config"), nugetConfig);
+			}
+
 			var arguments = new List<string> {
 				"new",
 				template,

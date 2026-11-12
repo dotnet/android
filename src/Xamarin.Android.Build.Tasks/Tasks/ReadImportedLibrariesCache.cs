@@ -35,7 +35,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ReadImportedLibrariesCache : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ReadImportedLibrariesCache : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "RIL";
 
@@ -53,11 +54,12 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (!File.Exists (CacheFile)) {
+			string cacheFile = TaskEnvironment.GetAbsolutePath (CacheFile);
+			if (!File.Exists (cacheFile)) {
 				Log.LogDebugMessage ("{0} does not exist. No Imported Libraries found", CacheFile);
 				return !Log.HasLoggedErrors;
 			}
-			var doc = XDocument.Load (CacheFile);
+			var doc = XDocument.Load (cacheFile);
 			Jars = doc.GetPathsAsTaskItems ("Jars", "Jar");
 			NativeLibraries = doc.GetPathsAsTaskItems ("NativeLibraries", "NativeLibrary");
 			ManifestDocuments = doc.GetPathsAsTaskItems ("ManifestDocuments", "ManifestDocument");

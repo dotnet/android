@@ -11,9 +11,9 @@ namespace Microsoft.Android.Tasks;
 /// Note this is independent of whether they are stored compressed with ZIP in the APK.
 /// Our runtime bits will Zstd decompress them at assembly load time.
 ///
-/// This task lives in Microsoft.Android.Build.Tasks.dll (net11.0) because it uses
+/// This task lives in Microsoft.Android.Build.Tasks.dll (net12.0) because it uses
 /// System.IO.Compression.ZstandardEncoder, which is not available in netstandard2.0.
-/// Its invocation selects the .NET runtime with <c>MSBuildRuntime="NET"</c>.
+/// It is imported with &lt;UsingTask ... Runtime="NET" /&gt; so it runs on .NET.
 /// </summary>
 public class CompressAssemblies : AndroidTask
 {

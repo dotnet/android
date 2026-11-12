@@ -10,7 +10,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetAndroidDefineConstants : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class GetAndroidDefineConstants : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "GAD";
 

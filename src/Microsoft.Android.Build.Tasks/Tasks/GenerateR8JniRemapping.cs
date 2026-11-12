@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
 
@@ -147,11 +148,11 @@ namespace Microsoft.Android.Tasks
 				classRenames [classMapping.OriginalJniName] = classMapping.ObfuscatedJniName;
 			}
 			foreach (R8ClassMapping classMapping in classMappings) {
-				if (requiredOriginalClasses.TryGetValue (classMapping.ObfuscatedJniName, out string? existing) &&
-						!string.Equals (existing, classMapping.OriginalJniName, StringComparison.Ordinal)) {
-					requiredOriginalClasses [classMapping.ObfuscatedJniName] = null;
-				} else if (!requiredOriginalClasses.ContainsKey (classMapping.ObfuscatedJniName)) {
-					requiredOriginalClasses [classMapping.ObfuscatedJniName] = classMapping.OriginalJniName;
+				ref string? originalClass = ref CollectionsMarshal.GetValueRefOrAddDefault (requiredOriginalClasses, classMapping.ObfuscatedJniName, out bool exists);
+				if (!exists) {
+					originalClass = classMapping.OriginalJniName;
+				} else if (!string.Equals (originalClass, classMapping.OriginalJniName, StringComparison.Ordinal)) {
+					originalClass = null;
 				}
 			}
 			string? RenameClass (string className)

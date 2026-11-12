@@ -10,7 +10,8 @@ namespace Xamarin.Android.Tasks
 	/// 
 	/// NOTE: .NET 5 does not currently support multiple RIDs, so this will need to be modified once that is available.
 	/// </summary>
-	public class RuntimeIdentifierToAbi : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class RuntimeIdentifierToAbi : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "RIAB";
 

@@ -22,6 +22,24 @@ public class DexUtilsTests
 	}
 
 	[Test]
+	public void ContainsClassWithFieldMatchesDeclaringClassNameAndType ()
+	{
+		var dexDump = new [] {
+			"  Class descriptor  : 'Lexample/Peer;'",
+			"      name          : 'ACTION_COLLAPSE'",
+			"      type          : 'Lexample/Peer;'",
+			"  Class descriptor  : 'Lexample/Other;'",
+			"      name          : 'OTHER'",
+			"      type          : 'I'",
+		};
+
+		Assert.IsTrue (DexUtils.ContainsClassWithField ("Lexample/Peer;", "ACTION_COLLAPSE", "Lexample/Peer;", dexDump));
+		Assert.IsFalse (DexUtils.ContainsClassWithField ("Lexample/Peer;", "ACTION_COLLAPSE", "I", dexDump));
+		Assert.IsFalse (DexUtils.ContainsClassWithField ("Lexample/Peer;", "COLLAPSE", "Lexample/Peer;", dexDump));
+		Assert.IsFalse (DexUtils.ContainsClassWithField ("Lexample/Other;", "ACTION_COLLAPSE", "Lexample/Peer;", dexDump));
+	}
+
+	[Test]
 	public void ContainsClassWithMethodScopesSignatureToMethod ()
 	{
 		var dexDump = new [] {

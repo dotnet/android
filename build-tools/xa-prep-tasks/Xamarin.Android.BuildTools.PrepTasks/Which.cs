@@ -150,46 +150,52 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		internal static Version GetProgramVersion (string hostOS, string command)
 		{
-			string shell, format;
-			GetShell (hostOS, out shell, out format);
-
-			var psi = new ProcessStartInfo (shell, string.Format (format, command)) {
+			bool windows = string.Equals (hostOS, "Windows", StringComparison.OrdinalIgnoreCase);
+			var psi = new ProcessStartInfo (windows ? "cmd.exe" : "/bin/sh") {
 				CreateNoWindow = true,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
 			};
-			string curVersion = null;
-			using (var p = new Process { StartInfo = psi }) {
-				p.OutputDataReceived += (sender, e) => {
-					if (string.IsNullOrEmpty (e.Data) || curVersion != null)
-						return;
-					var m = VersionMatch.Match (e.Data);
-					if (!m.Success)
-						return;
-					curVersion = m.Groups ["version"].Value;
-                                        if (!curVersion.Contains (".")) {
-                                                curVersion      += ".0";
-                                        }
-				};
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.WaitForExit ();
+			if (windows) {
+				psi.Arguments = $"/c \"{command}\"";
+			} else {
+				psi.ArgumentList.Add ("-c");
+				psi.ArgumentList.Add (command);
 			}
-			return curVersion == null
-				? new Version ()
-				: new Version (curVersion);
-		}
+			var timeout = TimeSpan.FromSeconds (30);
+			var timer = Stopwatch.StartNew ();
+			using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start version command '{command}'.");
+			try {
+				var (stdout, stderr) = process.ReadAllText (timeout);
+				Console.Error.Write (stderr);
+				var remaining = timeout - timer.Elapsed;
+				if (!process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status)) {
+					throw new TimeoutException ();
+				}
+				if (status.ExitCode != 0) {
+					throw new InvalidOperationException ($"Version command '{command}' failed with exit code {status.ExitCode}.");
+				}
 
-		static void GetShell (string hostOS, out string shell, out string format)
-		{
-			if (string.Equals (hostOS, "Windows", StringComparison.OrdinalIgnoreCase)) {
-				shell = "cmd.exe";
-				format = "/c \"{0}\"";
-				return;
+				using var reader = new StringReader (stdout);
+				string line;
+				while ((line = reader.ReadLine ()) != null) {
+					var match = VersionMatch.Match (line);
+					if (!match.Success)
+						continue;
+					var version = match.Groups ["version"].Value;
+					return new Version (version.Contains (".") ? version : version + ".0");
+				}
+				return new Version ();
+			} catch (TimeoutException ex) {
+				throw new TimeoutException ($"Version command '{command}' did not complete within 30 seconds.", ex);
+			} finally {
+				if (!process.HasExited) {
+					process.Kill (entireProcessTree: true);
+					process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
+				}
 			}
-			shell = "/bin/sh";
-			format = "-c \"{0}\"";
 		}
 	}
 }
-

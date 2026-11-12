@@ -104,6 +104,7 @@ extends:
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
       parameters:
+        agent_count: ${{ variables.MSBuildEmulatorTestAgentCount }}
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
     - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
@@ -151,7 +152,6 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
             dotnetVersion: $(DotNetSdkVersion)
-            dotnetQuality: $(DotNetSdkQuality)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -190,11 +190,14 @@ extends:
           displayName: Install .NET
           retryCountOnTaskFailure: 3
           workingDirectory: $(Build.SourcesDirectory)/maui
+          env:
+            _SkipUpdateBuildNumber: 'true'
 
         - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
           displayName: Pack .NET Maui
           workingDirectory: $(Build.SourcesDirectory)/maui
           env:
+            _SkipUpdateBuildNumber: 'true'
             NoWarn: CS0618
 
         - task: DotNetCoreCLI@2
@@ -377,7 +380,6 @@ extends:
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
           parameters:
             version: $(DotNetSdkVersion)
-            quality: $(DotNetSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
