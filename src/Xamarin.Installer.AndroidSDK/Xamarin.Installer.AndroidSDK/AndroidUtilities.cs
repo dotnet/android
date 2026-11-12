@@ -53,13 +53,16 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <param name="sourcePropertiesPath">path to the properties file</param>
 		/// <returns>collection of property names and values.</returns>
 		public static Dictionary<string, string> ReadAndroidProperties (string sourcePropertiesPath)
+			=> ReadAndroidProperties (sourcePropertiesPath, detectEncodingFromByteOrderMarks: false);
+
+		internal static Dictionary<string, string> ReadAndroidProperties (string sourcePropertiesPath, bool detectEncodingFromByteOrderMarks)
 		{
 			if (String.IsNullOrEmpty (sourcePropertiesPath) || !File.Exists (sourcePropertiesPath))
 				return new Dictionary<string, string> (StringComparer.Ordinal);
 			
 			try {
 				using (var fs = File.Open (sourcePropertiesPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-				using (var reader = new StreamReader (fs, Encoding.GetEncoding (28591), detectEncodingFromByteOrderMarks: false)) {
+				using (var reader = new StreamReader (fs, Encoding.GetEncoding (28591), detectEncodingFromByteOrderMarks)) {
 					return ReadProperties (reader);
 				}
 			} catch (Exception ex) {

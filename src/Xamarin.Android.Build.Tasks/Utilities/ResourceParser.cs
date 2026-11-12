@@ -1,7 +1,6 @@
 using System;
-using System.CodeDom;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +25,7 @@ namespace Xamarin.Android.Tasks
 				return Convert.ToInt32 (value, @base);
 			} catch (Exception e) {
 				throw new NotSupportedException (
-						string.Format ("Could not convert value '{0}' (base '{1}') into an Int32.",
+						string.Format (CultureInfo.InvariantCulture, "Could not convert value '{0}' (base '{1}') into an Int32.",
 							value, @base),
 						e);
 			}
