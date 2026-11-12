@@ -65,21 +65,10 @@ public partial class SdkManager
 
 		logger (TraceLevel.Verbose, "Checking for pending licenses...");
 
-		string stdout = "";
-		try {
-			// The sdkmanager owner feeds 'n' and observes the input loop while capturing both pipes.
-			var result = await RunSdkManagerAsync (sdkManagerPath, ["--licenses"], cancellationToken: cancellationToken).ConfigureAwait (false);
-			stdout = result.Stdout;
-		}
-		catch (OperationCanceledException) {
-			throw;
-		}
-		catch (Exception ex) {
-			// sdkmanager may exit with non-zero when declining licenses - that's expected
-			logger (TraceLevel.Verbose, $"License check exited non-zero (expected): {ex.GetType ().Name}");
-		}
+		// Declining licenses may return nonzero; operational failures must still propagate.
+		var result = await RunSdkManagerAsync (sdkManagerPath, ["--licenses"], cancellationToken: cancellationToken).ConfigureAwait (false);
 
-		return ParseLicenseOutput (stdout);
+		return ParseLicenseOutput (result.Stdout);
 	}
 
 	/// <summary>

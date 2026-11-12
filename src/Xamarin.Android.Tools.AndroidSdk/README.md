@@ -53,6 +53,10 @@ JDK discovery uses bounded native capture. SDK-manager and AVD creation own
 interactive stdin, start native capture before feeding input, and observe their
 input/exit tasks. SDK-manager closing stdin ends answer feeding, not execution
 or output capture; the command's exit status still determines success.
+License discovery parses completed output even when declining returns a nonzero
+exit code, but propagates startup, capture and drain-timeout failures instead of
+reporting an empty license list. Accepting specific license IDs propagates the
+same discovery failures.
 Native line enumeration serializes instrumentation parsing and LLVM symbol
 filtering without an event pump or text-writer adapter.
 

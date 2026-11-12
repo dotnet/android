@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -65,6 +66,60 @@ public class SdkManagerTests
 			Directory.Delete (Path.GetDirectoryName (bin));
 			Directory.Delete (Path.Combine (root, "cmdline-tools"));
 			Directory.Delete (root);
+		}
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	[Platform ("Linux,MacOsX")]
+	public void LicenseDiscovery_PropagatesInheritedOutputTimeout (bool acceptSpecificLicenses)
+	{
+		var root = Path.Combine (Path.GetTempPath (), $"sdk-license-{Guid.NewGuid ():N}");
+		var bin = Path.Combine (root, "cmdline-tools", "latest", "bin");
+		Directory.CreateDirectory (bin);
+		var executable = Path.Combine (bin, "sdkmanager");
+		try {
+			File.WriteAllText (executable, """
+				#!/bin/sh
+				echo $$ > "$0.pid"
+				printf 'License test-license:\nlicense terms\nAccept? (y/N):\n'
+				IFS= read -r answer
+				printf '%s\n' "$answer" > "$0.answer"
+				sleep 90 &
+				echo $! > "$0.child"
+				exit 1
+				""");
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			manager.AndroidSdkPath = root;
+			using var deadline = new CancellationTokenSource (TimeSpan.FromSeconds (45));
+			var timer = Stopwatch.StartNew ();
+			var error = Assert.ThrowsAsync<TimeoutException> (async () => {
+				Task operation = acceptSpecificLicenses
+					? manager.AcceptLicensesAsync (new [] { "test-license" }, deadline.Token)
+					: manager.GetPendingLicensesAsync (deadline.Token);
+				await operation.WaitAsync (TimeSpan.FromSeconds (40));
+			});
+			Assert.IsNotNull (error);
+			StringAssert.Contains ("redirected output did not close within 30 seconds", error.Message);
+			Assert.GreaterOrEqual (timer.Elapsed, TimeSpan.FromSeconds (29));
+			Assert.IsFalse (deadline.IsCancellationRequested, "The capture deadline must not cancel the caller.");
+			Assert.AreEqual ("n", File.ReadAllText (executable + ".answer").Trim ());
+			Assert.IsFalse (File.Exists (Path.Combine (root, "licenses", "test-license")), "Incomplete discovery must not accept a license.");
+		} finally {
+			foreach (var suffix in new [] { ".pid", ".child" }) {
+				if (!File.Exists (executable + suffix))
+					continue;
+				try {
+					using var process = Process.GetProcessById (int.Parse (File.ReadAllText (executable + suffix).Trim (), CultureInfo.InvariantCulture));
+					if (!process.HasExited)
+						process.Kill (entireProcessTree: true);
+					Assert.IsTrue (process.WaitForExit (5000), "The owned fixture process must exit before deleting its files.");
+				} catch (ArgumentException) {
+					// The owned fixture process has already been reaped.
+				}
+			}
+			Directory.Delete (root, recursive: true);
 		}
 	}
 
