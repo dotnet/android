@@ -587,15 +587,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       XmlInputPath="$(IntermediateOutputPath)android\AndroidManifest.xml"
       ProhibitDtd="true"
       Namespaces="&lt;Namespace Prefix='android' Uri='http://schemas.android.com/apk/res/android' /&gt;"
-      Query="(/manifest/application[1]/activity[intent-filter/category/@android:name='android.intent.category.LAUNCHER' and @android:name!='' and @android:name!='mono.android.__FastDevLauncher'])[1]/@android:name">
-    <Output TaskParameter="Result" PropertyName="_AndroidLaunchableActivity" />
-  </XmlPeek>
-  <XmlPeek
-      Condition=" '$(_AndroidLaunchableActivity)' == '' "
-      XmlInputPath="$(IntermediateOutputPath)android\AndroidManifest.xml"
-      ProhibitDtd="true"
-      Namespaces="&lt;Namespace Prefix='android' Uri='http://schemas.android.com/apk/res/android' /&gt;"
-      Query="(/manifest/application[1]/activity-alias[intent-filter/category/@android:name='android.intent.category.LAUNCHER' and @android:name!='' and @android:name!='mono.android.__FastDevLauncher'])[1]/@android:name">
+      Query="(/manifest/application[1]/activity[intent-filter/category/@android:name='android.intent.category.LAUNCHER' and @android:name!='' and @android:name!='mono.android.__FastDevLauncher']
+          | /manifest/application[1][not(activity[intent-filter/category/@android:name='android.intent.category.LAUNCHER' and @android:name!='' and @android:name!='mono.android.__FastDevLauncher'])]/activity-alias[intent-filter/category/@android:name='android.intent.category.LAUNCHER' and @android:name!='' and @android:name!='mono.android.__FastDevLauncher'])[1]/@android:name">
     <Output TaskParameter="Result" PropertyName="_AndroidLaunchableActivity" />
   </XmlPeek>
 </Target>

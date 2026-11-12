@@ -96,9 +96,13 @@ This file contains targets specific for Android application projects.
     </PropertyGroup>
   </Target>
 
+  <Target Name="_AndroidGetRunArgumentsActivity"
+      Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(AndroidUseInstrumentation)' != 'true' "
+      DependsOnTargets="_GetAndroidLaunchableActivity" />
+
   <Target Name="_AndroidComputeRunArguments"
       BeforeTargets="ComputeRunArguments"
-      DependsOnTargets="$(_AndroidComputeRunArgumentsDependsOn);_GetAndroidLaunchableActivity">
+      DependsOnTargets="$(_AndroidComputeRunArgumentsDependsOn);_AndroidGetRunArgumentsActivity">
     <!--
       $(AndroidUseInstrumentation) apps launch through their <instrumentation>, even if they
       also declare a launchable <activity>. $(EnableMSTestRunner) sets this by default.
@@ -172,8 +176,12 @@ This file contains targets specific for Android application projects.
     </PropertyGroup>
   </Target>
 
+  <Target Name="_AndroidGetRunWithLoggingActivity"
+      Condition=" '$(AndroidLaunchActivity)' == '' "
+      DependsOnTargets="_GetAndroidLaunchableActivity" />
+
   <Target Name="RunWithLogging"
-          DependsOnTargets="$(_RunWithLoggingDependsOn);_PrepareRunWithLogging;_GetAndroidLaunchableActivity">
+          DependsOnTargets="$(_RunWithLoggingDependsOn);_PrepareRunWithLogging;_AndroidGetRunWithLoggingActivity">
     <PropertyGroup Condition=" '$(AndroidLaunchActivity)' == '' ">
       <AndroidLaunchActivity>$(_AndroidLaunchableActivity)</AndroidLaunchActivity>
     </PropertyGroup>

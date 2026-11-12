@@ -299,7 +299,11 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 -->
 
 <!-- I dare to not add 'Install' as a dependency target. It is sometimes unwanted. Run Install explicitly. -->
-<Target Name="RunTests" DependsOnTargets="AndroidPrepareForBuild;_GetAndroidLaunchableActivity" Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)">
+<Target Name="_AndroidGetTestActivity"
+		Condition=" '$(RunActivity)' == '' "
+		DependsOnTargets="_GetAndroidLaunchableActivity" />
+
+<Target Name="RunTests" DependsOnTargets="AndroidPrepareForBuild;_AndroidGetTestActivity" Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)">
 	<PropertyGroup Condition=" '$(RunActivity)' == '' ">
 		<TargetTestActivity>$(_AndroidLaunchableActivity)</TargetTestActivity>
 	</PropertyGroup>
